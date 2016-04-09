@@ -35,9 +35,8 @@ namespace App
 				Console.Text += $"Display initialized. Connected: {_dmd.DeviceConnected}.\n";
 
 				if (_dmd.DeviceConnected) {
-					var info = _dmd.GetInfo();
-					Console.Text += $"Display detected at {info.Width}x{info.Height}\n";
-					Console.Text += $"Firmware: {info.Firmware}\n";
+					Console.Text += $"Display detected at {_dmd.Width}x{_dmd.Height}\n";
+					Console.Text += $"Firmware: {_dmd.Firmware}\n";
 
 				} else {
 					Console.Text += "Device not connected.";

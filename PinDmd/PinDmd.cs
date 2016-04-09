@@ -19,11 +19,10 @@ namespace PinDmd
 	/// </summary>
 	public class PinDmd
 	{
-		private readonly int _width;
-		private readonly int _height;
-
 		public bool DeviceConnected { get; }
-		public string DeviceFirmware { get; }
+		public string Firmware { get; }
+		public int Width { get; }
+		public int Height { get; }
 
 		/// <summary>
 		/// Constructor, initializes the DMD.
@@ -42,10 +41,10 @@ namespace PinDmd
 			if (DeviceConnected)
 			{
 				var info = GetInfo();
-				DeviceFirmware = info.Firmware;
-				_width = info.Width;
-				_height = info.Height;
-				Console.WriteLine("Display found at {0}x{1}.", _width, _height);
+				Firmware = info.Firmware;
+				Width = info.Width;
+				Height = info.Height;
+				Console.WriteLine("Display found at {0}x{1}.", Width, Height);
 			}
 		}
 
@@ -85,9 +84,9 @@ namespace PinDmd
 			}
 
 			var img = new Bitmap(path);
-			if (img.Width != _width || img.Height != _height)
+			if (img.Width != Width || img.Height != Height)
 			{
-				throw new Exception($"Image must have the same dimensions as the display ({_width}x{_height}).");
+				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
 			Console.WriteLine("Read bitmap at {0}x{1}.", img.Width, img.Height);
 
@@ -95,14 +94,14 @@ namespace PinDmd
 			var n = 0;
 			var sw = new Stopwatch();
 			sw.Start();
-			for (var y = 0; y < _height; y++)
+			for (var y = 0; y < Height; y++)
 			{
-				for (var x = 0; x < _width; x++)
+				for (var x = 0; x < Width; x++)
 				{
 					var color = img.GetPixel(x, y);
-					frame[(y * _width) + x].Red = color.R;
-					frame[(y * _width) + x].Green = color.G;
-					frame[(y * _width) + x].Blue = color.B;
+					frame[(y * Width) + x].Red = color.R;
+					frame[(y * Width) + x].Green = color.G;
+					frame[(y * Width) + x].Blue = color.B;
 					n++;
 				}
 			}
