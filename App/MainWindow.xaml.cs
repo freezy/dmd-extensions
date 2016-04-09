@@ -42,7 +42,6 @@ namespace App
 			} catch (Exception err) {
 				Console.Text = err.StackTrace;
 			}
-			
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
@@ -51,7 +50,7 @@ namespace App
 				_dmd.RenderImage("rgb-128x32.png");
 
 			} catch (Exception err) {
-				Console.Text = err.StackTrace;
+				Console.Text = err.Message + "\n" + err.StackTrace;
 			}
 		}
 	}

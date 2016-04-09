@@ -49,6 +49,7 @@ namespace PinDmd
 			Interop.GetDeviceInfo(ref info);
 			_width = info.Width;
 			_height = info.Height;
+			Console.WriteLine("Display at {0}x{1}.", _width, _height);
 
 			return new DmdInfo()
 			{
@@ -75,9 +76,9 @@ namespace PinDmd
 			var n = 0;
 			var sw = new Stopwatch();
 			sw.Start();
-			for (var y = 0; y < img.Height; y++)
+			for (var y = 0; y < _height; y++)
 			{
-				for (var x = 0; x < img.Width; x++)
+				for (var x = 0; x < _width; x++)
 				{
 					var color = img.GetPixel(x, y);
 					frame[x + y*_height].Red = color.R;
