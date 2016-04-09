@@ -81,13 +81,13 @@ namespace PinDmd
 				for (var x = 0; x < _width; x++)
 				{
 					var color = img.GetPixel(x, y);
-					frame[x + y*_height].Red = color.R;
-					frame[x + y*_height].Green = color.G;
-					frame[x + y*_height].Blue = color.B;
+					frame[(y * _width) + x].Red = color.R;
+					frame[(y * _width) + x].Green = color.G;
+					frame[(y * _width) + x].Blue = color.B;
 					n++;
 				}
 			}
-			Interop.RenderRgb24Frame(ref frame);
+			Interop.RenderRgb24Frame(frame);
 			sw.Stop();
 			Console.WriteLine("{0} pixels written in {1}ms.", n, sw.ElapsedMilliseconds);
 		}

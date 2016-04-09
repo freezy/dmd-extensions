@@ -112,7 +112,7 @@ namespace PinDmd
 		/// Return Type: void
 		/// currbuffer: rgb24*
 		[DllImport("pinDMD.dll", EntryPoint = "renderRGB24Frame", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void RenderRgb24Frame(ref PixelRgb24[] currbuffer);
+		public static extern void RenderRgb24Frame(PixelRgb24[] currbuffer);
 
 		/// Return Type: void
 		/// setting: UINT8->unsigned char
