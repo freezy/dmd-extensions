@@ -19,9 +19,24 @@ namespace PinDmd
 	/// </summary>
 	public class PinDmd
 	{
+		/// <summary>
+		/// True if device is connected, false otherwise. Check this before accessing anything else.
+		/// </summary>
 		public bool DeviceConnected { get; }
+
+		/// <summary>
+		/// Firmware string read from the device if connected
+		/// </summary>
 		public string Firmware { get; }
+
+		/// <summary>
+		/// Width in pixels of the display, 128 for PinDMD3
+		/// </summary>
 		public int Width { get; }
+
+		/// <summary>
+		/// Height in pixels of the display, 32 for PinDMD3
+		/// </summary>
 		public int Height { get; }
 
 		/// <summary>
@@ -62,7 +77,6 @@ namespace PinDmd
 
 			var info = new DeviceInfo();
 			Interop.GetDeviceInfo(ref info);
-			
 
 			return new DmdInfo()
 			{
@@ -121,6 +135,10 @@ namespace PinDmd
 		public string Firmware;
 	}
 
+	/// <summary>
+	/// Thrown on operations that don't make sense without the display connected.
+	/// </summary>
+	/// <seealso cref="PinDmd.DeviceConnected"/>
 	public class DeviceNotConnectedException : Exception
 	{
 	}
