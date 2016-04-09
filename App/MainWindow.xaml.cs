@@ -32,12 +32,17 @@ namespace App
 			try
 			{
 				_dmd = new PinDmd.PinDmd();
-				var available = _dmd.Init();
-				Console.Text += $"Display initialized. Present: {available}.\n";
+				Console.Text += $"Display initialized. Connected: {_dmd.DeviceConnected}.\n";
+
+				if (_dmd.DeviceConnected) {
+					var info = _dmd.GetInfo();
+					Console.Text += $"Display detected at {info.Width}x{info.Height}\n";
+					Console.Text += $"Firmware: {info.Firmware}\n";
+
+				} else {
+					Console.Text += "Device not connected.";
+				}
 				
-				var info = _dmd.GetInfo();
-				Console.Text += $"Display detected at {info.Width}x{info.Height}\n";
-				Console.Text += $"Firmware: {info.Firmware}\n";
 
 			} catch (Exception err) {
 				Console.Text = err.StackTrace;

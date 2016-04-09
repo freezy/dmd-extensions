@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -18,38 +19,51 @@ namespace PinDmd
 	/// </summary>
 	public class PinDmd
 	{
-		private int _width;
-		private int _height;
+		private readonly int _width;
+		private readonly int _height;
+
+		public bool DeviceConnected { get; }
+		public string DeviceFirmware { get; }
 
 		/// <summary>
-		/// Initializes the DMD.
+		/// Constructor, initializes the DMD.
 		/// </summary>
-		/// <returns>True if DMD found, false otherwise</returns>
-		public bool Init()
+		public PinDmd()
 		{
-			var port = Interop.Init(new Options()
-			{
+			var port = Interop.Init(new Options() {
 				DmdRed = 255,
 				DmdGreen = 0,
 				DmdBlue = 0,
 				DmdColorize = 0
 			});
 			Console.WriteLine("Enabled PinDMD: {0}", port);
-			return port != 0;
+			DeviceConnected = port != 0;
+
+			if (DeviceConnected)
+			{
+				var info = GetInfo();
+				DeviceFirmware = info.Firmware;
+				_width = info.Width;
+				_height = info.Height;
+				Console.WriteLine("Display found at {0}x{1}.", _width, _height);
+			}
 		}
 
 		/// <summary>
 		/// Returns width, height and firmware version of the connected DMD.
-		/// Must be run first
+		/// 
 		/// </summary>
+		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
 		/// <returns>DMD info</returns>
 		public DmdInfo GetInfo()
 		{
+			if (!DeviceConnected) {
+				throw new DeviceNotConnectedException();
+			}
+
 			var info = new DeviceInfo();
 			Interop.GetDeviceInfo(ref info);
-			_width = info.Width;
-			_height = info.Height;
-			Console.WriteLine("Display at {0}x{1}.", _width, _height);
+			
 
 			return new DmdInfo()
 			{
@@ -62,9 +76,14 @@ namespace PinDmd
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
+		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
 		/// <param name="path">Path to the image, can be anything <see cref="T:System.Drawing.Bitmap"/> understands.</param>
 		public void RenderImage(string path)
 		{
+			if (!DeviceConnected) {
+				throw new DeviceNotConnectedException();
+			}
+
 			var img = new Bitmap(path);
 			if (img.Width != _width || img.Height != _height)
 			{
@@ -101,5 +120,9 @@ namespace PinDmd
 		public byte Width;
 		public byte Height;
 		public string Firmware;
+	}
+
+	public class DeviceNotConnectedException : Exception
+	{
 	}
 }
