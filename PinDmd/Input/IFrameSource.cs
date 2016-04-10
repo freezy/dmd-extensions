@@ -12,7 +12,8 @@ namespace PinDmd.Input
 	/// </summary>
 	/// <remarks>
 	/// Since we want a contineous flow of frames, the method to override
-	/// returns an observable.
+	/// returns an observable. Note that the producer decides on the frequency
+	/// in which frames are delivered to the consumer.
 	/// </remarks>
 	public interface IFrameSource
 	{

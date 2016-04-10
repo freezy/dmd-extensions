@@ -151,7 +151,7 @@ namespace PinDmd
 		public void StartRendering(IFrameSource source)
 		{
 			if (_currentFrameSequence != null) {
-				throw new FrameRenderingInProgressException("Sequence already in progress, stop first.");
+				throw new RenderingInProgressException("Sequence already in progress, stop first.");
 			}
 			_currentFrameSequence = source.GetFrames().Subscribe(RenderImage);
 		}
@@ -188,9 +188,9 @@ namespace PinDmd
 	/// Thrown when a new rendering sequence is started during a previously started sequence
 	/// </summary>
 	/// <seealso cref="PinDmd.StopRendering"/>
-	public class FrameRenderingInProgressException : Exception
+	public class RenderingInProgressException : Exception
 	{
-		public FrameRenderingInProgressException(string message) : base(message)
+		public RenderingInProgressException(string message) : base(message)
 		{
 		}
 	}

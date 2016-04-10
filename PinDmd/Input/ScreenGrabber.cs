@@ -25,7 +25,6 @@ namespace PinDmd.Input
 
 		private Bitmap CaptureImage()
 		{
-			Console.WriteLine("*click*");
 			return NativeCapture.GetDesktopBitmap(Left, Top, Width, Height);
 		}
 	}

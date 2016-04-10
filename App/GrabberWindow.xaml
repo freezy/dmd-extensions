@@ -10,8 +10,69 @@
         AllowsTransparency="True"
         Background="Transparent">
     
+    <Window.Resources>
+        <Style x:Key="RectBorderStyle" TargetType="Rectangle">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+            <EventSetter Event="MouseLeftButtonDown" Handler="ResizeStart"/>
+            <EventSetter Event="MouseLeftButtonUp" Handler="ResizeEnd"/>
+            <EventSetter Event="MouseMove" Handler="Resizing"/>
+        </Style>
+    </Window.Resources>
+    
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Rectangle Fill="Transparent" Stroke="#80ff0000" StrokeThickness="4"
-                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <Rectangle x:Name="Borders" Fill="#01ff0000" Stroke="#80ff0000" StrokeThickness="4"
+                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Cursor="SizeAll"/>
+
+        <Rectangle x:Name="leftSizeGrip"
+            Width="7"
+            HorizontalAlignment="Left"
+            Cursor="SizeWE"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle x:Name="rightSizeGrip"
+            Width="7"
+            HorizontalAlignment="Right"
+            Cursor="SizeWE"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle x:Name="topSizeGrip"
+            Height="7"
+            VerticalAlignment="Top"
+            Cursor="SizeNS"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle x:Name="bottomSizeGrip"
+            Height="7"
+            VerticalAlignment="Bottom"
+            Cursor="SizeNS"
+            Style="{StaticResource RectBorderStyle}" />
+        <!--  Corners  -->
+        <Rectangle Name="topLeftSizeGrip"
+            Width="7"
+            Height="7"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Cursor="SizeNWSE"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle Name="bottomRightSizeGrip"
+            Width="7"
+            Height="7"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Cursor="SizeNWSE"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle Name="topRightSizeGrip"
+            Width="7"
+            Height="7"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Cursor="SizeNESW"
+            Style="{StaticResource RectBorderStyle}" />
+        <Rectangle Name="bottomLeftSizeGrip"
+            Width="7"
+            Height="7"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Cursor="SizeNESW"
+            Style="{StaticResource RectBorderStyle}" />
     </Grid>
 </Window>

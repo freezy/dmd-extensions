@@ -31,7 +31,7 @@ namespace App
 			Closing += OnWindowClosing;
 		}
 
-		private void button_Click(object sender, RoutedEventArgs e)
+		private void InitButton_Click(object sender, RoutedEventArgs e)
 		{
 			try
 			{
