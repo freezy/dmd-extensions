@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace PinDmd
+namespace PinDmd.Input
 {
 	/// <summary>
 	/// Class for getting images of the desktop.
@@ -16,7 +11,7 @@ namespace PinDmd
 	/// <note type="caution">This class is not thread safe.</note> 
 	/// <remarks>This class has been scaled back to the essentials for capturing a segment of 
 	/// the desktop in order to keep Cropper as small as possible.</remarks>
-	internal static class NativeMethods
+	internal static class NativeCapture
 	{
 		#region Dll Imports
 

@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PinDmd.Input;
+using PinDmd.Output;
 
 namespace PinDmd
 {
@@ -39,8 +41,8 @@ namespace PinDmd
 		public int Height { get; }
 
 		private static PinDmd _instance;
-
 		private readonly PixelRgb24[] _frameBuffer;
+		private IDisposable _currentFrameSequence;
 
 		public static PinDmd GetInstance()
 		{
@@ -115,11 +117,13 @@ namespace PinDmd
 		/// <param name="img">Any bitmap</param>
 		public void RenderImage(Bitmap img)
 		{
+			if (!DeviceConnected) {
+				return;
+				//throw new DeviceNotConnectedException();
+			}
 			if (img.Width != Width || img.Height != Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
-			Console.WriteLine("Read bitmap at {0}x{1}.", img.Width, img.Height);
-
 			for (var y = 0; y < Height; y++) {
 				for (var x = 0; x < Width; x++) {
 					var color = img.GetPixel(x, y);
@@ -129,6 +133,20 @@ namespace PinDmd
 				}
 			}
 			Interop.RenderRgb24Frame(_frameBuffer);
+		}
+
+		public void StartRenderingSequence(IFrameSource source)
+		{
+			if (_currentFrameSequence != null) {
+				throw new FrameRenderingInProgressException("Sequence already in progress, stop first.");
+			}
+			_currentFrameSequence = source.GetFrames().Subscribe(RenderImage);
+		}
+
+		public void StopRenderingSequence()
+		{
+			_currentFrameSequence.Dispose();
+			_currentFrameSequence = null;
 		}
 	}
 
@@ -148,5 +166,16 @@ namespace PinDmd
 	/// <seealso cref="PinDmd.DeviceConnected"/>
 	public class DeviceNotConnectedException : Exception
 	{
+	}
+
+	/// <summary>
+	/// Thrown when a new rendering sequence is started during a previously started sequence
+	/// </summary>
+	/// <seealso cref="PinDmd.StopRenderingSequence"/>
+	public class FrameRenderingInProgressException : Exception
+	{
+		public FrameRenderingInProgressException(string message) : base(message)
+		{
+		}
 	}
 }

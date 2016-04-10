@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace PinDmd
+namespace PinDmd.Output
 {
 	class Setting
 	{
