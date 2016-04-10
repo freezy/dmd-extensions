@@ -40,6 +40,8 @@ namespace PinDmd
 
 		private static PinDmd _instance;
 
+		private readonly PixelRgb24[] _frameBuffer;
+
 		public static PinDmd GetInstance()
 		{
 			return _instance ?? (_instance = new PinDmd());
@@ -66,6 +68,8 @@ namespace PinDmd
 				Width = info.Width;
 				Height = info.Height;
 				Console.WriteLine("Display found at {0}x{1}.", Width, Height);
+
+				_frameBuffer = new PixelRgb24[Width * Height];
 			}
 		}
 
@@ -116,22 +120,15 @@ namespace PinDmd
 			}
 			Console.WriteLine("Read bitmap at {0}x{1}.", img.Width, img.Height);
 
-			var frame = new PixelRgb24[4096];
-			var n = 0;
-			var sw = new Stopwatch();
-			sw.Start();
 			for (var y = 0; y < Height; y++) {
 				for (var x = 0; x < Width; x++) {
 					var color = img.GetPixel(x, y);
-					frame[(y * Width) + x].Red = color.R;
-					frame[(y * Width) + x].Green = color.G;
-					frame[(y * Width) + x].Blue = color.B;
-					n++;
+					_frameBuffer[(y * Width) + x].Red = color.R;
+					_frameBuffer[(y * Width) + x].Green = color.G;
+					_frameBuffer[(y * Width) + x].Blue = color.B;
 				}
 			}
-			Interop.RenderRgb24Frame(frame);
-			sw.Stop();
-			Console.WriteLine("{0} pixels written in {1}ms.", n, sw.ElapsedMilliseconds);
+			Interop.RenderRgb24Frame(_frameBuffer);
 		}
 	}
 

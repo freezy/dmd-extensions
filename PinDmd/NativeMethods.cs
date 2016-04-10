@@ -131,7 +131,7 @@ namespace PinDmd
 		/// <param name="rectangle">The rectangular area to capture.</param>
 		/// <returns>A <see cref="System.Drawing.Image"/> containg an image of the desktop 
 		/// at the specified coordinates</returns>
-		internal static Image GetDesktopBitmap(Rectangle rectangle)
+		internal static Bitmap GetDesktopBitmap(Rectangle rectangle)
 		{
 			return GetDesktopBitmap(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 		}
@@ -145,10 +145,10 @@ namespace PinDmd
 		/// <param name="height">The height of the requested area</param> 
 		/// <returns>A <see cref="System.Drawing.Image"/> of the desktop at 
 		/// the specified coordinates.</returns> 
-		internal static Image GetDesktopBitmap(int x, int y, int width, int height)
+		internal static Bitmap GetDesktopBitmap(int x, int y, int width, int height)
 		{
 			//Create the image and graphics to capture the portion of the desktop.
-			Image destinationImage = new Bitmap(width, height);
+			var destinationImage = new Bitmap(width, height);
 			Graphics destinationGraphics = Graphics.FromImage(destinationImage);
 
 			IntPtr destinationGraphicsHandle = IntPtr.Zero;

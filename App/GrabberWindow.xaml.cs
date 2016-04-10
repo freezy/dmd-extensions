@@ -29,13 +29,13 @@ namespace App
 			MouseDown += Window_MouseDown;
 			LocationChanged += Window_LocationChanged;
 
-			_grabber = new ScreenGrabber((int)Width, (int)Height);
+			_grabber = new ScreenGrabber();
 			_dmd = PinDmd.PinDmd.GetInstance();
 		}
 
 		private void Window_LocationChanged(object sender, EventArgs e)
 		{
-			var bmp = _grabber.Grab((int)Left, (int)Top);
+			var bmp = _grabber.CaptureImage((int)Left, (int)Top, (int)Width, (int)Height);
 			if (_dmd.DeviceConnected) {
 				_dmd.RenderImage(bmp);
 			}

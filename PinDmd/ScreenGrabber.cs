@@ -11,25 +11,9 @@ namespace PinDmd
 {
 	public class ScreenGrabber
 	{
-		public int Width { get; set; }
-		public int Height { get; set; }
-
-		public ScreenGrabber(int width, int height)
+		public Bitmap CaptureImage(int left, int top, int width, int height)
 		{
-			Width = width;
-			Height = height;
+			return NativeMethods.GetDesktopBitmap(left, top, width, height);
 		}
-
-		public Bitmap Grab(int left, int top)
-		{
-			var sw = new Stopwatch();
-			sw.Start();
-			var image = NativeMethods.GetDesktopBitmap(left, top, Width, Height);
-			var bmp = new Bitmap(image);
-			sw.Stop();
-			Console.WriteLine("Grabbed screen at {0}/{1} at {2}x{3} in {4}ms", left, top, Width, Height, sw.ElapsedMilliseconds);
-			return bmp;
-		}
-
 	}
 }
