@@ -15,6 +15,10 @@ flipping data before sending it to the display
 
 Very much work in progress
 
+## Credits
+
+- [Cropper](http://cropper.codeplex.com/) for the neat screen capture code
+
 ## License
 
 GPLv2, see [LICENSE](LICENSE).

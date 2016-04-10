@@ -38,10 +38,17 @@ namespace PinDmd
 		/// </summary>
 		public int Height { get; }
 
+		private static PinDmd _instance;
+
+		public static PinDmd GetInstance()
+		{
+			return _instance ?? (_instance = new PinDmd());
+		}
+
 		/// <summary>
 		/// Constructor, initializes the DMD.
 		/// </summary>
-		public PinDmd()
+		private PinDmd()
 		{
 			var port = Interop.Init(new Options() {
 				DmdRed = 255,
@@ -95,10 +102,16 @@ namespace PinDmd
 			if (!DeviceConnected) {
 				throw new DeviceNotConnectedException();
 			}
+			RenderImage(new Bitmap(path));
+		}
 
-			var img = new Bitmap(path);
-			if (img.Width != Width || img.Height != Height)
-			{
+		/// <summary>
+		/// Renders an image to the display.
+		/// </summary>
+		/// <param name="img">Any bitmap</param>
+		public void RenderImage(Bitmap img)
+		{
+			if (img.Width != Width || img.Height != Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
 			Console.WriteLine("Read bitmap at {0}x{1}.", img.Width, img.Height);
@@ -107,10 +120,8 @@ namespace PinDmd
 			var n = 0;
 			var sw = new Stopwatch();
 			sw.Start();
-			for (var y = 0; y < Height; y++)
-			{
-				for (var x = 0; x < Width; x++)
-				{
+			for (var y = 0; y < Height; y++) {
+				for (var x = 0; x < Width; x++) {
 					var color = img.GetPixel(x, y);
 					frame[(y * Width) + x].Red = color.R;
 					frame[(y * Width) + x].Green = color.G;
