@@ -32,8 +32,7 @@ namespace App
 			LocationChanged += Window_LocationChanged;
 			IsVisibleChanged += ToggleGrabbing;
 
-			_grabber = new ScreenGrabber();
-			_grabber.FramesPerSecond = 30;
+			_grabber = new ScreenGrabber { FramesPerSecond = 30 };
 			_dmd = PinDmd.PinDmd.GetInstance();
 		}
 

@@ -18,6 +18,10 @@ namespace PinDmd
 	/// Work in progress!
 	/// 
 	/// </summary>
+	/// <remarks>
+	/// This is a singleton. On first instantiation, the DMD is queried
+	/// and the status is kept during the lifetime of the application.
+	/// </remarks>
 	public class PinDmd
 	{
 		/// <summary>
@@ -44,6 +48,10 @@ namespace PinDmd
 		private readonly PixelRgb24[] _frameBuffer;
 		private IDisposable _currentFrameSequence;
 
+		/// <summary>
+		/// Returns the current instance of the PinDMD API.
+		/// </summary>
+		/// <returns></returns>
 		public static PinDmd GetInstance()
 		{
 			return _instance ?? (_instance = new PinDmd());
@@ -135,7 +143,12 @@ namespace PinDmd
 			Interop.RenderRgb24Frame(_frameBuffer);
 		}
 
-		public void StartRenderingSequence(IFrameSource source)
+		/// <summary>
+		/// Starts listening to the observable for frames and renders them on the 
+		/// display.
+		/// </summary>
+		/// <param name="source">Frame source</param>
+		public void StartRendering(IFrameSource source)
 		{
 			if (_currentFrameSequence != null) {
 				throw new FrameRenderingInProgressException("Sequence already in progress, stop first.");
@@ -143,7 +156,10 @@ namespace PinDmd
 			_currentFrameSequence = source.GetFrames().Subscribe(RenderImage);
 		}
 
-		public void StopRenderingSequence()
+		/// <summary>
+		/// Stops listening for frames by disposing the frame source.
+		/// </summary>
+		public void StopRendering()
 		{
 			_currentFrameSequence.Dispose();
 			_currentFrameSequence = null;
@@ -171,7 +187,7 @@ namespace PinDmd
 	/// <summary>
 	/// Thrown when a new rendering sequence is started during a previously started sequence
 	/// </summary>
-	/// <seealso cref="PinDmd.StopRenderingSequence"/>
+	/// <seealso cref="PinDmd.StopRendering"/>
 	public class FrameRenderingInProgressException : Exception
 	{
 		public FrameRenderingInProgressException(string message) : base(message)

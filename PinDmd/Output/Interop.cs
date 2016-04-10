@@ -3,75 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace PinDmd.Output
 {
-	class Setting
-	{
-		public const int Debug = 34;
-		public const int Brightness = 35;
-		public const int NumShades4 = 36;
-		public const int NumShades16 = 37;
-		public const int RainbowSpeed = 38;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	struct Options
-	{
-		public int DmdRed;
-		public int DmdGreen;
-		public int DmdBlue;
-		public int DmdPerc66;
-		public int DmdPerc33;
-		public int DmdPerc0;
-		public int DmdOnly;
-		public int DmdCompact;
-		public int DmdAntialias;
-		public int DmdColorize;
-		public int DmdRed66;
-		public int DmdGreen66;
-		public int DmdBlue66;
-		public int DmdRed33;
-		public int DmdGreen33;
-		public int DmdBlue33;
-		public int DmdRed0;
-		public int DmdGreen0;
-		public int DmdBlue0;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	struct PixelRgb24
-	{
-		public byte Red;
-		public byte Green;
-		public byte Blue;
-	}
-
-	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-	struct DeviceInfo
-	{
-		public byte Width;
-		public byte Height;
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 20)]
-		public string Firmware;
-	}
-
-	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-	struct DllInfo
-	{
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 20)]
-		public string Version;
-	}
-
-	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-	struct DeviceSettings
-	{
-		public byte DebugMode;
-		public byte Brightness;
-		public byte RainbowSpeed;
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 4)]
-		public string Shades4;
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
-		public string Shades16;
-	}
-
 	/// <summary>
 	/// P/Invoke signatures of pinDMD's header file
 	/// </summary>
@@ -142,5 +73,74 @@ namespace PinDmd.Output
 		/// Return Type: void
 		[DllImport("pinDMD.dll", EntryPoint = "disableDebug", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void DisableDebug();
+	}
+
+	class Setting
+	{
+		public const int Debug = 34;
+		public const int Brightness = 35;
+		public const int NumShades4 = 36;
+		public const int NumShades16 = 37;
+		public const int RainbowSpeed = 38;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	struct Options
+	{
+		public int DmdRed;
+		public int DmdGreen;
+		public int DmdBlue;
+		public int DmdPerc66;
+		public int DmdPerc33;
+		public int DmdPerc0;
+		public int DmdOnly;
+		public int DmdCompact;
+		public int DmdAntialias;
+		public int DmdColorize;
+		public int DmdRed66;
+		public int DmdGreen66;
+		public int DmdBlue66;
+		public int DmdRed33;
+		public int DmdGreen33;
+		public int DmdBlue33;
+		public int DmdRed0;
+		public int DmdGreen0;
+		public int DmdBlue0;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	struct PixelRgb24
+	{
+		public byte Red;
+		public byte Green;
+		public byte Blue;
+	}
+
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	struct DeviceInfo
+	{
+		public byte Width;
+		public byte Height;
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 20)]
+		public string Firmware;
+	}
+
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	struct DllInfo
+	{
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 20)]
+		public string Version;
+	}
+
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	struct DeviceSettings
+	{
+		public byte DebugMode;
+		public byte Brightness;
+		public byte RainbowSpeed;
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 4)]
+		public string Shades4;
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
+		public string Shades16;
 	}
 }
