@@ -35,7 +35,7 @@ namespace App
 
 		private void Window_LocationChanged(object sender, EventArgs e)
 		{
-			var bmp = _grabber.Grab2((int)Left, (int)Top);
+			var bmp = _grabber.Grab((int)Left, (int)Top);
 			if (_dmd.DeviceConnected) {
 				_dmd.RenderImage(bmp);
 			}
