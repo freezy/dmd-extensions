@@ -48,7 +48,7 @@ namespace App
 			}
 
 			// define sources
-			var grabber = new ScreenGrabber { FramesPerSecond = 25 };
+			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
 			var gridProcessor = new GridProcessor { Enabled = false };

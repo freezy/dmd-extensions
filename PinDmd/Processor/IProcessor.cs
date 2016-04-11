@@ -10,6 +10,6 @@ namespace PinDmd.Processor
 	public interface IProcessor
 	{
 		bool Enabled { get; set; }
-		Func<Bitmap, Bitmap> Process { get; }
+		Bitmap Process(Bitmap bmp);
 	}
 }

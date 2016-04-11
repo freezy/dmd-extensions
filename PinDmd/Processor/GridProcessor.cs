@@ -10,14 +10,13 @@ namespace PinDmd.Processor
 {
 	public class GridProcessor : IProcessor
 	{
-		public int Width { get; set; }
-		public int Height { get; set; }
+		public int Width { get; set; } = 128;
+		public int Height { get; set; } = 32;
 		public double Padding { get; set; }
 
 		public bool Enabled { get; set; } = true;
-		public Func<Bitmap, Bitmap> Process => ProcessBitmap;
 
-		private static Bitmap ProcessBitmap(Bitmap bmp)
+		public Bitmap Process(Bitmap bmp)
 		{
 			return bmp;
 		}

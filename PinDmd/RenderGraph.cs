@@ -21,14 +21,23 @@ namespace PinDmd
 
 		public void StartRendering()
 		{
+			if (_activeRenderers.Count > 0) {
+				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
+			}
+
+			var enabledProcessors = Processors.Where(processor => processor.Enabled);
+
 			foreach (var dest in Destinations) {
-				var obs = Source.GetFrames();
+				var frames = Source.GetFrames();
 				if (Processors != null) {
-					foreach (var processor in Processors.Where(processor => processor.Enabled)) {
-						obs.Select(processor.Process);
-					}
+					_activeRenderers.Add(frames.Subscribe(bmp => {
+						bmp = enabledProcessors.Aggregate(bmp, (current, processor) => processor.Process(current));
+						dest.RenderBitmap(bmp);
+					}));
+
+				} else {
+					_activeRenderers.Add(frames.Subscribe(dest.Render));
 				}
-				_activeRenderers.Add(obs.Subscribe(dest.Render));
 			}
 		}
 
@@ -37,6 +46,8 @@ namespace PinDmd
 			foreach (var activeRenderer in _activeRenderers) {
 				activeRenderer.Dispose();
 			}
+			Console.WriteLine("{0} renderer(s) stopped.", _activeRenderers.Count);
+			_activeRenderers.Clear();
 		}
 
 		public void Render(Bitmap bmp)
@@ -45,7 +56,12 @@ namespace PinDmd
 				dest.RenderBitmap(bmp);
 			}
 		}
+	}
 
-
+	public class RendersAlreadyActiveException : Exception
+	{
+		public RendersAlreadyActiveException(string message) : base(message)
+		{
+		}
 	}
 }

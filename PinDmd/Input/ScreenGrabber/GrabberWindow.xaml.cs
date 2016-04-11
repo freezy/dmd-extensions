@@ -21,7 +21,6 @@ namespace PinDmd.Input.ScreenGrabber
 		public GrabberWindow(RenderGraph graph)
 		{
 			InitializeComponent();
-			LocationChanged += Window_LocationChanged;
 			IsVisibleChanged += ToggleGrabbing;
 
 			Borders.MouseLeftButtonDown += MoveStart;
@@ -42,8 +41,7 @@ namespace PinDmd.Input.ScreenGrabber
 			}
 		}
 
-		#region Move and Resize
-		private void Window_LocationChanged(object sender, EventArgs e)
+		private void PositionChanged()
 		{
 			_whenPositionChanges.OnNext(new System.Drawing.Rectangle {
 				X = (int)Left,
@@ -53,11 +51,12 @@ namespace PinDmd.Input.ScreenGrabber
 			});
 		}
 
+		#region Move and Resize
+
 		private bool _moving;
 		private bool _resizing;
 		private Point _resizeLastPos;
 		private Point _moveLastPos;
-
 
 		private void MoveStart(object sender, MouseButtonEventArgs e)
 		{
@@ -86,7 +85,9 @@ namespace PinDmd.Input.ScreenGrabber
 				var pos = PointToScreen(e.GetPosition(this));
 				Top += pos.Y - _moveLastPos.Y;
 				Left += pos.X - _moveLastPos.X;
+
 				_moveLastPos = pos;
+				PositionChanged();
 			}
 		}
 
@@ -117,7 +118,6 @@ namespace PinDmd.Input.ScreenGrabber
 			if (rect != null && _resizing) {
 
 				var pos = PointToScreen(e.GetPosition(this));
-				Console.WriteLine("Moving to {0}", pos);
 
 				if (rect.Name.ToLower().Contains("right")) {
 					var width = Width + pos.X - _resizeLastPos.X;
@@ -152,6 +152,7 @@ namespace PinDmd.Input.ScreenGrabber
 				}
 
 				_resizeLastPos = pos;
+				PositionChanged();
 			}
 		}
 		#endregion
