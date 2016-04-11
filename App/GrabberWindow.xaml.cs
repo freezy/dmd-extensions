@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
-using System.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,10 +23,13 @@ namespace App
 	/// </summary>
 	public partial class GrabberWindow : Window
 	{
-		private readonly ScreenGrabber _grabber;
-		private readonly List<IFrameDestination> _renderers;
 
-		public GrabberWindow(List<IFrameDestination> renderers)
+		public IObservable<System.Drawing.Rectangle> WhenPositionChanges => _whenPositionChanges;
+		
+		private readonly List<RenderGraph> _graphs;
+		private readonly Subject<System.Drawing.Rectangle> _whenPositionChanges = new Subject<System.Drawing.Rectangle>();
+
+		public GrabberWindow(List<RenderGraph> graphs)
 		{
 			InitializeComponent();
 			LocationChanged += Window_LocationChanged;
@@ -36,32 +39,33 @@ namespace App
 			Borders.MouseLeftButtonUp += MoveEnd;
 			Borders.MouseMove += MoveMoving;
 
-			_renderers = renderers;
-			_grabber = new ScreenGrabber { FramesPerSecond = 25 };
+			_graphs = graphs;
 		}
-
-		#region Move and Resize
+		
 		private void ToggleGrabbing(object sender, DependencyPropertyChangedEventArgs e)
 		{
 			if (IsVisible) {
 				Console.WriteLine("Starting grabbing...");
-				foreach (var dest in _renderers) {
-					dest.StartRendering(_grabber);
+				foreach (var graph in _graphs) {
+					graph.StartRendering();
 				}
 			} else {
 				Console.WriteLine("Stopping grabbing...");
-				foreach (var dest in _renderers) {
-					dest.StopRendering();
+				foreach (var graph in _graphs) {
+					graph.StopRendering();
 				}
 			}
 		}
 
+		#region Move and Resize
 		private void Window_LocationChanged(object sender, EventArgs e)
 		{
-			_grabber.Left = (int)Left;
-			_grabber.Top = (int)Top;
-			_grabber.Width = (int)Width;
-			_grabber.Height = (int)Height;
+			_whenPositionChanges.OnNext(new System.Drawing.Rectangle {
+				X = (int)Left,
+				Y = (int)Top,
+				Width = (int)Width,
+				Height = (int)Height,
+			});
 		}
 
 		private bool _moving;

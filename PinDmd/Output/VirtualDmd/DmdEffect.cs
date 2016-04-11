@@ -5,6 +5,10 @@ using System.Windows.Media.Effects;
 
 namespace PinDmd.Output.VirtualDmd
 {
+	/// <summary>
+	/// An effect that transforms upscaled pixel into dots.
+	/// </summary>
+	/// <see cref="http://stackoverflow.com/questions/25452349/wpf-shader-effect-antialiasing-not-showing"/>
 	public class DmdEffect : ShaderEffect
 	{
 		static DmdEffect()

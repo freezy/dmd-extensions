@@ -66,8 +66,12 @@
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PinDmd.cs" />
+    <Compile Include="Processor\GridProcessor.cs" />
+    <Compile Include="Processor\IProcessor.cs" />
+    <Compile Include="Processor\ResizeProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Input\ScreenGrabber.cs" />
+    <Compile Include="RenderGraph.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Output\VirtualDmd\Dmd.ps" />

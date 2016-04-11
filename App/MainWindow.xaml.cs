@@ -14,6 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using PinDmd;
+using PinDmd.Input;
 using PinDmd.Output;
 
 namespace App
@@ -25,16 +27,16 @@ namespace App
 	{
 		private readonly GrabberWindow _grabberWindow;
 		private readonly List<IFrameDestination> _renderers = new List<IFrameDestination>();
+		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 
 		public MainWindow()
 		{
 			InitializeComponent();
 			Closing += OnWindowClosing;
 
-			// output to both virtual dmd and pindmd if connected
+			// define renderers
 			_renderers.Add(VirtualDmd);
 			Console.Text += "Added VirtualDMD renderer.\n";
-
 			var pinDmd = PinDmd.PinDmd.GetInstance();
 			if (pinDmd.DeviceConnected) {
 				_renderers.Add(pinDmd);
@@ -44,7 +46,19 @@ namespace App
 			} else {
 				Console.Text += "PinDMD3 not connected.\n";
 			}
-			_grabberWindow = new GrabberWindow(_renderers);
+
+			// define sources
+			var grabber = new ScreenGrabber { FramesPerSecond = 25 };
+
+
+			// chain them up
+			_graphs.Add(new RenderGraph {
+				Source = grabber,
+				Destinations = _renderers
+			});
+
+			_grabberWindow = new GrabberWindow(_graphs);
+
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
