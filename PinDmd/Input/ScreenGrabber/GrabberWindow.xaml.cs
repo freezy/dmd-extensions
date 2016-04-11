@@ -22,6 +22,8 @@ namespace PinDmd.Input.ScreenGrabber
 		{
 			InitializeComponent();
 			IsVisibleChanged += ToggleGrabbing;
+			SizeChanged += PositionChanged;
+			LocationChanged += PositionChanged;
 
 			Borders.MouseLeftButtonDown += MoveStart;
 			Borders.MouseLeftButtonUp += MoveEnd;
@@ -29,7 +31,17 @@ namespace PinDmd.Input.ScreenGrabber
 
 			_graph = graph;
 		}
-		
+
+		private void PositionChanged(object sender, EventArgs e)
+		{
+			_whenPositionChanges.OnNext(new System.Drawing.Rectangle {
+				X = (int)Left,
+				Y = (int)Top,
+				Width = (int)Width,
+				Height = (int)Height,
+			});
+		}
+
 		private void ToggleGrabbing(object sender, DependencyPropertyChangedEventArgs e)
 		{
 			if (IsVisible) {
@@ -39,16 +51,6 @@ namespace PinDmd.Input.ScreenGrabber
 				Console.WriteLine("Stopping grabbing...");
 				_graph.StopRendering();
 			}
-		}
-
-		private void PositionChanged()
-		{
-			_whenPositionChanges.OnNext(new System.Drawing.Rectangle {
-				X = (int)Left,
-				Y = (int)Top,
-				Width = (int)Width,
-				Height = (int)Height,
-			});
 		}
 
 		#region Move and Resize
@@ -87,7 +89,6 @@ namespace PinDmd.Input.ScreenGrabber
 				Left += pos.X - _moveLastPos.X;
 
 				_moveLastPos = pos;
-				PositionChanged();
 			}
 		}
 
@@ -152,7 +153,6 @@ namespace PinDmd.Input.ScreenGrabber
 				}
 
 				_resizeLastPos = pos;
-				PositionChanged();
 			}
 		}
 		#endregion

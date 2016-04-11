@@ -51,8 +51,8 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.5 };
-			var resizeProcessor = new ResizeProcessor { Enabled = false };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			var resizeProcessor = new ResizeProcessor { Enabled = true };
 
 			// chain them up
 			_graph = new RenderGraph {
@@ -61,14 +61,14 @@ namespace App
 				Processors = new List<IProcessor> { gridProcessor, resizeProcessor }
 			};
 
-			_grabberWindow = new GrabberWindow(_graph);
+			_grabberWindow = new GrabberWindow(_graph) { Width = 256, Height = 64 };
 			_grabberWindow.WhenPositionChanges.Subscribe(grabber.Move);
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
 			try {
-				var bmp = new Bitmap("rgb-128x32.png");
+				var bmp = new BitmapImage(new Uri("rgb-128x32.png", UriKind.Relative));
 				_graph.Render(bmp);
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;

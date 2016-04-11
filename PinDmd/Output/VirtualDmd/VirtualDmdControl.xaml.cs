@@ -22,30 +22,14 @@ namespace PinDmd.Output.VirtualDmd
 	/// </summary>
 	public partial class VirtualDmdControl : UserControl, IFrameDestination
 	{
-		public Action<Bitmap> Render => RenderBitmap;
-
 		public VirtualDmdControl()
 		{
 			InitializeComponent();
 		}
 
-		public void RenderBitmap(Bitmap bmp)
+		public void Render(BitmapSource bmp)
 		{
-			Dispatcher.Invoke(() => Dmd.Source = Convert(bmp));
-		}
-
-		public BitmapSource Convert(Bitmap bitmap)
-		{
-			var bitmapData = bitmap.LockBits(
-				new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-				System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
-
-			var bitmapSource = BitmapSource.Create(
-				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null,
-				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
-
-			bitmap.UnlockBits(bitmapData);
-			return bitmapSource;
+			Dispatcher.Invoke(() => Dmd.Source = bmp);
 		}
 	}
 }

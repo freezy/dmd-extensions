@@ -4,13 +4,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using PinDmd.Input;
 
 namespace PinDmd.Output
 {
 	public interface IFrameDestination
 	{
-		Action<Bitmap> Render { get; }
-		void RenderBitmap(Bitmap bmp);
+		void Render(BitmapSource bmp);
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Reactive.Linq;
+using System.Windows.Media.Imaging;
 
 namespace PinDmd.Input.ScreenGrabber
 {
@@ -16,7 +17,7 @@ namespace PinDmd.Input.ScreenGrabber
 		public int Width { get; set; } = 128;
 		public int Height { get; set; } = 32;
 
-		public IObservable<Bitmap> GetFrames()
+		public IObservable<BitmapSource> GetFrames()
 		{
 			return Observable
 				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
@@ -31,7 +32,7 @@ namespace PinDmd.Input.ScreenGrabber
 			Height = rect.Height;
 		}
 
-		private Bitmap CaptureImage()
+		private BitmapSource CaptureImage()
 		{
 			return NativeCapture.GetDesktopBitmap(Left, Top, Width, Height);
 		}

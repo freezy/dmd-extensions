@@ -4,12 +4,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace PinDmd.Processor
 {
 	public interface IProcessor
 	{
 		bool Enabled { get; set; }
-		Bitmap Process(Bitmap bmp);
+		BitmapSource Process(BitmapSource bmp);
 	}
 }

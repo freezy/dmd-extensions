@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using PinDmd.Input;
 using PinDmd.Output;
 using PinDmd.Processor;
@@ -29,15 +30,15 @@ namespace PinDmd
 
 			foreach (var dest in Destinations) {
 				var frames = Source.GetFrames();
-				if (Processors != null) {
-					_activeRenderers.Add(frames.Subscribe(bmp => {
-						bmp = enabledProcessors.Aggregate(bmp, (current, processor) => processor.Process(current));
-						dest.RenderBitmap(bmp);
-					}));
-
-				} else {
-					_activeRenderers.Add(frames.Subscribe(dest.Render));
-				}
+				_activeRenderers.Add(frames.Subscribe(bmp => {
+					
+					if (Processors != null) {
+						bmp = enabledProcessors.Aggregate(bmp,
+							(current, processor) => processor.Process(current));
+					}
+					bmp.Freeze();
+					dest.Render(bmp);
+				}));
 			}
 		}
 
@@ -50,10 +51,10 @@ namespace PinDmd
 			_activeRenderers.Clear();
 		}
 
-		public void Render(Bitmap bmp)
+		public void Render(BitmapSource bmp)
 		{
 			foreach (var dest in Destinations) {
-				dest.RenderBitmap(bmp);
+				dest.Render(bmp);
 			}
 		}
 	}

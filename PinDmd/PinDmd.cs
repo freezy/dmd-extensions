@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media.Imaging;
 using PinDmd.Input;
 using PinDmd.Output;
 using PinDmd.Output.PinDmd3;
@@ -44,8 +46,6 @@ namespace PinDmd
 		/// Height in pixels of the display, 32 for PinDMD3
 		/// </summary>
 		public int Height { get; }
-
-		public Action<Bitmap> Render => RenderBitmap;
 
 		private static PinDmd _instance;
 		private readonly PixelRgb24[] _frameBuffer;
@@ -113,30 +113,37 @@ namespace PinDmd
 		/// </summary>
 		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
 		/// <param name="path">Path to the image, can be anything <see cref="T:System.Drawing.Bitmap"/> understands.</param>
-		public void RenderBitmap(string path)
+		public void Render(string path)
 		{
 			if (!DeviceConnected) {
 				throw new DeviceNotConnectedException();
 			}
-			RenderBitmap(new Bitmap(path));
+			Render(new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute)));
 		}
 
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
-		/// <param name="img">Any bitmap</param>
-		public void RenderBitmap(Bitmap img)
+		/// <param name="bmp">Any bitmap</param>
+		public void Render(BitmapSource bmp)
 		{
 			if (!DeviceConnected) {
-				return;
-				//throw new DeviceNotConnectedException();
+				throw new DeviceNotConnectedException();
 			}
-			if (img.Width != Width || img.Height != Height) {
+			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
+
+			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+			var bytes = new byte[bytesPerPixel];
+			var rect = new Int32Rect(0, 0, 1, 1);
+
 			for (var y = 0; y < Height; y++) {
 				for (var x = 0; x < Width; x++) {
-					var color = img.GetPixel(x, y);
+					rect.X = x;
+					rect.Y = y;
+					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+					var color = Color.FromArgb(0xFF, bytes[2], bytes[1], bytes[0]);
 					_frameBuffer[(y * Width) + x].Red = color.R;
 					_frameBuffer[(y * Width) + x].Green = color.G;
 					_frameBuffer[(y * Width) + x].Blue = color.B;

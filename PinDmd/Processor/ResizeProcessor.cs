@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 
@@ -17,21 +18,15 @@ namespace PinDmd.Processor
 
 		public bool Enabled { get; set; } = true;
 
-		public Bitmap Process(Bitmap bmp)
+		public BitmapSource Process(BitmapSource bmp)
 		{
-			if (bmp.Width == Width && bmp.Height == Height) {
+			if (bmp.PixelWidth == Width && bmp.PixelHeight == Height) {
 				return bmp;
 			}
-
 			var sw = new Stopwatch();
 			sw.Start();
-			var result = new Bitmap(Width, Height);
-			using (var g = Graphics.FromImage(result)) {
-				g.DrawImage(bmp, 0, 0, Width, Height);
-			}
-			sw.Stop();
-			//Console.WriteLine("Resized from {0}x{1} to {2}x{3} in {4}ms.", bmp.Width, bmp.Height, result.Width, result.Height, sw.ElapsedMilliseconds);
-			return result;
+			var resized = new TransformedBitmap(bmp, new ScaleTransform(Width / bmp.Width, Height / bmp.Height, 0, 0));
+			return BitmapFrame.Create(resized);
 		}
 	}
 }

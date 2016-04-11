@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace PinDmd.Input.ScreenGrabber
 {
@@ -126,7 +128,7 @@ namespace PinDmd.Input.ScreenGrabber
 		/// <param name="rectangle">The rectangular area to capture.</param>
 		/// <returns>A <see cref="System.Drawing.Image"/> containg an image of the desktop 
 		/// at the specified coordinates</returns>
-		internal static Bitmap GetDesktopBitmap(Rectangle rectangle)
+		internal static BitmapSource GetDesktopBitmap(Rectangle rectangle)
 		{
 			return GetDesktopBitmap(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 		}
@@ -140,12 +142,11 @@ namespace PinDmd.Input.ScreenGrabber
 		/// <param name="height">The height of the requested area</param> 
 		/// <returns>A <see cref="System.Drawing.Image"/> of the desktop at 
 		/// the specified coordinates.</returns> 
-		internal static Bitmap GetDesktopBitmap(int x, int y, int width, int height)
+		internal static BitmapSource GetDesktopBitmap(int x, int y, int width, int height)
 		{
 			//Create the image and graphics to capture the portion of the desktop.
 			var destinationImage = new Bitmap(width, height);
 			Graphics destinationGraphics = Graphics.FromImage(destinationImage);
-
 			IntPtr destinationGraphicsHandle = IntPtr.Zero;
 
 			try {
@@ -162,7 +163,21 @@ namespace PinDmd.Input.ScreenGrabber
 			}
 
 			// Don't forget to dispose this image
-			return destinationImage;
+			return Convert(destinationImage);
+		}
+
+		internal static BitmapSource Convert(Bitmap bitmap)
+		{
+			var bitmapData = bitmap.LockBits(
+				new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
+				System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
+
+			var bitmapSource = BitmapSource.Create(
+				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null,
+				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+
+			bitmap.UnlockBits(bitmapData);
+			return bitmapSource;
 		}
 
 		#endregion
