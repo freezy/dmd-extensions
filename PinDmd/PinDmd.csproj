@@ -58,10 +58,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Input\IFrameSource.cs" />
+    <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
+      <DependentUpon>GrabberWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Output\VirtualDmd\DmdEffect.cs" />
     <Compile Include="Output\IFrameDestination.cs" />
     <Compile Include="Output\PinDmd3\Interop.cs" />
-    <Compile Include="Input\NativeCapture.cs" />
+    <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
     <Compile Include="Output\VirtualDmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
@@ -70,7 +73,7 @@
     <Compile Include="Processor\IProcessor.cs" />
     <Compile Include="Processor\ResizeProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Input\ScreenGrabber.cs" />
+    <Compile Include="Input\ScreenGrabber\ScreenGrabber.cs" />
     <Compile Include="RenderGraph.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +88,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Input\ScreenGrabber\GrabberWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Output\VirtualDmd\VirtualDmdControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

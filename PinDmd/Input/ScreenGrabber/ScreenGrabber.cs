@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Reactive.Linq;
 
-namespace PinDmd.Input
+namespace PinDmd.Input.ScreenGrabber
 {
 	/// <summary>
 	/// A screen grabber that captures a portion of the desktop given by 
@@ -15,6 +15,14 @@ namespace PinDmd.Input
 		public int Top { get; set; }
 		public int Width { get; set; } = 128;
 		public int Height { get; set; } = 32;
+
+		public void Move(Rectangle rect)
+		{
+			Left = rect.X;
+			Top = rect.Y;
+			Width = rect.Width;
+			Height = rect.Height;
+		}
 
 		public IObservable<Bitmap> GetFrames()
 		{

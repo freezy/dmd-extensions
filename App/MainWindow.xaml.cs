@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Drawing;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -16,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using PinDmd;
 using PinDmd.Input;
+using PinDmd.Input.ScreenGrabber;
 using PinDmd.Output;
 
 namespace App
@@ -50,7 +50,6 @@ namespace App
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 25 };
 
-
 			// chain them up
 			_graphs.Add(new RenderGraph {
 				Source = grabber,
@@ -58,7 +57,7 @@ namespace App
 			});
 
 			_grabberWindow = new GrabberWindow(_graphs);
-
+			_grabberWindow.WhenPositionChanges.Subscribe(grabber.Move);
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)

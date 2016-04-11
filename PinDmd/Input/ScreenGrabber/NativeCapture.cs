@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace PinDmd.Input
+namespace PinDmd.Input.ScreenGrabber
 {
 	/// <summary>
 	/// Class for getting images of the desktop.
