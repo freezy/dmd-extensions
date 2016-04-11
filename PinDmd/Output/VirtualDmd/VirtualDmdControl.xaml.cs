@@ -22,38 +22,16 @@ namespace PinDmd.Output.VirtualDmd
 	/// </summary>
 	public partial class VirtualDmdControl : UserControl, IFrameDestination
 	{
-		private IDisposable _currentFrameSequence;
+		public Action<Bitmap> Render => RenderBitmap;
 
 		public VirtualDmdControl()
 		{
 			InitializeComponent();
 		}
 
-		public void StartRendering(IFrameSource source)
-		{
-			if (_currentFrameSequence != null) {
-				throw new RenderingInProgressException("Sequence already in progress, stop first.");
-			}
-			_currentFrameSequence = source.GetFrames().Subscribe(bmp => {
-				Dispatcher.Invoke(() => {
-					var imageSource = Convert(bmp);
-					Dmd.Source = imageSource;
-				});
-			});
-		}
-
-		public void StopRendering()
-		{
-			_currentFrameSequence.Dispose();
-			_currentFrameSequence = null;
-		}
-
 		public void RenderBitmap(Bitmap bmp)
 		{
-			Dispatcher.Invoke(() => {
-				var imageSource = Convert(bmp);
-				Dmd.Source = imageSource;
-			});
+			Dispatcher.Invoke(() => Dmd.Source = Convert(bmp));
 		}
 
 		public BitmapSource Convert(Bitmap bitmap)

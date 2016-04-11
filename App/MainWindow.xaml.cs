@@ -26,7 +26,6 @@ namespace App
 	public partial class MainWindow : Window
 	{
 		private readonly GrabberWindow _grabberWindow;
-		private readonly List<IFrameDestination> _renderers = new List<IFrameDestination>();
 		private readonly RenderGraph _graph;
 
 		public MainWindow()
@@ -35,11 +34,11 @@ namespace App
 			Closing += OnWindowClosing;
 
 			// define renderers
-			_renderers.Add(VirtualDmd);
+			var renderers = new List<IFrameDestination> { VirtualDmd };
 			Console.Text += "Added VirtualDMD renderer.\n";
 			var pinDmd = PinDmd.PinDmd.GetInstance();
 			if (pinDmd.DeviceConnected) {
-				_renderers.Add(pinDmd);
+				renderers.Add(pinDmd);
 				Console.Text += $"Added PinDMD3 renderer.\n";
 				Console.Text += $"PinDMD3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
 				Console.Text += $"Firmware: {pinDmd.Firmware}\n";
@@ -53,7 +52,7 @@ namespace App
 			// chain them up
 			_graph = new RenderGraph {
 				Source = grabber,
-				Destinations = _renderers
+				Destinations = renderers
 			};
 
 			_grabberWindow = new GrabberWindow(_graph);
@@ -64,9 +63,7 @@ namespace App
 		{
 			try {
 				var bmp = new Bitmap("rgb-128x32.png");
-				foreach (var renderer in _renderers) {
-					renderer.RenderBitmap(bmp);
-				}
+				_graph.Render(bmp);
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;
 			}

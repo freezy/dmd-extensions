@@ -10,11 +10,18 @@ namespace PinDmd.Input.ScreenGrabber
 	/// </summary>
 	public class ScreenGrabber : IFrameSource
 	{
-		public double FramesPerSecond { get; set; } = 1;
+		public double FramesPerSecond { get; set; } = 15;
 		public int Left { get; set; }
 		public int Top { get; set; }
 		public int Width { get; set; } = 128;
 		public int Height { get; set; } = 32;
+
+		public IObservable<Bitmap> GetFrames()
+		{
+			return Observable
+				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+				.Select(x => CaptureImage());
+		}
 
 		public void Move(Rectangle rect)
 		{
@@ -22,13 +29,6 @@ namespace PinDmd.Input.ScreenGrabber
 			Top = rect.Y;
 			Width = rect.Width;
 			Height = rect.Height;
-		}
-
-		public IObservable<Bitmap> GetFrames()
-		{
-			return Observable
-				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-				.Select(x => CaptureImage());
 		}
 
 		private Bitmap CaptureImage()

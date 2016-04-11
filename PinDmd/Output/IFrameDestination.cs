@@ -10,8 +10,7 @@ namespace PinDmd.Output
 {
 	public interface IFrameDestination
 	{
-		void StartRendering(IFrameSource source);
-		void StopRendering();
+		Action<Bitmap> Render { get; }
 		void RenderBitmap(Bitmap bmp);
 	}
 }

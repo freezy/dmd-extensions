@@ -45,9 +45,10 @@ namespace PinDmd
 		/// </summary>
 		public int Height { get; }
 
+		public Action<Bitmap> Render => RenderBitmap;
+
 		private static PinDmd _instance;
 		private readonly PixelRgb24[] _frameBuffer;
-		private IDisposable _currentFrameSequence;
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
@@ -143,28 +144,6 @@ namespace PinDmd
 			}
 			Interop.RenderRgb24Frame(_frameBuffer);
 		}
-
-		/// <summary>
-		/// Starts listening to the observable for frames and renders them on the 
-		/// display.
-		/// </summary>
-		/// <param name="source">Frame source</param>
-		public void StartRendering(IFrameSource source)
-		{
-			if (_currentFrameSequence != null) {
-				throw new RenderingInProgressException("Sequence already in progress, stop first.");
-			}
-			_currentFrameSequence = source.GetFrames().Subscribe(RenderBitmap);
-		}
-
-		/// <summary>
-		/// Stops listening for frames by disposing the frame source.
-		/// </summary>
-		public void StopRendering()
-		{
-			_currentFrameSequence.Dispose();
-			_currentFrameSequence = null;
-		}
 	}
 
 	/// <summary>
@@ -183,16 +162,5 @@ namespace PinDmd
 	/// <seealso cref="PinDmd.DeviceConnected"/>
 	public class DeviceNotConnectedException : Exception
 	{
-	}
-
-	/// <summary>
-	/// Thrown when a new rendering sequence is started during a previously started sequence
-	/// </summary>
-	/// <seealso cref="PinDmd.StopRendering"/>
-	public class RenderingInProgressException : Exception
-	{
-		public RenderingInProgressException(string message) : base(message)
-		{
-		}
 	}
 }
