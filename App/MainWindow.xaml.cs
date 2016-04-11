@@ -27,7 +27,7 @@ namespace App
 	{
 		private readonly GrabberWindow _grabberWindow;
 		private readonly List<IFrameDestination> _renderers = new List<IFrameDestination>();
-		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
+		private readonly RenderGraph _graph;
 
 		public MainWindow()
 		{
@@ -51,12 +51,12 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 25 };
 
 			// chain them up
-			_graphs.Add(new RenderGraph {
+			_graph = new RenderGraph {
 				Source = grabber,
 				Destinations = _renderers
-			});
+			};
 
-			_grabberWindow = new GrabberWindow(_graphs);
+			_grabberWindow = new GrabberWindow(_graph);
 			_grabberWindow.WhenPositionChanges.Subscribe(grabber.Move);
 		}
 

@@ -15,10 +15,10 @@ namespace PinDmd.Input.ScreenGrabber
 
 		public IObservable<System.Drawing.Rectangle> WhenPositionChanges => _whenPositionChanges;
 		
-		private readonly List<RenderGraph> _graphs;
+		private readonly RenderGraph _graph;
 		private readonly Subject<System.Drawing.Rectangle> _whenPositionChanges = new Subject<System.Drawing.Rectangle>();
 
-		public GrabberWindow(List<RenderGraph> graphs)
+		public GrabberWindow(RenderGraph graph)
 		{
 			InitializeComponent();
 			LocationChanged += Window_LocationChanged;
@@ -28,21 +28,17 @@ namespace PinDmd.Input.ScreenGrabber
 			Borders.MouseLeftButtonUp += MoveEnd;
 			Borders.MouseMove += MoveMoving;
 
-			_graphs = graphs;
+			_graph = graph;
 		}
 		
 		private void ToggleGrabbing(object sender, DependencyPropertyChangedEventArgs e)
 		{
 			if (IsVisible) {
 				Console.WriteLine("Starting grabbing...");
-				foreach (var graph in _graphs) {
-					graph.StartRendering();
-				}
+				_graph.StartRendering();
 			} else {
 				Console.WriteLine("Stopping grabbing...");
-				foreach (var graph in _graphs) {
-					graph.StopRendering();
-				}
+				_graph.StopRendering();
 			}
 		}
 
