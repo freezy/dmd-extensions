@@ -46,13 +46,13 @@ namespace App
 			} else {
 				Console.Text += "PinDMD3 not connected.\n";
 			}
-
+			
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = false };
-			var resizeProcessor = new ResizeProcessor { Enabled = true };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			var resizeProcessor = new ResizeProcessor { Enabled = false };
 
 			// chain them up
 			_graph = new RenderGraph {
