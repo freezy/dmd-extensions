@@ -51,7 +51,7 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.5 };
 			var resizeProcessor = new ResizeProcessor { Enabled = false };
 
 			// chain them up
