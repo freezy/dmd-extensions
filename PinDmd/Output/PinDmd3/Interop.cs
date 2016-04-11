@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace PinDmd.Output
+namespace PinDmd.Output.PinDmd3
 {
 	/// <summary>
 	/// P/Invoke signatures of pinDMD's header file

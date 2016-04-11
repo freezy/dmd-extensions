@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using PinDmd;
 using PinDmd.Input;
+using PinDmd.Output;
 
 namespace App
 {
@@ -23,9 +24,9 @@ namespace App
 	public partial class GrabberWindow : Window
 	{
 		private readonly ScreenGrabber _grabber;
-		private readonly PinDmd.PinDmd _dmd;
+		private readonly List<IFrameDestination> _renderers;
 
-		public GrabberWindow()
+		public GrabberWindow(List<IFrameDestination> renderers)
 		{
 			InitializeComponent();
 			LocationChanged += Window_LocationChanged;
@@ -35,27 +36,23 @@ namespace App
 			Borders.MouseLeftButtonUp += MoveEnd;
 			Borders.MouseMove += MoveMoving;
 
-			_grabber = new ScreenGrabber { FramesPerSecond = 30 };
-			_dmd = PinDmd.PinDmd.GetInstance();
+			_renderers = renderers;
+			_grabber = new ScreenGrabber { FramesPerSecond = 25 };
 		}
 
-		/*
-		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-		{
-			base.OnMouseLeftButtonDown(e);
-
-			// Begin dragging the window
-			DragMove();
-		}*/
-
+		#region Move and Resize
 		private void ToggleGrabbing(object sender, DependencyPropertyChangedEventArgs e)
 		{
 			if (IsVisible) {
 				Console.WriteLine("Starting grabbing...");
-				//_dmd.StartRendering(_grabber);
+				foreach (var dest in _renderers) {
+					dest.StartRendering(_grabber);
+				}
 			} else {
 				Console.WriteLine("Stopping grabbing...");
-				//_dmd.StopRendering();
+				foreach (var dest in _renderers) {
+					dest.StopRendering();
+				}
 			}
 		}
 
@@ -168,5 +165,6 @@ namespace App
 				_resizeLastPos = pos;
 			}
 		}
+		#endregion
 	}
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using PinDmd.Input;
 using PinDmd.Output;
+using PinDmd.Output.PinDmd3;
 
 namespace PinDmd
 {
@@ -22,7 +23,7 @@ namespace PinDmd
 	/// This is a singleton. On first instantiation, the DMD is queried
 	/// and the status is kept during the lifetime of the application.
 	/// </remarks>
-	public class PinDmd
+	public class PinDmd : IFrameDestination
 	{
 		/// <summary>
 		/// True if device is connected, false otherwise. Check this before accessing anything else.
@@ -111,19 +112,19 @@ namespace PinDmd
 		/// </summary>
 		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
 		/// <param name="path">Path to the image, can be anything <see cref="T:System.Drawing.Bitmap"/> understands.</param>
-		public void RenderImage(string path)
+		public void RenderBitmap(string path)
 		{
 			if (!DeviceConnected) {
 				throw new DeviceNotConnectedException();
 			}
-			RenderImage(new Bitmap(path));
+			RenderBitmap(new Bitmap(path));
 		}
 
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
 		/// <param name="img">Any bitmap</param>
-		public void RenderImage(Bitmap img)
+		public void RenderBitmap(Bitmap img)
 		{
 			if (!DeviceConnected) {
 				return;
@@ -153,7 +154,7 @@ namespace PinDmd
 			if (_currentFrameSequence != null) {
 				throw new RenderingInProgressException("Sequence already in progress, stop first.");
 			}
-			_currentFrameSequence = source.GetFrames().Subscribe(RenderImage);
+			_currentFrameSequence = source.GetFrames().Subscribe(RenderBitmap);
 		}
 
 		/// <summary>

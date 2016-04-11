@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using PinDmd.Output;
 
 namespace App
 {
@@ -22,40 +23,37 @@ namespace App
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private PinDmd.PinDmd _dmd;
-		private readonly GrabberWindow _grabberWindow = new GrabberWindow();
+		private readonly GrabberWindow _grabberWindow;
+		private readonly List<IFrameDestination> _renderers = new List<IFrameDestination>();
 
 		public MainWindow()
 		{
 			InitializeComponent();
 			Closing += OnWindowClosing;
-		}
 
-		private void InitButton_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				_dmd = PinDmd.PinDmd.GetInstance();
-				Console.Text += $"Display initialized. Connected: {_dmd.DeviceConnected}.\n";
+			// output to both virtual dmd and pindmd if connected
+			_renderers.Add(VirtualDmd);
+			Console.Text += "Added VirtualDMD renderer.\n";
 
-				if (_dmd.DeviceConnected) {
-					Console.Text += $"Display detected at {_dmd.Width}x{_dmd.Height}\n";
-					Console.Text += $"Firmware: {_dmd.Firmware}\n";
-
-				} else {
-					Console.Text += "Device not connected.";
-				}
-
-			} catch (Exception err) {
-				Console.Text = err.StackTrace;
+			var pinDmd = PinDmd.PinDmd.GetInstance();
+			if (pinDmd.DeviceConnected) {
+				_renderers.Add(pinDmd);
+				Console.Text += $"Added PinDMD3 renderer.\n";
+				Console.Text += $"PinDMD3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
+				Console.Text += $"Firmware: {pinDmd.Firmware}\n";
+			} else {
+				Console.Text += "PinDMD3 not connected.\n";
 			}
+			_grabberWindow = new GrabberWindow(_renderers);
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
 			try {
-				_dmd.RenderImage("rgb-128x32.png");
-
+				var bmp = new Bitmap("rgb-128x32.png");
+				foreach (var renderer in _renderers) {
+					renderer.RenderBitmap(bmp);
+				}
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;
 			}
