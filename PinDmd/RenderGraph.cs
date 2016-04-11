@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PinDmd.Input;
@@ -21,7 +22,13 @@ namespace PinDmd
 		public void StartRendering()
 		{
 			foreach (var dest in Destinations) {
-				_activeRenderers.Add(Source.GetFrames().Subscribe(dest.Render));
+				var obs = Source.GetFrames();
+				if (Processors != null) {
+					foreach (var processor in Processors.Where(processor => processor.Enabled)) {
+						obs.Select(processor.Process);
+					}
+				}
+				_activeRenderers.Add(obs.Subscribe(dest.Render));
 			}
 		}
 

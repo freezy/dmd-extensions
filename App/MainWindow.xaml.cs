@@ -17,6 +17,7 @@ using PinDmd;
 using PinDmd.Input;
 using PinDmd.Input.ScreenGrabber;
 using PinDmd.Output;
+using PinDmd.Processor;
 
 namespace App
 {
@@ -49,10 +50,15 @@ namespace App
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 25 };
 
+			// define processors
+			var gridProcessor = new GridProcessor { Enabled = false };
+			var resizeProcessor = new ResizeProcessor { Enabled = true };
+
 			// chain them up
 			_graph = new RenderGraph {
 				Source = grabber,
-				Destinations = renderers
+				Destinations = renderers,
+				Processors = new List<IProcessor> { gridProcessor, resizeProcessor }
 			};
 
 			_grabberWindow = new GrabberWindow(_graph);

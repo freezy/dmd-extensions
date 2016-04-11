@@ -13,9 +13,11 @@ namespace PinDmd.Processor
 		public int Width { get; set; }
 		public int Height { get; set; }
 
-		public Bitmap process(Bitmap bmp)
+		public bool Enabled { get; set; } = true;
+		public Func<Bitmap, Bitmap> Process => ProcessBitmap;
+
+		private static Bitmap ProcessBitmap(Bitmap bmp)
 		{
-			
 			return bmp;
 		}
 	}
