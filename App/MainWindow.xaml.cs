@@ -51,14 +51,19 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.7 };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.5 };
 			var resizeProcessor = new ResizeProcessor { Enabled = true };
+			var monochromeProcessor = new MonochromeProcessor {
+				Enabled = true,
+				PixelFormat = PixelFormats.Gray2,
+				Color = System.Windows.Media.Color.FromRgb(255, 155, 0)
+			};
 
 			// chain them up
 			_graph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<IProcessor> { gridProcessor, resizeProcessor }
+				Processors = new List<IProcessor> { gridProcessor, resizeProcessor, monochromeProcessor }
 			};
 
 			_grabberWindow = new GrabberWindow(_graph) { Width = 256, Height = 64 };
