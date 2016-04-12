@@ -51,7 +51,7 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.7 };
 			var resizeProcessor = new ResizeProcessor { Enabled = true };
 
 			// chain them up
@@ -63,6 +63,9 @@ namespace App
 
 			_grabberWindow = new GrabberWindow(_graph) { Width = 256, Height = 64 };
 			_grabberWindow.WhenPositionChanges.Subscribe(grabber.Move);
+
+			PreviewKeyDown += _grabberWindow.HotKey;
+			PreviewKeyUp += _grabberWindow.HotKey;
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)

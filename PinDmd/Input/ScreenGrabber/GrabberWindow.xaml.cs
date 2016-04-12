@@ -24,6 +24,8 @@ namespace PinDmd.Input.ScreenGrabber
 			IsVisibleChanged += ToggleGrabbing;
 			SizeChanged += PositionChanged;
 			LocationChanged += PositionChanged;
+			KeyDown += HotKey;
+			KeyUp += HotKey;
 
 			Borders.MouseLeftButtonDown += MoveStart;
 			Borders.MouseLeftButtonUp += MoveEnd;
@@ -156,5 +158,67 @@ namespace PinDmd.Input.ScreenGrabber
 			}
 		}
 		#endregion
+
+		#region HotKeys
+
+		private bool _shiftHolding;
+		private bool _ctrlHolding;
+		public void HotKey(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.LeftShift || e.Key == Key.RightShift) {
+				_shiftHolding = e.IsDown;
+			}
+			if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) {
+				_ctrlHolding = e.IsDown;
+			}
+
+			if (e.IsDown) {
+				switch (e.Key) {
+					case Key.Up:
+						if (_ctrlHolding && _shiftHolding) {
+							Height--;
+						} else if (_ctrlHolding && !_shiftHolding) {
+							Top--;
+							Height++;
+						} else {
+							Top -= _shiftHolding ? 10 : 1;
+						}
+						break;
+					case Key.Down:
+						if (_ctrlHolding && _shiftHolding) {
+							Height++;
+						} else if (_ctrlHolding && !_shiftHolding) {
+							Top++;
+							Height--;
+						} else {
+							Top += _shiftHolding ? 10 : 1;
+						}
+						break;
+					case Key.Left:
+						if (_ctrlHolding && _shiftHolding) {
+							Width--;
+						} else if (_ctrlHolding && !_shiftHolding) {
+							Left--;
+							Width++;
+						} else {
+							Left -= _shiftHolding ? 10 : 1;
+						}
+						break;
+					case Key.Right:
+						if (_ctrlHolding && _shiftHolding) {
+							Width++;
+						} else if (_ctrlHolding && !_shiftHolding) {
+							Left++;
+							Width--;
+						} else {
+							Left += _shiftHolding ? 10 : 1;
+						}
+						break;
+				}
+			}
+		}
+
+		#endregion
+
 	}
 }

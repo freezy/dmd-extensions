@@ -20,7 +20,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" x:Name="Console" HorizontalAlignment="Stretch" Margin="10" TextWrapping="Wrap" VerticalAlignment="Stretch"/>
+        <TextBox Grid.Column="0" IsReadOnly="true" Grid.Row="0" Grid.ColumnSpan="2" x:Name="Console" HorizontalAlignment="Stretch" Margin="10" TextWrapping="Wrap" VerticalAlignment="Stretch"/>
         <Grid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
