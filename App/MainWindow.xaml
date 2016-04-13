@@ -5,11 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="295.497" Width="252.486">
+        Title="MainWindow" Height="295.497" Width="264.306">
     <Grid>
-        <Button x:Name="InitButton" Content="Init" HorizontalAlignment="Left" Margin="10,233,0,0" VerticalAlignment="Top" Width="75" Click="button_Click"/>
+        <Button x:Name="InitButton" Content="Init" HorizontalAlignment="Left" Margin="10,233,0,0" VerticalAlignment="Top" Width="75" Click="InitButton_Click"/>
         <Button x:Name="BitmapButton" Content="Bitmap" HorizontalAlignment="Left" Margin="90,233,0,0" VerticalAlignment="Top" Width="75" Click="BitmapButton_Click"/>
-        <TextBox x:Name="Console" HorizontalAlignment="Left" Height="210" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="218"/>
+        <Button x:Name="ScreenButton" Content="Screen" HorizontalAlignment="Left" Margin="170,233,-1,0" VerticalAlignment="Top" Width="75" Click="ScreenButton_Click" />
+        <TextBox x:Name="Console" HorizontalAlignment="Stretch" Height="210" Margin="10" TextWrapping="Wrap" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

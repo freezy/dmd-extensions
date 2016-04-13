@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Drawing;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -21,23 +23,28 @@ namespace App
 	public partial class MainWindow : Window
 	{
 		private PinDmd.PinDmd _dmd;
+		private readonly GrabberWindow _grabberWindow = new GrabberWindow();
 
 		public MainWindow()
 		{
 			InitializeComponent();
+			Closing += OnWindowClosing;
 		}
 
-		private void button_Click(object sender, RoutedEventArgs e)
+		private void InitButton_Click(object sender, RoutedEventArgs e)
 		{
 			try
 			{
-				_dmd = new PinDmd.PinDmd();
-				var available = _dmd.Init();
-				Console.Text += $"Display initialized. Present: {available}.\n";
-				
-				var info = _dmd.GetInfo();
-				Console.Text += $"Display detected at {info.Width}x{info.Height}\n";
-				Console.Text += $"Firmware: {info.Firmware}\n";
+				_dmd = PinDmd.PinDmd.GetInstance();
+				Console.Text += $"Display initialized. Connected: {_dmd.DeviceConnected}.\n";
+
+				if (_dmd.DeviceConnected) {
+					Console.Text += $"Display detected at {_dmd.Width}x{_dmd.Height}\n";
+					Console.Text += $"Firmware: {_dmd.Firmware}\n";
+
+				} else {
+					Console.Text += "Device not connected.";
+				}
 
 			} catch (Exception err) {
 				Console.Text = err.StackTrace;
@@ -52,6 +59,20 @@ namespace App
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;
 			}
+		}
+
+		private void ScreenButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (_grabberWindow.IsVisible) {
+				_grabberWindow.Hide();
+			} else {
+				_grabberWindow.Show();
+			}
+		}
+
+		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
+		{
+			_grabberWindow.Close();
 		}
 	}
 }
