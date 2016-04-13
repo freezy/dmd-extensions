@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -51,11 +53,11 @@ namespace App
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 0.5 };
+			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
 			var resizeProcessor = new ResizeProcessor { Enabled = true };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
-				PixelFormat = PixelFormats.Gray2,
+				PixelFormat = PixelFormats.Gray16,
 				Color = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
 
@@ -63,14 +65,39 @@ namespace App
 			_graph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<IProcessor> { gridProcessor, resizeProcessor, monochromeProcessor }
+				Processors = new List<AbstractProcessor> { gridProcessor, resizeProcessor, monochromeProcessor }
 			};
 
-			_grabberWindow = new GrabberWindow(_graph) { Width = 256, Height = 64 };
-			_grabberWindow.WhenPositionChanges.Subscribe(grabber.Move);
+			_grabberWindow = new GrabberWindow(_graph) {
+				Left = Properties.Settings.Default.GrabLeft,
+				Top = Properties.Settings.Default.GrabTop,
+				Width = Properties.Settings.Default.GrabWidth,
+				Height = Properties.Settings.Default.GrabHeight,
+			};
+			_grabberWindow.WhenPositionChanges.Subscribe(rect =>
+			{
+				grabber.Move(rect);
+				Properties.Settings.Default.GrabLeft = rect.X;
+				Properties.Settings.Default.GrabTop = rect.Y;
+				Properties.Settings.Default.GrabWidth = rect.Width;
+				Properties.Settings.Default.GrabHeight = rect.Height;
+				Properties.Settings.Default.Save();
+			});
 
 			PreviewKeyDown += _grabberWindow.HotKey;
 			PreviewKeyUp += _grabberWindow.HotKey;
+
+			// grid preview images
+			_graph.BeforeProcessed.Subscribe(bmp => {
+				OriginalCapture.Dispatcher.Invoke(() => {
+					OriginalCapture.Source = new WriteableBitmap(bmp); // freezes if bmp is used for some reason..
+				});
+			});
+			gridProcessor.WhenProcessed.Subscribe(bmp => {
+				ProcessedGrid.Dispatcher.Invoke(() => {
+					ProcessedGrid.Source = bmp;
+				});
+			});
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)

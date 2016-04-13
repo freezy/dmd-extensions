@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,15 +12,13 @@ using System.Windows.Media.Imaging;
 
 namespace PinDmd.Processor
 {
-	public class GridProcessor : IProcessor
+	public class GridProcessor : AbstractProcessor
 	{
 		public int Width { get; set; } = 128;
 		public int Height { get; set; } = 32;
 		public double Padding { get; set; }
 
-		public bool Enabled { get; set; } = true;
-
-		public BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp)
 		{
 			var sw = new Stopwatch();
 			sw.Start();
@@ -70,6 +69,9 @@ namespace PinDmd.Processor
 
 			sw.Stop();
 			//Console.WriteLine("Grid-sized from {0}x{1} to {2}x{3} in {4}ms.", bmp.Width, bmp.Height, img.PixelWidth, img.PixelHeight, sw.ElapsedMilliseconds);
+
+			img.Freeze();
+			_whenProcessed.OnNext(img);
 			return img;
 		}
 
@@ -81,5 +83,6 @@ namespace PinDmd.Processor
 				encoder.Save(fileStream);
 			}
 		}
+
 	}
 }

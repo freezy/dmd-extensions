@@ -14,6 +14,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -39,8 +40,10 @@
             <CheckBox Content="Enabled" Grid.Row="0" Grid.Column="3" VerticalAlignment="Bottom"/>
             <TextBox Grid.Row="2" Grid.Column="2" VerticalAlignment="Bottom" Text="128"/>
         </Grid>
-        <dmd:VirtualDmdControl x:Name="VirtualDmd" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Margin="10"/>
-        <Button Grid.Column="0" Grid.Row="3" x:Name="BitmapButton" Content="Bitmap" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Top" Width="75" Click="BitmapButton_Click"/>
-        <Button Grid.Column="1" Grid.Row="3" x:Name="ScreenButton" Content="Screen" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Top" Width="75" Click="ScreenButton_Click" />
+        <Image x:Name="OriginalCapture" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
+        <Image x:Name="ProcessedGrid" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
+        <dmd:VirtualDmdControl x:Name="VirtualDmd" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
+        <Button Grid.Column="0" Grid.Row="4" x:Name="BitmapButton" Content="Bitmap" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Top" Width="75" Click="BitmapButton_Click"/>
+        <Button Grid.Column="1" Grid.Row="4" x:Name="ScreenButton" Content="Screen" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Top" Width="75" Click="ScreenButton_Click" />
     </Grid>
 </Window>

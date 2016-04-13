@@ -15,13 +15,12 @@ using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace PinDmd.Processor
 {
-	public class MonochromeProcessor : IProcessor
+	public class MonochromeProcessor : AbstractProcessor
 	{
-		public bool Enabled { get; set; }
 		public Color Color { get; set; }
 		public PixelFormat PixelFormat { get; set; } = PixelFormats.Gray8;
 
-		public BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp)
 		{
 			var monochrome = new FormatConvertedBitmap();
 
@@ -30,7 +29,10 @@ namespace PinDmd.Processor
 			monochrome.DestinationFormat = PixelFormat;
 			monochrome.EndInit();
 
-			return Color.A > 0 ? ColorShade(monochrome, Color) : monochrome;
+			var dest = Color.A > 0 ? ColorShade(monochrome, Color) : monochrome;
+			_whenProcessed.OnNext(dest);
+
+			return dest;
 		}
 
 		public static BitmapSource ColorShade(BitmapSource bmp, Color color)
@@ -65,6 +67,7 @@ namespace PinDmd.Processor
 
 			var dest = new WriteableBitmap(colored);
 			dest.WritePixels(fullRect, pixelBuffer, stride, 0);
+			dest.Freeze();
 
 			return dest;
 		}

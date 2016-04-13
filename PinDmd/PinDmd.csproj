@@ -70,7 +70,7 @@
     </Compile>
     <Compile Include="PinDmd.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
-    <Compile Include="Processor\IProcessor.cs" />
+    <Compile Include="Processor\AbstractProcessor.cs" />
     <Compile Include="Processor\MonochromeProcessor.cs" />
     <Compile Include="Processor\ResizeProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

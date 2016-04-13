@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,7 +30,14 @@ namespace PinDmd.Output.VirtualDmd
 
 		public void Render(BitmapSource bmp)
 		{
-			Dispatcher.Invoke(() => Dmd.Source = bmp);
+			bmp.Freeze();
+			Dispatcher.Invoke(() => {
+				try {
+					Dmd.Source = bmp;
+				} catch (Exception e) {
+					Console.WriteLine("Error rendering on Virtual DMD: {0}", e.Message);
+				}
+			});
 		}
 	}
 }
