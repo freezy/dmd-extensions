@@ -62,6 +62,7 @@
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\VirtualDmd\DmdEffect.cs" />
     <Compile Include="Output\IFrameDestination.cs" />
     <Compile Include="Output\PinDmd3\Interop.cs" />

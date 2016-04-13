@@ -12,21 +12,36 @@ using System.Windows.Media.Imaging;
 
 namespace PinDmd.Processor
 {
+	/// <summary>
+	/// A processor that strips off the space between the "dot grid" of
+	/// a rendered DMD frame.
+	/// </summary>
 	public class GridProcessor : AbstractProcessor
 	{
+		/// <summary>
+		/// Number of horizontal dots
+		/// </summary>
 		public int Width { get; set; } = 128;
+
+		/// <summary>
+		/// Number of vertical dots
+		/// </summary>
 		public int Height { get; set; } = 32;
-		public double Padding { get; set; }
+
+		/// <summary>
+		/// Relative spacing to strip. 1 = 100% (same size as dot), 0.5 = half size, etc
+		/// </summary>
+		public double Spacing { get; set; }
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{
 			var sw = new Stopwatch();
 			sw.Start();
 
-			var sliceWidth = bmp.Width / (Width + Width * Padding - Padding);
-			var sliceHeight = bmp.Height / (Height + Height * Padding - Padding);
-			var paddingWidth = (bmp.Width * Padding) / (Width + Width * Padding - Padding);
-			var paddingHeight = (bmp.Height * Padding) / (Height + Height * Padding - Padding);
+			var sliceWidth = bmp.Width / (Width + Width * Spacing - Spacing);
+			var sliceHeight = bmp.Height / (Height + Height * Spacing - Spacing);
+			var paddingWidth = (bmp.Width * Spacing) / (Width + Width * Spacing - Spacing);
+			var paddingHeight = (bmp.Height * Spacing) / (Height + Height * Spacing - Spacing);
 			var destRect = new Int32Rect();
 			var srcRect = new Int32Rect();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
@@ -64,7 +79,6 @@ namespace PinDmd.Processor
 				dest.CopyPixels(srcRect, buffer, stride, 0);
 				dest.WritePixels(destRect, buffer, stride, 0);
 			}
-
 			var img = new CroppedBitmap(dest, new Int32Rect(0, 0, (int)(sliceWidth * Width), (int)(sliceHeight * Height)));
 
 			sw.Stop();
@@ -83,6 +97,5 @@ namespace PinDmd.Processor
 				encoder.Save(fileStream);
 			}
 		}
-
 	}
 }

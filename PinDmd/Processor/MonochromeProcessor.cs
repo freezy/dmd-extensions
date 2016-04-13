@@ -15,10 +15,21 @@ using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace PinDmd.Processor
 {
+	/// <summary>
+	/// Converts a frame to monochrome, with optional color tinting.
+	/// </summary>
 	public class MonochromeProcessor : AbstractProcessor
 	{
+		/// <summary>
+		/// Color to tint. Set to <see cref="Colors.Transparent"/> for no tinting.
+		/// </summary>
 		public Color Color { get; set; }
-		public PixelFormat PixelFormat { get; set; } = PixelFormats.Gray8;
+
+		/// <summary>
+		/// Pixel format. Settings this to <see cref="PixelFormats.Gray2"/> will not
+		/// give good results. Use another processor for fixed shades.
+		/// </summary>
+		public PixelFormat PixelFormat { get; set; } = PixelFormats.Gray16;
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{

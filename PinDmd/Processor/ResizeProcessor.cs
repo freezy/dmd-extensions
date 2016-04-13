@@ -11,9 +11,19 @@ using System.Windows.Media.TextFormatting;
 
 namespace PinDmd.Processor
 {
+	/// <summary>
+	/// Resizes a frame to given dimensions.
+	/// </summary>
 	public class ResizeProcessor : AbstractProcessor
 	{
+		/// <summary>
+		/// Pixel width of the output frame
+		/// </summary>
 		public int Width { get; set; } = 128;
+
+		/// <summary>
+		/// Pixel height of the output frame.
+		/// </summary>
 		public int Height { get; set; } = 32;
 
 		public override BitmapSource Process(BitmapSource bmp)
