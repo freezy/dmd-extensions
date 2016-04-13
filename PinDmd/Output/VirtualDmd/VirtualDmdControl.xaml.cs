@@ -30,14 +30,7 @@ namespace PinDmd.Output.VirtualDmd
 
 		public void Render(BitmapSource bmp)
 		{
-			bmp.Freeze();
-			Dispatcher.Invoke(() => {
-				try {
-					Dmd.Source = bmp;
-				} catch (Exception e) {
-					Console.WriteLine("Error rendering on Virtual DMD: {0}", e.Message);
-				}
-			});
+			Dispatcher.Invoke(() => Dmd.Source = bmp);
 		}
 	}
 }

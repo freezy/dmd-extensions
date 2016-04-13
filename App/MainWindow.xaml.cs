@@ -122,6 +122,7 @@ namespace App
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
 		{
 			_grabberWindow.Close();
+			Environment.Exit(0);
 		}
 	}
 }
