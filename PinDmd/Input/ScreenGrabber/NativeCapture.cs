@@ -21,6 +21,9 @@ namespace PinDmd.Input.ScreenGrabber
 		internal static extern IntPtr GetDC(IntPtr hwnd);
 
 		[DllImport("gdi32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = false)]
+		internal static extern bool DeleteDC(IntPtr hwnd);
+
+		[DllImport("gdi32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = false)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool BitBlt(IntPtr hDestDC, int x, int y, int nWidth, int nHeight, IntPtr hSrcDC, int xSrc, int ySrc, Int32 dwRop);
 
@@ -146,20 +149,24 @@ namespace PinDmd.Input.ScreenGrabber
 		{
 			//Create the image and graphics to capture the portion of the desktop.
 			var destinationImage = new Bitmap(width, height);
-			Graphics destinationGraphics = Graphics.FromImage(destinationImage);
-			IntPtr destinationGraphicsHandle = IntPtr.Zero;
+			var destinationGraphics = Graphics.FromImage(destinationImage);
+			var destinationGraphicsHandle = IntPtr.Zero;
 
+			var windowDC = IntPtr.Zero;
 			try {
 				//Pointers for window handles
 				destinationGraphicsHandle = destinationGraphics.GetHdc();
-				IntPtr windowDC = GetDC(IntPtr.Zero);
+				windowDC = GetDC(IntPtr.Zero);
 
 				//Get the screencapture
-				int dwRop = SRCCOPY;
+				var dwRop = SRCCOPY;
 
 				BitBlt(destinationGraphicsHandle, 0, 0, width, height, windowDC, x, y, dwRop);
 			} finally {
 				destinationGraphics.ReleaseHdc(destinationGraphicsHandle);
+				if (!windowDC.Equals(IntPtr.Zero)) {
+					DeleteDC(windowDC);
+				}
 			}
 
 			// Don't forget to dispose this image
@@ -177,6 +184,7 @@ namespace PinDmd.Input.ScreenGrabber
 				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
 
 			bitmap.UnlockBits(bitmapData);
+			bitmapSource.Freeze(); // make it readable on any thread
 			return bitmapSource;
 		}
 
