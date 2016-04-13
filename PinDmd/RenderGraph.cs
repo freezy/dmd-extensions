@@ -19,21 +19,22 @@ namespace PinDmd
 		public List<AbstractProcessor> Processors { get; set; }
 		public List<IFrameDestination> Destinations { get; set; }
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
+		public bool IsRendering { get; set; }
 
-		private readonly List<IDisposable> _activeRenderers = new List<IDisposable>();
+		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
 
 		public void StartRendering()
 		{
-			if (_activeRenderers.Count > 0) {
+			if (_activeSources.Count > 0) {
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
 			}
-
+			IsRendering = true;
 			var enabledProcessors = Processors.Where(processor => processor.Enabled);
 
 			foreach (var dest in Destinations) {
 				var frames = Source.GetFrames();
-				_activeRenderers.Add(frames.Subscribe(bmp => {
+				_activeSources.Add(frames.Subscribe(bmp => {
 
 					_beforeProcessed.OnNext(bmp);
 
@@ -48,11 +49,12 @@ namespace PinDmd
 
 		public void StopRendering()
 		{
-			foreach (var activeRenderer in _activeRenderers) {
-				activeRenderer.Dispose();
+			foreach (var source in _activeSources) {
+				source.Dispose();
 			}
-			Console.WriteLine("{0} renderer(s) stopped.", _activeRenderers.Count);
-			_activeRenderers.Clear();
+			Console.WriteLine("Source for {0} renderer(s) stopped.", _activeSources.Count);
+			_activeSources.Clear();
+			IsRendering = false;
 		}
 
 		public void Render(BitmapSource bmp)

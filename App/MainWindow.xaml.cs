@@ -30,7 +30,12 @@ namespace App
 	public partial class MainWindow : Window
 	{
 		private readonly GrabberWindow _grabberWindow;
-		private readonly RenderGraph _graph;
+		private readonly RenderGraph _screenGraph;
+		private readonly RenderGraph _pbfxGraph;
+		private readonly GridProcessor _gridProcessor;
+
+		private IDisposable _currentSource;
+		private RenderGraph _currentGraph;
 
 		public MainWindow()
 		{
@@ -52,10 +57,10 @@ namespace App
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
-			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 1 };
+			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
 
 			// define processors
-			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			_gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
 			var resizeProcessor = new ResizeProcessor { Enabled = true };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
@@ -64,20 +69,25 @@ namespace App
 			};
 
 			// chain them up
-			_graph = new RenderGraph {
+			_screenGraph = new RenderGraph {
+				Source = grabber,
+				Destinations = renderers,
+				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor, monochromeProcessor }
+			};
+			_pbfxGraph = new RenderGraph {
 				Source = pin2DmdGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { gridProcessor, resizeProcessor, monochromeProcessor }
+				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor }
 			};
 
-			_grabberWindow = new GrabberWindow(_graph) {
+			// init grabber window and link it to grabber
+			_grabberWindow = new GrabberWindow() {
 				Left = Properties.Settings.Default.GrabLeft,
 				Top = Properties.Settings.Default.GrabTop,
 				Width = Properties.Settings.Default.GrabWidth,
 				Height = Properties.Settings.Default.GrabHeight,
 			};
-			_grabberWindow.WhenPositionChanges.Subscribe(rect =>
-			{
+			_grabberWindow.WhenPositionChanges.Subscribe(rect => {
 				grabber.Move(rect);
 				Properties.Settings.Default.GrabLeft = rect.X;
 				Properties.Settings.Default.GrabTop = rect.Y;
@@ -89,36 +99,85 @@ namespace App
 			PreviewKeyDown += _grabberWindow.HotKey;
 			PreviewKeyUp += _grabberWindow.HotKey;
 
+			PreviewKeyDown += HotKey;
+
 			// grid preview images
-			_graph.BeforeProcessed.Subscribe(bmp => {
-				OriginalCapture.Dispatcher.Invoke(() => {
-					OriginalCapture.Source = new WriteableBitmap(bmp); // freezes if bmp is used for some reason..
-				});
-			});
-			gridProcessor.WhenProcessed.Subscribe(bmp => {
+			_gridProcessor.WhenProcessed.Subscribe(bmp => {
 				ProcessedGrid.Dispatcher.Invoke(() => {
 					ProcessedGrid.Source = bmp;
 				});
 			});
 		}
 
+		private void HotKey(object sender, KeyEventArgs e)
+		{
+			if (e.IsDown) {
+				switch (e.Key) {
+					case Key.PageUp:
+						_gridProcessor.Padding += 0.1;
+						Console.Text += "Grid padding: " + _gridProcessor.Padding + "\n";
+						break;
+
+					case Key.PageDown:
+						if (_gridProcessor.Padding > 0) {
+							_gridProcessor.Padding -= 0.1;
+							Console.Text += "Grid padding: " + _gridProcessor.Padding + "\n";
+						}
+						break;
+				}
+			}
+		}
+
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
 			try {
 				var bmp = new BitmapImage(new Uri("rgb-128x32.png", UriKind.Relative));
-				_graph.Render(bmp);
+				_screenGraph.Render(bmp);
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;
 			}
 		}
 
+		private void PbfxButton_Click(object sender, RoutedEventArgs e)
+		{
+			// ignore if already runnong
+			if (_pbfxGraph.IsRendering) {
+				Console.Text += "Already capturing Pinball FX2. Launch a game if you don't see anything!\n";
+				return;
+			}
+			SwitchGraph(_pbfxGraph);
+			Console.Text += "Started pulling frames from Pinball FX2.\n";
+		}
+
 		private void ScreenButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (_grabberWindow.IsVisible) {
+			// this one we stop if it's running and button was clicked again
+			if (_screenGraph.IsRendering) {
 				_grabberWindow.Hide();
-			} else {
-				_grabberWindow.Show();
+				_screenGraph.StopRendering();
+				_currentSource.Dispose();
+				Console.Text += "Stopped pulling frames from desktop.\n";
+				return;
 			}
+
+			_grabberWindow.Show();
+			SwitchGraph(_screenGraph);
+			Console.Text += "Started pulling frames from desktop.\n";
+		}
+
+		private void SwitchGraph(RenderGraph graph)
+		{
+			if (_currentGraph != null && _currentGraph.IsRendering) {
+				_currentGraph.StopRendering();
+				_currentSource.Dispose();
+			}
+			_currentGraph = graph;
+			_currentSource = graph.BeforeProcessed.Subscribe(bmp => {
+				OriginalCapture.Dispatcher.Invoke(() => {
+					OriginalCapture.Source = new WriteableBitmap(bmp); // freezes if bmp is used for some reason..
+				});
+			});
+			graph.StartRendering();
 		}
 
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
@@ -126,5 +185,6 @@ namespace App
 			_grabberWindow.Close();
 			Environment.Exit(0);
 		}
+
 	}
 }

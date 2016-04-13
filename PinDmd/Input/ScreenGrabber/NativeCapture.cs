@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Point = System.Drawing.Point;
 
 namespace PinDmd.Input.ScreenGrabber
 {
@@ -82,11 +84,13 @@ namespace PinDmd.Input.ScreenGrabber
 		[StructLayout(LayoutKind.Sequential)]
 		public struct RECT
 		{
-			public int Left;
-			public int Top;
-			public int Right;
-			public int Bottom;
+			public readonly int Left;
+			public readonly int Top;
+			public readonly int Right;
+			public readonly int Bottom;
 
+			public int Width => Right - Left;
+			public int Height => Bottom - Top;
 
 			public RECT(int left, int top, int right, int bottom)
 			{
@@ -148,37 +152,36 @@ namespace PinDmd.Input.ScreenGrabber
 		internal static BitmapSource GetDesktopBitmap(int x, int y, int width, int height)
 		{
 			//Create the image and graphics to capture the portion of the desktop.
-			var destinationImage = new Bitmap(width, height);
-			var destinationGraphics = Graphics.FromImage(destinationImage);
-			var destinationGraphicsHandle = IntPtr.Zero;
+			using (var destinationImage = new Bitmap(width, height)) 
+			{
+				using (var destinationGraphics = Graphics.FromImage(destinationImage)) 
+				{
+					var destinationGraphicsHandle = IntPtr.Zero;
+					var windowDC = IntPtr.Zero;
+					try {
 
-			var windowDC = IntPtr.Zero;
-			try {
-				//Pointers for window handles
-				destinationGraphicsHandle = destinationGraphics.GetHdc();
-				windowDC = GetDC(IntPtr.Zero);
+						//Pointers for window handles
+						destinationGraphicsHandle = destinationGraphics.GetHdc();
+						windowDC = GetDC(IntPtr.Zero);
 
-				//Get the screencapture
-				var dwRop = SRCCOPY;
+						//Get the screencapture
+						var dwRop = SRCCOPY;
+						BitBlt(destinationGraphicsHandle, 0, 0, width, height, windowDC, x, y, dwRop);
 
-				BitBlt(destinationGraphicsHandle, 0, 0, width, height, windowDC, x, y, dwRop);
-			} finally {
-				destinationGraphics.ReleaseHdc(destinationGraphicsHandle);
-				if (!windowDC.Equals(IntPtr.Zero)) {
-					DeleteDC(windowDC);
+					} finally {
+						destinationGraphics.ReleaseHdc(destinationGraphicsHandle);
+						if (!windowDC.Equals(IntPtr.Zero)) {
+							DeleteDC(windowDC);
+						}
+					}
+					return Convert(destinationImage);
 				}
 			}
-
-			// Don't forget to dispose this image
-			return Convert(destinationImage);
 		}
 
-		internal static BitmapSource Convert(Bitmap bitmap)
+		public static BitmapSource Convert(Bitmap bitmap)
 		{
-			var bitmapData = bitmap.LockBits(
-				new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-				System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
-
+			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
 			var bitmapSource = BitmapSource.Create(
 				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null,
 				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);

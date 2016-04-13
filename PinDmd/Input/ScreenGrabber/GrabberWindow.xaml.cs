@@ -8,20 +8,21 @@ using System.Windows.Shapes;
 namespace PinDmd.Input.ScreenGrabber
 {
 	/// <summary>
-	/// Interaction logic for ScreenGrabber.xaml
+	/// A movable and resizable red border.
 	/// </summary>
+	/// <remarks>
+	/// Independent from the actual screen grabber, subscribe to <see cref="WhenPositionChanges"/>
+	/// and hook it up.
+	/// </remarks>
 	public partial class GrabberWindow : Window
 	{
-
 		public IObservable<System.Drawing.Rectangle> WhenPositionChanges => _whenPositionChanges;
 		
-		private readonly RenderGraph _graph;
 		private readonly Subject<System.Drawing.Rectangle> _whenPositionChanges = new Subject<System.Drawing.Rectangle>();
 
-		public GrabberWindow(RenderGraph graph)
+		public GrabberWindow()
 		{
 			InitializeComponent();
-			IsVisibleChanged += ToggleGrabbing;
 			SizeChanged += PositionChanged;
 			LocationChanged += PositionChanged;
 			KeyDown += HotKey;
@@ -30,8 +31,6 @@ namespace PinDmd.Input.ScreenGrabber
 			Borders.MouseLeftButtonDown += MoveStart;
 			Borders.MouseLeftButtonUp += MoveEnd;
 			Borders.MouseMove += MoveMoving;
-
-			_graph = graph;
 		}
 
 		private void PositionChanged(object sender, EventArgs e)
@@ -42,17 +41,6 @@ namespace PinDmd.Input.ScreenGrabber
 				Width = (int)Width,
 				Height = (int)Height,
 			});
-		}
-
-		private void ToggleGrabbing(object sender, DependencyPropertyChangedEventArgs e)
-		{
-			if (IsVisible) {
-				Console.WriteLine("Starting grabbing...");
-				_graph.StartRendering();
-			} else {
-				Console.WriteLine("Stopping grabbing...");
-				_graph.StopRendering();
-			}
 		}
 
 		#region Move and Resize

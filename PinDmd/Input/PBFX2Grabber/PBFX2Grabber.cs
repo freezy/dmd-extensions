@@ -3,52 +3,196 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net.Security;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PinDmd.Input.ScreenGrabber;
 using Color = System.Windows.Media.Color;
+using Point = System.Drawing.Point;
 
 namespace PinDmd.Input.PBFX2Grabber
 {
+	/// <summary>
+	/// Polls for the Pinball FX2 process, searches for the DMD display grabs pixels off
+	/// the display, even if it's hidden (e.g. off the screen or behind the playfield).
+	/// </summary>
+	/// <remarks>
+	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
+	/// launched and stop sending when it exits.
+	/// </remarks>
 	public class PBFX2Grabber : IFrameSource
 	{
+		/// <summary>
+		/// Wait time between polls for the Pinball FX2 process. Stops polling as soon
+		/// as the process is found. 
+		/// 
+		/// Can be set quite high, just about as long as it takes for Pinball FX2 to launch
+		/// and load a game.
+		/// </summary>
+		public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(10);
+
+		/// <summary>
+		/// Frequency with which frames are pulled off the display.
+		/// </summary>
 		public double FramesPerSecond { get; set; } = 15;
+
 		private IntPtr _handle;
+		private IDisposable _poller;
 
-		public PBFX2Grabber()
-		{
-			var n = 0;
-			foreach (var proc in Process.GetProcesses()) {
-				if (proc.ProcessName == "Pinball FX2" && !string.IsNullOrEmpty(proc.MainWindowTitle)) {
-
-					Console.WriteLine("{0}: {1} ({2})", proc.ProcessName, proc.MainWindowTitle, proc.Id);
-					var handles = GetRootWindowsOfProcess(proc.Id);
-					foreach (var handle in handles) {
-						var grabbed = PrintWindow(handle);
-						if (grabbed != null) {
-							grabbed.Save("pbfx2-" + n + ".png");
-							n++;
-						}
+		private void PollForHandle() {
+			_handle = FindDmdHandle();
+			if (_handle == IntPtr.Zero) {
+				Console.WriteLine("Pinball FX2 not running, starting to poll...");
+				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x =>
+				{
+					_handle = FindDmdHandle();
+					if (_handle != IntPtr.Zero) {
+						Console.WriteLine("Pinball FX2 running, starting to capture!");
+						_poller.Dispose();
 					}
-				}
+				});
 			}
 		}
 
 		public IObservable<BitmapSource> GetFrames()
 		{
-			var bmp = new BitmapImage(new Uri("rgb-128x32.png", UriKind.Relative));
+			PollForHandle();
 			return Observable
-				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-				.Select(x => {
-					
-					return bmp;
-				});
+				.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
+				.Where(x => _handle != IntPtr.Zero)
+				.Select(x => CaptureWindow())
+				.Where(bmp => bmp != null);
 		}
+
+		public BitmapSource CaptureWindow()
+		{
+			NativeCapture.RECT rc;
+			GetWindowRect(_handle, out rc);
+
+			// rect contains 0 values if handler not available
+			if (rc.Width == 0 || rc.Height == 0) {
+				_handle = IntPtr.Zero;
+				PollForHandle();
+				return null;
+			}
+
+			using (var bmp = new Bitmap(rc.Width, rc.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+			{
+				using (var gfxBmp = Graphics.FromImage(bmp))
+				{
+					var hdcBitmap = gfxBmp.GetHdc();
+					try {
+						var succeeded = PrintWindow(_handle, hdcBitmap, 0);
+						if (!succeeded) {
+							Console.WriteLine("Could not retrieve image data from handle {0}", _handle);
+							return null;
+						}
+					} finally {
+						gfxBmp.ReleaseHdc(hdcBitmap);
+					}
+					return Convert(bmp);
+				}
+			}
+		}
+
+		private static IntPtr FindDmdHandle()
+		{
+			foreach (var proc in Process.GetProcessesByName("Pinball FX2")) {
+				var handles = GetRootWindowsOfProcess(proc.Id);
+				foreach (var handle in handles) {
+					NativeCapture.RECT rc;
+					GetWindowRect(handle, out rc);
+					if (rc.Width == 0 || rc.Height == 0) {
+						continue;
+					}
+					var ar = rc.Width / rc.Height;
+					if (ar >= 3 && ar < 4.2) {
+						return handle;
+					}
+				}
+				Console.WriteLine("Pinball FX2 process found (pid {0}) but DMD not! No game running?", proc.Id);
+			}
+			return IntPtr.Zero;
+		}
+
+		private static IEnumerable<IntPtr> GetRootWindowsOfProcess(int pid)
+		{
+			var rootWindows = GetChildWindows(IntPtr.Zero);
+			var dsProcRootWindows = new List<IntPtr>();
+			foreach (var hWnd in rootWindows) {
+				uint lpdwProcessId;
+				GetWindowThreadProcessId(hWnd, out lpdwProcessId);
+				if (lpdwProcessId == pid) {
+					dsProcRootWindows.Add(hWnd);
+				}
+
+			}
+			return dsProcRootWindows;
+		}
+
+		private static IEnumerable<IntPtr> GetChildWindows(IntPtr parent)
+		{
+			var result = new List<IntPtr>();
+			var listHandle = GCHandle.Alloc(result);
+			try {
+				Win32Callback childProc = EnumWindow;
+				EnumChildWindows(parent, childProc, GCHandle.ToIntPtr(listHandle));
+			} finally {
+				if (listHandle.IsAllocated) {
+					listHandle.Free();
+				}
+			}
+			return result;
+		}
+
+		private static bool EnumWindow(IntPtr handle, IntPtr pointer)
+		{
+			var gch = GCHandle.FromIntPtr(pointer);
+			var list = gch.Target as List<IntPtr>;
+			if (list == null) {
+				throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+			}
+			list.Add(handle);
+			// You can modify this to check to see if you want to cancel the operation, then return a null here
+			return true;
+		}
+
+		public static BitmapSource Convert(Bitmap bitmap)
+		{
+			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
+			var bitmapSource = BitmapSource.Create(
+				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null,
+				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+
+			bitmap.UnlockBits(bitmapData);
+			bitmapSource.Freeze(); // make it readable on any thread
+
+			// crop border (1 dot)
+			var dotWidth = (bitmapSource.PixelWidth / 130);
+			var dotHeight = (bitmapSource.PixelHeight / 34);
+			const double cropX = 1.5;
+			const double cropY = 1;
+			var img = new CroppedBitmap(bitmapSource, new Int32Rect(
+				(int)Math.Round(dotWidth * cropX), 
+				(int)Math.Round(dotHeight * cropY), 
+				(int)Math.Round(bitmapSource.PixelWidth - dotWidth * 2.5d), 
+				(int)Math.Round(bitmapSource.PixelHeight - dotHeight * 2.5d)));
+			img.Freeze();
+
+			return img;
+		}
+
+		#region Dll Imports
+
+		public delegate bool Win32Callback(IntPtr hwnd, IntPtr lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetWindowRect(IntPtr hWnd, out NativeCapture.RECT lpRect);
@@ -61,83 +205,22 @@ namespace PinDmd.Input.PBFX2Grabber
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreateRectRgn(int nLeftRect, int nTopRect, int nReghtRect, int nBottomRect);
-
-
-		public static Bitmap PrintWindow(IntPtr hwnd)
-		{
-			NativeCapture.RECT rc;
-			GetWindowRect(hwnd, out rc);
-
-			if (rc.Right == 0) {
-				return null;
-			}
-
-			Bitmap bmp = new Bitmap(rc.Right - rc.Left, rc.Bottom - rc.Top, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-			Graphics gfxBmp = Graphics.FromImage(bmp);
-			IntPtr hdcBitmap = gfxBmp.GetHdc();
-			bool succeeded = PrintWindow(hwnd, hdcBitmap, 0);
-			gfxBmp.ReleaseHdc(hdcBitmap);
-			if (!succeeded) {
-				gfxBmp.FillRectangle(new SolidBrush(System.Drawing.Color.Gray), new Rectangle(Point.Empty, bmp.Size));
-			}
-			IntPtr hRgn = CreateRectRgn(0, 0, 0, 0);
-			GetWindowRgn(hwnd, hRgn);
-			Region region = Region.FromHrgn(hRgn);
-			if (!region.IsEmpty(gfxBmp)) {
-				gfxBmp.ExcludeClip(region);
-				gfxBmp.Clear(System.Drawing.Color.Transparent);
-			}
-			gfxBmp.Dispose();
-			return bmp;
-		}
-
-
 		[DllImport("user32.dll")]
 		public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
-		[DllImport("user32.Dll")]
+		[DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool EnumChildWindows(IntPtr parentHandle, Win32Callback callback, IntPtr lParam);
 
-		public delegate bool Win32Callback(IntPtr hwnd, IntPtr lParam);
+		#endregion
 
-		List<IntPtr> GetRootWindowsOfProcess(int pid)
+		private static void Dump(BitmapSource bmp, string filePath)
 		{
-			List<IntPtr> rootWindows = GetChildWindows(IntPtr.Zero);
-			List<IntPtr> dsProcRootWindows = new List<IntPtr>();
-			foreach (IntPtr hWnd in rootWindows) {
-				uint lpdwProcessId;
-				GetWindowThreadProcessId(hWnd, out lpdwProcessId);
-				if (lpdwProcessId == pid)
-					dsProcRootWindows.Add(hWnd);
+			using (var fileStream = new FileStream(filePath, FileMode.Create)) {
+				BitmapEncoder encoder = new PngBitmapEncoder();
+				encoder.Frames.Add(BitmapFrame.Create(bmp));
+				encoder.Save(fileStream);
 			}
-			return dsProcRootWindows;
-		}
-
-		public static List<IntPtr> GetChildWindows(IntPtr parent)
-		{
-			List<IntPtr> result = new List<IntPtr>();
-			GCHandle listHandle = GCHandle.Alloc(result);
-			try {
-				Win32Callback childProc = new Win32Callback(EnumWindow);
-				EnumChildWindows(parent, childProc, GCHandle.ToIntPtr(listHandle));
-			} finally {
-				if (listHandle.IsAllocated)
-					listHandle.Free();
-			}
-			return result;
-		}
-
-		private static bool EnumWindow(IntPtr handle, IntPtr pointer)
-		{
-			GCHandle gch = GCHandle.FromIntPtr(pointer);
-			List<IntPtr> list = gch.Target as List<IntPtr>;
-			if (list == null) {
-				throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
-			}
-			list.Add(handle);
-			//  You can modify this to check to see if you want to cancel the operation, then return a null here
-			return true;
 		}
 	}
 }
