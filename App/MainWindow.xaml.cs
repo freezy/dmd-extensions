@@ -17,6 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using PinDmd;
 using PinDmd.Input;
+using PinDmd.Input.PBFX2Grabber;
 using PinDmd.Input.ScreenGrabber;
 using PinDmd.Output;
 using PinDmd.Processor;
@@ -48,9 +49,10 @@ namespace App
 			} else {
 				Console.Text += "PinDMD3 not connected.\n";
 			}
-			
+
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
+			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 1 };
 
 			// define processors
 			var gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
@@ -63,7 +65,7 @@ namespace App
 
 			// chain them up
 			_graph = new RenderGraph {
-				Source = grabber,
+				Source = pin2DmdGrabber,
 				Destinations = renderers,
 				Processors = new List<AbstractProcessor> { gridProcessor, resizeProcessor, monochromeProcessor }
 			};
