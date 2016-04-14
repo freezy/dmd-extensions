@@ -22,7 +22,7 @@ unsigned char *OutputPacketBuffer;
 
 extern "C"
 {
-PIN2DMD_API bool pin2dmdInit();
+PIN2DMD_API int pin2dmdInit();
 PIN2DMD_API bool pin2dmdDeInit();
 PIN2DMD_API void pin2dmdRenderRGB24(rgb24 *currbuffer);
 }

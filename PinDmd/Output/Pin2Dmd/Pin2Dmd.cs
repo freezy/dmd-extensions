@@ -27,7 +27,7 @@ namespace PinDmd.Output.Pin2Dmd
 		private readonly PixelRgb24[] _frameBuffer;
 
 		private Pin2Dmd() {
-			IsAvailable = Init();
+			IsAvailable = Init() == 1;
 			_frameBuffer = new PixelRgb24[Width * Height];
 		}
 
@@ -39,7 +39,7 @@ namespace PinDmd.Output.Pin2Dmd
 		public static Pin2Dmd GetInstance()
 		{
 			var instance = _instance ?? (_instance = new Pin2Dmd());
-			instance.IsAvailable = Init();
+			instance.IsAvailable = Init() == 1;
 			return _instance;
 		}
 
@@ -77,7 +77,7 @@ namespace PinDmd.Output.Pin2Dmd
 		#region Dll imports
 
 		[DllImport("pin2dmd.dll", EntryPoint = "pin2dmdInit", CallingConvention = CallingConvention.Cdecl)]
-		public static extern bool Init();
+		public static extern int Init();
 
 		[DllImport("pin2dmd.dll", EntryPoint = "pin2dmdDeInit", CallingConvention = CallingConvention.Cdecl)]
 		public static extern bool DeInit();

@@ -56,7 +56,7 @@ namespace App
 			}
 			var pin2Dmd = PinDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
 			if (pin2Dmd.IsAvailable) {
-//				renderers.Add(pin2Dmd);
+				renderers.Add(pin2Dmd);
 				Console.Text += $"Added PIN2DMD renderer.\n";
 			} else {
 				Console.Text += "PIN2DMD not connected.\n";
@@ -65,7 +65,7 @@ namespace App
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
-
+				
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
 			var resizeProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
