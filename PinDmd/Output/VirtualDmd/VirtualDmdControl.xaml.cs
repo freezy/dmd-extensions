@@ -23,6 +23,8 @@ namespace PinDmd.Output.VirtualDmd
 	/// </summary>
 	public partial class VirtualDmdControl : UserControl, IFrameDestination
 	{
+		public bool IsAvailable { get; } = true;
+
 		public VirtualDmdControl()
 		{
 			InitializeComponent();

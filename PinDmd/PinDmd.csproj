@@ -70,7 +70,7 @@
     <Compile Include="Output\VirtualDmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PinDmd.cs" />
+    <Compile Include="Output\PinDmd3\PinDmd.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
     <Compile Include="Processor\MonochromeProcessor.cs" />
@@ -84,8 +84,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="libusb-1.0.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="libusbK.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
+    <Content Include="pin2dmd.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="pinDMD.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

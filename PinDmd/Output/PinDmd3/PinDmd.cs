@@ -1,19 +1,10 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using PinDmd.Input;
-using PinDmd.Output;
-using PinDmd.Output.PinDmd3;
 
-namespace PinDmd
+namespace PinDmd.Output.PinDmd3
 {
 	/// <summary>
 	/// A .NET friendly API for accessing PinDMD3.
@@ -25,12 +16,13 @@ namespace PinDmd
 	/// This is a singleton. On first instantiation, the DMD is queried
 	/// and the status is kept during the lifetime of the application.
 	/// </remarks>
+	/// <see cref="http://pindmd.com/"/>
 	public class PinDmd : IFrameDestination
 	{
 		/// <summary>
 		/// True if device is connected, false otherwise. Check this before accessing anything else.
 		/// </summary>
-		public bool DeviceConnected { get; }
+		public bool IsAvailable { get; }
 
 		/// <summary>
 		/// Firmware string read from the device if connected
@@ -71,10 +63,9 @@ namespace PinDmd
 				DmdColorize = 0
 			});
 			Console.WriteLine("Enabled PinDMD: {0}", port);
-			DeviceConnected = port != 0;
+			IsAvailable = port != 0;
 
-			if (DeviceConnected)
-			{
+			if (IsAvailable) {
 				var info = GetInfo();
 				Firmware = info.Firmware;
 				Width = info.Width;
@@ -89,19 +80,18 @@ namespace PinDmd
 		/// Returns width, height and firmware version of the connected DMD.
 		/// 
 		/// </summary>
-		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
+		/// <remarks>Device must be connected, otherwise <seealso cref="SourceNotAvailableException"/> is thrown.</remarks>
 		/// <returns>DMD info</returns>
 		public DmdInfo GetInfo()
 		{
-			if (!DeviceConnected) {
-				throw new DeviceNotConnectedException();
+			if (!IsAvailable) {
+				throw new SourceNotAvailableException();
 			}
 
 			var info = new DeviceInfo();
 			Interop.GetDeviceInfo(ref info);
 
-			return new DmdInfo()
-			{
+			return new DmdInfo() {
 				Width = info.Width,
 				Height = info.Height,
 				Firmware = info.Firmware
@@ -111,12 +101,12 @@ namespace PinDmd
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
-		/// <remarks>Device must be connected, otherwise <seealso cref="DeviceNotConnectedException"/> is thrown.</remarks>
+		/// <remarks>Device must be connected, otherwise <seealso cref="SourceNotAvailableException"/> is thrown.</remarks>
 		/// <param name="path">Path to the image, can be anything <see cref="T:System.Drawing.Bitmap"/> understands.</param>
 		public void Render(string path)
 		{
-			if (!DeviceConnected) {
-				throw new DeviceNotConnectedException();
+			if (!IsAvailable) {
+				throw new SourceNotAvailableException();
 			}
 			Render(new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute)));
 		}
@@ -127,8 +117,8 @@ namespace PinDmd
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
-			if (!DeviceConnected) {
-				throw new DeviceNotConnectedException();
+			if (!IsAvailable) {
+				throw new SourceNotAvailableException();
 			}
 			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
@@ -161,13 +151,5 @@ namespace PinDmd
 		public byte Width;
 		public byte Height;
 		public string Firmware;
-	}
-
-	/// <summary>
-	/// Thrown on operations that don't make sense without the display connected.
-	/// </summary>
-	/// <seealso cref="PinDmd.DeviceConnected"/>
-	public class DeviceNotConnectedException : Exception
-	{
 	}
 }

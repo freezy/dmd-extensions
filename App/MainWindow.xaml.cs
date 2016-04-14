@@ -45,8 +45,8 @@ namespace App
 			// define renderers
 			var renderers = new List<IFrameDestination> { VirtualDmd };
 			Console.Text += "Added VirtualDMD renderer.\n";
-			var pinDmd = PinDmd.PinDmd.GetInstance();
-			if (pinDmd.DeviceConnected) {
+			var pinDmd = PinDmd.Output.PinDmd3.PinDmd.GetInstance();
+			if (pinDmd.IsAvailable) {
 				renderers.Add(pinDmd);
 				Console.Text += $"Added PinDMD3 renderer.\n";
 				Console.Text += $"PinDMD3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
@@ -54,18 +54,25 @@ namespace App
 			} else {
 				Console.Text += "PinDMD3 not connected.\n";
 			}
+			var pin2Dmd = PinDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
+			if (pin2Dmd.IsAvailable) {
+//				renderers.Add(pin2Dmd);
+				Console.Text += $"Added PIN2DMD renderer.\n";
+			} else {
+				Console.Text += "PIN2DMD not connected.\n";
+			}
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
 
 			// define processors
-			_gridProcessor = new GridProcessor { Enabled = true, Padding = 1 };
+			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
 			var resizeProcessor = new ResizeProcessor { Enabled = true };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
 				PixelFormat = PixelFormats.Gray16,
-				Color = System.Windows.Media.Color.FromRgb(255, 155, 0)
+				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
 
 			// chain them up
@@ -114,14 +121,14 @@ namespace App
 			if (e.IsDown) {
 				switch (e.Key) {
 					case Key.PageUp:
-						_gridProcessor.Padding += 0.1;
-						Console.Text += "Grid padding: " + _gridProcessor.Padding + "\n";
+						_gridProcessor.Spacing += 0.1;
+						Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
 						break;
 
 					case Key.PageDown:
-						if (_gridProcessor.Padding > 0) {
-							_gridProcessor.Padding -= 0.1;
-							Console.Text += "Grid padding: " + _gridProcessor.Padding + "\n";
+						if (_gridProcessor.Spacing > 0) {
+							_gridProcessor.Spacing -= 0.1;
+							Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
 						}
 						break;
 				}

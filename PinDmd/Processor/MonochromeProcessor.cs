@@ -23,7 +23,7 @@ namespace PinDmd.Processor
 		/// <summary>
 		/// Color to tint. Set to <see cref="Colors.Transparent"/> for no tinting.
 		/// </summary>
-		public Color Color { get; set; }
+		public Color Tint { get; set; }
 
 		/// <summary>
 		/// Pixel format. Settings this to <see cref="PixelFormats.Gray2"/> will not
@@ -40,7 +40,7 @@ namespace PinDmd.Processor
 			monochrome.DestinationFormat = PixelFormat;
 			monochrome.EndInit();
 
-			var dest = Color.A > 0 ? ColorShade(monochrome, Color) : monochrome;
+			var dest = Tint.A > 0 ? ColorShade(monochrome, Tint) : monochrome;
 			_whenProcessed.OnNext(dest);
 
 			return dest;

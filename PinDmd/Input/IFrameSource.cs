@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using PinDmd.Output.PinDmd3;
 
 namespace PinDmd.Input
 {
