@@ -68,7 +68,7 @@ namespace App
 					renderers.Add(pinDmd2);
 					Console.Text += $"Added PinDMDv2 renderer.\n";
 				} else {
-					Console.Text += "PIN2DMDv2 not connected.\n";
+					Console.Text += "PinDMDv2 not connected.\n";
 				}
 
 			} catch (DllNotFoundException e) {
@@ -154,9 +154,17 @@ namespace App
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
+			if (_currentGraph != null && _currentGraph.IsRendering) {
+				_currentGraph.StopRendering();
+				_currentSource.Dispose();
+			}
 			try {
-				var bmp = new BitmapImage(new Uri("rgb-128x32.png", UriKind.Relative));
-				_screenGraph.Render(bmp);
+				var bmp = new BitmapImage();
+				bmp.BeginInit();
+				bmp.UriSource = new Uri("pack://application:,,,/App;component/rgb-128x32.png");
+				bmp.EndInit();
+
+				_pbfxGraph.Render(bmp);
 			} catch (Exception err) {
 				Console.Text = err.Message + "\n" + err.StackTrace;
 			}
@@ -169,6 +177,7 @@ namespace App
 				Console.Text += "Already capturing Pinball FX2. Launch a game if you don't see anything!\n";
 				return;
 			}
+			_grabberWindow.Hide();
 			SwitchGraph(_pbfxGraph);
 			Console.Text += "Started pulling frames from Pinball FX2.\n";
 		}
