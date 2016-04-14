@@ -45,22 +45,39 @@ namespace App
 			// define renderers
 			var renderers = new List<IFrameDestination> { VirtualDmd };
 			Console.Text += "Added VirtualDMD renderer.\n";
-			var pinDmd = PinDmd.Output.PinDmd3.PinDmd.GetInstance();
-			if (pinDmd.IsAvailable) {
-				renderers.Add(pinDmd);
-				Console.Text += $"Added PinDMD3 renderer.\n";
-				Console.Text += $"PinDMD3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
-				Console.Text += $"Firmware: {pinDmd.Firmware}\n";
-			} else {
-				Console.Text += "PinDMD3 not connected.\n";
+
+			try {
+				var pinDmd = PinDmd.Output.PinDmd3.PinDmd.GetInstance();
+				if (pinDmd.IsAvailable) {
+					renderers.Add(pinDmd);
+					Console.Text += $"Added PinDMDv3 renderer.\n";
+					Console.Text += $"PinDMDv3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
+					Console.Text += $"Firmware: {pinDmd.Firmware}\n";
+				} else {
+					Console.Text += "PinDMDv3 not connected.\n";
+				}
+				var pin2Dmd = PinDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
+				if (pin2Dmd.IsAvailable) {
+					renderers.Add(pin2Dmd);
+					Console.Text += $"Added PIN2DMD renderer.\n";
+				} else {
+					Console.Text += "PIN2DMD not connected.\n";
+				}
+				var pinDmd2 = PinDmd.Output.PinDmd2.PinDmd2.GetInstance();
+				if (pinDmd2.IsAvailable) {
+					renderers.Add(pinDmd2);
+					Console.Text += $"Added PinDMDv2 renderer.\n";
+				} else {
+					Console.Text += "PIN2DMDv2 not connected.\n";
+				}
+
+			} catch (DllNotFoundException e) {
+				Console.Text += "A DLL was not found. It's possible that Windows blocked it.\n";
+				Console.Text += "Go look for it in the installation folder. If it's there, right-click, \"Properties\" and \"unblock\".\n";
+				Console.Text += "Then restart the app.\n";
+				Console.Text += "Message: " + e.Message + "\n";
 			}
-			var pin2Dmd = PinDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
-			if (pin2Dmd.IsAvailable) {
-				renderers.Add(pin2Dmd);
-				Console.Text += $"Added PIN2DMD renderer.\n";
-			} else {
-				Console.Text += "PIN2DMD not connected.\n";
-			}
+
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
