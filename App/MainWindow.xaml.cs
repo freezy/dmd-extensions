@@ -68,7 +68,7 @@ namespace App
 
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
-			var resizeProcessor = new ResizeProcessor { Enabled = true };
+			var resizeProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
 				PixelFormat = PixelFormats.Gray16,
