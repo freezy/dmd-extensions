@@ -124,9 +124,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="rgb-128x32.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="rgb-128x32.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Configuration\" />
