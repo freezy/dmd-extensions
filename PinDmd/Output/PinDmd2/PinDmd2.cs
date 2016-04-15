@@ -34,7 +34,7 @@ namespace PinDmd.Output.PinDmd2
 		public static PinDmd2 GetInstance()
 		{
 			var instance = _instance ?? (_instance = new PinDmd2());
-			instance.IsAvailable = Init() == 1;
+			instance.IsAvailable = Init() == 2;
 			return _instance;
 		}
 
