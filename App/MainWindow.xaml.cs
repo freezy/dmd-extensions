@@ -33,6 +33,7 @@ namespace App
 		private readonly RenderGraph _screenGraph;
 		private readonly RenderGraph _pbfxGraph;
 		private readonly GridProcessor _gridProcessor;
+		private readonly ShadeProcessor _shadeProcessor;
 
 		private IDisposable _currentSource;
 		private RenderGraph _currentGraph;
@@ -91,17 +92,18 @@ namespace App
 				PixelFormat = PixelFormats.Gray16,
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
+			_shadeProcessor = new ShadeProcessor { Intensity = 2.64, NumShades = 4, Lightness = 0.25 };
 
 			// chain them up
 			_screenGraph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor, monochromeProcessor }
+				Processors = new List<AbstractProcessor> { resizeProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
 				Source = pin2DmdGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor }
+				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor, _shadeProcessor }
 			};
 
 			// init grabber window and link it to grabber
@@ -138,14 +140,18 @@ namespace App
 			if (e.IsDown) {
 				switch (e.Key) {
 					case Key.PageUp:
-						_gridProcessor.Spacing += 0.1;
-						Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+						//_gridProcessor.Spacing += 0.1;
+						//Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+						_shadeProcessor.Intensity += 0.01;
+						Console.Text += "Shade intensity: " + _shadeProcessor.Intensity + "\n";
 						break;
 
 					case Key.PageDown:
 						if (_gridProcessor.Spacing > 0) {
-							_gridProcessor.Spacing -= 0.1;
-							Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+							//_gridProcessor.Spacing -= 0.1;
+							//Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+							_shadeProcessor.Intensity -= 0.01;
+							Console.Text += "Shade intensity: " + _shadeProcessor.Intensity + "\n";
 						}
 						break;
 				}
