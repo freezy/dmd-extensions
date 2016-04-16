@@ -29,7 +29,7 @@ send the data to the physical DMD.
 The grabber should work even if the DMD is behind the playfield, so under
 settings, move it to position `0`/`0`. Size should be the following:
 
-- Width: `1036`
+- Width: `1040`
 - Height: `272`
 
 Then launch both the application, click on the *Pinball FX2* button and run 

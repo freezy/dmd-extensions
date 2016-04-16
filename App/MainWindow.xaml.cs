@@ -87,7 +87,7 @@ namespace App
 				
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
-			var resizeProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
+			var transformationProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
 				PixelFormat = PixelFormats.Gray16,
@@ -99,12 +99,12 @@ namespace App
 			_screenGraph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { resizeProcessor, monochromeProcessor }
+				Processors = new List<AbstractProcessor> { transformationProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
 				Source = _pin2DmdGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor, _shadeProcessor }
+				Processors = new List<AbstractProcessor> { _gridProcessor, transformationProcessor, _shadeProcessor }
 			};
 
 			// init grabber window and link it to grabber
