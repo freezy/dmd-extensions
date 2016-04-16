@@ -44,6 +44,9 @@ namespace PinDmd.Input.PBFX2Grabber
 		/// </summary>
 		public double FramesPerSecond { get; set; } = 15;
 
+		public double CropLeft { get; set; } = 1.5;
+		public double CropRight { get; set; } = 1;
+
 		private IntPtr _handle;
 		private IDisposable _poller;
 
@@ -165,7 +168,7 @@ namespace PinDmd.Input.PBFX2Grabber
 			return true;
 		}
 
-		public static BitmapSource Convert(Bitmap bitmap)
+		public BitmapSource Convert(Bitmap bitmap)
 		{
 			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
 			var bitmapSource = BitmapSource.Create(
@@ -178,12 +181,13 @@ namespace PinDmd.Input.PBFX2Grabber
 			// crop border (1 dot)
 			var dotWidth = (bitmapSource.PixelWidth / 130);
 			var dotHeight = (bitmapSource.PixelHeight / 34);
-			const double cropX = 1.5;
+			var cropLeft = Math.Max(0, CropLeft);
+			var cropRight = Math.Max(0, CropRight);
 			const double cropY = 1;
 			var img = new CroppedBitmap(bitmapSource, new Int32Rect(
-				(int)Math.Round(dotWidth * cropX), 
+				(int)Math.Round(dotWidth * cropLeft), 
 				(int)Math.Round(dotHeight * cropY), 
-				(int)Math.Round(bitmapSource.PixelWidth - dotWidth * 2.5d), 
+				(int)Math.Round(bitmapSource.PixelWidth - dotWidth * (cropLeft + cropRight)), 
 				(int)Math.Round(bitmapSource.PixelHeight - dotHeight * 2.5d)));
 			img.Freeze();
 

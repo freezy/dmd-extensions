@@ -34,6 +34,7 @@ namespace App
 		private readonly RenderGraph _pbfxGraph;
 		private readonly GridProcessor _gridProcessor;
 		private readonly ShadeProcessor _shadeProcessor;
+		private readonly PBFX2Grabber _pin2DmdGrabber;
 
 		private IDisposable _currentSource;
 		private RenderGraph _currentGraph;
@@ -82,7 +83,7 @@ namespace App
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
-			var pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
+			_pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
 				
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
@@ -92,7 +93,7 @@ namespace App
 				PixelFormat = PixelFormats.Gray16,
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
-			_shadeProcessor = new ShadeProcessor { Intensity = 2.64, NumShades = 4, Lightness = 0.25 };
+			_shadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Lightness = 0 };
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -101,7 +102,7 @@ namespace App
 				Processors = new List<AbstractProcessor> { resizeProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
-				Source = pin2DmdGrabber,
+				Source = _pin2DmdGrabber,
 				Destinations = renderers,
 				Processors = new List<AbstractProcessor> { _gridProcessor, resizeProcessor, _shadeProcessor }
 			};
@@ -140,20 +141,52 @@ namespace App
 			if (e.IsDown) {
 				switch (e.Key) {
 					case Key.PageUp:
-						//_gridProcessor.Spacing += 0.1;
-						//Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
-						_shadeProcessor.Intensity += 0.01;
-						Console.Text += "Shade intensity: " + _shadeProcessor.Intensity + "\n";
+						_gridProcessor.Spacing += 0.1;
+						Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
 						break;
 
 					case Key.PageDown:
 						if (_gridProcessor.Spacing > 0) {
-							//_gridProcessor.Spacing -= 0.1;
-							//Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
-							_shadeProcessor.Intensity -= 0.01;
-							Console.Text += "Shade intensity: " + _shadeProcessor.Intensity + "\n";
+							_gridProcessor.Spacing -= 0.1;
+							Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
 						}
 						break;
+
+					case Key.Q:
+						_shadeProcessor.Intensity -= 0.1;
+						Console.Text += "Intensity: " + _shadeProcessor.Intensity + "\n";
+						break;
+					case Key.W:
+						_shadeProcessor.Intensity += 0.1;
+						Console.Text += "Intensity: " + _shadeProcessor.Intensity + "\n";
+						break;
+
+					case Key.E:
+						_shadeProcessor.Lightness -= 0.1;
+						Console.Text += "Lightness: " + _shadeProcessor.Lightness + "\n";
+						break;
+					case Key.R:
+						_shadeProcessor.Lightness += 0.1;
+						Console.Text += "Lightness: " + _shadeProcessor.Lightness + "\n";
+						break;
+
+					case Key.A:
+						_pin2DmdGrabber.CropLeft -= 0.1;
+						Console.Text += "Padding left: " + _pin2DmdGrabber.CropLeft + "\n";
+						break;
+					case Key.S:
+						_pin2DmdGrabber.CropLeft += 0.1;
+						Console.Text += "Padding left: " + _pin2DmdGrabber.CropLeft + "\n";
+						break;
+					case Key.D:
+						_pin2DmdGrabber.CropRight += 0.1;
+						Console.Text += "Padding right: " + _pin2DmdGrabber.CropRight + "\n";
+						break;
+					case Key.F:
+						_pin2DmdGrabber.CropRight -= 0.1;
+						Console.Text += "Padding right: " + _pin2DmdGrabber.CropRight + "\n";
+						break;
+
 				}
 			}
 		}
