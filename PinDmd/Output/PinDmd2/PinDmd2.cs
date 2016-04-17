@@ -51,12 +51,24 @@ namespace PinDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
-			Console.WriteLine("Found PinDMDv2 device.");
-			Console.WriteLine("   Descriptor: {0}", _pinDmd2Device.Info.Descriptor);
-			Console.WriteLine("   ManufacturerString: {0}", _pinDmd2Device.Info.ManufacturerString);
-			Console.WriteLine("   ProductString: {0}", _pinDmd2Device.Info.ProductString);
-			Console.WriteLine("   SerialString: {0}", _pinDmd2Device.Info.SerialString);
-			Console.WriteLine("   CurrentCultureLangID: {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+			if (!_pinDmd2Device.Info.ManufacturerString.Contains("PIN2DMD")) {
+				Console.WriteLine("Found PinDMDv2 device.");
+				Console.WriteLine("   Descriptor: {0}", _pinDmd2Device.Info.Descriptor);
+				Console.WriteLine("   ManufacturerString: {0}", _pinDmd2Device.Info.ManufacturerString);
+				Console.WriteLine("   ProductString: {0}", _pinDmd2Device.Info.ProductString);
+				Console.WriteLine("   SerialString: {0}", _pinDmd2Device.Info.SerialString);
+				Console.WriteLine("   CurrentCultureLangID: {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+
+			} else {
+				Console.WriteLine("Device found but it's not a PinDMDv2 device.");
+				Console.WriteLine("   Descriptor: {0}", _pinDmd2Device.Info.Descriptor);
+				Console.WriteLine("   ManufacturerString: {0}", _pinDmd2Device.Info.ManufacturerString);
+				Console.WriteLine("   ProductString: {0}", _pinDmd2Device.Info.ProductString);
+				Console.WriteLine("   SerialString: {0}", _pinDmd2Device.Info.SerialString);
+				Console.WriteLine("   CurrentCultureLangID: {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+				IsAvailable = false;
+				return;
+			}
 
 			var usbDevice = _pinDmd2Device as IUsbDevice;
 			if (!ReferenceEquals(usbDevice, null)) {
