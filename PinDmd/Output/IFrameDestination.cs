@@ -25,6 +25,17 @@ namespace PinDmd.Output
 		/// </summary>
 		/// <param name="bmp">Frame to render</param>
 		void Render(BitmapSource bmp);
+
+		/// <summary>
+		/// Initializes the device. <see cref="IsAvailable"/> must be set
+		/// after running this.
+		/// </summary>
+		void Init();
+
+		/// <summary>
+		/// Run before the output is discarded.
+		/// </summary>
+		void Destroy();
 	}
 
 	/// <summary>

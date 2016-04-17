@@ -83,7 +83,7 @@ namespace App
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
-			_pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 15 };
+			_pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 25 };
 				
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };

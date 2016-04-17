@@ -34,5 +34,15 @@ namespace PinDmd.Output.VirtualDmd
 		{
 			Dispatcher.Invoke(() => Dmd.Source = bmp);
 		}
+
+		public void Init()
+		{
+			// nothing to init
+		}
+
+		public void Destroy()
+		{
+			// nothing to destroy
+		}
 	}
 }

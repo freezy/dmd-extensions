@@ -22,22 +22,22 @@ namespace PinDmd.Output.PinDmd3
 		/// <summary>
 		/// True if device is connected, false otherwise. Check this before accessing anything else.
 		/// </summary>
-		public bool IsAvailable { get; }
+		public bool IsAvailable { get; private set; }
 
 		/// <summary>
 		/// Firmware string read from the device if connected
 		/// </summary>
-		public string Firmware { get; }
+		public string Firmware { get; private set; }
 
 		/// <summary>
 		/// Width in pixels of the display, 128 for PinDMD3
 		/// </summary>
-		public int Width { get; }
+		public int Width { get; private set; }
 
 		/// <summary>
 		/// Height in pixels of the display, 32 for PinDMD3
 		/// </summary>
-		public int Height { get; }
+		public int Height { get; private set; }
 
 		private static PinDmd _instance;
 		private readonly PixelRgb24[] _frameBuffer;
@@ -48,13 +48,22 @@ namespace PinDmd.Output.PinDmd3
 		/// <returns></returns>
 		public static PinDmd GetInstance()
 		{
-			return _instance ?? (_instance = new PinDmd());
+			if (_instance == null) {
+				_instance = new PinDmd();
+			} 
+			_instance.Init();
+			return _instance;
 		}
 
 		/// <summary>
 		/// Constructor, initializes the DMD.
 		/// </summary>
 		private PinDmd()
+		{
+			_frameBuffer = new PixelRgb24[Width * Height];
+		}
+
+		public void Init()
 		{
 			var port = Interop.Init(new Options() {
 				DmdRed = 255,
@@ -64,17 +73,15 @@ namespace PinDmd.Output.PinDmd3
 			});
 			Console.WriteLine("Enabled PinDMD: {0}", port);
 			IsAvailable = port != 0;
-
 			if (IsAvailable) {
 				var info = GetInfo();
 				Firmware = info.Firmware;
 				Width = info.Width;
 				Height = info.Height;
 				Console.WriteLine("Display found at {0}x{1}.", Width, Height);
-
-				_frameBuffer = new PixelRgb24[Width * Height];
 			}
 		}
+
 
 		/// <summary>
 		/// Returns width, height and firmware version of the connected DMD.
@@ -140,6 +147,10 @@ namespace PinDmd.Output.PinDmd3
 				}
 			}
 			Interop.RenderRgb24Frame(_frameBuffer);
+		}
+
+		public void Destroy()
+		{
 		}
 	}
 

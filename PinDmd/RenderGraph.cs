@@ -113,6 +113,13 @@ namespace PinDmd
 				dest.Render(bmp);
 			}
 		}
+
+		~RenderGraph()
+		{
+			foreach (var dest in Destinations) {
+				dest.Destroy();
+			}
+		}
 	}
 
 	/// <summary>
