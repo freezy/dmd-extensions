@@ -27,11 +27,11 @@ namespace Console
 				case "mirror":
 					return AutoBuild(Mirror, "dmdext mirror --source=<source> [--destination=<destination>]", Mirror.LastParserState);
 				default:
-					return AutoBuild(this, "dmdext <command> [<options>]");
+					return AutoBuild(this, "dmdext <command> [<options>]", null, false);
 			}
 		}
 
-		public static HelpText AutoBuild(object options, string usage, IParserState parserState = null)
+		public static HelpText AutoBuild(object options, string usage, IParserState parserState = null, bool addDashesToOption = true)
 		{
 			var title = (AssemblyTitleAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false).FirstOrDefault();
 			var version = (AssemblyInformationalVersionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false).FirstOrDefault();
@@ -40,7 +40,7 @@ namespace Console
 
 			var help = new HelpText {
 				AdditionalNewLineAfterOption = true,
-				AddDashesToOption = true,
+				AddDashesToOption = addDashesToOption
 			};
 
 			help.AddPreOptionsLine($"{title?.Title} v{version?.InformationalVersion}");
@@ -54,7 +54,7 @@ namespace Console
 				var errors = help.RenderParsingErrorsText(options, 2); // indent with two spaces
 
 				if (!string.IsNullOrEmpty(errors)) {
-					help.AddPostOptionsLine("ERROR:");
+					help.AddPostOptionsLine("ERROR:\n");
 					help.AddPostOptionsLine(errors);
 				}
 			}
