@@ -1,18 +1,21 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CommandLine;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Console")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("DMD Extensions")]
+[assembly: AssemblyDescription("Features for DMD owners that aren't officially supported.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Console")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyProduct("DMD Extensions")]
+[assembly: AssemblyCopyright("Copyright (C) 2016 <freezy@vpdb.io>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+[assembly: AssemblyUsage("\nUSAGE: dmdext <command> [<args>]")]
+[assembly: AssemblyLicense("This is free software. You may redistribute copies of it under the terms of the GPL License <https://opensource.org/licenses/GPL-2.0>.")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -34,3 +37,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyInformationalVersionAttribute("1.0.0")]
