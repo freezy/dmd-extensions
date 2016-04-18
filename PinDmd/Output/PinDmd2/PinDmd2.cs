@@ -51,21 +51,11 @@ namespace PinDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
-			if (!_pinDmd2Device.Info.ManufacturerString.Contains("PIN2DMD")) {
+			if (!_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
 				Console.WriteLine("Found PinDMDv2 device.");
-				Console.WriteLine("   Descriptor: {0}", _pinDmd2Device.Info.Descriptor);
-				Console.WriteLine("   ManufacturerString: {0}", _pinDmd2Device.Info.ManufacturerString);
-				Console.WriteLine("   ProductString: {0}", _pinDmd2Device.Info.ProductString);
-				Console.WriteLine("   SerialString: {0}", _pinDmd2Device.Info.SerialString);
-				Console.WriteLine("   CurrentCultureLangID: {0}", _pinDmd2Device.Info.CurrentCultureLangID);
 
 			} else {
-				Console.WriteLine("Device found but it's not a PinDMDv2 device.");
-				Console.WriteLine("   Descriptor: {0}", _pinDmd2Device.Info.Descriptor);
-				Console.WriteLine("   ManufacturerString: {0}", _pinDmd2Device.Info.ManufacturerString);
-				Console.WriteLine("   ProductString: {0}", _pinDmd2Device.Info.ProductString);
-				Console.WriteLine("   SerialString: {0}", _pinDmd2Device.Info.SerialString);
-				Console.WriteLine("   CurrentCultureLangID: {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+				Console.WriteLine("Device found but it's not a PinDMDv2 device ({0}).", _pinDmd2Device.Info.ProductString);
 				IsAvailable = false;
 				return;
 			}
@@ -135,16 +125,16 @@ namespace PinDmd.Output.PinDmd2
 						bd2 <<= 1;
 						bd3 <<= 1;
 
-						if ((pixel & 1) != 0) {
+						if ((pixel & 16) != 0) {
 							bd0 |= 1;
 						}
-						if ((pixel & 2) != 0) {
+						if ((pixel & 32) != 0) {
 							bd1 |= 1;
 						}
-						if ((pixel & 4) != 0) {
+						if ((pixel & 64) != 0) {
 							bd2 |= 1;
 						}
-						if ((pixel & 8) != 0) {
+						if ((pixel & 128) != 0) {
 							bd3 |= 1;
 						}
 					}
