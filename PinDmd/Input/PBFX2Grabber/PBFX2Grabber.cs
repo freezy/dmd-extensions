@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using NLog;
 using PinDmd.Input.ScreenGrabber;
 using Color = System.Windows.Media.Color;
 using Point = System.Drawing.Point;
@@ -49,16 +50,17 @@ namespace PinDmd.Input.PBFX2Grabber
 
 		private IntPtr _handle;
 		private IDisposable _poller;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private void PollForHandle() {
 			_handle = FindDmdHandle();
 			if (_handle == IntPtr.Zero) {
-				Console.WriteLine("Pinball FX2 not running, starting to poll...");
+				Logger.Info("Pinball FX2 not running, starting to poll...");
 				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x =>
 				{
 					_handle = FindDmdHandle();
 					if (_handle != IntPtr.Zero) {
-						Console.WriteLine("Pinball FX2 running, starting to capture!");
+						Logger.Info("Pinball FX2 running, starting to capture!");
 						_poller.Dispose();
 					}
 				});
@@ -95,7 +97,7 @@ namespace PinDmd.Input.PBFX2Grabber
 					try {
 						var succeeded = PrintWindow(_handle, hdcBitmap, 0);
 						if (!succeeded) {
-							Console.WriteLine("Could not retrieve image data from handle {0}", _handle);
+							Logger.Error("Could not retrieve image data from handle {0}", _handle);
 							return null;
 						}
 					} finally {
@@ -121,7 +123,7 @@ namespace PinDmd.Input.PBFX2Grabber
 						return handle;
 					}
 				}
-				Console.WriteLine("Pinball FX2 process found (pid {0}) but DMD not! No game running?", proc.Id);
+				Logger.Warn("Pinball FX2 process found (pid {0}) but DMD not! No game running?", proc.Id);
 			}
 			return IntPtr.Zero;
 		}

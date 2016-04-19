@@ -57,7 +57,6 @@ namespace PinDmd.Input.ScreenGrabber
 				_moving = true;
 				_moveLastPos = PointToScreen(e.GetPosition(this));
 				rect.CaptureMouse();
-				Console.WriteLine("Down at {0} ({1})", rect.Name, e.GetPosition(this));
 			}
 		}
 		private void MoveEnd(object sender, MouseButtonEventArgs e)
@@ -66,7 +65,6 @@ namespace PinDmd.Input.ScreenGrabber
 			if (rect != null) {
 				_moving = false;
 				rect.ReleaseMouseCapture();
-				Console.WriteLine("Up at {0} ({1})", rect.Name, e.GetPosition(this));
 			}
 		}
 
@@ -89,7 +87,6 @@ namespace PinDmd.Input.ScreenGrabber
 				_resizing = true;
 				_resizeLastPos = PointToScreen(e.GetPosition(this));
 				rect.CaptureMouse();
-				Console.WriteLine("Down at {0} ({1})", rect.Name, e.GetPosition(this));
 			}
 		}
 
@@ -99,7 +96,6 @@ namespace PinDmd.Input.ScreenGrabber
 			if (rect != null) {
 				_resizing = false;
 				rect.ReleaseMouseCapture();
-				Console.WriteLine("Up at {0} ({1})", rect.Name, e.GetPosition(this));
 			}
 		}
 
@@ -207,6 +203,5 @@ namespace PinDmd.Input.ScreenGrabber
 		}
 
 		#endregion
-
 	}
 }

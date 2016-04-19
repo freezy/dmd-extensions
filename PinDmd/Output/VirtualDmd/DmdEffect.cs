@@ -94,8 +94,6 @@ namespace PinDmd.Output.VirtualDmd
 		public static Uri MakePackUri(string relativeFile)
 		{
 			var uriString = "pack://application:,,,/" + AssemblyShortName + ";component/" + relativeFile;
-			//var uriString = "pack://application:,,,/" + relativeFile;
-			Console.WriteLine("Trying to load {0}", uriString);
 			return new Uri(uriString);
 		}
 

@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Media.Imaging;
 using FTD2XX_NET;
+using NLog;
 using PinDmd.Common;
 
 namespace PinDmd.Output.PinDmd1
@@ -21,6 +22,7 @@ namespace PinDmd.Output.PinDmd1
 		private readonly byte[] _frameBuffer;
 
 		private static readonly FTDI Ftdi = new FTDI();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static PinDmd1 _instance;
 		
 		private PinDmd1()
@@ -40,12 +42,13 @@ namespace PinDmd.Output.PinDmd1
 			uint ftdiDeviceCount = 0;
 			var status = Ftdi.GetNumberOfDevices(ref ftdiDeviceCount);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				Console.WriteLine("Failed to get number of FTDI devices: {0}", status);
+				Logger.Error("Failed to get number of FTDI devices: {0}", status);
 				return;
 			}
 
 			// if no FTDI device found, return.
 			if (ftdiDeviceCount == 0) {
+				Logger.Debug("PinDMDv1 device not found.");
 				return;
 			}
 
@@ -55,7 +58,7 @@ namespace PinDmd.Output.PinDmd1
 			// populate device list
 			status = Ftdi.GetDeviceList(ftdiDeviceList);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				Console.WriteLine("Failed to get FTDI devices: {0}", status);
+				Logger.Error("Failed to get FTDI devices: {0}", status);
 				return;
 			}
 
@@ -66,27 +69,27 @@ namespace PinDmd.Output.PinDmd1
 					_pinDmd1Device = ftdiDeviceList[i];
 					IsAvailable = true;
 
-					Console.WriteLine("Found PinDMDv1:");
-					Console.WriteLine("  Device Index: {0}", i);
-					Console.WriteLine("  Flags: {0:x}", _pinDmd1Device.Flags);
-					Console.WriteLine("  Type: {0}", _pinDmd1Device.Type);
-					Console.WriteLine("  ID: {0:x}", _pinDmd1Device.ID);
-					Console.WriteLine("  Location ID: {0}", _pinDmd1Device.LocId);
-					Console.WriteLine("  Serial Number: {0}", _pinDmd1Device.SerialNumber);
-					Console.WriteLine("  Description: {0}", _pinDmd1Device.Description);
+					Logger.Info("Found PinDMDv1 device.");
+					Logger.Debug("   Device Index:  {0}", i);
+					Logger.Debug("   Flags:         {0:x}", _pinDmd1Device.Flags);
+					Logger.Debug("   Type:          {0}", _pinDmd1Device.Type);
+					Logger.Debug("   ID:            {0:x}", _pinDmd1Device.ID);
+					Logger.Debug("   Location ID:   {0}", _pinDmd1Device.LocId);
+					Logger.Debug("   Serial Number: {0}", _pinDmd1Device.SerialNumber);
+					Logger.Debug("   Description:   {0}", _pinDmd1Device.Description);
 					break;
 				}
 			}
 
 			if (!IsAvailable) {
-				Console.WriteLine("PinDMDv1 device not found.");
+				Logger.Debug("PinDMDv1 device not found.");
 				return;
 			}
 
 			// open device by serial number
 			status = Ftdi.OpenBySerialNumber(_pinDmd1Device.SerialNumber);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				Console.WriteLine("Failed to open device: {0}", status);
+				Logger.Error("Failed to open device: {0}", status);
 				IsAvailable = false;
 				return;
 			}
@@ -94,7 +97,7 @@ namespace PinDmd.Output.PinDmd1
 			// set bit mode
 			status = Ftdi.SetBitMode(0xff, 0x1);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				Console.WriteLine("Failed to set bit mode: {0}", status);
+				Logger.Error("Failed to set bit mode: {0}", status);
 				IsAvailable = false;
 				return;
 			}
@@ -102,12 +105,11 @@ namespace PinDmd.Output.PinDmd1
 			// set baud rate
 			status = Ftdi.SetBaudRate(12000);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				Console.WriteLine("Failed to set baud rate: {0}", status);
+				Logger.Error("Failed to set baud rate: {0}", status);
 				IsAvailable = false;
 				return;
 			}
-
-			Console.WriteLine("Connected to PinDMDv1.");
+			Logger.Info("Connected to PinDMDv1.");
 		}
 
 		/// <summary>

@@ -7,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using NLog;
 using PinDmd.Input;
 using PinDmd.Output;
 using PinDmd.Processor;
@@ -70,6 +71,7 @@ namespace PinDmd
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// Starts the rendering.
@@ -102,7 +104,7 @@ namespace PinDmd
 			foreach (var source in _activeSources) {
 				source.Dispose();
 			}
-			Console.WriteLine("Source for {0} renderer(s) stopped.", _activeSources.Count);
+			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
 			_activeSources.Clear();
 			IsRendering = false;
 		}

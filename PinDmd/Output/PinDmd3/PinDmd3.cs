@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using NLog;
 using PinDmd.Input;
 
 namespace PinDmd.Output.PinDmd3
@@ -34,6 +35,7 @@ namespace PinDmd.Output.PinDmd3
 
 		private static PinDmd3 _instance;
 		private readonly PixelRgb24[] _frameBuffer;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
@@ -64,17 +66,19 @@ namespace PinDmd.Output.PinDmd3
 				DmdBlue = 0,
 				DmdColorize = 0
 			});
-			Console.WriteLine("Enabled PinDMD: {0}", port);
 			IsAvailable = port != 0;
 			if (IsAvailable) {
 				var info = GetInfo();
 				Firmware = info.Firmware;
 				Width = info.Width;
 				Height = info.Height;
-				Console.WriteLine("Display found at {0}x{1}.", Width, Height);
+				Logger.Info("Found PinDMDv3 device.");
+				Logger.Debug("   Firmware:    {0}", Firmware);
+				Logger.Debug("   Resolution:  {0}x{1}", Width, Height);
+			} else {
+				Logger.Debug("PinDMDv3 device not found.");
 			}
 		}
-
 
 		/// <summary>
 		/// Returns width, height and firmware version of the connected DMD.

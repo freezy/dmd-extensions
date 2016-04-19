@@ -9,8 +9,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using PinDmd.Common;
-using PinDmd.Input;
+using NLog;
 
 namespace PinDmd.Output.Pin2Dmd
 {
@@ -30,6 +29,7 @@ namespace PinDmd.Output.Pin2Dmd
 
 		private static Pin2Dmd _instance;
 		private static readonly UsbDeviceFinder Pin2DmdFinder = new UsbDeviceFinder(0x0314, 0xe457);
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private Pin2Dmd()
 		{
@@ -61,16 +61,19 @@ namespace PinDmd.Output.Pin2Dmd
 
 			// if the device is open and ready
 			if (_pin2DmdDevice == null) {
-				Console.WriteLine("PIN2DMD device not found.");
+				Logger.Debug("PIN2DMD device not found.");
 				IsAvailable = false;
 				return;
 			}
 
 			if (_pin2DmdDevice.Info.ManufacturerString.Contains("PIN2DMD")) {
-				Console.WriteLine("Found PIN2DMD device.");
-
+				Logger.Info("Found PIN2DMD device.");
+				Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
+				Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
+				Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
+				Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
 			} else {
-				Console.WriteLine("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
+				Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
 				IsAvailable = false;
 				return;
 			}
@@ -191,7 +194,7 @@ namespace PinDmd.Output.Pin2Dmd
 			int bytesWritten;
 			var error = writer.Write(_frameBuffer, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
-				Console.WriteLine("Error sending data to device: {0}", UsbDevice.LastErrorString);
+				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				throw new Exception(UsbDevice.LastErrorString);
 			}
 		}
