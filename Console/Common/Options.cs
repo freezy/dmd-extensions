@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
+using Console.Mirror;
+using Console.Test;
 
 namespace Console
 {
@@ -14,11 +16,13 @@ namespace Console
 		[VerbOption("mirror", HelpText = "Mirrors pixel data from the screen to one or more other destinations.")]
 		public MirrorOptions Mirror { get; set; }
 
+		[VerbOption("test", HelpText = "Displays a test image on all available devices.")]
+		public TestOptions Test { get; set; }
+
 		public Options()
 		{
 			Mirror = new MirrorOptions();
 		}
-
 
 		[HelpVerbOption]
 		public string GetUsage(string verb)
@@ -60,28 +64,5 @@ namespace Console
 			}
 			return help;
 		}
-	}
-
-	class MirrorOptions
-	{
-		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, screen ].")]
-		public SourceType Source { get; set; }
-
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd ]. Default: \"auto\".")]
-		public DestinationType Destination { get; set; }
-
-		[ParserState]
-		public IParserState LastParserState { get; set; }
-	}
-
-	enum SourceType
-	{
-		PinballFX2,
-		Screen
-	}
-
-	enum DestinationType
-	{
-		Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD
 	}
 }

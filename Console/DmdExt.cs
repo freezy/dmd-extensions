@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Console.Common;
+using Console.Mirror;
+using Console.Test;
 
 namespace Console
 {
-	class Program
+	class DmdExt
 	{
 		static void Main(string[] args)
 		{
 			var invokedVerb = "";
-			object invokedVerbInstance;
+			object invokedVerbInstance = null;
 			var options = new Options();
 			if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options, (verb, subOptions) => {
 
@@ -19,22 +22,21 @@ namespace Console
 				// will be passed to onVerbCommand delegate (string,object)
 				invokedVerb = verb;
 				invokedVerbInstance = subOptions;
-
-				System.Console.WriteLine("Ok sub-parsing succeeded ({0})!", verb);
-
 			})) {
-				System.Console.WriteLine("Parsing failed, exiting.");
-				//System.Console.WriteLine(options.GetUsage());
-
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
-			System.Console.WriteLine("Ok sub-parsing succeeded and we're back out: {0}", options.Mirror);
-//			if (invokedVerb == "commit") {
-//				var commitSubOptions = (CommitSubOptions)invokedVerbInstance;
-//			}
+			ICommand command;
+			switch (invokedVerb) {
+				case "mirror":
+					command = new MirrorCommand((MirrorOptions)invokedVerbInstance);
+					break;
+				default:
+					command = new TestCommand((TestOptions) invokedVerbInstance);
+					break;
 
-
+			}
+			command.Execute();
 		}
 	}
 }
