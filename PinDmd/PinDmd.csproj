@@ -98,6 +98,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ftd2xx.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="FTD2XX_NET.XML" />
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
