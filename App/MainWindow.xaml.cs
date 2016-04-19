@@ -72,6 +72,13 @@ namespace App
 				} else {
 					Console.Text += "PinDMDv2 not connected.\n";
 				}
+				var pinDmd1 = PinDmd.Output.PinDmd1.PinDmd1.GetInstance();
+				if (pinDmd1.IsAvailable) {
+					renderers.Add(pinDmd1);
+					Console.Text += $"Added PinDMDv1 renderer.\n";
+				} else {
+					Console.Text += "PinDMDv1 not connected.\n";
+				}
 
 			} catch (DllNotFoundException e) {
 				Console.Text += "A DLL was not found. It's possible that Windows blocked it.\n";

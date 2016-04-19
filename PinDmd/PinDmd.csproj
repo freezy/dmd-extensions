@@ -32,6 +32,10 @@
   <ItemGroup>
     <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    <Reference Include="FTD2XX_NET, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FTD2XX.Net.1.0.14\lib\FTD2XX_NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\LibUsbDotNet.2.2.8\lib\LibUsbDotNet.dll</HintPath>
       <Private>True</Private>
@@ -70,6 +74,7 @@
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
+    <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
     <Compile Include="Output\VirtualDmd\DmdEffect.cs" />
     <Compile Include="Output\IFrameDestination.cs" />
@@ -93,6 +98,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="FTD2XX_NET.XML" />
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
     <Content Include="pinDMD.dll">
