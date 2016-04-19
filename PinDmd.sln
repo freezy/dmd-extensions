@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinDmd", "PinDmd\PinDmd.csproj", "{0318CC71-57C6-4F46-9495-6CACF0CF1505}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibDmd", "LibDmd\LibDmd.csproj", "{0318CC71-57C6-4F46-9495-6CACF0CF1505}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{14EF89BE-8F54-4562-A165-E13589B8FB66}"
 EndProject

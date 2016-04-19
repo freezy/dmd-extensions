@@ -15,12 +15,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using PinDmd;
-using PinDmd.Input;
-using PinDmd.Input.PBFX2Grabber;
-using PinDmd.Input.ScreenGrabber;
-using PinDmd.Output;
-using PinDmd.Processor;
+using LibDmd;
+using LibDmd.Input.PBFX2Grabber;
+using LibDmd.Input.ScreenGrabber;
+using LibDmd.Output;
+using LibDmd.Output.Pin2Dmd;
+using LibDmd.Output.PinDmd1;
+using LibDmd.Output.PinDmd2;
+using LibDmd.Output.PinDmd3;
+using LibDmd.Processor;
 
 namespace App
 {
@@ -49,7 +52,7 @@ namespace App
 			Console.Text += "Added VirtualDMD renderer.\n";
 
 			try {
-				var pinDmd = PinDmd.Output.PinDmd3.PinDmd3.GetInstance();
+				var pinDmd = PinDmd3.GetInstance();
 				if (pinDmd.IsAvailable) {
 					renderers.Add(pinDmd);
 					Console.Text += $"Added PinDMDv3 renderer.\n";
@@ -58,21 +61,21 @@ namespace App
 				} else {
 					Console.Text += "PinDMDv3 not connected.\n";
 				}
-				var pin2Dmd = PinDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
+				var pin2Dmd = Pin2Dmd.GetInstance();
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					Console.Text += $"Added PIN2DMD renderer.\n";
 				} else {
 					Console.Text += "PIN2DMD not connected.\n";
 				}
-				var pinDmd2 = PinDmd.Output.PinDmd2.PinDmd2.GetInstance();
+				var pinDmd2 = PinDmd2.GetInstance();
 				if (pinDmd2.IsAvailable) {
 					renderers.Add(pinDmd2);
 					Console.Text += $"Added PinDMDv2 renderer.\n";
 				} else {
 					Console.Text += "PinDMDv2 not connected.\n";
 				}
-				var pinDmd1 = PinDmd.Output.PinDmd1.PinDmd1.GetInstance();
+				var pinDmd1 = PinDmd1.GetInstance();
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);
 					Console.Text += $"Added PinDMDv1 renderer.\n";

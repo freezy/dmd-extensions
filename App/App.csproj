@@ -135,9 +135,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PinDmd\PinDmd.csproj">
+    <ProjectReference Include="..\LibDmd\LibDmd.csproj">
       <Project>{0318CC71-57C6-4F46-9495-6CACF0CF1505}</Project>
-      <Name>PinDmd</Name>
+      <Name>LibDmd</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
