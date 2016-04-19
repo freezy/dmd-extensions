@@ -7,7 +7,7 @@ using PinDmd.Common;
 namespace PinDmd.Output.PinDmd1
 {
 	/// <summary>
-	/// Output target for PinDMD2 devices.
+	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	public class PinDmd1 : IFrameDestination
 	{
@@ -48,16 +48,17 @@ namespace PinDmd.Output.PinDmd1
 				return;
 			}
 
-			// Allocate storage for device info list
+			// allocate storage for device info list
 			var ftdiDeviceList = new FTDI.FT_DEVICE_INFO_NODE[ftdiDeviceCount];
 
-			// Populate our device list
+			// populate device list
 			status = Ftdi.GetDeviceList(ftdiDeviceList);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Console.WriteLine("Failed to get FTDI devices: {0}", status);
 				return;
 			}
 
+			// loop through list and find PinDMDv1
 			for (uint i = 0; i < ftdiDeviceCount; i++) {
 				var serialNumber = ftdiDeviceList[i].SerialNumber;
 				if (serialNumber == "DMD1000" || serialNumber == "DMD1001") {
@@ -158,7 +159,9 @@ namespace PinDmd.Output.PinDmd1
 						double luminosity;
 						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
 
-						var pixel = (byte)Math.Round(luminosity * 255d);
+						// pixel shade between 0 and 3
+						var pixel = (byte)(luminosity * 4);
+						pixel = pixel == 4 ? (byte)3 : pixel; // special case lum == 1 and hence pixel = 4
 
 						bd0 <<= 1;
 						bd1 <<= 1;

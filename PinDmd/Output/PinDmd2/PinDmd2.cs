@@ -51,7 +51,7 @@ namespace PinDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
-			if (!_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
+			if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
 				Console.WriteLine("Found PinDMDv2 device.");
 
 			} else {
@@ -118,7 +118,7 @@ namespace PinDmd.Output.PinDmd2
 						double luminosity;
 						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
 
-						var pixel = (byte)Math.Round(luminosity * 255d);
+						var pixel = (byte)(luminosity * 255d);
 
 						bd0 <<= 1;
 						bd1 <<= 1;
