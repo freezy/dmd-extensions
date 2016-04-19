@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using App;
 using Console.Common;
 
 namespace Console.Test
@@ -17,7 +18,8 @@ namespace Console.Test
 
 		public void Execute()
 		{
-
+			var virtualDmd = new VirtualDmd();
+			DmdExt.WinApp.Run(virtualDmd);
 		}
 	}
 }

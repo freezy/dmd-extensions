@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Console.Common;
 using Console.Mirror;
 using Console.Test;
@@ -11,6 +12,9 @@ namespace Console
 {
 	class DmdExt
 	{
+		public static Application WinApp { get; } = new Application();
+
+		[STAThread]
 		static void Main(string[] args)
 		{
 			var invokedVerb = "";

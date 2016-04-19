@@ -46,16 +46,24 @@
       <HintPath>..\packages\NLog.4.3.0\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ICommand.cs" />
+    <Compile Include="Common\VirtualDmd.xaml.cs">
+      <DependentUpon>VirtualDmd.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Mirror\MirrorCommand.cs" />
     <Compile Include="Mirror\MirrorOptions.cs" />
     <Compile Include="Common\Options.cs" />
@@ -65,7 +73,7 @@
     <Compile Include="Test\TestOptions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="test.png" />
+    <Resource Include="Test\TestImage.png" />
     <None Include="App.config" />
     <Content Include="FodyWeavers.xml" />
     <Content Include="NLog.config">
@@ -81,6 +89,12 @@
       <Project>{0318cc71-57c6-4f46-9495-6cacf0cf1505}</Project>
       <Name>LibDmd</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Common\VirtualDmd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.1.28.3\build\Fody.targets" Condition="Exists('..\packages\Fody.1.28.3\build\Fody.targets')" />

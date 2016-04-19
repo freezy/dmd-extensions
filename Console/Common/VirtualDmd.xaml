@@ -1,0 +1,13 @@
+﻿<Window x:Class="App.VirtualDmd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:App"
+        xmlns:virtualDmd="clr-namespace:LibDmd.Output.VirtualDmd;assembly=LibDmd"
+        mc:Ignorable="d"
+        Title="Virtual DMD" Height="256" Width="850">
+    <Grid>
+        <virtualDmd:VirtualDmdControl x:Name="Dmd" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
+    </Grid>
+</Window>
