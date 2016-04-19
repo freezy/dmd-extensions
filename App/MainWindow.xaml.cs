@@ -49,7 +49,7 @@ namespace App
 			Console.Text += "Added VirtualDMD renderer.\n";
 
 			try {
-				var pinDmd = PinDmd.Output.PinDmd3.PinDmd.GetInstance();
+				var pinDmd = PinDmd.Output.PinDmd3.PinDmd3.GetInstance();
 				if (pinDmd.IsAvailable) {
 					renderers.Add(pinDmd);
 					Console.Text += $"Added PinDMDv3 renderer.\n";
@@ -262,6 +262,9 @@ namespace App
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
 		{
 			_grabberWindow.Close();
+			_screenGraph.Dispose();
+			_pbfxGraph.Dispose();
+
 			Environment.Exit(0);
 		}
 

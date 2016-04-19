@@ -83,7 +83,7 @@
     <Compile Include="Output\VirtualDmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Output\PinDmd3\PinDmd.cs" />
+    <Compile Include="Output\PinDmd3\PinDmd3.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
     <Compile Include="Processor\MonochromeProcessor.cs" />

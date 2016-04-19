@@ -9,6 +9,7 @@ namespace PinDmd.Output.PinDmd1
 	/// <summary>
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
+	/// <see cref="http://pindmd.com/"/>
 	public class PinDmd1 : IFrameDestination
 	{
 		public bool IsAvailable { get; private set; }
@@ -188,7 +189,7 @@ namespace PinDmd.Output.PinDmd1
 			}
 		}
 
-		public void Destroy()
+		public void Dispose()
 		{
 			if (_pinDmd1Device != null) {
 				Ftdi.SetBitMode(0x00, 0x0);

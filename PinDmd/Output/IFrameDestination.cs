@@ -13,7 +13,7 @@ namespace PinDmd.Output
 	/// A destination where frames are rendered, like a physical display or
 	/// some sort of virtual DMD.
 	/// </summary>
-	public interface IFrameDestination
+	public interface IFrameDestination : IDisposable
 	{
 		/// <summary>
 		/// If true, destination is available and can be used as target.
@@ -31,11 +31,6 @@ namespace PinDmd.Output
 		/// after running this.
 		/// </summary>
 		void Init();
-
-		/// <summary>
-		/// Run before the output is discarded.
-		/// </summary>
-		void Destroy();
 	}
 
 	/// <summary>

@@ -7,17 +7,10 @@ using PinDmd.Input;
 namespace PinDmd.Output.PinDmd3
 {
 	/// <summary>
-	/// A .NET friendly API for accessing PinDMD3.
-	/// 
-	/// Work in progress!
-	/// 
+	/// Output target for PinDMD2 devices.
 	/// </summary>
-	/// <remarks>
-	/// This is a singleton. On first instantiation, the DMD is queried
-	/// and the status is kept during the lifetime of the application.
-	/// </remarks>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd : IFrameDestination
+	public class PinDmd3 : IFrameDestination
 	{
 		/// <summary>
 		/// True if device is connected, false otherwise. Check this before accessing anything else.
@@ -39,17 +32,17 @@ namespace PinDmd.Output.PinDmd3
 		/// </summary>
 		public int Height { get; private set; }
 
-		private static PinDmd _instance;
+		private static PinDmd3 _instance;
 		private readonly PixelRgb24[] _frameBuffer;
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
 		/// </summary>
 		/// <returns></returns>
-		public static PinDmd GetInstance()
+		public static PinDmd3 GetInstance()
 		{
 			if (_instance == null) {
-				_instance = new PinDmd();
+				_instance = new PinDmd3();
 			} 
 			_instance.Init();
 			return _instance;
@@ -58,7 +51,7 @@ namespace PinDmd.Output.PinDmd3
 		/// <summary>
 		/// Constructor, initializes the DMD.
 		/// </summary>
-		private PinDmd()
+		private PinDmd3()
 		{
 			_frameBuffer = new PixelRgb24[Width * Height];
 		}
@@ -149,8 +142,9 @@ namespace PinDmd.Output.PinDmd3
 			Interop.RenderRgb24Frame(_frameBuffer);
 		}
 
-		public void Destroy()
+		public void Dispose()
 		{
+			Interop.DeInit();
 		}
 	}
 

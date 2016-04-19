@@ -26,7 +26,7 @@ namespace PinDmd
 	/// should even be possible to have them running at the same time, e.g. a 
 	/// graph withe same source and different processors to different outputs.
 	/// </remarks>
-	public class RenderGraph
+	public class RenderGraph : IDisposable
 	{
 		/// <summary>
 		/// A source is something that produces frames at an arbitrary resolution with
@@ -114,10 +114,13 @@ namespace PinDmd
 			}
 		}
 
-		~RenderGraph()
+		public void Dispose()
 		{
+			if (IsRendering) {
+				StopRendering();
+			}
 			foreach (var dest in Destinations) {
-				dest.Destroy();
+				dest.Dispose();
 			}
 		}
 	}

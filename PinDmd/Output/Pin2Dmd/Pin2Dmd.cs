@@ -196,7 +196,7 @@ namespace PinDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void Destroy()
+		public void Dispose()
 		{
 			if (_pin2DmdDevice != null) {
 				if (_pin2DmdDevice.IsOpen) {

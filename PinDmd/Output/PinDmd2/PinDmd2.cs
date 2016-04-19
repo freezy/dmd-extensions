@@ -16,6 +16,7 @@ namespace PinDmd.Output.PinDmd2
 	/// <summary>
 	/// Output target for PinDMD2 devices.
 	/// </summary>
+	/// <see cref="http://pindmd.com/"/>
 	public class PinDmd2 : IFrameDestination
 	{
 		public bool IsAvailable { get; private set; }
@@ -155,7 +156,7 @@ namespace PinDmd.Output.PinDmd2
 			}
 		}
 
-		public void Destroy()
+		public void Dispose()
 		{
 			if (_pinDmd2Device != null) {
 				if (_pinDmd2Device.IsOpen) {

@@ -6,18 +6,25 @@ Real DMDs for virtual pinball cabinets are pretty cool but they need to be
 supported by the software running the games. This is an attempt to fill some
 gaps.
 
+
 ## Supported Displays
 
-Currently supported displays are the brand new **PinDMD v3**, as well as 
-**PIN2DMD** and **PinDMD v2** (untested). 
-For development there is also a virtual DMD that renders on the computer
-screen, so you can fiddle with it without any display at all.
+Currently supported displays:
+
+- **PinDMD v3**, full RGB support
+- **PinDMD v2**, 4 bit (16 shades) support
+- **PinDMD v1**, 2 bit (4 shades) support
+- **PIN2DMD**, full RGB support
+
+It's also possible to render to a virtual DMD on the computer screen if you 
+want to test or debug or you don't have a real DMD.
+
 
 ## Features
 
 The primary goal of this project was to add support real DMDs for games that
-don't provide support out of the box. The first game is Pinball FX2.
-
+don't provide support out of the box. The first game is Pinball FX2 and we're
+looking into support for the Pinball Arcade as well.
 
 ### Pinball FX2
 
@@ -36,13 +43,19 @@ Then launch both the application, click on the *Pinball FX2* button and run
 Pinball FX2 (order doesn't matter). You should see frames appearing on your 
 DMD.
 
-## TODO
+### The Pinball Arcade
+
+*Work in progress*
 
 Since Pinball Arcade axed the promised cabinet features, we won't see any
 official support soon (at all). Using the FreeCam mod, the same method as
-for Pinball FX2 might be possible.
+for Pinball FX2 might be possible. We're also looking into grabbing DMD
+data straight from the memory.
 
-Nota that this is still considered proof of concept. A lot will change until 
+
+## TODO
+
+Note that this is still considered proof of concept. A lot will change until 
 the v1.0 tag. Report bugs either at VPF or [here on the bug tracker](https://github.com/freezy/dmd-extensions/issues).
 
 ## Compatibility
@@ -51,11 +64,13 @@ This application is based on .NET 4.5, which only runs on Windows 7 or later.
 Probably on Vista too, but who cares. If you're still running WinXP then you
 have my sincerest sympathy, but that's as far as I go. ;)
 
+
 ## Credits
 
 - [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
   code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
+
 
 ## License
 

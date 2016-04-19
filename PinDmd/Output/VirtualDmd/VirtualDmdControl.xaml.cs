@@ -40,9 +40,9 @@ namespace PinDmd.Output.VirtualDmd
 			// nothing to init
 		}
 
-		public void Destroy()
+		public void Dispose()
 		{
-			// nothing to destroy
+			// nothing to dispose
 		}
 	}
 }
