@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Weavers>
+	<Costura PreloadOrder="pinDMD,ftd2xx">
+		<Unmanaged32Assemblies>
+			pinDMD
+			ftd2xx
+		</Unmanaged32Assemblies>
+	</Costura>
+</Weavers>
