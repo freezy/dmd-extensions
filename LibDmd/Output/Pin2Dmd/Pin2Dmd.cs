@@ -71,6 +71,7 @@ namespace LibDmd.Output.Pin2Dmd
 			} else {
 				Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
 				IsAvailable = false;
+				Dispose();
 				return;
 			}
 
