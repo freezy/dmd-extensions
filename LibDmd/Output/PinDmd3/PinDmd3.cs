@@ -23,12 +23,12 @@ namespace LibDmd.Output.PinDmd3
 		/// <summary>
 		/// Width in pixels of the display, 128 for PinDMD3
 		/// </summary>
-		public int Width { get; private set; }
+		public int Width { get; } = 128;
 
 		/// <summary>
 		/// Height in pixels of the display, 32 for PinDMD3
 		/// </summary>
-		public int Height { get; private set; }
+		public int Height { get; } = 32;
 
 		private static PinDmd3 _instance;
 		private readonly PixelRgb24[] _frameBuffer;
@@ -67,11 +67,13 @@ namespace LibDmd.Output.PinDmd3
 			if (IsAvailable) {
 				var info = GetInfo();
 				Firmware = info.Firmware;
-				Width = info.Width;
-				Height = info.Height;
 				Logger.Info("Found PinDMDv3 device.");
 				Logger.Debug("   Firmware:    {0}", Firmware);
 				Logger.Debug("   Resolution:  {0}x{1}", Width, Height);
+
+				if (info.Width != Width || info.Height != Height) {
+					throw new UnsupportedResolutionException("Should be " + Width + "x" + Height + " but is " + info.Width + "x" + info.Height + ".");
+				}
 			} else {
 				Logger.Debug("PinDMDv3 device not found.");
 			}

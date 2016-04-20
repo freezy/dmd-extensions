@@ -39,4 +39,11 @@ namespace LibDmd.Output
 	public class SourceNotAvailableException : Exception
 	{
 	}
+
+	public class UnsupportedResolutionException : Exception
+	{
+		public UnsupportedResolutionException(string message) : base(message)
+		{
+		}
+	}
 }
