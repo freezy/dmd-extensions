@@ -28,6 +28,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		private Pin2Dmd()
 		{
+			// not sure what 7684 is...
 			_frameBuffer = new byte[7684];
 			_frameBuffer[0] = 0x81; // frame sync bytes
 			_frameBuffer[1] = 0xC3;

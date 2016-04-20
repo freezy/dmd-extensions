@@ -115,6 +115,7 @@ namespace LibDmd
 
 		public void Dispose()
 		{
+			Logger.Debug("Disposing render graph.");
 			if (IsRendering) {
 				StopRendering();
 			}

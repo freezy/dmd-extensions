@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,13 +17,19 @@ namespace Console
 	{
 		public static Application WinApp { get; } = new Application();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		static readonly RaygunClient _client = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static BaseCommand _command;
+		private static EventHandler _handler;
 
 		[STAThread]
 		static void Main(string[] args)
 		{
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+			// enable exit handler
+			_handler += ExitHandler;
+			SetConsoleCtrlHandler(_handler, true);
 
 			var invokedVerb = "";
 			object invokedVerbInstance = null;
@@ -37,14 +44,13 @@ namespace Console
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
-			BaseCommand command;
 			switch (invokedVerb) {
 				case "mirror":
-					command = new MirrorCommand((MirrorOptions)invokedVerbInstance);
+					_command = new MirrorCommand((MirrorOptions)invokedVerbInstance);
 					break;
 
 				case "test":
-					command = new TestCommand((TestOptions)invokedVerbInstance);
+					_command = new TestCommand((TestOptions)invokedVerbInstance);
 					break;
 
 				default:
@@ -52,7 +58,7 @@ namespace Console
 			}
 
 			try {
-				command.Execute();
+				_command.Execute();
 				Logger.Info("Press CTRL+C to close.");
 				WinApp.Run();
 
@@ -73,7 +79,39 @@ namespace Console
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
-			_client.Send(e.ExceptionObject as Exception);
+			Raygun.Send(e.ExceptionObject as Exception);
 		}
+
+		#region Exit Handling
+
+		[DllImport("Kernel32")]
+		private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
+
+		private delegate bool EventHandler(CtrlType sig);
+
+		private static bool ExitHandler(CtrlType sig)
+		{
+			switch (sig) {
+				case CtrlType.CTRL_C_EVENT:
+				case CtrlType.CTRL_LOGOFF_EVENT:
+				case CtrlType.CTRL_SHUTDOWN_EVENT:
+				case CtrlType.CTRL_CLOSE_EVENT:
+				default:
+					_command?.Dispose();
+					return false;
+			}
+		}
+
+		enum CtrlType
+		{
+			CTRL_C_EVENT = 0,
+			CTRL_BREAK_EVENT = 1,
+			CTRL_CLOSE_EVENT = 2,
+			CTRL_LOGOFF_EVENT = 5,
+			CTRL_SHUTDOWN_EVENT = 6
+		}
+
+		#endregion
+
 	}
 }

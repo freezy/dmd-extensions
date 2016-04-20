@@ -17,7 +17,7 @@ using static Console.Common.BaseOptions.DestinationType;
 
 namespace Console.Common
 {
-	abstract class BaseCommand
+	abstract class BaseCommand : IDisposable
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -145,6 +145,10 @@ namespace Console.Common
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
 			return dmd.Dmd;
+		}
+
+		public virtual void Dispose()
+		{
 		}
 	}
 

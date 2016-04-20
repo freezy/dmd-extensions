@@ -23,6 +23,8 @@ namespace Console.Test
 	class TestCommand : BaseCommand
 	{
 		private readonly TestOptions _options;
+		private RenderGraph _graph;
+
 		public TestCommand(TestOptions options)
 		{
 			_options = options;
@@ -34,7 +36,7 @@ namespace Console.Test
 			var renderers = GetRenderers(_options);
 
 			// chain them up
-			var graph = new RenderGraph {
+			_graph = new RenderGraph {
 				Destinations = renderers,
 			};
 
@@ -45,7 +47,12 @@ namespace Console.Test
 			bmp.EndInit();
 
 			// render image
-			graph.Render(bmp);
+			_graph.Render(bmp);
+		}
+
+		public override void Dispose()
+		{
+			_graph?.Dispose();
 		}
 	}
 }

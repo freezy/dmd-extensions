@@ -16,6 +16,7 @@ namespace Console.Mirror
 	class MirrorCommand : BaseCommand
 	{
 		private readonly MirrorOptions _options;
+		private RenderGraph _graph;
 
 		public MirrorCommand(MirrorOptions options)
 		{
@@ -25,7 +26,7 @@ namespace Console.Mirror
 		public override void Execute()
 		{
 			// create graph with renderers
-			var graph = new RenderGraph {
+			_graph = new RenderGraph {
 				Destinations = GetRenderers(_options)
 			};
 
@@ -42,7 +43,7 @@ namespace Console.Mirror
 					if (_options.GridSize.Length != 2) {
 						throw new InvalidOptionException("Argument --grid-size must have two values: \"<Width> <Height>\".");
 					}
-					graph.Source = new PBFX2Grabber {
+					_graph.Source = new PBFX2Grabber {
 						FramesPerSecond = _options.FramesPerSecond
 					};
 					var gridProcessor = new GridProcessor {
@@ -56,7 +57,7 @@ namespace Console.Mirror
 						Intensity = _options.ShadeIntensity,
 						Brightness = _options.ShadeBrightness
 					};
-					graph.Processors = new List<AbstractProcessor>() {
+					_graph.Processors = new List<AbstractProcessor>() {
 						gridProcessor,
 						transformationProcessor,
 						shadeProcessor
@@ -67,14 +68,14 @@ namespace Console.Mirror
 					if (_options.Position.Length != 4) {
 						throw new InvalidOptionException("Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
 					}
-					graph.Source = new ScreenGrabber {
+					_graph.Source = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
 						Top = _options.Position[1],
 						Width = _options.Position[2],
 						Height = _options.Position[3]
 					};
-					graph.Processors = new List<AbstractProcessor>() { transformationProcessor };
+					_graph.Processors = new List<AbstractProcessor>() { transformationProcessor };
 					break;
 
 				default:
@@ -87,7 +88,12 @@ namespace Console.Mirror
 			};
 
 			// always transform to correct dimensions
-			graph.StartRendering();
+			_graph.StartRendering();
+		}
+
+		public override void Dispose()
+		{
+			_graph?.Dispose();
 		}
 	}
 }

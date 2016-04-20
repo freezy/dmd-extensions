@@ -38,6 +38,20 @@ namespace LibDmd.Output.PinDmd2
 			_frameBuffer[3] = 0x0;
 		}
 
+		/// <summary>
+		/// Returns the current instance of the PinDMD2 API. In any case,
+		/// the instance get (re-)initialized.
+		/// </summary>
+		/// <returns></returns>
+		public static PinDmd2 GetInstance()
+		{
+			if (_instance == null) {
+				_instance = new PinDmd2();
+			}
+			_instance.Init();
+			return _instance;
+		}
+
 		public void Init()
 		{
 			// find and open the usb device.
@@ -49,6 +63,7 @@ namespace LibDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
+
 			if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
 				Logger.Info("Found PinDMDv2 device.");
 				Logger.Debug("   Manufacturer: {0}", _pinDmd2Device.Info.ManufacturerString);
@@ -68,20 +83,6 @@ namespace LibDmd.Output.PinDmd2
 				usbDevice.ClaimInterface(0);
 			}
 			IsAvailable = true;
-		}
-
-		/// <summary>
-		/// Returns the current instance of the PinDMD2 API. In any case,
-		/// the instance get (re-)initialized.
-		/// </summary>
-		/// <returns></returns>
-		public static PinDmd2 GetInstance()
-		{
-			if (_instance == null) {
-				_instance = new PinDmd2();
-			}
-			_instance.Init();
-			return _instance;
 		}
 
 		/// <summary>
