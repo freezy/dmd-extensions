@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
 using Console.Mirror;
 using Console.Test;
 
-namespace Console
+namespace Console.Common
 {
 	class Options
 	{
@@ -22,6 +19,7 @@ namespace Console
 		public Options()
 		{
 			Mirror = new MirrorOptions();
+			Test = new TestOptions();
 		}
 
 		[HelpVerbOption]
@@ -30,6 +28,8 @@ namespace Console
 			switch (verb) {
 				case "mirror":
 					return AutoBuild(Mirror, "dmdext mirror --source=<source> [--destination=<destination>]", Mirror.LastParserState);
+				case "test":
+					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Mirror.LastParserState);
 				default:
 					return AutoBuild(this, "dmdext <command> [<options>]", null, false);
 			}
@@ -63,6 +63,13 @@ namespace Console
 				}
 			}
 			return help;
+		}
+	}
+
+	public class InvalidOptionException : Exception
+	{
+		public InvalidOptionException(string message) : base(message)
+		{
 		}
 	}
 }

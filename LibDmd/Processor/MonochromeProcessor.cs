@@ -22,6 +22,8 @@ namespace LibDmd.Processor
 		/// </summary>
 		public PixelFormat PixelFormat { get; set; } = PixelFormats.Gray16;
 
+		public override bool IsGreyscaleCompatible { get; } = false;
+
 		public override BitmapSource Process(BitmapSource bmp)
 		{
 			var monochrome = new FormatConvertedBitmap();

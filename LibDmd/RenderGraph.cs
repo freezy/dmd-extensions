@@ -78,7 +78,7 @@ namespace LibDmd
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
 			}
 			IsRendering = true;
-			var enabledProcessors = Processors.Where(processor => processor.Enabled);
+			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
 
 			foreach (var dest in Destinations) {
 				var frames = Source.GetFrames();
@@ -87,8 +87,9 @@ namespace LibDmd
 					_beforeProcessed.OnNext(bmp);
 
 					if (Processors != null) {
-						bmp = enabledProcessors.Aggregate(bmp,
-							(current, processor) => processor.Process(current));
+						bmp = enabledProcessors
+							.Where(processor => dest.IsRgb || processor.IsGreyscaleCompatible)
+							.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
 					}
 					dest.Render(bmp);
 				}));

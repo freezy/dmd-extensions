@@ -9,6 +9,7 @@ namespace LibDmd.Output.VirtualDmd
 	public partial class VirtualDmdControl : UserControl, IFrameDestination
 	{
 		public bool IsAvailable { get; } = true;
+		public bool IsRgb { get; } = true;
 
 		public VirtualDmdControl()
 		{

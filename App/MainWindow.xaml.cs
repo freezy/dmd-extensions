@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -46,6 +47,11 @@ namespace App
 		{
 			InitializeComponent();
 			Closing += OnWindowClosing;
+
+			var title = (AssemblyTitleAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false).FirstOrDefault();
+			var version = (AssemblyInformationalVersionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false).FirstOrDefault();
+			Title = $"{title?.Title} v{version?.InformationalVersion}";
+
 
 			// define renderers
 			var renderers = new List<IFrameDestination> { VirtualDmd };
@@ -103,7 +109,7 @@ namespace App
 				PixelFormat = PixelFormats.Gray16,
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
-			_shadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Lightness = 0 };
+			_shadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -172,12 +178,12 @@ namespace App
 						break;
 
 					case Key.E:
-						_shadeProcessor.Lightness -= 0.1;
-						Console.Text += "Lightness: " + _shadeProcessor.Lightness + "\n";
+						_shadeProcessor.Brightness -= 0.1;
+						Console.Text += "Lightness: " + _shadeProcessor.Brightness + "\n";
 						break;
 					case Key.R:
-						_shadeProcessor.Lightness += 0.1;
-						Console.Text += "Lightness: " + _shadeProcessor.Lightness + "\n";
+						_shadeProcessor.Brightness += 0.1;
+						Console.Text += "Lightness: " + _shadeProcessor.Brightness + "\n";
 						break;
 
 					case Key.A:
@@ -270,6 +276,5 @@ namespace App
 
 			Environment.Exit(0);
 		}
-
 	}
 }

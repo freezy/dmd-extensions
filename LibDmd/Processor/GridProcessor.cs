@@ -12,6 +12,12 @@ namespace LibDmd.Processor
 	/// </summary>
 	public class GridProcessor : AbstractProcessor
 	{
+		public override bool Enabled
+		{
+			get { return _enabled && Spacing > 0; }
+			set { _enabled = value; }
+		}
+
 		/// <summary>
 		/// Number of horizontal dots
 		/// </summary>
@@ -26,6 +32,8 @@ namespace LibDmd.Processor
 		/// Relative spacing to strip. 1 = 100% (same size as dot), 0.5 = half size, etc
 		/// </summary>
 		public double Spacing { get; set; }
+
+		private bool _enabled = true;
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{
@@ -81,15 +89,6 @@ namespace LibDmd.Processor
 			img.Freeze();
 			_whenProcessed.OnNext(img);
 			return img;
-		}
-
-		public static void Dump(BitmapSource image, string filePath)
-		{
-			using (var fileStream = new FileStream(filePath, FileMode.Create)) {
-				BitmapEncoder encoder = new PngBitmapEncoder();
-				encoder.Frames.Add(BitmapFrame.Create(image));
-				encoder.Save(fileStream);
-			}
 		}
 	}
 }

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:App"
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.VirtualDmd;assembly=LibDmd"
         mc:Ignorable="d"
-        Title="DMD Extensions v.0.0.3" Height="420" Width="420">
+        Height="420" Width="420">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

@@ -13,7 +13,7 @@ namespace LibDmd.Processor
 		/// <summary>
 		/// Number of shades to reduce luminosity to. Shades are equally 
 		/// distributed but can be tweaked with <see cref="Intensity"/> and
-		/// <see cref="Lightness"/>.
+		/// <see cref="Brightness"/>.
 		/// </summary>
 		/// <remarks>Set to 0 to disable shading (only intensity and lightness apply).</remarks>
 		public int NumShades { get; set; } = 4;
@@ -31,7 +31,9 @@ namespace LibDmd.Processor
 		/// can only be increased so much before overflowing, and full intensity
 		/// still needs to be achieved.
 		/// </summary>
-		public double Lightness { get; set; } = 0;
+		public double Brightness { get; set; } = 0;
+
+		public override bool IsGreyscaleCompatible { get; } = false;
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{
@@ -56,10 +58,10 @@ namespace LibDmd.Processor
 
 				// manipulate luminosity
 				if (NumShades > 0) {
-					luminosity = (Math.Round(luminosity * Intensity * NumShades) + Lightness) / NumShades;
+					luminosity = (Math.Round(luminosity * Intensity * NumShades) + Brightness) / NumShades;
 
 				} else {
-					luminosity = luminosity * Intensity + Lightness;
+					luminosity = luminosity * Intensity + Brightness;
 				}
 
 				// convert back to RGB

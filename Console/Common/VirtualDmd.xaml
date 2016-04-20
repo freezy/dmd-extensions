@@ -6,8 +6,16 @@
         xmlns:local="clr-namespace:App"
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.VirtualDmd;assembly=LibDmd"
         mc:Ignorable="d"
-        Title="Virtual DMD" Height="256" Width="850">
+        Title="Virtual DMD" Height="256" Width="1024"
+        WindowStyle="None"
+        Background="Black"
+        AllowsTransparency="True"
+        ResizeMode="CanResizeWithGrip">
     <Grid>
-        <virtualDmd:VirtualDmdControl x:Name="Dmd" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="467*"/>
+            <ColumnDefinition Width="549*"/>
+        </Grid.ColumnDefinitions>
+        <virtualDmd:VirtualDmdControl x:Name="Dmd" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </Window>

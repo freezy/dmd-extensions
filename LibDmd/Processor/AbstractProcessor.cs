@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 
@@ -18,7 +19,7 @@ namespace LibDmd.Processor
 		/// <summary>
 		/// If set to false, this processor will be ignored by the <see cref="RenderGraph"/>.
 		/// </summary>
-		public bool Enabled { get; set; } = true;
+		public virtual bool Enabled { get; set; } = true;
 
 		/// <summary>
 		/// Processes a frame
@@ -27,6 +28,24 @@ namespace LibDmd.Processor
 		/// <returns>Processed frame</returns>
 		public abstract BitmapSource Process(BitmapSource bmp);
 
+		/// <summary>
+		/// If false, non-RGB displays will skip this processor.
+		/// </summary>
+		/// <remarks>
+		/// This is useful because we don't want to artificially monochromify
+		/// frames that are sent to a monochrome display anyway.
+		/// </remarks>
+		public virtual bool IsGreyscaleCompatible { get; } = true;
+
 		protected Subject<BitmapSource> _whenProcessed = new Subject<BitmapSource>();
+
+		protected static void Dump(BitmapSource image, string filePath)
+		{
+			using (var fileStream = new FileStream(filePath, FileMode.Create)) {
+				BitmapEncoder encoder = new PngBitmapEncoder();
+				encoder.Frames.Add(BitmapFrame.Create(image));
+				encoder.Save(fileStream);
+			}
+		}
 	}
 }

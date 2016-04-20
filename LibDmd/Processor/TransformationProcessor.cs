@@ -31,7 +31,7 @@ namespace LibDmd.Processor
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{
-			if (bmp.PixelWidth == Width && bmp.PixelHeight == Height) {
+			if (bmp.PixelWidth == Width && bmp.PixelHeight == Height && !FlipHorizontally && !FlipVertically) {
 				return bmp;
 			}
 			var sw = new Stopwatch();

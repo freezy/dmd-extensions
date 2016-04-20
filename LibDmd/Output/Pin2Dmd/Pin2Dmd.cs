@@ -14,6 +14,7 @@ namespace LibDmd.Output.Pin2Dmd
 	public class Pin2Dmd : IFrameDestination
 	{
 		public bool IsAvailable { get; private set; }
+		public bool IsRgb { get; } = true;
 
 		public int Width { get; } = 128;
 		public int Height { get; } = 32;
@@ -79,7 +80,6 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 			IsAvailable = true;
 		}
-
 
 		/// <summary>
 		/// Renders an image to the display.

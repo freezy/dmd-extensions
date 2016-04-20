@@ -12,10 +12,8 @@ namespace LibDmd.Output.PinDmd3
 	/// <see cref="http://pindmd.com/"/>
 	public class PinDmd3 : IFrameDestination
 	{
-		/// <summary>
-		/// True if device is connected, false otherwise. Check this before accessing anything else.
-		/// </summary>
 		public bool IsAvailable { get; private set; }
+		public bool IsRgb { get; } = true;
 
 		/// <summary>
 		/// Firmware string read from the device if connected

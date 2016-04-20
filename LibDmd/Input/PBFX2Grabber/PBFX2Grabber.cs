@@ -47,12 +47,12 @@ namespace LibDmd.Input.PBFX2Grabber
 		private void PollForHandle() {
 			_handle = FindDmdHandle();
 			if (_handle == IntPtr.Zero) {
-				Logger.Info("Pinball FX2 not running, starting to poll...");
+				Logger.Info("Pinball FX2 not running, waiting...");
 				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x =>
 				{
 					_handle = FindDmdHandle();
 					if (_handle != IntPtr.Zero) {
-						Logger.Info("Pinball FX2 running, starting to capture!");
+						Logger.Info("Pinball FX2 running, starting to capture.");
 						_poller.Dispose();
 					}
 				});
@@ -115,7 +115,7 @@ namespace LibDmd.Input.PBFX2Grabber
 						return handle;
 					}
 				}
-				Logger.Warn("Pinball FX2 process found (pid {0}) but DMD not! No game running?", proc.Id);
+				Logger.Warn("Pinball FX2 process found (pid {0}) but DMD not. No game running?", proc.Id);
 			}
 			return IntPtr.Zero;
 		}

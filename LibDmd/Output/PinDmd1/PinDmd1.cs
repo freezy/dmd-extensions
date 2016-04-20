@@ -14,6 +14,7 @@ namespace LibDmd.Output.PinDmd1
 	public class PinDmd1 : IFrameDestination
 	{
 		public bool IsAvailable { get; private set; }
+		public bool IsRgb { get; } = false;
 
 		public int Width { get; } = 128;
 		public int Height { get; } = 32;
