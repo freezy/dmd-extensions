@@ -7,6 +7,7 @@ using System.Windows;
 using Console.Common;
 using Console.Mirror;
 using Console.Test;
+using Mindscape.Raygun4Net;
 using NLog;
 
 namespace Console
@@ -15,10 +16,14 @@ namespace Console
 	{
 		public static Application WinApp { get; } = new Application();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		static readonly RaygunClient _client = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 
 		[STAThread]
 		static void Main(string[] args)
 		{
+
+			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
 			var invokedVerb = "";
 			object invokedVerbInstance = null;
 			var options = new Options();
@@ -64,6 +69,11 @@ namespace Console
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
+		}
+
+		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			_client.Send(e.ExceptionObject as Exception);
 		}
 	}
 }

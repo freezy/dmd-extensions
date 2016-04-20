@@ -81,6 +81,7 @@ namespace Console.Mirror
 					throw new ArgumentOutOfRangeException();
 			}
 
+			// TODO add as option
 			var monochromeProcessor = new MonochromeProcessor {
 				Tint = Color.FromRgb(255, 155, 0)
 			};
