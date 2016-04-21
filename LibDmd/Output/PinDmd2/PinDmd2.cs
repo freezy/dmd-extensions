@@ -12,13 +12,12 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : IFrameDestination
+	public class PinDmd2 : BufferRenderer, IFrameDestination
 	{
-		public bool IsAvailable { get; private set; }
 		public bool IsRgb { get; } = false;
 
-		public int Width { get; } = 128;
-		public int Height { get; } = 32;
+		public override sealed int Width { get; } = 128;
+		public override sealed int Height { get; } = 32;
 
 		private UsbDevice _pinDmd2Device;
 		private readonly byte[] _frameBuffer;
@@ -92,64 +91,10 @@ namespace LibDmd.Output.PinDmd2
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
-			if (!IsAvailable) {
-				throw new SourceNotAvailableException();
-			}
-			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
-				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
-			}
+			// copy bitmap to frame buffer
+			RenderGrey4(bmp, _frameBuffer, 4);
 
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			var byteIdx = 4;
-
-			for (var y = 0; y < Height; y++) {
-				for (var x = 0; x < Width; x += 8) {
-					byte bd0 = 0;
-					byte bd1 = 0;
-					byte bd2 = 0;
-					byte bd3 = 0;
-					for (var v = 7; v >= 0; v--) {
-
-						rect.X = x + v;
-						rect.Y = y;
-						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-
-						// convert to HSL
-						double hue;
-						double saturation;
-						double luminosity;
-						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
-
-						var pixel = (byte)(luminosity * 255d);
-
-						bd0 <<= 1;
-						bd1 <<= 1;
-						bd2 <<= 1;
-						bd3 <<= 1;
-
-						if ((pixel & 16) != 0) {
-							bd0 |= 1;
-						}
-						if ((pixel & 32) != 0) {
-							bd1 |= 1;
-						}
-						if ((pixel & 64) != 0) {
-							bd2 |= 1;
-						}
-						if ((pixel & 128) != 0) {
-							bd3 |= 1;
-						}
-					}
-					_frameBuffer[byteIdx] = bd0;
-					_frameBuffer[byteIdx + 512] = bd1;
-					_frameBuffer[byteIdx + 1024] = bd2;
-					_frameBuffer[byteIdx + 1536] = bd3;
-					byteIdx++;
-				}
-			}
-
+			// send frame buffer to device
 			var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
 			var error = writer.Write(_frameBuffer, 2000, out bytesWritten);
@@ -161,14 +106,12 @@ namespace LibDmd.Output.PinDmd2
 
 		public void Dispose()
 		{
-			if (_pinDmd2Device != null) {
-				if (_pinDmd2Device.IsOpen) {
-					var wholeUsbDevice = _pinDmd2Device as IUsbDevice;
-					if (!ReferenceEquals(wholeUsbDevice, null)) {
-						wholeUsbDevice.ReleaseInterface(0);
-					}
-					_pinDmd2Device.Close();
+			if (_pinDmd2Device != null && _pinDmd2Device.IsOpen) {
+				var wholeUsbDevice = _pinDmd2Device as IUsbDevice;
+				if (!ReferenceEquals(wholeUsbDevice, null)) {
+					wholeUsbDevice.ReleaseInterface(0);
 				}
+				_pinDmd2Device.Close();
 			}
 			_pinDmd2Device = null;
 			UsbDevice.Exit();

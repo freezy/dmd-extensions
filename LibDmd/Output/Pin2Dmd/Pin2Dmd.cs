@@ -11,13 +11,12 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IFrameDestination
+	public class Pin2Dmd : BufferRenderer, IFrameDestination
 	{
-		public bool IsAvailable { get; private set; }
 		public bool IsRgb { get; } = true;
 
-		public int Width { get; } = 128;
-		public int Height { get; } = 32;
+		public override int Width { get; } = 128;
+		public override int Height { get; } = 32;
 
 		private UsbDevice _pin2DmdDevice;
 		private readonly byte[] _frameBuffer;
@@ -89,103 +88,10 @@ namespace LibDmd.Output.Pin2Dmd
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
-			if (!IsAvailable) {
-				throw new SourceNotAvailableException();
-			}
-			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
-				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
-			}
+			// copy bitmap to frame buffer
+			RenderRgb24(bmp, _frameBuffer, 4);
 
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			var byteIdx = 4;
-
-			for (var y = 0; y < Height; y++) {
-				for (var x = 0; x < Width; x += 8) {
-					byte r3 = 0;
-					byte r4 = 0;
-					byte r5 = 0;
-					byte r6 = 0;
-					byte r7 = 0;
-
-					byte g3 = 0;
-					byte g4 = 0;
-					byte g5 = 0;
-					byte g6 = 0;
-					byte g7 = 0;
-
-					byte b3 = 0;
-					byte b4 = 0;
-					byte b5 = 0;
-					byte b6 = 0;
-					byte b7 = 0;
-					for (var v = 7; v >= 0; v--) {
-						rect.X = x + v;
-						rect.Y = y;
-						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-
-						// convert to HSL
-						var pixelr = bytes[2];
-						var pixelg = bytes[1];
-						var pixelb = bytes[0];
-
-						r3 <<= 1;
-						r4 <<= 1;
-						r5 <<= 1;
-						r6 <<= 1;
-						r7 <<= 1;
-						g3 <<= 1;
-						g4 <<= 1;
-						g5 <<= 1;
-						g6 <<= 1;
-						g7 <<= 1;
-						b3 <<= 1;
-						b4 <<= 1;
-						b5 <<= 1;
-						b6 <<= 1;
-						b7 <<= 1;
-
-						if ((pixelr & 8) != 0) r3 |= 1;
-						if ((pixelr & 16) != 0) r4 |= 1;
-						if ((pixelr & 32) != 0) r5 |= 1;
-						if ((pixelr & 64) != 0) r6 |= 1;
-						if ((pixelr & 128) != 0) r7 |= 1;
-
-						if ((pixelg & 8) != 0) g3 |= 1;
-						if ((pixelg & 16) != 0) g4 |= 1;
-						if ((pixelg & 32) != 0) g5 |= 1;
-						if ((pixelg & 64) != 0) g6 |= 1;
-						if ((pixelg & 128) != 0) g7 |= 1;
-
-						if ((pixelb & 8) != 0) b3 |= 1;
-						if ((pixelb & 16) != 0) b4 |= 1;
-						if ((pixelb & 32) != 0) b5 |= 1;
-						if ((pixelb & 64) != 0) b6 |= 1;
-						if ((pixelb & 128) != 0) b7 |= 1;
-					}
-
-					_frameBuffer[byteIdx + 5120] = r3;
-					_frameBuffer[byteIdx + 5632] = r4;
-					_frameBuffer[byteIdx + 6144] = r5;
-					_frameBuffer[byteIdx + 6656] = r6;
-					_frameBuffer[byteIdx + 7168] = r7;
-
-					_frameBuffer[byteIdx + 2560] = g3;
-					_frameBuffer[byteIdx + 3072] = g4;
-					_frameBuffer[byteIdx + 3584] = g5;
-					_frameBuffer[byteIdx + 4096] = g6;
-					_frameBuffer[byteIdx + 4608] = g7;
-
-					_frameBuffer[byteIdx + 0] = b3;
-					_frameBuffer[byteIdx + 512] = b4;
-					_frameBuffer[byteIdx + 1024] = b5;
-					_frameBuffer[byteIdx + 1536] = b6;
-					_frameBuffer[byteIdx + 2048] = b7;
-					byteIdx++;
-				}
-			}
-
+			// send frame buffer to device
 			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
 			var error = writer.Write(_frameBuffer, 2000, out bytesWritten);

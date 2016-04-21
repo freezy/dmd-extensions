@@ -11,13 +11,12 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : IFrameDestination
+	public class PinDmd1 : BufferRenderer, IFrameDestination
 	{
-		public bool IsAvailable { get; private set; }
 		public bool IsRgb { get; } = false;
 
-		public int Width { get; } = 128;
-		public int Height { get; } = 32;
+		public override sealed int Width { get; } = 128;
+		public override sealed int Height { get; } = 32;
 
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
 		private readonly byte[] _frameBuffer;
@@ -133,58 +132,10 @@ namespace LibDmd.Output.PinDmd1
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
-			if (!IsAvailable) {
-				throw new SourceNotAvailableException();
-			}
-			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
-				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
-			}
+			// copy bitmap to frame buffer
+			RenderGrey2(bmp, _frameBuffer, 4);
 
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			var byteIdx = 4;
-
-			for (var y = 0; y < Height; y++) {
-				for (var x = 0; x < Width; x += 8)
-				{
-					byte bd0 = 0;
-					byte bd1 = 0;
-
-					for (var v = 7; v >= 0; v--) {
-
-						rect.X = x + v;
-						rect.Y = y;
-						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-
-						// convert to HSL
-						double hue;
-						double saturation;
-						double luminosity;
-						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
-
-						// pixel shade between 0 and 3
-						var pixel = (byte)(luminosity * 4);
-						pixel = pixel == 4 ? (byte)3 : pixel; // special case lum == 1 and hence pixel = 4
-
-						bd0 <<= 1;
-						bd1 <<= 1;
-
-						if ((pixel & 1) != 0) {
-							bd0 |= 1;
-						}
-
-						if ((pixel & 2) != 0) {
-							bd1 |= 1;
-						}
-					}
-
-					_frameBuffer[byteIdx + 0] = bd0;
-					_frameBuffer[byteIdx + 512] = bd1;
-					byteIdx++;
-				}
-			}
-
+			// send frame buffer to device
 			uint numBytesWritten = 0;
 			var status = Ftdi.Write(_frameBuffer, _frameBuffer.Length, ref numBytesWritten);
 			if (status != FTDI.FT_STATUS.FT_OK) {

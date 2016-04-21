@@ -10,9 +10,8 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : IFrameDestination
+	public class PinDmd3 : BufferRenderer, IFrameDestination
 	{
-		public bool IsAvailable { get; private set; }
 		public bool IsRgb { get; } = true;
 
 		/// <summary>
@@ -23,15 +22,16 @@ namespace LibDmd.Output.PinDmd3
 		/// <summary>
 		/// Width in pixels of the display, 128 for PinDMD3
 		/// </summary>
-		public int Width { get; } = 128;
+		public override sealed int Width { get; } = 128;
 
 		/// <summary>
 		/// Height in pixels of the display, 32 for PinDMD3
 		/// </summary>
-		public int Height { get; } = 32;
+		public override sealed int Height { get; } = 32;
 
 		private static PinDmd3 _instance;
 		private readonly PixelRgb24[] _frameBuffer;
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
@@ -104,28 +104,11 @@ namespace LibDmd.Output.PinDmd3
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
-		/// <remarks>Device must be connected, otherwise <seealso cref="SourceNotAvailableException"/> is thrown.</remarks>
-		/// <param name="path">Path to the image, can be anything <see cref="T:System.Drawing.Bitmap"/> understands.</param>
-		public void Render(string path)
-		{
-			if (!IsAvailable) {
-				throw new SourceNotAvailableException();
-			}
-			Render(new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute)));
-		}
-
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
-			if (!IsAvailable) {
-				throw new SourceNotAvailableException();
-			}
-			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
-				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
-			}
+			// make sure we can render
+			AssertRenderReady(bmp);
 
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
@@ -136,12 +119,13 @@ namespace LibDmd.Output.PinDmd3
 					rect.X = x;
 					rect.Y = y;
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-					var color = Color.FromArgb(0xFF, bytes[2], bytes[1], bytes[0]);
-					_frameBuffer[(y * Width) + x].Red = color.R;
-					_frameBuffer[(y * Width) + x].Green = color.G;
-					_frameBuffer[(y * Width) + x].Blue = color.B;
+					_frameBuffer[(y * Width) + x].Red = bytes[2];
+					_frameBuffer[(y * Width) + x].Green = bytes[1];
+					_frameBuffer[(y * Width) + x].Blue = bytes[0];
 				}
 			}
+
+			// send frame buffer to device
 			Interop.RenderRgb24Frame(_frameBuffer);
 		}
 
