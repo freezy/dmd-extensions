@@ -22,12 +22,12 @@ namespace LibDmd.Output
 		public abstract int Height { get; }
 
 		/// <summary>
-		/// Copies a bitmap into a 2-bit greyscale buffer. Used by PinDMDv1.
+		/// Copies a bitmap into a 2-bit grayscale buffer. Used by PinDMDv1.
 		/// </summary>
 		/// <param name="bmp">Image source</param>
 		/// <param name="frameBuffer">Destination buffer</param>
 		/// <param name="startAt">Position to start writing</param>
-		protected void RenderGrey2(BitmapSource bmp, byte[] frameBuffer, int startAt)
+		protected void RenderGray2(BitmapSource bmp, byte[] frameBuffer, int startAt)
 		{
 			// make sure we can render
 			AssertRenderReady(bmp);
@@ -78,12 +78,12 @@ namespace LibDmd.Output
 		}
 
 		/// <summary>
-		/// Copies a bitmap into a 4-bit greyscale buffer. Used by PinDMDv2 and PIN2DMD.
+		/// Copies a bitmap into a 4-bit grayscale buffer. Used by PinDMDv2 and PIN2DMD.
 		/// </summary>
 		/// <param name="bmp">Image source</param>
 		/// <param name="frameBuffer">Destination buffer</param>
 		/// <param name="startAt">Position to start writing</param>
-		protected void RenderGrey4(BitmapSource bmp, byte[] frameBuffer, int startAt)
+		protected void RenderGray4(BitmapSource bmp, byte[] frameBuffer, int startAt)
 		{
 			// make sure we can render
 			AssertRenderReady(bmp);

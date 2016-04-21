@@ -15,6 +15,9 @@ namespace Console.Common
 		[Option("no-virtual", HelpText = "Explicitly disables the virtual DMD when destination is \"auto\". Default: false.")]
 		public bool NoVirtualDmd { get; set; } = false;
 
+		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported.")]
+		public bool RenderAsGray4 { get; set; } = false;
+
 		[Option("flip-x", HelpText = "Flips the image horizontally. Default: false.")]
 		public bool FlipHorizontally { get; set; } = false;
 

@@ -12,8 +12,9 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : BufferRenderer, IFrameDestination
+	public class PinDmd2 : BufferRenderer, IFrameDestination, IGray4
 	{
+		public string Name { get; } = "PinDMD v2";
 		public bool IsRgb { get; } = false;
 
 		public override sealed int Width { get; } = 128;
@@ -33,7 +34,7 @@ namespace LibDmd.Output.PinDmd2
 			_frameBuffer = new byte[size];
 			_frameBuffer[0] = 0x81;    // frame sync bytes
 			_frameBuffer[1] = 0xC3;
-			_frameBuffer[2] = 0xE7;
+			_frameBuffer[2] = 0xE7;    // overridden when rendering frame, here only for reference.
 			_frameBuffer[3] = 0x0;
 		}
 
@@ -92,7 +93,7 @@ namespace LibDmd.Output.PinDmd2
 		public void Render(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
-			RenderGrey4(bmp, _frameBuffer, 4);
+			RenderGray4(bmp, _frameBuffer, 4);
 
 			// send frame buffer to device
 			var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
@@ -102,6 +103,12 @@ namespace LibDmd.Output.PinDmd2
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				throw new Exception(UsbDevice.LastErrorString);
 			}
+		}
+
+		public void RenderGray4(BitmapSource bmp)
+		{
+			// that's all PinDMDv2 can do anyway..
+			Render(bmp);
 		}
 
 		public void Dispose()

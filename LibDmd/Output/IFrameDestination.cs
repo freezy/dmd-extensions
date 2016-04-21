@@ -10,6 +10,11 @@ namespace LibDmd.Output
 	public interface IFrameDestination : IDisposable
 	{
 		/// <summary>
+		/// A human-friendly name for the device
+		/// </summary>
+		string Name { get; }
+
+		/// <summary>
 		/// If true, destination is available and can be used as target.
 		/// </summary>
 		bool IsAvailable { get; }

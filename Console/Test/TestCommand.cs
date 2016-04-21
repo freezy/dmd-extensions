@@ -38,6 +38,7 @@ namespace Console.Test
 			// chain them up
 			_graph = new RenderGraph {
 				Destinations = renderers,
+				RenderAsGray4 = _options.RenderAsGray4
 			};
 
 			// retrieve image

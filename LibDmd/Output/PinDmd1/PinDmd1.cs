@@ -13,6 +13,7 @@ namespace LibDmd.Output.PinDmd1
 	/// <see cref="http://pindmd.com/"/>
 	public class PinDmd1 : BufferRenderer, IFrameDestination
 	{
+		public string Name { get; } = "PinDMD v1";
 		public bool IsRgb { get; } = false;
 
 		public override sealed int Width { get; } = 128;
@@ -126,6 +127,8 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
+
+
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
@@ -133,7 +136,7 @@ namespace LibDmd.Output.PinDmd1
 		public void Render(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
-			RenderGrey2(bmp, _frameBuffer, 4);
+			RenderGray2(bmp, _frameBuffer, 4);
 
 			// send frame buffer to device
 			uint numBytesWritten = 0;

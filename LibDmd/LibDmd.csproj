@@ -82,6 +82,7 @@
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Output\BufferRenderer.cs" />
+    <Compile Include="Output\IGray4.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />

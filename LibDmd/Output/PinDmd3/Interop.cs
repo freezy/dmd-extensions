@@ -38,7 +38,7 @@ namespace LibDmd.Output.PinDmd3
 		/// Return Type: void
 		/// currbuffer: UINT8*
 		[DllImport("pinDMD.dll", EntryPoint = "render16ShadeFrame", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void Render16ShadeFrame(IntPtr currbuffer);
+		public static extern void Render16ShadeFrame(byte[] currbuffer);
 
 		/// Return Type: void
 		/// currbuffer: rgb24*

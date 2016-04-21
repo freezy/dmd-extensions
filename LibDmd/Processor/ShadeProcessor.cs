@@ -33,7 +33,7 @@ namespace LibDmd.Processor
 		/// </summary>
 		public double Brightness { get; set; } = 0;
 
-		public override bool IsGreyscaleCompatible { get; } = false;
+		public override bool IsGrayscaleCompatible { get; } = false;
 
 		public override BitmapSource Process(BitmapSource bmp)
 		{

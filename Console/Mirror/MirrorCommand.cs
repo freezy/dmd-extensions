@@ -27,7 +27,8 @@ namespace Console.Mirror
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
-				Destinations = GetRenderers(_options)
+				Destinations = GetRenderers(_options),
+				RenderAsGray4 = _options.RenderAsGray4
 			};
 
 			// instantiate transformation processor

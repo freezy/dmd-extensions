@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 
 namespace LibDmd.Output.PinDmd3
@@ -10,8 +11,9 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IFrameDestination
+	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4
 	{
+		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;
 
 		/// <summary>
@@ -30,7 +32,8 @@ namespace LibDmd.Output.PinDmd3
 		public override sealed int Height { get; } = 32;
 
 		private static PinDmd3 _instance;
-		private readonly PixelRgb24[] _frameBuffer;
+		private readonly PixelRgb24[] _frameBufferRgb24;
+		private readonly byte[] _frameBufferGray4;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -52,7 +55,8 @@ namespace LibDmd.Output.PinDmd3
 		/// </summary>
 		private PinDmd3()
 		{
-			_frameBuffer = new PixelRgb24[Width * Height];
+			_frameBufferRgb24 = new PixelRgb24[Width * Height];
+			_frameBufferGray4 = new byte[Width * Height];
 		}
 
 		public void Init()
@@ -119,14 +123,46 @@ namespace LibDmd.Output.PinDmd3
 					rect.X = x;
 					rect.Y = y;
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-					_frameBuffer[(y * Width) + x].Red = bytes[2];
-					_frameBuffer[(y * Width) + x].Green = bytes[1];
-					_frameBuffer[(y * Width) + x].Blue = bytes[0];
+					_frameBufferRgb24[(y * Width) + x].Red = bytes[2];
+					_frameBufferRgb24[(y * Width) + x].Green = bytes[1];
+					_frameBufferRgb24[(y * Width) + x].Blue = bytes[0];
 				}
 			}
 
 			// send frame buffer to device
-			Interop.RenderRgb24Frame(_frameBuffer);
+			Interop.RenderRgb24Frame(_frameBufferRgb24);
+		}
+
+		public void RenderGray4(BitmapSource bmp)
+		{
+			// make sure we can render
+			AssertRenderReady(bmp);
+
+			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+			var bytes = new byte[bytesPerPixel];
+			var rect = new Int32Rect(0, 0, 1, 1);
+
+			for (var y = 0; y < Height; y++) {
+				for (var x = 0; x < Width; x++) {
+					rect.X = x;
+					rect.Y = y;
+					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+
+					// convert to HSL
+					double hue;
+					double saturation;
+					double luminosity;
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+
+					var pixel = (byte)(luminosity * 16);
+					pixel = pixel == 16 ? (byte)15 : pixel; // special case lum == 1 and hence pixel = 16
+
+					_frameBufferGray4[(y * Width) + x] = pixel;
+				}
+			}
+
+			// send frame buffer to device
+			Interop.Render16ShadeFrame(_frameBufferGray4);
 		}
 
 		public void Dispose()

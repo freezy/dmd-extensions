@@ -35,7 +35,7 @@ namespace LibDmd.Processor
 		/// This is useful because we don't want to artificially monochromify
 		/// frames that are sent to a monochrome display anyway.
 		/// </remarks>
-		public virtual bool IsGreyscaleCompatible { get; } = true;
+		public virtual bool IsGrayscaleCompatible { get; } = true;
 
 		protected Subject<BitmapSource> _whenProcessed = new Subject<BitmapSource>();
 

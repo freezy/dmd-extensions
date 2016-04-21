@@ -38,7 +38,7 @@ namespace LibDmd
 		/// All frames from the source are passed through all processors before
 		/// the reach their destinations.
 		/// 
-		/// Examples of processors are convert to grey scale or resize.
+		/// Examples of processors are convert to gray scale or resize.
 		/// </summary>
 		public List<AbstractProcessor> Processors { get; set; }
 
@@ -65,6 +65,11 @@ namespace LibDmd
 		/// </summary>
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
+		/// <summary>
+		/// If true, send 4-byte grayscale image to renderers which support it.
+		/// </summary>
+		public bool RenderAsGray4 { get; set; }
+
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -82,16 +87,26 @@ namespace LibDmd
 
 			foreach (var dest in Destinations) {
 				var frames = Source.GetFrames();
+				var canRenderGray4 = false;
+				var destGray4 = dest as IGray4;
+				if (destGray4 != null) {
+					canRenderGray4 = true;
+					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
+				} 
 				_activeSources.Add(frames.Subscribe(bmp => {
 
 					_beforeProcessed.OnNext(bmp);
 
 					if (Processors != null) {
 						bmp = enabledProcessors
-							.Where(processor => dest.IsRgb || processor.IsGreyscaleCompatible)
+							.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
 							.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
 					}
-					dest.Render(bmp);
+					if (RenderAsGray4 && canRenderGray4) {
+						destGray4?.RenderGray4(bmp);
+					} else {
+						dest.Render(bmp);
+					}
 				}));
 			}
 		}
@@ -109,7 +124,13 @@ namespace LibDmd
 		public void Render(BitmapSource bmp)
 		{
 			foreach (var dest in Destinations) {
-				dest.Render(bmp);
+				var destGray4 = dest as IGray4;
+				if (RenderAsGray4 && destGray4 != null) {
+					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
+					destGray4.RenderGray4(bmp);
+				} else {
+					dest.Render(bmp);
+				}
 			}
 		}
 
