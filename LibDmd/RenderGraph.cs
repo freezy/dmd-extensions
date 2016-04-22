@@ -75,9 +75,28 @@ namespace LibDmd
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
-		/// Starts the rendering.
+		/// Renders a single bitmap on all destinations.
 		/// </summary>
-		public void StartRendering()
+		/// <param name="bmp">Bitmap to render</param>
+		/// <param name="onCompleted">If set, this action is executed once the bitmap is displayed.</param>
+		public void Render(BitmapSource bmp, Action onCompleted = null)
+		{
+			foreach (var dest in Destinations) {
+				var destGray4 = dest as IGray4;
+				if (RenderAsGray4 && destGray4 != null) {
+					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
+					destGray4.RenderGray4(bmp);
+				} else {
+					dest.Render(bmp);
+				}
+				onCompleted?.Invoke();
+			}
+		}
+
+		/// <summary>
+		/// Subscribes to the source and hence starts receiving and processing frames.
+		/// </summary>
+		public void StartRendering(Action onCompleted = null)
 		{
 			if (_activeSources.Count > 0) {
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
@@ -98,6 +117,7 @@ namespace LibDmd
 					_beforeProcessed.OnNext(bmp);
 
 					if (Processors != null) {
+						// TODO don't process non-greyscale compatible processors when gray4 is enabled
 						bmp = enabledProcessors
 							.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
 							.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
@@ -107,10 +127,22 @@ namespace LibDmd
 					} else {
 						dest.Render(bmp);
 					}
+
+				}, () => {
+					Logger.Info("Source {0} has finished.", dest.Name);
+					StopRendering();
+					onCompleted?.Invoke();
 				}));
 			}
 		}
 
+		/// <summary>
+		/// Unsubscribes all destinations from the source and hence stops rendering
+		/// </summary>
+		/// <remarks>
+		/// Note that destinations are still active, i.e. not yet disponsed and can
+		/// be re-subscribe if necssary.
+		/// </remarks>
 		public void StopRendering()
 		{
 			foreach (var source in _activeSources) {
@@ -121,19 +153,12 @@ namespace LibDmd
 			IsRendering = false;
 		}
 
-		public void Render(BitmapSource bmp)
-		{
-			foreach (var dest in Destinations) {
-				var destGray4 = dest as IGray4;
-				if (RenderAsGray4 && destGray4 != null) {
-					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
-					destGray4.RenderGray4(bmp);
-				} else {
-					dest.Render(bmp);
-				}
-			}
-		}
-
+		/// <summary>
+		/// Disposes the graph and all elements.
+		/// </summary>
+		/// <remarks>
+		/// Run this before exiting the application.
+		/// </remarks>
 		public void Dispose()
 		{
 			Logger.Debug("Disposing render graph.");

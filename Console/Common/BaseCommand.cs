@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using App;
+using LibDmd;
 using LibDmd.Output;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
@@ -21,7 +22,7 @@ namespace Console.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public abstract void Execute();
+		public abstract void Execute(Action onCompleted);
 
 		protected List<IFrameDestination> GetRenderers(BaseOptions options)
 		{

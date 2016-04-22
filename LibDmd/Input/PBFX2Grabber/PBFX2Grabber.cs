@@ -48,8 +48,7 @@ namespace LibDmd.Input.PBFX2Grabber
 			_handle = FindDmdHandle();
 			if (_handle == IntPtr.Zero) {
 				Logger.Info("Pinball FX2 not running, waiting...");
-				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x =>
-				{
+				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x => {
 					_handle = FindDmdHandle();
 					if (_handle != IntPtr.Zero) {
 						Logger.Info("Pinball FX2 running, starting to capture.");
@@ -130,7 +129,6 @@ namespace LibDmd.Input.PBFX2Grabber
 				if (lpdwProcessId == pid) {
 					dsProcRootWindows.Add(hWnd);
 				}
-
 			}
 			return dsProcRootWindows;
 		}

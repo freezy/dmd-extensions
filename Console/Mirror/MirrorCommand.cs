@@ -23,7 +23,7 @@ namespace Console.Mirror
 			_options = options;
 		}
 
-		public override void Execute()
+		public override void Execute(Action onCompleted)
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
@@ -89,7 +89,7 @@ namespace Console.Mirror
 			};
 
 			// always transform to correct dimensions
-			_graph.StartRendering();
+			_graph.StartRendering(onCompleted);
 		}
 
 		public override void Dispose()

@@ -30,7 +30,7 @@ namespace Console.Test
 			_options = options;
 		}
 
-		public override void Execute()
+		public override void Execute(Action onCompleted)
 		{
 			// define renderers
 			var renderers = GetRenderers(_options);
@@ -48,7 +48,7 @@ namespace Console.Test
 			bmp.EndInit();
 
 			// render image
-			_graph.Render(bmp);
+			_graph.Render(bmp, onCompleted);
 		}
 
 		public override void Dispose()

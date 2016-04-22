@@ -24,6 +24,10 @@ namespace Console.Common
 		[Option("flip-y", HelpText = "Flips the image vertically. Default: false.")]
 		public bool FlipVertically { get; set; } = false;
 
+		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.")]
+		public bool QuitWhenDone { get; set; } = false;
+
+
 		public enum DestinationType
 		{
 			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual

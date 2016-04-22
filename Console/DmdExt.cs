@@ -44,13 +44,16 @@ namespace Console
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
+			BaseOptions baseOptions;
 			switch (invokedVerb) {
 				case "mirror":
-					_command = new MirrorCommand((MirrorOptions)invokedVerbInstance);
+					baseOptions = (BaseOptions) invokedVerbInstance;
+					_command = new MirrorCommand((MirrorOptions)baseOptions);
 					break;
 
 				case "test":
-					_command = new TestCommand((TestOptions)invokedVerbInstance);
+					baseOptions = (BaseOptions)invokedVerbInstance;
+					_command = new TestCommand((TestOptions)baseOptions);
 					break;
 
 				default:
@@ -58,7 +61,13 @@ namespace Console
 			}
 
 			try {
-				_command.Execute();
+				_command.Execute(() => {
+					if (baseOptions != null && baseOptions.QuitWhenDone) {
+						Logger.Info("Exiting.");
+						WinApp.Shutdown();
+						Environment.Exit(0);
+					}
+				});
 				Logger.Info("Press CTRL+C to close.");
 				WinApp.Run();
 
