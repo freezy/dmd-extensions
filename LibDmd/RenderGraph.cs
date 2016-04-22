@@ -110,7 +110,9 @@ namespace LibDmd
 				var destGray4 = dest as IGray4;
 				if (destGray4 != null) {
 					canRenderGray4 = true;
-					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
+					if (RenderAsGray4) {
+						Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
+					}
 				} 
 				_activeSources.Add(frames.Subscribe(bmp => {
 
