@@ -55,7 +55,16 @@ namespace LibDmd.Output.PinDmd2
 		public void Init()
 		{
 			// find and open the usb device.
-			_pinDmd2Device = UsbDevice.OpenUsbDevice(PinDmd2Finder);
+			var allDevices = UsbDevice.AllDevices;
+			foreach (UsbRegistry usbRegistry in allDevices) {
+				UsbDevice device;
+				if (usbRegistry.Open(out device)) {
+					if (device.Info.Descriptor.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
+						_pinDmd2Device = device;
+						break;
+					}
+				}
+			}
 
 			// if the device is open and ready
 			if (_pinDmd2Device == null) {
@@ -63,6 +72,7 @@ namespace LibDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
+			_pinDmd2Device.Open();
 
 			if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
 				Logger.Info("Found PinDMDv2 device.");
