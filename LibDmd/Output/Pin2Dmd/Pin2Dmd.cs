@@ -26,7 +26,6 @@ namespace LibDmd.Output.Pin2Dmd
 		private readonly byte[] _frameBufferGray4;
 
 		private static Pin2Dmd _instance;
-		private static readonly UsbDeviceFinder Pin2DmdFinder = new UsbDeviceFinder(0x0314, 0xe457);
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private Pin2Dmd()

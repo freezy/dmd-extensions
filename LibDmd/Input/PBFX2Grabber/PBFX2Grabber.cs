@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
@@ -23,6 +25,11 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// </remarks>
 	public class PBFX2Grabber : IFrameSource
 	{
+		public string Name { get; } = "Pinball FX2";
+
+		public IObservable<Unit> OnResume => _onResume;
+		public IObservable<Unit> OnPause => _onPause;
+
 		/// <summary>
 		/// Wait time between polls for the Pinball FX2 process. Stops polling as soon
 		/// as the process is found. 
@@ -40,32 +47,68 @@ namespace LibDmd.Input.PBFX2Grabber
 		public double CropLeft { get; set; } = 1.5;
 		public double CropRight { get; set; } = 1;
 
+		private IConnectableObservable<BitmapSource> _frames;
+		private IDisposable _capturer;
 		private IntPtr _handle;
-		private IDisposable _poller;
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
+		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private void PollForHandle() {
-			_handle = FindDmdHandle();
-			if (_handle == IntPtr.Zero) {
-				Logger.Info("Pinball FX2 not running, waiting...");
-				_poller = Observable.Interval(PollForProcessDelay).Subscribe(x => {
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+	
+		/// <summary>
+		/// Waits for the Pinball FX2 process and DMD window.
+		/// </summary>
+		private void StartPolling()
+		{
+			Logger.Info("Waiting for Pinball FX2 to spawn...");
+			var success = new Subject<Unit>();
+			Observable
+				.Timer(TimeSpan.Zero, PollForProcessDelay)
+				.TakeUntil(success)
+				.Subscribe(x => {
 					_handle = FindDmdHandle();
 					if (_handle != IntPtr.Zero) {
-						Logger.Info("Pinball FX2 running, starting to capture.");
-						_poller.Dispose();
+						StartCapturing();
+						success.OnNext(Unit.Default);
 					}
 				});
-			}
+		}
+
+		/// <summary>
+		/// Starts sending frames.
+		/// </summary>
+		private void StartCapturing()
+		{
+			_capturer = _frames.Connect();
+			_onResume.OnNext(Unit.Default);
+		}
+
+		/// <summary>
+		/// Stops sending frames because we couldn't aquire the DMD handle anymore,
+		/// usually because Pinball FX2 was closed.
+		/// </summary>
+		private void StopCapturing()
+		{
+			// TODO send blank frame
+			_capturer.Dispose();
+			_onPause.OnNext(Unit.Default);
+			StartPolling();
 		}
 
 		public IObservable<BitmapSource> GetFrames()
 		{
-			PollForHandle();
-			return Observable
-				.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
-				.Where(x => _handle != IntPtr.Zero)
-				.Select(x => CaptureWindow())
-				.Where(bmp => bmp != null);
+			if (_frames == null) {
+				_frames = Observable
+					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+					.Do(l => Console.WriteLine("--> [{0}] Tick", l))
+					.Select(x => CaptureWindow())
+					.Where(bmp => bmp != null)
+					.Do(l => Console.WriteLine("-->      Captured", l))
+					.Publish();
+
+				StartPolling();
+			}
+			return _frames;
 		}
 
 		public BitmapSource CaptureWindow()
@@ -73,10 +116,11 @@ namespace LibDmd.Input.PBFX2Grabber
 			NativeCapture.RECT rc;
 			GetWindowRect(_handle, out rc);
 
-			// rect contains 0 values if handler not available
+			// rect contains 0 values if handler not available anymore
 			if (rc.Width == 0 || rc.Height == 0) {
+				Logger.Debug("Handle lost, stopping capture.");
 				_handle = IntPtr.Zero;
-				PollForHandle();
+				StopCapturing();
 				return null;
 			}
 

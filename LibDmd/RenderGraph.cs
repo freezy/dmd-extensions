@@ -7,6 +7,7 @@ using NLog;
 using LibDmd.Input;
 using LibDmd.Output;
 using LibDmd.Processor;
+using NLog.LayoutRenderers;
 
 namespace LibDmd
 {
@@ -105,7 +106,6 @@ namespace LibDmd
 			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
 
 			foreach (var dest in Destinations) {
-				var frames = Source.GetFrames();
 				var canRenderGray4 = false;
 				var destGray4 = dest as IGray4;
 				if (destGray4 != null) {
@@ -113,11 +113,18 @@ namespace LibDmd
 					if (RenderAsGray4) {
 						Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
 					}
-				} 
-				_activeSources.Add(frames.Subscribe(bmp => {
+				}
+				// now subscribe
+				Source.OnResume.Subscribe(x => {
+					Logger.Info("Frames coming in from {0}.", Source.Name);
+				});
+				Source.OnPause.Subscribe(x => {
+					Logger.Info("Frames stopped from {0}.", Source.Name);
+					onCompleted?.Invoke();
+				});
+				var disposable = Source.GetFrames().Subscribe(bmp => {
 
 					_beforeProcessed.OnNext(bmp);
-
 					if (Processors != null) {
 						// TODO don't process non-greyscale compatible processors when gray4 is enabled
 						bmp = enabledProcessors
@@ -129,12 +136,8 @@ namespace LibDmd
 					} else {
 						dest.Render(bmp);
 					}
-
-				}, () => {
-					Logger.Info("Source {0} has finished.", dest.Name);
-					StopRendering();
-					onCompleted?.Invoke();
-				}));
+				});
+				_activeSources.Add(disposable);
 			}
 		}
 

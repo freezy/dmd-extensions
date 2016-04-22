@@ -64,7 +64,6 @@ namespace Console
 				_command.Execute(() => {
 					if (baseOptions != null && baseOptions.QuitWhenDone) {
 						Logger.Info("Exiting.");
-						WinApp.Shutdown();
 						Environment.Exit(0);
 					}
 				});

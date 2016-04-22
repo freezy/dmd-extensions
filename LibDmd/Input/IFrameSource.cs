@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive;
+using System.Security.RightsManagement;
 using System.Windows.Media.Imaging;
 
 namespace LibDmd.Input
@@ -14,10 +16,25 @@ namespace LibDmd.Input
 	public interface IFrameSource
 	{
 		/// <summary>
+		/// A display name for the source
+		/// </summary>
+		string Name { get; }
+
+		/// <summary>
 		/// Returns an observable that produces a sequence of frames.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
 		/// <returns></returns>
 		IObservable<BitmapSource> GetFrames();
+
+		/// <summary>
+		/// An observable that triggers when the source starts providing frames.
+		/// </summary>
+		IObservable<Unit> OnResume { get; }
+
+		/// <summary>
+		/// An observable that triggers when the source is interrupted, e.g. a game is stopped.
+		/// </summary>
+		IObservable<Unit> OnPause { get; }
 	}
 }
