@@ -31,19 +31,21 @@ namespace LibDmd.Output.Pin2Dmd
 
 		private Pin2Dmd()
 		{
-			// not sure what 7684 is...
-			_frameBufferRgb24 = new byte[7684];
+			// 15 bits per pixel plus 4 init bytes
+			var size = (Width * Height * 15 / 8) + 4;
+			_frameBufferRgb24 = new byte[size];
 			_frameBufferRgb24[0] = 0x81; // frame sync bytes
 			_frameBufferRgb24[1] = 0xC3;
 			_frameBufferRgb24[2] = 0xE8;
 			_frameBufferRgb24[3] = 15;   // number of planes
 
-			var size = (Width * Height / 2) + 4;
+			// 4 bits per pixel plus 4 init bytes
+			size = (Width * Height * 4 / 8) + 4;
 			_frameBufferGray4 = new byte[size];
 			_frameBufferGray4[0] = 0x81; // frame sync bytes
 			_frameBufferGray4[1] = 0xC3;
 			_frameBufferGray4[2] = 0xE7;
-			_frameBufferGray4[3] = 15;   // number of planes
+			_frameBufferGray4[3] = 0x00;
 		}
 
 		/// <summary>
