@@ -64,6 +64,7 @@ namespace Console
 				_command.Execute(() => {
 					if (baseOptions != null && baseOptions.QuitWhenDone) {
 						Logger.Info("Exiting.");
+						_command?.Dispose();
 						Environment.Exit(0);
 					}
 				});
