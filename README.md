@@ -26,37 +26,134 @@ The primary goal of this project was to add support real DMDs for games that
 don't provide support out of the box. The first game is Pinball FX2 and we're
 looking into support for the Pinball Arcade as well.
 
+
+## Install Instructions
+
+[Get the latest release](https://github.com/freezy/dmd-extensions/releases),
+copy the content of the zip file to your hard drive, preferable in your `PATH`,
+and unblock the `.exe` file (right-click, properties, unblock).
+
+### Test
+
+1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
+2. Type `dmdext test` [enter]
+
+You should see a test image on your DMD as well as on a virtual DMD.
+
 ### Pinball FX2
 
-Pinball FX2 supports basic cabinet features such as portrait mode and multi
-monitors. These options must be enabled. The application will then grab pixels
-off the DMD rendered by Pinball FX2, parse the dots and their luminosity and
-send the data to the physical DMD.
+1. Enable cabinet options in Pinball FX2
+2. Resize the DMD to:
+   - Width: `1040`
+   - Height: `272`
+3. Move the DMD to somewhere hidden like off-screen or behind the playfield
+   (usually at `0`/`0`).
+4. Open a command prompt ([Windows]+[R], `cmd`, [enter])
+5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter]
+6. Start Pinball FX2
 
-The grabber should work even if the DMD is behind the playfield, so under
-settings, move it to position `0`/`0`. Size should be the following:
+For further tweaking, see options below.
 
-- Width: `1040`
-- Height: `272`
+## Documentation
 
-Then launch both the application, click on the *Pinball FX2* button and run 
-Pinball FX2 (order doesn't matter). You should see frames appearing on your 
-DMD.
+All options are documented in the tool.
 
-### The Pinball Arcade
+```
+C:\>dmdext
 
-*Work in progress*
+DMD Extensions v1.0.0
+USAGE: dmdext <command> [<options>]
 
-Since Pinball Arcade axed the promised cabinet features, we won't see any
-official support soon (at all). Using the FreeCam mod, the same method as
-for Pinball FX2 might be possible. We're also looking into grabbing DMD
-data straight from the memory.
+  mirror    Mirrors pixel data from the screen to one or more other
+            destinations.
 
+  test      Displays a test image on all available devices.
+```
 
-## TODO
+### Mirror
 
-Note that this is still considered proof of concept. A lot will change until 
-the v1.0 tag. Report bugs either at VPF or [here on the bug tracker](https://github.com/freezy/dmd-extensions/issues).
+```
+C:\>dmdext mirror --help
+
+DMD Extensions v1.0.0
+USAGE: dmdext mirror --source=<source> [--destination=<destination>]
+
+  -s, --source            Required. The source you want to retrieve DMD data
+                          from. One of: [ pinballfx2, screen ].
+
+  -f, --fps               How many frames per second should be mirrored.
+                          Default: 25
+
+  -p, --position          Position and size of screen grabber source. Four
+                          values: <Left> <Top> <Width> <Height>. Default: "0 0
+                          128 32".
+
+  --grid-spacing          How much of the white space around the dot should be
+                          cut off. 1 means same size as the dot, 0.5 half size,
+                          etc. 0 for disable. Default: 1.
+
+  --grid-size             Number of horizontal and vertical dots when removing
+                          grid spacing. Two values: <Width> <Height>. Default:
+                          "128 32".
+
+  --no-shading            Disabled shading, i.e. artificial downsampling for
+                          RGB displays. Default: false.
+
+  --shading-numshades     Number of shades for artifical downsampling for RGB
+                          displays. Default: 4
+
+  --shading-intensity     Multiplies luminosity of the parsed dot so it covers
+                          the whole spectrum before downsampling. Default: 2.5.
+
+  --shading-brightness    Adds luminosity to the parsed dot after being
+                          multiplied. Useful if even black dots should be
+                          slightly illuminated. Default: 0.1.
+
+  -d, --destination       The destination where the DMD data is sent to. One
+                          of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
+                          virtual ]. Default: "auto", which outputs to all
+                          available devices.
+
+  --no-virtual            Explicitly disables the virtual DMD when destination
+                          is "auto". Default: false.
+
+  --use-gray4             Sends frames in 4-bit grayscale to the display if
+                          supported.
+
+  --flip-x                Flips the image horizontally. Default: false.
+
+  --flip-y                Flips the image vertically. Default: false.
+
+  -q, --quit-when-done    Exit the program when finished, e.g. when Pinball FX2
+                          doesn't receive any frames anymore.
+```
+
+### Test
+
+```
+C:\>dmdext test --help
+
+DMD Extensions v1.0.0
+USAGE: dmdext test [--destination=<destination>]
+
+  -d, --destination       The destination where the DMD data is sent to. One
+                          of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
+                          virtual ]. Default: "auto", which outputs to all
+                          available devices.
+
+  --no-virtual            Explicitly disables the virtual DMD when destination
+                          is "auto". Default: false.
+
+  --use-gray4             Sends frames in 4-bit grayscale to the display if
+                          supported.
+
+  --flip-x                Flips the image horizontally. Default: false.
+
+  --flip-y                Flips the image vertically. Default: false.
+
+  -q, --quit-when-done    Exit the program when finished, e.g. when Pinball FX2
+                          doesn't receive any frames anymore.
+```
 
 ## Compatibility
 
