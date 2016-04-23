@@ -100,10 +100,8 @@ namespace LibDmd.Input.PBFX2Grabber
 			if (_frames == null) {
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Do(l => Console.WriteLine("--> [{0}] Tick", l))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Do(l => Console.WriteLine("-->      Captured", l))
 					.Publish();
 
 				StartPolling();
