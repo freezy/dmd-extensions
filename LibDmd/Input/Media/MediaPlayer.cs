@@ -68,25 +68,29 @@ namespace LibDmd.Input.Media
 					throw new ApplicationException(@"Could not find video stream");
 				}
 
-				var codecContext = *pStream->codec;
-				var width = codecContext.width;
-				var height = codecContext.height;
+				var context = new FrameContext {
+					FormatContext = pFormatContext,
+					Stream = pStream
+				};
+
+				var codecContext = *context.Stream->codec;
+				context.Width = codecContext.width;
+				context.Height = codecContext.height;
 				var fps = codecContext.framerate;
 				Console.WriteLine("Frame rate = {0}/{1}", fps.den, fps.num);
 				var sourcePixFmt = codecContext.pix_fmt;
 				var codecId = codecContext.codec_id;
 				const AVPixelFormat convertToPixFmt = AVPixelFormat.AV_PIX_FMT_BGR24;
-				var pConvertContext = ffmpeg.sws_getContext(width, height, sourcePixFmt,
-					width, height, convertToPixFmt,
+				context.ConvertContext = ffmpeg.sws_getContext(context.Width, context.Height, sourcePixFmt, context.Width, context.Height, convertToPixFmt,
 					ffmpeg.SWS_FAST_BILINEAR, null, null, null);
-				if (pConvertContext == null) {
+				if (context.ConvertContext == null) {
 					throw new ApplicationException(@"Could not initialize the conversion context");
 				}
 
-				var pConvertedFrame = ffmpeg.av_frame_alloc();
-				var convertedFrameBufferSize = ffmpeg.avpicture_get_size(convertToPixFmt, width, height);
+				context.ConvertedFrame = ffmpeg.av_frame_alloc();
+				var convertedFrameBufferSize = ffmpeg.avpicture_get_size(convertToPixFmt, context.Width, context.Height);
 				var pConvertedFrameBuffer = (sbyte*)ffmpeg.av_malloc((ulong)convertedFrameBufferSize);
-				ffmpeg.avpicture_fill((AVPicture*)pConvertedFrame, pConvertedFrameBuffer, convertToPixFmt, width, height);
+				ffmpeg.avpicture_fill((AVPicture*)context.ConvertedFrame, pConvertedFrameBuffer, convertToPixFmt, context.Width, context.Height);
 
 				var pCodec = ffmpeg.avcodec_find_decoder(codecId);
 				if (pCodec == null) {
@@ -95,21 +99,21 @@ namespace LibDmd.Input.Media
 
 				// Reusing codec context from stream info, initally it was looking like this: 
 				// AVCodecContext* pCodecContext = ffmpeg.avcodec_alloc_context3(pCodec); // but it is not working for all kind of codecs
-				var pCodecContext = &codecContext;
+				context.CodecContext = &codecContext;
 
 				if ((pCodec->capabilities & ffmpeg.AV_CODEC_CAP_TRUNCATED) == ffmpeg.AV_CODEC_CAP_TRUNCATED) {
-					pCodecContext->flags |= ffmpeg.AV_CODEC_FLAG_TRUNCATED;
+					context.CodecContext->flags |= ffmpeg.AV_CODEC_FLAG_TRUNCATED;
 				}
 
-				if (ffmpeg.avcodec_open2(pCodecContext, pCodec, null) < 0) {
+				if (ffmpeg.avcodec_open2(context.CodecContext, pCodec, null) < 0) {
 					throw new ApplicationException(@"Could not open codec");
 				}
 
-				var pDecodedFrame = ffmpeg.av_frame_alloc();
+				context.DecodedFrame = ffmpeg.av_frame_alloc();
 
 				var packet = new AVPacket();
-				var pPacket = &packet;
-				ffmpeg.av_init_packet(pPacket);
+				context.Packet = &packet;
+				ffmpeg.av_init_packet(context.Packet);
 
 				var frameNumber = 0;
 
@@ -120,7 +124,7 @@ namespace LibDmd.Input.Media
 				myTimer.Start();*/
 
 				while (frameNumber < 10) {
-					var bmp = ReadFrame(pFormatContext, pPacket, pStream, pCodecContext, pDecodedFrame, pConvertedFrame, pConvertContext, height, width);
+					var bmp = ReadFrame(context);
 
 					if (bmp != null) {
 						Console.WriteLine("Frame {2} decoded at {0}x{1}.", bmp.Width, bmp.Height, frameNumber);
@@ -130,12 +134,12 @@ namespace LibDmd.Input.Media
 					}
 				}
 
-				ffmpeg.av_free(pConvertedFrame);
+				ffmpeg.av_free(context.ConvertedFrame);
 				ffmpeg.av_free(pConvertedFrameBuffer);
-				ffmpeg.sws_freeContext(pConvertContext);
+				ffmpeg.sws_freeContext(context.ConvertContext);
 
-				ffmpeg.av_free(pDecodedFrame);
-				ffmpeg.avcodec_close(pCodecContext);
+				ffmpeg.av_free(context.DecodedFrame);
+				ffmpeg.avcodec_close(context.CodecContext);
 				ffmpeg.avformat_close_input(&pFormatContext);
 				
 			}
@@ -147,36 +151,34 @@ namespace LibDmd.Input.Media
 			throw new NotImplementedException();
 		}
 
-		private static unsafe Bitmap ReadFrame(AVFormatContext* pFormatContext, AVPacket* pPacket, AVStream* pStream,
-			AVCodecContext* pCodecContext, AVFrame* pDecodedFrame, AVFrame* pConvertedFrame,
-			SwsContext* pConvertContext, int height, int width)
+		private static unsafe Bitmap ReadFrame(FrameContext context)
 		{
-			if (ffmpeg.av_read_frame(pFormatContext, pPacket) < 0) {
+			if (ffmpeg.av_read_frame(context.FormatContext, context.Packet) < 0) {
 				throw new ApplicationException(@"Could not read frame");
 			}
 
-			if (pPacket->stream_index != pStream->index) {
+			if (context.Packet->stream_index != context.Stream->index) {
 				return null;
 			}
 
 			var gotPicture = 0;
-			var size = ffmpeg.avcodec_decode_video2(pCodecContext, pDecodedFrame, &gotPicture, pPacket);
+			var size = ffmpeg.avcodec_decode_video2(context.CodecContext, context.DecodedFrame, &gotPicture, context.Packet);
 			if (size < 0) {
 				throw new ApplicationException($"Error while decoding frame.");
 			}
 
 			if (gotPicture == 1) {
 
-				var src = &pDecodedFrame->data0;
-				var dst = &pConvertedFrame->data0;
-				var srcStride = pDecodedFrame->linesize;
-				var dstStride = pConvertedFrame->linesize;
-				ffmpeg.sws_scale(pConvertContext, src, srcStride, 0, height, dst, dstStride);
+				var src = &context.DecodedFrame->data0;
+				var dst = &context.ConvertedFrame->data0;
+				var srcStride = context.DecodedFrame->linesize;
+				var dstStride = context.ConvertedFrame->linesize;
+				ffmpeg.sws_scale(context.ConvertContext, src, srcStride, 0, context.Height, dst, dstStride);
 
-				var convertedFrameAddress = pConvertedFrame->data0;
+				var convertedFrameAddress = context.ConvertedFrame->data0;
 				var imageBufferPtr = new IntPtr(convertedFrameAddress);
 				var linesize = dstStride[0];
-				return new Bitmap(width, height, linesize, System.Drawing.Imaging.PixelFormat.Format24bppRgb, imageBufferPtr);
+				return new Bitmap(context.Width, context.Height, linesize, System.Drawing.Imaging.PixelFormat.Format24bppRgb, imageBufferPtr);
 			}
 			return null;
 		}
@@ -218,16 +220,16 @@ namespace LibDmd.Input.Media
 
 		private unsafe class FrameContext
 		{
-			private AVFormatContext* FormatContext;
-			private AVPacket* Packet;
-			private AVStream* Stream;
+			public AVFormatContext* FormatContext;
+			public AVPacket* Packet;
+			public AVStream* Stream;
 
-			private AVCodecContext* CodecContext;
-			private AVFrame* DecodedFrame;
-			private AVFrame* ConvertedFrame;
-			private SwsContext* ConvertContext;
-			private int Height;
-			private int Width;
+			public AVCodecContext* CodecContext;
+			public AVFrame* DecodedFrame;
+			public AVFrame* ConvertedFrame;
+			public SwsContext* ConvertContext;
+			public int Height;
+			public int Width;
 		}
 
 		[DllImport("kernel32", SetLastError = true)]
