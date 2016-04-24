@@ -40,7 +40,7 @@ namespace LibDmd.Input.Media
 		{
 			var ffmpegPath = $@"../../../../FFmpeg/bin/{(Environment.Is64BitProcess ? @"x64" : @"x86")}";
 			//RegisterLibrariesSearchPath(ffmpegPath);
-			RegisterLibrariesSearchPath(".\\");
+			//RegisterLibrariesSearchPath(".\\");
 		}
 
 
@@ -125,18 +125,20 @@ namespace LibDmd.Input.Media
 			ffmpeg.av_init_packet(_context.Packet);
 
 			var frameNumber = 0;
-			Console.WriteLine("Found {0} frames at {1}/{2}", numFrames, fps.den, fps.num);
-
+			var wait = fps.num > 0 ? (int)Math.Round(1000d * fps.den / fps.num) : 30;
+			Console.WriteLine("Found {0} frames at {1}/{2} ({3}ms)", numFrames, fps.den, fps.num, wait);
+			
 			while (frameNumber < numFrames) {
 				var bmp = ReadFrame(_context);
 				if (bmp != null) {
 					Console.WriteLine("Frame {2} decoded at {0}x{1}.", bmp.Width, bmp.Height, frameNumber);
 					var bitmapSource = Convert(bmp);
 					_frames.OnNext(bitmapSource);
-					frameNumber++;
-					Thread.Sleep((int)1000d * fps.den / fps.num);
+					Thread.Sleep(wait);
 				}
+				frameNumber++;
 			}
+			Console.WriteLine("All frames decoded, done!");
 
 			ffmpeg.av_free(_context.ConvertedFrame);
 			ffmpeg.av_free(pConvertedFrameBuffer);
@@ -153,7 +155,7 @@ namespace LibDmd.Input.Media
 		private static unsafe Bitmap ReadFrame(FrameContext context)
 		{
 			if (ffmpeg.av_read_frame(context.FormatContext, context.Packet) < 0) {
-				throw new ApplicationException(@"Could not read frame");
+				return null;
 			}
 
 			if (context.Packet->stream_index != context.Stream->index) {
@@ -187,7 +189,7 @@ namespace LibDmd.Input.Media
 		{
 			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
 			var bitmapSource = BitmapSource.Create(
-				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Rgb24, null,
+				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr24, null,
 				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
 
 			bitmap.UnlockBits(bitmapData);

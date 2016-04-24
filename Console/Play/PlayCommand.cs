@@ -1,8 +1,9 @@
 ﻿using System;
-
+using System.Collections.Generic;
 using Console.Common;
 using LibDmd;
 using LibDmd.Input.Media;
+using LibDmd.Processor;
 
 namespace Console.Play
 {
@@ -21,9 +22,15 @@ namespace Console.Play
 			// define renderers
 			var renderers = GetRenderers(_options);
 
+			var transformationProcessor = new TransformationProcessor {
+				FlipVertically = _options.FlipVertically,
+				FlipHorizontally = _options.FlipHorizontally
+			};
+
 			// chain them up
 			_graph = new RenderGraph {
 				Source = new MediaPlayer { Filename = _options.File },
+				Processors = new List<AbstractProcessor> { transformationProcessor },
 				Destinations = renderers,
 				RenderAsGray4 = _options.RenderAsGray4
 			};
