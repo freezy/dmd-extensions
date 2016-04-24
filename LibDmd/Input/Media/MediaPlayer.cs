@@ -9,11 +9,14 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FFmpeg.AutoGen;
+using Timer = System.Timers.Timer;
+
 //using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace LibDmd.Input.Media
@@ -31,124 +34,120 @@ namespace LibDmd.Input.Media
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<BitmapSource> _frames = new Subject<BitmapSource>();
+		private readonly FrameContext _context = new FrameContext();
 
 		public MediaPlayer()
 		{
 			var ffmpegPath = $@"../../../../FFmpeg/bin/{(Environment.Is64BitProcess ? @"x64" : @"x86")}";
 			//RegisterLibrariesSearchPath(ffmpegPath);
 			RegisterLibrariesSearchPath(".\\");
-
-			ffmpeg.av_register_all();
-			ffmpeg.avcodec_register_all();
-			ffmpeg.avformat_network_init();
 		}
 
 
 		public IObservable<BitmapSource> GetFrames()
 		{
-			unsafe {
+			var workerThread = new Thread(ReadFrames);
+			workerThread.Start();
 
-				var pFormatContext = ffmpeg.avformat_alloc_context();
-				if (ffmpeg.avformat_open_input(&pFormatContext, Filename, null, null) != 0) {
-					throw new ApplicationException(@"Could not open file");
-				}
-
-				if (ffmpeg.avformat_find_stream_info(pFormatContext, null) != 0) {
-					throw new ApplicationException(@"Could not find stream info");
-				}
-
-				AVStream* pStream = null;
-				for (var i = 0; i < pFormatContext->nb_streams; i++) {
-					if (pFormatContext->streams[i]->codec->codec_type == AVMediaType.AVMEDIA_TYPE_VIDEO) {
-						pStream = pFormatContext->streams[i];
-						break;
-					}
-				}
-				if (pStream == null) {
-					throw new ApplicationException(@"Could not find video stream");
-				}
-
-				var context = new FrameContext {
-					FormatContext = pFormatContext,
-					Stream = pStream
-				};
-
-				var codecContext = *context.Stream->codec;
-				context.Width = codecContext.width;
-				context.Height = codecContext.height;
-				var fps = codecContext.framerate;
-				Console.WriteLine("Frame rate = {0}/{1}", fps.den, fps.num);
-				var sourcePixFmt = codecContext.pix_fmt;
-				var codecId = codecContext.codec_id;
-				const AVPixelFormat convertToPixFmt = AVPixelFormat.AV_PIX_FMT_BGR24;
-				context.ConvertContext = ffmpeg.sws_getContext(context.Width, context.Height, sourcePixFmt, context.Width, context.Height, convertToPixFmt,
-					ffmpeg.SWS_FAST_BILINEAR, null, null, null);
-				if (context.ConvertContext == null) {
-					throw new ApplicationException(@"Could not initialize the conversion context");
-				}
-
-				context.ConvertedFrame = ffmpeg.av_frame_alloc();
-				var convertedFrameBufferSize = ffmpeg.avpicture_get_size(convertToPixFmt, context.Width, context.Height);
-				var pConvertedFrameBuffer = (sbyte*)ffmpeg.av_malloc((ulong)convertedFrameBufferSize);
-				ffmpeg.avpicture_fill((AVPicture*)context.ConvertedFrame, pConvertedFrameBuffer, convertToPixFmt, context.Width, context.Height);
-
-				var pCodec = ffmpeg.avcodec_find_decoder(codecId);
-				if (pCodec == null) {
-					throw new ApplicationException(@"Unsupported codec");
-				}
-
-				// Reusing codec context from stream info, initally it was looking like this: 
-				// AVCodecContext* pCodecContext = ffmpeg.avcodec_alloc_context3(pCodec); // but it is not working for all kind of codecs
-				context.CodecContext = &codecContext;
-
-				if ((pCodec->capabilities & ffmpeg.AV_CODEC_CAP_TRUNCATED) == ffmpeg.AV_CODEC_CAP_TRUNCATED) {
-					context.CodecContext->flags |= ffmpeg.AV_CODEC_FLAG_TRUNCATED;
-				}
-
-				if (ffmpeg.avcodec_open2(context.CodecContext, pCodec, null) < 0) {
-					throw new ApplicationException(@"Could not open codec");
-				}
-
-				context.DecodedFrame = ffmpeg.av_frame_alloc();
-
-				var packet = new AVPacket();
-				context.Packet = &packet;
-				ffmpeg.av_init_packet(context.Packet);
-
-				var frameNumber = 0;
-
-				/*
-				var myTimer = new Timer();
-				myTimer.Elapsed += DisplayTimeEvent;
-				myTimer.Interval = 1000; // 1000 ms is one second
-				myTimer.Start();*/
-
-				while (frameNumber < 10) {
-					var bmp = ReadFrame(context);
-
-					if (bmp != null) {
-						Console.WriteLine("Frame {2} decoded at {0}x{1}.", bmp.Width, bmp.Height, frameNumber);
-						var bitmapSource = Convert(bmp);
-						_frames.OnNext(bitmapSource);
-						frameNumber++;
-					}
-				}
-
-				ffmpeg.av_free(context.ConvertedFrame);
-				ffmpeg.av_free(pConvertedFrameBuffer);
-				ffmpeg.sws_freeContext(context.ConvertContext);
-
-				ffmpeg.av_free(context.DecodedFrame);
-				ffmpeg.avcodec_close(context.CodecContext);
-				ffmpeg.avformat_close_input(&pFormatContext);
-				
-			}
 			return _frames;
 		}
 
-		private void DisplayTimeEvent(object sender, ElapsedEventArgs e)
+		private unsafe void ReadFrames()
 		{
-			throw new NotImplementedException();
+			ffmpeg.av_register_all();
+			ffmpeg.avcodec_register_all();
+			ffmpeg.avformat_network_init();
+
+			var pFormatContext = ffmpeg.avformat_alloc_context();
+			if (ffmpeg.avformat_open_input(&pFormatContext, Filename, null, null) != 0) {
+				throw new ApplicationException(@"Could not open file");
+			}
+
+			if (ffmpeg.avformat_find_stream_info(pFormatContext, null) != 0) {
+				throw new ApplicationException(@"Could not find stream info");
+			}
+
+			AVStream* pStream = null;
+			for (var i = 0; i < pFormatContext->nb_streams; i++) {
+				if (pFormatContext->streams[i]->codec->codec_type == AVMediaType.AVMEDIA_TYPE_VIDEO) {
+					pStream = pFormatContext->streams[i];
+					break;
+				}
+			}
+			if (pStream == null) {
+				throw new ApplicationException(@"Could not find video stream");
+			}
+			
+
+			_context.FormatContext = pFormatContext;
+			_context.Stream = pStream;
+
+			var numFrames = _context.Stream->nb_frames;
+			var codecContext = *_context.Stream->codec;
+			_context.Width = codecContext.width;
+			_context.Height = codecContext.height;
+			var fps = codecContext.framerate;
+			var sourcePixFmt = codecContext.pix_fmt;
+			var codecId = codecContext.codec_id;
+			const AVPixelFormat convertToPixFmt = AVPixelFormat.AV_PIX_FMT_BGR24;
+			_context.ConvertContext = ffmpeg.sws_getContext(_context.Width, _context.Height, sourcePixFmt, _context.Width, _context.Height, convertToPixFmt,
+				ffmpeg.SWS_FAST_BILINEAR, null, null, null);
+			if (_context.ConvertContext == null) {
+				throw new ApplicationException(@"Could not initialize the conversion context");
+			}
+
+			_context.ConvertedFrame = ffmpeg.av_frame_alloc();
+			var convertedFrameBufferSize = ffmpeg.avpicture_get_size(convertToPixFmt, _context.Width, _context.Height);
+			var pConvertedFrameBuffer = (sbyte*)ffmpeg.av_malloc((ulong)convertedFrameBufferSize);
+			ffmpeg.avpicture_fill((AVPicture*)_context.ConvertedFrame, pConvertedFrameBuffer, convertToPixFmt, _context.Width, _context.Height);
+
+			var pCodec = ffmpeg.avcodec_find_decoder(codecId);
+			if (pCodec == null) {
+				throw new ApplicationException(@"Unsupported codec");
+			}
+
+			// Reusing codec context from stream info, initally it was looking like this: 
+			// AVCodecContext* pCodecContext = ffmpeg.avcodec_alloc_context3(pCodec); // but it is not working for all kind of codecs
+			_context.CodecContext = &codecContext;
+
+			if ((pCodec->capabilities & ffmpeg.AV_CODEC_CAP_TRUNCATED) == ffmpeg.AV_CODEC_CAP_TRUNCATED) {
+				_context.CodecContext->flags |= ffmpeg.AV_CODEC_FLAG_TRUNCATED;
+			}
+
+			if (ffmpeg.avcodec_open2(_context.CodecContext, pCodec, null) < 0) {
+				throw new ApplicationException(@"Could not open codec");
+			}
+
+			_context.DecodedFrame = ffmpeg.av_frame_alloc();
+
+			var packet = new AVPacket();
+			_context.Packet = &packet;
+			ffmpeg.av_init_packet(_context.Packet);
+
+			var frameNumber = 0;
+			Console.WriteLine("Found {0} frames at {1}/{2}", numFrames, fps.den, fps.num);
+
+			while (frameNumber < numFrames) {
+				var bmp = ReadFrame(_context);
+				if (bmp != null) {
+					Console.WriteLine("Frame {2} decoded at {0}x{1}.", bmp.Width, bmp.Height, frameNumber);
+					var bitmapSource = Convert(bmp);
+					_frames.OnNext(bitmapSource);
+					frameNumber++;
+					Thread.Sleep((int)1000d * fps.den / fps.num);
+				}
+			}
+
+			ffmpeg.av_free(_context.ConvertedFrame);
+			ffmpeg.av_free(pConvertedFrameBuffer);
+			ffmpeg.sws_freeContext(_context.ConvertContext);
+
+			ffmpeg.av_free(_context.DecodedFrame);
+			ffmpeg.avcodec_close(_context.CodecContext);
+			ffmpeg.avformat_close_input(&pFormatContext);
+
+			_onPause.OnNext(Unit.Default);
+			_frames.OnCompleted();
 		}
 
 		private static unsafe Bitmap ReadFrame(FrameContext context)
