@@ -34,7 +34,7 @@ namespace Console.Common
 				case "mirror":
 					return AutoBuild(Mirror, "dmdext mirror --source=<source> [--destination=<destination>] [<options>]", Mirror.LastParserState);
 				case "play":
-					return AutoBuild(Mirror, "dmdext play --file=<source> [--destination=<destination>] [<options>]", Play.LastParserState);
+					return AutoBuild(Play, "dmdext play --file=<source> [--destination=<destination>] [<options>]", Play.LastParserState);
 				case "test":
 					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Test.LastParserState);
 				default:
