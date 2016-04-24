@@ -77,6 +77,8 @@
     <Compile Include="Mirror\MirrorOptions.cs" />
     <Compile Include="Common\Options.cs" />
     <Compile Include="DmdExt.cs" />
+    <Compile Include="Play\PlayCommand.cs" />
+    <Compile Include="Play\PlayOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Test\TestCommand.cs" />
     <Compile Include="Test\TestOptions.cs" />

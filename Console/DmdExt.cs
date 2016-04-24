@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Console.Common;
 using Console.Mirror;
+using Console.Play;
 using Console.Test;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -47,8 +48,13 @@ namespace Console
 			BaseOptions baseOptions;
 			switch (invokedVerb) {
 				case "mirror":
-					baseOptions = (BaseOptions) invokedVerbInstance;
+					baseOptions = (BaseOptions)invokedVerbInstance;
 					_command = new MirrorCommand((MirrorOptions)baseOptions);
+					break;
+
+				case "play":
+					baseOptions = (PlayOptions)invokedVerbInstance;
+					_command = new PlayCommand((PlayOptions)baseOptions);
 					break;
 
 				case "test":
