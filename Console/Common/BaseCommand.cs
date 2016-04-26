@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Threading;
 using App;
 using LibDmd;
@@ -129,7 +130,8 @@ namespace Console.Common
 		private static IFrameDestination ShowVirtualDmd(BaseOptions options)
 		{
 			var dmd = new VirtualDmd {
-				AlwaysOnTop = options.VirtualDmdOnTop
+				AlwaysOnTop = options.VirtualDmdOnTop,
+				GripColor = options.VirtualDmdHideGrip ? Brushes.Transparent : Brushes.White
 			};
 			var thread = new Thread(() => {
 				

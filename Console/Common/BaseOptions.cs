@@ -18,6 +18,9 @@ namespace Console.Common
 		[Option("virtual-stay-on-top", HelpText = "Makes the virtual DMD stay on top of other application windows. Default: false.")]
 		public bool VirtualDmdOnTop { get; set; } = false;
 
+		[Option("virtual-hide-grip", HelpText = "Hides the resize grip of the virtual DMD. Default: false.")]
+		public bool VirtualDmdHideGrip { get; set; } = false;
+
 		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported. Default: false")]
 		public bool RenderAsGray4 { get; set; } = false;
 

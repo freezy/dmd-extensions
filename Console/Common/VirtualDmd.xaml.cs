@@ -25,12 +25,14 @@ namespace App
 		/// If true, the DMD stays on top of all other application windows.
 		/// </summary>
 		public bool AlwaysOnTop { get; set; }
+		public Brush GripColor { get; set; } = Brushes.White;
 
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
 		public VirtualDmd()
 		{
+			DataContext = this;
 			InitializeComponent();
 			SourceInitialized += Window_SourceInitialized;
 			MouseDown += Window_MouseDown;
