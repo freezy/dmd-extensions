@@ -187,20 +187,37 @@ namespace App
 						break;
 
 					case Key.A:
-						_pin2DmdGrabber.CropLeft -= 0.1;
-						Console.Text += "Padding left: " + _pin2DmdGrabber.CropLeft + "\n";
+						_pin2DmdGrabber.CropLeft -= 1;
+						Console.Text += "Crop left: " + _pin2DmdGrabber.CropLeft + "\n";
 						break;
 					case Key.S:
-						_pin2DmdGrabber.CropLeft += 0.1;
-						Console.Text += "Padding left: " + _pin2DmdGrabber.CropLeft + "\n";
+						_pin2DmdGrabber.CropLeft += 1;
+						Console.Text += "Crop left: " + _pin2DmdGrabber.CropLeft + "\n";
 						break;
 					case Key.D:
-						_pin2DmdGrabber.CropRight += 0.1;
-						Console.Text += "Padding right: " + _pin2DmdGrabber.CropRight + "\n";
+						_pin2DmdGrabber.CropRight += 1;
+						Console.Text += "Crop right: " + _pin2DmdGrabber.CropRight + "\n";
 						break;
 					case Key.F:
-						_pin2DmdGrabber.CropRight -= 0.1;
-						Console.Text += "Padding right: " + _pin2DmdGrabber.CropRight + "\n";
+						_pin2DmdGrabber.CropRight -= 1;
+						Console.Text += "Crop right: " + _pin2DmdGrabber.CropRight + "\n";
+						break;
+
+					case Key.Y:
+						_pin2DmdGrabber.CropTop -= 1;
+						Console.Text += "Crop top: " + _pin2DmdGrabber.CropTop + "\n";
+						break;
+					case Key.X:
+						_pin2DmdGrabber.CropTop += 1;
+						Console.Text += "Crop left: " + _pin2DmdGrabber.CropTop + "\n";
+						break;
+					case Key.C:
+						_pin2DmdGrabber.CropBottom += 1;
+						Console.Text += "Crop bottom: " + _pin2DmdGrabber.CropBottom + "\n";
+						break;
+					case Key.V:
+						_pin2DmdGrabber.CropBottom -= 1;
+						Console.Text += "Crop bottom: " + _pin2DmdGrabber.CropBottom + "\n";
 						break;
 
 				}

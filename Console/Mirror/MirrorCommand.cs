@@ -44,8 +44,15 @@ namespace Console.Mirror
 					if (_options.GridSize.Length != 2) {
 						throw new InvalidOptionException("Argument --grid-size must have two values: \"<Width> <Height>\".");
 					}
+					if (_options.DmdCrop.Length != 4) {
+						throw new InvalidOptionException("Argument --dmd-crop must have four values: \"<Left> <Top> <Right> <Bottom>\".");
+					}
 					_graph.Source = new PBFX2Grabber {
-						FramesPerSecond = _options.FramesPerSecond
+						FramesPerSecond = _options.FramesPerSecond,
+						CropLeft = _options.DmdCrop[0],
+						CropTop = _options.DmdCrop[1],
+						CropRight = _options.DmdCrop[2],
+						CropBottom = _options.DmdCrop[3]
 					};
 					var gridProcessor = new GridProcessor {
 						Spacing = _options.GridSpacing,

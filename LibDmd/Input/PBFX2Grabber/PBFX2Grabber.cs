@@ -44,8 +44,10 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// </summary>
 		public double FramesPerSecond { get; set; } = 15;
 
-		public double CropLeft { get; set; } = 1.5;
-		public double CropRight { get; set; } = 1;
+		public int CropLeft { get; set; } = 12;
+		public int CropTop { get; set; } = 8;
+		public int CropRight { get; set; } = 8;
+		public int CropBottom { get; set; } = 12;
 
 		private IConnectableObservable<BitmapSource> _frames;
 		private IDisposable _capturer;
@@ -212,19 +214,17 @@ namespace LibDmd.Input.PBFX2Grabber
 			bitmap.UnlockBits(bitmapData);
 			bitmapSource.Freeze(); // make it readable on any thread
 
-			// crop border (1 dot)
-			var dotWidth = (bitmapSource.PixelWidth / 130);
-			var dotHeight = (bitmapSource.PixelHeight / 34);
+			// crop border
 			var cropLeft = Math.Max(0, CropLeft);
 			var cropRight = Math.Max(0, CropRight);
-			const double cropY = 1;
+			var cropTop = Math.Max(0, CropTop);
+			var cropBottom = Math.Max(0, CropBottom);
 			var img = new CroppedBitmap(bitmapSource, new Int32Rect(
-				(int)Math.Round(dotWidth * cropLeft), 
-				(int)Math.Round(dotHeight * cropY), 
-				(int)Math.Round(bitmapSource.PixelWidth - dotWidth * (cropLeft + cropRight)), 
-				(int)Math.Round(bitmapSource.PixelHeight - dotHeight * 2.5d)));
+				cropLeft,
+				cropTop, 
+				bitmapSource.PixelWidth - cropLeft - cropRight,
+				bitmapSource.PixelHeight - cropTop - cropBottom));
 			img.Freeze();
-
 			return img;
 		}
 
