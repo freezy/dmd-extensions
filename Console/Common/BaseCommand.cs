@@ -73,7 +73,7 @@ namespace Console.Common
 					break;
 
 				case Virtual:
-					renderers.Add(ShowVirtualDmd());
+					renderers.Add(ShowVirtualDmd(options));
 					Logger.Info("Added VirtualDMD renderer.");
 					
 					break;
@@ -113,7 +113,7 @@ namespace Console.Common
 					Logger.Info("Added PIN2DMD renderer.");
 				}
 				if (!options.NoVirtualDmd) {
-					renderers.Add(ShowVirtualDmd());
+					renderers.Add(ShowVirtualDmd(options));
 					Logger.Info("Added VirtualDMD renderer.");
 				} else {
 					Logger.Debug("VirtualDMD disabled.");
@@ -126,9 +126,11 @@ namespace Console.Common
 			return renderers;
 		}
 
-		private static IFrameDestination ShowVirtualDmd()
+		private static IFrameDestination ShowVirtualDmd(BaseOptions options)
 		{
-			var dmd = new VirtualDmd();
+			var dmd = new VirtualDmd {
+				AlwaysOnTop = options.VirtualDmdOnTop
+			};
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:

@@ -15,7 +15,10 @@ namespace Console.Common
 		[Option("no-virtual", HelpText = "Explicitly disables the virtual DMD when destination is \"auto\". Default: false.")]
 		public bool NoVirtualDmd { get; set; } = false;
 
-		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported.")]
+		[Option("virtual-stay-on-top", HelpText = "Makes the virtual DMD stay on top of other application windows. Default: false.")]
+		public bool VirtualDmdOnTop { get; set; } = false;
+
+		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported. Default: false")]
 		public bool RenderAsGray4 { get; set; } = false;
 
 		[Option("flip-x", HelpText = "Flips the image horizontally. Default: false.")]
@@ -24,7 +27,7 @@ namespace Console.Common
 		[Option("flip-y", HelpText = "Flips the image vertically. Default: false.")]
 		public bool FlipVertically { get; set; } = false;
 
-		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.")]
+		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 
 

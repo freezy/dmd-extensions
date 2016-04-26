@@ -21,6 +21,11 @@ namespace App
 	/// </summary>
 	public partial class VirtualDmd : Window
 	{
+		/// <summary>
+		/// If true, the DMD stays on top of all other application windows.
+		/// </summary>
+		public bool AlwaysOnTop { get; set; }
+
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
@@ -29,6 +34,7 @@ namespace App
 			InitializeComponent();
 			SourceInitialized += Window_SourceInitialized;
 			MouseDown += Window_MouseDown;
+			Deactivated += Window_Deactivated;
 		}
 
 		public static Point GetMousePosition() // mouse position relative to screen
@@ -42,6 +48,14 @@ namespace App
 		{
 			if (e.ChangedButton == MouseButton.Left) {
 				DragMove();
+			}
+		}
+
+		private void Window_Deactivated(object sender, EventArgs e)
+		{
+			if (AlwaysOnTop) {
+				var window = (Window)sender;
+				window.Topmost = true;
 			}
 		}
 
