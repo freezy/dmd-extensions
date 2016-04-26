@@ -216,14 +216,22 @@ namespace LibDmd.Input.PBFX2Grabber
 
 			// crop border
 			var cropLeft = Math.Max(0, CropLeft);
-			var cropRight = Math.Max(0, CropRight);
 			var cropTop = Math.Max(0, CropTop);
+			var cropRight = Math.Max(0, CropRight);
 			var cropBottom = Math.Max(0, CropBottom);
-			var img = new CroppedBitmap(bitmapSource, new Int32Rect(
+			if (bitmapSource.PixelWidth - cropLeft - cropRight <= 0) {
+				throw new CropRectangleOutOfRangeException("With a width of " + bitmapSource.PixelWidth + ", left crop of " + cropLeft + " and right crop of " + cropRight + ", there is no surface left to grab.");
+			}
+			if (bitmapSource.PixelHeight - cropTop - cropBottom <= 0) {
+				throw new CropRectangleOutOfRangeException("With a height of " + bitmapSource.PixelHeight + ", top crop of " + cropTop + " and bottom crop of " + cropBottom + ", there is no surface left to grab.");
+			}
+			var rect = new Int32Rect(
 				cropLeft,
-				cropTop, 
+				cropTop,
 				bitmapSource.PixelWidth - cropLeft - cropRight,
-				bitmapSource.PixelHeight - cropTop - cropBottom));
+				bitmapSource.PixelHeight - cropTop - cropBottom);
+
+			var img = new CroppedBitmap(bitmapSource, rect);
 			img.Freeze();
 			return img;
 		}
@@ -259,6 +267,13 @@ namespace LibDmd.Input.PBFX2Grabber
 				encoder.Frames.Add(BitmapFrame.Create(bmp));
 				encoder.Save(fileStream);
 			}
+		}
+	}
+
+	public class CropRectangleOutOfRangeException : ArgumentException
+	{
+		public CropRectangleOutOfRangeException(string message) : base(message)
+		{
 		}
 	}
 }

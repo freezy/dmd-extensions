@@ -23,7 +23,7 @@ namespace Console.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public abstract void Execute(Action onCompleted);
+		public abstract void Execute(Action onCompleted, Action<Exception> onError);
 
 		protected List<IFrameDestination> GetRenderers(BaseOptions options)
 		{

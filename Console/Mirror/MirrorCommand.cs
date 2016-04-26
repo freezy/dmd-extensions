@@ -17,13 +17,14 @@ namespace Console.Mirror
 	{
 		private readonly MirrorOptions _options;
 		private RenderGraph _graph;
+		private IDisposable _renderer;
 
 		public MirrorCommand(MirrorOptions options)
 		{
 			_options = options;
 		}
 
-		public override void Execute(Action onCompleted)
+		public override void Execute(Action onCompleted, Action<Exception> onError)
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
@@ -96,11 +97,12 @@ namespace Console.Mirror
 			};
 
 			// always transform to correct dimensions
-			_graph.StartRendering(onCompleted);
+			_renderer = _graph.StartRendering(onCompleted, onError);
 		}
 
 		public override void Dispose()
 		{
+			_renderer?.Dispose();
 			_graph?.Dispose();
 		}
 	}

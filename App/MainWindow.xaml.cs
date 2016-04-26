@@ -41,6 +41,7 @@ namespace App
 		private readonly PBFX2Grabber _pin2DmdGrabber;
 
 		private IDisposable _currentSource;
+		private IDisposable _currentRenderer;
 		private RenderGraph _currentGraph;
 
 		public MainWindow()
@@ -219,16 +220,16 @@ namespace App
 						_pin2DmdGrabber.CropBottom -= 1;
 						Console.Text += "Crop bottom: " + _pin2DmdGrabber.CropBottom + "\n";
 						break;
-
 				}
 			}
 		}
 
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (_currentGraph != null && _currentGraph.IsRendering) {
-				_currentGraph.StopRendering();
+			if (_currentRenderer != null) {
+				_currentRenderer.Dispose();;
 				_currentSource.Dispose();
+				_currentRenderer = null;
 			}
 			try {
 				var bmp = new BitmapImage();
@@ -259,8 +260,9 @@ namespace App
 			// this one we stop if it's running and button was clicked again
 			if (_screenGraph.IsRendering) {
 				_grabberWindow.Hide();
-				_screenGraph.StopRendering();
+				_currentRenderer.Dispose();
 				_currentSource.Dispose();
+				_currentRenderer = null;
 				Console.Text += "Stopped pulling frames from desktop.\n";
 				return;
 			}
@@ -272,9 +274,10 @@ namespace App
 
 		private void SwitchGraph(RenderGraph graph)
 		{
-			if (_currentGraph != null && _currentGraph.IsRendering) {
-				_currentGraph.StopRendering();
+			if (_currentRenderer != null) {
+				_currentRenderer.Dispose();
 				_currentSource.Dispose();
+				_currentRenderer = null;
 			}
 			_currentGraph = graph;
 			_currentSource = graph.BeforeProcessed.Subscribe(bmp => {
@@ -282,7 +285,7 @@ namespace App
 					OriginalCapture.Source = new WriteableBitmap(bmp); // freezes if bmp is used for some reason..
 				});
 			});
-			graph.StartRendering();
+			_currentRenderer = graph.StartRendering();
 		}
 
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)

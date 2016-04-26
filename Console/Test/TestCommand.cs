@@ -30,7 +30,7 @@ namespace Console.Test
 			_options = options;
 		}
 
-		public override void Execute(Action onCompleted)
+		public override void Execute(Action onCompleted, Action<Exception> onError)
 		{
 			// define renderers
 			var renderers = GetRenderers(_options);

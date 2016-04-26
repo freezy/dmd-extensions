@@ -67,6 +67,10 @@ namespace Console
 						_command?.Dispose();
 						Environment.Exit(0);
 					}
+				}, ex => {
+					Logger.Error("Error: {0}", ex.Message);
+					_command?.Dispose();
+					Environment.Exit(0);
 				});
 				Logger.Info("Press CTRL+C to close.");
 				WinApp.Run();

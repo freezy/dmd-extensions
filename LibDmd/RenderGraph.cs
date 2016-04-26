@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using NLog;
 using LibDmd.Input;
+using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Output;
 using LibDmd.Processor;
 using NLog.LayoutRenderers;
@@ -66,6 +67,7 @@ namespace LibDmd
 		/// </summary>
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
+
 		/// <summary>
 		/// If true, send 4-byte grayscale image to renderers which support it.
 		/// </summary>
@@ -95,9 +97,32 @@ namespace LibDmd
 		}
 
 		/// <summary>
-		/// Subscribes to the source and hence starts receiving and processing frames.
+		/// Subscribes to the source and hence starts receiving and processing frames
+		/// as soon as the source produces them.
 		/// </summary>
-		public void StartRendering(Action onCompleted = null)
+		/// <remarks>
+		/// Note that unexpected errors crash the app so we get a log and can debug.
+		/// Expected errors end up in the provided error callback.
+		/// </remarks>
+		/// <param name="onError">When a known error occurs.</param>
+		/// <returns>An IDisposable that stops rendering when disposed.</returns>
+		public IDisposable StartRendering(Action<Exception> onError = null)
+		{
+			return StartRendering(null, onError);
+		}
+
+		/// <summary>
+		/// Subscribes to the source and hence starts receiving and processing frames
+		/// as soon as the source produces them.
+		/// </summary>
+		/// <remarks>
+		/// Note that unexpected errors crash the app so we get a log and can debug.
+		/// Expected errors end up in the provided error callback.
+		/// </remarks>
+		/// <param name="onCompleted">When the source stopped producing frames.</param>
+		///  <param name="onError">When a known error occurs.</param>
+		/// <returns>An IDisposable that stops rendering when disposed.</returns>
+		public IDisposable StartRendering(Action onCompleted, Action<Exception> onError = null)
 		{
 			if (_activeSources.Count > 0) {
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
@@ -136,26 +161,17 @@ namespace LibDmd
 					} else {
 						dest.Render(bmp);
 					}
+				}, ex => {
+					if (onError != null && ex is CropRectangleOutOfRangeException) {
+						onError.Invoke(ex);
+
+					} else {
+						throw ex;
+					}
 				});
 				_activeSources.Add(disposable);
 			}
-		}
-
-		/// <summary>
-		/// Unsubscribes all destinations from the source and hence stops rendering
-		/// </summary>
-		/// <remarks>
-		/// Note that destinations are still active, i.e. not yet disponsed and can
-		/// be re-subscribe if necssary.
-		/// </remarks>
-		public void StopRendering()
-		{
-			foreach (var source in _activeSources) {
-				source.Dispose();
-			}
-			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
-			_activeSources.Clear();
-			IsRendering = false;
+			return new RenderDisposable(this, _activeSources);
 		}
 
 		/// <summary>
@@ -168,11 +184,42 @@ namespace LibDmd
 		{
 			Logger.Debug("Disposing render graph.");
 			if (IsRendering) {
-				StopRendering();
+				throw new Exception("Must dispose renderer first!");
 			}
 			foreach (var dest in Destinations) {
 				dest.Dispose();
 			}
+		}
+	}
+
+	/// <summary>
+	/// A disposable that unsubscribes from all destinations from the source and 
+	/// hence stops rendering.
+	/// </summary>
+	/// <remarks>
+	/// Note that destinations are still active, i.e. not yet disposed and can
+	/// be re-subscribed if necssary.
+	/// </remarks>
+	class RenderDisposable : IDisposable
+	{
+		private readonly RenderGraph _graph;
+		private readonly List<IDisposable> _activeSources;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public RenderDisposable(RenderGraph graph, List<IDisposable> activeSources)
+		{
+			_graph = graph;
+			_activeSources = activeSources;
+		}
+
+		public void Dispose()
+		{
+			foreach (var source in _activeSources) {
+				source.Dispose();
+			}
+			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
+			_activeSources.Clear();
+			_graph.IsRendering = false;
 		}
 	}
 
