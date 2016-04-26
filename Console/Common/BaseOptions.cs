@@ -21,6 +21,9 @@ namespace Console.Common
 		[Option("virtual-hide-grip", HelpText = "Hides the resize grip of the virtual DMD. Default: false.")]
 		public bool VirtualDmdHideGrip { get; set; } = false;
 
+		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Three values: <Left> <Top> <Width>. Default: \"0 0 1024\".")]
+		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
+
 		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported. Default: false")]
 		public bool RenderAsGray4 { get; set; } = false;
 

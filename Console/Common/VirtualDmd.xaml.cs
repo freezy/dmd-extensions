@@ -37,6 +37,8 @@ namespace App
 			SourceInitialized += Window_SourceInitialized;
 			MouseDown += Window_MouseDown;
 			Deactivated += Window_Deactivated;
+
+			
 		}
 
 		public static Point GetMousePosition() // mouse position relative to screen

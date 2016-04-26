@@ -129,9 +129,16 @@ namespace Console.Common
 
 		private static IFrameDestination ShowVirtualDmd(BaseOptions options)
 		{
+			if (options.VirtualDmdPosition.Length != 3) {
+				throw new InvalidOptionException("Argument --virtual-position must have three values: \"<Left> <Top> <Width>\".");
+			}
 			var dmd = new VirtualDmd {
 				AlwaysOnTop = options.VirtualDmdOnTop,
-				GripColor = options.VirtualDmdHideGrip ? Brushes.Transparent : Brushes.White
+				GripColor = options.VirtualDmdHideGrip ? Brushes.Transparent : Brushes.White,
+				Left = options.VirtualDmdPosition[0],
+				Top = options.VirtualDmdPosition[1],
+				Width = options.VirtualDmdPosition[2],
+				Height = (int)((double)options.VirtualDmdPosition[2] / 4),
 			};
 			var thread = new Thread(() => {
 				
