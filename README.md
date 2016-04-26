@@ -78,54 +78,69 @@ C:\>dmdext mirror --help
 DMD Extensions v1.0.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
-  -s, --source            Required. The source you want to retrieve DMD data
-                          from. One of: [ pinballfx2, screen ].
+  -s, --source             Required. The source you want to retrieve DMD data
+                           from. One of: [ pinballfx2, screen ].
 
-  -f, --fps               How many frames per second should be mirrored.
-                          Default: 25
+  -f, --fps                How many frames per second should be mirrored.
+                           Default: 25
 
-  -p, --position          Position and size of screen grabber source. Four
-                          values: <Left> <Top> <Width> <Height>. Default: "0 0
-                          128 32".
+  -p, --position           [screen] Position and size of screen grabber source.
+                           Four values: <Left> <Top> <Width> <Height>. Default:
+                           "0 0 128 32".
 
-  --grid-spacing          How much of the white space around the dot should be
-                          cut off. 1 means same size as the dot, 0.5 half size,
-                          etc. 0 for disable. Default: 1.
+  --grid-spacing           [pinballfx2] How much of the white space around the
+                           dot should be cut off. 1 means same size as the dot,
+                           0.5 half size, etc. 0 for disable. Default: 1.
 
-  --grid-size             Number of horizontal and vertical dots when removing
-                          grid spacing. Two values: <Width> <Height>. Default:
-                          "128 32".
+  --grid-size              [pinballfx2] Number of horizontal and vertical dots
+                           when removing grid spacing. Two values: <Width>
+                           <Height>. Default: "128 32".
 
-  --no-shading            Disabled shading, i.e. artificial downsampling for
-                          RGB displays. Default: false.
+  --no-shading             [pinballfx2] Disable shading, i.e. artificial
+                           downsampling for RGB displays. Default: false.
 
-  --shading-numshades     Number of shades for artifical downsampling for RGB
-                          displays. Default: 4
+  --shading-numshades      [pinballfx2] Number of shades for artifical
+                           downsampling for RGB displays. Default: 4
 
-  --shading-intensity     Multiplies luminosity of the parsed dot so it covers
-                          the whole spectrum before downsampling. Default: 2.5.
+  --shading-intensity      [pinballfx2] Multiplies luminosity of the parsed dot
+                           so it covers the whole spectrum before downsampling.
+                           Default: 2.5.
 
-  --shading-brightness    Adds luminosity to the parsed dot after being
-                          multiplied. Useful if even black dots should be
-                          slightly illuminated. Default: 0.1.
+  --shading-brightness     [pinballfx2] Adds luminosity to the parsed dot after
+                           being multiplied. Useful if even black dots should
+                           be slightly illuminated. Default: 0.1.
 
-  -d, --destination       The destination where the DMD data is sent to. One
-                          of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
-                          virtual ]. Default: "auto", which outputs to all
-                          available devices.
+  --dmd-crop               [pinballfx2] How many pixels should be cropped off
+                           the DMD window. Four values: <Left> <Top> <Right>
+                           <Bottom>. Default: "12 8 8 12".
 
-  --no-virtual            Explicitly disables the virtual DMD when destination
-                          is "auto". Default: false.
+  -d, --destination        The destination where the DMD data is sent to. One
+                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
+                           virtual ]. Default: "auto", which outputs to all
+                           available devices.
 
-  --use-gray4             Sends frames in 4-bit grayscale to the display if
-                          supported.
+  --no-virtual             Explicitly disables the virtual DMD when destination
+                           is "auto". Default: false.
 
-  --flip-x                Flips the image horizontally. Default: false.
+  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
+                           application windows. Default: false.
 
-  --flip-y                Flips the image vertically. Default: false.
+  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
+                           false.
 
-  -q, --quit-when-done    Exit the program when finished, e.g. when Pinball FX2
-                          doesn't receive any frames anymore.
+  --virtual-position       Position and size of virtual DMD. Three values:
+                           <Left> <Top> <Width>. Default: "0 0 1024".
+
+  --use-gray4              Sends frames in 4-bit grayscale to the display if
+                           supported. Default: false
+
+  --flip-x                 Flips the image horizontally. Default: false.
+
+  --flip-y                 Flips the image vertically. Default: false.
+
+  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
+                           FX2 doesn't receive any frames anymore. Default:
+                           false
 ```
 
 ### Test
