@@ -227,7 +227,7 @@ namespace App
 		private void BitmapButton_Click(object sender, RoutedEventArgs e)
 		{
 			if (_currentRenderer != null) {
-				_currentRenderer.Dispose();;
+				_currentRenderer.Dispose();
 				_currentSource.Dispose();
 				_currentRenderer = null;
 			}
@@ -291,6 +291,7 @@ namespace App
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
 		{
 			_grabberWindow.Close();
+			_currentRenderer?.Dispose();
 			_screenGraph.Dispose();
 			_pbfxGraph.Dispose();
 

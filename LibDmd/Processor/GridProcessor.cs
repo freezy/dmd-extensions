@@ -12,6 +12,8 @@ namespace LibDmd.Processor
 	/// </summary>
 	public class GridProcessor : AbstractProcessor
 	{
+		public override string Name { get; } = "Grid Processor";
+
 		public override bool Enabled
 		{
 			get { return _enabled && Spacing > 0; }

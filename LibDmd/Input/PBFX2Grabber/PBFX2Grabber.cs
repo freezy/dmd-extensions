@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 using LibDmd.Input.ScreenGrabber;
 
@@ -49,7 +50,7 @@ namespace LibDmd.Input.PBFX2Grabber
 		public int CropRight { get; set; } = 8;
 		public int CropBottom { get; set; } = 12;
 
-		private IConnectableObservable<BitmapSource> _frames;
+		private IConnectableObservable<Tuple<BitmapSource, ProfilerFrame>> _frames;
 		private IDisposable _capturer;
 		private IntPtr _handle;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
@@ -97,13 +98,14 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames()
 		{
 			if (_frames == null) {
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Select(x => CaptureWindow())
-					.Where(bmp => bmp != null)
+					.Select(x => new ProfilerFrame())
+					.Select(profilerFrame => new Tuple<BitmapSource, ProfilerFrame>(CaptureWindow(), profilerFrame))
+					.Where(t => t.Item1 != null)
 					.Publish();
 
 				StartPolling();

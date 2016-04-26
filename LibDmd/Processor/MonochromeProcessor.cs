@@ -11,6 +11,8 @@ namespace LibDmd.Processor
 	/// </summary>
 	public class MonochromeProcessor : AbstractProcessor
 	{
+		public override string Name { get; } = "Monochrome Processor";
+
 		/// <summary>
 		/// Color to tint. Set to <see cref="Colors.Transparent"/> for no tinting.
 		/// </summary>

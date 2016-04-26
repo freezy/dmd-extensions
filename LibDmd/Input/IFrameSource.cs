@@ -2,6 +2,7 @@
 using System.Reactive;
 using System.Security.RightsManagement;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 
 namespace LibDmd.Input
 {
@@ -25,7 +26,7 @@ namespace LibDmd.Input
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
 		/// <returns></returns>
-		IObservable<BitmapSource> GetFrames();
+		IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames();
 
 		/// <summary>
 		/// An observable that triggers when the source starts providing frames.

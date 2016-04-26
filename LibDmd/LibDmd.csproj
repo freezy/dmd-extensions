@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
+    <Compile Include="Common\Profiler.cs" />
     <Compile Include="Input\IFrameSource.cs" />
     <Compile Include="Input\PBFX2Grabber\PBFX2Grabber.cs" />
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">

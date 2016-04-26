@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 
 namespace LibDmd.Input.ScreenGrabber
@@ -28,14 +29,15 @@ namespace LibDmd.Input.ScreenGrabber
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private IObservable<BitmapSource> _frames;
+		private IObservable<Tuple<BitmapSource, ProfilerFrame>> _frames;
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames()
 		{
 			return _frames ?? (
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Select(x => CaptureImage())
+					.Select(x => new ProfilerFrame())
+					.Select(profilerFrame => new Tuple<BitmapSource, ProfilerFrame>(CaptureImage(), profilerFrame))
 					.Publish()
 					.RefCount()
 			);

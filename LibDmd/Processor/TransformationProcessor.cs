@@ -9,6 +9,8 @@ namespace LibDmd.Processor
 	/// </summary>
 	public class TransformationProcessor : AbstractProcessor
 	{
+		public override string Name { get; } = "Transformation Processor";
+
 		/// <summary>
 		/// Pixel width of the output frame
 		/// </summary>

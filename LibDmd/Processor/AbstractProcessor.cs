@@ -11,6 +11,11 @@ namespace LibDmd.Processor
 	public abstract class AbstractProcessor
 	{
 		/// <summary>
+		/// Display name of this processor
+		/// </summary>
+		public abstract string Name { get; }
+
+		/// <summary>
 		/// Produces frames as they come out of the processor.
 		/// Useful for debugging and displaying intermediate results.
 		/// </summary>

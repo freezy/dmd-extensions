@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Output;
 using LibDmd.Processor;
-using NLog.LayoutRenderers;
 
 namespace LibDmd
 {
@@ -61,6 +61,11 @@ namespace LibDmd
 		public bool IsRendering { get; set; }
 
 		/// <summary>
+		/// If true, profiling data is collected.
+		/// </summary>
+		public bool IsProfiling { get; set; }
+
+		/// <summary>
 		/// Produces frames before they get send through the processors.
 		/// 
 		/// Useful for displaying them for debug purposes.
@@ -75,7 +80,10 @@ namespace LibDmd
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
+		private readonly Profiler _profiler = new Profiler();
+		private ProfilerFrame _profilerFrame;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		
 
 		/// <summary>
 		/// Renders a single bitmap on all destinations.
@@ -120,7 +128,7 @@ namespace LibDmd
 		/// Expected errors end up in the provided error callback.
 		/// </remarks>
 		/// <param name="onCompleted">When the source stopped producing frames.</param>
-		///  <param name="onError">When a known error occurs.</param>
+		/// <param name="onError">When a known error occurs.</param>
 		/// <returns>An IDisposable that stops rendering when disposed.</returns>
 		public IDisposable StartRendering(Action onCompleted, Action<Exception> onError = null)
 		{
@@ -147,20 +155,33 @@ namespace LibDmd
 					Logger.Info("Frames stopped from {0}.", Source.Name);
 					onCompleted?.Invoke();
 				});
-				var disposable = Source.GetFrames().Subscribe(bmp => {
+				var disposable = Source.GetFrames().Subscribe(x =>
+				{
+					_profilerFrame?.Next();
+					//Logger.Trace(_profilerFrame);
+					_profilerFrame = x.Item2;
+					_profilerFrame.Next(Source);
 
+					var bmp = x.Item1;
 					_beforeProcessed.OnNext(bmp);
 					if (Processors != null) {
 						// TODO don't process non-greyscale compatible processors when gray4 is enabled
 						bmp = enabledProcessors
 							.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-							.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
+							.Aggregate(bmp, (currentBmp, processor) => {
+								var b = processor.Process(currentBmp);
+								_profilerFrame.Next(processor);
+								return b;
+							});
 					}
 					if (RenderAsGray4 && canRenderGray4) {
 						destGray4?.RenderGray4(bmp);
 					} else {
 						dest.Render(bmp);
 					}
+					_profilerFrame.Next(dest);
+					_profiler.AddFrame(_profilerFrame);
+
 				}, ex => {
 					if (onError != null && ex is CropRectangleOutOfRangeException) {
 						onError.Invoke(ex);

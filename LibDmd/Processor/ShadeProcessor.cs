@@ -10,6 +10,8 @@ namespace LibDmd.Processor
 	/// </summary>
 	public class ShadeProcessor : AbstractProcessor
 	{
+		public override string Name { get; } = "Shade Processor";
+
 		/// <summary>
 		/// Number of shades to reduce luminosity to. Shades are equally 
 		/// distributed but can be tweaked with <see cref="Intensity"/> and
