@@ -8,7 +8,7 @@ namespace LibDmd.Processor
 	/// <summary>
 	/// Changes the luminosity of every pixel to a restricted number of shades.
 	/// </summary>
-	public class ShadeProcessor : AbstractProcessor
+	public class ShadeProcessor : BaseProcessor
 	{
 		public override string Name { get; } = "Shade Processor";
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Security.RightsManagement;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -14,28 +16,53 @@ namespace LibDmd.Input
 	/// returns an observable. Note that the producer decides on the frequency
 	/// in which frames are delivered to the consumer.
 	/// </remarks>
-	public interface IFrameSource
+	public abstract class BaseFrameSource
 	{
 		/// <summary>
 		/// A display name for the source
 		/// </summary>
-		string Name { get; }
+		public abstract string Name { get; }
 
 		/// <summary>
 		/// Returns an observable that produces a sequence of frames.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
 		/// <returns></returns>
-		IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames();
+		public abstract IObservable<Frame> GetFrames();
 
 		/// <summary>
 		/// An observable that triggers when the source starts providing frames.
 		/// </summary>
-		IObservable<Unit> OnResume { get; }
+		public IObservable<Unit> OnResume => _onResume;
 
 		/// <summary>
 		/// An observable that triggers when the source is interrupted, e.g. a game is stopped.
 		/// </summary>
-		IObservable<Unit> OnPause { get; }
+		public IObservable<Unit> OnPause => _onPause;
+
+		protected readonly ISubject<Unit> _onResume = new Subject<Unit>();
+		protected readonly ISubject<Unit> _onPause = new Subject<Unit>();
+	}
+
+	public class Frame
+	{
+		public static bool EnableProfiling = true;
+
+		public BitmapSource Bitmap { get; set; }
+		public ProfilerFrame ProfilerFrame { get; }
+		public bool HasBitmap => Bitmap != null;
+
+		public Frame()
+		{
+			if (EnableProfiling) {
+				ProfilerFrame = new ProfilerFrame();
+			}
+		}
+
+		public Frame SetBitmap(BitmapSource bmp)
+		{
+			Bitmap = bmp;
+			return this;
+		}
 	}
 }

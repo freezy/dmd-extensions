@@ -31,7 +31,7 @@ namespace LibDmd
 		/// A source is something that produces frames at an arbitrary resolution with
 		/// an arbitrary framerate.
 		/// </summary>
-		public IFrameSource Source { get; set; }
+		public BaseFrameSource Source { get; set; }
 
 		/// <summary>
 		/// A processor is something that receives a frame, does some processing
@@ -42,7 +42,7 @@ namespace LibDmd
 		/// 
 		/// Examples of processors are convert to gray scale or resize.
 		/// </summary>
-		public List<AbstractProcessor> Processors { get; set; }
+		public List<BaseProcessor> Processors { get; set; }
 
 		/// <summary>
 		/// Destinations are output devices that can render frames.
@@ -72,7 +72,6 @@ namespace LibDmd
 		/// </summary>
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
-
 		/// <summary>
 		/// If true, send 4-byte grayscale image to renderers which support it.
 		/// </summary>
@@ -83,7 +82,6 @@ namespace LibDmd
 		private readonly Profiler _profiler = new Profiler();
 		private ProfilerFrame _profilerFrame;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		
 
 		/// <summary>
 		/// Renders a single bitmap on all destinations.
@@ -136,7 +134,7 @@ namespace LibDmd
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
 			}
 			IsRendering = true;
-			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
+			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<BaseProcessor>();
 
 			foreach (var dest in Destinations) {
 				var canRenderGray4 = false;
@@ -155,14 +153,14 @@ namespace LibDmd
 					Logger.Info("Frames stopped from {0}.", Source.Name);
 					onCompleted?.Invoke();
 				});
-				var disposable = Source.GetFrames().Subscribe(x =>
+				var disposable = Source.GetFrames().Subscribe(frame =>
 				{
 					_profilerFrame?.Next();
 					//Logger.Trace(_profilerFrame);
-					_profilerFrame = x.Item2;
+					_profilerFrame = frame.ProfilerFrame;
 					_profilerFrame.Next(Source);
 
-					var bmp = x.Item1;
+					var bmp = frame.Bitmap;
 					_beforeProcessed.OnNext(bmp);
 					if (Processors != null) {
 						// TODO don't process non-greyscale compatible processors when gray4 is enabled

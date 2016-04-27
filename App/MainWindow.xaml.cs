@@ -116,12 +116,12 @@ namespace App
 			_screenGraph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { transformationProcessor, monochromeProcessor }
+				Processors = new List<BaseProcessor> { transformationProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
 				Source = _pin2DmdGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _gridProcessor, transformationProcessor, _shadeProcessor }
+				Processors = new List<BaseProcessor> { _gridProcessor, transformationProcessor, _shadeProcessor }
 			};
 
 			// init grabber window and link it to grabber

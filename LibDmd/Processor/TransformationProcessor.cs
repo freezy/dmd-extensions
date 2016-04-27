@@ -7,7 +7,7 @@ namespace LibDmd.Processor
 	/// <summary>
 	/// Resizes or flips a frame to given dimensions.
 	/// </summary>
-	public class TransformationProcessor : AbstractProcessor
+	public class TransformationProcessor : BaseProcessor
 	{
 		public override string Name { get; } = "Transformation Processor";
 

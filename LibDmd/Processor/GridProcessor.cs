@@ -10,7 +10,7 @@ namespace LibDmd.Processor
 	/// A processor that strips off the space between the "dot grid" of
 	/// a rendered DMD frame.
 	/// </summary>
-	public class GridProcessor : AbstractProcessor
+	public class GridProcessor : BaseProcessor
 	{
 		public override string Name { get; } = "Grid Processor";
 

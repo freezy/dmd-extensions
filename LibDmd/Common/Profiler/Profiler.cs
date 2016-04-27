@@ -33,13 +33,13 @@ namespace LibDmd.Common
 			_last = 0;
 		}
 
-		public IFrameSource Next(IFrameSource src)
+		public BaseFrameSource Next(BaseFrameSource src)
 		{
 			Add(src.Name);
 			return src;
 		}
 
-		public AbstractProcessor Next(AbstractProcessor proc)
+		public BaseProcessor Next(BaseProcessor proc)
 		{
 			Add(proc.Name);
 			return proc;

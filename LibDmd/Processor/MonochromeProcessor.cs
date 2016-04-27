@@ -9,7 +9,7 @@ namespace LibDmd.Processor
 	/// <summary>
 	/// Converts a frame to monochrome, with optional color tinting.
 	/// </summary>
-	public class MonochromeProcessor : AbstractProcessor
+	public class MonochromeProcessor : BaseProcessor
 	{
 		public override string Name { get; } = "Monochrome Processor";
 

@@ -13,12 +13,9 @@ namespace LibDmd.Input.ScreenGrabber
 	/// A screen grabber that captures a portion of the desktop given by 
 	/// position and dimensions.
 	/// </summary>
-	public class ScreenGrabber : IFrameSource
+	public class ScreenGrabber : BaseFrameSource
 	{
-		public string Name { get; } = "Screen Grabber";
-
-		public IObservable<Unit> OnResume => _onResume;
-		public IObservable<Unit> OnPause => _onPause;
+		public override string Name { get; } = "Screen Grabber";
 
 		public double FramesPerSecond { get; set; } = 15;
 		public int Left { get; set; }
@@ -26,18 +23,15 @@ namespace LibDmd.Input.ScreenGrabber
 		public int Width { get; set; } = 128;
 		public int Height { get; set; } = 32;
 
-		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
-		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
+		private IObservable<Frame> _frames;
 
-		private IObservable<Tuple<BitmapSource, ProfilerFrame>> _frames;
-
-		public IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames()
+		public override IObservable<Frame> GetFrames()
 		{
 			return _frames ?? (
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Select(x => new ProfilerFrame())
-					.Select(profilerFrame => new Tuple<BitmapSource, ProfilerFrame>(CaptureImage(), profilerFrame))
+					.Select(x => new Frame())
+					.Select(frame => frame.SetBitmap(CaptureImage()))
 					.Publish()
 					.RefCount()
 			);

@@ -8,7 +8,7 @@ namespace LibDmd.Processor
 	/// <summary>
 	/// Base class for all processors that contains common logic.
 	/// </summary>
-	public abstract class AbstractProcessor
+	public abstract class BaseProcessor
 	{
 		/// <summary>
 		/// Display name of this processor

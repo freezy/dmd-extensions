@@ -76,8 +76,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
-    <Compile Include="Common\Profiler.cs" />
-    <Compile Include="Input\IFrameSource.cs" />
+    <Compile Include="Common\Profiler\Profiler.cs" />
+    <Compile Include="Input\BaseFrameSource.cs" />
     <Compile Include="Input\PBFX2Grabber\PBFX2Grabber.cs" />
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
@@ -96,7 +96,7 @@
     </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
-    <Compile Include="Processor\AbstractProcessor.cs" />
+    <Compile Include="Processor\BaseProcessor.cs" />
     <Compile Include="Processor\MonochromeProcessor.cs" />
     <Compile Include="Processor\ShadeProcessor.cs" />
     <Compile Include="Processor\TransformationProcessor.cs" />

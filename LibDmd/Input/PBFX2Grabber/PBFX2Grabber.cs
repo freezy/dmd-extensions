@@ -24,12 +24,9 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : IFrameSource
+	public class PBFX2Grabber : BaseFrameSource
 	{
-		public string Name { get; } = "Pinball FX2";
-
-		public IObservable<Unit> OnResume => _onResume;
-		public IObservable<Unit> OnPause => _onPause;
+		public override string Name { get; } = "Pinball FX2";
 
 		/// <summary>
 		/// Wait time between polls for the Pinball FX2 process. Stops polling as soon
@@ -50,11 +47,9 @@ namespace LibDmd.Input.PBFX2Grabber
 		public int CropRight { get; set; } = 8;
 		public int CropBottom { get; set; } = 12;
 
-		private IConnectableObservable<Tuple<BitmapSource, ProfilerFrame>> _frames;
+		private IConnectableObservable<Frame> _frames;
 		private IDisposable _capturer;
 		private IntPtr _handle;
-		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
-		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 	
@@ -98,14 +93,14 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-		public IObservable<Tuple<BitmapSource, ProfilerFrame>> GetFrames()
+		public override IObservable<Frame> GetFrames()
 		{
 			if (_frames == null) {
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Select(x => new ProfilerFrame())
-					.Select(profilerFrame => new Tuple<BitmapSource, ProfilerFrame>(CaptureWindow(), profilerFrame))
-					.Where(t => t.Item1 != null)
+					.Select(x => new Frame())
+					.Select(frame => frame.SetBitmap(CaptureWindow()))
+					.Where(frame => frame.HasBitmap)
 					.Publish();
 
 				StartPolling();

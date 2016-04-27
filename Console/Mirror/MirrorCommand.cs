@@ -66,7 +66,7 @@ namespace Console.Mirror
 						Intensity = _options.ShadeIntensity,
 						Brightness = _options.ShadeBrightness
 					};
-					_graph.Processors = new List<AbstractProcessor>() {
+					_graph.Processors = new List<BaseProcessor>() {
 						gridProcessor,
 						transformationProcessor,
 						shadeProcessor
@@ -84,7 +84,7 @@ namespace Console.Mirror
 						Width = _options.Position[2],
 						Height = _options.Position[3]
 					};
-					_graph.Processors = new List<AbstractProcessor>() { transformationProcessor };
+					_graph.Processors = new List<BaseProcessor>() { transformationProcessor };
 					break;
 
 				default:
