@@ -33,8 +33,6 @@ namespace LibDmd.Processor
 		/// </summary>
 		public double Brightness { get; set; } = 0;
 
-		public override bool IsGrayscaleCompatible { get; } = false;
-
 		public override BitmapSource Process(BitmapSource bmp)
 		{
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
