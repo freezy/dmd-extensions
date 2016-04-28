@@ -123,24 +123,27 @@ namespace LibDmd.Input.TPAGrabber
 		public BitmapSource CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
-			WriteableBitmap wBmp = new WriteableBitmap(DMDWidth, DMDHeight, 96, 96, PixelFormats.Bgr32, null);
+			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight, 96, 96, PixelFormats.Bgr32, null);
 
 			// Check if a table is loaded..
-			byte[] TableLoaded = new byte[1];
-			ReadProcessMemory((int)_handle, (int)_gameBase + GameState, TableLoaded, 1, 0);
+			var tableLoaded = new byte[1];
+			ReadProcessMemory((int)_handle, (int)_gameBase + GameState, tableLoaded, 1, 0);
 
 			// ..if not, return an empty frame (blank DMD).
-			if (TableLoaded[0] == 0) { wBmp.Freeze(); return wBmp; }
+			if (tableLoaded[0] == 0) {
+				wBmp.Freeze();
+				return wBmp;
+			}
 
 			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
-			byte[] EAX = new byte[4];
-			ReadProcessMemory((int)_handle, (int)_codeCave, EAX, 4, 0);
+			var eax = new byte[4];
+			ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
 
 			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			int DMDOffset = BitConverter.ToInt32(EAX, 0) - 0x1F406;
+			var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
 
 			// Grab the whole raw DMD block from game's memory.
-			ReadProcessMemory((int)_handle, DMDOffset, RawDMD, MemBlockSize + 2, 0);
+			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
 			if (RawDMD[0] != 0x02) return null;
@@ -149,29 +152,29 @@ namespace LibDmd.Input.TPAGrabber
 			wBmp.Lock();
 
 			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-			int pixelIndex = 2;
+			var pixelIndex = 2;
 
 			// For each pixel on Y axis.
-			for (int dmdY = 0; dmdY < DMDHeight - 1; dmdY++) {
+			for (var dmdY = 0; dmdY < DMDHeight - 1; dmdY++) {
 				// For each pixel on X axis.
-				for (int dmdX = 0; dmdX < DMDWidth - 1; dmdX++) {
+				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++) {
+
 					// We got to use unsafe code, pointers are much faster for this kind of low level image processing.
-					unsafe
-					{
+					unsafe {
 						// Get a pointer to the back buffer.
-						int pBackBuffer = (int)wBmp.BackBuffer;
+						var pBackBuffer = (int)wBmp.BackBuffer;
 
 						// Find the address of the pixel to draw.
 						pBackBuffer += dmdY * wBmp.BackBufferStride;
 						pBackBuffer += dmdX * 4;
 
 						// Compute the pixel's color..
-						int color_data = RawDMD[pixelIndex] << 16; // R
-						color_data |= RawDMD[pixelIndex + 1] << 8; // G
-						color_data |= RawDMD[pixelIndex + 2] << 0; // B      
+						var colorData = RawDMD[pixelIndex] << 16; // R
+						colorData |= RawDMD[pixelIndex + 1] << 8; // G
+						colorData |= RawDMD[pixelIndex + 2] << 0; // B      
 
 						// Assign the color data to the pixel.
-						*((int*)pBackBuffer) = color_data;
+						*((int*)pBackBuffer) = colorData;
 					}
 					// Specify the area of the bitmap that changed.
 					wBmp.AddDirtyRect(new Int32Rect(dmdX, dmdY, 1, 1));
@@ -195,11 +198,11 @@ namespace LibDmd.Input.TPAGrabber
 		// Check if the game is started and return its process handle.
 		private static IntPtr FindGameHandle()
 		{
-			Process[] ProcessList = Process.GetProcesses();
-			foreach (var p in ProcessList) {
+			var processList = Process.GetProcesses();
+			foreach (var p in processList) {
 				if (p.ProcessName == "PinballArcade11") {
 					// When the process is found, write the codecave.
-					IntPtr processHandle = PatchCodeCave(p);
+					var processHandle = PatchCodeCave(p);
 					return processHandle;
 				}
 			}
@@ -207,19 +210,18 @@ namespace LibDmd.Input.TPAGrabber
 		}
 
 		// Helper function to retrieve process base address.
-		private static IntPtr BaseAddress(Process Process)
+		private static IntPtr BaseAddress(Process process)
 		{
-			IntPtr BaseAddress = IntPtr.Zero;
-			ProcessModule ProcMod = Process.MainModule;
-			return ProcMod.BaseAddress;
+			var procMod = process.MainModule;
+			return procMod.BaseAddress;
 		}
 
 		// Not fully commented.. basically we're creating a codecave to let the game retrieve for us the DMD location in memory.
-		private static IntPtr PatchCodeCave(Process GameProc)
+		private static IntPtr PatchCodeCave(Process gameProc)
 		{
 			// Defines offset address of our codecave.
-			_gameBase = BaseAddress(GameProc);
-			IntPtr PatchOffset = _gameBase + Patch;
+			_gameBase = BaseAddress(gameProc);
+			var patchOffset = _gameBase + Patch;
 
 			// Access rights to the process.
 			const int PROCESS_VM_OPERATION = 0x0008;
@@ -227,50 +229,49 @@ namespace LibDmd.Input.TPAGrabber
 			const int PROCESS_VM_WRITE = 0x0020;
 
 			// Open the process to allow memory operations + return process handle.
-			IntPtr processHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, GameProc.Id);
+			var processHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
 
 			// Allocating memory to write the codecave.
 			_codeCave = VirtualAllocEx(processHandle, IntPtr.Zero, 0x100, 0x1000, 0x40);
-			byte[] MEM = BitConverter.GetBytes((int)_codeCave);
+			var mem = BitConverter.GetBytes((int)_codeCave);
 
 			// Build the JMP to the original code.
-			byte[] JOC = ASMJump(_codeCave + 17, PatchOffset + 13);
+			var joc = ASMJump(_codeCave + 17, patchOffset + 13);
 
 			// Build the codecave.
-			byte[] DMDCodeCave = new byte[]
-			{
-						0x0F, 0xB6, 0x16,                     // MOVZX EDX,BYTE PTR DS:[ESI]
-						0x8B, 0x75, 0xF0,                     // MOV ESI,DWORD PTR SS:[EBP-10]
-						0xD3, 0xEA,                           // SHR EDX,CL
-						0x83, 0xE2, 0x01,                     // AND EDX,1
-						0x03, 0xFA,                           // ADD EDI,EDX
-						0xE9, JOC[1], JOC[2], JOC[3], JOC[4]  // JMP > ORIGINAL CODE
+			var dmdCodeCave = new byte[] {
+				0x0F, 0xB6, 0x16,                     // MOVZX EDX,BYTE PTR DS:[ESI]
+				0x8B, 0x75, 0xF0,                     // MOV ESI,DWORD PTR SS:[EBP-10]
+				0xD3, 0xEA,                           // SHR EDX,CL
+				0x83, 0xE2, 0x01,                     // AND EDX,1
+				0x03, 0xFA,                           // ADD EDI,EDX
+				0xE9, joc[1], joc[2], joc[3], joc[4]  // JMP > ORIGINAL CODE
 			};
 
 			// Write the codecave into memory.
-			WriteProcessMemory(processHandle, _codeCave + 4, DMDCodeCave, DMDCodeCave.Length, 0);
+			WriteProcessMemory(processHandle, _codeCave + 4, dmdCodeCave, dmdCodeCave.Length, 0);
 
 			// Build the JMP to the codecave.
-			byte[] JCC = ASMJump(PatchOffset + 5, _codeCave + 4);
+			var jcc = ASMJump(patchOffset + 5, _codeCave + 4);
 
 			// Build the jump to the codecave.
-			byte[] JMPToCC = new byte[] {
-				0xA3, MEM[0], MEM[1], MEM[2], MEM[3], // MOV DWORD PTR DS:[XXXXXXXX],EAX
-				0xE9, JCC[1], JCC[2], JCC[3], JCC[4], // JMP > CODECAVE
+			var jmpToCC = new byte[] {
+				0xA3, mem[0], mem[1], mem[2], mem[3], // MOV DWORD PTR DS:[XXXXXXXX],EAX
+				0xE9, jcc[1], jcc[2], jcc[3], jcc[4], // JMP > CODECAVE
 				0x90, 0x90, 0x90                      // NOP NOP NOP
 			};
 			// Write the jump into memory.
-			WriteProcessMemory(processHandle, PatchOffset, JMPToCC, JMPToCC.Length, 0);
+			WriteProcessMemory(processHandle, patchOffset, jmpToCC, jmpToCC.Length, 0);
 
 			// Return the process handle.
 			return processHandle;
 		}
 
 		// Function to calculate the 5-byte array for an ASM JMP.
-		private static byte[] ASMJump(IntPtr Location, IntPtr Destination)
+		private static byte[] ASMJump(IntPtr location, IntPtr destination)
 		{
-			byte[] JMPbytes = new byte[4];
-			JMPbytes = BitConverter.GetBytes((UInt64)Destination - (UInt64)Location - (UInt64)5);
+			var JMPbytes = new byte[4];
+			JMPbytes = BitConverter.GetBytes((UInt64)destination - (UInt64)location - (UInt64)5);
 			return new byte[] { 0xE9, JMPbytes[0], JMPbytes[1], JMPbytes[2], JMPbytes[3] };
 		}
 

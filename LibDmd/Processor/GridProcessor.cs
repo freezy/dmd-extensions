@@ -14,7 +14,7 @@ namespace LibDmd.Processor
 	{
 		public override bool Enabled
 		{
-			get { return _enabled && Spacing > 0; }
+			get { return _enabled && (Spacing > 0 || CropTop > 0 || CropLeft > 0 || CropRight > 0 || CropBottom > 0); }
 			set { _enabled = value; }
 		}
 
@@ -32,6 +32,11 @@ namespace LibDmd.Processor
 		/// Relative spacing to strip. 1 = 100% (same size as dot), 0.5 = half size, etc
 		/// </summary>
 		public double Spacing { get; set; }
+
+		public int CropLeft { get; set; } = 0;
+		public int CropTop { get; set; } = 0;
+		public int CropRight { get; set; } = 0;
+		public int CropBottom { get; set; } = 0;
 
 		private bool _enabled = true;
 
@@ -81,7 +86,11 @@ namespace LibDmd.Processor
 				dest.CopyPixels(srcRect, buffer, stride, 0);
 				dest.WritePixels(destRect, buffer, stride, 0);
 			}
-			var img = new CroppedBitmap(dest, new Int32Rect(0, 0, (int)(sliceWidth * Width), (int)(sliceHeight * Height)));
+			var img = new CroppedBitmap(dest, new Int32Rect(
+				CropLeft, 
+				CropTop, 
+				(int)(sliceWidth * Width) - CropLeft - CropRight, 
+				(int)(sliceHeight * Height) - CropTop - CropBottom));
 
 			sw.Stop();
 			//Console.WriteLine("Grid-sized from {0}x{1} to {2}x{3} in {4}ms.", bmp.Width, bmp.Height, img.PixelWidth, img.PixelHeight, sw.ElapsedMilliseconds);

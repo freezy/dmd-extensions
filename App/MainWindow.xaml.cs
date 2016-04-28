@@ -38,7 +38,8 @@ namespace App
 		private readonly RenderGraph _screenGraph;
 		private readonly RenderGraph _pbfxGraph;
 		private readonly RenderGraph _tpaGraph;
-		private readonly GridProcessor _gridProcessor;
+		private readonly GridProcessor _pbfxGridProcessor;
+		private readonly GridProcessor _tpaGridProcessor;
 		private readonly ShadeProcessor _shadeProcessor;
 		private readonly PBFX2Grabber _pbfxGrabber;
 		private readonly TPAGrabber _tpaGrabber;
@@ -106,7 +107,8 @@ namespace App
 			_tpaGrabber = new TPAGrabber { FramesPerSecond = 25 };
 				
 			// define processors
-			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
+			_pbfxGridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
+			_tpaGridProcessor = new GridProcessor { Enabled = true, Spacing = 0, CropRight = 0, CropBottom = 1 };
 			var transformationProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
 			var monochromeProcessor = new MonochromeProcessor {
 				Enabled = true,
@@ -114,6 +116,7 @@ namespace App
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
 			_shadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
+			var tpaShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 1.7, Brightness = 0 };
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -124,12 +127,12 @@ namespace App
 			_pbfxGraph = new RenderGraph {
 				Source = _pbfxGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _gridProcessor, transformationProcessor, _shadeProcessor }
+				Processors = new List<AbstractProcessor> { _pbfxGridProcessor, transformationProcessor, _shadeProcessor }
 			};
 			_tpaGraph = new RenderGraph {
 				Source = _tpaGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { transformationProcessor }
+				Processors = new List<AbstractProcessor> { _tpaGridProcessor, transformationProcessor, tpaShadeProcessor }
 			};
 
 			// init grabber window and link it to grabber
@@ -153,7 +156,12 @@ namespace App
 			PreviewKeyDown += HotKey;
 
 			// grid preview images
-			_gridProcessor.WhenProcessed.Subscribe(bmp => {
+			_pbfxGridProcessor.WhenProcessed.Subscribe(bmp => {
+				ProcessedGrid.Dispatcher.Invoke(() => {
+					ProcessedGrid.Source = bmp;
+				});
+			});
+			_tpaGridProcessor.WhenProcessed.Subscribe(bmp => {
 				ProcessedGrid.Dispatcher.Invoke(() => {
 					ProcessedGrid.Source = bmp;
 				});
@@ -162,17 +170,18 @@ namespace App
 
 		private void HotKey(object sender, KeyEventArgs e)
 		{
+			var gridProcessor = _tpaGraph.IsRendering ? _tpaGridProcessor : _pbfxGridProcessor;
 			if (e.IsDown) {
 				switch (e.Key) {
 					case Key.PageUp:
-						_gridProcessor.Spacing += 0.1;
-						Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+						gridProcessor.Spacing += 0.1;
+						Console.Text += "Grid padding: " + gridProcessor.Spacing + "\n";
 						break;
 
 					case Key.PageDown:
-						if (_gridProcessor.Spacing > 0) {
-							_gridProcessor.Spacing -= 0.1;
-							Console.Text += "Grid padding: " + _gridProcessor.Spacing + "\n";
+						if (gridProcessor.Spacing > 0) {
+							gridProcessor.Spacing -= 0.1;
+							Console.Text += "Grid padding: " + gridProcessor.Spacing + "\n";
 						}
 						break;
 
