@@ -19,6 +19,7 @@ using System.Windows.Shapes;
 using LibDmd;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ScreenGrabber;
+using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
@@ -36,9 +37,11 @@ namespace App
 		private readonly GrabberWindow _grabberWindow;
 		private readonly RenderGraph _screenGraph;
 		private readonly RenderGraph _pbfxGraph;
+		private readonly RenderGraph _tpaGraph;
 		private readonly GridProcessor _gridProcessor;
 		private readonly ShadeProcessor _shadeProcessor;
-		private readonly PBFX2Grabber _pin2DmdGrabber;
+		private readonly PBFX2Grabber _pbfxGrabber;
+		private readonly TPAGrabber _tpaGrabber;
 
 		private IDisposable _currentSource;
 		private IDisposable _currentRenderer;
@@ -97,10 +100,10 @@ namespace App
 				Console.Text += "Message: " + e.Message + "\n";
 			}
 
-
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
-			_pin2DmdGrabber = new PBFX2Grabber { FramesPerSecond = 25 };
+			_pbfxGrabber = new PBFX2Grabber { FramesPerSecond = 25 };
+			_tpaGrabber = new TPAGrabber { FramesPerSecond = 25 };
 				
 			// define processors
 			_gridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
@@ -119,9 +122,14 @@ namespace App
 				Processors = new List<AbstractProcessor> { transformationProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
-				Source = _pin2DmdGrabber,
+				Source = _pbfxGrabber,
 				Destinations = renderers,
 				Processors = new List<AbstractProcessor> { _gridProcessor, transformationProcessor, _shadeProcessor }
+			};
+			_tpaGraph = new RenderGraph {
+				Source = _tpaGrabber,
+				Destinations = renderers,
+				Processors = new List<AbstractProcessor> { transformationProcessor }
 			};
 
 			// init grabber window and link it to grabber
@@ -142,7 +150,6 @@ namespace App
 
 			PreviewKeyDown += _grabberWindow.HotKey;
 			PreviewKeyUp += _grabberWindow.HotKey;
-
 			PreviewKeyDown += HotKey;
 
 			// grid preview images
@@ -188,37 +195,37 @@ namespace App
 						break;
 
 					case Key.A:
-						_pin2DmdGrabber.CropLeft -= 1;
-						Console.Text += "Crop left: " + _pin2DmdGrabber.CropLeft + "\n";
+						_pbfxGrabber.CropLeft -= 1;
+						Console.Text += "Crop left: " + _pbfxGrabber.CropLeft + "\n";
 						break;
 					case Key.S:
-						_pin2DmdGrabber.CropLeft += 1;
-						Console.Text += "Crop left: " + _pin2DmdGrabber.CropLeft + "\n";
+						_pbfxGrabber.CropLeft += 1;
+						Console.Text += "Crop left: " + _pbfxGrabber.CropLeft + "\n";
 						break;
 					case Key.D:
-						_pin2DmdGrabber.CropRight += 1;
-						Console.Text += "Crop right: " + _pin2DmdGrabber.CropRight + "\n";
+						_pbfxGrabber.CropRight += 1;
+						Console.Text += "Crop right: " + _pbfxGrabber.CropRight + "\n";
 						break;
 					case Key.F:
-						_pin2DmdGrabber.CropRight -= 1;
-						Console.Text += "Crop right: " + _pin2DmdGrabber.CropRight + "\n";
+						_pbfxGrabber.CropRight -= 1;
+						Console.Text += "Crop right: " + _pbfxGrabber.CropRight + "\n";
 						break;
 
 					case Key.Y:
-						_pin2DmdGrabber.CropTop -= 1;
-						Console.Text += "Crop top: " + _pin2DmdGrabber.CropTop + "\n";
+						_pbfxGrabber.CropTop -= 1;
+						Console.Text += "Crop top: " + _pbfxGrabber.CropTop + "\n";
 						break;
 					case Key.X:
-						_pin2DmdGrabber.CropTop += 1;
-						Console.Text += "Crop left: " + _pin2DmdGrabber.CropTop + "\n";
+						_pbfxGrabber.CropTop += 1;
+						Console.Text += "Crop left: " + _pbfxGrabber.CropTop + "\n";
 						break;
 					case Key.C:
-						_pin2DmdGrabber.CropBottom += 1;
-						Console.Text += "Crop bottom: " + _pin2DmdGrabber.CropBottom + "\n";
+						_pbfxGrabber.CropBottom += 1;
+						Console.Text += "Crop bottom: " + _pbfxGrabber.CropBottom + "\n";
 						break;
 					case Key.V:
-						_pin2DmdGrabber.CropBottom -= 1;
-						Console.Text += "Crop bottom: " + _pin2DmdGrabber.CropBottom + "\n";
+						_pbfxGrabber.CropBottom -= 1;
+						Console.Text += "Crop bottom: " + _pbfxGrabber.CropBottom + "\n";
 						break;
 				}
 			}
@@ -251,8 +258,20 @@ namespace App
 				return;
 			}
 			_grabberWindow.Hide();
+			Console.Text += "Starting pulling frames from Pinball FX2.\n";
 			SwitchGraph(_pbfxGraph);
-			Console.Text += "Started pulling frames from Pinball FX2.\n";
+		}
+
+		private void TpaButton_Click(object sender, RoutedEventArgs e)
+		{
+			// ignore if already runnong
+			if (_tpaGraph.IsRendering) {
+				Console.Text += "Already capturing the Pinball Arcade. Launch a game if you don't see anything!\n";
+				return;
+			}
+			_grabberWindow.Hide();
+			Console.Text += "Starting pulling frames from the Pinball Arcade.\n";
+			SwitchGraph(_tpaGraph);
 		}
 
 		private void ScreenButton_Click(object sender, RoutedEventArgs e)
@@ -285,12 +304,18 @@ namespace App
 					OriginalCapture.Source = new WriteableBitmap(bmp); // freezes if bmp is used for some reason..
 				});
 			});
-			_currentRenderer = graph.StartRendering();
+			_currentRenderer = graph.StartRendering(err => {
+				Console.Text = err.Message + "\n";
+				_currentRenderer?.Dispose();
+				_currentSource?.Dispose();
+				_currentRenderer = null;
+			});
 		}
 
 		public void OnWindowClosing(object sender, CancelEventArgs cancelEventArgs)
 		{
 			_grabberWindow.Close();
+			_currentRenderer?.Dispose();
 			_screenGraph.Dispose();
 			_pbfxGraph.Dispose();
 
