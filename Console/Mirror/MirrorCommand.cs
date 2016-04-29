@@ -81,8 +81,8 @@ namespace Console.Mirror
 					var shadeProcessor = new ShadeProcessor {
 						Enabled = !_options.DisableShading,
 						NumShades = 4,
-						Shades = new[]{ 0d, 0.2, 0.35, 0.55 },
-						Intensity = 1.99,
+						Shades = new[]{ 0d, 0.22, 0.35, 0.55 },
+						Intensity = 1.9,
 						Brightness = 0
 					};
 					_graph.Processors = new List<AbstractProcessor>() {

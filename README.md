@@ -23,8 +23,8 @@ want to test or debug or you don't have a real DMD.
 ## Features
 
 The primary goal of this project was to add support real DMDs for games that
-don't provide support out of the box. The first game is Pinball FX2 and we're
-looking into support for the Pinball Arcade as well.
+don't provide support out of the box. The first game was **Pinball FX2** and 
+Farsight's **The Pinball Arcade** is supported as well.
 
 
 ## Install Instructions
@@ -54,6 +54,23 @@ You should see a test image on your DMD as well as on a virtual DMD.
 
 For further tweaking, see options below.
 
+### The Pinball Arcade
+
+For TPA we're pulling frames off the texture of the DMD in memory. Thus, you
+must be running the tool as Administrator.
+
+1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
+2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
+3. Start the DX11 version of The Pinball Arcade.
+
+Currently TPA's shades are re-mapped to custom values in order to achieve 
+better contrast. If you think the shades come out wrong, feel free to open an
+issue with comments.
+
+Also note that currently only 128x32 DMD games are supported, that means no
+EM games neither Frankenstein which has a different resolution.
+
+
 ## Documentation
 
 All options are documented in the tool.
@@ -61,7 +78,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.1.1
+DMD Extensions v1.2.0
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen to one or more other
@@ -75,11 +92,11 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.1.1
+DMD Extensions v1.2.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
-                           from. One of: [ pinballfx2, screen ].
+                           from. One of: [ pinballfx2, pinballarcade, screen ].
 
   -f, --fps                How many frames per second should be mirrored.
                            Default: 25
@@ -96,8 +113,9 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            when removing grid spacing. Two values: <Width>
                            <Height>. Default: "128 32".
 
-  --no-shading             [pinballfx2] Disable shading, i.e. artificial
-                           downsampling for RGB displays. Default: false.
+  --no-shading             [pinballfx2, pinballarcade] Disable shading, i.e.
+                           artificial downsampling for RGB displays. Default:
+                           false.
 
   --shading-numshades      [pinballfx2] Number of shades for artifical
                            downsampling for RGB displays. Default: 4
@@ -148,26 +166,36 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.1.1
+DMD Extensions v1.2.0
 USAGE: dmdext test [--destination=<destination>]
 
-  -d, --destination       The destination where the DMD data is sent to. One
-                          of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
-                          virtual ]. Default: "auto", which outputs to all
-                          available devices.
+  -d, --destination        The destination where the DMD data is sent to. One
+                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
+                           virtual ]. Default: "auto", which outputs to all
+                           available devices.
 
-  --no-virtual            Explicitly disables the virtual DMD when destination
-                          is "auto". Default: false.
+  --no-virtual             Explicitly disables the virtual DMD when destination
+                           is "auto". Default: false.
 
-  --use-gray4             Sends frames in 4-bit grayscale to the display if
-                          supported.
+  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
+                           application windows. Default: false.
 
-  --flip-x                Flips the image horizontally. Default: false.
+  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
+                           false.
 
-  --flip-y                Flips the image vertically. Default: false.
+  --virtual-position       Position and size of virtual DMD. Three values:
+                           <Left> <Top> <Width>. Default: "0 0 1024".
 
-  -q, --quit-when-done    Exit the program when finished, e.g. when Pinball FX2
-                          doesn't receive any frames anymore.
+  --use-gray4              Sends frames in 4-bit grayscale to the display if
+                           supported. Default: false
+
+  --flip-x                 Flips the image horizontally. Default: false.
+
+  --flip-y                 Flips the image vertically. Default: false.
+
+  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
+                           FX2 doesn't receive any frames anymore. Default:
+                           false
 ```
 
 ## Compatibility
@@ -179,6 +207,7 @@ have my sincerest sympathy, but that's as far as I go. ;)
 
 ## Credits
 
+- NoEx for the excellent TPA grabber code.
 - [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
   code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code

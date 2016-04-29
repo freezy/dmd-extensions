@@ -121,7 +121,7 @@ namespace App
 				NumShades = 4,
 				Intensity = 1.9,
 				Brightness = 0,
-				Shades = new[] { 0d, 0.2, 0.35, 0.55 }
+				Shades = new[] { 0d, 0.22, 0.35, 0.55 }
 			};
 
 			// chain them up
