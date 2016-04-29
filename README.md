@@ -56,10 +56,10 @@ For further tweaking, see options below.
 
 ### The Pinball Arcade
 
-For TPA we're pulling frames off the texture of the DMD in memory. Thus, you
-must be running the tool as Administrator.
+For TPA we're pulling frames off the DMD texture from TPA's memory. Thus, you
+must be running the tool as administrator.
 
-1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
+1. Open an administrator command prompt ([Windows], type `cmd`, right-click on `cmd.exe`, click on "Run as administrator")
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
 3. Start the DX11 version of The Pinball Arcade.
 
