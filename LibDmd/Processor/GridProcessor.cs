@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using LibDmd.Output;
 
 namespace LibDmd.Processor
 {
@@ -14,7 +15,7 @@ namespace LibDmd.Processor
 	{
 		public override bool Enabled
 		{
-			get { return _enabled && Spacing > 0; }
+			get { return _enabled && (Spacing > 0 || CropTop > 0 || CropLeft > 0 || CropRight > 0 || CropBottom > 0); }
 			set { _enabled = value; }
 		}
 
@@ -33,9 +34,14 @@ namespace LibDmd.Processor
 		/// </summary>
 		public double Spacing { get; set; }
 
+		public int CropLeft { get; set; } = 0;
+		public int CropTop { get; set; } = 0;
+		public int CropRight { get; set; } = 0;
+		public int CropBottom { get; set; } = 0;
+
 		private bool _enabled = true;
 
-		public override BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
 			var sw = new Stopwatch();
 			sw.Start();
@@ -48,7 +54,7 @@ namespace LibDmd.Processor
 			var srcRect = new Int32Rect();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 
-			var dest = new WriteableBitmap(bmp);
+			var wBmp = new WriteableBitmap(bmp);
 
 			srcRect.Y = 0;
 			srcRect.Width = (int)Math.Ceiling(sliceWidth);
@@ -63,7 +69,7 @@ namespace LibDmd.Processor
 				srcRect.X = (int)(x * (sliceWidth + paddingWidth));
 				destRect.X = (int)(x * sliceWidth);
 				bmp.CopyPixels(srcRect, buffer, stride, 0);
-				dest.WritePixels(destRect, buffer, stride, 0);
+				wBmp.WritePixels(destRect, buffer, stride, 0);
 			}
 
 			srcRect.X = 0;
@@ -78,10 +84,14 @@ namespace LibDmd.Processor
 			for (var y = 0; y < Height; y++) {
 				srcRect.Y = (int)(y * (sliceHeight + paddingHeight));
 				destRect.Y = (int)(y * sliceHeight);
-				dest.CopyPixels(srcRect, buffer, stride, 0);
-				dest.WritePixels(destRect, buffer, stride, 0);
+				wBmp.CopyPixels(srcRect, buffer, stride, 0);
+				wBmp.WritePixels(destRect, buffer, stride, 0);
 			}
-			var img = new CroppedBitmap(dest, new Int32Rect(0, 0, (int)(sliceWidth * Width), (int)(sliceHeight * Height)));
+			var img = new CroppedBitmap(wBmp, new Int32Rect(
+				CropLeft, 
+				CropTop, 
+				(int)(sliceWidth * Width) - CropLeft - CropRight, 
+				(int)(sliceHeight * Height) - CropTop - CropBottom));
 
 			sw.Stop();
 			//Console.WriteLine("Grid-sized from {0}x{1} to {2}x{3} in {4}ms.", bmp.Width, bmp.Height, img.PixelWidth, img.PixelHeight, sw.ElapsedMilliseconds);

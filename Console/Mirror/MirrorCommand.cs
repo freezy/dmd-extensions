@@ -9,6 +9,7 @@ using LibDmd;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ScreenGrabber;
+using LibDmd.Input.TPAGrabber;
 using LibDmd.Processor;
 
 namespace Console.Mirror
@@ -41,7 +42,8 @@ namespace Console.Mirror
 			// setup source and additional processors
 			switch (_options.Source) {
 
-				case SourceType.PinballFX2:
+				case SourceType.PinballFX2: {
+
 					if (_options.GridSize.Length != 2) {
 						throw new InvalidOptionException("Argument --grid-size must have two values: \"<Width> <Height>\".");
 					}
@@ -66,12 +68,29 @@ namespace Console.Mirror
 						Intensity = _options.ShadeIntensity,
 						Brightness = _options.ShadeBrightness
 					};
-					_graph.Processors = new List<AbstractProcessor>() {
+					_graph.Processors = new List<AbstractProcessor> {
 						gridProcessor,
 						transformationProcessor,
 						shadeProcessor
 					};
 					break;
+				}
+
+				case SourceType.PinballArcade: { 
+					_graph.Source = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
+					var shadeProcessor = new ShadeProcessor {
+						Enabled = !_options.DisableShading,
+						NumShades = 4,
+						Shades = new[]{ 0d, 0.22, 0.35, 0.55 },
+						Intensity = 1.9,
+						Brightness = 0
+					};
+					_graph.Processors = new List<AbstractProcessor>() {
+						transformationProcessor,
+						shadeProcessor
+					};
+					break;
+				}
 
 				case SourceType.Screen:
 					if (_options.Position.Length != 4) {

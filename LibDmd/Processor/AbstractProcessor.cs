@@ -2,6 +2,8 @@
 using System.IO;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
+using LibDmd.Input;
+using LibDmd.Output;
 
 namespace LibDmd.Processor
 {
@@ -25,8 +27,9 @@ namespace LibDmd.Processor
 		/// Processes a frame
 		/// </summary>
 		/// <param name="bmp">Unprocessed frame</param>
+		/// <param name="dest">The destination for which the frame is processed.</param>
 		/// <returns>Processed frame</returns>
-		public abstract BitmapSource Process(BitmapSource bmp);
+		public abstract BitmapSource Process(BitmapSource bmp, IFrameDestination dest);
 
 		/// <summary>
 		/// If false, non-RGB displays will skip this processor.

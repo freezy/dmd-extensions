@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Output;
 
 namespace LibDmd.Processor
 {
@@ -29,7 +30,7 @@ namespace LibDmd.Processor
 		/// </summary>
 		public bool FlipHorizontally { get; set; }
 
-		public override BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
 			if (bmp.PixelWidth == Width && bmp.PixelHeight == Height && !FlipHorizontally && !FlipVertically) {
 				return bmp;
@@ -41,11 +42,11 @@ namespace LibDmd.Processor
 				Height / bmp.Height * (FlipVertically ? -1 : 1), 
 				(double)bmp.PixelWidth / 2, 
 				(double)bmp.PixelHeight / 2));
-			var dest = BitmapFrame.Create(resized);
-			dest.Freeze();
+			var rBmp = BitmapFrame.Create(resized);
+			rBmp.Freeze();
 
-			_whenProcessed.OnNext(dest);
-			return dest;
+			_whenProcessed.OnNext(rBmp);
+			return rBmp;
 		}
 	}
 }

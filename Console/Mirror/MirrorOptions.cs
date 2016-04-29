@@ -11,7 +11,7 @@ namespace Console.Mirror
 {
 	class MirrorOptions : BaseOptions
 	{
-		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, screen ].")]
+		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballarcade, screen ].")]
 		public SourceType Source { get; set; }
 
 		[Option('f', "fps", HelpText = "How many frames per second should be mirrored. Default: 25")]
@@ -26,7 +26,7 @@ namespace Console.Mirror
 		[OptionArray("grid-size", HelpText = "[pinballfx2] Number of horizontal and vertical dots when removing grid spacing. Two values: <Width> <Height>. Default: \"128 32\".")]
 		public int[] GridSize { get; set; } = { 128, 32 };
 
-		[Option("no-shading", HelpText = "[pinballfx2] Disable shading, i.e. artificial downsampling for RGB displays. Default: false.")]
+		[Option("no-shading", HelpText = "[pinballfx2, pinballarcade] Disable shading, i.e. artificial downsampling for RGB displays. Default: false.")]
 		public bool DisableShading { get; set; } = false;
 
 		[Option("shading-numshades", HelpText = "[pinballfx2] Number of shades for artifical downsampling for RGB displays. Default: 4")]
@@ -48,7 +48,8 @@ namespace Console.Mirror
 	enum SourceType
 	{
 		PinballFX2,
-		Screen
+		Screen,
+		PinballArcade
 	}
 
 }

@@ -26,7 +26,8 @@
         <virtualDmd:VirtualDmdControl x:Name="VirtualDmd" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10"/>
         <Grid Grid.Row="4" Grid.ColumnSpan="2">
             <Button x:Name="BitmapButton" Content="Bitmap" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Top" Width="75" Click="BitmapButton_Click"/>
-            <Button x:Name="PbfxButton" Content="Pinball FX" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Top" Width="75" Click="PbfxButton_Click" />
+            <Button x:Name="PbfxButton" Content="Pinball FX" HorizontalAlignment="Center" Margin="-110,10,0,0" VerticalAlignment="Top" Width="75" Click="PbfxButton_Click" />
+            <Button x:Name="TpaButton" Content="TPA" HorizontalAlignment="Center" Margin="110,10,0,0" VerticalAlignment="Top" Width="75" Click="TpaButton_Click" />
             <Button x:Name="ScreenButton" Content="Screen" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Top" Width="75" Click="ScreenButton_Click" />
         </Grid>
     </Grid>

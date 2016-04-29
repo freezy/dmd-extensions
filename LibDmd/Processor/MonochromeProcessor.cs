@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Output;
 using Color = System.Windows.Media.Color;
 using PixelFormat = System.Windows.Media.PixelFormat;
 
@@ -24,7 +25,7 @@ namespace LibDmd.Processor
 
 		public override bool IsGrayscaleCompatible { get; } = false;
 
-		public override BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
 			var monochrome = new FormatConvertedBitmap();
 
@@ -33,10 +34,10 @@ namespace LibDmd.Processor
 			monochrome.DestinationFormat = PixelFormat;
 			monochrome.EndInit();
 
-			var dest = Tint.A > 0 ? ColorShade(monochrome, Tint) : monochrome;
-			_whenProcessed.OnNext(dest);
+			var b = Tint.A > 0 ? ColorShade(monochrome, Tint) : monochrome;
+			_whenProcessed.OnNext(b);
 
-			return dest;
+			return b;
 		}
 
 		public static BitmapSource ColorShade(BitmapSource bmp, Color color)

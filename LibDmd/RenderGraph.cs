@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
+using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
 using LibDmd.Processor;
 using NLog.LayoutRenderers;
@@ -147,29 +148,39 @@ namespace LibDmd
 					Logger.Info("Frames stopped from {0}.", Source.Name);
 					onCompleted?.Invoke();
 				});
-				var disposable = Source.GetFrames().Subscribe(bmp => {
+				try {
+					var disposable = Source.GetFrames().Subscribe(bmp => {
 
-					_beforeProcessed.OnNext(bmp);
-					if (Processors != null) {
-						// TODO don't process non-greyscale compatible processors when gray4 is enabled
-						bmp = enabledProcessors
-							.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-							.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
-					}
-					if (RenderAsGray4 && canRenderGray4) {
-						destGray4?.RenderGray4(bmp);
-					} else {
-						dest.Render(bmp);
-					}
-				}, ex => {
-					if (onError != null && ex is CropRectangleOutOfRangeException) {
+						_beforeProcessed.OnNext(bmp);
+						if (Processors != null) {
+							// TODO don't process non-greyscale compatible processors when gray4 is enabled
+							bmp = enabledProcessors
+								.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
+								.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
+						}
+						if (RenderAsGray4 && canRenderGray4) {
+							destGray4?.RenderGray4(bmp);
+						} else {
+							dest.Render(bmp);
+						}
+					}, ex => {
+						if (onError != null && ex is CropRectangleOutOfRangeException) {
+							onError.Invoke(ex);
+
+						} else {
+							throw ex;
+						}
+					});
+					_activeSources.Add(disposable);
+
+				} catch (AdminRightsRequiredException ex) {
+					if (onError != null) {
 						onError.Invoke(ex);
 
 					} else {
 						throw ex;
 					}
-				});
-				_activeSources.Add(disposable);
+				}
 			}
 			return new RenderDisposable(this, _activeSources);
 		}
