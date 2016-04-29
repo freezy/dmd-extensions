@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Output;
+using NLog;
 
 namespace LibDmd.Processor
 {
@@ -19,6 +23,11 @@ namespace LibDmd.Processor
 		public int NumShades { get; set; } = 4;
 
 		/// <summary>
+		/// Overrides the luminosity per shade.
+		/// </summary>
+		public double[] Shades { get; set; } = null; //{ 0d, 0.2, 0.35, 0.55 };
+
+		/// <summary>
 		/// Multiplies the intensity with the given value. This is useful for
 		/// reaching the full dynamic before cutting them down to the reduced
 		/// number of shades.
@@ -33,8 +42,10 @@ namespace LibDmd.Processor
 		/// </summary>
 		public double Brightness { get; set; } = 0;
 
-		public override BitmapSource Process(BitmapSource bmp)
+
+		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
+			var luminosities = new HashSet<double>();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var stride = bmp.PixelWidth * bytesPerPixel;
 			var pixelBuffer = new byte[stride * bmp.PixelHeight];
@@ -56,29 +67,40 @@ namespace LibDmd.Processor
 
 				// manipulate luminosity
 				if (NumShades > 0) {
-					luminosity = (Math.Round(luminosity * Intensity * NumShades) + Brightness) / NumShades;
+
+					var num = NumShades;
+					if (dest.IsRgb && Shades != null && Shades.Length == NumShades) {
+						var index = (int)Math.Min(num, Math.Max(0, (Math.Round(luminosity * Intensity * num) + Brightness)));
+						luminosity = Shades[index];
+					} else {
+						luminosity = Math.Max(0, (Math.Round(luminosity * Intensity * num) + Brightness) / num);
+					}
+
 
 				} else {
-					luminosity = luminosity * Intensity + Brightness;
+					luminosity = Math.Max(0, luminosity * Intensity + Brightness);
 				}
+				luminosities.Add(luminosity);
 
 				// convert back to RGB
 				byte red;
 				byte green;
 				byte blue;
+				saturation = 1;
 				ColorUtil.HslToRgb(hue, saturation, luminosity, out red, out green, out blue);
 
 				pixelBuffer[k] = blue;
 				pixelBuffer[k + 1] = green;
 				pixelBuffer[k + 2] = red;
 			}
+			Console.WriteLine(string.Join(",", luminosities));
 
-			var dest = new WriteableBitmap(bmp);
-			dest.WritePixels(fullRect, pixelBuffer, stride, 0);
-			dest.Freeze();
+			var wBmp = new WriteableBitmap(bmp);
+			wBmp.WritePixels(fullRect, pixelBuffer, stride, 0);
+			wBmp.Freeze();
 
-			_whenProcessed.OnNext(dest);
-			return dest;
+			_whenProcessed.OnNext(wBmp);
+			return wBmp;
 		}
 	}
 }

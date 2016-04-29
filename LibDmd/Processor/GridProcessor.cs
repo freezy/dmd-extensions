@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using LibDmd.Output;
 
 namespace LibDmd.Processor
 {
@@ -40,7 +41,7 @@ namespace LibDmd.Processor
 
 		private bool _enabled = true;
 
-		public override BitmapSource Process(BitmapSource bmp)
+		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
 			var sw = new Stopwatch();
 			sw.Start();
@@ -53,7 +54,7 @@ namespace LibDmd.Processor
 			var srcRect = new Int32Rect();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 
-			var dest = new WriteableBitmap(bmp);
+			var wBmp = new WriteableBitmap(bmp);
 
 			srcRect.Y = 0;
 			srcRect.Width = (int)Math.Ceiling(sliceWidth);
@@ -68,7 +69,7 @@ namespace LibDmd.Processor
 				srcRect.X = (int)(x * (sliceWidth + paddingWidth));
 				destRect.X = (int)(x * sliceWidth);
 				bmp.CopyPixels(srcRect, buffer, stride, 0);
-				dest.WritePixels(destRect, buffer, stride, 0);
+				wBmp.WritePixels(destRect, buffer, stride, 0);
 			}
 
 			srcRect.X = 0;
@@ -83,10 +84,10 @@ namespace LibDmd.Processor
 			for (var y = 0; y < Height; y++) {
 				srcRect.Y = (int)(y * (sliceHeight + paddingHeight));
 				destRect.Y = (int)(y * sliceHeight);
-				dest.CopyPixels(srcRect, buffer, stride, 0);
-				dest.WritePixels(destRect, buffer, stride, 0);
+				wBmp.CopyPixels(srcRect, buffer, stride, 0);
+				wBmp.WritePixels(destRect, buffer, stride, 0);
 			}
-			var img = new CroppedBitmap(dest, new Int32Rect(
+			var img = new CroppedBitmap(wBmp, new Int32Rect(
 				CropLeft, 
 				CropTop, 
 				(int)(sliceWidth * Width) - CropLeft - CropRight, 

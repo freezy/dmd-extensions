@@ -156,7 +156,7 @@ namespace LibDmd
 							// TODO don't process non-greyscale compatible processors when gray4 is enabled
 							bmp = enabledProcessors
 								.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-								.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp));
+								.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
 						}
 						if (RenderAsGray4 && canRenderGray4) {
 							destGray4?.RenderGray4(bmp);

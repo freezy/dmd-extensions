@@ -40,7 +40,8 @@ namespace App
 		private readonly RenderGraph _tpaGraph;
 		private readonly GridProcessor _pbfxGridProcessor;
 		private readonly GridProcessor _tpaGridProcessor;
-		private readonly ShadeProcessor _shadeProcessor;
+		private readonly ShadeProcessor _pbfxShadeProcessor;
+		private readonly ShadeProcessor _tpaShadeProcessor;
 		private readonly PBFX2Grabber _pbfxGrabber;
 		private readonly TPAGrabber _tpaGrabber;
 
@@ -60,51 +61,51 @@ namespace App
 
 			// define renderers
 			var renderers = new List<IFrameDestination> { VirtualDmd };
-			Console.Text += "Added VirtualDMD renderer.\n";
+			Console.AppendText("Added VirtualDMD renderer.\n");
 
 			try {
 				var pinDmd = PinDmd3.GetInstance();
 				if (pinDmd.IsAvailable) {
 					renderers.Add(pinDmd);
-					Console.Text += $"Added PinDMDv3 renderer.\n";
-					Console.Text += $"PinDMDv3 detected at {pinDmd.Width}x{pinDmd.Height}\n";
-					Console.Text += $"Firmware: {pinDmd.Firmware}\n";
+					Console.AppendText($"Added PinDMDv3 renderer.\n");
+					Console.AppendText($"PinDMDv3 detected at {pinDmd.Width}x{pinDmd.Height}\n");
+					Console.AppendText($"Firmware: {pinDmd.Firmware}\n");
 				} else {
-					Console.Text += "PinDMDv3 not connected.\n";
+					Console.AppendText("PinDMDv3 not connected.\n");
 				}
 				var pin2Dmd = Pin2Dmd.GetInstance();
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
-					Console.Text += $"Added PIN2DMD renderer.\n";
+					Console.AppendText($"Added PIN2DMD renderer.\n");
 				} else {
-					Console.Text += "PIN2DMD not connected.\n";
+					Console.AppendText("PIN2DMD not connected.\n");
 				}
 				var pinDmd2 = PinDmd2.GetInstance();
 				if (pinDmd2.IsAvailable) {
 					renderers.Add(pinDmd2);
-					Console.Text += $"Added PinDMDv2 renderer.\n";
+					Console.AppendText($"Added PinDMDv2 renderer.\n");
 				} else {
-					Console.Text += "PinDMDv2 not connected.\n";
+					Console.AppendText("PinDMDv2 not connected.\n");
 				}
 				var pinDmd1 = PinDmd1.GetInstance();
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);
-					Console.Text += $"Added PinDMDv1 renderer.\n";
+					Console.AppendText($"Added PinDMDv1 renderer.\n");
 				} else {
-					Console.Text += "PinDMDv1 not connected.\n";
+					Console.AppendText("PinDMDv1 not connected.\n");
 				}
 
 			} catch (DllNotFoundException e) {
-				Console.Text += "A DLL was not found. It's possible that Windows blocked it.\n";
-				Console.Text += "Go look for it in the installation folder. If it's there, right-click, \"Properties\" and \"unblock\".\n";
-				Console.Text += "Then restart the app.\n";
-				Console.Text += "Message: " + e.Message + "\n";
+				Console.AppendText("A DLL was not found. It's possible that Windows blocked it.\n");
+				Console.AppendText("Go look for it in the installation folder. If it's there, right-click, \"Properties\" and \"unblock\".\n");
+				Console.AppendText("Then restart the app.\n");
+				Console.AppendText("Message: " + e.Message + "\n");
 			}
 
 			// define sources
 			var grabber = new ScreenGrabber { FramesPerSecond = 15 };
 			_pbfxGrabber = new PBFX2Grabber { FramesPerSecond = 25 };
-			_tpaGrabber = new TPAGrabber { FramesPerSecond = 25 };
+			_tpaGrabber = new TPAGrabber { FramesPerSecond = 15 };
 				
 			// define processors
 			_pbfxGridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
@@ -115,8 +116,8 @@ namespace App
 				PixelFormat = PixelFormats.Gray16,
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
-			_shadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
-			var tpaShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 1.7, Brightness = 0 };
+			_pbfxShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
+			_tpaShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 1.9, Brightness = 0 };
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -127,12 +128,12 @@ namespace App
 			_pbfxGraph = new RenderGraph {
 				Source = _pbfxGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _pbfxGridProcessor, transformationProcessor, _shadeProcessor }
+				Processors = new List<AbstractProcessor> { _pbfxGridProcessor, transformationProcessor, _pbfxShadeProcessor }
 			};
 			_tpaGraph = new RenderGraph {
 				Source = _tpaGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _tpaGridProcessor, transformationProcessor, tpaShadeProcessor }
+				Processors = new List<AbstractProcessor> { transformationProcessor, _tpaShadeProcessor }
 			};
 
 			// init grabber window and link it to grabber
@@ -171,70 +172,72 @@ namespace App
 		private void HotKey(object sender, KeyEventArgs e)
 		{
 			var gridProcessor = _tpaGraph.IsRendering ? _tpaGridProcessor : _pbfxGridProcessor;
+			var shadingProcessor = _tpaGraph.IsRendering ? _tpaShadeProcessor : _pbfxShadeProcessor;
+
 			if (e.IsDown) {
 				switch (e.Key) {
 					case Key.PageUp:
 						gridProcessor.Spacing += 0.1;
-						Console.Text += "Grid padding: " + gridProcessor.Spacing + "\n";
+						Console.AppendText("Grid padding: " + gridProcessor.Spacing + "\n");
 						break;
 
 					case Key.PageDown:
 						if (gridProcessor.Spacing > 0) {
 							gridProcessor.Spacing -= 0.1;
-							Console.Text += "Grid padding: " + gridProcessor.Spacing + "\n";
+							Console.AppendText("Grid padding: " + gridProcessor.Spacing + "\n");
 						}
 						break;
 
 					case Key.Q:
-						_shadeProcessor.Intensity -= 0.1;
-						Console.Text += "Intensity: " + _shadeProcessor.Intensity + "\n";
+						shadingProcessor.Intensity -= 0.1;
+						Console.AppendText("Intensity: " + shadingProcessor.Intensity + "\n");
 						break;
 					case Key.W:
-						_shadeProcessor.Intensity += 0.1;
-						Console.Text += "Intensity: " + _shadeProcessor.Intensity + "\n";
+						shadingProcessor.Intensity += 0.1;
+						Console.AppendText("Intensity: " + shadingProcessor.Intensity + "\n");
 						break;
 
 					case Key.E:
-						_shadeProcessor.Brightness -= 0.1;
-						Console.Text += "Lightness: " + _shadeProcessor.Brightness + "\n";
+						shadingProcessor.Brightness -= 0.1;
+						Console.AppendText("Lightness: " + shadingProcessor.Brightness + "\n");
 						break;
 					case Key.R:
-						_shadeProcessor.Brightness += 0.1;
-						Console.Text += "Lightness: " + _shadeProcessor.Brightness + "\n";
+						shadingProcessor.Brightness += 0.1;
+						Console.AppendText("Lightness: " + shadingProcessor.Brightness + "\n");
 						break;
 
 					case Key.A:
 						_pbfxGrabber.CropLeft -= 1;
-						Console.Text += "Crop left: " + _pbfxGrabber.CropLeft + "\n";
+						Console.AppendText("Crop left: " + _pbfxGrabber.CropLeft + "\n");
 						break;
 					case Key.S:
 						_pbfxGrabber.CropLeft += 1;
-						Console.Text += "Crop left: " + _pbfxGrabber.CropLeft + "\n";
+						Console.AppendText("Crop left: " + _pbfxGrabber.CropLeft + "\n");
 						break;
 					case Key.D:
 						_pbfxGrabber.CropRight += 1;
-						Console.Text += "Crop right: " + _pbfxGrabber.CropRight + "\n";
+						Console.AppendText("Crop right: " + _pbfxGrabber.CropRight + "\n");
 						break;
 					case Key.F:
 						_pbfxGrabber.CropRight -= 1;
-						Console.Text += "Crop right: " + _pbfxGrabber.CropRight + "\n";
+						Console.AppendText("Crop right: " + _pbfxGrabber.CropRight + "\n");
 						break;
 
 					case Key.Y:
 						_pbfxGrabber.CropTop -= 1;
-						Console.Text += "Crop top: " + _pbfxGrabber.CropTop + "\n";
+						Console.AppendText("Crop top: " + _pbfxGrabber.CropTop + "\n");
 						break;
 					case Key.X:
 						_pbfxGrabber.CropTop += 1;
-						Console.Text += "Crop left: " + _pbfxGrabber.CropTop + "\n";
+						Console.AppendText("Crop left: " + _pbfxGrabber.CropTop + "\n");
 						break;
 					case Key.C:
 						_pbfxGrabber.CropBottom += 1;
-						Console.Text += "Crop bottom: " + _pbfxGrabber.CropBottom + "\n";
+						Console.AppendText("Crop bottom: " + _pbfxGrabber.CropBottom + "\n");
 						break;
 					case Key.V:
 						_pbfxGrabber.CropBottom -= 1;
-						Console.Text += "Crop bottom: " + _pbfxGrabber.CropBottom + "\n";
+						Console.AppendText("Crop bottom: " + _pbfxGrabber.CropBottom + "\n");
 						break;
 				}
 			}
@@ -263,11 +266,11 @@ namespace App
 		{
 			// ignore if already runnong
 			if (_pbfxGraph.IsRendering) {
-				Console.Text += "Already capturing Pinball FX2. Launch a game if you don't see anything!\n";
+				Console.AppendText("Already capturing Pinball FX2. Launch a game if you don't see anything!\n");
 				return;
 			}
 			_grabberWindow.Hide();
-			Console.Text += "Starting pulling frames from Pinball FX2.\n";
+			Console.AppendText("Starting pulling frames from Pinball FX2.\n");
 			SwitchGraph(_pbfxGraph);
 		}
 
@@ -275,11 +278,11 @@ namespace App
 		{
 			// ignore if already runnong
 			if (_tpaGraph.IsRendering) {
-				Console.Text += "Already capturing the Pinball Arcade. Launch a game if you don't see anything!\n";
+				Console.AppendText("Already capturing the Pinball Arcade. Launch a game if you don't see anything!\n");
 				return;
 			}
 			_grabberWindow.Hide();
-			Console.Text += "Starting pulling frames from the Pinball Arcade.\n";
+			Console.AppendText("Starting pulling frames from the Pinball Arcade.\n");
 			SwitchGraph(_tpaGraph);
 		}
 
@@ -291,13 +294,13 @@ namespace App
 				_currentRenderer.Dispose();
 				_currentSource.Dispose();
 				_currentRenderer = null;
-				Console.Text += "Stopped pulling frames from desktop.\n";
+				Console.AppendText("Stopped pulling frames from desktop.\n");
 				return;
 			}
 
 			_grabberWindow.Show();
 			SwitchGraph(_screenGraph);
-			Console.Text += "Started pulling frames from desktop.\n";
+			Console.AppendText("Started pulling frames from desktop.\n");
 		}
 
 		private void SwitchGraph(RenderGraph graph)

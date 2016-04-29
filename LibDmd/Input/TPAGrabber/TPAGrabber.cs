@@ -110,10 +110,8 @@ namespace LibDmd.Input.TPAGrabber
 			if (_frames == null) {
 				_frames = Observable
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Do(l => Console.WriteLine("--> [{0}] Tick", l))
 					.Select(x => CaptureDMD())
 					.Where(bmp => bmp != null)
-					.Do(l => Console.WriteLine("-->      Captured", l))
 					.Publish();
 				StartPolling();
 			}
@@ -123,7 +121,7 @@ namespace LibDmd.Input.TPAGrabber
 		public BitmapSource CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
-			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight, 96, 96, PixelFormats.Bgr32, null);
+			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - 1, 96, 96, PixelFormats.Bgr32, null);
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
@@ -155,7 +153,7 @@ namespace LibDmd.Input.TPAGrabber
 			var pixelIndex = 2;
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight - 1; dmdY++) {
+			for (var dmdY = 0; dmdY < DMDHeight - 2; dmdY++) {
 				// For each pixel on X axis.
 				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++) {
 

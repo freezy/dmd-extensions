@@ -2,6 +2,7 @@
 using System.Reactive;
 using System.Security.RightsManagement;
 using System.Windows.Media.Imaging;
+using LibDmd.Output;
 
 namespace LibDmd.Input
 {
@@ -24,7 +25,6 @@ namespace LibDmd.Input
 		/// Returns an observable that produces a sequence of frames.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		/// <returns></returns>
 		IObservable<BitmapSource> GetFrames();
 
 		/// <summary>
