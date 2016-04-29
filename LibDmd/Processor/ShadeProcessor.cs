@@ -70,7 +70,7 @@ namespace LibDmd.Processor
 
 					var num = NumShades;
 					if (dest.IsRgb && Shades != null && Shades.Length == NumShades) {
-						var index = (int)Math.Min(num, Math.Max(0, (Math.Round(luminosity * Intensity * num) + Brightness)));
+						var index = (int)Math.Min(num - 1, Math.Max(0, (Math.Round(luminosity * Intensity * num) + Brightness)));
 						luminosity = Shades[index];
 					} else {
 						luminosity = Math.Max(0, (Math.Round(luminosity * Intensity * num) + Brightness) / num);
