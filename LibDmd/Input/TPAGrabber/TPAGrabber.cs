@@ -120,8 +120,10 @@ namespace LibDmd.Input.TPAGrabber
 
 		public BitmapSource CaptureDMD()
 		{
+			const int bottomCrop = 1;
+
 			// Initialize a new writeable bitmap to receive DMD pixels.
-			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - 1, 96, 96, PixelFormats.Bgr32, null);
+			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - bottomCrop, 96, 96, PixelFormats.Bgr32, null);
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
@@ -153,7 +155,7 @@ namespace LibDmd.Input.TPAGrabber
 			var pixelIndex = 2;
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight - 2; dmdY++) {
+			for (var dmdY = 0; dmdY < DMDHeight - 1 - bottomCrop; dmdY++) {
 				// For each pixel on X axis.
 				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++) {
 

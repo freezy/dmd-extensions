@@ -25,7 +25,7 @@ namespace LibDmd.Processor
 		/// <summary>
 		/// Overrides the luminosity per shade.
 		/// </summary>
-		public double[] Shades { get; set; } = null; //{ 0d, 0.2, 0.35, 0.55 };
+		public double[] Shades { get; set; } = null;
 
 		/// <summary>
 		/// Multiplies the intensity with the given value. This is useful for
@@ -45,7 +45,7 @@ namespace LibDmd.Processor
 
 		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
-			var luminosities = new HashSet<double>();
+//			var luminosities = new HashSet<double>();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var stride = bmp.PixelWidth * bytesPerPixel;
 			var pixelBuffer = new byte[stride * bmp.PixelHeight];
@@ -80,7 +80,7 @@ namespace LibDmd.Processor
 				} else {
 					luminosity = Math.Max(0, luminosity * Intensity + Brightness);
 				}
-				luminosities.Add(luminosity);
+//				luminosities.Add(luminosity);
 
 				// convert back to RGB
 				byte red;
@@ -93,7 +93,7 @@ namespace LibDmd.Processor
 				pixelBuffer[k + 1] = green;
 				pixelBuffer[k + 2] = red;
 			}
-			Console.WriteLine(string.Join(",", luminosities));
+//			Console.WriteLine(string.Join(",", luminosities));
 
 			var wBmp = new WriteableBitmap(bmp);
 			wBmp.WritePixels(fullRect, pixelBuffer, stride, 0);

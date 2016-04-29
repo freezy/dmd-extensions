@@ -48,7 +48,8 @@ namespace Console.Mirror
 	enum SourceType
 	{
 		PinballFX2,
-		Screen
+		Screen,
+		PinballArcade
 	}
 
 }

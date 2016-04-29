@@ -117,7 +117,12 @@ namespace App
 				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
 			};
 			_pbfxShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
-			_tpaShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 1.9, Brightness = 0 };
+			_tpaShadeProcessor = new ShadeProcessor {
+				NumShades = 4,
+				Intensity = 1.9,
+				Brightness = 0,
+				Shades = new[] { 0d, 0.2, 0.35, 0.55 }
+			};
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -162,7 +167,7 @@ namespace App
 					ProcessedGrid.Source = bmp;
 				});
 			});
-			_tpaGridProcessor.WhenProcessed.Subscribe(bmp => {
+			transformationProcessor.WhenProcessed.Subscribe(bmp => {
 				ProcessedGrid.Dispatcher.Invoke(() => {
 					ProcessedGrid.Source = bmp;
 				});
