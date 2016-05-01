@@ -97,6 +97,7 @@
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
+    <Compile Include="Processor\DistortionProcessor.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
     <Compile Include="Processor\MonochromeProcessor.cs" />
