@@ -113,6 +113,7 @@ namespace LibDmd.Input.TPAGrabber
 					.Select(x => CaptureDMD())
 					.Where(bmp => bmp != null)
 					.Publish();
+
 				StartPolling();
 			}
 			return _frames;

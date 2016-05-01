@@ -8,6 +8,7 @@ using System.Windows;
 using Console.Common;
 using Console.Mirror;
 using Console.Test;
+using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
 
@@ -24,6 +25,7 @@ namespace Console
 		[STAThread]
 		static void Main(string[] args)
 		{
+			AssertDotNetVersion();
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -88,6 +90,18 @@ namespace Console
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
+		}
+
+		private static void AssertDotNetVersion()
+		{
+			using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\")) {
+				var releaseKey = Convert.ToInt32(ndpKey?.GetValue("Release"));
+				if (releaseKey < 379893) {
+					System.Console.WriteLine("You need to install at least v4.5.2 of the .NET framework.");
+					System.Console.WriteLine("Download from here: https://www.microsoft.com/en-us/download/details.aspx?id=42642");
+					Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+				}
+			}
 		}
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
