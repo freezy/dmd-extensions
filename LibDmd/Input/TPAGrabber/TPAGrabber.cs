@@ -120,78 +120,78 @@ namespace LibDmd.Input.TPAGrabber
 		}
 
 		public BitmapSource CaptureDMD()
-        {
-            const int bottomCrop = 1;
+		{
+			const int bottomCrop = 1;
 
-            // Initialize a new writeable bitmap to receive DMD pixels.
-            var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - bottomCrop, 96, 96, PixelFormats.Bgr32, null);
+			// Initialize a new writeable bitmap to receive DMD pixels.
+			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - bottomCrop, 96, 96, PixelFormats.Bgr32, null);
 
-            // Check if a table is loaded..
-            var tableLoaded = new byte[1];
-            ReadProcessMemory((int)_handle, (int)_gameBase + GameState, tableLoaded, 1, 0);
+			// Check if a table is loaded..
+			var tableLoaded = new byte[1];
+			ReadProcessMemory((int)_handle, (int)_gameBase + GameState, tableLoaded, 1, 0);
 
-            // ..if not, return an empty frame (blank DMD).
-            if (tableLoaded[0] == 0) {
-                wBmp.Freeze();
-                return wBmp;
-            }
+			// ..if not, return an empty frame (blank DMD).
+			if (tableLoaded[0] == 0) {
+				wBmp.Freeze();
+				return wBmp;
+			}
 
-            // Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
-            var eax = new byte[4];
-            ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
+			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
+			var eax = new byte[4];
+			ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
 
-            // Now we have our DMD location in memory + little hack to re-align the DMD block.
-            var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
+			// Now we have our DMD location in memory + little hack to re-align the DMD block.
+			var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
 
-            // Grab the whole raw DMD block from game's memory.
-            ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
+			// Grab the whole raw DMD block from game's memory.
+			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
 
-            // Check the DMD CRC flag, skip the frame if the value is incorrect.
-            if (RawDMD[0] != 0x02) return null;
+			// Check the DMD CRC flag, skip the frame if the value is incorrect.
+			if (RawDMD[0] != 0x02) return null;
 
-            // Lock the writeable bitmap to expose the backbuffer to other threads.
-            wBmp.Lock();
+			// Lock the writeable bitmap to expose the backbuffer to other threads.
+			wBmp.Lock();
 
-            ////Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-            var rawPixelIndex = 2;
-            var dmdPixelIndex = 2;
+			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
+			var rawPixelIndex = 2;
+			var dmdPixelIndex = 2;
 
-            int bytes = (Math.Abs(wBmp.BackBufferStride) * ((DMDHeight - bottomCrop)) + 2);
-            byte[] rgbValues = new byte[bytes];// new byte[bytes-5];
+			int bytes = (Math.Abs(wBmp.BackBufferStride) * ((DMDHeight - bottomCrop)) + 2);
+			byte[] rgbValues = new byte[bytes];// new byte[bytes-5];
 
-            // For each pixel on Y axis.
-            for (var dmdY = 0; dmdY < DMDHeight - 1; dmdY++)
-            {
-                // For each pixel on X axis.
-                for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++)
-                {
-                    // RGB to BGR
-                    rgbValues[dmdPixelIndex] = RawDMD[rawPixelIndex + 2]; // B
-                    rgbValues[dmdPixelIndex + 1] = RawDMD[rawPixelIndex + 1]; // G
-                    rgbValues[dmdPixelIndex + 2] = RawDMD[rawPixelIndex]; // R      
+			// For each pixel on Y axis.
+			for (var dmdY = 0; dmdY < DMDHeight - 1; dmdY++)
+			{
+				// For each pixel on X axis.
+				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++)
+				{
+					// RGB to BGR
+					rgbValues[dmdPixelIndex] = RawDMD[rawPixelIndex + 2]; // B
+					rgbValues[dmdPixelIndex + 1] = RawDMD[rawPixelIndex + 1]; // G
+					rgbValues[dmdPixelIndex + 2] = RawDMD[rawPixelIndex]; // R      
 
-                    // Each pixel takes 4 bytes of data in memory, jump to next pixel.
-                    rawPixelIndex += 4;
-                    dmdPixelIndex += 4;
-                }
-                // Jump to the next DMD line.
-                rawPixelIndex += LineJump;
-                dmdPixelIndex += 4;
-            }
-            wBmp.WritePixels(new Int32Rect(0, 0, DMDWidth, DMDHeight - bottomCrop), rgbValues, wBmp.BackBufferStride, 2);
+					// Each pixel takes 4 bytes of data in memory, jump to next pixel.
+					rawPixelIndex += 4;
+					dmdPixelIndex += 4;
+				}
+				// Jump to the next DMD line.
+				rawPixelIndex += LineJump;
+				dmdPixelIndex += 4;
+				}
+			wBmp.WritePixels(new Int32Rect(0, 0, DMDWidth, DMDHeight - bottomCrop), rgbValues, wBmp.BackBufferStride, 2);
 
-            // We're done, release the backbuffer and make it available for display.
-            wBmp.Unlock();
+			// We're done, release the backbuffer and make it available for display.
+			wBmp.Unlock();
 
-            // Freeze the DMD bitmap and make it readable to any thread.
-            wBmp.Freeze();
+			// Freeze the DMD bitmap and make it readable to any thread.
+			wBmp.Freeze();
 
-            // Return the DMD bitmap we've created.
-            return wBmp;
-        }
+			// Return the DMD bitmap we've created.
+			return wBmp;
+		}
 
-        // Check if the game is started and return its process handle.
-        private static IntPtr FindGameHandle()
+		// Check if the game is started and return its process handle.
+		private static IntPtr FindGameHandle()
 		{
 			var processList = Process.GetProcesses();
 			foreach (var p in processList) {
