@@ -160,7 +160,7 @@ namespace LibDmd.Input.TPAGrabber
 			byte[] rgbValues = new byte[bytes];// new byte[bytes-5];
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight - 1; dmdY++)
+			for (var dmdY = 0; dmdY < DMDHeight - 1 - bottomCrop; dmdY++)
 			{
 				// For each pixel on X axis.
 				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++)
@@ -177,7 +177,7 @@ namespace LibDmd.Input.TPAGrabber
 				// Jump to the next DMD line.
 				rawPixelIndex += LineJump;
 				dmdPixelIndex += 4;
-				}
+			}
 			wBmp.WritePixels(new Int32Rect(0, 0, DMDWidth, DMDHeight - bottomCrop), rgbValues, wBmp.BackBufferStride, 2);
 
 			// We're done, release the backbuffer and make it available for display.
