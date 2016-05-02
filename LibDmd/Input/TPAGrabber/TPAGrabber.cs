@@ -174,8 +174,6 @@ namespace LibDmd.Input.TPAGrabber
 						// Assign the color data to the pixel.
 						*((int*)pBackBuffer) = colorData;
 					}
-					// Specify the area of the bitmap that changed.
-					wBmp.AddDirtyRect(new Int32Rect(dmdX, dmdY, 1, 1));
 
 					// Each pixel takes 4 bytes of data in memory, jump to next pixel.
 					pixelIndex += 4;
