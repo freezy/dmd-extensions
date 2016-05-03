@@ -48,10 +48,10 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// DMD Stuff + Codecave
-		private const int MemBlockSize = 203772;
-		private const int LineJump = 0x404;
-		private const int DMDWidth = 256;
-		private const int DMDHeight = 65;
+		private const int DMDWidth = 128;
+		private const int DMDHeight = 32;
+		private const int LineJump = 0x400;
+		private const int MemBlockSize = 0x1FC02;
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 
 		private const int Patch = 0x001ADB4D;     // Working with v1.49.9 DX11
@@ -113,7 +113,6 @@ namespace LibDmd.Input.TPAGrabber
 					.Select(x => CaptureDMD())
 					.Where(bmp => bmp != null)
 					.Publish();
-
 				StartPolling();
 			}
 			return _frames;
@@ -121,10 +120,8 @@ namespace LibDmd.Input.TPAGrabber
 
 		public BitmapSource CaptureDMD()
 		{
-			const int bottomCrop = 1;
-
 			// Initialize a new writeable bitmap to receive DMD pixels.
-			var wBmp = new WriteableBitmap(DMDWidth, DMDHeight - bottomCrop, 96, 96, PixelFormats.Bgr32, null);
+			var wBmp = new WriteableBitmap(DMDWidth * 2, DMDHeight * 2, 96, 96, PixelFormats.Bgr32, null);
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
@@ -160,8 +157,7 @@ namespace LibDmd.Input.TPAGrabber
 			byte[] rgbValues = new byte[bytes];// new byte[bytes-5];
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight - 1 - bottomCrop; dmdY++)
-			{
+			for (var dmdY = 0; dmdY < DMDHeight * 2; dmdY++) {
 				// For each pixel on X axis.
 				for (var dmdX = 0; dmdX < DMDWidth - 1; dmdX++)
 				{
