@@ -78,7 +78,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.2.0
+DMD Extensions v1.2.2
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen to one or more other
@@ -92,7 +92,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.2.0
+DMD Extensions v1.2.2
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -166,7 +166,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.2.0
+DMD Extensions v1.2.2
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
