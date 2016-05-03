@@ -148,39 +148,34 @@ namespace LibDmd.Input.TPAGrabber
 
 			// Lock the writeable bitmap to expose the backbuffer to other threads.
 			wBmp.Lock();
-
+			
 			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-			var pixelIndex = 2;
+			var rawPixelIndex = 2;
+			var dmdPixelIndex = 2;
+
+			int bytes = (Math.Abs(wBmp.BackBufferStride * 2) * ((DMDHeight * 2)) + 2);
+			byte[] rgbValues = new byte[bytes];
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight * 2; dmdY++) {
+			for (var dmdY = 0; dmdY < (DMDHeight * 2); dmdY++)
+			{
 				// For each pixel on X axis.
-				for (var dmdX = 0; dmdX < DMDWidth * 2; dmdX++) {
-
-					// We got to use unsafe code, pointers are much faster for this kind of low level image processing.
-					unsafe {
-						// Get a pointer to the back buffer.
-						var pBackBuffer = (int)wBmp.BackBuffer;
-
-						// Find the address of the pixel to draw.
-						pBackBuffer += dmdY * wBmp.BackBufferStride;
-						pBackBuffer += dmdX * 4;
-
-						// Compute the pixel's color..
-						var colorData = RawDMD[pixelIndex] << 16; // R
-						colorData |= RawDMD[pixelIndex + 1] << 8; // G
-						colorData |= RawDMD[pixelIndex + 2] << 0; // B
-
-						// Assign the color data to the pixel.
-						*((int*)pBackBuffer) = colorData;
-					}
+				for (var dmdX = 0; dmdX < (DMDWidth * 2); dmdX++)
+				{
+					// RGB to BGR
+					rgbValues[dmdPixelIndex] = RawDMD[rawPixelIndex + 2]; // B
+					rgbValues[dmdPixelIndex + 1] = RawDMD[rawPixelIndex + 1]; // G
+					rgbValues[dmdPixelIndex + 2] = RawDMD[rawPixelIndex]; // R      
 
 					// Each pixel takes 4 bytes of data in memory, jump to next pixel.
-					pixelIndex += 4;
+					rawPixelIndex += 4;
+					dmdPixelIndex += 4;
 				}
 				// Jump to the next DMD line.
-				pixelIndex += LineJump;
+				rawPixelIndex += LineJump;
 			}
+			wBmp.WritePixels(new Int32Rect(0, 0, DMDWidth * 2, DMDHeight * 2), rgbValues, wBmp.BackBufferStride, 2);
+
 			// We're done, release the backbuffer and make it available for display.
 			wBmp.Unlock();
 
