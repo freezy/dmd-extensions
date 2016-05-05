@@ -79,6 +79,7 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Input\IFrameSource.cs" />
+    <Compile Include="Input\Media\ImageSource.cs" />
     <Compile Include="Input\PBFX2Grabber\PBFX2Grabber.cs" />
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
       <DependentUpon>GrabberWindow.xaml</DependentUpon>

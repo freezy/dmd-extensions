@@ -4,14 +4,18 @@ using System.Reflection;
 using CommandLine;
 using CommandLine.Text;
 using Console.Mirror;
+using Console.Play;
 using Console.Test;
 
 namespace Console.Common
 {
 	class Options
 	{
-		[VerbOption("mirror", HelpText = "Mirrors pixel data from the screen to one or more other destinations.")]
+		[VerbOption("mirror", HelpText = "Mirrors pixel data from the screen or memory to all available devices.")]
 		public MirrorOptions Mirror { get; set; }
+
+		[VerbOption("play", HelpText = "Plays any media on all available devices (currently only images).")]
+		public PlayOptions Play { get; set; }
 
 		[VerbOption("test", HelpText = "Displays a test image on all available devices.")]
 		public TestOptions Test { get; set; }
@@ -19,6 +23,7 @@ namespace Console.Common
 		public Options()
 		{
 			Mirror = new MirrorOptions();
+			Play = new PlayOptions();
 			Test = new TestOptions();
 		}
 
@@ -28,8 +33,10 @@ namespace Console.Common
 			switch (verb) {
 				case "mirror":
 					return AutoBuild(Mirror, "dmdext mirror --source=<source> [--destination=<destination>]", Mirror.LastParserState);
+				case "play":
+					return AutoBuild(Play, "dmdext play --file=<image path> [--destination=<destination>]", Play.LastParserState);
 				case "test":
-					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Mirror.LastParserState);
+					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Test.LastParserState);
 				default:
 					return AutoBuild(this, "dmdext <command> [<options>]", null, false);
 			}
