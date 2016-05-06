@@ -9,6 +9,7 @@ using Console.Common;
 using Console.Mirror;
 using Console.Play;
 using Console.Test;
+using LibDmd.Input.Media;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -93,6 +94,9 @@ namespace Console
 				Logger.Error("Invalid option: {0}", e.Message);
 
 			} catch (FileNotFoundException e) {
+				Logger.Error(e.Message);
+
+			} catch (WrongFormatException e) {
 				Logger.Error(e.Message);
 
 			} finally {
