@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using LibDmd.Processor;
 
 namespace Console.Common
 {
@@ -11,6 +12,9 @@ namespace Console.Common
 	{
 		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual ]. Default: \"auto\", which outputs to all available devices.")]
 		public DestinationType Destination { get; set; } = DestinationType.Auto;
+
+		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
+		public TransformationProcessor.ResizeMode Resize { get; set; } = TransformationProcessor.ResizeMode.Stretch;
 
 		[Option("no-virtual", HelpText = "Explicitly disables the virtual DMD when destination is \"auto\". Default: false.")]
 		public bool NoVirtualDmd { get; set; } = false;

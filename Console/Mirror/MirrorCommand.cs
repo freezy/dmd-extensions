@@ -36,7 +36,8 @@ namespace Console.Mirror
 			// instantiate transformation processor
 			var transformationProcessor = new TransformationProcessor {
 				FlipVertically = _options.FlipVertically,
-				FlipHorizontally = _options.FlipHorizontally
+				FlipHorizontally = _options.FlipHorizontally,
+				Resize = _options.Resize
 			};
 
 			// setup source and additional processors

@@ -32,7 +32,8 @@ namespace Console.Play
 			// define processors
 			var transformationProcessor = new TransformationProcessor {
 				FlipVertically = _options.FlipVertically,
-				FlipHorizontally = _options.FlipHorizontally
+				FlipHorizontally = _options.FlipHorizontally,
+				Resize = _options.Resize
 			};
 
 			// chain them up

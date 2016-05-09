@@ -35,7 +35,7 @@ namespace LibDmd.Processor
 		/// <summary>
 		/// How the image is resized
 		/// </summary>
-		public ResizeMode Resize { get; set; } = ResizeMode.Fit;
+		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
 		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
 		{
