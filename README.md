@@ -78,11 +78,13 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.2.2
+DMD Extensions v1.2.3
 USAGE: dmdext <command> [<options>]
 
-  mirror    Mirrors pixel data from the screen to one or more other
-            destinations.
+  mirror    Mirrors pixel data from the screen or memory to all available
+            devices.
+
+  play      Plays any media on all available devices (currently only images).
 
   test      Displays a test image on all available devices.
 ```
@@ -92,7 +94,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.2.2
+DMD Extensions v1.2.3
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -137,6 +139,9 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            virtual ]. Default: "auto", which outputs to all
                            available devices.
 
+  -r, --resize             How the source image is resized. One of: [ stretch,
+                           fill, fit ]. Default: "stretch".
+
   --no-virtual             Explicitly disables the virtual DMD when destination
                            is "auto". Default: false.
 
@@ -161,18 +166,63 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            false
 ```
 
+### Media
+
+```
+C:\>dmdext play --help
+
+DMD Extensions v1.2.3
+USAGE: dmdext play --file=<image path> [--destination=<destination>]
+
+  -f, --file               Required. Path to the file to play. Currently
+                           supported file types: PNG, JPG.
+
+  -d, --destination        The destination where the DMD data is sent to. One
+                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
+                           virtual ]. Default: "auto", which outputs to all
+                           available devices.
+
+  -r, --resize             How the source image is resized. One of: [ stretch,
+                           fill, fit ]. Default: "stretch".
+
+  --no-virtual             Explicitly disables the virtual DMD when destination
+                           is "auto". Default: false.
+
+  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
+                           application windows. Default: false.
+
+  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
+                           false.
+
+  --virtual-position       Position and size of virtual DMD. Three values:
+                           <Left> <Top> <Width>. Default: "0 0 1024".
+
+  --use-gray4              Sends frames in 4-bit grayscale to the display if
+                           supported. Default: false
+
+  --flip-x                 Flips the image horizontally. Default: false.
+
+  --flip-y                 Flips the image vertically. Default: false.
+
+  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
+                           FX2 doesn't receive any frames anymore. Default:
+                           false
+```
 ### Test
 
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.2.2
+DMD Extensions v1.2.3
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
                            virtual ]. Default: "auto", which outputs to all
                            available devices.
+
+  -r, --resize             How the source image is resized. One of: [ stretch,
+                           fill, fit ]. Default: "stretch".
 
   --no-virtual             Explicitly disables the virtual DMD when destination
                            is "auto". Default: false.
