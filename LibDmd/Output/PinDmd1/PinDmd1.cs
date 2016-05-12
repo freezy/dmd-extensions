@@ -142,7 +142,7 @@ namespace LibDmd.Output.PinDmd1
 			uint numBytesWritten = 0;
 			var status = Ftdi.Write(_frameBuffer, _frameBuffer.Length, ref numBytesWritten);
 			if (status != FTDI.FT_STATUS.FT_OK) {
-				throw new Exception("Error writing to FTDI device: " + status);
+				throw new RenderException("Error writing to FTDI device: " + status);
 			}
 		}
 

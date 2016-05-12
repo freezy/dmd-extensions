@@ -24,7 +24,6 @@ namespace LibDmd.Output.PinDmd2
 		private readonly byte[] _frameBuffer;
 
 		private static PinDmd2 _instance;
-		private static readonly UsbDeviceFinder PinDmd2Finder = new UsbDeviceFinder(0x0314, 0xe457);
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private PinDmd2()
@@ -111,7 +110,7 @@ namespace LibDmd.Output.PinDmd2
 			var error = writer.Write(_frameBuffer, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
-				throw new Exception(UsbDevice.LastErrorString);
+				throw new RenderException(UsbDevice.LastErrorString);
 			}
 		}
 

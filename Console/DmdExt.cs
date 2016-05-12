@@ -103,6 +103,9 @@ namespace Console
 			} catch (UnsupportedResolutionException e) {
 				Logger.Error(e.Message);
 
+			} catch (RenderException e) {
+				Logger.Error(e.Message);
+
 			} finally {
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
