@@ -10,6 +10,7 @@ using Console.Mirror;
 using Console.Play;
 using Console.Test;
 using LibDmd.Input.Media;
+using LibDmd.Output;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -97,6 +98,9 @@ namespace Console
 				Logger.Error(e.Message);
 
 			} catch (WrongFormatException e) {
+				Logger.Error(e.Message);
+
+			} catch (UnsupportedResolutionException e) {
 				Logger.Error(e.Message);
 
 			} finally {
