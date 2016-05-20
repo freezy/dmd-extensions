@@ -81,7 +81,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.2.3
+DMD Extensions v1.2.4
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -97,7 +97,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.2.3
+DMD Extensions v1.2.4
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -167,6 +167,9 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
+
+  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
+                           provided folder.
 ```
 
 ### Media
@@ -174,7 +177,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.2.3
+DMD Extensions v1.2.4
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -210,13 +213,16 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
+
+  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
+                           provided folder.
 ```
 ### Test
 
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.2.3
+DMD Extensions v1.2.4
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
@@ -249,6 +255,9 @@ USAGE: dmdext test [--destination=<destination>]
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
+
+  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
+                           provided folder.
 ```
 
 ## Compatibility
