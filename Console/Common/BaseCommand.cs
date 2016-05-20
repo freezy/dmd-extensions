@@ -23,7 +23,15 @@ namespace Console.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public abstract void Execute(Action onCompleted, Action<Exception> onError);
+		private RenderGraph _graph;
+		private IDisposable _renderer;
+
+		protected abstract RenderGraph CreateRenderGraph();
+
+		public RenderGraph GetRenderGraph()
+		{
+			return _graph ?? (_graph = CreateRenderGraph());
+		}
 
 		protected List<IFrameDestination> GetRenderers(BaseOptions options)
 		{
@@ -159,8 +167,15 @@ namespace Console.Common
 			return dmd.Dmd;
 		}
 
-		public virtual void Dispose()
+		public void Execute(Action onCompleted, Action<Exception> onError)
 		{
+			_renderer = GetRenderGraph().StartRendering(onCompleted, onError);
+		}
+
+		public void Dispose()
+		{
+			_renderer?.Dispose();
+			_graph?.Dispose();
 		}
 	}
 

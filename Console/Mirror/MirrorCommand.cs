@@ -25,7 +25,7 @@ namespace Console.Mirror
 			_options = options;
 		}
 
-		public override void Execute(Action onCompleted, Action<Exception> onError)
+		protected override RenderGraph CreateRenderGraph()
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
@@ -110,20 +110,7 @@ namespace Console.Mirror
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
-
-			// TODO add as option
-			var monochromeProcessor = new MonochromeProcessor {
-				Tint = Color.FromRgb(255, 155, 0)
-			};
-
-			// always transform to correct dimensions
-			_renderer = _graph.StartRendering(onCompleted, onError);
-		}
-
-		public override void Dispose()
-		{
-			_renderer?.Dispose();
-			_graph?.Dispose();
+			return _graph;
 		}
 	}
 }

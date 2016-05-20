@@ -40,6 +40,8 @@ namespace Console.Common
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 
+		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
+		public string SaveToFile { get; set; }
 
 		public enum DestinationType
 		{

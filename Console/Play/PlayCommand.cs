@@ -21,7 +21,7 @@ namespace Console.Play
 			_options = options;
 		}
 
-		public override void Execute(Action onCompleted, Action<Exception> onError)
+		protected override RenderGraph CreateRenderGraph()
 		{
 			// define source
 			var source = new ImageSource(_options.FileName);
@@ -45,13 +45,7 @@ namespace Console.Play
 			};
 
 			// render image
-			_renderer = _graph.StartRendering(onCompleted, onError);
-		}
-
-		public override void Dispose()
-		{
-			_renderer?.Dispose();
-			_graph?.Dispose();
+			return _graph;
 		}
 	}
 

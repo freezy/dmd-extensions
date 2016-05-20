@@ -24,6 +24,11 @@ namespace LibDmd.Input.Media
 
 		private readonly BehaviorSubject<BitmapSource> _frames;
 
+		public ImageSource(BitmapSource bmp)
+		{
+			_frames = new BehaviorSubject<BitmapSource>(bmp);
+		}
+
 		public ImageSource(string fileName)
 		{
 			if (!File.Exists(fileName)) {

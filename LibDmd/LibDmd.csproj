@@ -86,6 +86,7 @@
     </Compile>
     <Compile Include="Input\TPAGrabber\TPAGrabber.cs" />
     <Compile Include="Output\BufferRenderer.cs" />
+    <Compile Include="Output\FileOutput\FileOutput.cs" />
     <Compile Include="Output\IGray4.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />

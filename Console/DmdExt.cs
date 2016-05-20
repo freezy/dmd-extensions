@@ -11,6 +11,7 @@ using Console.Play;
 using Console.Test;
 using LibDmd.Input.Media;
 using LibDmd.Output;
+using LibDmd.Output.FileOutput;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -71,6 +72,12 @@ namespace Console
 			}
 
 			try {
+				var graph = _command.GetRenderGraph();
+
+				if (baseOptions.SaveToFile != null) {
+					graph.Destinations.Add(new FileOutput(baseOptions.SaveToFile));
+				}
+
 				_command.Execute(() => {
 					if (baseOptions != null && baseOptions.QuitWhenDone) {
 						Logger.Info("Exiting.");
@@ -101,6 +108,9 @@ namespace Console
 				Logger.Error(e.Message);
 
 			} catch (UnsupportedResolutionException e) {
+				Logger.Error(e.Message);
+
+			} catch (InvalidFolderException e) {
 				Logger.Error(e.Message);
 
 			} catch (RenderException e) {

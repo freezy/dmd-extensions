@@ -26,7 +26,8 @@ The primary goal of this project was to add support real DMDs for games that
 don't provide support out of the box. The first game was **Pinball FX2** and 
 Farsight's **The Pinball Arcade** is supported as well.
 
-The command line tool can also display image files on the DMD device.
+The command line tool can also display image files on the DMD device and render
+frames to bitmap files.
 
 
 ## Install Instructions
