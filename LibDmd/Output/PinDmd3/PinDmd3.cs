@@ -1,17 +1,20 @@
 ﻿using System;
+using System.CodeDom;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibUsbDotNet;
+using LibUsbDotNet.Main;
 using NLog;
 
 namespace LibDmd.Output.PinDmd3
 {
 	/// <summary>
-	/// Output target for PinDMD2 devices.
+	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4
+	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;
@@ -38,15 +41,21 @@ namespace LibDmd.Output.PinDmd3
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
+		/// If device is initialized in raw mode, this is the raw device.
+		/// </summary>
+		private UsbDevice _pinDmd3Device;
+
+		/// <summary>
 		/// Returns the current instance of the PinDMD API.
 		/// </summary>
-		/// <returns></returns>
-		public static PinDmd3 GetInstance()
+		/// <param name="initThroughDll">If true, use pindmd.dll for initialization, otherwise try to identify the USB device</param>
+		/// <returns>New or current instance</returns>
+		public static PinDmd3 GetInstance(bool initThroughDll)
 		{
 			if (_instance == null) {
 				_instance = new PinDmd3();
 			} 
-			_instance.Init();
+			_instance.Init(initThroughDll);
 			return _instance;
 		}
 
@@ -60,6 +69,20 @@ namespace LibDmd.Output.PinDmd3
 		}
 
 		public void Init()
+		{
+			Init(false);			
+		}
+
+		public void Init(bool initThroughDll)
+		{
+			if (initThroughDll) {
+				InitDll();
+			} else {
+				InitRaw();
+			}
+		}
+
+		private void InitDll()
 		{
 			var port = Interop.Init(new Options() {
 				DmdRed = 255,
@@ -83,6 +106,51 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
+		private void InitRaw()
+		{
+			// find and open the usb device.
+			var allDevices = UsbDevice.AllDevices;
+			foreach (UsbRegistry usbRegistry in allDevices) {
+				UsbDevice device;
+				if (usbRegistry.Open(out device)) {
+					if (device.Info.Descriptor.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
+						_pinDmd3Device = device;
+						break;
+					}
+				}
+			}
+
+			// if the device is open and ready
+			if (_pinDmd3Device == null) {
+				Logger.Debug("PinDMDv3 raw device not found.");
+				IsAvailable = false;
+				return;
+			}
+			_pinDmd3Device.Open();
+
+			if (_pinDmd3Device.Info.ProductString.Contains("pinDMD V3")) {
+				Logger.Info("Found PinDMDv2 device.");
+				Logger.Debug("   Manufacturer: {0}", _pinDmd3Device.Info.ManufacturerString);
+				Logger.Debug("   Product:      {0}", _pinDmd3Device.Info.ProductString);
+				Logger.Debug("   Serial:       {0}", _pinDmd3Device.Info.SerialString);
+				Logger.Debug("   Language ID:  {0}", _pinDmd3Device.Info.CurrentCultureLangID);
+
+			} else {
+				Logger.Debug("Device found but it's not a PinDMDv3 device ({0}).", _pinDmd3Device.Info.ProductString);
+				IsAvailable = false;
+				Dispose();
+				return;
+			}
+
+			var usbDevice = _pinDmd3Device as IUsbDevice;
+			if (!ReferenceEquals(usbDevice, null)) {
+				usbDevice.SetConfiguration(1);
+				usbDevice.ClaimInterface(0);
+			}
+			IsAvailable = true;
+		}
+
+	
 		/// <summary>
 		/// Returns width, height and firmware version of the connected DMD.
 		/// 
@@ -163,6 +231,17 @@ namespace LibDmd.Output.PinDmd3
 
 			// send frame buffer to device
 			Interop.Render16ShadeFrame(_frameBufferGray4);
+		}
+
+		public void RenderRaw(byte[] data)
+		{
+			var writer = _pinDmd3Device.OpenEndpointWriter(WriteEndpointID.Ep01);
+			int bytesWritten;
+			var error = writer.Write(data, 2000, out bytesWritten);
+			if (error != ErrorCode.None) {
+				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+				throw new RenderException(UsbDevice.LastErrorString);
+			}
 		}
 
 		public void Dispose()

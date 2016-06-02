@@ -11,7 +11,7 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : BufferRenderer, IFrameDestination
+	public class PinDmd1 : BufferRenderer, IFrameDestination, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v1";
 		public bool IsRgb { get; } = false;
@@ -127,8 +127,6 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
-
-
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
@@ -139,8 +137,13 @@ namespace LibDmd.Output.PinDmd1
 			RenderGray2(bmp, _frameBuffer, 4);
 
 			// send frame buffer to device
+			RenderRaw(_frameBuffer);
+		}
+
+		public void RenderRaw(byte[] data)
+		{
 			uint numBytesWritten = 0;
-			var status = Ftdi.Write(_frameBuffer, _frameBuffer.Length, ref numBytesWritten);
+			var status = Ftdi.Write(data, data.Length, ref numBytesWritten);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				throw new RenderException("Error writing to FTDI device: " + status);
 			}

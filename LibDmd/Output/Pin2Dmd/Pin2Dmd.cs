@@ -13,7 +13,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IFrameDestination, IGray4
+	public class Pin2Dmd : BufferRenderer, IFrameDestination, IGray4, IRawOutput
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsRgb { get; } = true;
@@ -114,13 +114,7 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderRgb24(bmp, _frameBufferRgb24, 4);
 
 			// send frame buffer to device
-			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
-			int bytesWritten;
-			var error = writer.Write(_frameBufferRgb24, 2000, out bytesWritten);
-			if (error != ErrorCode.None) {
-				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
-				throw new RenderException(UsbDevice.LastErrorString);
-			}
+			RenderRaw(_frameBufferRgb24);
 		}
 
 		/// <summary>
@@ -133,9 +127,14 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderGray4(bmp, _frameBufferGray4, 4);
 
 			// send frame buffer to device
+			RenderRaw(_frameBufferGray4);
+		}
+
+		public void RenderRaw(byte[] data)
+		{
 			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
-			var error = writer.Write(_frameBufferGray4, 2000, out bytesWritten);
+			var error = writer.Write(data, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				throw new Exception(UsbDevice.LastErrorString);

@@ -9,7 +9,7 @@ using Console.Common;
 using Console.Mirror;
 using Console.Play;
 using Console.Test;
-using LibDmd.Input.Media;
+using LibDmd.Input.FileSystem;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using Microsoft.Win32;
@@ -75,7 +75,7 @@ namespace Console
 				var graph = _command.GetRenderGraph();
 
 				if (baseOptions.SaveToFile != null) {
-					graph.Destinations.Add(new FileOutput(baseOptions.SaveToFile));
+					graph.Destinations.Add(new BitmapOutput(baseOptions.SaveToFile));
 				}
 
 				_command.Execute(() => {

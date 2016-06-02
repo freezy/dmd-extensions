@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 using Console.Common;
 using Console.Test;
 using LibDmd;
-using LibDmd.Input.Media;
+using LibDmd.Input.FileSystem;
 using LibDmd.Processor;
 
 namespace Console.Play

@@ -15,7 +15,7 @@ namespace LibDmd.Output.FileOutput
 	/// <remarks>
 	/// Images are hashed and there should no duplicate images written.
 	/// </remarks>
-	public class FileOutput : IFrameDestination
+	public class BitmapOutput : IFrameDestination
 	{
 		public string OutputFolder { get; set; }
 
@@ -27,7 +27,7 @@ namespace LibDmd.Output.FileOutput
 		private readonly HashSet<string> _hashes = new HashSet<string>();
 		private readonly SHA1CryptoServiceProvider _hashProvider = new SHA1CryptoServiceProvider();
 
-		public FileOutput(string outputFolder)
+		public BitmapOutput(string outputFolder)
 		{
 			OutputFolder = outputFolder;
 			if (!Directory.Exists(outputFolder)) {

@@ -2,7 +2,7 @@
 using System.Windows.Media.Imaging;
 using Console.Common;
 using LibDmd;
-using ImageSource = LibDmd.Input.Media.ImageSource;
+using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 
 namespace Console.Test
 {

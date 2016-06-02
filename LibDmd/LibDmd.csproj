@@ -78,16 +78,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
+    <Compile Include="Input\FileSystem\ImageSource.cs" />
+    <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />
-    <Compile Include="Input\Media\ImageSource.cs" />
+    <Compile Include="Input\IRawSource.cs" />
     <Compile Include="Input\PBFX2Grabber\PBFX2Grabber.cs" />
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Input\TPAGrabber\TPAGrabber.cs" />
     <Compile Include="Output\BufferRenderer.cs" />
-    <Compile Include="Output\FileOutput\FileOutput.cs" />
+    <Compile Include="Output\FileOutput\BitmapOutput.cs" />
     <Compile Include="Output\IGray4.cs" />
+    <Compile Include="Output\IRawOutput.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
