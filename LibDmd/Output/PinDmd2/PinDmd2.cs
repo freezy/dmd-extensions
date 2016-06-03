@@ -1,10 +1,7 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Media.Imaging;
+﻿using System.Windows.Media.Imaging;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using NLog;
-using LibDmd.Common;
 
 namespace LibDmd.Output.PinDmd2
 {

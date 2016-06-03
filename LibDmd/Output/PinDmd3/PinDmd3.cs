@@ -1,7 +1,4 @@
-﻿using System;
-using System.CodeDom;
-using System.Drawing;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
@@ -112,13 +109,14 @@ namespace LibDmd.Output.PinDmd3
 			// find and open the usb device.
 			Logger.Info("Initializing PinDMDv3 through USB bus...");
 			var allDevices = UsbDevice.AllDevices;
+			Logger.Info("All devices: {0}", allDevices.Count);
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
 					Logger.Info("Found device {0}/{1}:", device.Info.Descriptor.VendorID, device.Info.Descriptor.ProductID);
-					Logger.Debug("   Manufacturer: {0}", _pinDmd3Device.Info.ManufacturerString);
-					Logger.Debug("   Product:      {0}", _pinDmd3Device.Info.ProductString);
-					Logger.Debug("   Serial:       {0}", _pinDmd3Device.Info.SerialString);
+					Logger.Debug("   Manufacturer: {0}", device.Info.ManufacturerString);
+					Logger.Debug("   Product:      {0}", device.Info.ProductString);
+					Logger.Debug("   Serial:       {0}", device.Info.SerialString);
 					if (device.Info.Descriptor.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
 						_pinDmd3Device = device;
 						break;

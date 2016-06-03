@@ -103,9 +103,13 @@ namespace Console.Common
 		{
 			var renderers = new List<IFrameDestination>();
 			try {
+
+				var playOptions = options as PlayOptions;
+				var rawInput = playOptions?.FileName.ToLower().EndsWith(".bin") ?? false;
+
 				var pinDmd1 = PinDmd1.GetInstance();
 				var pinDmd2 = PinDmd2.GetInstance();
-				var pinDmd3 = PinDmd3.GetInstance(true);
+				var pinDmd3 = PinDmd3.GetInstance(!rawInput);
 				var pin2Dmd = Pin2Dmd.GetInstance();
 
 				if (pinDmd1.IsAvailable) {

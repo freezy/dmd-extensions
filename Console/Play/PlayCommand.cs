@@ -77,13 +77,6 @@ namespace Console.Play
 		}
 	}
 
-	public class FileNotFoundException : Exception
-	{
-		public FileNotFoundException(string message) : base(message)
-		{
-		}
-	}
-
 	public class UnknownFormatException : Exception
 	{
 		public UnknownFormatException(string message) : base(message)

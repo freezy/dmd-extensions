@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LibDmd.Input.FileSystem
 {
@@ -24,26 +19,31 @@ namespace LibDmd.Input.FileSystem
 
 		public IObservable<byte[]> GetRawdata()
 		{
-			return new FileStream(_filename, FileMode.Open, FileAccess.Read).ToObservable(4096);
+			return ObservableRead(new FileStream(_filename, FileMode.Open, FileAccess.Read), 4096);
 		}
-	}
 
-	public static class Ext
-	{
-		public static IObservable<byte[]> ToObservable(this Stream stream, int bufferSize)
+		public static IObservable<byte[]> ObservableRead(Stream stream, int bufferSize)
 		{
-			// to hold read data
-			var buffer = new byte[bufferSize];
-			// Step 1: async signature => observable factory
-			var asyncRead = Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead);
-			return Observable.While(
-				// while there is data to be read
-				() => stream.CanRead,
-				// iteratively invoke the observable factory, which will
-				// "recreate" it such that it will start from the current
-				// stream position - hence "0" for offset
-				Observable.Defer(() => asyncRead(buffer, 0, bufferSize))
-					.Select(readBytes => buffer.Take(readBytes).ToArray()));
+			return Observable.Create<byte[]>(o =>
+			{
+				var buffer = new byte[bufferSize];
+				try {
+					while (true) {
+						var read = stream.Read(buffer, 0, buffer.Length);
+						if (read == 0) {
+							break;
+						}
+						var results = buffer.Take(read).ToArray();
+						// always return a copy, never the buffer for concurrency's sake.
+						o.OnNext(results);
+					}
+				} catch (Exception ex) {
+					o.OnError(ex);
+				} finally {
+					o.OnCompleted();
+				}
+				return Disposable.Empty;
+			});
 		}
 	}
 }
