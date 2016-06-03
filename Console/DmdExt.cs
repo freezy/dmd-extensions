@@ -9,6 +9,7 @@ using Console.Common;
 using Console.Mirror;
 using Console.Play;
 using Console.Test;
+using LibDmd;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -72,10 +73,10 @@ namespace Console
 			}
 
 			try {
-				var graph = _command.GetRenderGraph();
+				var renderer = _command.GetRenderGraph();
 
 				if (baseOptions.SaveToFile != null) {
-					graph.Destinations.Add(new BitmapOutput(baseOptions.SaveToFile));
+					(renderer as RenderGraph)?.Destinations.Add(new BitmapOutput(baseOptions.SaveToFile));
 				}
 
 				_command.Execute(() => {
@@ -104,6 +105,9 @@ namespace Console
 			} catch (FileNotFoundException e) {
 				Logger.Error(e.Message);
 
+			} catch (UnknownFormatException e) {
+				Logger.Error(e.Message);
+
 			} catch (WrongFormatException e) {
 				Logger.Error(e.Message);
 
@@ -114,6 +118,12 @@ namespace Console
 				Logger.Error(e.Message);
 
 			} catch (RenderException e) {
+				Logger.Error(e.Message);
+
+			} catch (NoRawDestinationException e) {
+				Logger.Error(e.Message);
+
+			} catch (MultipleRawSourcesException e) {
 				Logger.Error(e.Message);
 
 			} finally {

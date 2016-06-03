@@ -26,7 +26,7 @@ namespace LibDmd
 	/// should even be possible to have them running at the same time, e.g. a 
 	/// graph withe same source and different processors to different outputs.
 	/// </remarks>
-	public class RenderGraph : IDisposable
+	public class RenderGraph : IRenderer
 	{
 		/// <summary>
 		/// A source is something that produces frames at an arbitrary resolution with

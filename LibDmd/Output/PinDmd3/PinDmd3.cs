@@ -84,6 +84,7 @@ namespace LibDmd.Output.PinDmd3
 
 		private void InitDll()
 		{
+			Logger.Info("Initializing PinDMDv3 through DLL...");
 			var port = Interop.Init(new Options() {
 				DmdRed = 255,
 				DmdGreen = 0,
@@ -109,10 +110,15 @@ namespace LibDmd.Output.PinDmd3
 		private void InitRaw()
 		{
 			// find and open the usb device.
+			Logger.Info("Initializing PinDMDv3 through USB bus...");
 			var allDevices = UsbDevice.AllDevices;
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
+					Logger.Info("Found device {0}/{1}:", device.Info.Descriptor.VendorID, device.Info.Descriptor.ProductID);
+					Logger.Debug("   Manufacturer: {0}", _pinDmd3Device.Info.ManufacturerString);
+					Logger.Debug("   Product:      {0}", _pinDmd3Device.Info.ProductString);
+					Logger.Debug("   Serial:       {0}", _pinDmd3Device.Info.SerialString);
 					if (device.Info.Descriptor.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
 						_pinDmd3Device = device;
 						break;
@@ -129,7 +135,7 @@ namespace LibDmd.Output.PinDmd3
 			_pinDmd3Device.Open();
 
 			if (_pinDmd3Device.Info.ProductString.Contains("pinDMD V3")) {
-				Logger.Info("Found PinDMDv2 device.");
+				Logger.Info("Found PinDMDv3 device.");
 				Logger.Debug("   Manufacturer: {0}", _pinDmd3Device.Info.ManufacturerString);
 				Logger.Debug("   Product:      {0}", _pinDmd3Device.Info.ProductString);
 				Logger.Debug("   Serial:       {0}", _pinDmd3Device.Info.SerialString);

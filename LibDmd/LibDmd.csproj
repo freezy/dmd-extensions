@@ -79,6 +79,7 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
+    <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />
     <Compile Include="Input\IRawSource.cs" />
@@ -87,6 +88,7 @@
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Input\TPAGrabber\TPAGrabber.cs" />
+    <Compile Include="IRenderer.cs" />
     <Compile Include="Output\BufferRenderer.cs" />
     <Compile Include="Output\FileOutput\BitmapOutput.cs" />
     <Compile Include="Output\IGray4.cs" />

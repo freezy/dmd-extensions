@@ -13,7 +13,7 @@ namespace LibDmd.Output
 	/// <remarks>
 	/// Note that raw data is device-specific.
 	/// </remarks>
-	interface IRawOutput
+	public interface IRawOutput : IDisposable
 	{
 		/// <summary>
 		/// Sends raw data to the device.

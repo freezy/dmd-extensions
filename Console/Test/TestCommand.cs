@@ -16,7 +16,7 @@ namespace Console.Test
 			_options = options;
 		}
 
-		protected override RenderGraph CreateRenderGraph()
+		protected override IRenderer CreateRenderGraph()
 		{
 			// define renderers
 			var renderers = GetRenderers(_options);

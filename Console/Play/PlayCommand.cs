@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows.Media.Imaging;
+using System.Linq;
 using Console.Common;
-using Console.Test;
 using LibDmd;
+using LibDmd.Input;
 using LibDmd.Input.FileSystem;
+using LibDmd.Output;
 using LibDmd.Processor;
 
 namespace Console.Play
@@ -13,18 +14,31 @@ namespace Console.Play
 	class PlayCommand : BaseCommand
 	{
 		private readonly PlayOptions _options;
-		private RenderGraph _graph;
-		private IDisposable _renderer;
 
 		public PlayCommand(PlayOptions options)
 		{
 			_options = options;
 		}
 
-		protected override RenderGraph CreateRenderGraph()
+		protected override IRenderer CreateRenderGraph()
 		{
 			// define source
-			var source = new ImageSource(_options.FileName);
+			object source;
+			switch (Path.GetExtension(_options.FileName.ToLower()))
+			{
+				case ".png":
+				case ".jpg":
+					source = new ImageSource(_options.FileName);
+					break;
+
+				case ".bin":
+					source = new RawSource(_options.FileName);
+					break;
+
+				default:
+					throw new UnknownFormatException("Unknown format " + Path.GetExtension(_options.FileName.ToLower()) + 
+						". Known formats: png, jpg, bin.");
+			}
 
 			// define renderers
 			var renderers = GetRenderers(_options);
@@ -36,22 +50,57 @@ namespace Console.Play
 				Resize = _options.Resize
 			};
 
-			// chain them up
-			_graph = new RenderGraph {
-				Source = source,
-				Processors = new List<AbstractProcessor> { transformationProcessor },
-				Destinations = renderers,
-				RenderAsGray4 = _options.RenderAsGray4, 
-			};
+			var frameSource = source as IFrameSource;
+			if (frameSource != null) {
+				// chain them up
+				return new RenderGraph {
+					Source = frameSource,
+					Processors = new List<AbstractProcessor> { transformationProcessor },
+					Destinations = renderers,
+					RenderAsGray4 = _options.RenderAsGray4,
+				};
+			}
 
-			// render image
-			return _graph;
+			// not an IFrameSource, so it must be a IRawSource.
+			var rawSource = (IRawSource)source;
+			IRawOutput rawOutput = null;
+			foreach (var dest in renderers.OfType<IRawOutput>()) {
+				if (rawOutput != null) {
+					throw new MultipleRawSourcesException("Cannot use multiple destinations when using a raw source.");
+				}
+				rawOutput = dest;
+			}
+			if (rawOutput == null) {
+				throw new NoRawDestinationException("No device supporting raw data available.");
+			}
+			return new RawRenderer(rawSource, rawOutput);
 		}
 	}
 
 	public class FileNotFoundException : Exception
 	{
 		public FileNotFoundException(string message) : base(message)
+		{
+		}
+	}
+
+	public class UnknownFormatException : Exception
+	{
+		public UnknownFormatException(string message) : base(message)
+		{
+		}
+	}
+
+	public class NoRawDestinationException : Exception
+	{
+		public NoRawDestinationException(string message) : base(message)
+		{
+		}
+	}
+
+	public class MultipleRawSourcesException : Exception
+	{
+		public MultipleRawSourcesException(string message) : base(message)
 		{
 		}
 	}

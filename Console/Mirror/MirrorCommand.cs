@@ -25,7 +25,7 @@ namespace Console.Mirror
 			_options = options;
 		}
 
-		protected override RenderGraph CreateRenderGraph()
+		protected override IRenderer CreateRenderGraph()
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {

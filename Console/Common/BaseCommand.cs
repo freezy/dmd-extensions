@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using App;
+using Console.Play;
 using LibDmd;
 using LibDmd.Output;
 using LibDmd.Output.Pin2Dmd;
@@ -23,12 +24,12 @@ namespace Console.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private RenderGraph _graph;
+		private IRenderer _graph;
 		private IDisposable _renderer;
 
-		protected abstract RenderGraph CreateRenderGraph();
+		protected abstract IRenderer CreateRenderGraph();
 
-		public RenderGraph GetRenderGraph()
+		public IRenderer GetRenderGraph()
 		{
 			return _graph ?? (_graph = CreateRenderGraph());
 		}
@@ -62,7 +63,9 @@ namespace Console.Common
 					break;
 
 				case PinDMDv3:
-					var pinDmd3 = PinDmd3.GetInstance(true);
+					var playOptions = options as PlayOptions;
+					var rawInput = playOptions?.FileName.ToLower().EndsWith(".bin") ?? false;
+					var pinDmd3 = PinDmd3.GetInstance(rawInput);
 					if (pinDmd3.IsAvailable) {
 						renderers.Add(pinDmd3);
 						Logger.Info("Added PinDMDv3 renderer.");

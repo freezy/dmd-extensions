@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibDmd.Input
 {
-	interface IRawSource
+	public interface IRawSource
 	{
 		/// <summary>
 		/// A display name for the source
