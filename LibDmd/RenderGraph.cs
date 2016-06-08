@@ -164,7 +164,7 @@ namespace LibDmd
 							dest.Render(bmp);
 						}
 					}, ex => {
-						if (onError != null && ex is CropRectangleOutOfRangeException) {
+						if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
 							onError.Invoke(ex);
 
 						} else {
