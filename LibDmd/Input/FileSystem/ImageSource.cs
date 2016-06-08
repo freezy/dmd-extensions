@@ -37,6 +37,10 @@ namespace LibDmd.Input.FileSystem
 
 				_frames = new BehaviorSubject<BitmapSource>(bmp);
 
+
+			} catch (UriFormatException) {
+				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");
+
 			} catch (NotSupportedException e) {
 				if (e.Message.Contains("No imaging component suitable")) {
 					throw new WrongFormatException($"Could not determine image format. Are you sure {fileName} is an image?");
