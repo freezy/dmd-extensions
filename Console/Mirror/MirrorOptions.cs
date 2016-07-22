@@ -49,7 +49,8 @@ namespace Console.Mirror
 	{
 		PinballFX2,
 		Screen,
-		PinballArcade
+		PinballArcade,
+		ProPinball
 	}
 
 }

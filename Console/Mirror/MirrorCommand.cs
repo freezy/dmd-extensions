@@ -8,6 +8,7 @@ using Console.Common;
 using LibDmd;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
+using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Processor;
@@ -89,6 +90,14 @@ namespace Console.Mirror
 					_graph.Processors = new List<AbstractProcessor>() {
 						transformationProcessor,
 						shadeProcessor
+					};
+					break;
+				}
+
+				case SourceType.ProPinball: { 
+					_graph.Source = new ProPinballSlave();
+					_graph.Processors = new List<AbstractProcessor>() {
+						transformationProcessor
 					};
 					break;
 				}

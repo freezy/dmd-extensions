@@ -22,7 +22,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -79,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
+    <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />
@@ -119,7 +121,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="FodyWeavers.xml" />
+    <Content Include="FodyWeavers.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <EmbeddedResource Include="Costura32\ftd2xx.dll" />
     <Content Include="FTD2XX_NET.XML" />
     <Content Include="Output\VirtualDmd\Dmd.fx" />
@@ -136,7 +140,13 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\ProPinballBridge\ProPinballBridge.vcxproj">
+      <Project>{668cdaaf-49e4-4b01-bd9d-37d5ae89ddac}</Project>
+      <Name>ProPinballBridge</Name>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
