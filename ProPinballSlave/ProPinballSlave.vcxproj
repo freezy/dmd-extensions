@@ -137,7 +137,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\packages\boost.1.60.0.0\lib\native\include\boost\interprocess\ipc\message_queue.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
