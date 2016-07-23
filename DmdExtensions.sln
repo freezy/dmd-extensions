@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProPinballBridge", "ProPinb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProPinballDmdSlave", "ProPinballDmdSlave\ProPinballDmdSlave.csproj", "{A4568212-D058-419F-A328-CFF92BD666CE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProPinballSlave", "ProPinballSlave\ProPinballSlave.vcxproj", "{AD8F664A-B792-4D67-BAAB-F19654A59697}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,16 @@ Global
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x64.Build.0 = Release|Any CPU
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.ActiveCfg = Release|Any CPU
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.Build.0 = Release|Any CPU
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x64.ActiveCfg = Debug|x64
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x64.Build.0 = Debug|x64
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x86.ActiveCfg = Debug|Win32
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x86.Build.0 = Debug|Win32
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Release|Any CPU.ActiveCfg = Release|Win32
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Release|x64.ActiveCfg = Release|x64
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Release|x64.Build.0 = Release|x64
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Release|x86.ActiveCfg = Release|Win32
+		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
