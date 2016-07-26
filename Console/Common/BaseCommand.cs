@@ -63,9 +63,7 @@ namespace Console.Common
 					break;
 
 				case PinDMDv3:
-					var playOptions = options as PlayOptions;
-					var rawInput = playOptions?.FileName.ToLower().EndsWith(".bin") ?? false;
-					var pinDmd3 = PinDmd3.GetInstance(rawInput);
+					var pinDmd3 = PinDmd3.GetInstance();
 					if (pinDmd3.IsAvailable) {
 						renderers.Add(pinDmd3);
 						Logger.Info("Added PinDMDv3 renderer.");
@@ -103,13 +101,9 @@ namespace Console.Common
 		{
 			var renderers = new List<IFrameDestination>();
 			try {
-
-				var playOptions = options as PlayOptions;
-				var rawInput = playOptions?.FileName.ToLower().EndsWith(".bin") ?? false;
-
 				var pinDmd1 = PinDmd1.GetInstance();
 				var pinDmd2 = PinDmd2.GetInstance();
-				var pinDmd3 = PinDmd3.GetInstance(!rawInput);
+				var pinDmd3 = PinDmd3.GetInstance();
 				var pin2Dmd = Pin2Dmd.GetInstance();
 
 				if (pinDmd1.IsAvailable) {
