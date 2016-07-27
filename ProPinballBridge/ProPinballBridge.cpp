@@ -151,7 +151,6 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 
 					const boost::posix_time::ptime wait_time = microsec_clock::universal_time() + boost::posix_time::milliseconds(500);
 
-					printf("+++ Fetching frame from queue...\n");
 					received_message = dmd_data_message_queue->timed_receive(dot_matrix_data_message_buffer,
 						128 * 32,
 						received_size,
@@ -162,17 +161,12 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 					{
 						if (received_size == 128 * 32)
 						{
-							printf("+++ Message received, calling delegate.\n");
 							callback(dot_matrix_data_message_buffer);
 						}
 						else
 						{
-							printf("+++ Received dmd data message size %d, but expecting size %d\n", (int)received_size, 128*32);
+							printf("+++ Received dmd data message size %d, but expecting size %d\n", (int)received_size, 128 * 32);
 						}
-					}
-					else
-					{
-						printf("+++ No message received.\n");
 					}
 
 				}
@@ -203,7 +197,6 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 																									  general_message_buffer_size,
 																									  received_size,
 																									  priority);
-
 					if (received_message)
 					{
 						if (received_size == general_message_buffer_size)
@@ -215,7 +208,7 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 							}
 							else if (message->message_type == MESSAGE_TYPE_FEEDBACK)
 							{
-								//handle_feedback(&(message->message_data.feedback_message_data));
+								printf("Ignoring feedback message."); // handle_feedback(&(message->message_data.feedback_message_data));
 							}
 							else
 							{

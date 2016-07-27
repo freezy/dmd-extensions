@@ -46,7 +46,7 @@ namespace LibDmd.Input.ProPinball
 				Logger.Info("Subscribing to Pro Pinball's message queue...");
 				unsafe {
 					_bridge.GetFrames(frame => {
-						Console.WriteLine("Got frame!");
+						Console.WriteLine("Got a frame!");
 						var f = new byte[FrameSize];
 						Marshal.Copy((IntPtr)frame, f, 0, FrameSize);
 					});

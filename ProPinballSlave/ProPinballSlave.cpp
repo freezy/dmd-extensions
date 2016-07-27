@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include "stdafx.h"
 #include "boost/interprocess/ipc/message_queue.hpp"
 
 using namespace boost::interprocess;
@@ -364,11 +365,11 @@ int main(int argc, char* argv[])
 				}
 			} while (received_message);
 		}
-
+/*
 #if !BUILD_DMD_SLAVE
 		const DWORD SLEEP_TIME_MILLI_SECONDS = 5;
 		Sleep(SLEEP_TIME_MILLI_SECONDS);
-#endif
+#endif*/
 	}
 
 	return 0;
