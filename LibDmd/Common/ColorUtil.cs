@@ -58,7 +58,7 @@ namespace LibDmd.Common
 		public static void HslToRgb(double hue, double saturation, double luminosity, out byte red, out byte green, out byte blue)
 		{
 			byte r, g, b;
-			if (saturation == 0) {
+			if (Math.Abs(saturation) < 0.001) {
 				r = (byte)Math.Round(luminosity * 255d);
 				g = (byte)Math.Round(luminosity * 255d);
 				b = (byte)Math.Round(luminosity * 255d);
