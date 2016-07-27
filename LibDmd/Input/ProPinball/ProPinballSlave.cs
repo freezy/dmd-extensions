@@ -87,6 +87,14 @@ namespace LibDmd.Input.ProPinball
 							bmp.Unlock();
 							bmp.Freeze();
 							o.OnNext(bmp);
+
+						}, err => {
+							throw new ProPinballSlaveException(new string(err));
+
+						}, () => {
+							Logger.Debug("Received exit signal from Pro Pinball, closing.");
+							o.OnCompleted();
+							Thread.CurrentThread.Abort();
 						});
 					}
 				});

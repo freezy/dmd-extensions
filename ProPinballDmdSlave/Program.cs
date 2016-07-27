@@ -28,6 +28,12 @@ namespace ProPinballDmdSlave
 						Console.WriteLine("Got frame!");
 						var f = new byte[frameSize];
 						Marshal.Copy((IntPtr)frame, f, 0, frameSize);
+
+					}, err => {
+						Console.WriteLine("Error: {0}", new string(err));
+
+					}, () => {
+						Console.WriteLine("Done!");
 					});
 				}
 			}

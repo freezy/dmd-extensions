@@ -123,6 +123,8 @@ ProPinballBridge::ProPinballDmd::ProPinballDmd()
 		}
 		catch (interprocess_exception &exception)
 		{
+			Status = 1;
+			Error = exception.what();
 			printf("Error sending slave ready message: %s\n", exception.what());
 		}
 	}
@@ -133,7 +135,7 @@ void ProPinballBridge::ProPinballDmd::Release()
 	delete this;
 }
 
-void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
+void ProPinballBridge::ProPinballDmd::GetFrames(OnNext^ onNext, OnError^ onError, OnCompleted^ onCompleted)
 {
 	bool done = false;
 
@@ -161,24 +163,28 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 					{
 						if (received_size == 128 * 32)
 						{
-							callback(dot_matrix_data_message_buffer);
+							onNext(dot_matrix_data_message_buffer);
 						}
 						else
 						{
-							printf("+++ Received dmd data message size %d, but expecting size %d\n", (int)received_size, 128 * 32);
+							onError("Received DMD data has wrong size.");
+							received_message = false;
+							done = true;
 						}
 					}
 
 				}
 				catch (interprocess_exception &exception)
 				{
-					printf("+++ Error receiving dot matrix display data message: '%s'\n", exception.what());
+					onError(exception.what());
+					done = true;
 				}
 			} while (received_message);
 		}
 		else
 		{
-			printf("+++ Message queue invalid, aborting.\n");
+			onError("Invalid message queue.");
+			done = true;
 		}
 
 		if (master_to_slave_message_queue)
@@ -203,9 +209,10 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 						{
 							if (message->message_type == MESSAGE_TYPE_END)
 							{
-								printf("Received end message\n");
+								onCompleted();
 								done = true;
 							}
+							/*
 							else if (message->message_type == MESSAGE_TYPE_FEEDBACK)
 							{
 								printf("Ignoring feedback message."); // handle_feedback(&(message->message_data.feedback_message_data));
@@ -213,17 +220,23 @@ void ProPinballBridge::ProPinballDmd::GetFrames(DmdFrameReceived^ callback)
 							else
 							{
 								printf("Received message %d\n", message->message_type);
-							}
+							}*/
 						}
 						else
 						{
 							printf("Received message size %d, but expecting size %d\n", (int)received_size, general_message_buffer_size);
+							onError("Received DMD data has wrong size.");
+							received_message = false;
+							done = true;
 						}
 					}
 				}
 				catch (interprocess_exception &exception)
 				{
-					printf("Error receiving message: '%s'\n", exception.what());
+					onError("Error receiving control message.");
+					printf("Control message error: %s\n", exception.what());
+					done = true;
+					received_message = false;
 				}
 			} while (received_message);
 		}

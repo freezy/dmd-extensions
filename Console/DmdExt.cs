@@ -12,6 +12,7 @@ using Console.Play;
 using Console.Test;
 using LibDmd;
 using LibDmd.Input.FileSystem;
+using LibDmd.Input.ProPinball;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using Microsoft.Win32;
@@ -125,6 +126,9 @@ namespace Console
 				Logger.Error(e.Message);
 
 			} catch (MultipleRawSourcesException e) {
+				Logger.Error(e.Message);
+
+			} catch (ProPinballSlaveException e) {
 				Logger.Error(e.Message);
 
 			} finally {

@@ -3,14 +3,16 @@
 
 namespace ProPinballBridge
 {
-	public delegate void DmdFrameReceived(unsigned char* frame);
+	public delegate void OnNext(unsigned char* frame);
+	public delegate void OnError(const char* message);
+	public delegate void OnCompleted();
 
 	public ref class ProPinballDmd
 	{
 		public:
 			ProPinballDmd(void);
 
-			void GetFrames(DmdFrameReceived^ callback);
+			void GetFrames(OnNext^ onNext, OnError^ onError, OnCompleted^ onCompleted);
 			void Release();
 
 			int Status;
