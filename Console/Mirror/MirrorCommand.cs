@@ -94,9 +94,10 @@ namespace Console.Mirror
 					break;
 				}
 
-				case SourceType.ProPinball: { 
+				case SourceType.ProPinball: {
+					
 					_graph.Source = new ProPinballSlave();
-					_graph.Processors = new List<AbstractProcessor>() {
+					_graph.Processors = new List<AbstractProcessor> {
 						transformationProcessor
 					};
 					break;

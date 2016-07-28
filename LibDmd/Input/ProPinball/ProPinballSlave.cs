@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -14,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using NLog;
+using static System.Reflection.Assembly;
 
 namespace LibDmd.Input.ProPinball
 {
@@ -23,11 +26,10 @@ namespace LibDmd.Input.ProPinball
 		private const int Width = 128;
 		private const int Height = 32;
 
-		const int FrameSize = Width * Height;
-
 		public string Name { get; } = "Pro Pinball";
 
 		public Color Color { get; set; } = Color.FromRgb(255, 191, 0);
+
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
 
@@ -111,7 +113,6 @@ namespace LibDmd.Input.ProPinball
 		public IObservable<BitmapSource> GetFrames()
 		{
 			StartCapturing();
-			//return new Subject<BitmapSource>();
 			return _frames;
 		}
 	}

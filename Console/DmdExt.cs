@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -134,7 +136,6 @@ namespace Console
 			} finally {
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
-
 		}
 
 		private static void AssertDotNetVersion()
@@ -186,6 +187,5 @@ namespace Console
 		}
 
 		#endregion
-
 	}
 }

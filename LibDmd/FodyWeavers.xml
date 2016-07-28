@@ -5,5 +5,8 @@
       pinDMD
       ftd2xx
     </Unmanaged32Assemblies>
+    <Unmanaged64Assemblies>
+      ProPinballBridge
+    </Unmanaged64Assemblies>
 	</Costura>
 </Weavers>

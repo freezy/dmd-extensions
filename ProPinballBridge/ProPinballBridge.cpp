@@ -116,8 +116,6 @@ ProPinballBridge::ProPinballDmd::ProPinballDmd()
 	{
 		try
 		{
-			printf("Sending slave ready message\n");
-
 			message->message_type = MESSAGE_TYPE_SLAVE_READY;
 			slave_to_master_message_queue->send(message, general_message_buffer_size, DEFAULT_MESSAGE_PRIORITY);
 		}
@@ -250,7 +248,6 @@ boost::interprocess::message_queue* ProPinballBridge::ProPinballDmd::open_messag
 	try
 	{
 		message_queue = new boost::interprocess::message_queue(open_only, message_queue_name.c_str());
-		printf("+++ Message queue opened.\n");
 	}
 	catch (interprocess_exception &exception)
 	{

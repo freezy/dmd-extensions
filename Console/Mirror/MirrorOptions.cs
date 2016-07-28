@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
 using Console.Common;
+using LibDmd.Input.ProPinball;
 
 namespace Console.Mirror
 {
@@ -52,5 +53,4 @@ namespace Console.Mirror
 		PinballArcade,
 		ProPinball
 	}
-
 }
