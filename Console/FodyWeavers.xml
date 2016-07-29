@@ -3,10 +3,10 @@
   <Costura>
     <Unmanaged32Assemblies>
       pinDMD
-      ftd2xx
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
       ProPinballBridge
+      ftd2xx
     </Unmanaged64Assemblies>
   </Costura>
 </Weavers>

@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers>
-	<Costura PreloadOrder="pinDMD,ftd2xx">
+	<Costura>
 		<Unmanaged32Assemblies>
       pinDMD
-      ftd2xx
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
       ProPinballBridge
+      ftd2xx
     </Unmanaged64Assemblies>
 	</Costura>
 </Weavers>

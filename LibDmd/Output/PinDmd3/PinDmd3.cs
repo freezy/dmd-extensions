@@ -8,6 +8,7 @@ using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using NLog;
+using NLog.LayoutRenderers;
 using static System.Text.Encoding;
 
 namespace LibDmd.Output.PinDmd3
@@ -94,22 +95,32 @@ namespace LibDmd.Output.PinDmd3
 			var ports = SerialPort.GetPortNames();
 			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
 			foreach (var portName in ports) {
-				_serialPort = new SerialPort(portName, 921600, Parity.None, 8, StopBits.One);
-				_serialPort.Open();
-				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
-				System.Threading.Thread.Sleep(100); // duh...
+				try {
+					Logger.Debug("Checking port {0} for PinDMDv3...", portName);
+					_serialPort = new SerialPort(portName, 921600, Parity.None, 8, StopBits.One);
+					_serialPort.Open();
+					_serialPort.Write(new byte[] {0x42, 0x42}, 0, 2);
+					System.Threading.Thread.Sleep(100); // duh...
 
-				result = new byte[100];
-				_serialPort.Read(result, 0, 100);
-				Firmware = UTF8.GetString(result.Skip(2).TakeWhile(b => b != 0x00).ToArray());
-				if (firmwareRegex.IsMatch(Firmware)) {
-					Logger.Info("Found PinDMDv3 device on {0}.", portName);
-					Logger.Debug("   Firmware:    {0}", Firmware);
-					Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[0]);
-					IsAvailable = true;
-					break;
+					result = new byte[100];
+					_serialPort.Read(result, 0, 100);
+					Firmware = UTF8.GetString(result.Skip(2).TakeWhile(b => b != 0x00).ToArray());
+					if (firmwareRegex.IsMatch(Firmware)) {
+						Logger.Info("Found PinDMDv3 device on {0}.", portName);
+						Logger.Debug("   Firmware:    {0}", Firmware);
+						Logger.Debug("   Resolution:  {0}x{1}", (int) result[0], (int) result[0]);
+						IsAvailable = true;
+						break;
+					}
+
+				} catch (Exception e) {
+					Logger.Debug("Error: {0}", e.Message.Trim());
+
+				} finally {
+					if (_serialPort != null && _serialPort.IsOpen) {
+						_serialPort.Close();
+					}
 				}
-				_serialPort.Close();
 			}
 
 			if (!IsAvailable) {

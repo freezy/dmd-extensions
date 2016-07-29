@@ -121,6 +121,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <Content Include="FodyWeavers.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -128,7 +129,6 @@
     <Content Include="FTD2XX_NET.XML" />
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
-    <EmbeddedResource Include="Costura32\pinDMD.dll" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Input\ScreenGrabber\GrabberWindow.xaml">
