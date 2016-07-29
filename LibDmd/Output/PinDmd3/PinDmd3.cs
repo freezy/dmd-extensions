@@ -115,8 +115,6 @@ namespace LibDmd.Output.PinDmd3
 
 				} catch (Exception e) {
 					Logger.Debug("Error: {0}", e.Message.Trim());
-
-				} finally {
 					if (_serialPort != null && _serialPort.IsOpen) {
 						_serialPort.Close();
 					}
