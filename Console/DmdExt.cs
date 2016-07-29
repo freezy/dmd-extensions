@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -136,7 +137,7 @@ namespace Console
 				Logger.Error(e.Message);
 
 			} finally {
-				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+				Process.GetCurrentProcess().Kill();
 			}
 		}
 
