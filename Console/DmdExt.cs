@@ -108,6 +108,8 @@ namespace Console
 
 			} catch (FileNotFoundException e) {
 				Logger.Error(e.Message);
+				Logger.Info("Try installing the Visual C++ Redistributable for Visual Studio 2015 if you haven't so already:");
+				Logger.Info("    https://www.microsoft.com/en-us/download/details.aspx?id=48145");
 
 			} catch (UnknownFormatException e) {
 				Logger.Error(e.Message);

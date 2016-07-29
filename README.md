@@ -32,9 +32,10 @@ frames to bitmap files.
 
 ## Install Instructions
 
-[Get the latest release](https://github.com/freezy/dmd-extensions/releases),
-copy the content of the zip file to your hard drive, preferable in your `PATH`,
-and unblock the `.exe` file (right-click, properties, unblock).
+1. [Get the latest release](https://github.com/freezy/dmd-extensions/releases),
+   copy the content of the zip file to your hard drive, preferable in your `PATH`,
+   and unblock the `.exe` file (right-click, properties, unblock).
+2. Download and install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
 
 ### Test
 
