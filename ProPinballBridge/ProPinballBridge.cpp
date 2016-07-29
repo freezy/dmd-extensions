@@ -252,7 +252,8 @@ boost::interprocess::message_queue* ProPinballBridge::ProPinballDmd::open_messag
 	catch (interprocess_exception &exception)
 	{
 		printf("+++ Failed to open message queue '%s', error: '%s'\n", message_queue_name.c_str(), exception.what());
-		exit(1);
+		Status = 1;
+		Error = exception.what();
 	}
 	return message_queue;
 }
