@@ -64,7 +64,7 @@ namespace App
 			Console.AppendText("Added VirtualDMD renderer.\n");
 
 			try {
-				var pinDmd = PinDmd3.GetInstance(true);
+				var pinDmd = PinDmd3.GetInstance();
 				if (pinDmd.IsAvailable) {
 					renderers.Add(pinDmd);
 					Console.AppendText($"Added PinDMDv3 renderer.\n");
