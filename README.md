@@ -73,6 +73,18 @@ issue with comments.
 Also note that currently only 128x32 DMD games are supported, that means no
 EM games neither Frankenstein which has a different resolution.
 
+### Pro Pinball Ultra
+
+In version 1.2.1, Barnstorm Games added support for external hardware through
+a message queue. To get it running, do the following:
+
+1. Make sure you have `dmdext.exe` in your `PATH`
+2. Copy `ProPinballSlave.bat` to the Pro Pinball installation folder (usually at `%PROGRAMFILES(X86)%\Steam\SteamLibrary\steamapps\common\Pro Pinball Ultra`)
+3. Add the following command line parameters when launching `ProPinball.exe`: `m3 dProPinballSlave`
+
+Note that this currently works only with the 64-bit version of Pro Pinball. 32 bit binaries will
+be provided with a later release. If you want to change the options (e.g. show the virtual DMD), 
+edit `ProPinballSlave.bat` and adopt accordingly.
 
 ## Documentation
 
@@ -273,6 +285,7 @@ have my sincerest sympathy, but that's as far as I go. ;)
 - [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
   code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
+- Adrian Page from Barnstorm for his help setting up the slave correctly.
 
 
 ## License
