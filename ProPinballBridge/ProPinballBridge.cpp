@@ -95,7 +95,7 @@ struct SLAVE_MESSAGE
 const int DEFAULT_MESSAGE_PRIORITY = 0;
 
 
-ProPinballBridge::ProPinballDmd::ProPinballDmd()
+ProPinballBridge::ProPinballDmd::ProPinballDmd(unsigned int message_size)
 {
 	const char* DMD_DATA_QUEUE_NAME = "dmd_dot_matrix_display_data";
 	dmd_data_message_queue = open_message_queue(DMD_DATA_QUEUE_NAME);
@@ -107,7 +107,7 @@ ProPinballBridge::ProPinballDmd::ProPinballDmd()
 	const char* SLAVE_TO_MASTER_QUEUE_NAME = "dmd_slave_to_master";
 	slave_to_master_message_queue = open_message_queue(SLAVE_TO_MASTER_QUEUE_NAME);
 
-	general_message_buffer_size = 392; // Get from command line arg m
+	general_message_buffer_size = message_size; // Get from command line arg m
 	general_message_buffer = new unsigned char[general_message_buffer_size];
 
 	SLAVE_MESSAGE* message = (SLAVE_MESSAGE*)general_message_buffer;

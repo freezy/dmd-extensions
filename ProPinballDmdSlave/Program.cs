@@ -12,7 +12,7 @@ namespace ProPinballDmdSlave
 		static void Main(string[] args)
 		{
 			const int frameSize = 128*32;
-			var bridge = new ProPinballBridge.ProPinballDmd();
+			var bridge = new ProPinballBridge.ProPinballDmd(392);
 
 			Console.WriteLine("Bridge status: {0}", bridge.Status);
 			if (bridge.Status != 0) {

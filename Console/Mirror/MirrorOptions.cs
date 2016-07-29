@@ -42,6 +42,9 @@ namespace Console.Mirror
 		[OptionArray("dmd-crop", HelpText = "[pinballfx2] How many pixels should be cropped off the DMD window. Four values: <Left> <Top> <Right> <Bottom>. Default: \"12 8 8 12\".")]
 		public int[] DmdCrop { get; set; } = { 12, 8, 8, 12 };
 
+		[Option("propinball-args", HelpText = "[propinball] Arguments send from the Pro Pinball master process. Usually something like: \"ndmd w0_0_0_0_w m392\".")]
+		public string ProPinballArgs { get; set; } = "ndmd w0_0_0_0_w m392";
+
 		[ParserState]
 		public IParserState LastParserState { get; set; }
 	}

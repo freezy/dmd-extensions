@@ -10,7 +10,7 @@ namespace ProPinballBridge
 	public ref class ProPinballDmd
 	{
 		public:
-			ProPinballDmd(void);
+			ProPinballDmd(unsigned int message_size);
 
 			void GetFrames(OnNext^ onNext, OnError^ onError, OnCompleted^ onCompleted);
 			void Release();

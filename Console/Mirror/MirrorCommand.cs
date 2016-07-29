@@ -96,7 +96,7 @@ namespace Console.Mirror
 
 				case SourceType.ProPinball: {
 					
-					_graph.Source = new ProPinballSlave();
+					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
 					_graph.Processors = new List<AbstractProcessor> {
 						transformationProcessor
 					};

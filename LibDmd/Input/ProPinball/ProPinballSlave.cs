@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -9,6 +10,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,15 +40,24 @@ namespace LibDmd.Input.ProPinball
 
 		private IObservable<BitmapSource> _frames;
 		private ProPinballBridge.ProPinballDmd _bridge;
+		private uint _messageBufferSize = 392;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public ProPinballSlave(string args)
+		{
+			var match = Regex.Match(args, @"m(\d+)", RegexOptions.IgnoreCase);
+			if (match.Success) {
+				_messageBufferSize = uint.Parse(match.Groups[1].Value);
+			}
+		}
 
 		/// <summary>
 		/// Starts sending frames.
 		/// </summary>
 		private void StartCapturing()
 		{
-			_bridge = new ProPinballBridge.ProPinballDmd();
+			_bridge = new ProPinballBridge.ProPinballDmd(_messageBufferSize);
 
 			Logger.Info("DMD status: {0}", _bridge.Status);
 			if (_bridge.Status != 0) {
@@ -95,8 +106,10 @@ namespace LibDmd.Input.ProPinball
 
 						}, () => {
 							Logger.Debug("Received exit signal from Pro Pinball, closing.");
-							o.OnCompleted();
-							Thread.CurrentThread.Abort();
+
+							// spent 2 days figuring out why instantiating boost::interprocess::message_queue
+							// in c++ would crash (or block) the app. fuck it, let's just kill the process.
+							Process.GetCurrentProcess().Kill();
 						});
 					}
 				});
