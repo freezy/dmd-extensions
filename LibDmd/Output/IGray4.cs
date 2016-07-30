@@ -18,5 +18,11 @@ namespace LibDmd.Output
 		/// </summary>
 		/// <param name="bmp">Frame to render</param>
 		void RenderGray4(BitmapSource bmp);
+
+		/// <summary>
+		/// Renders a frame in 4 bit.
+		/// </summary>
+		/// <param name="bmp">Array containing Width * Height bytes, with values between 0 and 15 for every pixel.</param>
+		void RenderGray4(byte[] bmp);
 	}
 }

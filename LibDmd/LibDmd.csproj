@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
+    <Compile Include="Input\IFrameSourceGray4.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />

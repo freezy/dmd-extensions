@@ -141,6 +141,58 @@ namespace LibDmd.Output
 		}
 
 		/// <summary>
+		/// Copies byte array into a 4-bit grayscale buffer. Used by PinDMDv2 and PIN2DMD.
+		/// </summary>
+		/// <param name="frame">Array containing Width * Height bytes, with values between 0 and 15 for every pixel.</param>
+		/// <param name="frameBuffer">Destination buffer</param>
+		/// <param name="startAt">Position to start writing</param>
+		protected void RenderGray4(byte[] frame, byte[] frameBuffer, int startAt)
+		{
+			// make sure we can render
+			AssertRenderReady(frame);
+
+			var byteIdx = startAt;
+
+			for (var y = 0; y < Height; y++) {
+				for (var x = 0; x < Width; x += 8) {
+					byte bd0 = 0;
+					byte bd1 = 0;
+					byte bd2 = 0;
+					byte bd3 = 0;
+					for (var v = 7; v >= 0; v--)
+					{
+						var shade = frame[y * Width + x + v]; // between 0 and 15
+						var pixel = (byte)(shade * 16);
+
+						bd0 <<= 1;
+						bd1 <<= 1;
+						bd2 <<= 1;
+						bd3 <<= 1;
+
+						if ((pixel & 16) != 0) {
+							bd0 |= 1;
+						}
+						if ((pixel & 32) != 0) {
+							bd1 |= 1;
+						}
+						if ((pixel & 64) != 0) {
+							bd2 |= 1;
+						}
+						if ((pixel & 128) != 0) {
+							bd3 |= 1;
+						}
+					}
+					frameBuffer[byteIdx] = bd0;
+					frameBuffer[byteIdx + 512] = bd1;
+					frameBuffer[byteIdx + 1024] = bd2;
+					frameBuffer[byteIdx + 1536] = bd3;
+					byteIdx++;
+				}
+			}
+		}
+
+
+		/// <summary>
 		/// Copies a bitmap into a 24-bit RGB buffer. Used by PIN2DMD.
 		/// </summary>
 		/// <param name="bmp">Image source</param>
@@ -241,7 +293,6 @@ namespace LibDmd.Output
 				}
 			}
 		}
-
 	
 		/// <summary>
 		/// Makes sure the device is available and the source has the same dimensions as the display.
@@ -253,6 +304,19 @@ namespace LibDmd.Output
 				throw new SourceNotAvailableException();
 			}
 			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
+				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
+			}
+		}	
+		/// <summary>
+		/// Makes sure the device is available and the source has the same dimensions as the display.
+		/// </summary>
+		/// <param name="bmp"></param>
+		protected void AssertRenderReady(byte[] bmp)
+		{
+			if (!IsAvailable) {
+				throw new SourceNotAvailableException();
+			}
+			if (bmp.Length != Width * Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
 		}

@@ -111,6 +111,15 @@ namespace LibDmd.Output.PinDmd2
 			Render(bmp);
 		}
 
+		public void RenderGray4(byte[] frame)
+		{
+			// copy frame to frame buffer
+			RenderGray4(frame, _frameBuffer, 4);
+
+			// send frame buffer to device
+			RenderRaw(_frameBuffer);
+		}
+
 		public void RenderRaw(byte[] data)
 		{
 			var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);

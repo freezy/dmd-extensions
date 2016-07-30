@@ -130,11 +130,20 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderRaw(_frameBufferGray4);
 		}
 
-		public void RenderRaw(byte[] data)
+		public void RenderGray4(byte[] frame)
+		{
+			// copy frame to frame buffer
+			RenderGray4(frame, _frameBufferGray4, 4);
+
+			// send frame buffer to device
+			RenderRaw(_frameBufferGray4);
+		}
+
+		public void RenderRaw(byte[] frame)
 		{
 			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
-			var error = writer.Write(data, 2000, out bytesWritten);
+			var error = writer.Write(frame, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				throw new Exception(UsbDevice.LastErrorString);

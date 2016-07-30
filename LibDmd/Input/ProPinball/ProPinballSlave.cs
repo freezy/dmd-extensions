@@ -23,7 +23,7 @@ using static System.Reflection.Assembly;
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : IFrameSource
+	public class ProPinballSlave : IFrameSource, IFrameSourceGray4
 	{
 		private const int Width = 128;
 		private const int Height = 32;
@@ -38,9 +38,10 @@ namespace LibDmd.Input.ProPinball
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private IObservable<BitmapSource> _frames;
+		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
-		private uint _messageBufferSize = 392;
+		private IObservable<BitmapSource> _frames;
+		private IObservable<byte[]> _framesGrey4;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -52,19 +53,14 @@ namespace LibDmd.Input.ProPinball
 			}
 		}
 
-		/// <summary>
-		/// Starts sending frames.
-		/// </summary>
-		private void StartCapturing()
-		{
-			_bridge = new ProPinballBridge.ProPinballDmd(_messageBufferSize);
 
-			Logger.Info("DMD status: {0}", _bridge.Status);
-			if (_bridge.Status != 0) {
-				unsafe {
-					throw new ProPinballSlaveException("Error connecting: " + new string(_bridge.Error));
-				}
+		public IObservable<BitmapSource> GetFrames()
+		{
+			if (_frames != null) {
+				return _frames;
 			}
+			CreateBridge();
+
 			double hue, saturation, luminosity;
 			ColorUtil.RgbToHsl(Color.R, Color.G, Color.B, out hue, out saturation, out luminosity);
 			Logger.Info("Subscribing to Pro Pinball's message queue...");
@@ -88,7 +84,7 @@ namespace LibDmd.Input.ProPinball
 									var lum = (double)pixelLum / 15 * luminosity;
 									byte red, green, blue;
 									ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
-									
+
 									frameBuffer[index] = blue;
 									frameBuffer[index + 1] = green;
 									frameBuffer[index + 2] = red;
@@ -121,12 +117,60 @@ namespace LibDmd.Input.ProPinball
 					Logger.Debug("Disposing Pro Pinball's message queue...");
 				});
 			});
+			return _frames;
 		}
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<byte[]> GetGray4Frames()
 		{
-			StartCapturing();
-			return _frames;
+			if (_framesGrey4 != null) {
+				return _framesGrey4;
+			}
+			CreateBridge();
+
+			Logger.Info("Subscribing to Pro Pinball's message queue...");
+			_framesGrey4 = Observable.Create<byte[]>(o => {
+
+				const int len = Width * Height;
+
+				// this is blocking, so use a new thread
+				var thread = new Thread(() => {
+					unsafe {
+						_bridge.GetFrames(frame => {
+							var arr = new byte[len];
+							Marshal.Copy((IntPtr)frame, arr, 0, len);
+							o.OnNext(arr);
+
+						}, err => {
+							throw new ProPinballSlaveException(new string(err));
+
+						}, () => {
+							Logger.Debug("Received exit signal from Pro Pinball, closing.");
+							Process.GetCurrentProcess().Kill();
+						});
+					}
+				});
+				thread.Start();
+				Logger.Debug("Subscribed to Pro Pinball's message queue.");
+
+				return Disposable.Create(() => {
+					thread.Abort();
+					Logger.Debug("Disposing Pro Pinball's message queue...");
+				});
+			});
+			return _framesGrey4;
+		}
+
+		private void CreateBridge()
+		{
+			if (_bridge != null) {
+				throw new ProPinballSlaveException("Can only have one active source at the time!");
+			}
+			_bridge = new ProPinballBridge.ProPinballDmd(_messageBufferSize);
+			if (_bridge.Status != 0) {
+				unsafe {
+					throw new ProPinballSlaveException("Error connecting: " + new string(_bridge.Error));
+				}
+			}
 		}
 	}
 

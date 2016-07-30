@@ -73,20 +73,20 @@ namespace LibDmd.Output.PinDmd3
 
 			// 4 bits per pixel, 14 control bytes
 			_frameBufferGray4 = new byte[Width * Height / 2 + 14];     
-			_frameBufferGray4[0] = 0x31;
-			_frameBufferGray4[1] = 0xff;
-			_frameBufferGray4[2] = 0x58;
-			_frameBufferGray4[3] = 0x20;
-			_frameBufferGray4[4] = 0x0;
-			_frameBufferGray4[5] = 0x0;
-			_frameBufferGray4[6] = 0x0;
-			_frameBufferGray4[7] = 0x0;
-			_frameBufferGray4[8] = 0x0;
-			_frameBufferGray4[9] = 0x0;
-			_frameBufferGray4[10] = 0x0;
-			_frameBufferGray4[11] = 0x0;
-			_frameBufferGray4[12] = 0x0;
-			_frameBufferGray4[Width * Height / 2 + 1] = 0x31;
+			_frameBufferGray4[0] = 0x31; // command byte
+			_frameBufferGray4[1] = 0xff; // 100%: red
+			_frameBufferGray4[2] = 0x58; // 100%: green
+			_frameBufferGray4[3] = 0x20; // 100%: blue
+			_frameBufferGray4[4] = 0x0;  // 66%: red
+			_frameBufferGray4[5] = 0x0;  // 66%: green
+			_frameBufferGray4[6] = 0x0;  // 66%: blue
+			_frameBufferGray4[7] = 0x0;  // 33%: red
+			_frameBufferGray4[8] = 0x0;  // 33%: green
+			_frameBufferGray4[9] = 0x0;  // 33%: blue
+			_frameBufferGray4[10] = 0x0; // 0%: red
+			_frameBufferGray4[11] = 0x0; // 0%: green
+			_frameBufferGray4[12] = 0x0; // 0%: blue
+			_frameBufferGray4[Width * Height / 2 + 1] = 0x31; // command byte
 		}
 
 		public void Init()
@@ -203,6 +203,15 @@ namespace LibDmd.Output.PinDmd3
 		{
 			// copy bitmap to frame buffer
 			RenderGray4(bmp, _frameBufferGray4, 13);
+
+			// send frame buffer to device
+			RenderRaw(_frameBufferGray4);
+		}
+
+		public void RenderGray4(byte[] frame)
+		{
+			// copy frame to frame buffer
+			RenderGray4(frame, _frameBufferGray4, 13);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);

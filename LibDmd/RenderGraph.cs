@@ -149,29 +149,42 @@ namespace LibDmd
 					onCompleted?.Invoke();
 				});
 				try {
-					var disposable = Source.GetFrames().Subscribe(bmp => {
 
-						_beforeProcessed.OnNext(bmp);
-						if (Processors != null) {
-							// TODO don't process non-greyscale compatible processors when gray4 is enabled
-							bmp = enabledProcessors
-								.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-								.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
-						}
-						if (RenderAsGray4 && canRenderGray4) {
-							destGray4?.RenderGray4(bmp);
-						} else {
-							dest.Render(bmp);
-						}
-					}, ex => {
-						if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
-							onError.Invoke(ex);
-
-						} else {
+					if (Destinations.Count == 1 && canRenderGray4 && RenderAsGray4 && Source is IFrameSourceGray4) {
+						Logger.Info("Sending unprocessed 4-bit data from {0} to {1}", Source.Name, dest.Name);
+						var disposable = ((IFrameSourceGray4)Source).GetGray4Frames().Subscribe(frame => {
+							destGray4.RenderGray4(frame);
+						}, ex => {
 							throw ex;
-						}
-					});
-					_activeSources.Add(disposable);
+						});
+						_activeSources.Add(disposable);
+
+					} else {
+						var disposable = Source.GetFrames().Subscribe(bmp => {
+
+							_beforeProcessed.OnNext(bmp);
+							if (Processors != null) {
+								// TODO don't process non-greyscale compatible processors when gray4 is enabled
+								bmp = enabledProcessors
+									.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
+									.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
+							}
+							if (RenderAsGray4 && canRenderGray4) {
+								destGray4?.RenderGray4(bmp);
+							} else {
+								dest.Render(bmp);
+							}
+						}, ex => {
+							if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
+								onError.Invoke(ex);
+
+							} else {
+								throw ex;
+							}
+						});
+						_activeSources.Add(disposable);
+					}
+					
 
 				} catch (AdminRightsRequiredException ex) {
 					if (onError != null) {
