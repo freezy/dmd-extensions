@@ -146,8 +146,8 @@ namespace Console.Common
 				GripColor = options.VirtualDmdHideGrip ? Brushes.Transparent : Brushes.White,
 				Left = options.VirtualDmdPosition[0],
 				Top = options.VirtualDmdPosition[1],
-				Width = options.VirtualDmdPosition[2],
-				Height = (int)((double)options.VirtualDmdPosition[2] / 4),
+				Width = options.VirtualDmdPosition[2] / 4,
+				Height = (int)((double)options.VirtualDmdPosition[2]),
 			};
 			var thread = new Thread(() => {
 				

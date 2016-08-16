@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:App"
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.VirtualDmd;assembly=LibDmd"
         mc:Ignorable="d"
-        Title="Virtual DMD" Height="256" Width="1024"
+        Title="Virtual DMD" Height="1024" Width="256"
         WindowStyle="None"
         Background="Black"
         AllowsTransparency="True"

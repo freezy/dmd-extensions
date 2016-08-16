@@ -22,7 +22,9 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void Render(BitmapSource bmp)
 		{
-			Dispatcher.Invoke(() => Dmd.Source = bmp);
+			BitmapSource processedBmp = new TransformedBitmap(bmp, new RotateTransform(90));
+			processedBmp.Freeze();
+			Dispatcher.Invoke(() => Dmd.Source = processedBmp);
 		}
 
 		public void RenderGray4(BitmapSource bmp)

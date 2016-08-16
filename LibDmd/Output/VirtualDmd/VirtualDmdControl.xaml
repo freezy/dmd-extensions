@@ -9,11 +9,11 @@
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Image x:Name="Dmd" Source="red-128x32.png">
             <Image.Effect>
-                <virtualDmd:DmdEffect BlockCount="128" AspectRatio="4" Max="1.5"/>
+                <virtualDmd:DmdEffect BlockCount="32" AspectRatio="0.25" Max="0.05"/>
             </Image.Effect>
         </Image>
         <Grid.Effect>
-            <BlurEffect Radius="2"></BlurEffect>
+            <BlurEffect Radius="0"></BlurEffect>
         </Grid.Effect>
     </Grid>
 </UserControl>
