@@ -83,6 +83,7 @@
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IFrameSourceGray4.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
+    <Compile Include="Output\IRgb24.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />
@@ -102,7 +103,6 @@
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
     <Compile Include="Output\VirtualDmd\DmdEffect.cs" />
     <Compile Include="Output\IFrameDestination.cs" />
-    <Compile Include="Output\PinDmd3\Interop.cs" />
     <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
     <Compile Include="Output\VirtualDmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>

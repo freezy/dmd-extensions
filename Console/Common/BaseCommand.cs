@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using App;
 using Console.Play;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.Output;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
@@ -93,6 +94,14 @@ namespace Console.Common
 			}
 			if (renderers.Count == 0) {
 				throw new NoRenderersAvailableException();
+			}
+
+			if (!ColorUtil.IsColor(options.RenderColor)) {
+				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
+			}
+			foreach (var renderer in renderers) {
+				var rgb24 = renderer as IRgb24;
+				rgb24?.SetColor(ColorUtil.ParseColor(options.RenderColor));
 			}
 			return renderers;
 		}

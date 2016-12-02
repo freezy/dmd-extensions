@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using Console.Common;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ProPinball;

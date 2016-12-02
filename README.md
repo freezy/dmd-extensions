@@ -29,6 +29,14 @@ Farsight's **The Pinball Arcade** is supported as well.
 The command line tool can also display image files on the DMD device and render
 frames to bitmap files.
 
+### Colors
+
+If you have an RGB display, you can override the color tone in which the output
+is rendered. However, in order to do this, you must force the source to produce
+grayscale frames. You can do this by using the `--use-gray-4` parameter. Then
+use the `--color` parameter to specify the color. Example:
+
+    dmdext test -d virtual --use-gray4 --color=8080ff
 
 ## Install Instructions
 

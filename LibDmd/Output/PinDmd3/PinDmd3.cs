@@ -3,6 +3,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
@@ -17,7 +18,7 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4, IRawOutput
+	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4, IRgb24, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;
@@ -77,19 +78,9 @@ namespace LibDmd.Output.PinDmd3
 			// 4 bits per pixel, 14 control bytes
 			_frameBufferGray4 = new byte[Width * Height / 2 + 14];     
 			_frameBufferGray4[0] = Gray4CommandByte; // command byte
-			_frameBufferGray4[1] = 0xff; // 100%: red
-			_frameBufferGray4[2] = 0xff; // 100%: green
-			_frameBufferGray4[3] = 0xff; // 100%: blue
-			_frameBufferGray4[4] = 0xaa;  // 66%: red
-			_frameBufferGray4[5] = 0xaa;  // 66%: green
-			_frameBufferGray4[6] = 0xaa;  // 66%: blue
-			_frameBufferGray4[7] = 0x55;  // 33%: red
-			_frameBufferGray4[8] = 0x55;  // 33%: green
-			_frameBufferGray4[9] = 0x55;  // 33%: blue
-			_frameBufferGray4[10] = 0x0; // 0%: red
-			_frameBufferGray4[11] = 0x0; // 0%: green
-			_frameBufferGray4[12] = 0x0; // 0%: blue
 			_frameBufferGray4[Width * Height / 2 + 13] = Gray4CommandByte; // command byte
+
+			SetColor(Color.FromRgb(0xff, 0x30, 0));
 		}
 
 		public void Init()
@@ -135,7 +126,6 @@ namespace LibDmd.Output.PinDmd3
 
 			result = new byte[20];
 			_serialPort.Read(result, 0, 20); // no idea what this is
-		
 		}
 	
 		/// <summary>
@@ -195,6 +185,31 @@ namespace LibDmd.Output.PinDmd3
 				_frameBufferRgb24[i] = 0;
 			}
 			_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
+		}
+
+		public void SetColor(Color color)
+		{
+			double hue, saturation, luminosity;
+			byte r, g, b;
+			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
+
+			_frameBufferGray4[1] = color.R; // 100%: red
+			_frameBufferGray4[2] = color.G; // 100%: green
+			_frameBufferGray4[3] = color.B; // 100%: blue
+
+			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.66, out r, out g, out b);
+			_frameBufferGray4[4] = r;  // 66%: red
+			_frameBufferGray4[5] = g;  // 66%: green
+			_frameBufferGray4[6] = b;  // 66%: blue
+
+			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.33, out r, out g, out b);
+			_frameBufferGray4[7] = r;  // 33%: red
+			_frameBufferGray4[8] = g;  // 33%: green
+			_frameBufferGray4[9] = b;  // 33%: blue
+
+			_frameBufferGray4[10] = 0x0; // 0%: red
+			_frameBufferGray4[11] = 0x0; // 0%: green
+			_frameBufferGray4[12] = 0x0; // 0%: blue
 		}
 
 		public void Dispose()

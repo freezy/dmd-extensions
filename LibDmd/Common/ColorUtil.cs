@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Media;
 
 namespace LibDmd.Common
 {
@@ -90,6 +91,33 @@ namespace LibDmd.Common
 			red = r;
 			green = g;
 			blue = b;
+		}
+
+
+		/// <summary>
+		/// Checks if a given string can be interpreted as color
+		/// </summary>
+		/// <param name="c">String to parse as color</param>
+		/// <returns>True if color, false otherwise</returns>
+		public static bool IsColor(string c)
+		{
+			try {
+				ColorConverter.ConvertFromString(c.StartsWith("#") ? c : "#FF" + c);
+				return true;
+			} catch (FormatException e) {
+				Console.WriteLine(e);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Parses a string to a color
+		/// </summary>
+		/// <param name="c">String to parse as color</param>
+		/// <returns>Parsed color</returns>
+		public static Color ParseColor(string c)
+		{
+			return (Color)ColorConverter.ConvertFromString(c.StartsWith("#") ? c : "#FF" + c);
 		}
 
 		private static double ColorCalc(double c, double t1, double t2)

@@ -31,6 +31,9 @@ namespace Console.Common
 		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported. Default: false")]
 		public bool RenderAsGray4 { get; set; } = false;
 
+		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
+		public string RenderColor { get; set; } = "ff3000";
+
 		[Option("flip-x", HelpText = "Flips the image horizontally. Default: false.")]
 		public bool FlipHorizontally { get; set; } = false;
 
