@@ -46,8 +46,10 @@ namespace LibDmd.Output.VirtualDmd
 
 					// generate a "rainbow" pixel
 					var pixelLum = frame[y * width + x]; // 0 - 15
-					var lum = (double)pixelLum / 15 / 3 + 0.3;
-					var hue = (double)pixelLum / 15 * 6;
+					var lum = (double)pixelLum / 15;
+					var hue = 0;
+					//var lum = (double)pixelLum / 15 / 3 + 0.3;
+					//var hue = (double)pixelLum / 15 * 6;
 					byte red, green, blue;
 					ColorUtil.HslToRgb(hue, 1, lum, out red, out green, out blue);
 
