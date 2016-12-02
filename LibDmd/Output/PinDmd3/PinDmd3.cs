@@ -22,6 +22,9 @@ namespace LibDmd.Output.PinDmd3
 		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;
 
+		const byte Rgb24CommandByte = 0x02;
+		const byte Gray4CommandByte = 0x31;
+
 		/// <summary>
 		/// Firmware string read from the device if connected
 		/// </summary>
@@ -69,24 +72,24 @@ namespace LibDmd.Output.PinDmd3
 			// 3 bytes per pixel, 2 control bytes
 			_frameBufferRgb24 = new byte[Width * Height * 3 + 2];
 			_frameBufferRgb24[0] = 0x02;
-			_frameBufferRgb24[Width * Height * 3 + 1] = 0x02;
+			_frameBufferRgb24[Width * Height * 3 + 1] = Rgb24CommandByte;
 
 			// 4 bits per pixel, 14 control bytes
 			_frameBufferGray4 = new byte[Width * Height / 2 + 14];     
-			_frameBufferGray4[0] = 0x31; // command byte
+			_frameBufferGray4[0] = Gray4CommandByte; // command byte
 			_frameBufferGray4[1] = 0xff; // 100%: red
-			_frameBufferGray4[2] = 0x58; // 100%: green
-			_frameBufferGray4[3] = 0x20; // 100%: blue
-			_frameBufferGray4[4] = 0x0;  // 66%: red
-			_frameBufferGray4[5] = 0x0;  // 66%: green
-			_frameBufferGray4[6] = 0x0;  // 66%: blue
-			_frameBufferGray4[7] = 0x0;  // 33%: red
-			_frameBufferGray4[8] = 0x0;  // 33%: green
-			_frameBufferGray4[9] = 0x0;  // 33%: blue
+			_frameBufferGray4[2] = 0xff; // 100%: green
+			_frameBufferGray4[3] = 0xff; // 100%: blue
+			_frameBufferGray4[4] = 0xaa;  // 66%: red
+			_frameBufferGray4[5] = 0xaa;  // 66%: green
+			_frameBufferGray4[6] = 0xaa;  // 66%: blue
+			_frameBufferGray4[7] = 0x55;  // 33%: red
+			_frameBufferGray4[8] = 0x55;  // 33%: green
+			_frameBufferGray4[9] = 0x55;  // 33%: blue
 			_frameBufferGray4[10] = 0x0; // 0%: red
 			_frameBufferGray4[11] = 0x0; // 0%: green
 			_frameBufferGray4[12] = 0x0; // 0%: blue
-			_frameBufferGray4[Width * Height / 2 + 1] = 0x31; // command byte
+			_frameBufferGray4[Width * Height / 2 + 13] = Gray4CommandByte; // command byte
 		}
 
 		public void Init()
@@ -132,43 +135,7 @@ namespace LibDmd.Output.PinDmd3
 
 			result = new byte[20];
 			_serialPort.Read(result, 0, 20); // no idea what this is
-
-			/*
-			var port = Interop.Init(new Options() {
-				DmdRed = 1,
-				DmdGreen = 2,
-				DmdBlue = 3,
-				DmdPerc66 = 4,
-				DmdPerc33 = 5,
-				DmdPerc0 = 6,
-				DmdOnly = 7,
-				DmdCompact = 8,
-				DmdAntialias = 9,
-				DmdColorize = 10,
-				DmdRed66 = 11,
-				DmdGreen66 = 12,
-				DmdBlue66 = 13,
-				DmdRed33 = 14,
-				DmdGreen33 = 15,
-				DmdBlue33 = 16,
-				DmdRed0 = 17,
-				DmdGreen0 = 18,
-				DmdBlue0 = 19
-			});
-			IsAvailable = port != 0;
-			if (IsAvailable) {
-				var info = GetInfo();
-				Firmware = info.Firmware;
-				Logger.Info("Found PinDMDv3 device.");
-				Logger.Debug("   Firmware:    {0}", Firmware);
-				Logger.Debug("   Resolution:  {0}x{1}", Width, Height);
-
-				if (info.Width != Width || info.Height != Height) {
-					throw new UnsupportedResolutionException("Should be " + Width + "x" + Height + " but is " + info.Width + "x" + info.Height + ".");
-				}
-			} else {
-				Logger.Debug("PinDMDv3 device not found.");
-			}*/
+		
 		}
 	
 		/// <summary>
