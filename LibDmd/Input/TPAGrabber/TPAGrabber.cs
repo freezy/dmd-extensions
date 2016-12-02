@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 
 namespace LibDmd.Input.TPAGrabber
@@ -19,7 +20,7 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : IFrameSource
+	public class TPAGrabber : IFrameSource, IFrameSourceGray4
 	{
 		public string Name { get; } = "Pinball Arcade DX11";
 
@@ -40,6 +41,7 @@ namespace LibDmd.Input.TPAGrabber
 		public double FramesPerSecond { get; set; } = 25;
 
 		private IConnectableObservable<BitmapSource> _frames;
+		private IConnectableObservable<byte[]> _framesGray4;
 		private IDisposable _capturer;
 		private IntPtr _handle;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
@@ -62,13 +64,16 @@ namespace LibDmd.Input.TPAGrabber
         private static IntPtr _codeCave = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
 
+		private bool _lastGray4Poll;
+
         /// <summary>
         /// Waits for the Pinball Arcade DX11 process.
         /// </summary>
         /// 
 
-        private void StartPolling()
+        private void StartPolling(bool gray4)
 		{
+			_lastGray4Poll = gray4;
 			var curIdentity = WindowsIdentity.GetCurrent();
 			var myPrincipal = new WindowsPrincipal(curIdentity);
 			if (!myPrincipal.IsInRole(WindowsBuiltInRole.Administrator)) {
@@ -83,7 +88,7 @@ namespace LibDmd.Input.TPAGrabber
 				.Subscribe(x => {
 					_handle = FindGameHandle();
 					if (_handle != IntPtr.Zero) {
-						StartCapturing();
+						StartCapturing(gray4);
 						success.OnNext(Unit.Default);
 					}
 				});
@@ -92,9 +97,9 @@ namespace LibDmd.Input.TPAGrabber
 		/// <summary>
 		/// Starts sending frames.
 		/// </summary>
-		private void StartCapturing()
+		private void StartCapturing(bool gray4)
 		{
-			_capturer = _frames.Connect();
+			_capturer = gray4 ? _framesGray4.Connect() : _frames.Connect();
 			_onResume.OnNext(Unit.Default);
 		}
 
@@ -107,7 +112,7 @@ namespace LibDmd.Input.TPAGrabber
 			// TODO send blank frame
 			_capturer.Dispose();
 			_onPause.OnNext(Unit.Default);
-			StartPolling();
+			StartPolling(_lastGray4Poll);
 		}
 
 		public IObservable<BitmapSource> GetFrames()
@@ -118,9 +123,22 @@ namespace LibDmd.Input.TPAGrabber
 					.Select(x => CaptureDMD())
 					.Where(bmp => bmp != null)
 					.Publish();
-				StartPolling();
+				StartPolling(false);
 			}
 			return _frames;
+		}
+
+		public IObservable<byte[]> GetGray4Frames()
+		{
+			if (_framesGray4 == null) {
+				_framesGray4 = Observable
+					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+					.Select(x => CaptureDMDGray4())
+					.Where(frame => frame != null)
+					.Publish();
+				StartPolling(true);
+			}
+			return _framesGray4;
 		}
 
 		public BitmapSource CaptureDMD()
@@ -135,6 +153,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				wBmp.Freeze();
+				Console.WriteLine("Sent blank.");
 				return wBmp;
 			}
 
@@ -149,7 +168,10 @@ namespace LibDmd.Input.TPAGrabber
 			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
-			if (RawDMD[0] != 0x02) return null;
+			if (RawDMD[0] != 0x02) {
+				Console.WriteLine("CRC failed");
+				return null;
+			}
 
 			// Lock the writeable bitmap to expose the backbuffer to other threads.
 			wBmp.Lock();
@@ -187,8 +209,63 @@ namespace LibDmd.Input.TPAGrabber
 			// Freeze the DMD bitmap and make it readable to any thread.
 			wBmp.Freeze();
 
+			Console.WriteLine("Sent frame.");
+
 			// Return the DMD bitmap we've created.
 			return wBmp;
+		}
+
+		public byte[] CaptureDMDGray4()
+		{
+			// Initialize a new writeable bitmap to receive DMD pixels.
+			var wFrame = new byte[DMDWidth * DMDHeight];
+
+			// Check if a table is loaded..
+			var tableLoaded = new byte[1];
+			ReadProcessMemory((int)_handle, (int)_gameBase + (int)GameState, tableLoaded, 1, 0);
+
+			// ..if not, return an empty frame (blank DMD).
+			if (tableLoaded[0] == 0) {
+				return wFrame;
+			}
+
+			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
+			var eax = new byte[4];
+			ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
+
+			// Now we have our DMD location in memory + little hack to re-align the DMD block.
+			var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
+
+			// Grab the whole raw DMD block from game's memory.
+			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
+
+			// Check the DMD CRC flag, skip the frame if the value is incorrect.
+			if (RawDMD[0] != 0x02) return null;
+
+			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
+			var rawPixelIndex = 2;
+
+			// For each pixel on Y axis.
+			for (var dmdY = 0; dmdY < DMDHeight; dmdY++)
+			{
+				// For each pixel on X axis.
+				for (var dmdX = 0; dmdX < DMDWidth; dmdX++)
+				{
+					// RGB to BGR
+					double hue, sat, lum;
+					ColorUtil.RgbToHsl(RawDMD[rawPixelIndex], RawDMD[rawPixelIndex + 1], RawDMD[rawPixelIndex + 2], out hue, out sat, out lum);
+					
+					wFrame[dmdY * DMDWidth + dmdX] = (byte)(lum * 15 * 1.5);
+
+					// Each pixel takes 4 bytes of data in memory, advance 2 pixels.
+					rawPixelIndex += 8;
+				}
+				// Jump to the next DMD line.
+				rawPixelIndex += LineJump * 2 + DMDWidth * 8;
+			}
+			
+			// Return the DMD bitmap we've created.
+			return wFrame;
 		}
 
 		// Check if the game is started and return its process handle.
