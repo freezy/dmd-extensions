@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Info;
 using LibUsbDotNet.Main;
@@ -13,7 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IFrameDestination, IGray4, IRawOutput
+	public class Pin2Dmd : BufferRenderer, IFrameDestination, IGray4, IRgb24, IRawOutput
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsRgb { get; } = true;
@@ -24,6 +26,7 @@ namespace LibDmd.Output.Pin2Dmd
 		private UsbDevice _pin2DmdDevice;
 		private readonly byte[] _frameBufferRgb24;
 		private readonly byte[] _frameBufferGray4;
+		private readonly byte[] _colorPalette;
 
 		private static Pin2Dmd _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -45,6 +48,17 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferGray4[1] = 0xC3;
 			_frameBufferGray4[2] = 0xE7;
 			_frameBufferGray4[3] = 0x00;
+
+			// color palette
+			size = 7 + 16 * 3;
+			_colorPalette = new byte[size];
+			_colorPalette[0] = 0x81;
+			_colorPalette[1] = 0xC3;
+			_colorPalette[2] = 0xE7;
+			_colorPalette[3] = 0xFF;
+			_colorPalette[4] = 0x04;
+			_colorPalette[5] = 0x00;
+			_colorPalette[6] = 0x01;
 		}
 
 		/// <summary>
@@ -148,6 +162,23 @@ namespace LibDmd.Output.Pin2Dmd
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				throw new Exception(UsbDevice.LastErrorString);
 			}
+		}
+
+		public void SetColor(Color color)
+		{
+			double hue, saturation, luminosity;
+			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
+			const int offset = 7;
+
+			for (var i = 0; i < 16; i++) {
+				var lum = i / 15;
+				byte r, g, b;
+				ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
+				_colorPalette[offset + (i * 3)] = r;
+				_colorPalette[offset + (i * 3) + 1] = g;
+				_colorPalette[offset + (i * 3) + 2] = b;
+			}
+			RenderRaw(_colorPalette);
 		}
 
 		public void Dispose()
