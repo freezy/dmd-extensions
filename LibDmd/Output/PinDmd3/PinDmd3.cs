@@ -32,6 +32,12 @@ namespace LibDmd.Output.PinDmd3
 		public string Firmware { get; private set; }
 
 		/// <summary>
+		/// Manually overriden port name. If set, don't loop through available
+		/// ports in order to find the device.
+		/// </summary>
+		public string Port { get; set; }
+
+		/// <summary>
 		/// Width in pixels of the display, 128 for PinDMD3
 		/// </summary>
 		public override sealed int Width { get; } = 128;
@@ -66,6 +72,20 @@ namespace LibDmd.Output.PinDmd3
 		}
 
 		/// <summary>
+		/// Returns the current instance of the PinDMD API.
+		/// </summary>
+		/// <param name="port">Don't loop through available ports but use this COM port name.</param>
+		/// <returns>New or current instance</returns>
+		public static PinDmd3 GetInstance(string port)
+		{
+			if (_instance == null) {
+				_instance = new PinDmd3 { Port = port };
+			} 
+			_instance.Init();
+			return _instance;
+		}
+
+		/// <summary>
 		/// Constructor, initializes the DMD.
 		/// </summary>
 		private PinDmd3()
@@ -85,32 +105,15 @@ namespace LibDmd.Output.PinDmd3
 
 		public void Init()
 		{
-			byte[] result;
-			var ports = SerialPort.GetPortNames();
-			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
-			foreach (var portName in ports) {
-				try {
-					Logger.Debug("Checking port {0} for PinDMDv3...", portName);
-					_serialPort = new SerialPort(portName, 921600, Parity.None, 8, StopBits.One);
-					_serialPort.Open();
-					_serialPort.Write(new byte[] {0x42, 0x42}, 0, 2);
-					System.Threading.Thread.Sleep(100); // duh...
+			if (Port != null) {
+				IsAvailable = Connect(Port, false);
 
-					result = new byte[100];
-					_serialPort.Read(result, 0, 100);
-					Firmware = UTF8.GetString(result.Skip(2).TakeWhile(b => b != 0x00).ToArray());
-					if (firmwareRegex.IsMatch(Firmware)) {
-						Logger.Info("Found PinDMDv3 device on {0}.", portName);
-						Logger.Debug("   Firmware:    {0}", Firmware);
-						Logger.Debug("   Resolution:  {0}x{1}", (int) result[0], (int) result[0]);
-						IsAvailable = true;
+			} else {
+				var ports = SerialPort.GetPortNames();
+				foreach (var portName in ports) {
+					IsAvailable = Connect(portName, true);
+					if (IsAvailable) {
 						break;
-					}
-
-				} catch (Exception e) {
-					Logger.Debug("Error: {0}", e.Message.Trim());
-					if (_serialPort != null && _serialPort.IsOpen) {
-						_serialPort.Close();
 					}
 				}
 			}
@@ -124,10 +127,46 @@ namespace LibDmd.Output.PinDmd3
 			_serialPort.Write(new byte[] { 0x43, 0x13, 0x55, 0xdb, 0x5c, 0x94, 0x4e, 0x0, 0x0, 0x43 }, 0, 10);
 			System.Threading.Thread.Sleep(100); // duuh...
 
-			result = new byte[20];
+			var result = new byte[20];
 			_serialPort.Read(result, 0, 20); // no idea what this is
 		}
-	
+
+		private bool Connect(string port, bool checkFirmware)
+		{
+			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
+			try {
+				Logger.Debug("Checking port {0} for PinDMDv3...", port);
+				_serialPort = new SerialPort(port, 921600, Parity.None, 8, StopBits.One);
+				_serialPort.Open();
+				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
+				System.Threading.Thread.Sleep(100); // duh...
+
+				var result = new byte[100];
+				_serialPort.Read(result, 0, 100);
+				Firmware = UTF8.GetString(result.Skip(2).TakeWhile(b => b != 0x00).ToArray());
+				if (checkFirmware) {
+					if (firmwareRegex.IsMatch(Firmware)) {
+						Logger.Info("Found PinDMDv3 device on {0}.", port);
+						Logger.Debug("   Firmware:    {0}", Firmware);
+						Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[0]);
+						return true;
+					}
+				} else {
+					Logger.Info("Trusting that PinDMDv3 sits on port {0}.", port);
+					Logger.Debug("   Firmware:    {0}", Firmware);
+					Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[0]);
+					return true;
+				}
+
+			} catch (Exception e) {
+				Logger.Debug("Error: {0}", e.Message.Trim());
+				if (_serialPort != null && _serialPort.IsOpen) {
+					_serialPort.Close();
+				}
+			}
+			return false;
+		}
+
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>

@@ -40,6 +40,9 @@ namespace Console.Common
 		[Option("flip-y", HelpText = "Flips the image vertically. Default: false.")]
 		public bool FlipVertically { get; set; } = false;
 
+		[Option('p', "port", HelpText = "Force COM port for PinDMDv3 devices. Example: \"COM3\".")]
+		public string Port { get; set; } = null;
+
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 

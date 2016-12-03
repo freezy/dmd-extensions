@@ -64,7 +64,7 @@ namespace Console.Common
 					break;
 
 				case PinDMDv3:
-					var pinDmd3 = PinDmd3.GetInstance();
+					var pinDmd3 = PinDmd3.GetInstance(options.Port);
 					if (pinDmd3.IsAvailable) {
 						renderers.Add(pinDmd3);
 						Logger.Info("Added PinDMDv3 renderer.");
@@ -112,7 +112,7 @@ namespace Console.Common
 			try {
 				var pinDmd1 = PinDmd1.GetInstance();
 				var pinDmd2 = PinDmd2.GetInstance();
-				var pinDmd3 = PinDmd3.GetInstance();
+				var pinDmd3 = PinDmd3.GetInstance(options.Port);
 				var pin2Dmd = Pin2Dmd.GetInstance();
 
 				if (pinDmd1.IsAvailable) {
