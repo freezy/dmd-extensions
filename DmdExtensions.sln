@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProPinballSlave", "ProPinba
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoopTest", "NoopTest\NoopTest.csproj", "{59EB8C3E-AE97-4ED2-A96F-0EC5895EAE1C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinMameDevice", "PinMameDevice\PinMameDevice.csproj", "{3E9138DA-A0A5-449E-BFD2-965E38B9182E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,18 @@ Global
 		{59EB8C3E-AE97-4ED2-A96F-0EC5895EAE1C}.Release|x64.Build.0 = Release|Any CPU
 		{59EB8C3E-AE97-4ED2-A96F-0EC5895EAE1C}.Release|x86.ActiveCfg = Release|Any CPU
 		{59EB8C3E-AE97-4ED2-A96F-0EC5895EAE1C}.Release|x86.Build.0 = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|x64.Build.0 = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Debug|x86.Build.0 = Debug|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|x64.ActiveCfg = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|x64.Build.0 = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|x86.ActiveCfg = Release|Any CPU
+		{3E9138DA-A0A5-449E-BFD2-965E38B9182E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
