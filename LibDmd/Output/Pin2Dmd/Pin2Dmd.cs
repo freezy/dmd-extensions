@@ -50,8 +50,7 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferGray4[3] = 0x00;
 
 			// color palette
-			size = 7 + 16 * 3;
-			_colorPalette = new byte[size];
+			_colorPalette = new byte[2052];
 			_colorPalette[0] = 0x81;
 			_colorPalette[1] = 0xC3;
 			_colorPalette[2] = 0xE7;
