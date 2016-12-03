@@ -171,7 +171,7 @@ namespace LibDmd.Output.Pin2Dmd
 			const int offset = 7;
 
 			for (var i = 0; i < 16; i++) {
-				var lum = i / 15;
+				var lum = (double)i / 15;
 				byte r, g, b;
 				ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
 				_colorPalette[offset + (i * 3)] = r;
