@@ -2,7 +2,6 @@
 <Weavers>
   <Costura>
     <Unmanaged32Assemblies>
-      pinDMD
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
       ProPinballBridge

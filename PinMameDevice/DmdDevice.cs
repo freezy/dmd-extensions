@@ -10,11 +10,14 @@ namespace PinMameDevice
 {
     internal static class DmdDevice
     {
+		static readonly DmdExt _dmdExt = new DmdExt();
+
 		// int Open()
 		[DllExport("Open", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static int Open()
 		{
 			Console.WriteLine("[vpm] Open()");
+			_dmdExt.Init();
 			return 1;
 		}
 
@@ -51,16 +54,9 @@ namespace PinMameDevice
 		[DllExport("Render_4_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_4_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
-
-			var dmd = new byte[width * height];
-			Marshal.Copy(currbuffer, dmd, 0, width * height);
-			Console.WriteLine("[vpm] Render_4_Shades()");
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x++) {
-					Console.Write(dmd[width * y + x].ToString("X1"));
-				}
-				Console.WriteLine();
-			}
+			var frame = new byte[width * height];
+			Marshal.Copy(currbuffer, frame, 0, width * height);
+			_dmdExt.RenderGray2(width, height, frame);
 		}
 
 		//  void Render_PM_Alphanumeric_Frame(layout_t layout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
