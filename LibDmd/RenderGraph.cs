@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
@@ -69,14 +70,10 @@ namespace LibDmd
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
 		/// <summary>
-		/// If true, send 4-byte grayscale image to renderers which support it.
+		/// How data is internally processed. Default is Bitmap, which passes bitmaps 
+		/// and allows processing, but is the slowest.
 		/// </summary>
-		public bool RenderAsGray4 { get; set; }		
-		
-		/// <summary>
-		/// If true, send 2-byte grayscale image to renderers which support it.
-		/// </summary>
-		public bool RenderAsGray2 { get; set; }
+		public RenderBitLength RenderAs { get; set; } = RenderBitLength.Bitmap;
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
@@ -90,18 +87,27 @@ namespace LibDmd
 		public void Render(BitmapSource bmp, Action onCompleted = null)
 		{
 			foreach (var dest in Destinations) {
-				var destGray2 = dest as IGray2;
-				var destGray4 = dest as IGray4;
-				if (RenderAsGray2 && destGray2 != null) {
-					Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
-					destGray2.RenderGray2(bmp);
+				switch (RenderAs) 
+				{
+					case RenderBitLength.Gray2:
+						var destGray2 = dest as IGray2;
+						AssertCompatibility(dest, destGray2, "2-bit");
+						Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
+						destGray2.RenderGray2(bmp);
+						break;
 
-				} else if (RenderAsGray4 && destGray4 != null) {
-					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
-					destGray4.RenderGray4(bmp);
+					case RenderBitLength.Gray4:
+						var destGray4 = dest as IGray4;
+						AssertCompatibility(dest, destGray4, "4-bit");
+						destGray4.RenderGray4(bmp);
+						break;
 
-				} else {
-					dest.Render(bmp);
+					case RenderBitLength.Rgb24:
+					case RenderBitLength.Bitmap:
+						dest.Render(bmp);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
 				}
 				onCompleted?.Invoke();
 			}
@@ -139,91 +145,80 @@ namespace LibDmd
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
 			}
 			IsRendering = true;
-			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
 
-			foreach (var dest in Destinations) {
-				var canRenderGray2 = false;
-				var canRenderGray4 = false;
-				var destGray2 = dest as IGray2;
-				var destGray4 = dest as IGray4;
-				if (destGray2 != null) {
-					canRenderGray2 = true;
-					if (RenderAsGray2) {
-						Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
-					}
-				} else if (destGray4 != null) {
-					canRenderGray4 = true;
-					if (RenderAsGray4) {
-						Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
-					}
-				}
-				// now subscribe
-				Source.OnResume.Subscribe(x => {
-					Logger.Info("Frames coming in from {0}.", Source.Name);
-				});
-				Source.OnPause.Subscribe(x => {
-					Logger.Info("Frames stopped from {0}.", Source.Name);
-					onCompleted?.Invoke();
-				});
-				try {
+			try {
 
-					if (Destinations.Count == 1 && canRenderGray2 && RenderAsGray2 && Source is IFrameSourceGray2) {
-						Logger.Info("Sending unprocessed 2-bit data from {0} to {1}", Source.Name, dest.Name);
-						var disposable = ((IFrameSourceGray2)Source).GetGray2Frames().Subscribe(frame => {
-							destGray2.RenderGray2(frame);
-						}, ex => {
-							throw ex;
-						});
-						_activeSources.Add(disposable);
-
-					} else if (Destinations.Count == 1 && canRenderGray4 && RenderAsGray4 && Source is IFrameSourceGray4) {
-						Logger.Info("Sending unprocessed 4-bit data from {0} to {1}", Source.Name, dest.Name);
-						var disposable = ((IFrameSourceGray4)Source).GetGray4Frames().Subscribe(frame => {
-							destGray4.RenderGray4(frame);
-						}, ex => {
-							throw ex;
-						});
-						_activeSources.Add(disposable);
-
-					} else {
-						var disposable = Source.GetFrames().Subscribe(bmp => {
-
-							_beforeProcessed.OnNext(bmp);
-							if (Processors != null) {
-								// TODO don't process non-greyscale compatible processors when gray4 is enabled
-								bmp = enabledProcessors
-									.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-									.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
-							}
-							if (RenderAsGray2 && canRenderGray2) {
-								destGray2?.RenderGray2(bmp);
-
-							} else if (RenderAsGray4 && canRenderGray4) {
-								destGray4?.RenderGray4(bmp);
-
-							} else {
+				foreach (var dest in Destinations) {
+					switch (RenderAs)
+					{
+						case RenderBitLength.Gray2: {
+							var sourceGray2 = Source as IFrameSourceGray2;
+							var destGray2 = dest as IGray2;
+							AssertCompatibility(Source, sourceGray2, dest, destGray2, "2-bit");
+							Logger.Info("Sending unprocessed 2-bit data from {0} to {1}", Source.Name, dest.Name);
+							var disposable = sourceGray2.GetGray2Frames()
+								.Subscribe(frame => { destGray2.RenderGray2(frame); }, ex => { throw ex; });
+							_activeSources.Add(disposable);
+							break;
+						}
+						case RenderBitLength.Gray4: {
+							var sourceGray4 = Source as IFrameSourceGray4;
+							var destGray4 = dest as IGray4;
+							AssertCompatibility(Source, sourceGray4, dest, destGray4, "4-bit");
+							Logger.Info("Sending unprocessed 4-bit data from {0} to {1}", Source.Name, dest.Name);
+							var disposable = sourceGray4.GetGray4Frames()
+								.Subscribe(frame => { destGray4.RenderGray4(frame); }, ex => { throw ex; });
+							_activeSources.Add(disposable);
+							break;
+						}
+						case RenderBitLength.Rgb24: {
+							var sourceRgb24 = Source as IFrameSourceRgb24;
+							var destRgb24 = dest as IRgb24;
+							AssertCompatibility(Source, sourceRgb24, dest, destRgb24, "24-bit");
+							Logger.Info("Sending unprocessed 24-bit RGB data from {0} to {1}", Source.Name, dest.Name);
+							var disposable = sourceRgb24.GetRgb24Frames()
+								.Subscribe(frame => { destRgb24.RenderRgb24(frame); }, ex => { throw ex; });
+							_activeSources.Add(disposable);
+							break;
+						}
+						case RenderBitLength.Bitmap: {
+							Logger.Info("Sending bitmap data from {0} to {1}", Source.Name, dest.Name);
+							var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
+							var disposable = Source.GetFrames().Subscribe(bmp => {
+								_beforeProcessed.OnNext(bmp);
+								if (Processors != null) {
+									bmp = enabledProcessors.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
+										.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
+								}
 								dest.Render(bmp);
-							}
-
-						}, ex => {
-							if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
-								onError.Invoke(ex);
-
-							} else {
-								throw ex;
-							}
-						});
-						_activeSources.Add(disposable);
+							}, ex => {
+								if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
+									onError.Invoke(ex);
+								} else {
+									throw ex;
+								}
+							});
+							_activeSources.Add(disposable);
+							break;
+						}
+						default:
+							throw new ArgumentOutOfRangeException();
 					}
 
-				} catch (AdminRightsRequiredException ex) {
-					IsRendering = false;
-					if (onError != null) {
-						onError.Invoke(ex);
+					// now subscribe
+					Source.OnResume.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });
+					Source.OnPause.Subscribe(x => {
+						Logger.Info("Frames stopped from {0}.", Source.Name);
+						onCompleted?.Invoke();
+					});
+				}
 
-					} else {
-						throw ex;
-					}
+			} catch (AdminRightsRequiredException ex) {
+				IsRendering = false;
+				if (onError != null) {
+					onError.Invoke(ex);
+				} else {
+					throw ex;
 				}
 			}
 			return new RenderDisposable(this, _activeSources);
@@ -245,6 +240,46 @@ namespace LibDmd
 				dest.Dispose();
 			}
 		}
+
+		/// <summary>
+		/// Makes sure that a given source is compatible with a given destination or throws an exception.
+		/// </summary>
+		/// <param name="src">Original source</param>
+		/// <param name="castedSource">Casted source, will be checked against null</param>
+		/// <param name="dest">Original destination</param>
+		/// <param name="castedDest">Casted source, will be checked against null</param>
+		/// <param name="what">Message</param>
+		private static void AssertCompatibility(IFrameSource src, object castedSource, IFrameDestination dest, object castedDest, string what)
+		{
+			if (castedSource == null && castedDest == null) {
+				throw new IncompatibleRenderer("Neither source \"" + src.Name + "\" nor destination \"" + dest.Name + "\" are " + what + " compatible.");
+			}
+			if (castedSource == null) {
+				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + what + " compatible.");
+			}
+			AssertCompatibility(dest, castedDest, what);
+		}
+		
+		/// <summary>
+		/// Makes sure that a given source is compatible with a given destination or throws an exception.
+		/// </summary>
+		/// <param name="dest">Original destination</param>
+		/// <param name="castedDest">Casted source, will be checked against null</param>
+		/// <param name="what">Message</param>
+		private static void AssertCompatibility(IFrameDestination dest, object castedDest, string what)
+		{
+			if (castedDest == null) {
+				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + what + " compatible.");
+			}
+		}
+	}
+
+	public enum RenderBitLength
+	{
+		Gray2,
+		Gray4,
+		Rgb24,
+		Bitmap
 	}
 
 	/// <summary>
@@ -255,7 +290,7 @@ namespace LibDmd
 	/// Note that destinations are still active, i.e. not yet disposed and can
 	/// be re-subscribed if necssary.
 	/// </remarks>
-	class RenderDisposable : IDisposable
+	internal class RenderDisposable : IDisposable
 	{
 		private readonly RenderGraph _graph;
 		private readonly List<IDisposable> _activeSources;
@@ -284,6 +319,16 @@ namespace LibDmd
 	public class RendersAlreadyActiveException : Exception
 	{
 		public RendersAlreadyActiveException(string message) : base(message)
+		{
+		}
+	}
+
+	/// <summary>
+	/// Thrown when trying to force a bitlength and either source or destination isn't compatible.
+	/// </summary>
+	public class IncompatibleRenderer : Exception
+	{
+		public IncompatibleRenderer(string message) : base(message)
 		{
 		}
 	}

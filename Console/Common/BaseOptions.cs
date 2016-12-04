@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using LibDmd;
 using LibDmd.Processor;
 
 namespace DmdExt.Common
@@ -28,8 +29,8 @@ namespace DmdExt.Common
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Three values: <Left> <Top> <Width>. Default: \"0 0 1024\".")]
 		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
-		[Option("use-gray4", HelpText = "Sends frames in 4-bit grayscale to the display if supported. Default: false")]
-		public bool RenderAsGray4 { get; set; } = false;
+		[Option("render-as", HelpText = "Internally process at a given bit length. One of: [ gray2, gray4, rgb24, bitmap ]. Default: \"bitmap\"")]
+		public RenderBitLength RenderAs { get; set; } = RenderBitLength.Bitmap;
 
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";

@@ -80,8 +80,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
+    <Compile Include="Common\ImageUtils.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IFrameSourceGray2.cs" />
+    <Compile Include="Input\IFrameSourceRgb24.cs" />
     <Compile Include="Input\IFrameSourceGray4.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\IGray2.cs" />

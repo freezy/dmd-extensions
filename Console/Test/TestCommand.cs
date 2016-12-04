@@ -31,7 +31,7 @@ namespace DmdExt.Test
 			_graph = new RenderGraph {
 				Source = new ImageSource(bmp),
 				Destinations = renderers,
-				RenderAsGray4 = _options.RenderAsGray4
+				RenderAs = _options.RenderAs
 			};
 
 			return _graph;

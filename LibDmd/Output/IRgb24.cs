@@ -14,6 +14,13 @@ namespace LibDmd.Output
 	/// </summary>
 	public interface IRgb24
 	{
+
+		/// <summary>
+		/// Renders a frame in 24 bit RGB.
+		/// </summary>
+		/// <param name="frame">Array containing Width * Height * 3 bytes, with RGB values between 0 and 255 for every pixel.</param>
+		void RenderRgb24(byte[] frame);
+
 		/// <summary>
 		/// Sets the color with which a grayscale source is rendered on the RGB display.
 		/// </summary>

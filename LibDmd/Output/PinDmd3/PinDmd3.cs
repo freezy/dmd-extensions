@@ -176,20 +176,8 @@ namespace LibDmd.Output.PinDmd3
 			// make sure we can render
 			AssertRenderReady(bmp);
 
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			for (var y = 0; y < Height; y++) {
-				for (var x = 0; x < Width; x++) {
-					rect.X = x;
-					rect.Y = y;
-					var pos = (y * Width * 3) + (x * 3) + 1;
-					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-					_frameBufferRgb24[pos] = bytes[2];      // r
-					_frameBufferRgb24[pos + 1] = bytes[1];  // g
-					_frameBufferRgb24[pos + 2] = bytes[0];  // b
-				}
-			}
+			// copy bmp to rgb24 buffer
+			ImageUtils.ConvertToRgb24(bmp, _frameBufferRgb24);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferRgb24);
@@ -224,6 +212,11 @@ namespace LibDmd.Output.PinDmd3
 				_frameBufferRgb24[i] = 0;
 			}
 			_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
+		}
+
+		public void RenderRgb24(byte[] bmp)
+		{
+			throw new NotImplementedException();
 		}
 
 		public void SetColor(Color color)

@@ -152,6 +152,12 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderRaw(_frameBufferGray4);
 		}
 
+		public void RenderRgb24(byte[] frame)
+		{
+			// TODO don't convert to bitmap but update buffer renderer to deal with rgb24 directly
+			Render(ImageUtils.ConvertFromRgb24(Width, Height, frame));
+		}
+
 		public void RenderRaw(byte[] frame)
 		{
 			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);

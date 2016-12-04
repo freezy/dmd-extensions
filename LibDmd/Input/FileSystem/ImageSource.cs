@@ -8,7 +8,7 @@ using LibDmd.Common;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : IFrameSource, IFrameSourceGray4
+	public class ImageSource : IFrameSource, IFrameSourceGray4, IFrameSourceGray2, IFrameSourceRgb24
 	{
 		public string Name { get; } = "Image Source";
 
@@ -19,12 +19,16 @@ namespace LibDmd.Input.FileSystem
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly BehaviorSubject<BitmapSource> _frames;
+		private readonly BehaviorSubject<byte[]> _framesGray2;
 		private readonly BehaviorSubject<byte[]> _framesGray4;
+		private readonly BehaviorSubject<byte[]> _framesRgb24;
 
 		public ImageSource(BitmapSource bmp)
 		{
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
-			_framesGray4 =  new BehaviorSubject<byte[]>(ConvertToGray4(bmp));
+			_framesGray2 = new BehaviorSubject<byte[]>(ImageUtils.ConvertToGray2(bmp));
+			_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtils.ConvertToGray4(bmp));
+			_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtils.ConvertToRgb24(bmp));
 		}
 
 		public ImageSource(string fileName)
@@ -63,31 +67,14 @@ namespace LibDmd.Input.FileSystem
 			return _framesGray4;
 		}
 
-		private static byte[] ConvertToGray4(BitmapSource bmp)
+		public IObservable<byte[]> GetGray2Frames()
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
+			return _framesGray2;
+		}
 
-			for (var y = 0; y < bmp.PixelHeight; y++) {
-				rect.Y = y;
-				for (var x = 0; x < bmp.PixelWidth; x++) {
-
-					rect.X = x;
-					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-
-					// convert to HSL
-					double hue;
-					double saturation;
-					double luminosity;
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
-
-					frame[y * bmp.PixelWidth + x] = (byte)(luminosity * 15d);
-				}
-			}
-
-			return frame;
+		public IObservable<byte[]> GetRgb24Frames()
+		{
+			return _framesRgb24;
 		}
 	}
 

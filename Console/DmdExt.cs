@@ -136,6 +136,9 @@ namespace DmdExt
 			} catch (ProPinballSlaveException e) {
 				Logger.Error(e.Message);
 
+			} catch (IncompatibleRenderer e) {
+				Logger.Error(e.Message);
+
 			} finally {
 				Process.GetCurrentProcess().Kill();
 			}

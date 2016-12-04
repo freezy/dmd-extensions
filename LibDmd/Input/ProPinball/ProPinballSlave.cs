@@ -71,31 +71,7 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var bmp = new WriteableBitmap(Width, Height, 96, 96, PixelFormats.Bgr32, null);
-							var bufferSize = (Math.Abs(bmp.BackBufferStride) * Height + 2);
-							var frameBuffer = new byte[bufferSize];
-
-							var index = 0;
-							bmp.Lock();
-							for (var y = 0; y < Height; y++) {
-								for (var x = 0; x < Width; x++) {
-
-									var pixelLum = frame[y * Width + x];
-									var lum = (double)pixelLum / 15 * luminosity;
-									byte red, green, blue;
-									ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
-
-									frameBuffer[index] = blue;
-									frameBuffer[index + 1] = green;
-									frameBuffer[index + 2] = red;
-
-									index += 4;
-								}
-							}
-							bmp.WritePixels(new Int32Rect(0, 0, Width, Height), frameBuffer, bmp.BackBufferStride, 0);
-							bmp.Unlock();
-							bmp.Freeze();
-							o.OnNext(bmp);
+							o.OnNext(ImageUtils.ConvertFromGray4(Width, Height, frame, hue, saturation, luminosity));
 
 						}, err => {
 							throw new ProPinballSlaveException(new string(err));

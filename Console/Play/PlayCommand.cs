@@ -57,7 +57,7 @@ namespace DmdExt.Play
 					Source = frameSource,
 					Processors = new List<AbstractProcessor> { transformationProcessor },
 					Destinations = renderers,
-					RenderAsGray4 = _options.RenderAsGray4,
+					RenderAs = _options.RenderAs,
 				};
 			}
 

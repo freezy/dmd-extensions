@@ -17,7 +17,7 @@ namespace PinMameDevice
 		[DllExport("Open", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static int Open()
 		{
-			_dmdExt.Init();
+			_dmdExt.Open();
 			return 1;
 		}
 
@@ -40,14 +40,20 @@ namespace PinMameDevice
 		[DllExport("Render_RGB24", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_RGB24(ushort width, ushort height, IntPtr currbuffer)
 		{
-			Console.WriteLine("[vpm] Render_RGB24()");
+			var frameSize = width * height * 3;
+			var frame = new byte[frameSize];
+			Marshal.Copy(currbuffer, frame, 0, frameSize);
+			_dmdExt.RenderRgb24(width, height, frame);
 		}
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
 		[DllExport("Render_16_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_16_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
-			Console.WriteLine("[vpm] Render_16_Shades()");
+			var frameSize = width * height;
+			var frame = new byte[frameSize];
+			Marshal.Copy(currbuffer, frame, 0, frameSize);
+			_dmdExt.RenderGray4(width, height, frame);
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
@@ -55,8 +61,9 @@ namespace PinMameDevice
 		[DllExport("Render_4_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_4_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
-			var frame = new byte[width * height];
-			Marshal.Copy(currbuffer, frame, 0, width * height);
+			var frameSize = width * height;
+			var frame = new byte[frameSize];
+			Marshal.Copy(currbuffer, frame, 0, frameSize);
 			_dmdExt.RenderGray2(width, height, frame);
 		}
 

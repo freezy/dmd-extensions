@@ -31,7 +31,7 @@ namespace DmdExt.Mirror
 			// create graph with renderers
 			_graph = new RenderGraph {
 				Destinations = GetRenderers(_options),
-				RenderAsGray4 = _options.RenderAsGray4
+				RenderAs = _options.RenderAs
 			};
 
 			// instantiate transformation processor
