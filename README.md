@@ -74,10 +74,10 @@ must be running the tool as administrator.
 1. Open an administrator command prompt ([Windows], type `cmd`, right-click on `cmd.exe`, click on "Run as administrator")
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
 3. Start the DX11 version of The Pinball Arcade.
+4. Select and **start** a game (*only then* it starts mirroring, during attract mode it doesn't, even though TPA does display the DMD).
 
-Currently TPA's shades are re-mapped to custom values in order to achieve 
-better contrast. If you think the shades come out wrong, feel free to open an
-issue with comments.
+Currently re-running `dmdext` while TPA is running doesn't work and will be 
+addressed soon.
 
 Also note that currently only 128x32 DMD games are supported, that means no
 EM games neither Frankenstein which has a different resolution.
