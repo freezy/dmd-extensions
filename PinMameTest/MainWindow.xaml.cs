@@ -7,6 +7,9 @@ namespace PinMameTest
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
+	/// 
+	///            !!! DisconnectedContext can be ignored (don't break) !!!
+	/// 
 	/// </summary>
 	public partial class MainWindow : Window
 	{

@@ -17,7 +17,6 @@ namespace PinMameDevice
 		[DllExport("Open", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static int Open()
 		{
-			Console.WriteLine("[vpm] Open()");
 			_dmdExt.Init();
 			return 1;
 		}

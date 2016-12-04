@@ -204,6 +204,7 @@ namespace LibDmd
 							} else {
 								dest.Render(bmp);
 							}
+
 						}, ex => {
 							if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
 								onError.Invoke(ex);
@@ -214,9 +215,9 @@ namespace LibDmd
 						});
 						_activeSources.Add(disposable);
 					}
-					
 
 				} catch (AdminRightsRequiredException ex) {
+					IsRendering = false;
 					if (onError != null) {
 						onError.Invoke(ex);
 

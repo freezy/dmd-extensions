@@ -64,7 +64,7 @@ namespace LibDmd.Input.TPAGrabber
         private static IntPtr _codeCave = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
 
-		private bool _lastGray4Poll;
+		private bool _gray;
 
         /// <summary>
         /// Waits for the Pinball Arcade DX11 process.
@@ -73,7 +73,7 @@ namespace LibDmd.Input.TPAGrabber
 
         private void StartPolling(bool gray4)
 		{
-			_lastGray4Poll = gray4;
+			_gray = gray4;
 			var curIdentity = WindowsIdentity.GetCurrent();
 			var myPrincipal = new WindowsPrincipal(curIdentity);
 			if (!myPrincipal.IsInRole(WindowsBuiltInRole.Administrator)) {
@@ -112,7 +112,7 @@ namespace LibDmd.Input.TPAGrabber
 			// TODO send blank frame
 			_capturer.Dispose();
 			_onPause.OnNext(Unit.Default);
-			StartPolling(_lastGray4Poll);
+			StartPolling(_gray);
 		}
 
 		public IObservable<BitmapSource> GetFrames()
@@ -153,7 +153,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				wBmp.Freeze();
-				Console.WriteLine("Sent blank.");
+				//Console.WriteLine("Sent blank.");
 				return wBmp;
 			}
 
@@ -169,7 +169,7 @@ namespace LibDmd.Input.TPAGrabber
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
 			if (RawDMD[0] != 0x02) {
-				Console.WriteLine("CRC failed");
+				//Console.WriteLine("CRC failed");
 				return null;
 			}
 
@@ -209,7 +209,7 @@ namespace LibDmd.Input.TPAGrabber
 			// Freeze the DMD bitmap and make it readable to any thread.
 			wBmp.Freeze();
 
-			Console.WriteLine("Sent frame.");
+			//Console.WriteLine("Sent frame.");
 
 			// Return the DMD bitmap we've created.
 			return wBmp;

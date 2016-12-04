@@ -20,7 +20,6 @@ namespace DmdExt.Mirror
 	{
 		private readonly MirrorOptions _options;
 		private RenderGraph _graph;
-		private IDisposable _renderer;
 
 		public MirrorCommand(MirrorOptions options)
 		{
