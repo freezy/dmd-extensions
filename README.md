@@ -102,7 +102,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.2.4
+DMD Extensions v1.3.0-beta2
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -118,7 +118,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.2.4
+DMD Extensions v1.3.0-beta2
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -158,6 +158,10 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            the DMD window. Four values: <Left> <Top> <Right>
                            <Bottom>. Default: "12 8 8 12".
 
+  --propinball-args        [propinball] Arguments send from the Pro Pinball
+                           master process. Usually something like: "ndmd
+                           w0_0_0_0_w m392".
+
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
                            virtual ]. Default: "auto", which outputs to all
@@ -181,9 +185,15 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
   --use-gray4              Sends frames in 4-bit grayscale to the display if
                            supported. Default: false
 
+  -c, --color              Sets the color of a grayscale source that is
+                           rendered on an RGB destination. Default: ff3000
+
   --flip-x                 Flips the image horizontally. Default: false.
 
   --flip-y                 Flips the image vertically. Default: false.
+
+  -p, --port               Force COM port for PinDMDv3 devices. Example:
+                           "COM3".
 
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
@@ -198,11 +208,11 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.2.4
+DMD Extensions v1.3.0-beta2
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
-                           supported file types: PNG, JPG.
+                           supported file types: PNG, JPG, BIN (raw).
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
@@ -227,9 +237,15 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
   --use-gray4              Sends frames in 4-bit grayscale to the display if
                            supported. Default: false
 
+  -c, --color              Sets the color of a grayscale source that is
+                           rendered on an RGB destination. Default: ff3000
+
   --flip-x                 Flips the image horizontally. Default: false.
 
   --flip-y                 Flips the image vertically. Default: false.
+
+  -p, --port               Force COM port for PinDMDv3 devices. Example:
+                           "COM3".
 
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
@@ -243,8 +259,11 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.2.4
+DMD Extensions v1.3.0-beta2
 USAGE: dmdext test [--destination=<destination>]
+
+ -f, --file               Required. Path to the file to play. Currently
+                           supported file types: PNG, JPG, BIN (raw).
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
@@ -269,9 +288,15 @@ USAGE: dmdext test [--destination=<destination>]
   --use-gray4              Sends frames in 4-bit grayscale to the display if
                            supported. Default: false
 
+  -c, --color              Sets the color of a grayscale source that is
+                           rendered on an RGB destination. Default: ff3000
+
   --flip-x                 Flips the image horizontally. Default: false.
 
   --flip-y                 Flips the image vertically. Default: false.
+
+  -p, --port               Force COM port for PinDMDv3 devices. Example:
+                           "COM3".
 
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
