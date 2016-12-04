@@ -16,22 +16,21 @@ namespace PinMameDevice
 	public class DmdExt
 	{
 		private readonly PinMameSource _source = new PinMameSource();
+		private RenderGraph _graph;
+
 		public void Init()
 		{
 			ShowVirtualDmd();
 		}
 
+		public void Close()
+		{
+			_graph?.Dispose();
+		}
+
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
-			Console.WriteLine("[dmdext] Render_4_Shades()");
 			_source.FramesGray2.OnNext(frame);
-
-			/*for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x++) {
-					Console.Write(frame[width * y + x].ToString("X1"));
-				}
-				Console.WriteLine();
-			}*/
 		}
 
 
@@ -41,13 +40,13 @@ namespace PinMameDevice
 			var thread = new Thread(() => {
 
 				var dmd = new VirtualDmd();
-				var graph = new RenderGraph {
+				_graph = new RenderGraph {
 					Source = _source,
 					Destinations = new List<IFrameDestination> { dmd.Dmd },
 					RenderAsGray4 = false,
 					RenderAsGray2 = true,
 				};
-				graph.StartRendering();
+				_graph.StartRendering();
 
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));

@@ -26,18 +26,18 @@ namespace PinMameDevice
 		[DllExport("Close", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static bool Close()
 		{
-			Console.WriteLine("[vpm] Close()");
+			_dmdExt.Close();
 			return true;
 		}
 
-		// void PM_GameSettings(const char* GameName, UINT64 HardwareGeneration, const tPMoptions &Options)
+		// void PM_GameSettings(const char* GameName, UINT64 HardwareGeneration, const PMoptions &Options)
 		[DllExport("PM_GameSettings", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-		static void PM_GameSettings(string gameName, ulong hardwareGeneration, tPMoptions options)
+		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
 		{
 			Console.WriteLine("[vpm] PM_GameSettings()");
 		}
 
-		// void Render_RGB24(UINT16 width, UINT16 height, rgb24 *currbuffer)
+		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
 		[DllExport("Render_RGB24", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_RGB24(ushort width, ushort height, IntPtr currbuffer)
 		{
@@ -61,28 +61,28 @@ namespace PinMameDevice
 			_dmdExt.RenderGray2(width, height, frame);
 		}
 
-		//  void Render_PM_Alphanumeric_Frame(layout_t layout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
+		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
 		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-		static void Render_PM_Alphanumeric_Frame(layout_t layout, IntPtr seg_data, IntPtr seg_data2)
+		static void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
 		{
 			Console.WriteLine("[vpm] Render_PM_Alphanumeric_Frame()");
 		}
 
-		// void Set_4_Colors_Palette(rgb24 color0, rgb24 color33, rgb24 color66, rgb24 color100) 
+		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
 		[DllExport("Set_4_Colors_Palette", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-		static void Set_4_Colors_Palette(rgb24 color0, rgb24 color33, rgb24 color66, rgb24 color100)
+		static void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
 			Console.WriteLine("[vpm] Set_4_Colors_Palette()");
 		}
 
-		// void Set_16_Colors_Palette(rgb24 *color)
+		// void Set_16_Colors_Palette(Rgb24 *color)
 		[DllExport("Set_16_Colors_Palette", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Set_16_Colors_Palette(IntPtr color)
 		{
 			Console.WriteLine("[vpm] Set_16_Colors_Palette()");
 		}
 
-		struct tPMoptions
+		struct PMoptions
 		{
 			int dmd_red, dmd_green, dmd_blue;
 			int dmd_perc66, dmd_perc33, dmd_perc0;
@@ -93,14 +93,14 @@ namespace PinMameDevice
 			int dmd_red0, dmd_green0, dmd_blue0;
 		}
 
-		struct rgb24
+		struct Rgb24
 		{
 			char red;
 			char green;
 			char blue;
 		}
 
-		public enum layout_t
+		public enum NumericalLayout
 		{
 			None,
 			__2x16Alpha,
