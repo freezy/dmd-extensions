@@ -13,6 +13,7 @@ namespace PinMameDevice
 		static readonly DmdExt _dmdExt = new DmdExt();
 
 		// int Open()
+		[STAThread]
 		[DllExport("Open", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static int Open()
 		{
@@ -51,6 +52,7 @@ namespace PinMameDevice
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
+		[STAThread]
 		[DllExport("Render_4_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 		static void Render_4_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{

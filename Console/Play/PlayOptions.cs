@@ -1,7 +1,7 @@
 ﻿using CommandLine;
-using Console.Common;
+using DmdExt.Common;
 
-namespace Console.Play
+namespace DmdExt.Play
 {
 	class PlayOptions : BaseOptions
 	{

@@ -9,10 +9,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using Console.Common;
-using Console.Mirror;
-using Console.Play;
-using Console.Test;
+using DmdExt.Common;
+using DmdExt.Mirror;
+using DmdExt.Play;
+using DmdExt.Test;
 using LibDmd;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.ProPinball;
@@ -22,7 +22,7 @@ using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
 
-namespace Console
+namespace DmdExt
 {
 	class DmdExt
 	{

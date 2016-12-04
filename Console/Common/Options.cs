@@ -3,11 +3,11 @@ using System.Linq;
 using System.Reflection;
 using CommandLine;
 using CommandLine.Text;
-using Console.Mirror;
-using Console.Play;
-using Console.Test;
+using DmdExt.Mirror;
+using DmdExt.Play;
+using DmdExt.Test;
 
-namespace Console.Common
+namespace DmdExt.Common
 {
 	class Options
 	{

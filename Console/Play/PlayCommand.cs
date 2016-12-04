@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Console.Common;
+using DmdExt.Common;
 using LibDmd;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
 using LibDmd.Processor;
 
-namespace Console.Play
+namespace DmdExt.Play
 {
 	class PlayCommand : BaseCommand
 	{

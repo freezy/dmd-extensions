@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
-using Console.Common;
+using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
 using LibDmd.Input;
@@ -14,7 +14,7 @@ using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Processor;
 
-namespace Console.Mirror
+namespace DmdExt.Mirror
 {
 	class MirrorCommand : BaseCommand
 	{

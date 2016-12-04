@@ -6,8 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
-using App;
-using Console.Play;
+using DmdExt.Play;
 using LibDmd;
 using LibDmd.Common;
 using LibDmd.Output;
@@ -17,9 +16,9 @@ using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
-using static Console.Common.BaseOptions.DestinationType;
+using static DmdExt.Common.BaseOptions.DestinationType;
 
-namespace Console.Common
+namespace DmdExt.Common
 {
 	abstract class BaseCommand : IDisposable
 	{

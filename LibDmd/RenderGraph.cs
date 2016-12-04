@@ -68,11 +68,15 @@ namespace LibDmd
 		/// </summary>
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
-
 		/// <summary>
 		/// If true, send 4-byte grayscale image to renderers which support it.
 		/// </summary>
-		public bool RenderAsGray4 { get; set; }
+		public bool RenderAsGray4 { get; set; }		
+		
+		/// <summary>
+		/// If true, send 2-byte grayscale image to renderers which support it.
+		/// </summary>
+		public bool RenderAsGray2 { get; set; }
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
@@ -86,10 +90,16 @@ namespace LibDmd
 		public void Render(BitmapSource bmp, Action onCompleted = null)
 		{
 			foreach (var dest in Destinations) {
+				var destGray2 = dest as IGray2;
 				var destGray4 = dest as IGray4;
-				if (RenderAsGray4 && destGray4 != null) {
+				if (RenderAsGray2 && destGray2 != null) {
+					Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
+					destGray2.RenderGray2(bmp);
+
+				} else if (RenderAsGray4 && destGray4 != null) {
 					Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
 					destGray4.RenderGray4(bmp);
+
 				} else {
 					dest.Render(bmp);
 				}
@@ -132,9 +142,16 @@ namespace LibDmd
 			var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
 
 			foreach (var dest in Destinations) {
+				var canRenderGray2 = false;
 				var canRenderGray4 = false;
+				var destGray2 = dest as IGray2;
 				var destGray4 = dest as IGray4;
-				if (destGray4 != null) {
+				if (destGray2 != null) {
+					canRenderGray2 = true;
+					if (RenderAsGray2) {
+						Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
+					}
+				} else if (destGray4 != null) {
 					canRenderGray4 = true;
 					if (RenderAsGray4) {
 						Logger.Info("Enabling 4-bit grayscale rendering for {0}", dest.Name);
@@ -150,7 +167,16 @@ namespace LibDmd
 				});
 				try {
 
-					if (Destinations.Count == 1 && canRenderGray4 && RenderAsGray4 && Source is IFrameSourceGray4) {
+					if (Destinations.Count == 1 && canRenderGray2 && RenderAsGray2 && Source is IFrameSourceGray2) {
+						Logger.Info("Sending unprocessed 2-bit data from {0} to {1}", Source.Name, dest.Name);
+						var disposable = ((IFrameSourceGray2)Source).GetGray2Frames().Subscribe(frame => {
+							destGray2.RenderGray2(frame);
+						}, ex => {
+							throw ex;
+						});
+						_activeSources.Add(disposable);
+
+					} else if (Destinations.Count == 1 && canRenderGray4 && RenderAsGray4 && Source is IFrameSourceGray4) {
 						Logger.Info("Sending unprocessed 4-bit data from {0} to {1}", Source.Name, dest.Name);
 						var disposable = ((IFrameSourceGray4)Source).GetGray4Frames().Subscribe(frame => {
 							destGray4.RenderGray4(frame);
@@ -169,8 +195,12 @@ namespace LibDmd
 									.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
 									.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
 							}
-							if (RenderAsGray4 && canRenderGray4) {
+							if (RenderAsGray2 && canRenderGray2) {
+								destGray2?.RenderGray2(bmp);
+
+							} else if (RenderAsGray4 && canRenderGray4) {
 								destGray4?.RenderGray4(bmp);
+
 							} else {
 								dest.Render(bmp);
 							}

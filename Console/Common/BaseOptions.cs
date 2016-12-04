@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using LibDmd.Processor;
 
-namespace Console.Common
+namespace DmdExt.Common
 {
 	abstract class BaseOptions
 	{

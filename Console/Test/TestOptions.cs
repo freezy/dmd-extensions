@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
-using Console.Common;
+using DmdExt.Common;
 
-namespace Console.Test
+namespace DmdExt.Test
 {
 	class TestOptions : BaseOptions
 	{

@@ -108,6 +108,11 @@ namespace LibDmd.Output.VirtualDmd
 			bmp.Freeze();
 			Render(bmp);
 		}
+		
+		public void RenderGray2(BitmapSource bmp)
+		{
+			throw new NotImplementedException();
+		}
 
 		public void SetColor(Color color)
 		{

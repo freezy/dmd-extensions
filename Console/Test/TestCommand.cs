@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows.Media.Imaging;
-using Console.Common;
+using DmdExt.Common;
 using LibDmd;
 using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 
-namespace Console.Test
+namespace DmdExt.Test
 {
 	class TestCommand : BaseCommand
 	{

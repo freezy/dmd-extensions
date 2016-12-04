@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
-using Console.Common;
+using DmdExt.Common;
 using LibDmd.Input.ProPinball;
 
-namespace Console.Mirror
+namespace DmdExt.Mirror
 {
 	class MirrorOptions : BaseOptions
 	{
