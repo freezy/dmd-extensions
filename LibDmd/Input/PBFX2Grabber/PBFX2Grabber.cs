@@ -10,8 +10,10 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using NLog;
 using LibDmd.Input.ScreenGrabber;
+using LibDmd.Processor;
 
 namespace LibDmd.Input.PBFX2Grabber
 {
@@ -23,7 +25,7 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : IFrameSource
+	public class PBFX2Grabber : IFrameSource, IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
 	{
 		public string Name { get; } = "Pinball FX2";
 
@@ -50,8 +52,13 @@ namespace LibDmd.Input.PBFX2Grabber
 		public int CropBottom { get; set; } = 12;
 
 		private IConnectableObservable<BitmapSource> _frames;
+		private IConnectableObservable<byte[]> _framesGray2;
+		private IConnectableObservable<byte[]> _framesGray4;
+		private IConnectableObservable<byte[]> _framesRgb24;
+
 		private IDisposable _capturer;
 		private IntPtr _handle;
+		private RenderBitLength _bitLength = RenderBitLength.Bitmap;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
@@ -81,7 +88,23 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// </summary>
 		private void StartCapturing()
 		{
-			_capturer = _frames.Connect();
+			switch (_bitLength)
+			{
+				case RenderBitLength.Gray2:
+					_capturer = _framesGray2.Connect();
+					break;
+				case RenderBitLength.Gray4:
+					_capturer = _framesGray4.Connect();
+					break;
+				case RenderBitLength.Rgb24:
+					_capturer = _framesRgb24.Connect();
+					break;
+				case RenderBitLength.Bitmap:
+					_capturer = _frames.Connect();
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 			_onResume.OnNext(Unit.Default);
 		}
 
@@ -99,9 +122,10 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		public IObservable<BitmapSource> GetFrames()
 		{
+			_bitLength = RenderBitLength.Bitmap;
 			if (_frames == null) {
 				_frames = Observable
-					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+					.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
 					.Publish();
@@ -111,13 +135,73 @@ namespace LibDmd.Input.PBFX2Grabber
 			return _frames;
 		}
 
+		public IObservable<byte[]> GetGray2Frames()
+		{
+			_bitLength = RenderBitLength.Gray2;
+			if (_framesGray2 == null) {
+				var resizeProcessor = new TransformationProcessor();
+				var gridProcessor = new GridProcessor { Spacing = 1d };
+				_framesGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
+					.Select(x => CaptureWindow())
+					.Where(bmp => bmp != null)
+					.Select(bmp => gridProcessor.Process(bmp, null))
+					.Select(bmp => resizeProcessor.Process(bmp, null))
+					.Select(bmp => ImageUtils.ConvertToGray2(bmp, 5))
+					.Publish();
+
+				StartPolling();
+			}
+			return _framesGray2;
+		}
+
+	
+
+		public IObservable<byte[]> GetGray4Frames()
+		{
+			_bitLength = RenderBitLength.Gray4;
+			if (_framesGray4 == null) {
+				var resizeProcessor = new TransformationProcessor();
+				var gridProcessor = new GridProcessor { Spacing = 1d };
+				_framesGray4 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
+					.Select(x => CaptureWindow())
+					.Where(bmp => bmp != null)
+					.Select(bmp => gridProcessor.Process(bmp, null))
+					.Select(bmp => resizeProcessor.Process(bmp, null))
+					.Select(bmp => ImageUtils.ConvertToGray4(bmp, 5))
+					.Publish();
+
+				StartPolling();
+			}
+			return _framesGray4;
+		}
+
+		public IObservable<byte[]> GetRgb24Frames()
+		{
+			_bitLength = RenderBitLength.Rgb24;
+			if (_framesRgb24 == null) {
+				var resizeProcessor = new TransformationProcessor();
+				var gridProcessor = new GridProcessor { Spacing = 1d };
+				_framesRgb24 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
+					.Select(x => CaptureWindow())
+					.Where(bmp => bmp != null)
+					.Select(bmp => gridProcessor.Process(bmp, null))
+					.Select(bmp => resizeProcessor.Process(bmp, null))
+					.Select(bmp => ImageUtils.ConvertToRgb24(bmp, 2))
+					.Publish();
+
+				StartPolling();
+			}
+			return _framesRgb24;
+		}
+
 		public BitmapSource CaptureWindow()
 		{
 			NativeCapture.RECT rc;
 			GetWindowRect(_handle, out rc);
 
 			// rect contains 0 values if handler not available anymore
-			if (rc.Width == 0 || rc.Height == 0) {
+			if (rc.Width == 0 || rc.Height == 0)
+			{
 				Logger.Debug("Handle lost, stopping capture.");
 				_handle = IntPtr.Zero;
 				StopCapturing();
@@ -129,13 +213,17 @@ namespace LibDmd.Input.PBFX2Grabber
 				using (var gfxBmp = Graphics.FromImage(bmp))
 				{
 					var hdcBitmap = gfxBmp.GetHdc();
-					try {
+					try
+					{
 						var succeeded = PrintWindow(_handle, hdcBitmap, 0);
-						if (!succeeded) {
+						if (!succeeded)
+						{
 							Logger.Error("Could not retrieve image data from handle {0}", _handle);
 							return null;
 						}
-					} finally {
+					}
+					finally
+					{
 						gfxBmp.ReleaseHdc(hdcBitmap);
 					}
 					return Convert(bmp);
@@ -145,16 +233,20 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		private static IntPtr FindDmdHandle()
 		{
-			foreach (var proc in Process.GetProcessesByName("Pinball FX2")) {
+			foreach (var proc in Process.GetProcessesByName("Pinball FX2"))
+			{
 				var handles = GetRootWindowsOfProcess(proc.Id);
-				foreach (var handle in handles) {
+				foreach (var handle in handles)
+				{
 					NativeCapture.RECT rc;
 					GetWindowRect(handle, out rc);
-					if (rc.Width == 0 || rc.Height == 0) {
+					if (rc.Width == 0 || rc.Height == 0)
+					{
 						continue;
 					}
-					var ar = rc.Width / rc.Height;
-					if (ar >= 3 && ar < 4.2) {
+					var ar = rc.Width/rc.Height;
+					if (ar >= 3 && ar < 4.2)
+					{
 						return handle;
 					}
 				}
@@ -167,10 +259,12 @@ namespace LibDmd.Input.PBFX2Grabber
 		{
 			var rootWindows = GetChildWindows(IntPtr.Zero);
 			var dsProcRootWindows = new List<IntPtr>();
-			foreach (var hWnd in rootWindows) {
+			foreach (var hWnd in rootWindows)
+			{
 				uint lpdwProcessId;
 				GetWindowThreadProcessId(hWnd, out lpdwProcessId);
-				if (lpdwProcessId == pid) {
+				if (lpdwProcessId == pid)
+				{
 					dsProcRootWindows.Add(hWnd);
 				}
 			}
@@ -181,11 +275,15 @@ namespace LibDmd.Input.PBFX2Grabber
 		{
 			var result = new List<IntPtr>();
 			var listHandle = GCHandle.Alloc(result);
-			try {
+			try
+			{
 				Win32Callback childProc = EnumWindow;
 				EnumChildWindows(parent, childProc, GCHandle.ToIntPtr(listHandle));
-			} finally {
-				if (listHandle.IsAllocated) {
+			}
+			finally
+			{
+				if (listHandle.IsAllocated)
+				{
 					listHandle.Free();
 				}
 			}
@@ -196,7 +294,8 @@ namespace LibDmd.Input.PBFX2Grabber
 		{
 			var gch = GCHandle.FromIntPtr(pointer);
 			var list = gch.Target as List<IntPtr>;
-			if (list == null) {
+			if (list == null)
+			{
 				throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
 			}
 			list.Add(handle);
@@ -207,9 +306,7 @@ namespace LibDmd.Input.PBFX2Grabber
 		public BitmapSource Convert(Bitmap bitmap)
 		{
 			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
-			var bitmapSource = BitmapSource.Create(
-				bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null,
-				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+			var bitmapSource = BitmapSource.Create(bitmapData.Width, bitmapData.Height, 96, 96, PixelFormats.Bgr32, null, bitmapData.Scan0, bitmapData.Stride*bitmapData.Height, bitmapData.Stride);
 
 			bitmap.UnlockBits(bitmapData);
 			bitmapSource.Freeze(); // make it readable on any thread
@@ -219,17 +316,15 @@ namespace LibDmd.Input.PBFX2Grabber
 			var cropTop = Math.Max(0, CropTop);
 			var cropRight = Math.Max(0, CropRight);
 			var cropBottom = Math.Max(0, CropBottom);
-			if (bitmapSource.PixelWidth - cropLeft - cropRight <= 0) {
+			if (bitmapSource.PixelWidth - cropLeft - cropRight <= 0)
+			{
 				throw new CropRectangleOutOfRangeException("With a width of " + bitmapSource.PixelWidth + ", left crop of " + cropLeft + " and right crop of " + cropRight + ", there is no surface left to grab.");
 			}
-			if (bitmapSource.PixelHeight - cropTop - cropBottom <= 0) {
+			if (bitmapSource.PixelHeight - cropTop - cropBottom <= 0)
+			{
 				throw new CropRectangleOutOfRangeException("With a height of " + bitmapSource.PixelHeight + ", top crop of " + cropTop + " and bottom crop of " + cropBottom + ", there is no surface left to grab.");
 			}
-			var rect = new Int32Rect(
-				cropLeft,
-				cropTop,
-				bitmapSource.PixelWidth - cropLeft - cropRight,
-				bitmapSource.PixelHeight - cropTop - cropBottom);
+			var rect = new Int32Rect(cropLeft, cropTop, bitmapSource.PixelWidth - cropLeft - cropRight, bitmapSource.PixelHeight - cropTop - cropBottom);
 
 			var img = new CroppedBitmap(bitmapSource, rect);
 			img.Freeze();
@@ -251,6 +346,7 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreateRectRgn(int nLeftRect, int nTopRect, int nReghtRect, int nBottomRect);
+
 		[DllImport("user32.dll")]
 		public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
@@ -262,7 +358,8 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		private static void Dump(BitmapSource bmp, string filePath)
 		{
-			using (var fileStream = new FileStream(filePath, FileMode.Create)) {
+			using (var fileStream = new FileStream(filePath, FileMode.Create))
+			{
 				BitmapEncoder encoder = new PngBitmapEncoder();
 				encoder.Frames.Add(BitmapFrame.Create(bmp));
 				encoder.Save(fileStream);

@@ -18,14 +18,14 @@ namespace LibDmd.Common
 		/// Converts a bitmap to a 2-bit grayscale array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
-		public static byte[] ConvertToGray2(BitmapSource bmp)
+		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
 			var rect = new Int32Rect(0, 0, 1, 1);
-
 			for (var y = 0; y < bmp.PixelHeight; y++) {
 				rect.Y = y;
 				for (var x = 0; x < bmp.PixelWidth; x++) {
@@ -39,7 +39,7 @@ namespace LibDmd.Common
 					double luminosity;
 					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
 
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 3d);
+					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 3d * lum);
 				}
 			}
 			return frame;
@@ -49,14 +49,14 @@ namespace LibDmd.Common
 		/// Converts a bitmap to a 4-bit grayscale array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array with value for every pixel between 0 and 15</returns>
-		public static byte[] ConvertToGray4(BitmapSource bmp)
+		public static byte[] ConvertToGray4(BitmapSource bmp, double lum = 1)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
 			var rect = new Int32Rect(0, 0, 1, 1);
-
 			for (var y = 0; y < bmp.PixelHeight; y++) {
 				rect.Y = y;
 				for (var x = 0; x < bmp.PixelWidth; x++) {
@@ -70,7 +70,7 @@ namespace LibDmd.Common
 					double luminosity;
 					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
 
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d);
+					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
 				}
 			}
 			return frame;
@@ -80,11 +80,12 @@ namespace LibDmd.Common
 		/// Converts a bitmap to an RGB24 array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array filled with RGB values for each pixel between 0 and 255.</returns>
-		public static byte[] ConvertToRgb24(BitmapSource bmp)
+		public static byte[] ConvertToRgb24(BitmapSource bmp, double lum = 1)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
-			ConvertToRgb24(bmp, frame);
+			ConvertToRgb24(bmp, frame, lum);
 			return frame;
 		}
 
@@ -93,7 +94,8 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="buffer">Destination buffer. Will be filled with RGB values for each pixel between 0 and 255.</param>
-		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer)
+		/// <param name="lum">Multiply luminosity</param>
+		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, double lum = 1)
 		{
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
@@ -104,10 +106,21 @@ namespace LibDmd.Common
 					rect.X = x;
 					rect.Y = y;
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
-					buffer[pos] = bytes[2];      // r
-					buffer[pos + 1] = bytes[1];  // g
-					buffer[pos + 2] = bytes[0];  // b
 
+					if (Math.Abs(lum - 1) > 0.01) {
+						double hue, saturation, luminosity;
+						byte r, g, b;
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+						ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
+						buffer[pos] = r;
+						buffer[pos + 1] = g;
+						buffer[pos + 2] = b;
+						
+					} else {
+						buffer[pos] = bytes[2];      // r
+						buffer[pos + 1] = bytes[1];  // g
+						buffer[pos + 2] = bytes[0];  // b
+					}
 					pos += 3;
 				}
 			}
