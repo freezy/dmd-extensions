@@ -297,7 +297,7 @@ namespace LibDmd.Output
 		/// <summary>
 		/// Makes sure the device is available and the source has the same dimensions as the display.
 		/// </summary>
-		/// <param name="bmp"></param>
+		/// <param name="bmp">Bitmap</param>
 		protected void AssertRenderReady(BitmapSource bmp)
 		{
 			if (!IsAvailable) {
@@ -306,17 +306,19 @@ namespace LibDmd.Output
 			if (bmp.PixelWidth != Width || bmp.PixelHeight != Height) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
-		}	
+		}
+
 		/// <summary>
 		/// Makes sure the device is available and the source has the same dimensions as the display.
 		/// </summary>
-		/// <param name="bmp"></param>
-		protected void AssertRenderReady(byte[] bmp)
+		/// <param name="frame">Pixel array</param>
+		/// <param name="bytesPerPixel">Bytes per pixel</param>
+		protected void AssertRenderReady(byte[] frame, int bytesPerPixel = 1)
 		{
 			if (!IsAvailable) {
 				throw new SourceNotAvailableException();
 			}
-			if (bmp.Length != Width * Height) {
+			if (frame.Length != Width * Height * bytesPerPixel) {
 				throw new Exception($"Image must have the same dimensions as the display ({Width}x{Height}).");
 			}
 		}

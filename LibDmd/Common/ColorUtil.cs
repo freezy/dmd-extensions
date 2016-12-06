@@ -129,7 +129,7 @@ namespace LibDmd.Common
 		/// <param name="palette">Color to assign to each gray shade</param>
 		/// <param name="numTones">Number of shades to return</param>
 		/// <returns></returns>
-		public static Color[] GetGrayPalette(Color[] palette, int numTones)
+		public static Color[] GetPalette(Color[] palette, int numTones)
 		{
 			if (palette.Length == 0) {
 				return null;
@@ -157,7 +157,7 @@ namespace LibDmd.Common
 
 				interpolatedPalette[toRasterPos] = MixColors(fromColorStart, fromColorEnd, relativePos);
 
-				if (fromRasterSize * (fromRasterPos + 1) < toRasterSize * (toRasterPos + 1)) {
+				while (fromRasterSize * (fromRasterPos + 1) < toRasterSize * (toRasterPos + 1)) {
 					fromRasterPos++;
 				}
 			}
@@ -192,6 +192,13 @@ namespace LibDmd.Common
 			return colorizedFrame;
 		}
 
+		/// <summary>
+		/// Mixes two colors in a give proportion
+		/// </summary>
+		/// <param name="color1">First color</param>
+		/// <param name="color2">Second color</param>
+		/// <param name="p">Proportion. The higher, the more of color2 will be returned. Must between 0 and 1.</param>
+		/// <returns></returns>
 		private static Color MixColors(Color color1, Color color2, double p)
 		{
 			return Color.FromRgb(

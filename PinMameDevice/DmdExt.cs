@@ -7,6 +7,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Output;
 using Mindscape.Raygun4Net;
+using NLog;
 using static System.Windows.Threading.Dispatcher;
 
 namespace PinMameDevice
@@ -17,16 +18,22 @@ namespace PinMameDevice
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
-		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private Color[] _palette;
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 
 		public void Open()
 		{
+			Logger.Info("Opening virtual DMD...");
 			ShowVirtualDmd();
+
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 		}
 
 		public void Close()
 		{
+			Logger.Info("Closing up.");
 			_renderers.ForEach(r => r.Dispose());
 			_graphs.ForEach(graph => graph.Dispose());
 			_graphs.RemoveAll(g => true);
@@ -36,7 +43,8 @@ namespace PinMameDevice
 		}
 
 		public void SetPalette(Color[] colors) {
-			_dmd.Dmd.SetPalette(colors);
+			Logger.Info("Setting palette to {0} colors...", colors.Length);
+			_palette = colors;
 		}
 
 		public void RenderGray2(int width, int height, byte[] frame)
@@ -53,7 +61,6 @@ namespace PinMameDevice
 		{
 			_source.FramesRgb24.OnNext(frame);
 		}
-
 
 		private void ShowVirtualDmd()
 		{
@@ -78,6 +85,10 @@ namespace PinMameDevice
 					Destinations = dest,
 					RenderAs = RenderBitLength.Rgb24
 				});
+
+				if (_palette != null) {
+					_dmd.Dmd.SetPalette(_palette);
+				}
 
 				_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 

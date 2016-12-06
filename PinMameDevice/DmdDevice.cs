@@ -81,8 +81,8 @@ namespace PinMameDevice
 		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
 		static void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			_dmdExt.SetPalette(new []{ ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100) });
 			Console.WriteLine("[vpm] Set_4_Colors_Palette()");
+			_dmdExt.SetPalette(new []{ ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100) });
 		}
 
 		// void Set_16_Colors_Palette(Rgb24 *color)

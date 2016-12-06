@@ -201,6 +201,13 @@ namespace LibDmd.Output.PinDmd3
 			RenderRaw(_frameBufferGray4);
 		}
 
+		public void RenderRgb24(byte[] frame)
+		{
+			// can directly be sent to the device.
+			RenderRaw(frame);
+		}
+
+
 		public void RenderRaw(byte[] data)
 		{
 			_serialPort.Write(data, 0, data.Length);
@@ -212,11 +219,6 @@ namespace LibDmd.Output.PinDmd3
 				_frameBufferRgb24[i] = 0;
 			}
 			_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
-		}
-
-		public void RenderRgb24(byte[] bmp)
-		{
-			throw new NotImplementedException();
 		}
 
 		public void SetColor(Color color)
@@ -246,7 +248,14 @@ namespace LibDmd.Output.PinDmd3
 
 		public void SetPalette(Color[] colors)
 		{
-			throw new NotImplementedException();
+			var palette = ColorUtil.GetPalette(colors, 4);
+			var pos = 1;
+			for (var i = 0; i < 4; i++) {
+				_frameBufferGray4[pos] = palette[3 - i].R;
+				_frameBufferGray4[pos + 1] = palette[3 - i].G;
+				_frameBufferGray4[pos + 2] = palette[3 - i].B;
+				pos += 3;
+			}
 		}
 
 		public void Dispose()

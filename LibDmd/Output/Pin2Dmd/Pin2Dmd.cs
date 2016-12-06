@@ -173,27 +173,54 @@ namespace LibDmd.Output.Pin2Dmd
 		{
 			double hue, saturation, luminosity;
 			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
-			const int offset = 7;
-
+			const int pos = 7;
 			for (var i = 0; i < 16; i++) {
 				var lum = (double)i / 15;
 				byte r, g, b;
 				ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
-				_colorPalette[offset + (i * 3)] = r;
-				_colorPalette[offset + (i * 3) + 1] = g;
-				_colorPalette[offset + (i * 3) + 2] = b;
+				_colorPalette[pos + (i * 3)] = r;
+				_colorPalette[pos + (i * 3) + 1] = g;
+				_colorPalette[pos + (i * 3) + 2] = b;
 			}
 			RenderRaw(_colorPalette);
 		}
 
 		public void SetPalette(Color[] colors)
 		{
-			
+			var palette = ColorUtil.GetPalette(colors, 16);
+			const int pos = 7;
+			for (var i = 0; i < 16; i++) {
+				var color = palette[i];
+				_colorPalette[pos + (i * 3)] = color.R;
+				_colorPalette[pos + (i * 3) + 1] = color.G;
+				_colorPalette[pos + (i * 3) + 2] = color.B;
+			}
+			RenderRaw(_colorPalette);
 		}
 
 		public void Dispose()
 		{
 			if (_pin2DmdDevice != null) {
+				var buffer = new byte[2052];
+
+				// clear screen
+				buffer[0] = 0x81;
+				buffer[1] = 0xC3;
+				buffer[2] = 0xE7;
+				buffer[3] = 0x00;
+				RenderRaw(buffer);
+				System.Threading.Thread.Sleep(50);
+
+				// reset settings
+				buffer[0] = 0x81;
+				buffer[1] = 0xC3;
+				buffer[2] = 0xE7;
+				buffer[3] = 0xFF;
+				buffer[4] = 0x07;
+				RenderRaw(buffer);
+				System.Threading.Thread.Sleep(50);
+
+				// close device
 				if (_pin2DmdDevice.IsOpen) {
 					var wholeUsbDevice = _pin2DmdDevice as IUsbDevice;
 					if (!ReferenceEquals(wholeUsbDevice, null)) {
