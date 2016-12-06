@@ -88,6 +88,10 @@
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\IGray2.cs" />
     <Compile Include="Output\IRgb24.cs" />
+    <Compile Include="Processor\Coloring\BinaryReaderExtension.cs" />
+    <Compile Include="Processor\Coloring\Mapping.cs" />
+    <Compile Include="Processor\Coloring\Palette.cs" />
+    <Compile Include="Processor\Coloring\PaletteConfiguration.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />
