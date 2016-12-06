@@ -244,6 +244,11 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferGray4[12] = 0x0; // 0%: blue
 		}
 
+		public void SetPalette(Color[] colors)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose()
 		{
 			RenderBlank();

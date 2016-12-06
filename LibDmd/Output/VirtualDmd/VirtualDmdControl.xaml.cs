@@ -19,6 +19,9 @@ namespace LibDmd.Output.VirtualDmd
 		private double _sat;
 		private double _lum;
 
+		private Color[] _gray2Palette;
+		private Color[] _gray4Palette;
+
 		public VirtualDmdControl()
 		{
 			InitializeComponent();
@@ -40,7 +43,11 @@ namespace LibDmd.Output.VirtualDmd
 			// retrieve dimensions from frame size with AR = 1:4
 			var width = 2 * (int) Math.Sqrt(frame.Length);
 			var height = width / 4;
-			Render(ImageUtils.ConvertFromGray4(width, height, frame, _hue, _sat, _lum));
+			if (_gray4Palette != null) {
+				RenderRgb24(ColorUtil.ColorizeFrame(width, height, frame, _gray4Palette));
+			} else {
+				Render(ImageUtils.ConvertFromGray4(width, height, frame, _hue, _sat, _lum));
+			}
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -48,7 +55,11 @@ namespace LibDmd.Output.VirtualDmd
 			// retrieve dimensions from frame size with AR = 1:4
 			var width = 2 * (int) Math.Sqrt(frame.Length);
 			var height = width / 4;
-			Render(ImageUtils.ConvertFromGray2(width, height, frame, _hue, _sat, _lum));
+			if (_gray2Palette != null) {
+				RenderRgb24(ColorUtil.ColorizeFrame(width, height, frame, _gray2Palette));
+			} else {
+				Render(ImageUtils.ConvertFromGray2(width, height, frame, _hue, _sat, _lum));
+			}
 		}
 		
 		public void RenderGray2(BitmapSource bmp)
@@ -69,6 +80,12 @@ namespace LibDmd.Output.VirtualDmd
 		public void SetColor(Color color)
 		{
 			ColorUtil.RgbToHsl(color.R, color.G, color.B, out _hue, out _sat, out _lum);
+		}
+
+		public void SetPalette(Color[] colors)
+		{
+			_gray2Palette = ColorUtil.GetGrayPalette(colors, 4);
+			_gray4Palette = ColorUtil.GetGrayPalette(colors, 16);
 		}
 
 		public void Init()

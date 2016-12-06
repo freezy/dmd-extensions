@@ -154,7 +154,6 @@ namespace LibDmd.Input.PBFX2Grabber
 			return _framesGray2;
 		}
 
-	
 
 		public IObservable<byte[]> GetGray4Frames()
 		{

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
@@ -32,6 +33,10 @@ namespace PinMameDevice
 			_dmd?.Dispatcher.Invoke(() => {
 				_dmd.Close();
 			});
+		}
+
+		public void SetPalette(Color[] colors) {
+			_dmd.Dmd.SetPalette(colors);
 		}
 
 		public void RenderGray2(int width, int height, byte[] frame)

@@ -4,40 +4,43 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using RGiesecke.DllExport;
 
 namespace PinMameDevice
 {
-    internal static class DmdDevice
+	public static class DmdDevice
     {
-		static readonly DmdExt _dmdExt = new DmdExt();
+		static DmdExt _dmdExt;
 
 		// int Open()
 		[STAThread]
-		[DllExport("Open", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
 		static int Open()
 		{
+			_dmdExt = new DmdExt();
 			_dmdExt.Open();
 			return 1;
 		}
 
 		// bool Close()
-		[DllExport("Close", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Close", CallingConvention = CallingConvention.Cdecl)]
 		static bool Close()
 		{
 			_dmdExt.Close();
+			_dmdExt = null;
 			return true;
 		}
 
 		// void PM_GameSettings(const char* GameName, UINT64 HardwareGeneration, const PMoptions &Options)
-		[DllExport("PM_GameSettings", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
 		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
 		{
 			Console.WriteLine("[vpm] PM_GameSettings()");
 		}
 
 		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
-		[DllExport("Render_RGB24", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Render_RGB24", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_RGB24(ushort width, ushort height, IntPtr currbuffer)
 		{
 			var frameSize = width * height * 3;
@@ -47,7 +50,7 @@ namespace PinMameDevice
 		}
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
-		[DllExport("Render_16_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Render_16_Shades", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_16_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
 			var frameSize = width * height;
@@ -58,7 +61,7 @@ namespace PinMameDevice
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[STAThread]
-		[DllExport("Render_4_Shades", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Render_4_Shades", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_4_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
 			var frameSize = width * height;
@@ -68,24 +71,57 @@ namespace PinMameDevice
 		}
 
 		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
-		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
 		{
 			Console.WriteLine("[vpm] Render_PM_Alphanumeric_Frame()");
 		}
 
 		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
-		[DllExport("Set_4_Colors_Palette", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
 		static void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
+			_dmdExt.SetPalette(new []{ ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100) });
 			Console.WriteLine("[vpm] Set_4_Colors_Palette()");
 		}
 
 		// void Set_16_Colors_Palette(Rgb24 *color)
-		[DllExport("Set_16_Colors_Palette", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-		static void Set_16_Colors_Palette(IntPtr color)
+		[DllExport("Set_16_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
+		static void Set_16_Colors_Palette(IntPtr palette)
 		{
 			Console.WriteLine("[vpm] Set_16_Colors_Palette()");
+			var size = Marshal.SizeOf(typeof(Rgb24));
+
+			// for some shit reason, using a loop fails compilation.
+			_dmdExt.SetPalette(new [] {
+				ConvertColor(GetColorAtPosition(palette, 0, size)),
+				ConvertColor(GetColorAtPosition(palette, 1, size)),
+				ConvertColor(GetColorAtPosition(palette, 2, size)),
+				ConvertColor(GetColorAtPosition(palette, 3, size)),
+				ConvertColor(GetColorAtPosition(palette, 4, size)),
+				ConvertColor(GetColorAtPosition(palette, 5, size)),
+				ConvertColor(GetColorAtPosition(palette, 6, size)),
+				ConvertColor(GetColorAtPosition(palette, 7, size)),
+				ConvertColor(GetColorAtPosition(palette, 8, size)),
+				ConvertColor(GetColorAtPosition(palette, 9, size)),
+				ConvertColor(GetColorAtPosition(palette, 10, size)),
+				ConvertColor(GetColorAtPosition(palette, 11, size)),
+				ConvertColor(GetColorAtPosition(palette, 12, size)),
+				ConvertColor(GetColorAtPosition(palette, 13, size)),
+				ConvertColor(GetColorAtPosition(palette, 14, size)),
+				ConvertColor(GetColorAtPosition(palette, 15, size)),
+			});
+		}
+
+		private static Rgb24 GetColorAtPosition(IntPtr data, int pos, int size)
+		{
+			var p = new IntPtr(data.ToInt64() + pos * size);
+			return (Rgb24) Marshal.PtrToStructure(p, typeof(Rgb24));
+		}
+
+		private static Color ConvertColor(Rgb24 color)
+		{
+			return Color.FromRgb((byte)color.red, (byte)color.green, (byte)color.blue);
 		}
 
 		struct PMoptions
@@ -99,11 +135,12 @@ namespace PinMameDevice
 			int dmd_red0, dmd_green0, dmd_blue0;
 		}
 
-		struct Rgb24
+		[StructLayout(LayoutKind.Sequential)]
+		public struct Rgb24
 		{
-			char red;
-			char green;
-			char blue;
+			public char red;
+			public char green;
+			public char blue;
 		}
 
 		public enum NumericalLayout

@@ -186,6 +186,11 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderRaw(_colorPalette);
 		}
 
+		public void SetPalette(Color[] colors)
+		{
+			
+		}
+
 		public void Dispose()
 		{
 			if (_pin2DmdDevice != null) {
