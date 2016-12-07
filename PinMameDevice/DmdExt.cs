@@ -47,8 +47,9 @@ namespace PinMameDevice
 		{
 			Logger.Info("Closing up.");
 			_renderers.ForEach(r => r.Dispose());
+			_renderers.Clear();
 			_graphs.ForEach(graph => graph.Dispose());
-			_graphs.RemoveAll(g => true);
+			_graphs.Clear();
 			_dmd?.Dispatcher.Invoke(() => {
 				_dmd.Hide();
 			});
