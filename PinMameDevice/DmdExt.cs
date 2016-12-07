@@ -18,17 +18,29 @@ namespace PinMameDevice
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
+		private Color _color = Colors.OrangeRed;
 		private Color[] _palette;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 
+		public DmdExt()
+		{
+			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+		}
+
 		public void Open()
 		{
-			Logger.Info("Opening virtual DMD...");
-			ShowVirtualDmd();
+			if (_dmd == null) {
+				Logger.Info("Opening virtual DMD...");
+				SetupVirtualDmd();
 
-			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+			} else {
+				_dmd.Dispatcher.Invoke(() => {
+					SetupGraphs();
+					_dmd.Show();
+				});
+			}
 		}
 
 		public void Close()
@@ -38,10 +50,18 @@ namespace PinMameDevice
 			_graphs.ForEach(graph => graph.Dispose());
 			_graphs.RemoveAll(g => true);
 			_dmd?.Dispatcher.Invoke(() => {
-				_dmd.Close();
+				_dmd.Hide();
 			});
+
+			_color = Colors.OrangeRed;
+			_palette = null;
 		}
 
+		public void SetColor(Color color)
+		{
+			Logger.Info("Setting color: {0}", color);
+			_color = color;
+		}
 		public void SetPalette(Color[] colors) {
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
@@ -62,35 +82,12 @@ namespace PinMameDevice
 			_source.FramesRgb24.OnNext(frame);
 		}
 
-		private void ShowVirtualDmd()
+		private void SetupVirtualDmd()
 		{
 			var thread = new Thread(() => {
 
 				_dmd = new VirtualDmd();
-				var dest = new List<IFrameDestination> { _dmd.Dmd };
-				
-				// create a graph for each bit length.
-				_graphs.Add(new RenderGraph {
-					Source = _source,
-					Destinations = dest,
-					RenderAs = RenderBitLength.Gray2
-				});
-				_graphs.Add(new RenderGraph {
-					Source = _source,
-					Destinations = dest,
-					RenderAs = RenderBitLength.Gray4
-				});
-				_graphs.Add(new RenderGraph {
-					Source = _source,
-					Destinations = dest,
-					RenderAs = RenderBitLength.Rgb24
-				});
-
-				if (_palette != null) {
-					_dmd.Dmd.SetPalette(_palette);
-				}
-
-				_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
+				SetupGraphs();
 
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
@@ -106,6 +103,36 @@ namespace PinMameDevice
 			});
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
+		}
+
+		private void SetupGraphs()
+		{
+
+			var dest = new List<IFrameDestination> { _dmd.Dmd };
+
+			// create a graph for each bit length.
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Gray2
+			});
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Gray4
+			});
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Rgb24
+			});
+
+			_dmd.Dmd.SetColor(_color);
+			if (_palette != null) {
+				_dmd.Dmd.SetPalette(_palette);
+			}
+
+			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 		}
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

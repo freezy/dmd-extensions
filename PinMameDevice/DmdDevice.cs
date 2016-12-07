@@ -5,20 +5,22 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using NLog;
 using RGiesecke.DllExport;
 
 namespace PinMameDevice
 {
 	public static class DmdDevice
     {
-		static DmdExt _dmdExt;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		static readonly DmdExt _dmdExt = new DmdExt();
 
 		// int Open()
 		[STAThread]
 		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
 		static int Open()
 		{
-			_dmdExt = new DmdExt();
+			Logger.Info("[vpm] Open()");
 			_dmdExt.Open();
 			return 1;
 		}
@@ -27,8 +29,8 @@ namespace PinMameDevice
 		[DllExport("Close", CallingConvention = CallingConvention.Cdecl)]
 		static bool Close()
 		{
+			Logger.Info("[vpm] Close()");
 			_dmdExt.Close();
-			_dmdExt = null;
 			return true;
 		}
 
@@ -36,7 +38,8 @@ namespace PinMameDevice
 		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
 		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
 		{
-			Console.WriteLine("[vpm] PM_GameSettings()");
+			Logger.Info("[vpm] PM_GameSettings()");
+			_dmdExt.SetColor(Color.FromRgb((byte)options.dmd_red, (byte)options.dmd_green, (byte)options.dmd_blue));
 		}
 
 		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
@@ -74,14 +77,14 @@ namespace PinMameDevice
 		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
 		{
-			Console.WriteLine("[vpm] Render_PM_Alphanumeric_Frame()");
+			Logger.Info("[vpm] Render_PM_Alphanumeric_Frame()");
 		}
 
 		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
 		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
 		static void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			Console.WriteLine("[vpm] Set_4_Colors_Palette()");
+			Logger.Info("[vpm] ConvertColor()");
 			_dmdExt.SetPalette(new []{ ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100) });
 		}
 
@@ -89,7 +92,7 @@ namespace PinMameDevice
 		[DllExport("Set_16_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
 		static void Set_16_Colors_Palette(IntPtr palette)
 		{
-			Console.WriteLine("[vpm] Set_16_Colors_Palette()");
+			Logger.Info("[vpm] Set_16_Colors_Palette()");
 			var size = Marshal.SizeOf(typeof(Rgb24));
 
 			// for some shit reason, using a loop fails compilation.
@@ -126,13 +129,13 @@ namespace PinMameDevice
 
 		struct PMoptions
 		{
-			int dmd_red, dmd_green, dmd_blue;
-			int dmd_perc66, dmd_perc33, dmd_perc0;
-			int dmd_only, dmd_compact, dmd_antialias;
-			int dmd_colorize;
-			int dmd_red66, dmd_green66, dmd_blue66;
-			int dmd_red33, dmd_green33, dmd_blue33;
-			int dmd_red0, dmd_green0, dmd_blue0;
+			public int dmd_red, dmd_green, dmd_blue;
+			public int dmd_perc66, dmd_perc33, dmd_perc0;
+			public int dmd_only, dmd_compact, dmd_antialias;
+			public int dmd_colorize;
+			public int dmd_red66, dmd_green66, dmd_blue66;
+			public int dmd_red33, dmd_green33, dmd_blue33;
+			public int dmd_red0, dmd_green0, dmd_blue0;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
