@@ -3,6 +3,11 @@ using System.IO;
 
 namespace LibDmd.Processor.Coloring
 {
+	/// <summary>
+	/// A palette configuration file.
+	/// 
+	/// For examples, see: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
+	/// </summary>
 	public class PaletteConfiguration
 	{
 		public readonly string Filename;
@@ -11,6 +16,10 @@ namespace LibDmd.Processor.Coloring
 		public readonly Mapping[] Mappings;
 		public readonly byte[][] Masks;
 
+		/// <summary>
+		/// Reads palette configuration from a file.
+		/// </summary>
+		/// <param name="filename"></param>
 		public PaletteConfiguration(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
