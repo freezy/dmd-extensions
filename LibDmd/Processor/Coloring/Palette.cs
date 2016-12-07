@@ -16,17 +16,17 @@ namespace LibDmd.Processor.Coloring
 		/// <summary>
 		/// Palette index
 		/// </summary>
-		public int Index;
+		public readonly int Index;
 
 		/// <summary>
 		/// type of palette. 0: normal, 1: default (only one palette per file could be marked as default)
 		/// </summary>
-		public int Type; //  0: normal, 1: default
+		public readonly int Type; //  0: normal, 1: default
 
 		/// <summary>
 		/// RGB data. Three values (red, green, blue) for each color.
 		/// </summary>
-		public byte[] Colors;
+		public readonly byte[] Colors;
 
 		public Palette(BinaryReader reader)
 		{

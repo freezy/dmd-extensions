@@ -12,22 +12,22 @@ namespace LibDmd.Processor.Coloring
 		/// <summary>
 		/// MD5 hash of key frame
 		/// </summary>
-		public byte[] Hash;
+		public readonly byte[] Hash;
 
 		/// <summary>
 		/// Palette index
 		/// </summary>
-		public int PaletteIndex;
+		public readonly int PaletteIndex;
 
 		/// <summary>
 		/// Offset in fsq file for replacement frames seq (or 0 if just palette switching)
 		/// </summary>
-		public ulong Offset;
+		public readonly ulong Offset;
 
 		/// <summary>
 		/// Duration until switch back to default palette (if 0 don’t switch back at all)
 		/// </summary>
-		public int Duration;
+		public readonly int Duration;
 
 		public Mapping(BinaryReader reader)
 		{
