@@ -21,7 +21,7 @@ namespace PinMameDevice
 		static int Open()
 		{
 			Logger.Info("[vpm] Open()");
-			_dmdExt.Open();
+			// ignoring, use PM_GameSettings for opening because then we have all the config ready.
 			return 1;
 		}
 
@@ -40,6 +40,7 @@ namespace PinMameDevice
 		{
 			Logger.Info("[vpm] PM_GameSettings()");
 			_dmdExt.SetColor(Color.FromRgb((byte)options.dmd_red, (byte)options.dmd_green, (byte)options.dmd_blue));
+			_dmdExt.Open();
 		}
 
 		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
@@ -84,7 +85,7 @@ namespace PinMameDevice
 		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
 		static void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			Logger.Info("[vpm] ConvertColor()");
+			Logger.Info("[vpm] Set_4_Colors_Palette()");
 			_dmdExt.SetPalette(new []{ ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100) });
 		}
 

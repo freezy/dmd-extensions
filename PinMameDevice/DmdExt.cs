@@ -126,10 +126,15 @@ namespace PinMameDevice
 				Destinations = dest,
 				RenderAs = RenderBitLength.Rgb24
 			});
-
-			_dmd.Dmd.SetColor(_color);
+			
 			if (_palette != null) {
+				Logger.Info("Applying palette to DMD...");
+				_dmd.Dmd.ClearColor();
 				_dmd.Dmd.SetPalette(_palette);
+			} else {
+				Logger.Info("Applying color to DMD...");
+				_dmd.Dmd.ClearPalette();
+				_dmd.Dmd.SetColor(_color);	
 			}
 
 			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
@@ -137,7 +142,12 @@ namespace PinMameDevice
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
-			Raygun.Send(e.ExceptionObject as Exception);
+			var ex = e.ExceptionObject as Exception;
+			if (ex != null) {
+				Logger.Error(ex.Message);
+				Logger.Error(ex.StackTrace);
+			}
+			Raygun.Send(ex);
 		}
 	}
 }

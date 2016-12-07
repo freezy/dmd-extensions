@@ -258,6 +258,16 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
+		public void ClearPalette()
+		{
+			ClearColor();
+		}
+
+		public void ClearColor()
+		{
+			SetColor(Colors.OrangeRed);
+		}
+
 		public void Dispose()
 		{
 			RenderBlank();

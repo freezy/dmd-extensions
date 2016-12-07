@@ -32,5 +32,15 @@ namespace LibDmd.Output
 		/// </summary>
 		/// <param name="colors"></param>
 		void SetPalette(Color[] colors);
+
+		/// <summary>
+		/// Removes a previously set palette
+		/// </summary>
+		void ClearPalette();
+
+		/// <summary>
+		/// Resets the color
+		/// </summary>
+		void ClearColor();
 	}
 }

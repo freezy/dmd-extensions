@@ -25,7 +25,7 @@ namespace LibDmd.Output.VirtualDmd
 		public VirtualDmdControl()
 		{
 			InitializeComponent();
-			SetColor(Color.FromRgb(0xff, 0x30, 0));
+			ClearColor();
 		}
 
 		public void Render(BitmapSource bmp)
@@ -86,6 +86,17 @@ namespace LibDmd.Output.VirtualDmd
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+		}
+
+		public void ClearPalette()
+		{
+			_gray2Palette = null;
+			_gray4Palette = null;
+		}
+
+		public void ClearColor()
+		{
+			SetColor(Colors.OrangeRed);
 		}
 
 		public void Init()

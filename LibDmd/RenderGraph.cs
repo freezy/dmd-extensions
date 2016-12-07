@@ -155,7 +155,7 @@ namespace LibDmd
 							var sourceGray2 = Source as IFrameSourceGray2;
 							var destGray2 = dest as IGray2;
 							AssertCompatibility(Source, sourceGray2, dest, destGray2, "2-bit");
-							Logger.Info("Sending unprocessed 2-bit data from {0} to {1}", Source.Name, dest.Name);
+							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray2.GetGray2Frames()
 								.Subscribe(frame => destGray2.RenderGray2(frame), ex => { throw ex; });
 							_activeSources.Add(disposable);
@@ -165,7 +165,7 @@ namespace LibDmd
 							var sourceGray4 = Source as IFrameSourceGray4;
 							var destGray4 = dest as IGray4;
 							AssertCompatibility(Source, sourceGray4, dest, destGray4, "4-bit");
-							Logger.Info("Sending unprocessed 4-bit data from {0} to {1}", Source.Name, dest.Name);
+							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray4.GetGray4Frames()
 								.Subscribe(frame => destGray4.RenderGray4(frame), ex => { throw ex; });
 							_activeSources.Add(disposable);
@@ -175,14 +175,14 @@ namespace LibDmd
 							var sourceRgb24 = Source as IFrameSourceRgb24;
 							var destRgb24 = dest as IRgb24;
 							AssertCompatibility(Source, sourceRgb24, dest, destRgb24, "24-bit");
-							Logger.Info("Sending unprocessed 24-bit RGB data from {0} to {1}", Source.Name, dest.Name);
+							Logger.Info("Sending unprocessed 24-bit RGB data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceRgb24.GetRgb24Frames()
 								.Subscribe(frame => destRgb24.RenderRgb24(frame), ex => { throw ex; });
 							_activeSources.Add(disposable);
 							break;
 						}
 						case RenderBitLength.Bitmap: {
-							Logger.Info("Sending bitmap data from {0} to {1}", Source.Name, dest.Name);
+							Logger.Info("Sending bitmap data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
 							var disposable = Source.GetFrames().Subscribe(bmp => {
 								_beforeProcessed.OnNext(bmp);
