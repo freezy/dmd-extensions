@@ -44,12 +44,13 @@ namespace PinMameDevice
 
 		// void PM_GameSettings(const char* GameName, UINT64 HardwareGeneration, const PMoptions &Options)
 		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
-		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
+		static void PM_GameSettings(string gameName, ulong hardwareGeneration, IntPtr options)
 		{
-			Logger.Info("[vpm] PM_GameSettings({0})", options.dmd_colorize);
-			_dmdExt.SetColorize(options.dmd_colorize != 0);
+			var opt = (PMoptions) Marshal.PtrToStructure(options, typeof(PMoptions));
+			Logger.Info("[vpm] PM_GameSettings({0})", opt.Colorize);
+			_dmdExt.SetColorize(opt.Colorize != 0);
 			_dmdExt.SetGameName(gameName);
-			_dmdExt.SetColor(Color.FromRgb((byte)options.dmd_red, (byte)options.dmd_green, (byte)options.dmd_blue));
+			_dmdExt.SetColor(Color.FromRgb((byte)(opt.Red), (byte)(opt.Green), (byte)(opt.Blue)));
 			_dmdExt.Init();
 		}
 
@@ -141,13 +142,13 @@ namespace PinMameDevice
 		[StructLayout(LayoutKind.Sequential)]
 		public struct PMoptions
 		{
-			public int dmd_red, dmd_green, dmd_blue;
-			public int dmd_perc66, dmd_perc33, dmd_perc0;
-			public int dmd_only, dmd_compact, dmd_antialias;
-			public int dmd_colorize;
-			public int dmd_red66, dmd_green66, dmd_blue66;
-			public int dmd_red33, dmd_green33, dmd_blue33;
-			public int dmd_red0, dmd_green0, dmd_blue0;
+			public int Red, Green, Blue;
+			public int Perc66, Perc33, Perc0;
+			public int DmdOnly, Compact, Antialias;
+			public int Colorize;
+			public int Red66, Green66, Blue66;
+			public int Red33, Green33, Blue33;
+			public int Red0, Green0, Blue0;
 		}
 
 		[StructLayout(LayoutKind.Sequential), Serializable]

@@ -49,6 +49,7 @@ namespace PinMameDevice
 		{
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var palettePath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+
 			if (File.Exists(palettePath)) {
 				Logger.Info("Loading palette file at {0}...", palettePath);
 				try {
@@ -173,7 +174,7 @@ namespace PinMameDevice
 				RenderAs = RenderBitLength.Rgb24
 			});
 			
-			if (_palette != null) {
+			if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to DMD...");
 				_dmd.Dmd.ClearColor();
 				_dmd.Dmd.SetPalette(_palette);
