@@ -24,7 +24,6 @@ namespace PinMameDevice
 		static readonly DmdExt _dmdExt = new DmdExt();
 
 		// int Open()
-		[STAThread]
 		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
 		static int Open()
 		{
@@ -75,7 +74,6 @@ namespace PinMameDevice
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
-		[STAThread]
 		[DllExport("Render_4_Shades", CallingConvention = CallingConvention.Cdecl)]
 		static void Render_4_Shades(ushort width, ushort height, IntPtr currbuffer)
 		{
@@ -136,7 +134,7 @@ namespace PinMameDevice
 
 		private static Color ConvertColor(Rgb24 color)
 		{
-			return Color.FromRgb((byte)color.red, (byte)color.green, (byte)color.blue);
+			return Color.FromRgb((byte)color.Red, (byte)color.Green, (byte)color.Blue);
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -154,9 +152,9 @@ namespace PinMameDevice
 		[StructLayout(LayoutKind.Sequential), Serializable]
 		public struct Rgb24
 		{
-			public char red;
-			public char green;
-			public char blue;
+			public char Red;
+			public char Green;
+			public char Blue;
 		}
 
 		public enum NumericalLayout

@@ -45,6 +45,12 @@ namespace PinMameDevice
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 		}
 
+		/// <summary>
+		/// Executed when all parameters are set.
+		/// </summary>
+		/// <remarks>
+		/// Can be run multiple times but the DMD is only created once.
+		/// </remarks>
 		public void Init()
 		{
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
@@ -56,7 +62,7 @@ namespace PinMameDevice
 					_paletteConfig = new Coloring(palettePath);
 					if (_paletteConfig.Palettes.Length == 1) {
 						Logger.Info("Only one palette found, applying...");
-						_palette = _paletteConfig.Palettes[0].GetPalette();
+						_palette = _paletteConfig.Palettes[0].Colors;
 					}
 				} catch (Exception e) {
 					Logger.Warn("Error loading palette: {0}", e.Message);
@@ -67,7 +73,7 @@ namespace PinMameDevice
 
 			if (_dmd == null) {
 				Logger.Info("Opening virtual DMD...");
-				SetupVirtualDmd();
+				CreateVirtualDmd();
 
 			} else {
 				_dmd.Dispatcher.Invoke(() => {
@@ -77,6 +83,74 @@ namespace PinMameDevice
 			}
 		}
 
+		/// <summary>
+		/// Creates a new instance of the virtual DMD and attaches the render graphs
+		/// to it.
+		/// </summary>
+		private void CreateVirtualDmd()
+		{
+			var thread = new Thread(() => {
+
+				_dmd = new VirtualDmd();
+				SetupGraphs();
+
+				// Create our context, and install it:
+				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
+
+				// When the window closes, shut down the dispatcher
+				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+				_dmd.Dispatcher.Invoke(() => {
+					_dmd.Show();
+				});
+
+				// Start the Dispatcher Processing
+				Run();
+			});
+			thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
+		}
+
+		/// <summary>
+		/// Creates a graph for every input type and attaches them
+		/// to the virtual DMD.
+		/// </summary>
+		private void SetupGraphs()
+		{
+			var dest = new List<IFrameDestination> { _dmd.Dmd };
+
+			// create a graph for each bit length.
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Gray2
+			});
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Gray4
+			});
+			_graphs.Add(new RenderGraph {
+				Source = _source,
+				Destinations = dest,
+				RenderAs = RenderBitLength.Rgb24
+			});
+			
+			if (_colorize && _palette != null) {
+				Logger.Info("Applying palette to DMD...");
+				_dmd.Dmd.ClearColor();
+				_dmd.Dmd.SetPalette(_palette);
+			} else {
+				Logger.Info("Applying color to DMD...");
+				_dmd.Dmd.ClearPalette();
+				_dmd.Dmd.SetColor(_color);	
+			}
+
+			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
+		}
+
+		/// <summary>
+		/// Stops all renderers and hides the virtual DMD
+		/// </summary>
 		public void Close()
 		{
 			Logger.Info("Closing up.");
@@ -127,64 +201,6 @@ namespace PinMameDevice
 		public void RenderRgb24(int width, int height, byte[] frame)
 		{
 			_source.FramesRgb24.OnNext(frame);
-		}
-
-		private void SetupVirtualDmd()
-		{
-			var thread = new Thread(() => {
-
-				_dmd = new VirtualDmd();
-				SetupGraphs();
-
-				// Create our context, and install it:
-				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
-
-				// When the window closes, shut down the dispatcher
-				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				_dmd.Dispatcher.Invoke(() => {
-					_dmd.Show();
-				});
-
-				// Start the Dispatcher Processing
-				Run();
-			});
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-		}
-
-		private void SetupGraphs()
-		{
-
-			var dest = new List<IFrameDestination> { _dmd.Dmd };
-
-			// create a graph for each bit length.
-			_graphs.Add(new RenderGraph {
-				Source = _source,
-				Destinations = dest,
-				RenderAs = RenderBitLength.Gray2
-			});
-			_graphs.Add(new RenderGraph {
-				Source = _source,
-				Destinations = dest,
-				RenderAs = RenderBitLength.Gray4
-			});
-			_graphs.Add(new RenderGraph {
-				Source = _source,
-				Destinations = dest,
-				RenderAs = RenderBitLength.Rgb24
-			});
-			
-			if (_colorize && _palette != null) {
-				Logger.Info("Applying palette to DMD...");
-				_dmd.Dmd.ClearColor();
-				_dmd.Dmd.SetPalette(_palette);
-			} else {
-				Logger.Info("Applying color to DMD...");
-				_dmd.Dmd.ClearPalette();
-				_dmd.Dmd.SetColor(_color);	
-			}
-
-			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 		}
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

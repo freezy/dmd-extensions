@@ -27,13 +27,11 @@ namespace LibDmd.Processor.Coloring
 		public readonly int Type; //  0: normal, 1: default
 
 		/// <summary>
-		/// RGB data. Three values (red, green, blue) for each color.
+		/// RGB data.
 		/// </summary>
-		public readonly byte[] Colors;
+		public readonly Color[] Colors;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-		private Color[] _palette;
 
 		public Palette(BinaryReader reader)
 		{
@@ -43,21 +41,13 @@ namespace LibDmd.Processor.Coloring
 			Logger.Trace("  [{1}] [palette] Read number of colors as {0}", numColors, reader.BaseStream.Position);
 			Type = reader.ReadByte();
 			Logger.Trace("  [{1}] [palette] Read type as {0}", Type, reader.BaseStream.Position);
-			Colors = reader.ReadBytesRequired(numColors * 3);
-			Logger.Trace("  [{1}] [palette] Read {0} bytes of color data", Colors.Length, reader.BaseStream.Position);
-		}
-
-		public Color[] GetPalette()
-		{
-			if (_palette == null) {
-				_palette = new Color[Colors.Length / 3];
-				var j = 0;
-				for (var i = 0; i < Colors.Length; i += 3) {
-					_palette[j] = Color.FromRgb(Colors[i], Colors[i + 1], Colors[i + 2]);
-					j++;
-				}
+			Colors = new Color[numColors];
+			var j = 0;
+			for (var i = 0; i < numColors * 3; i += 3) {
+				Colors[j] = Color.FromRgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+				j++;
 			}
-			return _palette;
+			Logger.Trace("  [{1}] [palette] Read {0} bytes of color data", numColors * 3, reader.BaseStream.Position);
 		}
 	}
 }

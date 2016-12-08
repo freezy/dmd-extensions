@@ -1,15 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using LibDmd.Input;
 
 namespace PinMameDevice
 {
+	/// <summary>
+	/// An input source that is linked to VPinMAME.
+	/// </summary>
+	/// 
+	/// <remarks>
+	/// Data originates through <see cref="DmdDevice"/>, which is called by VPM,
+	/// then passed to <see cref="DmdExt"/> which passes the frames to this 
+	/// class.
+	/// </remarks>
 	class PinMameSource : IFrameSource, IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
 	{
 		public string Name { get; } = "PinMAME Source";
@@ -23,10 +28,6 @@ namespace PinMameDevice
 		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesGray4 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
-
-		public PinMameSource()
-		{
-		}
 
 		public IObservable<BitmapSource> GetFrames()
 		{
