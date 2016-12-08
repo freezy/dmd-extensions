@@ -15,6 +15,14 @@ using static System.Windows.Threading.Dispatcher;
 
 namespace PinMameDevice
 {
+	/// <summary>
+	/// Main logic for VPinMAME's <c>DmdDevice.dll</c>.
+	/// </summary>
+	/// <remarks>
+	/// It currently supports only the virtual DMD, though other devices will
+	/// be added at some point.
+	/// </remarks>
+	/// <seealso cref="DmdDevice">Data source called by VPinMAME</seealso>
 	public class DmdExt
 	{
 		private readonly PinMameSource _source = new PinMameSource();
@@ -24,6 +32,7 @@ namespace PinMameDevice
 
 		// configuration
 		private string _gameName;
+		private bool _colorize;
 		private Color _color = Colors.OrangeRed;
 		private Color[] _palette;
 		private Coloring _paletteConfig;
@@ -36,7 +45,7 @@ namespace PinMameDevice
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 		}
 
-		public void Open()
+		public void Init()
 		{
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var palettePath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
@@ -86,6 +95,12 @@ namespace PinMameDevice
 		{
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
+		}
+
+		public void SetColorize(bool colorize)
+		{
+			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
+			_colorize = colorize;
 		}
 
 		public void SetColor(Color color)

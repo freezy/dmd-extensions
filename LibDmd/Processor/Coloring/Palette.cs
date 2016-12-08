@@ -52,7 +52,7 @@ namespace LibDmd.Processor.Coloring
 			if (_palette == null) {
 				_palette = new Color[Colors.Length / 3];
 				var j = 0;
-				for (var i = 0; i < _palette.Length; i += 3) {
+				for (var i = 0; i < Colors.Length; i += 3) {
 					_palette[j] = Color.FromRgb(Colors[i], Colors[i + 1], Colors[i + 2]);
 					j++;
 				}

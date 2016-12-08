@@ -10,6 +10,14 @@ using RGiesecke.DllExport;
 
 namespace PinMameDevice
 {
+	/// <summary>
+	/// A C/C++ compatible DLL that is loaded by VPinMAME and receives DMD data 
+	/// through an API.
+	/// </summary>
+	/// <remarks>
+	/// This class contains minimal logic, it principally forwards data to <see cref="DmdExt"/>.
+	/// </remarks>
+	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
 	public static class DmdDevice
     {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -38,10 +46,11 @@ namespace PinMameDevice
 		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
 		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
 		{
-			Logger.Info("[vpm] PM_GameSettings()");
+			Logger.Info("[vpm] PM_GameSettings({0})", options.dmd_colorize);
+			_dmdExt.SetColorize(options.dmd_colorize != 0);
 			_dmdExt.SetGameName(gameName);
 			_dmdExt.SetColor(Color.FromRgb((byte)options.dmd_red, (byte)options.dmd_green, (byte)options.dmd_blue));
-			_dmdExt.Open();
+			_dmdExt.Init();
 		}
 
 		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
@@ -129,7 +138,8 @@ namespace PinMameDevice
 			return Color.FromRgb((byte)color.red, (byte)color.green, (byte)color.blue);
 		}
 
-		struct PMoptions
+		[StructLayout(LayoutKind.Sequential)]
+		public struct PMoptions
 		{
 			public int dmd_red, dmd_green, dmd_blue;
 			public int dmd_perc66, dmd_perc33, dmd_perc0;
@@ -140,7 +150,7 @@ namespace PinMameDevice
 			public int dmd_red0, dmd_green0, dmd_blue0;
 		}
 
-		[StructLayout(LayoutKind.Sequential)]
+		[StructLayout(LayoutKind.Sequential), Serializable]
 		public struct Rgb24
 		{
 			public char red;
