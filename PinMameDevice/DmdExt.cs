@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Output;
+using LibDmd.Processor.Coloring;
 using Mindscape.Raygun4Net;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
@@ -18,8 +21,12 @@ namespace PinMameDevice
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
+
+		// configuration
+		private string _gameName;
 		private Color _color = Colors.OrangeRed;
 		private Color[] _palette;
+		private PaletteConfiguration _paletteConfig;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
@@ -31,6 +38,23 @@ namespace PinMameDevice
 
 		public void Open()
 		{
+			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			var palettePath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+			if (File.Exists(palettePath)) {
+				Logger.Info("Loading palette file at {0}...", palettePath);
+				try {
+					_paletteConfig = new PaletteConfiguration(palettePath);
+					if (_paletteConfig.Palettes.Length == 1) {
+						Logger.Info("Only one palette found, applying...");
+						_palette = _paletteConfig.Palettes[0].GetPalette();
+					}
+				} catch (Exception e) {
+					Logger.Warn("Error loading palette: {0}", e.Message);
+				}
+			} else {
+				Logger.Debug("No palette file found at {0}.", palettePath);
+			}
+
 			if (_dmd == null) {
 				Logger.Info("Opening virtual DMD...");
 				SetupVirtualDmd();
@@ -56,6 +80,12 @@ namespace PinMameDevice
 
 			_color = Colors.OrangeRed;
 			_palette = null;
+		}
+
+		public void SetGameName(string gameName)
+		{
+			Logger.Info("Setting game name: {0}", gameName);
+			_gameName = gameName;
 		}
 
 		public void SetColor(Color color)

@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using NLog;
 
 namespace LibDmd.Output.VirtualDmd
 {
@@ -21,6 +22,8 @@ namespace LibDmd.Output.VirtualDmd
 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public VirtualDmdControl()
 		{
@@ -84,6 +87,7 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void SetPalette(Color[] colors)
 		{
+			Array.ForEach(colors, c => Logger.Trace("   " + c));
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
 		}

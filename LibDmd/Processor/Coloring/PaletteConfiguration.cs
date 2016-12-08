@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using NLog;
 
 namespace LibDmd.Processor.Coloring
 {
@@ -16,6 +17,8 @@ namespace LibDmd.Processor.Coloring
 		public readonly Mapping[] Mappings;
 		public readonly byte[][] Masks;
 
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		/// <summary>
 		/// Reads palette configuration from a file.
 		/// </summary>
@@ -27,8 +30,10 @@ namespace LibDmd.Processor.Coloring
 
 			Filename = filename;
 			Version = reader.ReadByte();
+			Logger.Trace("[{1}] Read version as {0}", Version, reader.BaseStream.Position);
 
 			var numPalettes = reader.ReadUInt16BE();
+			Logger.Trace("[{1}] Read number of palettes as {0}", numPalettes, reader.BaseStream.Position);
 			Palettes = new Palette[numPalettes];
 			for (var i = 0; i < numPalettes; i++) {
 				Palettes[i] = new Palette(reader);
@@ -42,21 +47,24 @@ namespace LibDmd.Processor.Coloring
 			}
 
 			var numMappings = reader.ReadUInt16BE();
+			Logger.Trace("[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
 			Mappings = new Mapping[numMappings];
 			for (var i = 0; i < numMappings; i++) {
 				Mappings[i] = new Mapping(reader);
 			}
 
-			if (reader.BaseStream.Position == reader.BaseStream.Length) {
+			if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
 				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
 
 			var numMasks = reader.ReadByte();
+			Logger.Trace("[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
 			Masks = new byte[numMasks][];
-			for (var i = 0; i < numMappings; i++) {
-				Masks[i] = reader.ReadBytes(512);
+			for (var i = 0; i < numMasks; i++) {
+				Masks[i] = reader.ReadBytesRequired(512);
+				Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
 			}
 
 			if (reader.BaseStream.Position != reader.BaseStream.Length) {
@@ -68,7 +76,7 @@ namespace LibDmd.Processor.Coloring
 
 		public override string ToString()
 		{
-			return $"{Path.GetFileName(Filename)}: v{Version}, {Palettes.Length} palettes, {Mappings.Length} mappings, {Masks.Length} masks";
+			return $"{Path.GetFileName(Filename)}: v{Version}, {Palettes.Length} palette(s), {Mappings.Length} mapping(s), {Masks.Length} mask(s)";
 		}
 	}
 }

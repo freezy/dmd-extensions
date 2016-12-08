@@ -39,6 +39,7 @@ namespace PinMameDevice
 		static void PM_GameSettings(string gameName, ulong hardwareGeneration, PMoptions options)
 		{
 			Logger.Info("[vpm] PM_GameSettings()");
+			_dmdExt.SetGameName(gameName);
 			_dmdExt.SetColor(Color.FromRgb((byte)options.dmd_red, (byte)options.dmd_green, (byte)options.dmd_blue));
 			_dmdExt.Open();
 		}
