@@ -155,7 +155,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRgb24(byte[] frame)
 		{
 			// TODO don't convert to bitmap but update buffer renderer to deal with rgb24 directly
-			Render(ImageUtils.ConvertFromRgb24(Width, Height, frame));
+			Render(ImageUtil.ConvertFromRgb24(Width, Height, frame));
 		}
 
 		public void RenderRaw(byte[] frame)

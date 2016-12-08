@@ -80,7 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
-    <Compile Include="Common\ImageUtils.cs" />
+    <Compile Include="Common\ImageUtil.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IFrameSourceGray2.cs" />
     <Compile Include="Input\IFrameSourceRgb24.cs" />
@@ -88,10 +88,10 @@
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\IGray2.cs" />
     <Compile Include="Output\IRgb24.cs" />
-    <Compile Include="Processor\Coloring\BinaryReaderExtension.cs" />
+    <Compile Include="Common\BinaryReaderExtension.cs" />
     <Compile Include="Processor\Coloring\Mapping.cs" />
     <Compile Include="Processor\Coloring\Palette.cs" />
-    <Compile Include="Processor\Coloring\PaletteConfiguration.cs" />
+    <Compile Include="Processor\Coloring\Coloring.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />

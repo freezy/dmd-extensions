@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using LibDmd.Common;
 using NLog;
 
 namespace LibDmd.Processor.Coloring
@@ -9,7 +10,7 @@ namespace LibDmd.Processor.Coloring
 	/// 
 	/// For examples, see: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
 	/// </summary>
-	public class PaletteConfiguration
+	public class Coloring
 	{
 		public readonly string Filename;
 		public readonly int Version;
@@ -23,7 +24,7 @@ namespace LibDmd.Processor.Coloring
 		/// Reads palette configuration from a file.
 		/// </summary>
 		/// <param name="filename"></param>
-		public PaletteConfiguration(string filename)
+		public Coloring(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
@@ -54,6 +55,9 @@ namespace LibDmd.Processor.Coloring
 			}
 
 			if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
+				if (reader.BaseStream.Position != reader.BaseStream.Length) {
+					Logger.Warn("[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
+				}
 				Masks = new byte[0][];
 				reader.Close();
 				return;

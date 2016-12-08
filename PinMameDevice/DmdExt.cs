@@ -26,7 +26,7 @@ namespace PinMameDevice
 		private string _gameName;
 		private Color _color = Colors.OrangeRed;
 		private Color[] _palette;
-		private PaletteConfiguration _paletteConfig;
+		private Coloring _paletteConfig;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
@@ -43,7 +43,7 @@ namespace PinMameDevice
 			if (File.Exists(palettePath)) {
 				Logger.Info("Loading palette file at {0}...", palettePath);
 				try {
-					_paletteConfig = new PaletteConfiguration(palettePath);
+					_paletteConfig = new Coloring(palettePath);
 					if (_paletteConfig.Palettes.Length == 1) {
 						Logger.Info("Only one palette found, applying...");
 						_palette = _paletteConfig.Palettes[0].GetPalette();

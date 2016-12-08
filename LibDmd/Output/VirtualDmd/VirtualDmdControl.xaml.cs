@@ -54,7 +54,7 @@ namespace LibDmd.Output.VirtualDmd
 			if (_gray2Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(width, height, frame, _gray2Palette));
 			} else {
-				Render(ImageUtils.ConvertFromGray2(width, height, frame, _hue, _sat, _lum));
+				Render(ImageUtil.ConvertFromGray2(width, height, frame, _hue, _sat, _lum));
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace LibDmd.Output.VirtualDmd
 			if (_gray4Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(width, height, frame, _gray4Palette));
 			} else {
-				Render(ImageUtils.ConvertFromGray4(width, height, frame, _hue, _sat, _lum));
+				Render(ImageUtil.ConvertFromGray4(width, height, frame, _hue, _sat, _lum));
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace LibDmd.Output.VirtualDmd
 			}
 			var width = 2 * (int)Math.Sqrt((double)frame.Length / 3);
 			var height = width / 4;
-			Render(ImageUtils.ConvertFromRgb24(width, height, frame));
+			Render(ImageUtil.ConvertFromRgb24(width, height, frame));
 		}
 
 		public void SetColor(Color color)

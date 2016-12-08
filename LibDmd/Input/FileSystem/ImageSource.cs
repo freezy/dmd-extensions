@@ -26,9 +26,9 @@ namespace LibDmd.Input.FileSystem
 		public ImageSource(BitmapSource bmp)
 		{
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
-			_framesGray2 = new BehaviorSubject<byte[]>(ImageUtils.ConvertToGray2(bmp));
-			_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtils.ConvertToGray4(bmp));
-			_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtils.ConvertToRgb24(bmp));
+			_framesGray2 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
+			_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
+			_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToRgb24(bmp));
 		}
 
 		public ImageSource(string fileName)

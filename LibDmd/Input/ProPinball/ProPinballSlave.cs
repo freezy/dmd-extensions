@@ -71,7 +71,7 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							o.OnNext(ImageUtils.ConvertFromGray4(Width, Height, frame, hue, saturation, luminosity));
+							o.OnNext(ImageUtil.ConvertFromGray4(Width, Height, frame, hue, saturation, luminosity));
 
 						}, err => {
 							throw new ProPinballSlaveException(new string(err));

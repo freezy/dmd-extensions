@@ -146,7 +146,7 @@ namespace LibDmd.Input.PBFX2Grabber
 					.Where(bmp => bmp != null)
 					.Select(bmp => gridProcessor.Process(bmp, null))
 					.Select(bmp => resizeProcessor.Process(bmp, null))
-					.Select(bmp => ImageUtils.ConvertToGray2(bmp, 5))
+					.Select(bmp => ImageUtil.ConvertToGray2(bmp, 5))
 					.Publish();
 
 				StartPolling();
@@ -166,7 +166,7 @@ namespace LibDmd.Input.PBFX2Grabber
 					.Where(bmp => bmp != null)
 					.Select(bmp => gridProcessor.Process(bmp, null))
 					.Select(bmp => resizeProcessor.Process(bmp, null))
-					.Select(bmp => ImageUtils.ConvertToGray4(bmp, 5))
+					.Select(bmp => ImageUtil.ConvertToGray4(bmp, 5))
 					.Publish();
 
 				StartPolling();
@@ -185,7 +185,7 @@ namespace LibDmd.Input.PBFX2Grabber
 					.Where(bmp => bmp != null)
 					.Select(bmp => gridProcessor.Process(bmp, null))
 					.Select(bmp => resizeProcessor.Process(bmp, null))
-					.Select(bmp => ImageUtils.ConvertToRgb24(bmp, 2))
+					.Select(bmp => ImageUtil.ConvertToRgb24(bmp, 2))
 					.Publish();
 
 				StartPolling();

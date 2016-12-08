@@ -10,7 +10,7 @@ using System.Windows.Media.Imaging;
 
 namespace LibDmd.Common
 {
-	public class ImageUtils
+	public class ImageUtil
 	{
 		private static readonly Frame _frame = new Frame();
 
@@ -320,7 +320,7 @@ namespace LibDmd.Common
 
 		/// <summary>
 		/// Sometimes we have a pointer, sometimes an array, but we don't want to implement
-		/// everything twice, so this is a wrapper.
+		/// everything twice, so this is a wrapper that supports both.
 		/// </summary>
 		private unsafe class Frame
 		{

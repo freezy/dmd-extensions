@@ -18,7 +18,7 @@ namespace DmdExt.Test
 		{
 			_options = options;
 
-			var pc = new PaletteConfiguration(@"F:\Pinball\Visual Pinball\VPinMAME\altcolor\fg_1200af\pin2dmd.pal");
+			var pc = new Coloring(@"F:\Pinball\Visual Pinball\VPinMAME\altcolor\fg_1200af\pin2dmd.pal");
 			Console.WriteLine("Loaded palette file: {0}", pc);
 		}
 

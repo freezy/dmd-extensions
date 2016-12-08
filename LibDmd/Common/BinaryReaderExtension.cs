@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace LibDmd.Processor.Coloring
+namespace LibDmd.Common
 {
 	// Note this MODIFIES THE GIVEN ARRAY then returns a reference to the modified array.
 	static class BinaryReaderExtension

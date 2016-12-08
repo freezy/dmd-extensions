@@ -177,7 +177,7 @@ namespace LibDmd.Output.PinDmd3
 			AssertRenderReady(bmp);
 
 			// copy bmp to rgb24 buffer
-			ImageUtils.ConvertToRgb24(bmp, _frameBufferRgb24);
+			ImageUtil.ConvertToRgb24(bmp, _frameBufferRgb24);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferRgb24);
