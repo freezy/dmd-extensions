@@ -25,6 +25,8 @@ namespace PinMameDevice
 	/// <seealso cref="DmdDevice">Data source called by VPinMAME</seealso>
 	public class DmdExt
 	{
+		private static readonly Color DefaultColor = Colors.OrangeRed;
+
 		private readonly PinMameSource _source = new PinMameSource();
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
@@ -33,7 +35,7 @@ namespace PinMameDevice
 		// configuration
 		private string _gameName;
 		private bool _colorize;
-		private Color _color = Colors.OrangeRed;
+		private Color _color = DefaultColor;
 		private Color[] _palette;
 		private Coloring _paletteConfig;
 
@@ -162,7 +164,7 @@ namespace PinMameDevice
 				_dmd.Hide();
 			});
 
-			_color = Colors.OrangeRed;
+			_color = DefaultColor;
 			_palette = null;
 		}
 
