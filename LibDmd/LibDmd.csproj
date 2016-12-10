@@ -81,6 +81,8 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
+    <Compile Include="Converter\Colorizer.cs" />
+    <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IFrameSourceGray2.cs" />
     <Compile Include="Input\IFrameSourceRgb24.cs" />

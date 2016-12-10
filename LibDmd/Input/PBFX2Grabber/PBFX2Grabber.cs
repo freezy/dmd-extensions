@@ -25,7 +25,7 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : IFrameSource, IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
+	public class PBFX2Grabber : IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
 	{
 		public string Name { get; } = "Pinball FX2";
 

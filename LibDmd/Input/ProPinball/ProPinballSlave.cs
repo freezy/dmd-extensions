@@ -23,7 +23,7 @@ using static System.Reflection.Assembly;
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : IFrameSource, IFrameSourceGray4
+	public class ProPinballSlave : IFrameSourceGray4
 	{
 		private const int Width = 128;
 		private const int Height = 32;

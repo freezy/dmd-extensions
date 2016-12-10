@@ -15,7 +15,7 @@ namespace PinMameDevice
 	/// then passed to <see cref="DmdExt"/> which passes the frames to this 
 	/// class.
 	/// </remarks>
-	class PinMameSource : IFrameSource, IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
+	class PinMameSource : IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
 	{
 		public string Name { get; } = "PinMAME Source";
 

@@ -37,7 +37,7 @@ namespace PinMameDevice
 		private bool _colorize;
 		private Color _color = DefaultColor;
 		private Color[] _palette;
-		private Coloring _paletteConfig;
+		private Coloring _coloring;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
@@ -62,10 +62,10 @@ namespace PinMameDevice
 			if (File.Exists(palettePath)) {
 				Logger.Info("Loading palette file at {0}...", palettePath);
 				try {
-					_paletteConfig = new Coloring(palettePath);
-					if (_paletteConfig.Palettes.Length == 1) {
+					_coloring = new Coloring(palettePath);
+					if (_coloring.Palettes.Length == 1) {
 						Logger.Info("Only one palette found, applying...");
-						_palette = _paletteConfig.Palettes[0].Colors;
+						_palette = _coloring.Palettes[0].Colors;
 					}
 				} catch (Exception e) {
 					Logger.Warn("Error loading palette: {0}", e.Message);
@@ -93,7 +93,14 @@ namespace PinMameDevice
 		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
 		public void LoadPalette(uint num)
 		{
+			var palette = _coloring?.GetPalette(num);
+			if (palette != null) {
+				Logger.Info("Setting palette of {0} via side channel...", palette.Colors.Length);
+				_dmd.Dmd.SetPalette(palette.Colors);
 
+			} else {
+				Logger.Warn("No palette with index {0} found to load through side channel.", num);
+			}
 		}
 
 		/// <summary>

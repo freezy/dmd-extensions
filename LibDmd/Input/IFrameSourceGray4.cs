@@ -10,7 +10,7 @@ namespace LibDmd.Input
 	/// <summary>
 	/// A source that is able to deliver 4-bit frames without conversion.
 	/// </summary>
-	public interface IFrameSourceGray4
+	public interface IFrameSourceGray4 : IFrameSource
 	{
 		/// <summary>
 		/// Returns an observable that produces a sequence of 4-bit frames.

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using LibDmd.Common;
 using NLog;
 
@@ -76,6 +77,12 @@ namespace LibDmd.Processor.Coloring
 			}
 
 			reader.Close();
+		}
+
+		public Palette GetPalette(uint index)
+		{
+			// TODO index bruichä
+			return Palettes.First(p => p.Index == index);
 		}
 
 		public override string ToString()

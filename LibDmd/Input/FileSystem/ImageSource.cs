@@ -8,7 +8,7 @@ using LibDmd.Common;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : IFrameSource, IFrameSourceGray4, IFrameSourceGray2, IFrameSourceRgb24
+	public class ImageSource : IFrameSourceGray4, IFrameSourceGray2, IFrameSourceRgb24
 	{
 		public string Name { get; } = "Image Source";
 

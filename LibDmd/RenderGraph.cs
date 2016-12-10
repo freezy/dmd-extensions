@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
+using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
@@ -55,6 +56,11 @@ namespace LibDmd
 		/// on the computer screen, PinDMD and PIN2DMD integrations.
 		/// </summary>
 		public List<IFrameDestination> Destinations { get; set; }
+
+		/// <summary>
+		/// If set, convert bitrate. Overrides <see cref="RenderAs"/>.
+		/// </summary>
+		public IConverter Converter { get; set; } 
 
 		/// <summary>
 		/// True of the graph is currently active, i.e. if the source is

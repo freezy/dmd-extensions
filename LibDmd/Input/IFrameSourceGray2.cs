@@ -10,7 +10,7 @@ namespace LibDmd.Input
 	/// <summary>
 	/// A source that is able to deliver 2-bit frames without conversion.
 	/// </summary>
-	public interface IFrameSourceGray2
+	public interface IFrameSourceGray2 : IFrameSource
 	{
 		/// <summary>
 		/// Returns an observable that produces a sequence of 2-bit frames.

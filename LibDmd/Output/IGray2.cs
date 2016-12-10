@@ -6,7 +6,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render 2 bit frames.
 	/// </summary>
-	public interface IGray2
+	public interface IGray2 : IFrameDestination
 	{
 		/// <summary>
 		/// Renders a frame in 2 bit.

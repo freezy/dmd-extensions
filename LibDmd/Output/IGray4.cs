@@ -6,7 +6,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render 4 bit frames.
 	/// </summary>
-	public interface IGray4
+	public interface IGray4 : IFrameDestination
 	{
 		/// <summary>
 		/// Renders a frame in 4 bit.
