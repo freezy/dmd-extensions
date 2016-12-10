@@ -12,22 +12,22 @@ namespace LibDmd.Processor.Coloring
 	public class Mapping
 	{
 		/// <summary>
-		/// MD5 hash of key frame
+		/// D Checkum fürs File
 		/// </summary>
-		public readonly uint Crc32;
+		public readonly uint Checksum;
 
 		/// <summary>
-		/// Mode
+		/// Dr Modus
 		/// </summary>
 		public readonly int Mode;
 
 		/// <summary>
-		/// Palette index
+		/// Dr Palettäindex
 		/// </summary>
 		public readonly ushort PaletteIndex;
 
 		/// <summary>
-		/// Duration until switch back to default palette (if 0 don’t switch back at all)
+		/// Wiä lang's gaht bis mr zrugg zur Standard-Palettä wächslet (wenn 0 gar nid zrugg wächslä)
 		/// </summary>
 		public readonly uint Duration;
 
@@ -35,8 +35,8 @@ namespace LibDmd.Processor.Coloring
 
 		public Mapping(BinaryReader reader)
 		{
-			Crc32 = reader.ReadUInt32BE();
-			Logger.Trace("  [{1}] [palette] Read crc32 as {0}", Crc32, reader.BaseStream.Position);
+			Checksum = reader.ReadUInt32BE();
+			Logger.Trace("  [{1}] [palette] Read checksum as {0}", Checksum, reader.BaseStream.Position);
 			Mode = reader.ReadByte();
 			Logger.Trace("  [{1}] [palette] Read mode as {0}", Mode, reader.BaseStream.Position);
 			PaletteIndex = reader.ReadUInt16BE();

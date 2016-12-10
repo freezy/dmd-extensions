@@ -16,13 +16,13 @@ using static System.Windows.Threading.Dispatcher;
 namespace PinMameDevice
 {
 	/// <summary>
-	/// Main logic for VPinMAME's <c>DmdDevice.dll</c>.
+	/// Hiä isch d Haiptlogik fir d <c>DmdDevice.dll</c> vom VPinMAME.
 	/// </summary>
 	/// <remarks>
-	/// It currently supports only the virtual DMD, though other devices will
-	/// be added at some point.
+	/// Im Momänt untrstitzts numä s virtueuä DMD, wobi schpätr ai diä
+	/// ächtä drzuä chemid.
 	/// </remarks>
-	/// <seealso cref="DmdDevice">Data source called by VPinMAME</seealso>
+	/// <seealso cref="DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
 	public class DmdExt
 	{
 		private static readonly Color DefaultColor = Colors.OrangeRed;
@@ -32,7 +32,7 @@ namespace PinMameDevice
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
 
-		// configuration
+		// Ziigs vo VPM
 		private string _gameName;
 		private bool _colorize;
 		private Color _color = DefaultColor;
@@ -48,10 +48,11 @@ namespace PinMameDevice
 		}
 
 		/// <summary>
-		/// Executed when all parameters are set.
+		/// Wird uisgfiärt wemmr aui Parametr hend.
 		/// </summary>
 		/// <remarks>
-		/// Can be run multiple times but the DMD is only created once.
+		/// Es cha si dass das meh as einisch uisgfiärt wird, wobih's DMD numä
+		/// einisch ersteuht wird.
 		/// </remarks>
 		public void Init()
 		{
@@ -86,8 +87,18 @@ namespace PinMameDevice
 		}
 
 		/// <summary>
-		/// Creates a new instance of the virtual DMD and attaches the render graphs
-		/// to it.
+		/// Wird uifgriäft wenn vom modifiziärtä ROM ibärä Sitäkanau ä Palettäwächsu
+		/// ah gä wird.
+		/// </summary>
+		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
+		public void LoadPalette(uint num)
+		{
+
+		}
+
+		/// <summary>
+		/// Tuät ä nii Inschantz vom virtueuä DMD kreiärä und tuät drnah d 
+		/// Render-Graphä drabindä.
 		/// </summary>
 		private void CreateVirtualDmd()
 		{
@@ -113,14 +124,14 @@ namespace PinMameDevice
 		}
 
 		/// <summary>
-		/// Creates a graph for every input type and attaches them
-		/// to the virtual DMD.
+		/// Kreiärt ä Render-Graph fir jedä Input-Tip und bindet si as 
+		/// virtueuä DMD.
 		/// </summary>
 		private void SetupGraphs()
 		{
 			var dest = new List<IFrameDestination> { _dmd.Dmd };
 
-			// create a graph for each bit length.
+			// miär bruichid äi Render-Graph fir jedi Bitlängi
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = dest,
@@ -151,7 +162,7 @@ namespace PinMameDevice
 		}
 
 		/// <summary>
-		/// Stops all renderers and hides the virtual DMD
+		/// Tuät aui Renderer ahautä unds virtueua DMD vrschteckä.
 		/// </summary>
 		public void Close()
 		{

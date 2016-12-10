@@ -11,23 +11,23 @@ using NLog;
 namespace LibDmd.Processor.Coloring
 {
 	/// <summary>
-	/// A palette is a list of colors. It comes with an index and a type for
-	/// telling if it's the default palette or not.
+	/// Ä palettä isch ä Lischtä vo Farbä. Jedi Palettä het än Index und a Tip wo
+	/// seit obs d Standard-Palettä isch odr nid.
 	/// </summary>
 	public class Palette
 	{
 		/// <summary>
-		/// Palette index
+		/// Dr Palettäindex
 		/// </summary>
 		public readonly uint Index;
 
 		/// <summary>
-		/// type of palette. 0: normal, 1: default (only one palette per file could be marked as default)
+		/// Dr Palettätip.
 		/// </summary>
 		public readonly int Type; //  0: normal, 1: default
 
 		/// <summary>
-		/// RGB data.
+		/// Das sind d Farbä vo dr Palettä.
 		/// </summary>
 		public readonly Color[] Colors;
 

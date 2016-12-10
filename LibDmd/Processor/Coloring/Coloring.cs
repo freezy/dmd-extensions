@@ -6,9 +6,9 @@ using NLog;
 namespace LibDmd.Processor.Coloring
 {
 	/// <summary>
-	/// A palette configuration file.
+	/// Das ischd Haiptkonfig firs iifärbä vo Graistuifä-Aazeigä.
 	/// 
-	/// For examples, see: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
+	/// Biischpiu vom Fileformat hets hiä: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
 	/// </summary>
 	public class Coloring
 	{
@@ -21,9 +21,9 @@ namespace LibDmd.Processor.Coloring
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
-		/// Reads palette configuration from a file.
+		/// List di ganzi Konfig vom File inä.
 		/// </summary>
-		/// <param name="filename"></param>
+		/// <param name="filename">Dr Pfad zum File</param>
 		public Coloring(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
