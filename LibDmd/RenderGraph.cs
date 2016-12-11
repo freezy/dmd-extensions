@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Converter;
 using NLog;
@@ -155,6 +158,35 @@ namespace LibDmd
 			try {
 
 				foreach (var dest in Destinations) {
+					
+					// check for 2->24 bit converter
+					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
+						var sourceGray2 = Source as IFrameSourceGray2;
+						var destRgb24 = dest as IRgb24;
+						AssertCompatibility(Source, sourceGray2, dest, destRgb24, "2-bit", "24-bit");
+						Logger.Info("Sending 2-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
+						var disposable = sourceGray2.GetGray2Frames()
+							.Subscribe(frame => destRgb24.RenderRgb24(Converter.Convert(frame)), ex => { throw ex; });
+						_activeSources.Add(disposable);
+						continue;
+					}
+					
+					// check for 4->24 bit converter
+					if (Converter?.From == RenderBitLength.Gray4 && Converter.To == RenderBitLength.Rgb24) {
+						var sourceGray4 = Source as IFrameSourceGray4;
+						var destRgb24 = dest as IRgb24;
+						AssertCompatibility(Source, sourceGray4, dest, destRgb24, "4-bit", "24-bit");
+						Logger.Info("Sending 4-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
+						var disposable = sourceGray4.GetGray4Frames()
+							.Subscribe(frame => destRgb24.RenderRgb24(Converter.Convert(frame)), ex => { throw ex; });
+						_activeSources.Add(disposable);
+						continue;
+					}
+
+					if (Converter != null) {
+						throw new NotImplementedException($"Frame convertion from ${Converter.From} to ${Converter.To} not implemented.");
+					}
+
 					switch (RenderAs)
 					{
 						case RenderBitLength.Gray2: {
@@ -255,15 +287,18 @@ namespace LibDmd
 		/// <param name="dest">Original destination</param>
 		/// <param name="castedDest">Casted source, will be checked against null</param>
 		/// <param name="what">Message</param>
-		private static void AssertCompatibility(IFrameSource src, object castedSource, IFrameDestination dest, object castedDest, string what)
+		private static void AssertCompatibility(IFrameSource src, object castedSource, IFrameDestination dest, object castedDest, string what, string whatDest = null)
 		{
 			if (castedSource == null && castedDest == null) {
-				throw new IncompatibleRenderer("Neither source \"" + src.Name + "\" nor destination \"" + dest.Name + "\" are " + what + " compatible.");
+				if (whatDest != null) {
+					throw new IncompatibleRenderer($"Source \"${src.Name}\" is not ${what} compatible and destination \"${dest.Name}\" is not ${whatDest} compatible.");
+                }
+				throw new IncompatibleRenderer($"Neither source \"${src.Name}\" nor destination \"${dest.Name}\" are ${what} compatible.");
 			}
 			if (castedSource == null) {
 				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + what + " compatible.");
 			}
-			AssertCompatibility(dest, castedDest, what);
+			AssertCompatibility(dest, castedDest, whatDest ?? what);
 		}
 		
 		/// <summary>

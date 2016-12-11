@@ -27,7 +27,6 @@ namespace LibDmd.Converter
 		/// Converts from source to destination
 		/// </summary>
 		/// <param name="from">Source data</param>
-		/// <param name="to">Destination data</param>
-		void Convert(byte[] from, byte[] to);
+		byte[] Convert(byte[] from);
 	}
 }
