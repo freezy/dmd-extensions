@@ -12,7 +12,6 @@ namespace LibDmd.Converter
 {
 	public class Gray4Colorizer : IConverter
 	{
-
 		public readonly int Width;
 		public readonly int Height;
 		public readonly Color DefaultColor = Colors.DarkOrchid;
@@ -47,6 +46,31 @@ namespace LibDmd.Converter
 
 		public byte[] Convert(byte[] frame)
 		{
+			// Zersch dimmer s Frame i Planes uifteilä
+			var planes = FrameUtil.Split4Bit(Width, Height, frame);
+			var match = false;
+
+			// Jedi Plane wird einisch duräghäscht
+			for (var i = 0; i < 3; i++) {
+				var checksum = FrameUtil.Checksum(planes[i]);
+
+				// Wemer dr Häsch hett de luägemr grad obs ächt ä Palettä drzuäg git
+				var palette = _coloring.FindPalette(checksum);
+				if (palette == null) {
+					continue;
+				}
+
+				// Faus ja de grad awändä und guät isch
+				Logger.Info("[colorize] Setting palette of {0} colors via unmasked frame.", palette.Colors.Length);
+				SetPalette(palette.Colors);
+				match = true;
+				break;
+			}
+			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
+			if (!match) {
+				
+			}
+
 			ColorUtil.ColorizeFrame(Width, Height, frame, _palette, _coloredFrame);
 			return _coloredFrame;
 		}
@@ -55,7 +79,7 @@ namespace LibDmd.Converter
 		{
 			var palette = _coloring.GetPalette(index);
 			if (palette != null) {
-				Logger.Info("[colorize] Setting palette of {0} via side channel...", palette.Colors.Length);
+				Logger.Info("[colorize] Setting palette of {0} colors via side channel...", palette.Colors.Length);
 				SetPalette(palette.Colors);
 
 			} else {

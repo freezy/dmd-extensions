@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
+    <Compile Include="Common\FrameUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />

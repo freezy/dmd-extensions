@@ -84,9 +84,18 @@ namespace LibDmd.Converter.Colorize
 			return Palettes.First(p => p.Index == index);
 		}
 
+		public Palette FindPalette(uint checksum)
+		{
+			// TODO index bruichä
+			var mapping = Mappings.First(m => m.Checksum == checksum);
+			return mapping != null ? GetPalette(mapping.PaletteIndex) : null;
+		}
+
 		public override string ToString()
 		{
 			return $"{Path.GetFileName(Filename)}: v{Version}, {Palettes.Length} palette(s), {Mappings.Length} mapping(s), {Masks.Length} mask(s)";
 		}
+
+		
 	}
 }
