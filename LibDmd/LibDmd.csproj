@@ -81,7 +81,7 @@
   <ItemGroup>
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
-    <Compile Include="Converter\Colorizer.cs" />
+    <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IFrameSourceGray2.cs" />
@@ -91,9 +91,9 @@
     <Compile Include="Output\IGray2.cs" />
     <Compile Include="Output\IRgb24.cs" />
     <Compile Include="Common\BinaryReaderExtension.cs" />
-    <Compile Include="Processor\Coloring\Mapping.cs" />
-    <Compile Include="Processor\Coloring\Palette.cs" />
-    <Compile Include="Processor\Coloring\Coloring.cs" />
+    <Compile Include="Converter\Colorize\Mapping.cs" />
+    <Compile Include="Converter\Colorize\Palette.cs" />
+    <Compile Include="Converter\Colorize\Coloring.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\IFrameSource.cs" />

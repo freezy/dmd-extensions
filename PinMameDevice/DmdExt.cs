@@ -7,8 +7,8 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.Converter;
 using LibDmd.Output;
-using LibDmd.Processor.Coloring;
 using Mindscape.Raygun4Net;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
@@ -37,7 +37,8 @@ namespace PinMameDevice
 		private bool _colorize;
 		private Color _color = DefaultColor;
 		private Color[] _palette;
-		private Coloring _coloring;
+		private Gray4Colorizer _gray4Colorizer;
+
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
@@ -60,15 +61,10 @@ namespace PinMameDevice
 			var palettePath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
 
 			if (File.Exists(palettePath)) {
-				Logger.Info("Loading palette file at {0}...", palettePath);
 				try {
-					_coloring = new Coloring(palettePath);
-					if (_coloring.Palettes.Length == 1) {
-						Logger.Info("Only one palette found, applying...");
-						_palette = _coloring.Palettes[0].Colors;
-					}
+					_gray4Colorizer = new Gray4Colorizer(128, 32, palettePath);
 				} catch (Exception e) {
-					Logger.Warn("Error loading palette: {0}", e.Message);
+					Logger.Warn("Error initializing colorizer: {0}", e.Message);
 				}
 			} else {
 				Logger.Debug("No palette file found at {0}.", palettePath);
@@ -93,14 +89,7 @@ namespace PinMameDevice
 		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
 		public void LoadPalette(uint num)
 		{
-			var palette = _coloring?.GetPalette(num);
-			if (palette != null) {
-				Logger.Info("Setting palette of {0} via side channel...", palette.Colors.Length);
-				_dmd.Dmd.SetPalette(palette.Colors);
-
-			} else {
-				Logger.Warn("No palette with index {0} found to load through side channel.", num);
-			}
+			_gray4Colorizer?.LoadPalette(num);
 		}
 
 		/// <summary>
@@ -147,6 +136,7 @@ namespace PinMameDevice
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = dest,
+				Converter = _gray4Colorizer,
 				RenderAs = RenderBitLength.Gray4
 			});
 			_graphs.Add(new RenderGraph {
@@ -155,10 +145,15 @@ namespace PinMameDevice
 				RenderAs = RenderBitLength.Rgb24
 			});
 			
-			if (_colorize && _palette != null) {
+			if (_colorize && _gray4Colorizer != null) {
+				Logger.Info("Just clearing palette, colorization is done by converter.");
+				_dmd.Dmd.ClearColor();
+
+			} else if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to DMD...");
 				_dmd.Dmd.ClearColor();
 				_dmd.Dmd.SetPalette(_palette);
+
 			} else {
 				Logger.Info("Applying color to DMD...");
 				_dmd.Dmd.ClearPalette();
@@ -184,6 +179,7 @@ namespace PinMameDevice
 
 			_color = DefaultColor;
 			_palette = null;
+			_gray4Colorizer = null;
 		}
 
 		public void SetGameName(string gameName)

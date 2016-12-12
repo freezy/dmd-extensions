@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Processor.Coloring
+namespace LibDmd.Converter.Colorize
 {
 	/// <summary>
 	/// Ä palettä isch ä Lischtä vo Farbä. Jedi Palettä het än Index und a Tip wo

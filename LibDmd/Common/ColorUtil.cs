@@ -175,10 +175,11 @@ namespace LibDmd.Common
 		/// <param name="height">Height of the frame to color</param>
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
+		/// <param name="colorizedFrame">If set, write data into this array</param>
 		/// <returns></returns>
-		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette)
+		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
-			var colorizedFrame = new byte[width * height * 3];
+			colorizedFrame = colorizedFrame ?? new byte[width * height * 3];
 			var pos = 0;
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x++) {

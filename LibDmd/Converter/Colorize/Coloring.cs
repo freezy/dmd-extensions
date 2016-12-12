@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Processor.Coloring
+namespace LibDmd.Converter.Colorize
 {
 	/// <summary>
 	/// Das ischd Haiptkonfig firs iifärbä vo Graistuifä-Aazeigä.
