@@ -52,7 +52,7 @@ namespace LibDmd.Converter
 			Height = height;
 			_coloring = new Coloring(filename);
 			_coloredFrame = new byte[width * height * 3];
-			SetPalette(new[] { Colors.Black, DefaultColor });
+			SetPalette(_coloring.DefaultPalette != null ? _coloring.DefaultPalette.Colors : new[] {Colors.Black, DefaultColor});
 			Logger.Debug("[colorize] Initialized.");
 		}
 

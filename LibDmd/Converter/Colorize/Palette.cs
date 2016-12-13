@@ -26,6 +26,11 @@ namespace LibDmd.Converter.Colorize
 		/// </summary>
 		public readonly Color[] Colors;
 
+		/// <summary>
+		/// Isch true wenns d Haiptpalettä isch
+		/// </summary>
+		public bool IsDefault => Type == 1;
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public Palette(BinaryReader reader)

@@ -17,6 +17,7 @@ namespace LibDmd.Converter.Colorize
 		public readonly Palette[] Palettes;
 		public readonly Mapping[] Mappings;
 		public readonly byte[][] Masks;
+		public readonly Palette DefaultPalette;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -38,6 +39,12 @@ namespace LibDmd.Converter.Colorize
 			Palettes = new Palette[numPalettes];
 			for (var i = 0; i < numPalettes; i++) {
 				Palettes[i] = new Palette(reader);
+				if (DefaultPalette == null && Palettes[i].IsDefault) {
+					DefaultPalette = Palettes[i];
+				}
+			}
+			if (DefaultPalette == null && Palettes.Length > 0) {
+				DefaultPalette = Palettes[0];
 			}
 
 			if (reader.BaseStream.Position == reader.BaseStream.Length) {
