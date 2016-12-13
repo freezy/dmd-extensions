@@ -12,6 +12,9 @@ namespace LibDmd.Converter.Colorize
 	public class Animation
 	{
 		public readonly Frame[] Frames;
+		public ushort CurrentFrame { get; private set; }
+
+		public bool IsFinished => Frames.Length == CurrentFrame;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -23,6 +26,19 @@ namespace LibDmd.Converter.Colorize
 			for (var i = 0; i < numFrames; i++) {
 				Frames[i] = new Frame(reader);
 			}
+		}
+		
+		public void Start()
+		{
+			CurrentFrame = 0;
+		}
+
+		public Frame Next()
+		{
+			if (IsFinished) {
+				throw new IndexOutOfRangeException("Animation is finished, cannot continue.");
+			}
+			return Frames[CurrentFrame++];
 		}
 
 		public static Animation[] ReadFrameSequence(string filename)

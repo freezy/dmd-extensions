@@ -92,11 +92,10 @@ namespace LibDmd.Converter.Colorize
 			return Palettes.FirstOrDefault(p => p.Index == index);
 		}
 
-		public Palette FindPalette(uint checksum)
+		public Mapping FindMapping(uint checksum)
 		{
 			// TODO index bruichä
-			var mapping = Mappings.FirstOrDefault(m => m.Checksum == checksum);
-			return mapping != null ? GetPalette(mapping.PaletteIndex) : null;
+			return Mappings.FirstOrDefault(m => m.Checksum == checksum);
 		}
 
 		public override string ToString()

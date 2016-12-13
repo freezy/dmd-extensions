@@ -45,6 +45,7 @@ namespace LibDmd.Converter
 		private Color[] _palette;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private Animation _currentAnimation;
 
 		public Gray4Colorizer(int width, int height, string palFile, string fsqFile = null)
 		{
@@ -63,6 +64,12 @@ namespace LibDmd.Converter
 
 		public byte[] Convert(byte[] frame)
 		{
+			// Wennä Animation am laifä isch de nämmer diräkt diä Datä
+			var coloredFrame = PopAnimation();
+			if (coloredFrame != null) {
+				return coloredFrame;
+			}
+
 			// Zersch dimmer s Frame i Planes uifteilä
 			var planes = FrameUtil.Split4Bit(Width, Height, frame);
 			var match = false;
@@ -71,18 +78,20 @@ namespace LibDmd.Converter
 			for (var i = 0; i < 4; i++) {
 				var checksum = FrameUtil.Checksum(planes[i]);
 
-				// Wemer dr Häsch hett de luägemr grad obs ächt ä Palettä drzuäg git
-				var palette = _coloring.FindPalette(checksum);
-				if (palette == null) {
-					continue;
-				}
+				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
+				match = ApplyMapping(checksum, false);
 
 				// Faus ja de grad awändä und guät isch
-				Logger.Info("[colorize] Setting palette of {0} colors via unmasked frame.", palette.Colors.Length);
-				SetPalette(palette.Colors);
-				match = true;
-				break;
+				if (match) {
+					break;
+				}
 			}
+			// Villicht het än Animation aagfangä..
+			coloredFrame = PopAnimation();
+			if (coloredFrame != null) {
+				return coloredFrame;
+			}
+
 			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			if (!match && _coloring.Masks.Length > 0) {
 				var maskedPlane = new byte[512];
@@ -91,24 +100,67 @@ namespace LibDmd.Converter
 						var plane = new BitArray(planes[i]);
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
 						var checksum = FrameUtil.Checksum(maskedPlane);
-						var palette = _coloring.FindPalette(checksum);
-						if (palette == null) {
-							continue;
+						if (ApplyMapping(checksum, true)) {
+							break;
 						}
-						Logger.Info("[colorize] Setting palette of {0} colors via masked frame.", palette.Colors.Length);
-						SetPalette(palette.Colors);
-						match = true;
-						break;
-					}
-					if (match) {
-						break;
 					}
 				}
 			}
 
-			// Und am Schluss wird iigfärbt.
+			// Villicht het ja etz än Animation aagfangä..
+			coloredFrame = PopAnimation();
+			if (coloredFrame != null) {
+				return coloredFrame;
+			}
+
+			// Faus nid timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, _palette, _coloredFrame);
 			return _coloredFrame;
+		}
+
+		private bool ApplyMapping(uint checksum, bool masked)
+		{
+			var mapping = _coloring.FindMapping(checksum);
+			if (mapping == null) {
+				return false;
+			}
+			if (mapping.Mode == 1) {
+				var palette = _coloring.GetPalette(mapping.Offset);
+				if (palette == null) {
+					Logger.Warn("[colorize] No palette found at index {0} for {1} frame.", mapping.Offset, masked ? "masked" : "unmasked");
+					return false;
+				}
+				Logger.Info("[colorize] Setting palette of {0} colors via {1} frame.", palette.Colors.Length, masked ? "masked" : "unmasked");
+				SetPalette(palette.Colors);
+				return true;
+			}
+			if (mapping.Mode == 2) {
+				if (mapping.Offset >= _animation.Length) {
+					Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Offset, masked ? "masked" : "unmasked");
+					return false;
+				}
+				Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", _animation[mapping.Offset].Frames.Length, masked ? "masked" : "unmasked");
+				_currentAnimation = _animation[mapping.Offset];
+				return true;
+			}
+			return false;
+		}
+
+		private byte[] PopAnimation()
+		{
+			if (_currentAnimation == null) {
+				return null;
+			}
+			Logger.Trace("[colorize] Playing frame {0} of animation.", _currentAnimation.CurrentFrame);
+			var replacementFrame = _currentAnimation.Next();
+			if (_currentAnimation.IsFinished) {
+				_currentAnimation = null;
+			}
+			if (replacementFrame.BitLength == 4) {
+				ColorUtil.ColorizeFrame(Width, Height, replacementFrame.GetFrame(Width, Height), _palette, _coloredFrame);
+				return _coloredFrame;
+			}
+			return null;
 		}
 
 		/// <summary>

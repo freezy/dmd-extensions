@@ -11,6 +11,7 @@ namespace LibDmd.Converter.Colorize
 {
 	public class Frame
 	{
+		public int BitLength => Planes.Length; 
 		public uint Delay;
 		public readonly byte[][] Planes;
 
@@ -27,6 +28,11 @@ namespace LibDmd.Converter.Colorize
 			for (var i = 0; i < numPlanes; i++) {
 				Planes[i] = reader.ReadBytes(planeSize);
 			}
+		}
+
+		public byte[] GetFrame(int width, int height)
+		{
+			return FrameUtil.Join(width, height, Planes);
 		}
 	}
 }

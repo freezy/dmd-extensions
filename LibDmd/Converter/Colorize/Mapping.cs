@@ -19,7 +19,7 @@ namespace LibDmd.Converter.Colorize
 		/// <summary>
 		/// Dr Palettäindex
 		/// </summary>
-		public readonly ushort PaletteIndex;
+		public readonly ushort Offset;
 
 		/// <summary>
 		/// Wiä lang's gaht bis mr zrugg zur Standard-Palettä wächslet (wenn 0 gar nid zrugg wächslä)
@@ -34,8 +34,8 @@ namespace LibDmd.Converter.Colorize
 			Logger.Trace("  [{1}] [palette] Read checksum as {0}", Checksum, reader.BaseStream.Position);
 			Mode = reader.ReadByte();
 			Logger.Trace("  [{1}] [palette] Read mode as {0}", Mode, reader.BaseStream.Position);
-			PaletteIndex = reader.ReadUInt16BE();
-			Logger.Trace("  [{1}] [palette] Read index as {0}", PaletteIndex, reader.BaseStream.Position);
+			Offset = reader.ReadUInt16BE();
+			Logger.Trace("  [{1}] [palette] Read index as {0}", Offset, reader.BaseStream.Position);
 			Duration = reader.ReadUInt32BE();
 			Logger.Trace("  [{1}] [palette] Read duration as {0}", Duration, reader.BaseStream.Position);
 		}
