@@ -41,10 +41,10 @@ namespace LibDmd.Common
 							bd3 |= 1;
 						}
 					}
-					//planes[0][byteIdx] = bd0;
-					//planes[1][byteIdx] = bd1;
-					//planes[2][byteIdx] = bd2;
-					//planes[3][byteIdx] = bd3;
+					planes[0][byteIdx] = bd0;
+					planes[1][byteIdx] = bd1;
+					planes[2][byteIdx] = bd2;
+					planes[3][byteIdx] = bd3;
 					byteIdx++;
 				}
 			}
