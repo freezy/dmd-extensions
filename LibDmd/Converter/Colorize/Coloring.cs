@@ -9,6 +9,7 @@ namespace LibDmd.Converter.Colorize
 	/// Das ischd Haiptkonfig firs iifärbä vo Graistuifä-Aazeigä.
 	/// 
 	/// Biischpiu vom Fileformat hets hiä: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
+	/// Doku übrs Format hiä: https://github.com/sker65/go-dmd-clock/blob/master/doc/README.md
 	/// </summary>
 	public class Coloring
 	{

@@ -1,13 +1,19 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 
 namespace LibDmd.Common
 {
 	public class FrameUtil
 	{
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		public static byte[][] Split4Bit(int width, int height, byte[] frame)
 		{
 			var planes = new byte[4][];
@@ -49,6 +55,66 @@ namespace LibDmd.Common
 				}
 			}
 			return planes;
+		}
+
+		public static byte[][] Split(int width, int height, int bitlen, byte[] frame)
+		{
+			var planeSize = width * height / 8;
+			var planes = new byte[bitlen][];
+			for (var i = 0; i < bitlen; i++) {
+				planes[i] = new byte[planeSize];
+			}
+			var byteIdx = 0;
+			var bd = new byte[bitlen];
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width; x += 8) {
+					for (var i = 0; i < bitlen; i++) {
+						bd[i] = 0;
+					}
+					for (var v = 7; v >= 0; v--) {
+						var pixel = frame[(y * width) + (x + v)];
+						for (var i = 0; i < bitlen; i++) {
+							bd[i] <<= 1;
+							if ((pixel & (byte)Math.Pow(2, i)) != 0) {
+								bd[i] |= 1;
+							}
+						}
+					}
+					for (var i = 0; i < bitlen; i++) {
+						planes[i][byteIdx] = bd[i];
+					}
+					byteIdx++;
+				}
+			}
+			return planes;
+		}
+
+		public static byte[] Join(int width, int height, byte[][] pl)
+		{
+			var fr = new byte[width * height];
+			var planes = new BitArray[pl.Length];
+			for (var i = 0; i < pl.Length; i++) {
+				planes[i] = new BitArray(pl[i]);
+			}
+			for (var f = 0; f < fr.Length; f++) {
+				for (var p = 0; p < pl.Length; p++) {
+					var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
+					fr[f] |= (byte)(bit << p);
+				}
+			}
+			return fr;
+		}
+
+		public static void DumpConsole(int width, int height, byte[] frame)
+		{
+			var i = 0;
+			for (var y = 0; y < height; y++) {
+				var sb = new StringBuilder(width);
+				for (var x = 0; x < width; x++) {
+					sb.Append(frame[i++].ToString("X"));
+				}
+				Logger.Debug(sb);
+			}
 		}
 
 		public static uint Checksum(byte[] input)

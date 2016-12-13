@@ -25,7 +25,7 @@ namespace PinMameTest
 			Controller = new VPinMameController();
 			//Controller.Run("mm_109b").Subscribe(status => {
 			//Controller.Run("mm_109c").Subscribe(status => {
-			Controller.Run("tz_92").Subscribe(status => {
+			Controller.Run("sprk_103").Subscribe(status => {
 
 				Console.WriteLine("[{0}] Game status: {1}", Thread.CurrentThread.ManagedThreadId, status);
 			});

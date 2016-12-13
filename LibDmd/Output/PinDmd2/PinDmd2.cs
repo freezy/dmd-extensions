@@ -9,7 +9,7 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : BufferRenderer, IFrameDestination, IGray4, IRawOutput
+	public class PinDmd2 : BufferRenderer, IGray4, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v2";
 		public bool IsRgb { get; } = false;

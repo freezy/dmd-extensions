@@ -40,18 +40,23 @@ namespace LibDmd.Converter
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
 		private readonly Coloring _coloring;
+		private readonly Animation[] _animation;
 		private readonly byte[] _coloredFrame;
 		private Color[] _palette;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Gray4Colorizer(int width, int height, string filename)
+		public Gray4Colorizer(int width, int height, string palFile, string fsqFile = null)
 		{
-			Logger.Info("[colorize] Loading palette file at {0}...", filename);
 			Width = width;
 			Height = height;
-			_coloring = new Coloring(filename);
+			Logger.Info("[colorize] Loading palette file at {0}...", palFile);
+			_coloring = new Coloring(palFile);
 			_coloredFrame = new byte[width * height * 3];
+			if (fsqFile != null) {
+				Logger.Info("[colorize] Loading animation file at {0}...", fsqFile);
+				_animation = Animation.ReadFrameSequence(fsqFile);
+			}
 			SetPalette(_coloring.DefaultPalette != null ? _coloring.DefaultPalette.Colors : new[] {Colors.Black, DefaultColor});
 			Logger.Debug("[colorize] Initialized.");
 		}

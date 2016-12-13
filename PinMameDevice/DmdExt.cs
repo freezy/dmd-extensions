@@ -39,7 +39,6 @@ namespace PinMameDevice
 		private Color[] _palette;
 		private Gray4Colorizer _gray4Colorizer;
 
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 
@@ -58,16 +57,19 @@ namespace PinMameDevice
 		public void Init()
 		{
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-			var palettePath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+			var palPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+			var fsqPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
 
-			if (File.Exists(palettePath)) {
+			if (File.Exists(palPath)) {
 				try {
-					_gray4Colorizer = new Gray4Colorizer(128, 32, palettePath);
+					_gray4Colorizer = File.Exists(fsqPath) 
+						? new Gray4Colorizer(128, 32, palPath, fsqPath) 
+						: new Gray4Colorizer(128, 32, palPath);
 				} catch (Exception e) {
 					Logger.Warn("Error initializing colorizer: {0}", e.Message);
 				}
 			} else {
-				Logger.Debug("No palette file found at {0}.", palettePath);
+				Logger.Debug("No palette file found at {0}.", palPath);
 			}
 
 			if (_dmd == null) {
