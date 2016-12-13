@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,25 @@ using NLog;
 
 namespace LibDmd.Converter
 {
+	/// <summary>
+	/// Tuät viär Bit Graischtuifä-Frames i RGB24-Frames umwandlä.
+	/// </summary>
+	/// <remarks>
+	/// Hiä gits zwe Methodä. I jedem Fau wärdid aui Farbdatä zersch vomänä Feil
+	/// gladä.
+	/// 
+	/// Im erschtä Fau wärdid d Palettäwächsu ibärä Sitäkanau aagäh. Diä Wächsu
+	/// chemid diräkt vom ROM, wo midem Pinball Browser abgändered wordä sind.
+	/// 
+	/// Im zweitä Fau timmer jedes Biud häschä und luägid ob dr Häsch neimä im
+	/// Feil vorhandä isch. Faus ja, de wird diä entsprächendi Palettä gladä. S Feil
+	/// cha abr ai nu Maskä beinhautä wo dynamischi Elemänt uisbländid, diä wärdid
+	/// de ai nu aagwandt bim Häschä.
+	/// 
+	/// Bim Häschä isch nu wichtig z wissä dass mr uifd Bitplanes seperat häschid,
+	/// und nid uifd Originaldatä vo VPM. Bi drii Maskä und viär Bit git das auso
+	/// drii mau viär plus viär unghäschti, macht sächzä Häsches zum Vrgliichä.
+	/// </remarks>
 	public class Gray4Colorizer : IConverter
 	{
 		public readonly int Width;
@@ -36,14 +56,6 @@ namespace LibDmd.Converter
 			Logger.Debug("[colorize] Initialized.");
 		}
 
-		public void SetPalette(Color[] colors)
-		{
-			Logger.Debug("[colorize] Setting new palette:");
-			Array.ForEach(colors, c => Logger.Trace("   " + c));
-
-			_palette = ColorUtil.GetPalette(colors, 16);
-		}
-
 		public byte[] Convert(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
@@ -67,14 +79,49 @@ namespace LibDmd.Converter
 				break;
 			}
 			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
-			if (!match) {
-				
+			if (!match && _coloring.Masks.Length > 0) {
+				var maskedPlane = new byte[512];
+				for (var i = 0; i < 3; i++) {
+					foreach (var mask in _coloring.Masks) {
+						var plane = new BitArray(planes[i]);
+						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
+						var checksum = FrameUtil.Checksum(maskedPlane);
+						var palette = _coloring.FindPalette(checksum);
+						if (palette == null) {
+							continue;
+						}
+						Logger.Info("[colorize] Setting palette of {0} colors via masked frame.", palette.Colors.Length);
+						SetPalette(palette.Colors);
+						match = true;
+						break;
+					}
+					if (match) {
+						break;
+					}
+				}
 			}
 
+			// Und am Schluss wird iigfärbt.
 			ColorUtil.ColorizeFrame(Width, Height, frame, _palette, _coloredFrame);
 			return _coloredFrame;
 		}
 
+		/// <summary>
+		/// Tuät nii Farbä dr Palettä wo grad bruichd wird zuäwiisä.
+		/// </summary>
+		/// <param name="colors">Diä niiä Farbä vord Palettä</param>
+		public void SetPalette(Color[] colors)
+		{
+			Logger.Debug("[colorize] Setting new palette:");
+			Array.ForEach(colors, c => Logger.Trace("   " + c));
+
+			_palette = ColorUtil.GetPalette(colors, 16);
+		}
+
+		/// <summary>
+		/// Tuät d Palettä wo grad bruichd wird mitärän andärä uiswächslä.
+		/// </summary>
+		/// <param name="index">Dr Index fo dr niiä Palettä wo vom Palettä-Feil gläsä wordä isch</param>
 		public void LoadPalette(uint index)
 		{
 			var palette = _coloring.GetPalette(index);
