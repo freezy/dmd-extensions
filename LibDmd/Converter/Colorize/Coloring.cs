@@ -81,13 +81,13 @@ namespace LibDmd.Converter.Colorize
 		public Palette GetPalette(uint index)
 		{
 			// TODO index bruichä
-			return Palettes.First(p => p.Index == index);
+			return Palettes.FirstOrDefault(p => p.Index == index);
 		}
 
 		public Palette FindPalette(uint checksum)
 		{
 			// TODO index bruichä
-			var mapping = Mappings.First(m => m.Checksum == checksum);
+			var mapping = Mappings.FirstOrDefault(m => m.Checksum == checksum);
 			return mapping != null ? GetPalette(mapping.PaletteIndex) : null;
 		}
 
