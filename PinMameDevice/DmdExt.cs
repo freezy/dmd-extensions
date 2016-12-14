@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
+using LibDmd.Converter.Colorize;
 using LibDmd.Output;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -25,6 +26,9 @@ namespace PinMameDevice
 	/// <seealso cref="DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
 	public class DmdExt
 	{
+
+		private static readonly int Width = 128;
+		private static readonly int Height = 32;
 		private static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly PinMameSource _source = new PinMameSource();
@@ -37,6 +41,7 @@ namespace PinMameDevice
 		private bool _colorize;
 		private Color _color = DefaultColor;
 		private Color[] _palette;
+		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -62,9 +67,17 @@ namespace PinMameDevice
 
 			if (File.Exists(palPath)) {
 				try {
-					_gray4Colorizer = File.Exists(fsqPath) 
-						? new Gray4Colorizer(128, 32, palPath, fsqPath) 
-						: new Gray4Colorizer(128, 32, palPath);
+					Logger.Info("Loading palette file at {0}...", palPath);
+					var coloring = new Coloring(palPath);
+					Animation[] animations = null;
+
+					if (File.Exists(fsqPath)) {
+						Logger.Info("Loading animation file at {0}...", fsqPath);
+						animations = Animation.ReadFrameSequence(fsqPath, Width, Height);
+					}
+					_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
+					_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
+
 				} catch (Exception e) {
 					Logger.Warn("Error initializing colorizer: {0}", e.Message);
 				}
@@ -133,6 +146,7 @@ namespace PinMameDevice
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = dest,
+				Converter = _gray2Colorizer,
 				RenderAs = RenderBitLength.Gray2
 			});
 			_graphs.Add(new RenderGraph {
@@ -147,7 +161,7 @@ namespace PinMameDevice
 				RenderAs = RenderBitLength.Rgb24
 			});
 			
-			if (_colorize && _gray4Colorizer != null) {
+			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_dmd.Dmd.ClearColor();
 

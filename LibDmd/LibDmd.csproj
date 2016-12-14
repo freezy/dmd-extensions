@@ -82,8 +82,10 @@
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
+    <Compile Include="Converter\AbstractColorizer.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
     <Compile Include="Converter\Colorize\Frame.cs" />
+    <Compile Include="Converter\Gray2Colorizer.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />

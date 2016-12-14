@@ -41,13 +41,15 @@ namespace LibDmd.Converter
 	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
 	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public class Gray4Colorizer : AbstractColorizer, IConverter, IFrameSourceRgb24
+	public class Gray2Colorizer : AbstractColorizer, IConverter, IFrameSourceRgb24
 	{
-		public RenderBitLength From { get; } = RenderBitLength.Gray4;
+
+		public RenderBitLength From { get; } = RenderBitLength.Gray2;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
-		public Gray4Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
+		public Gray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
 		{
+			Animations[0].Start(AnimationFrames, Palette);
 		}
 
 		public byte[] Convert(byte[] frame)
@@ -58,11 +60,11 @@ namespace LibDmd.Converter
 			}
 
 			// Zersch dimmer s Frame i Planes uifteilä
-			var planes = FrameUtil.Split4Bit(Width, Height, frame);
+			var planes = FrameUtil.Split(Width, Height, 2, frame);
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht
-			for (var i = 0; i < 4; i++) {
+			for (var i = 0; i < 2; i++) {
 				var checksum = FrameUtil.Checksum(planes[i]);
 
 				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
@@ -81,7 +83,7 @@ namespace LibDmd.Converter
 			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			if (!match && Coloring.Masks.Length > 0) {
 				var maskedPlane = new byte[512];
-				for (var i = 0; i < 4; i++) {
+				for (var i = 0; i < 2; i++) {
 					foreach (var mask in Coloring.Masks) {
 						var plane = new BitArray(planes[i]);
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);

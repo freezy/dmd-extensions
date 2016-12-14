@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
 
@@ -52,14 +54,23 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
-		public void Start(Subject<byte[]> frameSource)
+		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Color[]> palette)
 		{
+			Logger.Info("[fsq] Starting animation of {0} frames...", Frames.Length);
 			IsRunning = true;
-			Frames.ToObservable()
-				.Where(frame => IsRunning)
-				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Delay)))
-				.Select(frame => frame.GetFrame(_width, _height))
-				.Subscribe(frameSource.OnNext, () => IsRunning = false);
+
+			var delays = Frames.ToObservable().Select(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Delay)));
+			//var delays = Observable.Interval(TimeSpan.FromMilliseconds(250)).Delay(TimeSpan.FromSeconds(2));
+			var frames = Frames.ToObservable();
+
+			frames.Zip(delays.Switch(), (l, r) => l).Subscribe(frame => {
+				Logger.Info("[fsq] Playing {0}-bit frame for {1}ms...", frame.BitLength, frame.Delay);
+				frameSource.OnNext(ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value));
+			}, () => {
+				Logger.Info("[fsq] Animation done.");
+				IsRunning = false;
+			});
+
 		}
 
 		public void Stop()
