@@ -163,11 +163,19 @@ namespace LibDmd
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
 						var sourceGray2 = Source as IFrameSourceGray2;
 						var destRgb24 = dest as IRgb24;
+						var converterSource = Converter as IFrameSourceRgb24;
 						AssertCompatibility(Source, sourceGray2, dest, destRgb24, "2-bit", "24-bit");
 						Logger.Info("Sending 2-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray2.GetGray2Frames()
-							.Subscribe(frame => destRgb24.RenderRgb24(Converter.Convert(frame)), ex => { throw ex; });
+							.Select(Converter.Convert)
+							.Where(frame => frame != null)
+							.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
 						_activeSources.Add(disposable);
+						if (converterSource != null) {
+							// for pre-recorded animations, a converter can become source.
+							Logger.Info("Added converter as additional RGB24 source.");
+							_activeSources.Add(converterSource.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
+						}
 						continue;
 					}
 					
@@ -175,11 +183,19 @@ namespace LibDmd
 					if (Converter?.From == RenderBitLength.Gray4 && Converter.To == RenderBitLength.Rgb24) {
 						var sourceGray4 = Source as IFrameSourceGray4;
 						var destRgb24 = dest as IRgb24;
+						var converterSource = Converter as IFrameSourceRgb24;
 						AssertCompatibility(Source, sourceGray4, dest, destRgb24, "4-bit", "24-bit");
 						Logger.Info("Sending 4-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray4.GetGray4Frames()
-							.Subscribe(frame => destRgb24.RenderRgb24(Converter.Convert(frame)), ex => { throw ex; });
+							.Select(Converter.Convert)
+							.Where(frame => frame != null)
+							.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
 						_activeSources.Add(disposable);
+						if (converterSource != null) {
+							// for pre-recorded animations, a converter can become source.
+							Logger.Info("Added converter as additional RGB24 source.");
+							_activeSources.Add(converterSource.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
+						}
 						continue;
 					}
 
@@ -195,7 +211,8 @@ namespace LibDmd
 							AssertCompatibility(Source, sourceGray2, dest, destGray2, "2-bit");
 							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray2.GetGray2Frames()
-								.Subscribe(frame => destGray2.RenderGray2(frame), ex => { throw ex; });
+								.Where(frame => frame != null)
+								.Subscribe(destGray2.RenderGray2, ex => { throw ex; });
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -205,7 +222,8 @@ namespace LibDmd
 							AssertCompatibility(Source, sourceGray4, dest, destGray4, "4-bit");
 							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray4.GetGray4Frames()
-								.Subscribe(frame => destGray4.RenderGray4(frame), ex => { throw ex; });
+								.Where(frame => frame != null)
+								.Subscribe(destGray4.RenderGray4, ex => { throw ex; });
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -215,7 +233,8 @@ namespace LibDmd
 							AssertCompatibility(Source, sourceRgb24, dest, destRgb24, "24-bit");
 							Logger.Info("Sending unprocessed 24-bit RGB data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceRgb24.GetRgb24Frames()
-								.Subscribe(frame => destRgb24.RenderRgb24(frame), ex => { throw ex; });
+								.Where(frame => frame != null)
+								.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -225,7 +244,8 @@ namespace LibDmd
 							var disposable = Source.GetFrames().Subscribe(bmp => {
 								_beforeProcessed.OnNext(bmp);
 								if (Processors != null) {
-									bmp = enabledProcessors.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
+									bmp = enabledProcessors
+										.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
 										.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
 								}
 								dest.Render(bmp);

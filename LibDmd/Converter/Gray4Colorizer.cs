@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Converter
@@ -14,6 +16,7 @@ namespace LibDmd.Converter
 	/// <summary>
 	/// Tuät viär Bit Graischtuifä-Frames i RGB24-Frames umwandlä.
 	/// </summary>
+	/// 
 	/// <remarks>
 	/// Hiä gits zwe Methodä. I jedem Fau wärdid aui Farbdatä zersch vomänä Feil
 	/// gladä.
@@ -29,8 +32,16 @@ namespace LibDmd.Converter
 	/// Bim Häschä isch nu wichtig z wissä dass mr uifd Bitplanes seperat häschid,
 	/// und nid uifd Originaldatä vo VPM. Bi drii Maskä und viär Bit git das auso
 	/// drii mau viär plus viär unghäschti, macht sächzä Häsches zum Vrgliichä.
+	/// 
+	/// Näbdr Palettäwächsu gits abr ai nu ä Meglichkäit, kompletti Animazionä
+	/// abzschpilä. Je nach <see cref="Mapping.Mode"/> wird Animazion komplett
+	/// abgschpiut oder numä mit Graidatä ergänzt.
+	/// 
+	/// Wärendem än Animazion ablaift gaht abrs Häsching uifd (eventuel 
+	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
+	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public class Gray4Colorizer : IConverter
+	public class Gray4Colorizer : IConverter, IFrameSourceRgb24
 	{
 		public readonly int Width;
 		public readonly int Height;
@@ -46,6 +57,8 @@ namespace LibDmd.Converter
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private Animation _currentAnimation;
+		private readonly Subject<byte[]> _animationFrames = new Subject<byte[]>();
+		private bool IsAnimationRunning => _currentAnimation != null && _currentAnimation.IsRunning;
 
 		public Gray4Colorizer(int width, int height, string palFile, string fsqFile = null)
 		{
@@ -56,7 +69,7 @@ namespace LibDmd.Converter
 			_coloredFrame = new byte[width * height * 3];
 			if (fsqFile != null) {
 				Logger.Info("[colorize] Loading animation file at {0}...", fsqFile);
-				_animation = Animation.ReadFrameSequence(fsqFile);
+				_animation = Animation.ReadFrameSequence(fsqFile, Width, Height);
 			}
 			SetPalette(_coloring.DefaultPalette != null ? _coloring.DefaultPalette.Colors : new[] {Colors.Black, DefaultColor});
 			Logger.Debug("[colorize] Initialized.");
@@ -64,10 +77,9 @@ namespace LibDmd.Converter
 
 		public byte[] Convert(byte[] frame)
 		{
-			// Wennä Animation am laifä isch de nämmer diräkt diä Datä
-			var coloredFrame = PopAnimation();
-			if (coloredFrame != null) {
-				return coloredFrame;
+			// Wenn schonä Animation am laifä isch de gäbämr nid uisä
+			if (IsAnimationRunning) {
+				return null;
 			}
 
 			// Zersch dimmer s Frame i Planes uifteilä
@@ -87,9 +99,8 @@ namespace LibDmd.Converter
 				}
 			}
 			// Villicht het än Animation aagfangä..
-			coloredFrame = PopAnimation();
-			if (coloredFrame != null) {
-				return coloredFrame;
+			if (IsAnimationRunning) {
+				return null;
 			}
 
 			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
@@ -108,9 +119,8 @@ namespace LibDmd.Converter
 			}
 
 			// Villicht het ja etz än Animation aagfangä..
-			coloredFrame = PopAnimation();
-			if (coloredFrame != null) {
-				return coloredFrame;
+			if (IsAnimationRunning) {
+				return null;
 			}
 
 			// Faus nid timmr eifach iifärbä.
@@ -124,43 +134,27 @@ namespace LibDmd.Converter
 			if (mapping == null) {
 				return false;
 			}
-			if (mapping.Mode == 1) {
-				var palette = _coloring.GetPalette(mapping.Offset);
+			if (mapping.Mode == 0) {
+				var palette = _coloring.GetPalette(mapping.PaletteIndex);
 				if (palette == null) {
-					Logger.Warn("[colorize] No palette found at index {0} for {1} frame.", mapping.Offset, masked ? "masked" : "unmasked");
+					Logger.Warn("[colorize] No palette found at index {0} for {1} frame.", mapping.PaletteIndex, masked ? "masked" : "unmasked");
 					return false;
 				}
 				Logger.Info("[colorize] Setting palette of {0} colors via {1} frame.", palette.Colors.Length, masked ? "masked" : "unmasked");
 				SetPalette(palette.Colors);
 				return true;
 			}
-			if (mapping.Mode == 2) {
-				if (mapping.Offset >= _animation.Length) {
-					Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Offset, masked ? "masked" : "unmasked");
+			if (mapping.Mode == 1) {
+				if (mapping.PaletteIndex >= _animation.Length) {
+					Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.PaletteIndex, masked ? "masked" : "unmasked");
 					return false;
 				}
-				Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", _animation[mapping.Offset].Frames.Length, masked ? "masked" : "unmasked");
-				_currentAnimation = _animation[mapping.Offset];
+				Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", _animation[mapping.PaletteIndex].Frames.Length, masked ? "masked" : "unmasked");
+				_currentAnimation = _animation[mapping.PaletteIndex];
+				_currentAnimation.Start(_animationFrames, mapping.Duration);
 				return true;
 			}
 			return false;
-		}
-
-		private byte[] PopAnimation()
-		{
-			if (_currentAnimation == null) {
-				return null;
-			}
-			Logger.Trace("[colorize] Playing frame {0} of animation.", _currentAnimation.CurrentFrame);
-			var replacementFrame = _currentAnimation.Next();
-			if (_currentAnimation.IsFinished) {
-				_currentAnimation = null;
-			}
-			if (replacementFrame.BitLength == 4) {
-				ColorUtil.ColorizeFrame(Width, Height, replacementFrame.GetFrame(Width, Height), _palette, _coloredFrame);
-				return _coloredFrame;
-			}
-			return null;
 		}
 
 		/// <summary>
@@ -189,6 +183,11 @@ namespace LibDmd.Converter
 			} else {
 				Logger.Warn("[colorize] No palette with index {0} found to load through side channel.", index);
 			}
+		}
+
+		public IObservable<byte[]> GetRgb24Frames()
+		{
+			return _animationFrames;
 		}
 	}
 }
