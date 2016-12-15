@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -59,9 +60,27 @@ namespace LibDmd.Converter.Colorize
 			Logger.Info("[fsq] Starting animation of {0} frames...", Frames.Length);
 			IsRunning = true;
 
-			var delays = Frames.ToObservable().Select(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Delay)));
+			var delay = TimeSpan.Zero;
+			var delays = Frames
+				.ToObservable()
+				.Delay(frame => {
+					delay = delay.Add(TimeSpan.FromMilliseconds(frame.Delay*10));
+					return Observable.Timer(delay);
+				})
+				.Subscribe(x => Logger.Info("Received frame after {0} ms", x.Delay));
+
+			//Frames.ToObservable()
+			//	.SelectMany(i => Observable.Timer(TimeSpan.FromSeconds(1)).Select(_ => i))
+			//	.Subscribe(x => Logger.Info("Received frame"));
+
+			/*
+			var input = Frames.ToObservable();
+			var res = input.Delay(x => Observable.Timer(TimeSpan.FromSeconds(1)));
+			res.ForEach(x => Logger.Info("Received frame"));*/
+
+			//delays.ForEach(frame => Logger.Info("Got frame which should have been delayed {0} ms.", frame.Delay));
 			//var delays = Observable.Interval(TimeSpan.FromMilliseconds(250)).Delay(TimeSpan.FromSeconds(2));
-			var frames = Frames.ToObservable();
+			/*var frames = Frames.ToObservable();
 
 			frames.Zip(delays.Switch(), (l, r) => l).Subscribe(frame => {
 				Logger.Info("[fsq] Playing {0}-bit frame for {1}ms...", frame.BitLength, frame.Delay);
@@ -69,7 +88,7 @@ namespace LibDmd.Converter.Colorize
 			}, () => {
 				Logger.Info("[fsq] Animation done.");
 				IsRunning = false;
-			});
+			});*/
 
 		}
 
