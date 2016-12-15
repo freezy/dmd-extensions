@@ -18,28 +18,8 @@ namespace LibDmd.Converter
 	/// </summary>
 	/// 
 	/// <remarks>
-	/// Hiä gits zwe Methodä. I jedem Fau wärdid aui Farbdatä zersch vomänä Feil
-	/// gladä.
-	/// 
-	/// Im erschtä Fau wärdid d Palettäwächsu ibärä Sitäkanau aagäh. Diä Wächsu
-	/// chemid diräkt vom ROM, wo midem Pinball Browser abgändered wordä sind.
-	/// 
-	/// Im zweitä Fau timmer jedes Biud häschä und luägid ob dr Häsch neimä im
-	/// Feil vorhandä isch. Faus ja, de wird diä entsprächendi Palettä gladä. S Feil
-	/// cha abr ai nu Maskä beinhautä wo dynamischi Elemänt uisbländid, diä wärdid
-	/// de ai nu aagwandt bim Häschä.
-	/// 
-	/// Bim Häschä isch nu wichtig z wissä dass mr uifd Bitplanes seperat häschid,
-	/// und nid uifd Originaldatä vo VPM. Bi drii Maskä und viär Bit git das auso
-	/// drii mau viär plus viär unghäschti, macht sächzä Häsches zum Vrgliichä.
-	/// 
-	/// Näbdr Palettäwächsu gits abr ai nu ä Meglichkäit, kompletti Animazionä
-	/// abzschpilä. Je nach <see cref="Mapping.Mode"/> wird Animazion komplett
+	/// Je nach <see cref="Mapping.Mode"/> wird d Animazion komplett
 	/// abgschpiut oder numä mit Graidatä ergänzt.
-	/// 
-	/// Wärendem än Animazion ablaift gaht abrs Häsching uifd (eventuel 
-	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
-	/// nii Animazionä chend losgah.
 	/// </remarks>
 	public class Gray2Colorizer : AbstractColorizer, IConverter, IFrameSourceRgb24
 	{
@@ -49,18 +29,12 @@ namespace LibDmd.Converter
 
 		public Gray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
 		{
-			Animations[0].Start(AnimationFrames, Palette);
 		}
 
 		public byte[] Convert(byte[] frame)
 		{
-			// Wenn schonä Animation am laifä isch de gäbämr nid uisä
-			if (IsAnimationRunning) {
-				return null;
-			}
-
 			// Zersch dimmer s Frame i Planes uifteilä
-			var planes = FrameUtil.Split(Width, Height, 2, frame);
+			var planes = FrameUtil.Split4Bit(Width, Height, frame);
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht
@@ -68,16 +42,12 @@ namespace LibDmd.Converter
 				var checksum = FrameUtil.Checksum(planes[i]);
 
 				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
-				match = ApplyMapping(checksum, false);
+				match = ApplyMapping(checksum, "unmasked");
 
 				// Faus ja de grad awändä und guät isch
 				if (match) {
 					break;
 				}
-			}
-			// Villicht het än Animation aagfangä..
-			if (IsAnimationRunning) {
-				return null;
 			}
 
 			// Faus nei de gemmr Maskä fir Maskä durä und luägid ob da eppis passt
@@ -88,16 +58,29 @@ namespace LibDmd.Converter
 						var plane = new BitArray(planes[i]);
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
 						var checksum = FrameUtil.Checksum(maskedPlane);
-						if (ApplyMapping(checksum, true)) {
+						if (ApplyMapping(checksum, "masked")) {
 							break;
 						}
 					}
 				}
 			}
 
-			// Villicht het ja etz än Animation aagfangä..
+			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			if (IsAnimationRunning) {
 				return null;
+			}
+
+			// Wenns Biud muäss mit zwe Bytes ergänzt wärdä, de go!
+			if (IsEnhancerRunning) {
+				var data = CurrentEnhancer.Next();
+				if (data.BitLength == 2) {
+					planes[2] = data.Planes[0];
+					planes[3] = data.Planes[1];
+					frame = FrameUtil.Join(Width, Height, planes);
+
+				} else {
+					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
+				}
 			}
 
 			// Faus nid timmr eifach iifärbä.

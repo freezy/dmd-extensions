@@ -168,9 +168,9 @@ namespace LibDmd
 						Logger.Info("Sending 2-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray2.GetGray2Frames()
 							.Select(Converter.Convert)
-							.Where(frame => frame != null);
-						//	.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
-						//_activeSources.Add(disposable);
+							.Where(frame => frame != null)
+							.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
+						_activeSources.Add(disposable);
 						if (converterSource != null) {
 							// for pre-recorded animations, a converter can become source.
 							Logger.Info("Added converter as additional RGB24 source.");

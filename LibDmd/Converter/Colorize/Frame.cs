@@ -13,13 +13,15 @@ namespace LibDmd.Converter.Colorize
 	{
 		public int BitLength => Planes.Length; 
 		public uint Delay;
+		public uint Time;
 		public readonly byte[][] Planes;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Frame(BinaryReader reader)
+		public Frame(BinaryReader reader, uint time)
 		{
 			Delay = reader.ReadUInt32BE();
+			Time = time;
 			var numPlanes = reader.ReadUInt16BE();
 			var planeSize = reader.ReadUInt16BE();
 			//Logger.Trace("  [{2}] [fsq] Reading {0}-bit frame with {1}-byte planes", numPlanes, planeSize, reader.BaseStream.Position);

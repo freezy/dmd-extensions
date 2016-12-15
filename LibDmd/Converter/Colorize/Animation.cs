@@ -40,9 +40,17 @@ namespace LibDmd.Converter.Colorize
 
 		private readonly int _width;
 		private readonly int _height;
+		private IDisposable _animation;
+		private uint _currentFrame;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		/// <summary>
+		/// Kreiärt ä nii Animazion
+		/// </summary>
+		/// <param name="reader">S Feil wod Animazion dinnä staht</param>
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
 		public Animation(BinaryReader reader, int width, int height)
 		{
 			_width = width;
@@ -50,53 +58,65 @@ namespace LibDmd.Converter.Colorize
 			var numFrames = reader.ReadUInt16BE();
 			Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
 			Frames = new Frame[numFrames];
+			uint time = 0;
 			for (var i = 0; i < numFrames; i++) {
-				Frames[i] = new Frame(reader);
+				Frames[i] = new Frame(reader, time);
+				time += Frames[i].Delay;
 			}
 		}
 
+		/// <summary>
+		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
+		/// uisgäh.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Das hiä isch dr Fau wo diä gsamti Animazion uisgäh und VPM ignoriärt
+		/// wird (dr Modus eis).
+		/// </remarks>
+		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
+		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
 		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Color[]> palette)
 		{
 			Logger.Info("[fsq] Starting animation of {0} frames...", Frames.Length);
 			IsRunning = true;
+			_animation = Frames.ToObservable()
+				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
+				.Select(frame => frame.GetFrame(_width, _height))
+				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame, palette.Value))
+				.Subscribe(frameSource.OnNext, () => { IsRunning = false; });
+		}
+		
+		public void Start()
+		{
+			_currentFrame = 0;
+			IsRunning = true;
+		}
 
-			var delay = TimeSpan.Zero;
-			var delays = Frames
-				.ToObservable()
-				.Delay(frame => {
-					delay = delay.Add(TimeSpan.FromMilliseconds(frame.Delay*10));
-					return Observable.Timer(delay);
-				})
-				.Subscribe(x => Logger.Info("Received frame after {0} ms", x.Delay));
-
-			//Frames.ToObservable()
-			//	.SelectMany(i => Observable.Timer(TimeSpan.FromSeconds(1)).Select(_ => i))
-			//	.Subscribe(x => Logger.Info("Received frame"));
-
-			/*
-			var input = Frames.ToObservable();
-			var res = input.Delay(x => Observable.Timer(TimeSpan.FromSeconds(1)));
-			res.ForEach(x => Logger.Info("Received frame"));*/
-
-			//delays.ForEach(frame => Logger.Info("Got frame which should have been delayed {0} ms.", frame.Delay));
-			//var delays = Observable.Interval(TimeSpan.FromMilliseconds(250)).Delay(TimeSpan.FromSeconds(2));
-			/*var frames = Frames.ToObservable();
-
-			frames.Zip(delays.Switch(), (l, r) => l).Subscribe(frame => {
-				Logger.Info("[fsq] Playing {0}-bit frame for {1}ms...", frame.BitLength, frame.Delay);
-				frameSource.OnNext(ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value));
-			}, () => {
-				Logger.Info("[fsq] Animation done.");
+		public Frame Next()
+		{
+			if (!IsRunning) {
+				throw new InvalidOperationException("Cannot retrieve next frame of stopped animation.");
+			}
+			if (Frames.Length == _currentFrame + 1) {
 				IsRunning = false;
-			});*/
-
+			}
+			return Frames[_currentFrame++];
 		}
 
 		public void Stop()
 		{
+			_animation?.Dispose();
 			IsRunning = false;
 		}
 
+		/// <summary>
+		/// Tuät aui Animazionä vom Feil inälääsä.
+		/// </summary>
+		/// <param name="filename">Dr Pfad zum Feil</param>
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <returns></returns>
 		public static Animation[] ReadFrameSequence(string filename, int width, int height)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
