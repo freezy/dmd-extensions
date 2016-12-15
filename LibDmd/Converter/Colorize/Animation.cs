@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
@@ -25,23 +17,23 @@ namespace LibDmd.Converter.Colorize
 	/// Än Animazion wird abgschpiut wenns äs Matching git und dr Modus eis odr
 	/// zwei isch.
 	/// 
-	/// Im Modus eis chemid aui Biudr vo <see cref="Frames"/>. Fird Uisgab wird
+	/// Im Modus eis chemid aui Biudr vo <see cref="_frames"/>. Fird Uisgab wird
 	/// VPM ignoriärt. S Timing wird ibr <see cref="Frame.Delay"/> definiärt.
 	/// 
 	/// Im Modus zwäi chemid d Biudr vo VPM. Fir d Uisgab wärdid d Bits vo
-	/// <see cref="Frames"/> a diä bestehendä Datä hinnä anäghänkt. S Timing 
+	/// <see cref="_frames"/> a diä bestehendä Datä hinnä anäghänkt. S Timing 
 	/// bliibt s gliichä wiä das vo VPM.
 	/// </remarks>
 	public class Animation
 	{
-		public readonly Frame[] Frames;
-
 		public bool IsRunning { get; private set; }
+		public int NumFrames => _frames.Length;
 
+		private readonly Frame[] _frames;
 		private readonly int _width;
 		private readonly int _height;
 		private IDisposable _animation;
-		private uint _currentFrame;
+		private uint _frameIndex;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -57,11 +49,11 @@ namespace LibDmd.Converter.Colorize
 			_height = height;
 			var numFrames = reader.ReadUInt16BE();
 			Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
-			Frames = new Frame[numFrames];
+			_frames = new Frame[numFrames];
 			uint time = 0;
 			for (var i = 0; i < numFrames; i++) {
-				Frames[i] = new Frame(reader, time);
-				time += Frames[i].Delay;
+				_frames[i] = new Frame(reader, time);
+				time += _frames[i].Delay;
 			}
 		}
 
@@ -78,32 +70,48 @@ namespace LibDmd.Converter.Colorize
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
 		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Color[]> palette)
 		{
-			Logger.Info("[fsq] Starting animation of {0} frames...", Frames.Length);
+			Logger.Info("[fsq] Starting animation of {0} frames...", _frames.Length);
 			IsRunning = true;
-			_animation = Frames.ToObservable()
+			_animation = _frames.ToObservable()
 				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
 				.Select(frame => frame.GetFrame(_width, _height))
 				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame, palette.Value))
 				.Subscribe(frameSource.OnNext, () => { IsRunning = false; });
 		}
-		
+
+		/// <summary>
+		/// Tuät d Animazion aus loosglah markiäre. Äs wird abr nid uisgäh.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Das hiä isch dr Fau wo zur Bit-Erwiiterig diänt (Modus zwäi). Dr 
+		/// Konvärtr chunnt säuber ibr <see cref="Next"/> d Biudr go abholä
+		/// bisses käni me hett odr d Animazion gschtoppt wird.
+		/// </remarks>
 		public void Start()
 		{
-			_currentFrame = 0;
+			_frameIndex = 0;
 			IsRunning = true;
 		}
 
+		/// <summary>
+		/// Gits nächschtä Biud zrugg.
+		/// </summary>
+		/// <returns>S nächschtä Biud idr Animazion</returns>
 		public Frame Next()
 		{
 			if (!IsRunning) {
 				throw new InvalidOperationException("Cannot retrieve next frame of stopped animation.");
 			}
-			if (Frames.Length == _currentFrame + 1) {
+			if (_frames.Length == _frameIndex + 1) {
 				IsRunning = false;
 			}
-			return Frames[_currentFrame++];
+			return _frames[_frameIndex++];
 		}
 
+		/// <summary>
+		/// Tuät d Animazion aahautä.
+		/// </summary>
 		public void Stop()
 		{
 			_animation?.Dispose();
@@ -111,7 +119,7 @@ namespace LibDmd.Converter.Colorize
 		}
 
 		/// <summary>
-		/// Tuät aui Animazionä vom Feil inälääsä.
+		/// Tuät aui Animazionä vom Feil uisälääsä.
 		/// </summary>
 		/// <param name="filename">Dr Pfad zum Feil</param>
 		/// <param name="width">Bräiti vom Biud</param>

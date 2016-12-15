@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
+﻿using System.Collections;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
-using LibDmd.Input;
-using NLog;
 
 namespace LibDmd.Converter
 {
@@ -21,7 +12,7 @@ namespace LibDmd.Converter
 	/// Je nach <see cref="Mapping.Mode"/> wird d Animazion komplett
 	/// abgschpiut oder numä mit Graidatä ergänzt.
 	/// </remarks>
-	public class Gray2Colorizer : AbstractColorizer, IConverter, IFrameSourceRgb24
+	public class Gray2Colorizer : AbstractColorizer, IConverter
 	{
 
 		public RenderBitLength From { get; } = RenderBitLength.Gray2;
@@ -70,7 +61,7 @@ namespace LibDmd.Converter
 				return null;
 			}
 
-			// Wenns Biud muäss mit zwe Bytes ergänzt wärdä, de go!
+			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrs einfach ersetzä
 			if (IsEnhancerRunning) {
 				var data = CurrentEnhancer.Next();
 				if (data.BitLength == 2) {
@@ -83,7 +74,7 @@ namespace LibDmd.Converter
 				}
 			}
 
-			// Faus nid timmr eifach iifärbä.
+			// Und sisch timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value, ColoredFrame);
 			return ColoredFrame;
 		}

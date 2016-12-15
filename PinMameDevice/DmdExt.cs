@@ -17,7 +17,7 @@ using static System.Windows.Threading.Dispatcher;
 namespace PinMameDevice
 {
 	/// <summary>
-	/// Hiä isch d Haiptlogik fir d <c>DmdDevice.dll</c> vom VPinMAME.
+	/// Hiä isch d Haiptlogik fir d <c>DmdDevice.dll</c> fir VPinMAME.
 	/// </summary>
 	/// <remarks>
 	/// Im Momänt untrstitzts numä s virtueuä DMD, wobi schpätr ai diä
@@ -26,7 +26,6 @@ namespace PinMameDevice
 	/// <seealso cref="DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
 	public class DmdExt
 	{
-
 		private static readonly int Width = 128;
 		private static readonly int Height = 32;
 		private static readonly Color DefaultColor = Colors.OrangeRed;
@@ -40,10 +39,13 @@ namespace PinMameDevice
 		private string _gameName;
 		private bool _colorize;
 		private Color _color = DefaultColor;
+
+		// Iifärbigsziig
 		private Color[] _palette;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 
+		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 
@@ -64,6 +66,8 @@ namespace PinMameDevice
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var palPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
 			var fsqPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
+			_gray2Colorizer = null;
+			_gray4Colorizer = null;
 
 			if (File.Exists(palPath)) {
 				try {

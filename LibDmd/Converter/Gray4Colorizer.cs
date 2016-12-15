@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
+﻿using System.Collections;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
-using LibDmd.Input;
-using NLog;
 
 namespace LibDmd.Converter
 {
@@ -21,7 +12,7 @@ namespace LibDmd.Converter
 	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
 	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
 	/// </remarks>
-	public class Gray4Colorizer : AbstractColorizer, IConverter, IFrameSourceRgb24
+	public class Gray4Colorizer : AbstractColorizer, IConverter
 	{
 		public RenderBitLength From { get; } = RenderBitLength.Gray4;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;

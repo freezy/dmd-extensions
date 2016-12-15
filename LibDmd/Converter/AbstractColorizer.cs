@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 using LibDmd.Input;
@@ -42,7 +36,7 @@ namespace LibDmd.Converter
 	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
 	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public abstract class AbstractColorizer 
+	public abstract class AbstractColorizer : IFrameSourceRgb24
 	{
 		public readonly int Width;
 		public readonly int Height;
@@ -94,39 +88,43 @@ namespace LibDmd.Converter
 			Logger.Info("[colorize] Setting palette of {0} colors via {1} frame.", palette.Colors.Length, masked);
 			SetPalette(palette.Colors);
 
-			// Numä iifärbä (hemmr scho) und guät isch
-			if (mapping.Mode == 0) {
-				return true;
-			}
+			
+			switch (mapping.Mode)
+			{
+				// Numä iifärbä (hemmr scho) und guät isch
+				case 0:
+					return true;
 
-			// Än Animazion wird losgla
-			if (mapping.Mode == 1) {
-				if (mapping.Duration >= Animations.Length) {
-					Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
+				// Än Animazion wird losgla
+				case 1:
+					if (mapping.Duration >= Animations.Length) {
+						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
+						return false;
+					}
+					Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].NumFrames, masked);
+					CurrentAnimation?.Stop();
+					CurrentEnhancer?.Stop();
+					CurrentAnimation = Animations[mapping.Duration];
+					CurrentAnimation.Start(AnimationFrames, Palette);
+					return true;
+				
+				// Ab etz wärdid d Biudli mit zwe Bit ergänzt
+				case 2:
+					if (mapping.Duration >= Animations.Length) {
+						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
+						return false;
+					}
+					Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].NumFrames, masked);
+					CurrentAnimation?.Stop();
+					CurrentEnhancer?.Stop();
+					CurrentEnhancer = Animations[mapping.Duration];
+					CurrentEnhancer.Start();
+					return true;
+
+				default:
+					Logger.Warn("[colorize] Unknown mode {0}.", mapping.Mode);
 					return false;
-				}
-				Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].Frames.Length, masked);
-				CurrentAnimation?.Stop();
-				CurrentEnhancer?.Stop();
-				CurrentAnimation = Animations[mapping.Duration];
-				CurrentAnimation.Start(AnimationFrames, Palette);
-				return true;
 			}
-
-			// Ab etz wärdid d Biudli mit zwe Bit ergänzt
-			if (mapping.Mode == 2) {
-				if (mapping.Duration >= Animations.Length) {
-					Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
-					return false;
-				}
-				Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].Frames.Length, masked);
-				CurrentAnimation?.Stop();
-				CurrentEnhancer?.Stop();
-				CurrentEnhancer = Animations[mapping.Duration];
-				CurrentEnhancer.Start();
-			}
-
-			return false;
 		}
 
 		/// <summary>
@@ -137,6 +135,7 @@ namespace LibDmd.Converter
 		{
 			if (colors == null) {
 				Logger.Warn("[colorize] Ignoring null palette.");
+				return;
 			}
 			Logger.Debug("[colorize] Setting new palette:");
 			Array.ForEach(colors, c => Logger.Trace("   " + c));
