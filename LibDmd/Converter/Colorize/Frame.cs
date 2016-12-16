@@ -12,8 +12,8 @@ namespace LibDmd.Converter.Colorize
 	public class Frame
 	{
 		public int BitLength => Planes.Length; 
-		public uint Delay;
-		public uint Time;
+		public readonly uint Delay;
+		public readonly uint Time;
 		public readonly byte[][] Planes;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

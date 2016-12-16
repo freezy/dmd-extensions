@@ -121,30 +121,32 @@ namespace LibDmd.Converter
 
 				// Än Animazion wird losgla
 				case 1:
-					if (mapping.Duration >= Animations.Length) {
+					var animation = Animation.Find(Animations, mapping.Duration);
+					if (animation == null) {
 						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
-					Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].NumFrames, masked);
+					Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
 					CurrentAnimation?.Stop();
 					CurrentEnhancer?.Stop();
-					CurrentAnimation = Animations[mapping.Duration];
+					CurrentAnimation = animation;
 					CurrentAnimation.Start(AnimationFrames, Palette);
 					return true;
-				
+
 				// Ab etz wärdid d Biudli mit zwe Bit ergänzt
 				case 2:
-					if (mapping.Duration >= Animations.Length) {
+					var enhancer = Animation.Find(Animations, mapping.Duration);
+					if (enhancer == null) {
 						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
-					Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", Animations[mapping.PaletteIndex].NumFrames, masked);
+					Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);
 					CurrentAnimation?.Stop();
 					CurrentEnhancer?.Stop();
-					CurrentEnhancer = Animations[mapping.Duration];
+					CurrentEnhancer = enhancer;
 					CurrentEnhancer.Start();
 					return true;
-
+				
 				default:
 					Logger.Warn("[colorize] Unknown mode {0}.", mapping.Mode);
 					return false;

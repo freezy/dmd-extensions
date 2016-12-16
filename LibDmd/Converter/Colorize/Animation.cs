@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
@@ -27,6 +28,7 @@ namespace LibDmd.Converter.Colorize
 	public class Animation
 	{
 		public bool IsRunning { get; private set; }
+		public readonly long Offset;
 		public int NumFrames => _frames.Length;
 
 		private readonly Frame[] _frames;
@@ -47,6 +49,7 @@ namespace LibDmd.Converter.Colorize
 		{
 			_width = width;
 			_height = height;
+			Offset = reader.BaseStream.Position;
 			var numFrames = reader.ReadUInt16BE();
 			Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
 			_frames = new Frame[numFrames];
@@ -116,6 +119,11 @@ namespace LibDmd.Converter.Colorize
 		{
 			_animation?.Dispose();
 			IsRunning = false;
+		}
+
+		public static Animation Find(Animation[] animations, long offset)
+		{
+			return animations.FirstOrDefault(animation => animation.Offset == offset);
 		}
 
 		/// <summary>
