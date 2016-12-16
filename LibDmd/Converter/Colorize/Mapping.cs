@@ -38,7 +38,7 @@ namespace LibDmd.Converter.Colorize
 
 		/// <summary>
 		/// Im Modus 0 ischs wiä lang's gaht bis mr zrugg zur Standard-Palettä wächslet (wenn 0 gar nid zrugg wächslä).
-		/// Im Modus eis odr zwäi ischs dr Index vodr Animazion uisem FSQ-Feil.
+		/// Im Modus eis odr zwäi ischs d Byte-Position vodr Animazion im FSQ-Feil.
 		/// </summary>
 		public readonly uint Duration;
 

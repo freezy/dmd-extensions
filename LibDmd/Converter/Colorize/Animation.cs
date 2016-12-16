@@ -120,8 +120,15 @@ namespace LibDmd.Converter.Colorize
 			IsRunning = false;
 		}
 
+		/// <summary>
+		/// Findet än Animazion wo anärä gegäbänä Steu im Feil gsi isch.
+		/// </summary>
+		/// <param name="animations">D Lischtä vo aunä Animazionä</param>
+		/// <param name="offset">D Steu im Feil</param>
+		/// <returns>Diä gfundini Animazion odr sisch null</returns>
 		public static Animation Find(Animation[] animations, long offset)
 		{
+			// TODO index bruichä
 			return animations.FirstOrDefault(animation => animation.Offset == offset);
 		}
 

@@ -12,7 +12,7 @@ namespace LibDmd.Common
 {
 	public class ImageUtil
 	{
-		private static readonly Frame _frame = new Frame();
+		private static readonly Frame FrameData = new Frame();
 
 		/// <summary>
 		/// Converts a bitmap to a 2-bit grayscale array.
@@ -246,7 +246,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray2(int width, int height, byte* frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray2(width, height, _frame.With(frame), hue, saturation, luminosity);
+			return ConvertFromGray2(width, height, FrameData.With(frame), hue, saturation, luminosity);
 		}
 
 		/// <summary>
@@ -261,7 +261,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray2(int width, int height, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray2(width, height, _frame.With(frame), hue, saturation, luminosity);
+			return ConvertFromGray2(width, height, FrameData.With(frame), hue, saturation, luminosity);
 		}
 
 		/// <summary>
@@ -276,7 +276,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray4(int width, int height, byte* frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray4(width, height, _frame.With(frame), hue, saturation, luminosity);
+			return ConvertFromGray4(width, height, FrameData.With(frame), hue, saturation, luminosity);
 		}
 
 		/// <summary>
@@ -291,7 +291,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray4(int width, int height, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray4(width, height, _frame.With(frame), hue, saturation, luminosity);
+			return ConvertFromGray4(width, height, FrameData.With(frame), hue, saturation, luminosity);
 		}
 
 		/// <summary>
@@ -303,7 +303,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromRgb24(int width, int height, byte* frame)
 		{
-			return ConvertFromRgb24(width, height, _frame.With(frame));
+			return ConvertFromRgb24(width, height, FrameData.With(frame));
 		}
 
 		/// <summary>
@@ -315,7 +315,7 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromRgb24(int width, int height, byte[] frame)
 		{
-			return ConvertFromRgb24(width, height, _frame.With(frame));
+			return ConvertFromRgb24(width, height, FrameData.With(frame));
 		}
 
 		/// <summary>

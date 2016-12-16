@@ -110,7 +110,7 @@ namespace LibDmd.Converter
 							.StartWith(Unit.Default)
 							.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
 								if (_defaultPalette != null) {
-									Logger.Info("[colorize] Resetting to default palette after duration.");
+									Logger.Info("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
 									SetPalette(_defaultPalette);
 								}
 								_paletteReset = null;
@@ -122,7 +122,7 @@ namespace LibDmd.Converter
 				case 1:
 					var animation = Animation.Find(Animations, mapping.Duration);
 					if (animation == null) {
-						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
+						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
 					Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
@@ -136,7 +136,7 @@ namespace LibDmd.Converter
 				case 2:
 					var enhancer = Animation.Find(Animations, mapping.Duration);
 					if (enhancer == null) {
-						Logger.Warn("[colorize] No animation found at index {0} for {1} frame.", mapping.Duration, masked);
+						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
 					Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);

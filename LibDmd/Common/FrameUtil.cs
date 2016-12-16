@@ -9,54 +9,27 @@ using NLog;
 
 namespace LibDmd.Common
 {
+	/// <summary>
+	/// Wärchziig zum hin- und härkonvertiärä vo Biud-Datä.
+	/// </summary>
 	public class FrameUtil
 	{
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static byte[][] Split4Bit(int width, int height, byte[] frame)
-		{
-			var planes = new byte[4][];
-			planes[0] = new byte[512];
-			planes[1] = new byte[512];
-			planes[2] = new byte[512];
-			planes[3] = new byte[512];
-			var byteIdx = 0;
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x += 8) {
-					byte bd0 = 0;
-					byte bd1 = 0;
-					byte bd2 = 0;
-					byte bd3 = 0;
-					for (var v = 7; v >= 0; v--) {
-						var pixel = frame[(y * width) + (x + v)];
-						bd0 <<= 1;
-						bd1 <<= 1;
-						bd2 <<= 1;
-						bd3 <<= 1;
-						if ((pixel & 1) != 0) {
-							bd0 |= 1;
-						}
-						if ((pixel & 2) != 0) {
-							bd1 |= 1;
-						}
-						if ((pixel & 4) != 0) {
-							bd2 |= 1;
-						}
-						if ((pixel & 8) != 0) {
-							bd3 |= 1;
-						}
-					}
-					planes[0][byteIdx] = bd0;
-					planes[1][byteIdx] = bd1;
-					planes[2][byteIdx] = bd2;
-					planes[3][byteIdx] = bd3;
-					byteIdx++;
-				}
-			}
-			return planes;
-		}
-
+		/// <summary>
+		/// Tuät es Biud i sini Bitahteiu uifteilä.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Äbänä fir
+		/// jedes Bit uisächemid
+		/// </remarks>
+		/// 
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
+		/// <param name="frame">D datä vom Biud</param>
+		/// <returns>Än Ebini fir jedes Bit</returns>
 		public static byte[][] Split(int width, int height, int bitlen, byte[] frame)
 		{
 			var planeSize = width * height / 8;
@@ -89,15 +62,22 @@ namespace LibDmd.Common
 			return planes;
 		}
 
-		public static byte[] Join(int width, int height, byte[][] pl)
+		/// <summary>
+		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
+		/// </summary>
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="bitPlanes">Ä Lischtä vo Ebänä zum zämäfiägä</param>
+		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
+		public static byte[] Join(int width, int height, byte[][] bitPlanes)
 		{
 			var fr = new byte[width * height];
-			var planes = new BitArray[pl.Length];
-			for (var i = 0; i < pl.Length; i++) {
-				planes[i] = new BitArray(pl[i]);
+			var planes = new BitArray[bitPlanes.Length];
+			for (var i = 0; i < bitPlanes.Length; i++) {
+				planes[i] = new BitArray(bitPlanes[i]);
 			}
 			for (var f = 0; f < fr.Length; f++) {
-				for (var p = 0; p < pl.Length; p++) {
+				for (var p = 0; p < bitPlanes.Length; p++) {
 					var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
 					fr[f] |= (byte)(bit << p);
 				}
@@ -105,6 +85,12 @@ namespace LibDmd.Common
 			return fr;
 		}
 
+		/// <summary>
+		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
+		/// </summary>
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="frame">D Bit-Ebini</param>
 		public static void DumpHex(int width, int height, byte[] frame)
 		{
 			var i = 0;
@@ -117,6 +103,12 @@ namespace LibDmd.Common
 			}
 		}
 
+		/// <summary>
+		/// Tuät äs Biud uifd Konsolä uisä druckä
+		/// </summary>
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="plane">S Biud</param>
 		public static void DumpBinary(int width, int height, byte[] plane)
 		{
 			var i = 0;
@@ -130,7 +122,11 @@ namespace LibDmd.Common
 			}
 		}
 
-
+		/// <summary>
+		/// Tuät äs Biud häschä
+		/// </summary>
+		/// <param name="input">S Biud</param>
+		/// <returns>Dr Häsch</returns>
 		public static uint Checksum(byte[] input)
 		{
 			var table = new uint[]{
