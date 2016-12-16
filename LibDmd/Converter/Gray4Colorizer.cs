@@ -62,7 +62,7 @@ namespace LibDmd.Converter
 			}
 
 			// Faus nid timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value, ColoredFrame);
+			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(BitLength), ColoredFrame);
 			return ColoredFrame;
 		}
 	}

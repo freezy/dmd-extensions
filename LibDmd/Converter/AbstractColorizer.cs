@@ -48,8 +48,7 @@ namespace LibDmd.Converter
 		protected readonly Coloring Coloring;
 		protected readonly Animation[] Animations;
 		protected readonly byte[] ColoredFrame;
-		protected readonly BehaviorSubject<Color[]> Palette = new BehaviorSubject<Color[]>(new[]{Colors.Black, Colors.Coral});
-
+		protected readonly BehaviorSubject<Palette> Palette = new BehaviorSubject<Palette>(new Palette(new[]{Colors.Black, Colors.Cyan}));
 
 		protected Animation CurrentAnimation;
 		protected Animation CurrentEnhancer;
@@ -58,7 +57,7 @@ namespace LibDmd.Converter
 		protected bool IsEnhancerRunning => CurrentEnhancer != null && CurrentEnhancer.IsRunning;
 		protected int NumColors => (int)Math.Pow(2, BitLength);
 
-		private Color[] _defaultPalette;
+		private Palette _defaultPalette;
 		private IDisposable _paletteReset;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -70,7 +69,7 @@ namespace LibDmd.Converter
 			Coloring = coloring;
 			Animations = animations;
 			ColoredFrame = new byte[width * height * 3];
-			SetPalette(Coloring.DefaultPalette.Colors, true);
+			SetPalette(Coloring.DefaultPalette, true);
 			Logger.Debug("[colorize] Initialized.");
 		}
 
@@ -99,7 +98,7 @@ namespace LibDmd.Converter
 			_paletteReset?.Dispose();
 			_paletteReset = null;
 
-			SetPalette(palette.Colors);
+			SetPalette(palette);
 
 			switch (mapping.Mode)
 			{
@@ -156,20 +155,19 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Tuät nii Farbä dr Palettä wo grad bruichd wird zuäwiisä.
 		/// </summary>
-		/// <param name="colors">Diä niiä Farbä vord Palettä</param>
+		/// <param name="palette">Diä nii Palettä</param>
 		/// <param name="isDefault"></param>
-		public void SetPalette(Color[] colors, bool isDefault = false)
+		public void SetPalette(Palette palette, bool isDefault = false)
 		{
-			if (colors == null) {
+			if (palette == null) {
 				Logger.Warn("[colorize] Ignoring null palette.");
 				return;
 			}
 			if (isDefault) {
-				_defaultPalette = colors;
+				_defaultPalette = palette;
 			}
-			var newColors = ColorUtil.GetPalette(colors, NumColors);
-			Logger.Debug("[colorize] Setting new colors: [ {0} ]", string.Join(" ", newColors.Select(c => c.ToString())));
-			Palette.OnNext(newColors);
+			Logger.Debug("[colorize] Setting new palette: [ {0} ]", string.Join(" ", palette.Colors.Select(c => c.ToString())));
+			Palette.OnNext(palette);
 		}
 
 		/// <summary>
@@ -181,7 +179,7 @@ namespace LibDmd.Converter
 			var palette = Coloring.GetPalette(index);
 			if (palette != null) {
 				Logger.Info("[colorize] Setting palette of {0} colors via side channel...", palette.Colors.Length);
-				SetPalette(palette.Colors);
+				SetPalette(palette);
 
 			} else {
 				Logger.Warn("[colorize] No palette with index {0} found to load through side channel.", index);

@@ -71,14 +71,13 @@ namespace LibDmd.Converter.Colorize
 		/// </remarks>
 		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
-		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Color[]> palette)
+		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette)
 		{
 			Logger.Info("[fsq] Starting animation of {0} frames...", _frames.Length);
 			IsRunning = true;
 			_animation = _frames.ToObservable()
 				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
-				.Select(frame => frame.GetFrame(_width, _height))
-				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame, palette.Value))
+				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)))
 				.Subscribe(frameSource.OnNext, () => { IsRunning = false; });
 		}
 

@@ -67,13 +67,14 @@ namespace LibDmd.Converter
 			}
 
 			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrs einfach ersetzä
+			var bitlength = BitLength;
 			if (IsEnhancerRunning) {
 				var data = CurrentEnhancer.Next();
 				if (data.BitLength == 2) {
 					planes[2] = data.Planes[0];
 					planes[3] = data.Planes[1];
 					frame = FrameUtil.Join(Width, Height, planes);
-
+					bitlength += 2;
 				} else {
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
 				}
@@ -82,7 +83,7 @@ namespace LibDmd.Converter
 			//Logger.Trace("Palette: [ {0} ]", string.Join(", ", Palette.Value.Select(color => color.ToString())));
 
 			// Und sisch timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value, ColoredFrame);
+			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(bitlength), ColoredFrame);
 			return ColoredFrame;
 		}
 	}

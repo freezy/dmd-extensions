@@ -127,9 +127,9 @@ namespace LibDmd.Common
 		/// don't match the bit length
 		/// </summary>
 		/// <param name="palette">Color to assign to each gray shade</param>
-		/// <param name="numTones">Number of shades to return</param>
+		/// <param name="numColors">Number of shades to return</param>
 		/// <returns></returns>
-		public static Color[] GetPalette(Color[] palette, int numTones)
+		public static Color[] GetPalette(Color[] palette, int numColors)
 		{
 			if (palette.Length == 0) {
 				return null;
@@ -137,19 +137,19 @@ namespace LibDmd.Common
 			if (palette.Length == 1) {
 				throw new ArgumentException("Must provide at least 2 colors.");
 			}
-			if (palette.Length == numTones) {
+			if (palette.Length == numColors) {
 				return palette;
 			}
-			if (palette.Length == 16 && numTones == 4) {
+			if (palette.Length == 16 && numColors == 4) {
 				return new[] { palette[0], palette[1], palette[4], palette[15] };
 			}
 
 			// else interpolate
-			var interpolatedPalette = new Color[numTones];
-			var toRasterSize = 1d / (numTones - 1);
+			var interpolatedPalette = new Color[numColors];
+			var toRasterSize = 1d / (numColors - 1);
 			var fromRasterPos = 0;
 			var fromRasterSize = 1d / (palette.Length - 1);
-			for (var toRasterPos = 0; toRasterPos < numTones; toRasterPos++) {
+			for (var toRasterPos = 0; toRasterPos < numColors; toRasterPos++) {
 				
 				var fromColorPos = fromRasterPos * fromRasterSize;
 				var toColorPos = toRasterPos * toRasterSize;

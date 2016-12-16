@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
@@ -31,6 +33,8 @@ namespace LibDmd.Converter.Colorize
 		/// </summary>
 		public bool IsDefault => Type == 1;
 
+		private readonly Dictionary<int, Color[]> _colors = new Dictionary<int, Color[]>();
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public Palette(BinaryReader reader)
@@ -48,6 +52,21 @@ namespace LibDmd.Converter.Colorize
 				j++;
 			}
 			Logger.Trace("  [{1}] [palette] Read {0} bytes of color data", numColors * 3, reader.BaseStream.Position);
+		}
+
+		public Palette(Color[] colors)
+		{
+			Index = 0;
+			Type = 0;
+			Colors = colors;
+		}
+
+		public Color[] GetColors(int bitlength)
+		{
+			if (!_colors.ContainsKey(bitlength)) {
+				_colors.Add(bitlength, ColorUtil.GetPalette(Colors, (int)Math.Pow(2, bitlength)));
+			}
+			return _colors[bitlength];
 		}
 	}
 }
