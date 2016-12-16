@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 
@@ -15,7 +16,7 @@ namespace LibDmd.Converter
 	/// </remarks>
 	public class Gray2Colorizer : AbstractColorizer, IConverter
 	{
-
+		protected override int BitLength { get; } = 2;
 		public RenderBitLength From { get; } = RenderBitLength.Gray2;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
@@ -77,6 +78,8 @@ namespace LibDmd.Converter
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
 				}
 			}
+
+			//Logger.Trace("Palette: [ {0} ]", string.Join(", ", Palette.Value.Select(color => color.ToString())));
 
 			// Und sisch timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value, ColoredFrame);

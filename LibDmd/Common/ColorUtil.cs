@@ -140,6 +140,9 @@ namespace LibDmd.Common
 			if (palette.Length == numTones) {
 				return palette;
 			}
+			if (palette.Length == 16 && numTones == 4) {
+				return new[] { palette[0], palette[1], palette[4], palette[15] };
+			}
 
 			// else interpolate
 			var interpolatedPalette = new Color[numTones];

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -41,17 +42,21 @@ namespace LibDmd.Converter
 		public readonly int Width;
 		public readonly int Height;
 
+		protected abstract int BitLength { get; }
 		protected readonly Coloring Coloring;
 		protected readonly Animation[] Animations;
 		protected readonly byte[] ColoredFrame;
 		protected readonly BehaviorSubject<Color[]> Palette = new BehaviorSubject<Color[]>(new[]{Colors.Black, Colors.Coral});
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		protected Animation CurrentAnimation;
 		protected Animation CurrentEnhancer;
 		protected readonly Subject<byte[]> AnimationFrames = new Subject<byte[]>();
 		protected bool IsAnimationRunning => CurrentAnimation != null && CurrentAnimation.IsRunning;
 		protected bool IsEnhancerRunning => CurrentEnhancer != null && CurrentEnhancer.IsRunning;
+		protected int NumColors => (int)Math.Pow(2, BitLength);
+
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		protected AbstractColorizer(int width, int height, Coloring coloring, Animation[] animations)
 		{
@@ -85,14 +90,14 @@ namespace LibDmd.Converter
 				Logger.Warn("[colorize] No palette found at index {0} for {1} frame.", mapping.PaletteIndex, masked);
 				return false;
 			}
-			Logger.Info("[colorize] Setting palette of {0} colors via {1} frame.", palette.Colors.Length, masked);
+			Logger.Info("[colorize] Setting palette {0} of {1} colors via {2} frame: [ {3} ]", mapping.PaletteIndex, palette.Colors.Length, masked, string.Join(" ", palette.Colors.Select(c => c.ToString())));
 			SetPalette(palette.Colors);
 
-			
 			switch (mapping.Mode)
 			{
 				// Numä iifärbä (hemmr scho) und guät isch
 				case 0:
+					// TODO: Timer for palette reset after mapping.Duration
 					return true;
 
 				// Än Animazion wird losgla
@@ -137,10 +142,9 @@ namespace LibDmd.Converter
 				Logger.Warn("[colorize] Ignoring null palette.");
 				return;
 			}
-			Logger.Debug("[colorize] Setting new palette:");
-			Array.ForEach(colors, c => Logger.Trace("   " + c));
-
-			Palette.OnNext(ColorUtil.GetPalette(colors, 16));
+			var newColors = ColorUtil.GetPalette(colors, NumColors);
+			Logger.Debug("[colorize] Setting new colors: [ {0} ]", string.Join(" ", newColors.Select(c => c.ToString())));
+			Palette.OnNext(newColors);
 		}
 
 		/// <summary>

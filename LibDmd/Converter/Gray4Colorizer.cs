@@ -14,6 +14,7 @@ namespace LibDmd.Converter
 	/// </remarks>
 	public class Gray4Colorizer : AbstractColorizer, IConverter
 	{
+		protected override int BitLength { get; } = 4;
 		public RenderBitLength From { get; } = RenderBitLength.Gray4;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
