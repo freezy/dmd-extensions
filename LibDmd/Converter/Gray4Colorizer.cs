@@ -24,7 +24,7 @@ namespace LibDmd.Converter
 		public byte[] Convert(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
-			var planes = FrameUtil.Split4Bit(Width, Height, frame);
+			var planes = FrameUtil.Split(Width, Height, 4, frame);
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht

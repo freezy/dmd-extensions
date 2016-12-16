@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 
@@ -25,12 +26,15 @@ namespace LibDmd.Converter
 		public byte[] Convert(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
-			var planes = FrameUtil.Split4Bit(Width, Height, frame);
+			var planes = FrameUtil.Split(Width, Height, 2, frame);
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht
 			for (var i = 0; i < 2; i++) {
 				var checksum = FrameUtil.Checksum(planes[i]);
+
+				//FrameUtil.DumpBinary(Width, Height, planes[i]);
+				//Logger.Trace("Hash bit {0}: {1}", i, checksum.ToString("X"));
 
 				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
 				match = ApplyMapping(checksum, "unmasked");

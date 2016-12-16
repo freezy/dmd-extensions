@@ -34,16 +34,16 @@ namespace LibDmd.Common
 						bd1 <<= 1;
 						bd2 <<= 1;
 						bd3 <<= 1;
-						if ((pixel & 16) != 0) {
+						if ((pixel & 1) != 0) {
 							bd0 |= 1;
 						}
-						if ((pixel & 32) != 0) {
+						if ((pixel & 2) != 0) {
 							bd1 |= 1;
 						}
-						if ((pixel & 64) != 0) {
+						if ((pixel & 4) != 0) {
 							bd2 |= 1;
 						}
-						if ((pixel & 128) != 0) {
+						if ((pixel & 8) != 0) {
 							bd3 |= 1;
 						}
 					}
@@ -105,7 +105,7 @@ namespace LibDmd.Common
 			return fr;
 		}
 
-		public static void DumpConsole(int width, int height, byte[] frame)
+		public static void DumpHex(int width, int height, byte[] frame)
 		{
 			var i = 0;
 			for (var y = 0; y < height; y++) {
@@ -116,6 +116,20 @@ namespace LibDmd.Common
 				Logger.Debug(sb);
 			}
 		}
+
+		public static void DumpBinary(int width, int height, byte[] plane)
+		{
+			var i = 0;
+			var planeBits = new BitArray(plane);
+			for (var y = 0; y < height; y++) {
+				var sb = new StringBuilder(width);
+				for (var x = 0; x < width; x++) {
+					sb.Append(planeBits.Get(i++) ? "1" : "0");
+				}
+				Logger.Debug(sb);
+			}
+		}
+
 
 		public static uint Checksum(byte[] input)
 		{
