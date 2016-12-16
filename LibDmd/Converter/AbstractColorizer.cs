@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -56,6 +58,9 @@ namespace LibDmd.Converter
 		protected bool IsEnhancerRunning => CurrentEnhancer != null && CurrentEnhancer.IsRunning;
 		protected int NumColors => (int)Math.Pow(2, BitLength);
 
+		private Color[] _defaultPalette;
+		private IDisposable _paletteReset;
+
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		protected AbstractColorizer(int width, int height, Coloring coloring, Animation[] animations)
@@ -65,7 +70,7 @@ namespace LibDmd.Converter
 			Coloring = coloring;
 			Animations = animations;
 			ColoredFrame = new byte[width * height * 3];
-			SetPalette(Coloring.DefaultPalette.Colors);
+			SetPalette(Coloring.DefaultPalette.Colors, true);
 			Logger.Debug("[colorize] Initialized.");
 		}
 
@@ -91,13 +96,27 @@ namespace LibDmd.Converter
 				return false;
 			}
 			Logger.Info("[colorize] Setting palette {0} of {1} colors via {2} frame: [ {3} ]", mapping.PaletteIndex, palette.Colors.Length, masked, string.Join(" ", palette.Colors.Select(c => c.ToString())));
+			_paletteReset?.Dispose();
+			_paletteReset = null;
+
 			SetPalette(palette.Colors);
 
 			switch (mapping.Mode)
 			{
 				// Numä iifärbä (hemmr scho) und guät isch
 				case 0:
-					// TODO: Timer for palette reset after mapping.Duration
+					if (mapping.Duration > 0) {
+						_paletteReset = Observable
+							.Never<Unit>()
+							.StartWith(Unit.Default)
+							.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
+								if (_defaultPalette != null) {
+									Logger.Info("[colorize] Resetting to default palette after duration.");
+									SetPalette(_defaultPalette);
+								}
+								_paletteReset = null;
+							});
+					}
 					return true;
 
 				// Än Animazion wird losgla
@@ -136,11 +155,15 @@ namespace LibDmd.Converter
 		/// Tuät nii Farbä dr Palettä wo grad bruichd wird zuäwiisä.
 		/// </summary>
 		/// <param name="colors">Diä niiä Farbä vord Palettä</param>
-		public void SetPalette(Color[] colors)
+		/// <param name="isDefault"></param>
+		public void SetPalette(Color[] colors, bool isDefault = false)
 		{
 			if (colors == null) {
 				Logger.Warn("[colorize] Ignoring null palette.");
 				return;
+			}
+			if (isDefault) {
+				_defaultPalette = colors;
 			}
 			var newColors = ColorUtil.GetPalette(colors, NumColors);
 			Logger.Debug("[colorize] Setting new colors: [ {0} ]", string.Join(" ", newColors.Select(c => c.ToString())));
