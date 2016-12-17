@@ -253,7 +253,7 @@ namespace LibDmd
 								if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
 									onError.Invoke(ex);
 								} else {
-									throw ex;
+									throw new Exception("Error rendering bitmap.", ex);
 								}
 							});
 							_activeSources.Add(disposable);

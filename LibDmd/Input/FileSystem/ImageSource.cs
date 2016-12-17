@@ -53,7 +53,7 @@ namespace LibDmd.Input.FileSystem
 				if (e.Message.Contains("No imaging component suitable")) {
 					throw new WrongFormatException($"Could not determine image format. Are you sure {fileName} is an image?");
 				}
-				throw;
+				throw new Exception("Error instantiating image source.", e);
 			}
 		}
 
