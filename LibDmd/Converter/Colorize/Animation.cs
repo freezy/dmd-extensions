@@ -10,7 +10,7 @@ using NLog;
 namespace LibDmd.Converter.Colorize
 {
 	/// <summary>
-	/// Animazionsdatä wo entweder ä Animazion uisem ROM komplett uistuischid
+	/// Animazionsdatä wo entweder än Animazion uisem ROM komplett uistuischid
 	/// odr abr erwiiterid.
 	/// </summary>
 	/// 
@@ -82,7 +82,7 @@ namespace LibDmd.Converter.Colorize
 		}
 
 		/// <summary>
-		/// Tuät d Animazion aus loosglah markiäre. Äs wird abr nid uisgäh.
+		/// Tuät d Animazion aus loosglah markiäre. Äs wird abr niit uisgäh.
 		/// </summary>
 		/// 
 		/// <remarks>

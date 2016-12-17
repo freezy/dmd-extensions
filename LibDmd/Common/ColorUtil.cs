@@ -121,10 +121,10 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Sets the 16-color gray4 palette.
+		/// Sets the palette for a given bit length.
 		/// 
 		/// Any number of colors can be provided, they are interpolated if they
-		/// don't match the bit length
+		/// don't match the bit length.
 		/// </summary>
 		/// <param name="palette">Color to assign to each gray shade</param>
 		/// <param name="numColors">Number of shades to return</param>
@@ -179,7 +179,7 @@ namespace LibDmd.Common
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
 		/// <param name="colorizedFrame">If set, write data into this array</param>
-		/// <returns></returns>
+		/// <returns>Colorized frame</returns>
 		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
 			colorizedFrame = colorizedFrame ?? new byte[width * height * 3];

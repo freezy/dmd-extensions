@@ -21,7 +21,7 @@ namespace LibDmd.Common
 		/// </summary>
 		/// 
 		/// <remarks>
-		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Äbänä fir
+		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Ebänä fir
 		/// jedes Bit uisächemid
 		/// </remarks>
 		/// 

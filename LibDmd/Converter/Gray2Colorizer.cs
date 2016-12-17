@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
@@ -71,10 +72,10 @@ namespace LibDmd.Converter
 			if (IsEnhancerRunning) {
 				var data = CurrentEnhancer.Next();
 				if (data.BitLength == 2) {
-					planes[2] = data.Planes[0];
-					planes[3] = data.Planes[1];
-					frame = FrameUtil.Join(Width, Height, planes);
 					bitlength += 2;
+					var enhancedPlanes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] };
+					frame = FrameUtil.Join(Width, Height, enhancedPlanes.ToArray());
+					
 				} else {
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
 				}

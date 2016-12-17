@@ -169,7 +169,7 @@ namespace LibDmd
 						var disposable = sourceGray2.GetGray2Frames()
 							.Select(Converter.Convert)
 							.Where(frame => frame != null)
-							.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
+							.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
 							// for pre-recorded animations, a converter can become source.
@@ -189,7 +189,7 @@ namespace LibDmd
 						var disposable = sourceGray4.GetGray4Frames()
 							.Select(Converter.Convert)
 							.Where(frame => frame != null)
-							.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
+							.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
 							// for pre-recorded animations, a converter can become source.
@@ -212,7 +212,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray2.GetGray2Frames()
 								.Where(frame => frame != null)
-								.Subscribe(destGray2.RenderGray2, ex => { throw ex; });
+								.Subscribe(destGray2.RenderGray2, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -223,7 +223,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray4.GetGray4Frames()
 								.Where(frame => frame != null)
-								.Subscribe(destGray4.RenderGray4, ex => { throw ex; });
+								.Subscribe(destGray4.RenderGray4, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -234,7 +234,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 24-bit RGB data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceRgb24.GetRgb24Frames()
 								.Where(frame => frame != null)
-								.Subscribe(destRgb24.RenderRgb24, ex => { throw ex; });
+								.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
 						}
