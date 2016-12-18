@@ -23,7 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -54,6 +54,10 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="SharpAvi, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpAvi.2.1.0\lib\net45\SharpAvi.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -93,6 +97,7 @@
     <Compile Include="Input\IFrameSourceRgb24.cs" />
     <Compile Include="Input\IFrameSourceGray4.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
+    <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IGray2.cs" />
     <Compile Include="Output\IRgb24.cs" />
     <Compile Include="Common\BinaryReaderExtension.cs" />

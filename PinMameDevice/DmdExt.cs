@@ -10,6 +10,7 @@ using LibDmd;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Output;
+using LibDmd.Output.FileOutput;
 using Mindscape.Raygun4Net;
 using NLog;
 using static System.Windows.Threading.Dispatcher;

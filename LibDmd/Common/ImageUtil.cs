@@ -121,6 +121,20 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static void ConvertRgb24ToDIB(int width, int height, byte[] from, byte[] to)
+		{
+			var pos = 0;
+			for (var y = height - 1; y >= 0; y--) {
+				for (var x = 0; x < width * 3; x += 3) {
+					var fromPos = width * 3 * y + x;
+					to[pos] = from[fromPos];
+					to[pos + 1] = from[fromPos + 1];
+					to[pos + 2] = from[fromPos + 2];
+					pos += 3;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Converts an 2-bit grayscale array to a bitmap.
 		/// </summary>
