@@ -102,7 +102,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.3.0-beta2
+DMD Extensions v1.3.0-beta3
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -118,7 +118,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.3.0-beta2
+DMD Extensions v1.3.0-beta3
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -179,11 +179,13 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
   --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
                            false.
 
-  --virtual-position       Position and size of virtual DMD. Three values:
-                           <Left> <Top> <Width>. Default: "0 0 1024".
+  --virtual-position       Position and size of virtual DMD. Four values:
+                           <Left> <Top> <Width> [<Height>]. Height is optional
+                           and can be used for custom aspect ratio. Default: "0
+                           0 1024".
 
-  --use-gray4              Sends frames in 4-bit grayscale to the display if
-                           supported. Default: false
+  --render-as              Internally process at a given bit length. One of: [
+                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
 
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
@@ -208,7 +210,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.3.0-beta2
+DMD Extensions v1.3.0-beta3
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -231,11 +233,13 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
   --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
                            false.
 
-  --virtual-position       Position and size of virtual DMD. Three values:
-                           <Left> <Top> <Width>. Default: "0 0 1024".
+  --virtual-position       Position and size of virtual DMD. Four values:
+                           <Left> <Top> <Width> [<Height>]. Height is optional
+                           and can be used for custom aspect ratio. Default: "0
+                           0 1024".
 
-  --use-gray4              Sends frames in 4-bit grayscale to the display if
-                           supported. Default: false
+  --render-as              Internally process at a given bit length. One of: [
+                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
 
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
@@ -259,11 +263,8 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.3.0-beta2
+DMD Extensions v1.3.0-beta3
 USAGE: dmdext test [--destination=<destination>]
-
- -f, --file               Required. Path to the file to play. Currently
-                           supported file types: PNG, JPG, BIN (raw).
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
@@ -282,11 +283,13 @@ USAGE: dmdext test [--destination=<destination>]
   --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
                            false.
 
-  --virtual-position       Position and size of virtual DMD. Three values:
-                           <Left> <Top> <Width>. Default: "0 0 1024".
+  --virtual-position       Position and size of virtual DMD. Four values:
+                           <Left> <Top> <Width> [<Height>]. Height is optional
+                           and can be used for custom aspect ratio. Default: "0
+                           0 1024".
 
-  --use-gray4              Sends frames in 4-bit grayscale to the display if
-                           supported. Default: false
+  --render-as              Internally process at a given bit length. One of: [
+                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
 
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
@@ -305,6 +308,22 @@ USAGE: dmdext test [--destination=<destination>]
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
 ```
+
+## Troubleshooting
+
+### Flickering with PinDMDv3
+
+Some users reported heavy flickering when running via PinballX. Seems that this
+is linked to the desktop settings. This seems to help:
+
+- Go to **My Computer**
+- Click on **Performance Information and Tools** on the bottom left
+- Click on **Adjust Visual Effects** at the top left.
+- When the Performance Window pops up, click on **Adjust for Best Appearance**. 
+  All the boxes should automatically get check marked.
+- Click on **Apply**, and then OK to get out.
+
+*Thanks xman72*
 
 ## Compatibility
 
