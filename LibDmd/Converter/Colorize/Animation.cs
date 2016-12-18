@@ -35,6 +35,7 @@ namespace LibDmd.Converter.Colorize
 		private readonly int _width;
 		private readonly int _height;
 		private IDisposable _animation;
+
 		private uint _frameIndex;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -75,10 +76,16 @@ namespace LibDmd.Converter.Colorize
 		{
 			Logger.Info("[fsq] Starting animation of {0} frames...", _frames.Length);
 			IsRunning = true;
+			var n = 0;
+			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			_animation = _frames.ToObservable()
 				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
 				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)))
-				.Subscribe(frameSource.OnNext, () => { IsRunning = false; });
+				.Subscribe(frame => {
+					frameSource.OnNext(frame);
+					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					n++;
+				}, () => { IsRunning = false; });
 		}
 
 		/// <summary>
@@ -118,6 +125,11 @@ namespace LibDmd.Converter.Colorize
 		{
 			_animation?.Dispose();
 			IsRunning = false;
+		}
+
+		public bool Equals(Animation animation)
+		{
+			return Offset == animation.Offset;
 		}
 
 		/// <summary>

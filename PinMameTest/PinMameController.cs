@@ -63,7 +63,6 @@ namespace PinMameTest
 						Console.WriteLine("Unkown event {0}", e);
 						break;
 				}
-				
 			});
 			_controller.Run();
 			return _status;

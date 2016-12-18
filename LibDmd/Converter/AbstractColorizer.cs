@@ -59,6 +59,8 @@ namespace LibDmd.Converter
 
 		private Palette _defaultPalette;
 		private IDisposable _paletteReset;
+		protected int _frameCounter = 0;
+		protected long _lastFrame = 0;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -130,6 +132,8 @@ namespace LibDmd.Converter
 					CurrentEnhancer?.Stop();
 					CurrentAnimation = animation;
 					CurrentAnimation.Start(AnimationFrames, Palette);
+					_frameCounter = 0;
+					_lastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 					return true;
 
 				// Ab etz wärdid d Biudli mit zwe Bit ergänzt
@@ -139,11 +143,13 @@ namespace LibDmd.Converter
 						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
-					Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);
-					CurrentAnimation?.Stop();
-					CurrentEnhancer?.Stop();
-					CurrentEnhancer = enhancer;
-					CurrentEnhancer.Start();
+					if (CurrentEnhancer == null || !CurrentEnhancer.Equals(enhancer)) {
+						Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);
+						CurrentAnimation?.Stop();
+						CurrentEnhancer?.Stop();
+						CurrentEnhancer = enhancer;
+						CurrentEnhancer.Start();
+					}
 					return true;
 				
 				default:

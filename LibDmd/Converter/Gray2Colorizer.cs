@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
@@ -62,6 +63,7 @@ namespace LibDmd.Converter
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			if (IsAnimationRunning) {
+				Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", _frameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - _lastFrame);
 				return null;
 			}
 
