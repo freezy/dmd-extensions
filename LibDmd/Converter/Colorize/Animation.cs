@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
@@ -85,7 +86,15 @@ namespace LibDmd.Converter.Colorize
 					frameSource.OnNext(frame);
 					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					n++;
-				}, () => { IsRunning = false; });
+				}, () => {
+
+					// nu uifs letschti biud wartä bis mer fertig sind
+					Observable
+						.Never<Unit>()
+						.StartWith(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(_frames[_frames.Length - 1].Delay))
+						.Subscribe(_ => IsRunning = false);
+				});
 		}
 
 		/// <summary>
