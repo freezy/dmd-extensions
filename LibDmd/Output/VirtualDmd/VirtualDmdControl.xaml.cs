@@ -11,10 +11,14 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : UserControl, IFrameDestination, IGray4, IGray2, IRgb24
+	public partial class VirtualDmdControl : UserControl, IGray4, IGray2, IRgb24
 	{
 		public bool IsAvailable { get; } = true;
 		public bool IsRgb { get; } = true;
+		public bool IgnoreAspectRatio {
+			get { return Dmd.Stretch == Stretch.UniformToFill; }
+			set { Dmd.Stretch = value ? Stretch.Fill : Stretch.UniformToFill; }
+		}
 
 		private double _hue;
 		private double _sat;

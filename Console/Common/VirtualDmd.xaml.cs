@@ -16,8 +16,21 @@ namespace DmdExt.Common
 		/// If true, the DMD stays on top of all other application windows.
 		/// </summary>
 		public bool AlwaysOnTop { get; set; }
+
+		public bool IgnoreAspectRatio
+		{
+			get { return _ignoreAr; }
+			set {
+				_ignoreAr = value;
+				if (Dmd != null) {
+					Dmd.IgnoreAspectRatio = value;
+				}
+			}
+		}
+
 		public Brush GripColor { get; set; } = Brushes.White;
 
+		private bool _ignoreAr;
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
@@ -63,6 +76,10 @@ namespace DmdExt.Common
 
 		private IntPtr DragHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
+			if (_ignoreAr) {
+				return IntPtr.Zero;
+			}
+
 			switch ((WM)msg) {
 				case WM.WindowPosChanging: {
 						var pos = (WindowPos)Marshal.PtrToStructure(lParam, typeof(WindowPos));

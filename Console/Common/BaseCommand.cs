@@ -146,8 +146,16 @@ namespace DmdExt.Common
 
 		private static IFrameDestination ShowVirtualDmd(BaseOptions options)
 		{
-			if (options.VirtualDmdPosition.Length != 3) {
-				throw new InvalidOptionException("Argument --virtual-position must have three values: \"<Left> <Top> <Width>\".");
+			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
+				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
+			}
+			int height; bool ignoreAr;
+			if (options.VirtualDmdPosition.Length == 4) {
+				height = options.VirtualDmdPosition[3];
+				ignoreAr = true;
+			} else {
+				height = (int)((double)options.VirtualDmdPosition[2] / 4);
+				ignoreAr = false;
 			}
 			var dmd = new VirtualDmd {
 				AlwaysOnTop = options.VirtualDmdOnTop,
@@ -155,7 +163,8 @@ namespace DmdExt.Common
 				Left = options.VirtualDmdPosition[0],
 				Top = options.VirtualDmdPosition[1],
 				Width = options.VirtualDmdPosition[2],
-				Height = (int)((double)options.VirtualDmdPosition[2] / 4),
+				Height = height,
+				IgnoreAspectRatio = ignoreAr
 			};
 			var thread = new Thread(() => {
 				
