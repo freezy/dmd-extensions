@@ -9,11 +9,13 @@ namespace PinMameDevice
 {
 	public class Configuration
 	{
+		public readonly GlobalConfig Global;
 		public readonly VirtualDmdConfig VirtualDmd;
 		public readonly PinDmd1Config PinDmd1;
 		public readonly PinDmd2Config PinDmd2;
 		public readonly PinDmd3Config PinDmd3;
 		public readonly Pin2DmdConfig Pin2Dmd;
+		public readonly VideoConfig Video;
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
@@ -28,17 +30,28 @@ namespace PinMameDevice
 			_parser = new FileIniDataParser();
 			_data = File.Exists(_iniPath) ? _parser.ReadFile(_iniPath) : new IniData();
 
+			Global = new GlobalConfig(_data, this);
 			VirtualDmd = new VirtualDmdConfig(_data, this);
 			PinDmd1 = new PinDmd1Config(_data, this);
 			PinDmd2 = new PinDmd2Config(_data, this);
 			PinDmd3 = new PinDmd3Config(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
+			Video = new VideoConfig(_data, this);
 		}
 
 		public void Save()
 		{
 			Logger.Info("Saving config to {0}", _iniPath);
 			_parser.WriteFile(_iniPath, _data);
+		}
+	}
+
+	public class GlobalConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "global";
+
+		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
+		{
 		}
 	}
 
@@ -168,6 +181,28 @@ namespace PinMameDevice
 			Save();
 		}
 	}
+
+	public class VideoConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "video";
+
+		public bool Enabled
+		{
+			get { return GetBoolean("enabled", false); }
+			set { Set("enabled", value); }
+		}
+
+		public string Path
+		{
+			get { return GetString("path", "."); }
+			set { Set("path", value); }
+		}
+
+		public VideoConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
 
 	public abstract class AbstractConfiguration
 	{

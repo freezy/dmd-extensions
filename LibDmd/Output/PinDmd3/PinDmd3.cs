@@ -105,7 +105,7 @@ namespace LibDmd.Output.PinDmd3
 
 		public void Init()
 		{
-			if (Port != null) {
+			if (Port != null && Port.Trim().Length > 0) {
 				IsAvailable = Connect(Port, false);
 
 			} else {

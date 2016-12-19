@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -19,7 +12,7 @@ namespace LibDmd.Output.FileOutput
 {
 	public class VideoOutput : IRgb24
 	{
-		public string OutputFolder { get; set; }
+		public string VideoPath { get; set; }
 
 		public readonly int Width = 128;
 		public readonly int Height = 32;
@@ -35,12 +28,12 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VideoOutput(string outputFolder, uint fps = 30)
+		public VideoOutput(string path, uint fps = 30)
 		{
 			Fps = fps;
-			OutputFolder = outputFolder;
-			if (!Directory.Exists(outputFolder)) {
-				throw new InvalidFolderException($"Path \"{outputFolder}\" is not a folder.");
+			VideoPath = Path.GetFullPath(path);
+			if (!Directory.Exists(Path.GetDirectoryName(VideoPath))) {
+				throw new InvalidFolderException($"Path \"{Path.GetDirectoryName(VideoPath)}\" is not a folder.");
 			}
 			Init();
 		}
@@ -48,8 +41,7 @@ namespace LibDmd.Output.FileOutput
 		public void Init()
 		{
 
-			var file = Path.Combine(OutputFolder, "DmdDevice.avi");
-			_writer = new AviWriter(file) {
+			_writer = new AviWriter(VideoPath) {
 				FramesPerSecond = 30,
 				EmitIndex1 = true
 			};
@@ -68,7 +60,7 @@ namespace LibDmd.Output.FileOutput
 					}
 				});
 
-			Logger.Info("Writing video to {0}.", file);
+			Logger.Info("Writing video to {0}.", VideoPath);
 		}
 
 		/// <summary>
@@ -82,6 +74,7 @@ namespace LibDmd.Output.FileOutput
 
 		public void Dispose()
 		{
+			_animation.Dispose();
 			_writer.Close();
 		}
 

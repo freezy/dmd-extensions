@@ -200,6 +200,24 @@ namespace PinMameDevice
 				renderers.Add(_dmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
 			}
+			if (_config.Video.Enabled) {
+
+				var rootPath = "";
+				if (_config.Video.Path.Length == 0 || !Path.IsPathRooted(_config.Video.Path)) {
+					rootPath = AssemblyPath;
+				}
+				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
+					Logger.Info("Added video renderer.");
+					
+				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
+					Logger.Info("Added video renderer.");	
+
+				} else {
+					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
+				}
+			}
 
 			if (renderers.Count == 0) {
 				Logger.Error("No renderers found, exiting.");
