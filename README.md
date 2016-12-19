@@ -15,16 +15,17 @@ Currently supported displays:
 - **PinDMD v2**, 4 bit (16 shades) support
 - **PinDMD v1**, 2 bit (4 shades) support
 - **PIN2DMD**, full RGB support
-
-It's also possible to render to a virtual DMD on the computer screen if you 
-want to test or debug or you don't have a real DMD.
-
+- **Virtual DMD** on a computer monitor, renders nice dots and is useful for debugging.
 
 ## Features
 
 The primary goal of this project was to add support real DMDs for games that
-don't provide support out of the box. The first game was **Pinball FX2** and 
-Farsight's **The Pinball Arcade** is supported as well.
+don't provide support out of the box. Supported games are:
+
+- **Pinball FX2** through frame grabbing from screen 
+- Farsight's **The Pinball Arcade** through grabbing the DMD texture from memory
+- **Pro Pinball Timeshock** through their message queue
+- **Visual PinMAME** through `dmddevice.dll` 
 
 The command line tool can also display image files on the DMD device and render
 frames to bitmap files.
@@ -33,10 +34,10 @@ frames to bitmap files.
 
 If you have an RGB display, you can override the color tone in which the output
 is rendered. However, in order to do this, you must force the source to produce
-grayscale frames. You can do this by using the `--use-gray-4` parameter. Then
+grayscale frames. You can do this by using the `--render-as` parameter. Then
 use the `--color` parameter to specify the color. Example:
 
-    dmdext test -d virtual --use-gray4 --color=8080ff
+    dmdext test -d virtual --render-as gray4 --color=8080ff
 
 ## Install Instructions
 
@@ -94,6 +95,19 @@ a message queue. To get it running, do the following:
 Note that this currently works only with the 64-bit version of Pro Pinball. 32 bit binaries will
 be provided with a later release. If you want to change the options (e.g. show the virtual DMD), 
 edit `ProPinballSlave.bat` and adopt accordingly.
+
+### Visual PinMAME
+
+VPM recently introduced the possibility of delegating DMD rendering to an external
+DLL. The main motivation is being able to ship a single build instead of having to
+release multiple binaries for multiple DMDs. 
+
+You can enable this by copying the included `DmdDevice.dll` to the location of
+`VPinMAME.dll`. In VPM you then need to enable *Use External DMD* and then 
+rendering should go through dmdext.
+
+If you are a PC monitor user or have a RGB display (PinDMDv3 or PIN2DMD), the
+advantage of dmdext is that Lucky1's coloring features are fully supported.
 
 ## Documentation
 
