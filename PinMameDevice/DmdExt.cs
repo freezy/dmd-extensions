@@ -12,6 +12,9 @@ using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
+using LibDmd.Output.Pin2Dmd;
+using LibDmd.Output.PinDmd1;
+using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -94,15 +97,19 @@ namespace PinMameDevice
 				Logger.Debug("No palette file found at {0}.", palPath);
 			}
 
-			if (_dmd == null) {
-				Logger.Info("Opening virtual DMD...");
-				CreateVirtualDmd();
+			if (_config.VirtualDmd.Enabled) {
+				if (_dmd == null) {
+					Logger.Info("Opening virtual DMD...");
+					CreateVirtualDmd();
 
-			} else {
-				_dmd.Dispatcher.Invoke(() => {
-					SetupGraphs();
-					_dmd.Show();
-				});
+				} else {
+					_dmd.Dispatcher.Invoke(() => {
+						SetupGraphs();
+						_dmd.Show();
+					});
+				}
+			} else { 				
+				SetupGraphs();
 			}
 		}
 
@@ -133,11 +140,14 @@ namespace PinMameDevice
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(() => {
-					_dmd.Show();
 					_dmd.Left = _config.VirtualDmd.Left;
 					_dmd.Top = _config.VirtualDmd.Top;
 					_dmd.Width = _config.VirtualDmd.Width;
 					_dmd.Height = _config.VirtualDmd.Height;
+					_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
+					_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
+					_dmd.Show();
+					
 				});
 
 				_dmd.PositionChanged
@@ -157,30 +167,61 @@ namespace PinMameDevice
 		/// </summary>
 		private void SetupGraphs()
 		{
-			var dest = new List<IFrameDestination> { _dmd.Dmd };
-
+			var renderers = new List<IFrameDestination>();
+			if (_config.PinDmd1.Enabled) {
+				var pinDmd1 = PinDmd1.GetInstance();
+				if (pinDmd1.IsAvailable) {
+					renderers.Add(pinDmd1);
+					Logger.Info("Added PinDMDv1 renderer.");					
+				}
+			}
+			if (_config.PinDmd2.Enabled) {
+				var pinDmd2 = PinDmd2.GetInstance();
+				if (pinDmd2.IsAvailable) {
+					renderers.Add(pinDmd2);
+					Logger.Info("Added PinDMDv2 renderer.");					
+				}
+			}
 			if (_config.PinDmd3.Enabled) {
-				dest.Add(_config.PinDmd3.Port.Trim() != ""
-					? PinDmd3.GetInstance(_config.PinDmd3.Port.Trim())
-					: PinDmd3.GetInstance());
+				var pinDmd3 = PinDmd3.GetInstance(_config.PinDmd3.Port);
+				if (pinDmd3.IsAvailable) {
+					renderers.Add(pinDmd3);
+					Logger.Info("Added PinDMDv3 renderer.");					
+				}
+			}
+			if (_config.Pin2Dmd.Enabled) {
+				var pin2Dmd = Pin2Dmd.GetInstance();
+				if (pin2Dmd.IsAvailable) {
+					renderers.Add(pin2Dmd);
+					Logger.Info("Added PIN2DMD renderer.");					
+				}
+			}
+			if (_config.VirtualDmd.Enabled) {
+				renderers.Add(_dmd.Dmd);
+				Logger.Info("Added VirtualDMD renderer.");
+			}
+
+			if (renderers.Count == 0) {
+				Logger.Error("No renderers found, exiting.");
+				return;
 			}
 
 			// miär bruichid äi Render-Graph fir jedi Bitlängi
 			_graphs.Add(new RenderGraph {
 				Source = _source,
-				Destinations = dest,
+				Destinations = renderers,
 				Converter = _gray2Colorizer,
 				RenderAs = RenderBitLength.Gray2
 			});
 			_graphs.Add(new RenderGraph {
 				Source = _source,
-				Destinations = dest,
+				Destinations = renderers,
 				Converter = _gray4Colorizer,
 				RenderAs = RenderBitLength.Gray4
 			});
 			_graphs.Add(new RenderGraph {
 				Source = _source,
-				Destinations = dest,
+				Destinations = renderers,
 				RenderAs = RenderBitLength.Rgb24
 			});
 			

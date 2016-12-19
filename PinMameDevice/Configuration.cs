@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using IniParser;
 using IniParser.Model;
-using Microsoft.Win32;
 using NLog;
 
 namespace PinMameDevice
@@ -89,7 +84,7 @@ namespace PinMameDevice
 
 		public string Port
 		{
-			get { return GetString("port", ""); }
+			get { return GetString("port", null); }
 			set { Set("port", value); }
 		}
 
@@ -121,6 +116,18 @@ namespace PinMameDevice
 		{
 			get { return GetBoolean("enabled", true); }
 			set { Set("enabled", value); }
+		}
+
+		public bool StayOnTop
+		{
+			get { return GetBoolean("stayontop", false); }
+			set { Set("stayontop", value); }
+		}
+
+		public bool HideGrip
+		{
+			get { return GetBoolean("hidegrip", false); }
+			set { Set("hidegrip", value); }
 		}
 
 		public double Left
@@ -169,6 +176,7 @@ namespace PinMameDevice
 		private readonly Configuration _parent;
 
 		protected bool DoWrite = true;
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		protected AbstractConfiguration(IniData data, Configuration parent)
 		{
@@ -194,14 +202,15 @@ namespace PinMameDevice
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
-			if (_data[Name] == null) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
 
 			try {
 				return bool.Parse(_data[Name][key]);
 			} catch (FormatException e) {
-				throw new InvalidIniValueException("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".");
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
+				return fallback;
 			}
 		}
 
@@ -225,7 +234,8 @@ namespace PinMameDevice
 			try {
 				return int.Parse(_data[Name][key]);
 			} catch (FormatException e) {
-				throw new InvalidIniValueException("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.");
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
+				return fallback;
 			}
 		}
 
@@ -249,7 +259,8 @@ namespace PinMameDevice
 			try {
 				return double.Parse(_data[Name][key]);
 			} catch (FormatException e) {
-				throw new InvalidIniValueException("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
+				return fallback;
 			}
 		}
 
@@ -270,13 +281,6 @@ namespace PinMameDevice
 				return fallback;
 			}
 			return _data[Name][key];
-		}
-	}
-
-	public class InvalidIniValueException : Exception
-	{
-		public InvalidIniValueException(string message) : base(message)
-		{
 		}
 	}
 }

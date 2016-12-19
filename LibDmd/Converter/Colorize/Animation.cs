@@ -53,7 +53,7 @@ namespace LibDmd.Converter.Colorize
 			_height = height;
 			Offset = reader.BaseStream.Position;
 			var numFrames = reader.ReadUInt16BE();
-			Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
+			//Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
 			_frames = new Frame[numFrames];
 			uint time = 0;
 			for (var i = 0; i < numFrames; i++) {

@@ -76,7 +76,7 @@ namespace LibDmd.Converter.Colorize
 			Masks = new byte[numMasks][];
 			for (var i = 0; i < numMasks; i++) {
 				Masks[i] = reader.ReadBytesRequired(512);
-				Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
+				// Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
 			}
 
 			if (reader.BaseStream.Position != reader.BaseStream.Length) {
