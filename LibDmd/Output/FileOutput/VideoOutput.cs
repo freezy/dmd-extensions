@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using NLog;
 using SharpAvi;
+using SharpAvi.Codecs;
 using SharpAvi.Output;
 
 namespace LibDmd.Output.FileOutput
@@ -40,18 +41,39 @@ namespace LibDmd.Output.FileOutput
 
 		public void Init()
 		{
-
 			_writer = new AviWriter(VideoPath) {
 				FramesPerSecond = 30,
 				EmitIndex1 = true
 			};
 
-			_stream = _writer.AddVideoStream();
-			_stream.Width = Width;
-			_stream.Height = Height;
-			_stream.Codec = KnownFourCCs.Codecs.Uncompressed;
-			_stream.BitsPerPixel = BitsPerPixel.Bpp24;
+			try {
+				_stream = _writer.AddMpeg4VideoStream(Width, Height, Fps,
+					quality: 100, 
+					codec: KnownFourCCs.Codecs.X264, 
+					forceSingleThreadedAccess: true
+				);
+				Logger.Info("X264 encoder found.");
 
+			} catch (InvalidOperationException e) {
+				Logger.Warn("Error creating X264 encoded stream: {0}.", e.Message);
+			}
+
+			try {
+				if (_stream == null) {
+					_stream = _writer.AddMotionJpegVideoStream(Width, Height,
+						quality: 100
+					);
+				}
+				Logger.Info("MJPEG encoder found.");
+
+			} catch (InvalidOperationException e) {
+				Logger.Warn("Error creating MJPEG encoded stream: {0}.", e.Message);
+			}
+
+			if (_stream == null) {
+				Logger.Error("No encoder available, aborting.");
+				return;
+			}
 			_animation = Observable
 				.Interval(TimeSpan.FromTicks(1000 * TimeSpan.TicksPerMillisecond / Fps))
 				.Subscribe(_ => {
@@ -59,7 +81,6 @@ namespace LibDmd.Output.FileOutput
 						_stream?.WriteFrame(true, _frame, 0, _frame.Length);
 					}
 				});
-
 			Logger.Info("Writing video to {0}.", VideoPath);
 		}
 
@@ -84,9 +105,9 @@ namespace LibDmd.Output.FileOutput
 				return;
 			}
 			if (_frame == null) {
-				_frame = new byte[Width * Height * 3];
+				_frame = new byte[Width * Height * 4];
 			}
-			ImageUtil.ConvertRgb24ToDIB(Width, Height, frame, _frame);
+			ImageUtil.ConvertRgb24ToBgr32(Width, Height, frame, _frame);
 		}
 
 		public void SetColor(Color color)

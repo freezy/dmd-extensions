@@ -135,6 +135,21 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static void ConvertRgb24ToBgr32(int width, int height, byte[] from, byte[] to)
+		{
+			var pos = 0;
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width * 3; x += 3) {
+					var fromPos = width * 3 * y + x;
+					to[pos] = from[fromPos + 2];
+					to[pos + 1] = from[fromPos + 1];
+					to[pos + 2] = from[fromPos];
+					to[pos + 3] = 0;
+					pos += 4;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Converts an 2-bit grayscale array to a bitmap.
 		/// </summary>
