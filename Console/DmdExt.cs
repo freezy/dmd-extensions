@@ -35,8 +35,11 @@ namespace DmdExt
 		[STAThread]
 		static void Main(string[] args)
 		{
-			AssertDotNetVersion();
+			// setup log config
+			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(assemblyPath, "dmdext.log.config"), true);
 
+			AssertDotNetVersion();
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
 			// enable exit handler

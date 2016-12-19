@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Media;
@@ -11,6 +12,7 @@ using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
+using LibDmd.Output.PinDmd3;
 using Mindscape.Raygun4Net;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
@@ -31,6 +33,7 @@ namespace PinMameDevice
 		private static readonly int Height = 32;
 		private static readonly Color DefaultColor = Colors.OrangeRed;
 
+		private readonly Configuration _config = new Configuration();
 		private readonly PinMameSource _source = new PinMameSource();
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
@@ -49,10 +52,12 @@ namespace PinMameDevice
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
 		public DmdExt()
 		{
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+			LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(AssemblyPath, "DmdDevice.Log.config"), true);
 		}
 
 		/// <summary>
@@ -64,9 +69,8 @@ namespace PinMameDevice
 		/// </remarks>
 		public void Init()
 		{
-			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-			var palPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.pal");
-			var fsqPath = Path.Combine(assemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
+			var palPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+			var fsqPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 
@@ -130,7 +134,15 @@ namespace PinMameDevice
 				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(() => {
 					_dmd.Show();
+					_dmd.Left = _config.VirtualDmd.Left;
+					_dmd.Top = _config.VirtualDmd.Top;
+					_dmd.Width = _config.VirtualDmd.Width;
+					_dmd.Height = _config.VirtualDmd.Height;
 				});
+
+				_dmd.PositionChanged
+					.Throttle(TimeSpan.FromSeconds(1))
+					.Subscribe(pos => _config.VirtualDmd.SetPosition(pos.Left, pos.Top, pos.Width, pos.Height));
 
 				// Start the Dispatcher Processing
 				Run();
@@ -146,6 +158,12 @@ namespace PinMameDevice
 		private void SetupGraphs()
 		{
 			var dest = new List<IFrameDestination> { _dmd.Dmd };
+
+			if (_config.PinDmd3.Enabled) {
+				dest.Add(_config.PinDmd3.Port.Trim() != ""
+					? PinDmd3.GetInstance(_config.PinDmd3.Port.Trim())
+					: PinDmd3.GetInstance());
+			}
 
 			// miär bruichid äi Render-Graph fir jedi Bitlängi
 			_graphs.Add(new RenderGraph {

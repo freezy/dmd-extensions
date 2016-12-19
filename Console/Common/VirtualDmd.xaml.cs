@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -8,7 +10,7 @@ using System.Windows.Media;
 namespace DmdExt.Common
 {
 	/// <summary>
-	/// A borderless virtual DMD that resizes with the same aspect ratio.
+	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
 	/// </summary>
 	public partial class VirtualDmd : Window
 	{
@@ -16,6 +18,8 @@ namespace DmdExt.Common
 		/// If true, the DMD stays on top of all other application windows.
 		/// </summary>
 		public bool AlwaysOnTop { get; set; }
+
+		public readonly BehaviorSubject<DmdPosition> PositionChanged;
 
 		public bool IgnoreAspectRatio
 		{
@@ -41,6 +45,15 @@ namespace DmdExt.Common
 			SourceInitialized += Window_SourceInitialized;
 			MouseDown += Window_MouseDown;
 			Deactivated += Window_Deactivated;
+			LocationChanged += LocationChanged_Event;
+			SizeChanged += LocationChanged_Event;
+
+			PositionChanged = new BehaviorSubject<DmdPosition>(new DmdPosition(Left, Top, Width, Height));
+		}
+
+		private void LocationChanged_Event(object sender, EventArgs e)
+		{
+			PositionChanged.OnNext(new DmdPosition(Left, Top, Width, Height));
 		}
 
 		public static Point GetMousePosition() // mouse position relative to screen
@@ -155,5 +168,26 @@ namespace DmdExt.Common
 		[DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool GetCursorPos(ref Win32Point pt);
+	}
+
+	public class DmdPosition
+	{
+		public double Left { get; set; }
+		public double Top { get; set; }
+		public double Width { get; set; }
+		public double Height { get; set; }
+
+		public DmdPosition(double left, double top, double width, double height)
+		{
+			Left = left;
+			Top = top;
+			Width = width;
+			Height = height;
+		}
+
+		public override string ToString()
+		{
+			return $"{Width}x{Height}@{Left}/{Top}";
+		}
 	}
 }

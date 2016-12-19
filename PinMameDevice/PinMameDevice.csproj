@@ -37,6 +37,10 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="INIFileParser, Version=2.3.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.3.0\lib\net20\INIFileParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mindscape.Raygun4Net">
       <HintPath>..\packages\Mindscape.Raygun4Net.5.3.0\lib\net40\Mindscape.Raygun4Net.dll</HintPath>
     </Reference>
@@ -77,13 +81,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration.cs" />
     <Compile Include="DmdDevice.cs" />
     <Compile Include="DmdExt.cs" />
     <Compile Include="PinMameSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NLog.config">
+    <Content Include="DmdDevice.log.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
@@ -111,8 +116,8 @@
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME"
-copy /Y "$(TargetDir)NLog.config" "F:\Pinball\Visual Pinball\VPinMAME"
+    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "C:\Games\Visual Pinball\VPinMAME"
+copy /Y "$(TargetDir)DmdDevice.log.config" "C:\Games\Visual Pinball\VPinMAME"
 
 </PostBuildEvent>
   </PropertyGroup>
