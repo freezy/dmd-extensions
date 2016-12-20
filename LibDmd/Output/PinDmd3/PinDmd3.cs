@@ -225,7 +225,9 @@ namespace LibDmd.Output.PinDmd3
 			for (var i = 1; i < _frameBufferRgb24.Length - 1; i++) {
 				_frameBufferRgb24[i] = 0;
 			}
-			_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
+			if (_serialPort.IsOpen) {
+				_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
+			}
 		}
 
 		public void SetColor(Color color)
