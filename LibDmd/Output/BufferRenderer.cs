@@ -161,24 +161,23 @@ namespace LibDmd.Output
 					byte bd3 = 0;
 					for (var v = 7; v >= 0; v--)
 					{
-						var shade = frame[y * Width + x + v]; // between 0 and 15
-						var pixel = (byte)(shade * 16);
+						var pixel = frame[y * Width + x + v]; // between 0 and 15
 
 						bd0 <<= 1;
 						bd1 <<= 1;
 						bd2 <<= 1;
 						bd3 <<= 1;
 
-						if ((pixel & 16) != 0) {
+						if ((pixel & 1) != 0) {
 							bd0 |= 1;
 						}
-						if ((pixel & 32) != 0) {
+						if ((pixel & 2) != 0) {
 							bd1 |= 1;
 						}
-						if ((pixel & 64) != 0) {
+						if ((pixel & 4) != 0) {
 							bd2 |= 1;
 						}
-						if ((pixel & 128) != 0) {
+						if ((pixel & 8) != 0) {
 							bd3 |= 1;
 						}
 					}

@@ -105,12 +105,6 @@ namespace LibDmd.Output.PinDmd2
 			RenderRaw(_frameBuffer);
 		}
 
-		public void RenderGray4(BitmapSource bmp)
-		{
-			// that's all PinDMDv2 can do anyway..
-			Render(bmp);
-		}
-
 		public void RenderGray4(byte[] frame)
 		{
 			// copy frame to frame buffer

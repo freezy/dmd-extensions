@@ -80,7 +80,7 @@ namespace LibDmd.Common
 		public static byte[] ConvertToRgb24(BitmapSource bmp, double lum = 1)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
-			ConvertToRgb24(bmp, frame, lum);
+			ConvertToRgb24(bmp, frame, 0, lum);
 			return frame;
 		}
 
@@ -89,13 +89,14 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="buffer">Destination buffer. Will be filled with RGB values for each pixel between 0 and 255.</param>
+		/// <param name="offset">Offset in destination array</param>
 		/// <param name="lum">Multiply luminosity</param>
-		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, double lum = 1)
+		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, int offset = 0, double lum = 1)
 		{
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
 			var rect = new Int32Rect(0, 0, 1, 1);
-			var pos = 0;
+			var pos = offset;
 			for (var y = 0; y < bmp.PixelHeight; y++) {
 				for (var x = 0; x < bmp.PixelWidth; x++) {
 					rect.X = x;

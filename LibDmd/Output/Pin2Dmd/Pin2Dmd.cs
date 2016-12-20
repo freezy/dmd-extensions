@@ -15,7 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IFrameDestination, IGray4, IRgb24, IRawOutput
+	public class Pin2Dmd : BufferRenderer, IGray2, IGray4, IRgb24, IRawOutput
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsRgb { get; } = true;
@@ -130,14 +130,10 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderRaw(_frameBufferRgb24);
 		}
 
-		/// <summary>
-		/// Renders an image in 4 bit to the display.
-		/// </summary>
-		/// <param name="bmp"></param>
-		public void RenderGray4(BitmapSource bmp)
+		public void RenderGray2(byte[] frame)
 		{
-			// copy bitmap to frame buffer
-			RenderGray4(bmp, _frameBufferGray4, 4);
+			// copy frame to frame buffer
+			RenderGray4(FrameUtil.Map2To4(frame), _frameBufferGray4, 4);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);

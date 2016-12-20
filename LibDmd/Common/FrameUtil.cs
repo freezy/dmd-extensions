@@ -86,6 +86,36 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts a 2-bit frame to a 4-bit frame for PIN2DMD.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// It maps the 2-bit values to 0,1,4,15 within the 4-bit result.
+		/// </remarks>
+		/// <param name="frame2Bit">Top left bottom right pixels with values between 0 and 3</param>
+		/// <returns>Top left bottom right pixels with values between 0 and 15</returns>
+		public static byte[] Map2To4(byte[] frame2Bit)
+		{
+			var frame4Bit = new byte[frame2Bit.Length];
+			for (var i = 0; i < frame4Bit.Length; i++) {
+				switch (frame2Bit[i]) 
+				{
+					case 0x0:
+					case 0x01:
+						frame4Bit[i] = frame2Bit[i];
+						break;
+					case 0x02:
+						frame4Bit[i] = 0x04;
+						break;
+					case 0x03:
+						frame4Bit[i] = 0x0F;
+						break;
+				}
+			}
+			return frame4Bit;
+		}
+
+		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
 		/// </summary>
 		/// <param name="width">Bräiti vom Biud</param>

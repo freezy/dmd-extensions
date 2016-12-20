@@ -17,9 +17,6 @@ namespace DmdExt.Test
 		public TestCommand(TestOptions options)
 		{
 			_options = options;
-
-			var pc = new Coloring(@"F:\Pinball\Visual Pinball\VPinMAME\altcolor\fg_1200af\pin2dmd.pal");
-			Console.WriteLine("Loaded palette file: {0}", pc);
 		}
 
 		protected override IRenderer CreateRenderGraph()

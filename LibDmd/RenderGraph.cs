@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
@@ -104,16 +105,21 @@ namespace LibDmd
 						var destGray2 = dest as IGray2;
 						AssertCompatibility(dest, destGray2, "2-bit");
 						Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
-						destGray2.RenderGray2(bmp);
+						destGray2.RenderGray2(ImageUtil.ConvertToGray2(bmp));
 						break;
 
 					case RenderBitLength.Gray4:
 						var destGray4 = dest as IGray4;
 						AssertCompatibility(dest, destGray4, "4-bit");
-						destGray4.RenderGray4(bmp);
+						destGray4.RenderGray4(ImageUtil.ConvertToGray4(bmp));
 						break;
 
 					case RenderBitLength.Rgb24:
+						var destRgb24 = dest as IRgb24;
+						AssertCompatibility(dest, destRgb24, "24-bit");
+						destRgb24.RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
+						break;
+
 					case RenderBitLength.Bitmap:
 						dest.Render(bmp);
 						break;

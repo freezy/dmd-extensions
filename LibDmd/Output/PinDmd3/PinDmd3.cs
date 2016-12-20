@@ -18,10 +18,12 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IFrameDestination, IGray4, IRgb24, IRawOutput
+	public class PinDmd3 : BufferRenderer, IGray2, IGray4, IRgb24, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;
+
+		public static readonly Color DefaultColor = Colors.OrangeRed;
 
 		const byte Rgb24CommandByte = 0x02;
 		const byte Gray4CommandByte = 0x31;
@@ -92,15 +94,15 @@ namespace LibDmd.Output.PinDmd3
 		{
 			// 3 bytes per pixel, 2 control bytes
 			_frameBufferRgb24 = new byte[Width * Height * 3 + 2];
-			_frameBufferRgb24[0] = 0x02;
+			_frameBufferRgb24[0] = Rgb24CommandByte;
 			_frameBufferRgb24[Width * Height * 3 + 1] = Rgb24CommandByte;
 
 			// 4 bits per pixel, 14 control bytes
 			_frameBufferGray4 = new byte[Width * Height / 2 + 14];     
-			_frameBufferGray4[0] = Gray4CommandByte; // command byte
-			_frameBufferGray4[Width * Height / 2 + 13] = Gray4CommandByte; // command byte
+			_frameBufferGray4[0] = Gray4CommandByte;
+			_frameBufferGray4[Width * Height / 2 + 13] = Gray4CommandByte;
 
-			SetColor(Color.FromRgb(0xff, 0x30, 0));
+			ClearColor();
 		}
 
 		public void Init()
@@ -148,13 +150,13 @@ namespace LibDmd.Output.PinDmd3
 					if (firmwareRegex.IsMatch(Firmware)) {
 						Logger.Info("Found PinDMDv3 device on {0}.", port);
 						Logger.Debug("   Firmware:    {0}", Firmware);
-						Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[0]);
+						Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[1]);
 						return true;
 					}
 				} else {
 					Logger.Info("Trusting that PinDMDv3 sits on port {0}.", port);
 					Logger.Debug("   Firmware:    {0}", Firmware);
-					Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[0]);
+					Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[1]);
 					return true;
 				}
 
@@ -173,20 +175,21 @@ namespace LibDmd.Output.PinDmd3
 		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
+			Logger.Info("Rendering frame as bitmap");
 			// make sure we can render
 			AssertRenderReady(bmp);
 
 			// copy bmp to rgb24 buffer
-			ImageUtil.ConvertToRgb24(bmp, _frameBufferRgb24);
+			ImageUtil.ConvertToRgb24(bmp, _frameBufferRgb24, 1);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferRgb24);
 		}
 
-		public void RenderGray4(BitmapSource bmp)
+		public void RenderGray2(byte[] frame)
 		{
-			// copy bitmap to frame buffer
-			RenderGray4(bmp, _frameBufferGray4, 13);
+			// copy frame to frame buffer
+			RenderGray4(FrameUtil.Map2To4(frame), _frameBufferGray4, 13);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
@@ -203,10 +206,14 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderRgb24(byte[] frame)
 		{
-			// can directly be sent to the device.
-			RenderRaw(frame);
-		}
+			Logger.Info("Rendering {0}-byte frame as rgb24", frame.Length);
 
+			// copy data to frame buffer
+			Buffer.BlockCopy(frame, 0, _frameBufferRgb24, 1, frame.Length);
+
+			// can directly be sent to the device.
+			RenderRaw(_frameBufferRgb24);
+		}
 
 		public void RenderRaw(byte[] data)
 		{
@@ -265,7 +272,7 @@ namespace LibDmd.Output.PinDmd3
 
 		public void ClearColor()
 		{
-			SetColor(Colors.OrangeRed);
+			SetColor(DefaultColor);
 		}
 
 		public void Dispose()
