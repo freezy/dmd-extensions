@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
@@ -241,8 +240,12 @@ namespace PinMameDevice
 				RenderAs = RenderBitLength.Rgb24
 			});
 
-			foreach (var rgb24Renderer in renderers.OfType<IRgb24Destination>()) 
-			{
+			// ReSharper disable once ForCanBeConvertedToForeach
+			for (var i = 0; i < _renderers.Count; i++) {
+				var rgb24Renderer = _renderers[i] as IRgb24Destination;
+				if (rgb24Renderer == null) {
+					continue;
+				}
 				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
 					Logger.Info("Just clearing palette, colorization is done by converter.");
 					rgb24Renderer.ClearColor();
@@ -255,9 +258,10 @@ namespace PinMameDevice
 				} else {
 					Logger.Info("Applying color to DMD...");
 					rgb24Renderer.ClearPalette();
-					rgb24Renderer.SetColor(_color);
+					rgb24Renderer.SetColor(_color);	
 				}
 			}
+
 			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 		}
 
@@ -304,7 +308,6 @@ namespace PinMameDevice
 
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
-			//_source.Dimensions.OnNext(DisplaySize);
 			_source.FramesGray2.OnNext(frame);
 		}
 
