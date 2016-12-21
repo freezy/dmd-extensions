@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
@@ -25,10 +26,6 @@ namespace PinMameDevice
 	/// <summary>
 	/// Hiä isch d Haiptlogik fir d <c>DmdDevice.dll</c> fir VPinMAME.
 	/// </summary>
-	/// <remarks>
-	/// Im Momänt untrstitzts numä s virtueuä DMD, wobi schpätr ai diä
-	/// ächtä drzuä chemid.
-	/// </remarks>
 	/// <seealso cref="DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
 	public class DmdExt
 	{
@@ -242,22 +239,24 @@ namespace PinMameDevice
 				Destinations = renderers,
 				RenderAs = RenderBitLength.Rgb24
 			});
-			
-			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
-				Logger.Info("Just clearing palette, colorization is done by converter.");
-				_dmd.Dmd.ClearColor();
 
-			} else if (_colorize && _palette != null) {
-				Logger.Info("Applying palette to DMD...");
-				_dmd.Dmd.ClearColor();
-				_dmd.Dmd.SetPalette(_palette);
+			foreach (var rgb24Renderer in renderers.OfType<IRgb24>()) 
+			{
+				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
+					Logger.Info("Just clearing palette, colorization is done by converter.");
+					rgb24Renderer.ClearColor();
 
-			} else {
-				Logger.Info("Applying color to DMD...");
-				_dmd.Dmd.ClearPalette();
-				_dmd.Dmd.SetColor(_color);	
+				} else if (_colorize && _palette != null) {
+					Logger.Info("Applying palette to DMD...");
+					rgb24Renderer.ClearColor();
+					rgb24Renderer.SetPalette(_palette);
+
+				} else {
+					Logger.Info("Applying color to DMD...");
+					rgb24Renderer.ClearPalette();
+					rgb24Renderer.SetColor(_color);
+				}
 			}
-
 			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 		}
 
