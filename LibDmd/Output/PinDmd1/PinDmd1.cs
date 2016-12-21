@@ -11,7 +11,7 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : BufferRenderer, IFrameDestination, IRawOutput
+	public class PinDmd1 : BufferRenderer, IRawOutput, IGray2Destination, IBitmapDestination
 	{
 		public string Name { get; } = "PinDMD v1";
 		public bool IsRgb { get; } = false;
@@ -127,16 +127,24 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
 			RenderGray2(bmp, _frameBuffer, 4);
 
 			// send frame buffer to device
+			RenderRaw(_frameBuffer);
+		}
+
+		public void RenderGray2(byte[] frame)
+		{
+			// split frame into 2-bit planes
+			var planes = FrameUtil.Split(Width, Height, 2, frame);
+
+			// copy planes into frame buffer
+			FrameUtil.Copy(planes, _frameBuffer, 4);
+
+			// send buffer to device
 			RenderRaw(_frameBuffer);
 		}
 

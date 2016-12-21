@@ -20,9 +20,10 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : IFrameSourceGray4
+	public class TPAGrabber : IGray4Source, IBitmapSource
 	{
 		public string Name { get; } = "Pinball Arcade DX11";
+		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

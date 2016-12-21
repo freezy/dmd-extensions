@@ -34,9 +34,9 @@ namespace DmdExt.Common
 			return _graph ?? (_graph = CreateRenderGraph());
 		}
 
-		protected List<IFrameDestination> GetRenderers(BaseOptions options)
+		protected List<IDestination> GetRenderers(BaseOptions options)
 		{
-			var renderers = new List<IFrameDestination>();
+			var renderers = new List<IDestination>();
 			switch (options.Destination) {
 				case Auto:
 					renderers = GetAvailableRenderers(options);
@@ -99,15 +99,15 @@ namespace DmdExt.Common
 				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
 			}
 			foreach (var renderer in renderers) {
-				var rgb24 = renderer as IRgb24;
+				var rgb24 = renderer as IRgb24Destination;
 				rgb24?.SetColor(ColorUtil.ParseColor(options.RenderColor));
 			}
 			return renderers;
 		}
 
-		protected List<IFrameDestination> GetAvailableRenderers(BaseOptions options)
+		protected List<IDestination> GetAvailableRenderers(BaseOptions options)
 		{
-			var renderers = new List<IFrameDestination>();
+			var renderers = new List<IDestination>();
 			try {
 				var pinDmd1 = PinDmd1.GetInstance();
 				var pinDmd2 = PinDmd2.GetInstance();
@@ -144,7 +144,7 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IFrameDestination ShowVirtualDmd(BaseOptions options)
+		private static IDestination ShowVirtualDmd(BaseOptions options)
 		{
 			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
 				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");

@@ -18,7 +18,7 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IGray2, IGray4, IRgb24, IRawOutput
+	public class PinDmd3 : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsRgb { get; } = true;

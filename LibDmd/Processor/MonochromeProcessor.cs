@@ -25,7 +25,7 @@ namespace LibDmd.Processor
 
 		public override bool IsGrayscaleCompatible { get; } = false;
 
-		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
+		public override BitmapSource Process(BitmapSource bmp, IDestination dest)
 		{
 			var monochrome = new FormatConvertedBitmap();
 

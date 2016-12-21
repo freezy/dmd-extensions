@@ -37,7 +37,7 @@ namespace LibDmd.Processor
 		/// </summary>
 		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
-		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
+		public override BitmapSource Process(BitmapSource bmp, IDestination dest)
 		{
 			if (bmp.PixelWidth == Width && bmp.PixelHeight == Height && !FlipHorizontally && !FlipVertically) {
 				return bmp;

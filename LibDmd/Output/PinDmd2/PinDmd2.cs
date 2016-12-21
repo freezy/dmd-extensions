@@ -1,4 +1,5 @@
 ﻿using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using NLog;
@@ -9,7 +10,7 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : BufferRenderer, IGray4, IRawOutput
+	public class PinDmd2 : BufferRenderer, IGray2Destination, IGray4Destination, IBitmapDestination, IRawOutput
 	{
 		public string Name { get; } = "PinDMD v2";
 		public bool IsRgb { get; } = false;
@@ -92,16 +93,24 @@ namespace LibDmd.Output.PinDmd2
 			IsAvailable = true;
 		}
 
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
 		public void Render(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
 			RenderGray4(bmp, _frameBuffer, 4);
 
 			// send frame buffer to device
+			RenderRaw(_frameBuffer);
+		}
+
+		public void RenderGray2(byte[] frame)
+		{
+			// split frame into 2-bit planes
+			var planes = FrameUtil.Split(Width, Height, 2, frame);
+
+			// copy planes into frame buffer
+			FrameUtil.Copy(planes, _frameBuffer, 4);
+
+			// send buffer to device
 			RenderRaw(_frameBuffer);
 		}
 

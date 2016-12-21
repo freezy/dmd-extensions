@@ -29,7 +29,7 @@ namespace LibDmd.Processor
 		/// <param name="bmp">Unprocessed frame</param>
 		/// <param name="dest">The destination for which the frame is processed.</param>
 		/// <returns>Processed frame</returns>
-		public abstract BitmapSource Process(BitmapSource bmp, IFrameDestination dest);
+		public abstract BitmapSource Process(BitmapSource bmp, IDestination dest);
 
 		/// <summary>
 		/// If false, non-RGB displays will skip this processor.

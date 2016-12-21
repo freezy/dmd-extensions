@@ -11,7 +11,7 @@ using SharpAvi.Output;
 
 namespace LibDmd.Output.FileOutput
 {
-	public class VideoOutput : IRgb24
+	public class VideoOutput : IRgb24Destination, IBitmapDestination
 	{
 		public string VideoPath { get; set; }
 

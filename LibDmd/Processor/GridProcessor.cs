@@ -41,7 +41,7 @@ namespace LibDmd.Processor
 
 		private bool _enabled = true;
 
-		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
+		public override BitmapSource Process(BitmapSource bmp, IDestination dest)
 		{
 			var sw = new Stopwatch();
 			sw.Start();

@@ -24,7 +24,7 @@ namespace DmdExt.Test
 			// define renderers
 			var renderers = GetRenderers(_options);
 			renderers.ForEach(renderer => {
-				(renderer as IRgb24)?.SetPalette(new[] {
+				(renderer as IRgb24Destination)?.SetPalette(new[] {
 					Color.FromRgb(0x0, 0x0, 0xff),
 					Color.FromRgb(0xff, 0x0, 0x0),
 				});

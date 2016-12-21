@@ -12,7 +12,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render RGB 24-bit frames.
 	/// </summary>
-	public interface IRgb24 : IFrameDestination
+	public interface IRgb24Destination : IDestination
 	{
 
 		/// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using System.Reactive.Subjects;
 using System.Security.RightsManagement;
 using System.Windows.Media.Imaging;
 using LibDmd.Output;
@@ -14,7 +15,7 @@ namespace LibDmd.Input
 	/// returns an observable. Note that the producer decides on the frequency
 	/// in which frames are delivered to the consumer.
 	/// </remarks>
-	public interface IFrameSource
+	public interface ISource
 	{
 		/// <summary>
 		/// A display name for the source
@@ -22,10 +23,9 @@ namespace LibDmd.Input
 		string Name { get; }
 
 		/// <summary>
-		/// Returns an observable that produces a sequence of frames.
+		/// The size of the source. Can change any time.
 		/// </summary>
-		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<BitmapSource> GetFrames();
+		BehaviorSubject<DisplaySize> Dimensions { get; }
 
 		/// <summary>
 		/// An observable that triggers when the source starts providing frames.

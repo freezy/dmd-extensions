@@ -11,6 +11,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
+using LibDmd.Input;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Pin2Dmd;
@@ -34,7 +35,7 @@ namespace PinMameDevice
 		private static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly Configuration _config = new Configuration();
-		private readonly PinMameSource _source = new PinMameSource();
+		private readonly PassthroughSource _source = new PassthroughSource();
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
@@ -164,7 +165,7 @@ namespace PinMameDevice
 		/// </summary>
 		private void SetupGraphs()
 		{
-			var renderers = new List<IFrameDestination>();
+			var renderers = new List<IDestination>();
 			if (_config.PinDmd1.Enabled) {
 				var pinDmd1 = PinDmd1.GetInstance();
 				if (pinDmd1.IsAvailable) {
@@ -240,7 +241,7 @@ namespace PinMameDevice
 				RenderAs = RenderBitLength.Rgb24
 			});
 
-			foreach (var rgb24Renderer in renderers.OfType<IRgb24>()) 
+			foreach (var rgb24Renderer in renderers.OfType<IRgb24Destination>()) 
 			{
 				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
 					Logger.Info("Just clearing palette, colorization is done by converter.");
@@ -303,6 +304,7 @@ namespace PinMameDevice
 
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
+			//_source.Dimensions.OnNext(DisplaySize);
 			_source.FramesGray2.OnNext(frame);
 		}
 

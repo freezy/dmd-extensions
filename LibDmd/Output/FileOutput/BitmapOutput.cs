@@ -15,7 +15,7 @@ namespace LibDmd.Output.FileOutput
 	/// <remarks>
 	/// Images are hashed and there should no duplicate images written.
 	/// </remarks>
-	public class BitmapOutput : IFrameDestination
+	public class BitmapOutput : IBitmapDestination
 	{
 		public string OutputFolder { get; set; }
 

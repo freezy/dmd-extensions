@@ -5,12 +5,14 @@ using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : IFrameSourceGray4, IFrameSourceGray2, IFrameSourceRgb24
+	public class ImageSource : IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
 		public string Name { get; } = "Image Source";
+		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

@@ -50,7 +50,7 @@ namespace DmdExt.Play
 				Resize = _options.Resize
 			};
 
-			var frameSource = source as IFrameSource;
+			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up
 				return new RenderGraph {
@@ -61,7 +61,7 @@ namespace DmdExt.Play
 				};
 			}
 
-			// not an IFrameSource, so it must be a IRawSource.
+			// not an ISource, so it must be a IRawSource.
 			var rawSource = (IRawSource)source;
 			IRawOutput rawOutput = null;
 			foreach (var dest in renderers.OfType<IRawOutput>()) {

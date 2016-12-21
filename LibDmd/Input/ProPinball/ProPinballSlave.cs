@@ -23,12 +23,10 @@ using static System.Reflection.Assembly;
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : IFrameSourceGray4
+	public class ProPinballSlave : IGray4Source, IBitmapSource
 	{
-		private const int Width = 128;
-		private const int Height = 32;
-
 		public string Name { get; } = "Pro Pinball";
+		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public Color Color { get; set; } = Color.FromRgb(255, 191, 0);
 
@@ -71,7 +69,7 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							o.OnNext(ImageUtil.ConvertFromGray4(Width, Height, frame, hue, saturation, luminosity));
+							o.OnNext(ImageUtil.ConvertFromGray4(Dimensions.Value.Width, Dimensions.Value.Width, frame, hue, saturation, luminosity));
 
 						}, err => {
 							throw new ProPinballSlaveException(new string(err));
@@ -106,7 +104,7 @@ namespace LibDmd.Input.ProPinball
 			Logger.Info("Subscribing to Pro Pinball's message queue...");
 			_framesGrey4 = Observable.Create<byte[]>(o => {
 
-				const int len = Width * Height;
+				var len = Dimensions.Value.Width * Dimensions.Value.Height;
 
 				// this is blocking, so use a new thread
 				var thread = new Thread(() => {

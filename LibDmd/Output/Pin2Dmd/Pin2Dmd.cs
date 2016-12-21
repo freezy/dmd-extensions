@@ -15,7 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IGray2, IGray4, IRgb24, IRawOutput
+	public class Pin2Dmd : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsRgb { get; } = true;

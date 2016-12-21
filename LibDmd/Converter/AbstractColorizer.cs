@@ -39,10 +39,15 @@ namespace LibDmd.Converter
 	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
 	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public abstract class AbstractColorizer : IFrameSourceRgb24
+	public abstract class AbstractColorizer : IRgb24Source
 	{
 		public readonly int Width;
 		public readonly int Height;
+
+		public string Name { get; } = "Colorizer";
+		public BehaviorSubject<DisplaySize> Dimensions { get; }
+		public IObservable<Unit> OnResume { get; }
+		public IObservable<Unit> OnPause { get; }
 
 		protected abstract int BitLength { get; }
 		protected readonly Coloring Coloring;
@@ -196,6 +201,5 @@ namespace LibDmd.Converter
 		{
 			return AnimationFrames;
 		}
-
 	}
 }

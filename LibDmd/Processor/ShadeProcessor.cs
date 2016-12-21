@@ -43,7 +43,7 @@ namespace LibDmd.Processor
 		public double Brightness { get; set; } = 0;
 
 
-		public override BitmapSource Process(BitmapSource bmp, IFrameDestination dest)
+		public override BitmapSource Process(BitmapSource bmp, IDestination dest)
 		{
 //			var luminosities = new HashSet<double>();
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;

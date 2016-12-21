@@ -11,7 +11,7 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2, IGray4, IRgb24
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 

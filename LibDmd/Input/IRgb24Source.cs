@@ -10,7 +10,7 @@ namespace LibDmd.Input
 	/// <summary>
 	/// A source that is able to deliver 24-bit frames without conversion.
 	/// </summary>
-	public interface IFrameSourceRgb24
+	public interface IRgb24Source : ISource
 	{
 		/// <summary>
 		/// Returns an observable that produces a sequence of RGB 24-bit frames.

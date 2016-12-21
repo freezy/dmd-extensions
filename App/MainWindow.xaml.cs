@@ -60,7 +60,7 @@ namespace App
 
 
 			// define renderers
-			var renderers = new List<IFrameDestination> { VirtualDmd };
+			var renderers = new List<IDestination> { VirtualDmd };
 			Console.AppendText("Added VirtualDMD renderer.\n");
 
 			try {

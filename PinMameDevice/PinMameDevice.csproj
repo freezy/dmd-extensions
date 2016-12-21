@@ -84,7 +84,6 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="DmdDevice.cs" />
     <Compile Include="DmdExt.cs" />
-    <Compile Include="PinMameSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

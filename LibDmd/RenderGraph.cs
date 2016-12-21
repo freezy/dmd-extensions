@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Converter;
@@ -17,7 +12,6 @@ using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
 using LibDmd.Processor;
-using NLog.LayoutRenderers;
 
 namespace LibDmd
 {
@@ -40,7 +34,7 @@ namespace LibDmd
 		/// A source is something that produces frames at an arbitrary resolution with
 		/// an arbitrary framerate.
 		/// </summary>
-		public IFrameSource Source { get; set; }
+		public ISource Source { get; set; }
 
 		/// <summary>
 		/// A processor is something that receives a frame, does some processing
@@ -61,7 +55,7 @@ namespace LibDmd
 		/// Examples of destinations is a virtual DMD that renders frames
 		/// on the computer screen, PinDMD and PIN2DMD integrations.
 		/// </summary>
-		public List<IFrameDestination> Destinations { get; set; }
+		public List<IDestination> Destinations { get; set; }
 
 		/// <summary>
 		/// If set, convert bitrate. Overrides <see cref="RenderAs"/>.
@@ -102,26 +96,28 @@ namespace LibDmd
 				switch (RenderAs) 
 				{
 					case RenderBitLength.Gray2:
-						var destGray2 = dest as IGray2;
+						var destGray2 = dest as IGray2Destination;
 						AssertCompatibility(dest, destGray2, "2-bit");
 						Logger.Info("Enabling 2-bit grayscale rendering for {0}", dest.Name);
 						destGray2.RenderGray2(ImageUtil.ConvertToGray2(bmp));
 						break;
 
 					case RenderBitLength.Gray4:
-						var destGray4 = dest as IGray4;
+						var destGray4 = dest as IGray4Destination;
 						AssertCompatibility(dest, destGray4, "4-bit");
 						destGray4.RenderGray4(ImageUtil.ConvertToGray4(bmp));
 						break;
 
 					case RenderBitLength.Rgb24:
-						var destRgb24 = dest as IRgb24;
+						var destRgb24 = dest as IRgb24Destination;
 						AssertCompatibility(dest, destRgb24, "24-bit");
 						destRgb24.RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
 						break;
 
 					case RenderBitLength.Bitmap:
-						dest.Render(bmp);
+						var destBitmap = dest as IBitmapDestination;
+						AssertCompatibility(dest, destBitmap, "Bitmap");
+						destBitmap.Render(bmp);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -169,9 +165,9 @@ namespace LibDmd
 					
 					// check for 2->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
-						var sourceGray2 = Source as IFrameSourceGray2;
-						var destRgb24 = dest as IRgb24;
-						var converterSource = Converter as IFrameSourceRgb24;
+						var sourceGray2 = Source as IGray2Source;
+						var destRgb24 = dest as IRgb24Destination;
+						var converterSource = Converter as IRgb24Source;
 						AssertCompatibility(Source, sourceGray2, dest, destRgb24, "2-bit", "24-bit");
 						Logger.Info("Sending 2-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray2.GetGray2Frames()
@@ -189,9 +185,9 @@ namespace LibDmd
 					
 					// check for 4->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray4 && Converter.To == RenderBitLength.Rgb24) {
-						var sourceGray4 = Source as IFrameSourceGray4;
-						var destRgb24 = dest as IRgb24;
-						var converterSource = Converter as IFrameSourceRgb24;
+						var sourceGray4 = Source as IGray4Source;
+						var destRgb24 = dest as IRgb24Destination;
+						var converterSource = Converter as IRgb24Source;
 						AssertCompatibility(Source, sourceGray4, dest, destRgb24, "4-bit", "24-bit");
 						Logger.Info("Sending 4-bit frames from \"{0}\" as 24-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray4.GetGray4Frames()
@@ -214,8 +210,8 @@ namespace LibDmd
 					switch (RenderAs)
 					{
 						case RenderBitLength.Gray2: {
-							var sourceGray2 = Source as IFrameSourceGray2;
-							var destGray2 = dest as IGray2;
+							var sourceGray2 = Source as IGray2Source;
+							var destGray2 = dest as IGray2Destination;
 							AssertCompatibility(Source, sourceGray2, dest, destGray2, "2-bit");
 							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray2.GetGray2Frames()
@@ -225,8 +221,8 @@ namespace LibDmd
 							break;
 						}
 						case RenderBitLength.Gray4: {
-							var sourceGray4 = Source as IFrameSourceGray4;
-							var destGray4 = dest as IGray4;
+							var sourceGray4 = Source as IGray4Source;
+							var destGray4 = dest as IGray4Destination;
 							AssertCompatibility(Source, sourceGray4, dest, destGray4, "4-bit");
 							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray4.GetGray4Frames()
@@ -236,8 +232,8 @@ namespace LibDmd
 							break;
 						}
 						case RenderBitLength.Rgb24: {
-							var sourceRgb24 = Source as IFrameSourceRgb24;
-							var destRgb24 = dest as IRgb24;
+							var sourceRgb24 = Source as IRgb24Source;
+							var destRgb24 = dest as IRgb24Destination;
 							AssertCompatibility(Source, sourceRgb24, dest, destRgb24, "24-bit");
 							Logger.Info("Sending unprocessed 24-bit RGB data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceRgb24.GetRgb24Frames()
@@ -247,16 +243,19 @@ namespace LibDmd
 							break;
 						}
 						case RenderBitLength.Bitmap: {
+							var sourceBitmap = Source as IBitmapSource;
+							var destBitmap = dest as IBitmapDestination;
+							AssertCompatibility(Source, sourceBitmap, dest, destBitmap, "bitmap");
 							Logger.Info("Sending bitmap data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
-							var disposable = Source.GetFrames().Subscribe(bmp => {
+							var disposable = sourceBitmap.GetFrames().Subscribe(bmp => {
 								_beforeProcessed.OnNext(bmp);
 								if (Processors != null) {
 									bmp = enabledProcessors
 										.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
 										.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
 								}
-								dest.Render(bmp);
+								destBitmap.Render(bmp);
 							}, ex => {
 								if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
 									onError.Invoke(ex);
@@ -315,7 +314,7 @@ namespace LibDmd
 		/// <param name="dest">Original destination</param>
 		/// <param name="castedDest">Casted source, will be checked against null</param>
 		/// <param name="what">Message</param>
-		private static void AssertCompatibility(IFrameSource src, object castedSource, IFrameDestination dest, object castedDest, string what, string whatDest = null)
+		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, string what, string whatDest = null)
 		{
 			if (castedSource == null && castedDest == null) {
 				if (whatDest != null) {
@@ -335,7 +334,7 @@ namespace LibDmd
 		/// <param name="dest">Original destination</param>
 		/// <param name="castedDest">Casted source, will be checked against null</param>
 		/// <param name="what">Message</param>
-		private static void AssertCompatibility(IFrameDestination dest, object castedDest, string what)
+		private static void AssertCompatibility(IDestination dest, object castedDest, string what)
 		{
 			if (castedDest == null) {
 				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + what + " compatible.");

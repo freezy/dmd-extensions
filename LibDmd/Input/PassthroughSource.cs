@@ -4,20 +4,15 @@ using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using LibDmd.Input;
 
-namespace PinMameDevice
+namespace LibDmd.Input
 {
 	/// <summary>
-	/// An input source that is linked to VPinMAME.
+	/// An input source just contains observables with all subjects.
 	/// </summary>
-	/// 
-	/// <remarks>
-	/// Data originates through <see cref="DmdDevice"/>, which is called by VPM,
-	/// then passed to <see cref="DmdExt"/> which passes the frames to this 
-	/// class.
-	/// </remarks>
-	class PinMameSource : IFrameSourceGray2, IFrameSourceGray4, IFrameSourceRgb24
+	public class PassthroughSource : IGray2Source, IGray4Source, IRgb24Source
 	{
-		public string Name { get; } = "PinMAME Source";
+		public string Name { get; } = "Passthrough Source";
+		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -28,11 +23,11 @@ namespace PinMameDevice
 		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesGray4 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
+		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
 
 		public IObservable<BitmapSource> GetFrames()
 		{
-			// doesn't need to implemented, we'll never get bitmaps from VPinMAME.
-			throw new NotImplementedException();
+			return FramesBitmap;
 		}
 
 		public IObservable<byte[]> GetGray2Frames()

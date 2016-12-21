@@ -86,6 +86,20 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Merges an array of bit planes into one single array.
+		/// </summary>
+		/// <param name="planes">Source pla nes</param>
+		/// <param name="frame">Destination array</param>
+		/// <param name="offset">Where to start copying at destination</param>
+		public static void Copy(byte[][] planes, byte[] frame, int offset)
+		{
+			foreach (var plane in planes) {
+				Buffer.BlockCopy(plane, 0, frame, offset, plane.Length);
+				offset += plane.Length;
+			}
+		}
+
+		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame for PIN2DMD.
 		/// </summary>
 		/// 
