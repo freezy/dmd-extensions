@@ -22,8 +22,8 @@ namespace LibDmd.Output.PinDmd3
 	{
 		public string Name { get; } = "PinDMD v3";
 
-		public override int Width { get; } = 128;
-		public override int Height { get; } = 32;
+		public override int Width { get; set; } = 128;
+		public override int Height { get; set; } = 32;
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
