@@ -227,18 +227,27 @@ namespace PinMameDevice
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray2Colorizer,
-				RenderAs = RenderBitLength.Gray2
+				RenderAs = RenderBitLength.Gray2,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically =  _config.Global.FlipVertically
 			});
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray4Colorizer,
-				RenderAs = RenderBitLength.Gray4
+				RenderAs = RenderBitLength.Gray4,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically =  _config.Global.FlipVertically
 			});
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = renderers,
-				RenderAs = RenderBitLength.Rgb24
+				RenderAs = RenderBitLength.Rgb24,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically =  _config.Global.FlipVertically
 			});
 
 			// ReSharper disable once ForCanBeConvertedToForeach

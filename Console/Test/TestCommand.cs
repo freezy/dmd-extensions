@@ -40,7 +40,10 @@ namespace DmdExt.Test
 			_graph = new RenderGraph {
 				Source = new ImageSource(bmp),
 				Destinations = renderers,
-				RenderAs = _options.RenderAs
+				RenderAs = _options.RenderAs,
+				Resize = _options.Resize,
+				FlipHorizontally = _options.FlipHorizontally,
+				FlipVertically = _options.FlipVertically
 			};
 
 			return _graph;

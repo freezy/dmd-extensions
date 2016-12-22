@@ -16,8 +16,8 @@ namespace LibDmd.Output.VirtualDmd
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		public int DmdWidth { get; private set; } = 192;
-		public int DmdHeight { get;private set; } = 64;
+		public int DmdWidth { get; private set; } = 128;
+		public int DmdHeight { get;private set; } = 32;
 
 		public bool IsAvailable { get; } = true;
 
@@ -77,9 +77,11 @@ namespace LibDmd.Output.VirtualDmd
 		{
 			DmdWidth = width;
 			DmdHeight = height;
-			Effect.AspectRatio = (double)width / height;
-			Effect.BlockCount = Math.Max(width, height);
-			Effect.Max = Effect.AspectRatio * 0.375;
+			Dispatcher.Invoke(() => {
+				Effect.AspectRatio = (double)width / height;
+				Effect.BlockCount = Math.Max(width, height);
+				Effect.Max = Effect.AspectRatio * 0.375;
+			});
 			Host.SetDimensions(width, height);
 		}
 
@@ -107,7 +109,10 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void Init()
 		{
-			//SetDimensions(DmdWidth, DmdHeight);
+			if (this is IFixedSizeDestination) {
+				SetDimensions(DmdWidth, DmdHeight);
+			}
+			
 		}
 
 		public void Dispose()

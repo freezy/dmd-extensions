@@ -59,8 +59,10 @@ namespace DmdExt.Common
 		public void SetDimensions(int width, int height)
 		{
 			Logger.Info("Resizing Virtual DMD to {0}x{1}.", width, height);
-			_aspectRatio = (double)width / height;
-			Height = Width / _aspectRatio;
+			Dispatcher.Invoke(() => {
+				_aspectRatio = (double)width / height;
+				Height = Width / _aspectRatio;
+			});
 		}
 
 		private void LocationChanged_Event(object sender, EventArgs e)

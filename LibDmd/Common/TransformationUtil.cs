@@ -21,7 +21,7 @@ namespace LibDmd.Common
 			if (bmp.PixelWidth == destWidth && bmp.PixelHeight == destHeight && !flipHorizontally && !flipVertically) {
 				return bmp;
 			}
-			Console.WriteLine("Transforming from {0}x{1} to {2}x{3}...", bmp.PixelWidth, bmp.PixelHeight, destWidth, destHeight);
+			//Console.WriteLine("Transforming from {0}x{1} to {2}x{3}...", bmp.PixelWidth, bmp.PixelHeight, destWidth, destHeight);
 
 			var sw = new Stopwatch();
 			sw.Start();
@@ -36,7 +36,6 @@ namespace LibDmd.Common
 			var marginY = 0;
 			var cropX = 0;
 			var cropY = 0;
-
 
 			// image fits into dest, don't upscale, just adjust margins.
 			if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight) {
@@ -121,7 +120,7 @@ namespace LibDmd.Common
 				width = destWidth;
 				height = destHeight;
 			}
-			Console.WriteLine("[{6}]: size: {0}x{1}, crop: {2}/{3}, margins: {4}/{5}", width, height, cropX, cropY, marginX, marginY, resize);
+			//Console.WriteLine("[{6}]: size: {0}x{1}, crop: {2}/{3}, margins: {4}/{5}", width, height, cropX, cropY, marginX, marginY, resize);
 
 			BitmapSource processedBmp;
 			if (bmp.PixelWidth == (int)width && bmp.PixelHeight == (int)height && !flipHorizontally && !flipVertically) {
@@ -134,7 +133,7 @@ namespace LibDmd.Common
 			if (cropX > 0 || cropY > 0) {
 				var cropParams = new Int32Rect(cropX, cropY, Math.Min(destWidth, processedBmp.PixelWidth), Math.Min(destHeight, processedBmp.PixelHeight));
 				processedBmp = new CroppedBitmap(processedBmp, cropParams);
-				Console.WriteLine("Cropped bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
+				//Console.WriteLine("Cropped bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
 			}
 
 			// fit needs painting on new canvas
@@ -154,7 +153,7 @@ namespace LibDmd.Common
 				rect.Y = marginY;
 				emptyBmp.WritePixels(rect, buffer, stride, 0);
 				processedBmp = emptyBmp;
-				Console.WriteLine("Repainted bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
+				//Console.WriteLine("Repainted bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
 			}
 			
 			processedBmp.Freeze();

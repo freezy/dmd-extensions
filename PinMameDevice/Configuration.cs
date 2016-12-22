@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.WindowsRuntime;
 using IniParser;
 using IniParser.Model;
+using LibDmd.Input;
 using NLog;
 
 namespace PinMameDevice
@@ -49,6 +52,24 @@ namespace PinMameDevice
 	public class GlobalConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "global";
+
+		public ResizeMode Resize
+		{
+			get { return GetEnum("resize", ResizeMode.Fit); }
+			set { Set("resize", value); }
+		}
+
+		public bool FlipHorizontally
+		{
+			get { return GetBoolean("fliphorizontally", false); }
+			set { Set("fliphorizontally", value); }
+		}
+
+		public bool FlipVertically
+		{
+			get { return GetBoolean("flipvertically", false); }
+			set { Set("flipvertically", value); }
+		}
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -316,6 +337,34 @@ namespace PinMameDevice
 				return fallback;
 			}
 			return _data[Name][key];
+		}
+
+		protected T GetEnum<T>(string key, T fallback)
+		{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				return fallback;
+			}
+			try {
+				var e = (T)Enum.Parse(typeof(T), _data[Name][key].First().ToString().ToUpper() + _data[Name][key].Substring(1));
+				if (!Enum.IsDefined(typeof(T), e)) {
+					throw new ArgumentException();
+				}
+				return e;
+			} catch (ArgumentException) {
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
+				return fallback;
+			}
+		}
+
+		protected void Set<T>(string key, T value)
+		{
+			if (_data[Name] == null) {
+				_data.Sections.Add(new SectionData(Name));
+			}
+			_data[Name][key] = value.ToString();
+			if (DoWrite) {
+				_parent.Save();
+			}
 		}
 	}
 }
