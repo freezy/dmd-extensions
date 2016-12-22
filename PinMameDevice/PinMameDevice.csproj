@@ -81,6 +81,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaNumeric.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="DmdDevice.cs" />
     <Compile Include="DmdExt.cs" />

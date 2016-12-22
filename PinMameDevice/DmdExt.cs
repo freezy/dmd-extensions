@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Input;
@@ -58,7 +59,7 @@ namespace PinMameDevice
 		{
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-			var logConfigPath = Path.Combine(AssemblyPath, "dmdext.log.config");
+			var logConfigPath = Path.Combine(AssemblyPath, "DmdDevice.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
 			}
@@ -338,10 +339,53 @@ namespace PinMameDevice
 			_source.FramesRgb24.OnNext(frame);
 		}
 
+		public void RenderAlphaNumeric(DmdDevice.NumericalLayout layout, byte[] segData, byte[] segDataExtended)
+		{
+			Logger.Info("Alphanumeric: {0}", layout);
+			switch(layout)
+			{
+				case DmdDevice.NumericalLayout.None:
+					break;
+				case DmdDevice.NumericalLayout.__2x16Alpha:
+					break;
+				case DmdDevice.NumericalLayout.__2x20Alpha:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_10x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
+					var planes = FrameUtil.Copy(128, 32, AlphaNumeric._2x7Num10_2x7Num10_4x1Num(segData), 2, 4);
+					_source.FramesGray2.OnNext(FrameUtil.Join(128, 32, planes));
+					break;
+				case DmdDevice.NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__4x7Num10:
+					break;
+				case DmdDevice.NumericalLayout.__6x4Num_4x1Num:
+					break;
+				case DmdDevice.NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
+					break;
+				case DmdDevice.NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
+			}
+		}
+
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			var ex = e.ExceptionObject as Exception;
-			if (ex != null) {
+			if (ex != null)
+			{
 				Logger.Error(ex.Message);
 				Logger.Error(ex.StackTrace);
 			}

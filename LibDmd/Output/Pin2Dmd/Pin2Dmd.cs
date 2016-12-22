@@ -152,6 +152,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
+
 		}
 
 		public void RenderRgb24(byte[] frame)

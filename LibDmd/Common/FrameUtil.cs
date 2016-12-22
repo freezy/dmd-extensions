@@ -193,6 +193,17 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static byte[][] Copy(int width, int height, byte[] planes, int bitlength, int offset)
+		{
+			var copy = new byte[bitlength][];
+			var planeSize = width * height / 8;
+			for (var i = 0; i < bitlength; i++) {
+				copy[i] = new byte[planeSize];
+				Buffer.BlockCopy(planes, offset + i * planeSize, copy[i], 0, planeSize);
+			}
+			return copy;
+		}
+
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame for PIN2DMD.
 		/// </summary>
