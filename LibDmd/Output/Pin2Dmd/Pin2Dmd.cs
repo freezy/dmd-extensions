@@ -19,11 +19,11 @@ namespace LibDmd.Output.Pin2Dmd
 	{
 		public string Name { get; } = "PIN2DMD";
 
-		public override sealed int Width { get; } = 128;
-		public override sealed int Height { get; } = 32;
+		public override int Width { get; set; } = 128;
+		public override int Height { get; set; } = 32;
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public int DmdWidth { get; private set; } = 128;
+		public int DmdHeight { get; private set; } = 32;
 
 		private UsbDevice _pin2DmdDevice;
 		private readonly byte[] _frameBufferRgb24;
@@ -98,12 +98,20 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 			_pin2DmdDevice.Open();
 
-			if (_pin2DmdDevice.Info.ManufacturerString.Contains("PIN2DMD")) {
+			if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD")) {
 				Logger.Info("Found PIN2DMD device.");
 				Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
 				Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
 				Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
 				Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
+
+				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL")) {
+					DmdWidth = 192;
+					DmdHeight = 64;
+					Width = 192;
+					Height = 64;
+				}
+
 			} else {
 				Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
 				IsAvailable = false;

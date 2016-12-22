@@ -18,8 +18,8 @@ namespace LibDmd.Output
 	{
 		public bool IsAvailable { get; protected set; }
 
-		public abstract int Width { get; }
-		public abstract int Height { get; }
+		public abstract int Width { get; set; }
+		public abstract int Height { get; set; }
 
 		/// <summary>
 		/// Copies a bitmap into a 2-bit grayscale buffer. Used by PinDMDv1.
