@@ -25,10 +25,9 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
+	public class PBFX2Grabber : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
 		public string Name { get; } = "Pinball FX2";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -121,7 +120,7 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<BitmapSource> GetBitmapFrames()
 		{
 			_bitLength = RenderBitLength.Bitmap;
 			if (_frames == null) {

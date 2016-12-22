@@ -24,11 +24,6 @@ namespace LibDmd.Output
 		/// after running this.
 		/// </summary>
 		void Init();
-
-		/// <summary>
-		/// If true, the device can display RGB frames.
-		/// </summary>
-		bool IsRgb { get; }
 	}
 
 	/// <summary>

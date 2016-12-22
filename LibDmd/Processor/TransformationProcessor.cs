@@ -4,12 +4,14 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Output;
+using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd.Processor
 {
 	/// <summary>
 	/// Resizes or flips a frame to given dimensions.
 	/// </summary>
+	[Obsolete("Will be baked into render graph directly", false)]
 	public class TransformationProcessor : AbstractProcessor
 	{
 		/// <summary>
@@ -126,24 +128,6 @@ namespace LibDmd.Processor
 			processedBmp.Freeze();
 			_whenProcessed.OnNext(processedBmp);
 			return processedBmp;
-		}
-
-		public enum ResizeMode
-		{
-			/// <summary>
-			/// Stretch to fit dimensions. Aspect ratio is not kept.
-			/// </summary>
-			Stretch,
-
-			/// <summary>
-			/// Smaller dimensions fits while larger dimension gets cropped.
-			/// </summary>
-			Fill,
-
-			/// <summary>
-			/// Larger dimensions fits and smaller dimension stays black.
-			/// </summary>
-			Fit
 		}
 	}
 }

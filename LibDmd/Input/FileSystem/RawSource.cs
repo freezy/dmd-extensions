@@ -7,10 +7,9 @@ using System.Reactive.Subjects;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class RawSource : IRawSource
+	public class RawSource : AbstractSource, IRawSource
 	{
 		public string Name { get; } = "Binary File";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		private readonly string _filename;
 

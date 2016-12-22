@@ -6,13 +6,14 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using LibDmd.Output.VirtualDmd;
 
 namespace DmdExt.Common
 {
 	/// <summary>
 	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
 	/// </summary>
-	public partial class VirtualDmd : Window
+	public partial class VirtualDmd : Window, DmdWindow
 	{
 		/// <summary>
 		/// If true, the DMD stays on top of all other application windows.
@@ -48,7 +49,14 @@ namespace DmdExt.Common
 			LocationChanged += LocationChanged_Event;
 			SizeChanged += LocationChanged_Event;
 
+			Dmd.Host = this;
 			PositionChanged = new BehaviorSubject<DmdPosition>(new DmdPosition(Left, Top, Width, Height));
+		}
+
+		public void SetDimensions(int width, int height)
+		{
+			_aspectRatio = (double)width / height;
+			Height = Width / _aspectRatio;
 		}
 
 		private void LocationChanged_Event(object sender, EventArgs e)

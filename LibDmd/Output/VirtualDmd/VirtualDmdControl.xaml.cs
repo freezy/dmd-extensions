@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.VirtualDmd
@@ -11,15 +12,16 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IFixedSizeDestination
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		public readonly int DmdWidth = 128;
-		public readonly int DmdHeight = 32;
+		public int DmdWidth { get; } = 192;
+		public int DmdHeight { get; } = 64;
 
 		public bool IsAvailable { get; } = true;
-		public bool IsRgb { get; } = true;
+
+		public DmdWindow Host { set; get; }
 		public bool IgnoreAspectRatio {
 			get { return Dmd.Stretch == Stretch.UniformToFill; }
 			set { Dmd.Stretch = value ? Stretch.Fill : Stretch.UniformToFill; }
@@ -40,28 +42,26 @@ namespace LibDmd.Output.VirtualDmd
 			ClearColor();
 		}
 
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			Dispatcher.Invoke(() => Dmd.Source = bmp);
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			// retrieve dimensions from frame size with AR = 1:4
 			if (_gray2Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray2Palette));
 			} else {
-				Render(ImageUtil.ConvertFromGray2(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
+				RenderBitmap(ImageUtil.ConvertFromGray2(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
 		}
 
 		public void RenderGray4(byte[] frame)
 		{
-			// retrieve dimensions from frame size with AR = 1:4
 			if (_gray4Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray4Palette));
 			} else {
-				Render(ImageUtil.ConvertFromGray4(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
+				RenderBitmap(ImageUtil.ConvertFromGray4(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
 		}
 
@@ -70,7 +70,14 @@ namespace LibDmd.Output.VirtualDmd
 			if (frame.Length % 3 != 0) {
 				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Length + " isn't.");
 			}
-			Render(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
+			RenderBitmap(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
+		}
+
+		public void SetDimensions(int width, int height)
+		{
+			Effect.AspectRatio = (double)width / height;
+			Effect.BlockCount = Math.Max(width, height);
+			Host.SetDimensions(width, height);
 		}
 
 		public void SetColor(Color color)
@@ -98,12 +105,17 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void Init()
 		{
-			// nothing to init
+			SetDimensions(DmdWidth, DmdHeight);
 		}
 
 		public void Dispose()
 		{
 			// nothing to dispose
 		}
+	}
+
+	public interface DmdWindow
+	{
+		void SetDimensions(int width, int height);
 	}
 }

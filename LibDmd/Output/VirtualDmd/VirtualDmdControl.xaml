@@ -9,7 +9,7 @@
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Image x:Name="Dmd" Source="red-128x32.png">
             <Image.Effect>
-                <virtualDmd:DmdEffect BlockCount="128" AspectRatio="4" Max="1.5"/>
+                <virtualDmd:DmdEffect x:Name="Effect" BlockCount="192" AspectRatio="3" Max="1.2"/>
             </Image.Effect>
         </Image>
         <Grid.Effect>

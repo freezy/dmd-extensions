@@ -34,12 +34,11 @@ namespace DmdExt.Mirror
 				RenderAs = _options.RenderAs
 			};
 
-			// instantiate transformation processor
-			var transformationProcessor = new TransformationProcessor {
+			/*var transformationProcessor = new TransformationProcessor {
 				FlipVertically = _options.FlipVertically,
 				FlipHorizontally = _options.FlipHorizontally,
 				Resize = _options.Resize
-			};
+			};*/
 
 			// setup source and additional processors
 			switch (_options.Source) {
@@ -72,7 +71,7 @@ namespace DmdExt.Mirror
 					};
 					_graph.Processors = new List<AbstractProcessor> {
 						gridProcessor,
-						transformationProcessor,
+						//transformationProcessor,
 						shadeProcessor
 					};
 					break;
@@ -88,7 +87,7 @@ namespace DmdExt.Mirror
 						Brightness = 0
 					};
 					_graph.Processors = new List<AbstractProcessor>() {
-						transformationProcessor,
+						//transformationProcessor,
 						shadeProcessor
 					};
 					break;
@@ -98,7 +97,7 @@ namespace DmdExt.Mirror
 					
 					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
 					_graph.Processors = new List<AbstractProcessor> {
-						transformationProcessor
+						//transformationProcessor
 					};
 					break;
 				}
@@ -114,7 +113,7 @@ namespace DmdExt.Mirror
 						Width = _options.Position[2],
 						Height = _options.Position[3]
 					};
-					_graph.Processors = new List<AbstractProcessor>() { transformationProcessor };
+					_graph.Processors = new List<AbstractProcessor>() /*{ transformationProcessor }*/;
 					break;
 
 				default:

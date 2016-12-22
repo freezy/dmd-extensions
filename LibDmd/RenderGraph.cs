@@ -81,6 +81,21 @@ namespace LibDmd
 		/// </summary>
 		public RenderBitLength RenderAs { get; set; } = RenderBitLength.Bitmap;
 
+		/// <summary>
+		/// If set, flips the image vertically.
+		/// </summary>
+		public bool FlipVertically { get; set; }
+
+		/// <summary>
+		/// If set, flips the image horizontally.
+		/// </summary>
+		public bool FlipHorizontally { get; set; }
+
+		/// <summary>
+		/// How the image is resized for destinations with fixed width
+		/// </summary>
+		public ResizeMode Resize { get; set; } = ResizeMode.Fit;
+
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -117,7 +132,7 @@ namespace LibDmd
 					case RenderBitLength.Bitmap:
 						var destBitmap = dest as IBitmapDestination;
 						AssertCompatibility(dest, destBitmap, "Bitmap");
-						destBitmap.Render(bmp);
+						destBitmap.RenderBitmap(bmp);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -161,7 +176,8 @@ namespace LibDmd
 
 			try {
 
-				foreach (var dest in Destinations) {
+				foreach (var dest in Destinations) 
+				{
 					
 					// check for 2->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
@@ -207,6 +223,11 @@ namespace LibDmd
 						throw new NotImplementedException($"Frame convertion from ${Converter.From} to ${Converter.To} not implemented.");
 					}
 
+					var destFixedSize = dest as IFixedSizeDestination;
+					var destResizable = dest as IResizableDestination;
+					if (destResizable != null) {
+						Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
+					}
 					switch (RenderAs)
 					{
 						case RenderBitLength.Gray2: {
@@ -216,6 +237,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray2.GetGray2Frames()
 								.Where(frame => frame != null)
+								.Select(frame => TransformGray2(Source.Dimensions.Value.Width, Source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destGray2.RenderGray2, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
@@ -227,6 +249,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceGray4.GetGray4Frames()
 								.Where(frame => frame != null)
+								.Select(frame => TransformGray4(Source.Dimensions.Value.Width, Source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destGray4.RenderGray4, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
@@ -238,6 +261,7 @@ namespace LibDmd
 							Logger.Info("Sending unprocessed 24-bit RGB data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var disposable = sourceRgb24.GetRgb24Frames()
 								.Where(frame => frame != null)
+								.Select(frame => TransformRgb24(Source.Dimensions.Value.Width, Source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 							_activeSources.Add(disposable);
 							break;
@@ -248,21 +272,18 @@ namespace LibDmd
 							AssertCompatibility(Source, sourceBitmap, dest, destBitmap, "bitmap");
 							Logger.Info("Sending bitmap data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
 							var enabledProcessors = Processors?.Where(processor => processor.Enabled) ?? new List<AbstractProcessor>();
-							var disposable = sourceBitmap.GetFrames().Subscribe(bmp => {
-								_beforeProcessed.OnNext(bmp);
-								if (Processors != null) {
-									bmp = enabledProcessors
-										.Where(processor => dest.IsRgb || processor.IsGrayscaleCompatible)
-										.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest));
-								}
-								destBitmap.Render(bmp);
-							}, ex => {
-								if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
-									onError.Invoke(ex);
-								} else {
-									throw new Exception("Error rendering bitmap.", ex);
-								}
-							});
+							var disposable = sourceBitmap.GetBitmapFrames()
+									.Where(bmp => bmp != null)
+									.Do(_beforeProcessed.OnNext)
+									.Select(bmp => enabledProcessors.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp, dest)))
+									.Select(bmp => Transform(bmp, destFixedSize))
+									.Subscribe(destBitmap.RenderBitmap, ex => {
+										if (onError != null && (ex is CropRectangleOutOfRangeException || ex is RenderException)) {
+											onError.Invoke(ex);
+										} else {
+											throw new Exception("Error rendering bitmap.", ex);
+										}
+									});
 							_activeSources.Add(disposable);
 							break;
 						}
@@ -288,6 +309,7 @@ namespace LibDmd
 			}
 			return new RenderDisposable(this, _activeSources);
 		}
+		
 
 		/// <summary>
 		/// Disposes the graph and all elements.
@@ -304,6 +326,45 @@ namespace LibDmd
 			foreach (var dest in Destinations) {
 				dest.Dispose();
 			}
+		}
+
+		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
+		{
+			if (dest == null) {
+				return frame;
+			}
+			var bmp = ImageUtil.ConvertFromGray2(width, height, frame, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
+			return transformedFrame;
+		}
+
+		private byte[] TransformGray4(int width, int height, byte[] frame, IFixedSizeDestination dest)
+		{
+			if (dest == null) {
+				return frame;
+			}
+			var bmp = ImageUtil.ConvertFromGray4(width, height, frame, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
+			return transformedFrame;
+		}
+
+		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)
+		{
+			if (dest == null) {
+				return frame;
+			}
+			var bmp = ImageUtil.ConvertFromRgb24(width, height, frame);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = new byte[dest.DmdWidth * dest.DmdHeight * 3];
+			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
+			return transformedFrame;
+		}
+
+		private BitmapSource Transform(BitmapSource bmp, IFixedSizeDestination dest)
+		{
+			return dest == null ? bmp : TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 		}
 
 		/// <summary>

@@ -308,16 +308,19 @@ namespace PinMameDevice
 
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
+			_source.SetDimensions(width, height);
 			_source.FramesGray2.OnNext(frame);
 		}
 
 		public void RenderGray4(int width, int height, byte[] frame)
 		{
+			_source.SetDimensions(width, height);
 			_source.FramesGray4.OnNext(frame);
 		}
 
 		public void RenderRgb24(int width, int height, byte[] frame)
 		{
+			_source.SetDimensions(width, height);
 			_source.FramesRgb24.OnNext(frame);
 		}
 

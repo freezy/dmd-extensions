@@ -18,10 +18,16 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput
+	public class PinDmd3 : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
-		public bool IsRgb { get; } = true;
+
+		public override int Width { get; } = 128;
+		public override int Height { get; } = 32;
+
+		public int DmdWidth { get; } = 128;
+		public int DmdHeight { get; } = 32;
+
 
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
@@ -38,16 +44,6 @@ namespace LibDmd.Output.PinDmd3
 		/// ports in order to find the device.
 		/// </summary>
 		public string Port { get; set; }
-
-		/// <summary>
-		/// Width in pixels of the display, 128 for PinDMD3
-		/// </summary>
-		public override sealed int Width { get; } = 128;
-
-		/// <summary>
-		/// Height in pixels of the display, 32 for PinDMD3
-		/// </summary>
-		public override sealed int Height { get; } = 32;
 
 		private static PinDmd3 _instance;
 		private readonly byte[] _frameBufferRgb24;
@@ -173,7 +169,7 @@ namespace LibDmd.Output.PinDmd3
 		/// Renders an image to the display.
 		/// </summary>
 		/// <param name="bmp">Any bitmap</param>
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			Logger.Info("Rendering frame as bitmap");
 			// make sure we can render

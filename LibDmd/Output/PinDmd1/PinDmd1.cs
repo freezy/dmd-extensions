@@ -11,13 +11,16 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : BufferRenderer, IRawOutput, IGray2Destination, IBitmapDestination
+	public class PinDmd1 : BufferRenderer, IRawOutput, IGray2Destination, IBitmapDestination, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v1";
-		public bool IsRgb { get; } = false;
 
-		public override sealed int Width { get; } = 128;
-		public override sealed int Height { get; } = 32;
+		public override int Width { get; } = 128;
+		public override int Height { get; } = 32;
+
+		public int DmdWidth { get; } = 128;
+		public int DmdHeight { get; } = 32;
+
 
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
 		private readonly byte[] _frameBuffer;
@@ -127,7 +130,7 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
 			RenderGray2(bmp, _frameBuffer, 4);
@@ -166,5 +169,6 @@ namespace LibDmd.Output.PinDmd1
 				IsAvailable = false;
 			}
 		}
+
 	}
 }

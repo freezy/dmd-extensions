@@ -19,7 +19,6 @@ namespace LibDmd.Output.FileOutput
 		public readonly int Height = 32;
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
-		public bool IsRgb { get; } = true;
 		public bool IsAvailable { get; } = true;
 
 		private AviWriter _writer;
@@ -88,7 +87,7 @@ namespace LibDmd.Output.FileOutput
 		/// Renders an image to the display.
 		/// </summary>
 		/// <param name="bmp">Any bitmap</param>
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			throw new NotImplementedException();
 		}

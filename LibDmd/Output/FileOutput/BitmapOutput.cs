@@ -20,7 +20,6 @@ namespace LibDmd.Output.FileOutput
 		public string OutputFolder { get; set; }
 
 		public string Name { get; } = "File Writer";
-		public bool IsRgb { get; } = true;
 		public bool IsAvailable { get; } = true;
 
 		private int _counter;
@@ -43,7 +42,7 @@ namespace LibDmd.Output.FileOutput
 		/// Renders an image to the display.
 		/// </summary>
 		/// <param name="bmp">Any bitmap</param>
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			// hash bitmap to see if we already saved it
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;

@@ -25,7 +25,7 @@ namespace LibDmd.Input
 		/// <summary>
 		/// The size of the source. Can change any time.
 		/// </summary>
-		BehaviorSubject<DisplaySize> Dimensions { get; }
+		BehaviorSubject<Dimensions> Dimensions { get; }
 
 		/// <summary>
 		/// An observable that triggers when the source starts providing frames.
@@ -36,5 +36,29 @@ namespace LibDmd.Input
 		/// An observable that triggers when the source is interrupted, e.g. a game is stopped.
 		/// </summary>
 		IObservable<Unit> OnPause { get; }
+	}
+
+	public struct Dimensions
+	{
+		public int Width { get; set; }
+		public int Height { get; set; }
+	}
+
+	public enum ResizeMode
+	{
+		/// <summary>
+		/// Stretch to fit dimensions. Aspect ratio is not kept.
+		/// </summary>
+		Stretch,
+
+		/// <summary>
+		/// Smaller dimensions fits while larger dimension gets cropped.
+		/// </summary>
+		Fill,
+
+		/// <summary>
+		/// Larger dimensions fits and smaller dimension stays black.
+		/// </summary>
+		Fit
 	}
 }

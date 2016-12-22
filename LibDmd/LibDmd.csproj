@@ -86,13 +86,14 @@
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
+    <Compile Include="Common\TransformationUtil.cs" />
     <Compile Include="Converter\AbstractColorizer.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
     <Compile Include="Converter\Colorize\Frame.cs" />
     <Compile Include="Converter\Gray2Colorizer.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
-    <Compile Include="Input\DisplaySize.cs" />
+    <Compile Include="Input\AbstractSource.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IBitmapSource.cs" />
     <Compile Include="Input\IGray2Source.cs" />
@@ -103,6 +104,8 @@
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
     <Compile Include="Output\IGray2Destination.cs" />
+    <Compile Include="Output\IFixedSizeDestination.cs" />
+    <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtension.cs" />
     <Compile Include="Converter\Colorize\Mapping.cs" />

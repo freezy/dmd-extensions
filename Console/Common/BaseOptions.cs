@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 using LibDmd;
+using LibDmd.Input;
 using LibDmd.Processor;
 
 namespace DmdExt.Common
@@ -15,7 +16,7 @@ namespace DmdExt.Common
 		public DestinationType Destination { get; set; } = DestinationType.Auto;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
-		public TransformationProcessor.ResizeMode Resize { get; set; } = TransformationProcessor.ResizeMode.Stretch;
+		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
 		[Option("no-virtual", HelpText = "Explicitly disables the virtual DMD when destination is \"auto\". Default: false.")]
 		public bool NoVirtualDmd { get; set; } = false;

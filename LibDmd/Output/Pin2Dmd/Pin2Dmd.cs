@@ -15,13 +15,15 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput
+	public class Pin2Dmd : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
-		public bool IsRgb { get; } = true;
 
 		public override sealed int Width { get; } = 128;
 		public override sealed int Height { get; } = 32;
+
+		public int DmdWidth { get; } = 128;
+		public int DmdHeight { get; } = 32;
 
 		private UsbDevice _pin2DmdDevice;
 		private readonly byte[] _frameBufferRgb24;
@@ -121,7 +123,7 @@ namespace LibDmd.Output.Pin2Dmd
 		/// Renders an image to the display.
 		/// </summary>
 		/// <param name="bmp">Any bitmap</param>
-		public void Render(BitmapSource bmp)
+		public void RenderBitmap(BitmapSource bmp)
 		{
 			// copy bitmap to frame buffer
 			RenderRgb24(bmp, _frameBufferRgb24, 4);
@@ -151,7 +153,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRgb24(byte[] frame)
 		{
 			// TODO don't convert to bitmap but update buffer renderer to deal with rgb24 directly
-			Render(ImageUtil.ConvertFromRgb24(Width, Height, frame));
+			RenderBitmap(ImageUtil.ConvertFromRgb24(Width, Height, frame));
 		}
 
 		public void RenderRaw(byte[] frame)

@@ -9,10 +9,9 @@ using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
+	public class ImageSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
 		public string Name { get; } = "Image Source";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -27,6 +26,7 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSource(BitmapSource bmp)
 		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
 			_framesGray2 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
 			_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
@@ -42,11 +42,14 @@ namespace LibDmd.Input.FileSystem
 			try {
 				var bmp = new BitmapImage();
 				bmp.BeginInit();
-				bmp.UriSource = new Uri(fileName);
+				bmp.UriSource = new Uri(Path.IsPathRooted(fileName) ? fileName : Path.Combine(Directory.GetCurrentDirectory(), fileName));
 				bmp.EndInit();
 
+				SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 				_frames = new BehaviorSubject<BitmapSource>(bmp);
-
+				_framesGray2 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
+				_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
+				_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToRgb24(bmp));
 
 			} catch (UriFormatException) {
 				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");
@@ -59,7 +62,7 @@ namespace LibDmd.Input.FileSystem
 			}
 		}
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<BitmapSource> GetBitmapFrames()
 		{
 			return _frames;
 		}

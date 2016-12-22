@@ -12,10 +12,9 @@ namespace LibDmd.Input.ScreenGrabber
 	/// A screen grabber that captures a portion of the desktop given by 
 	/// position and dimensions.
 	/// </summary>
-	public class ScreenGrabber : IBitmapSource
+	public class ScreenGrabber : AbstractSource, IBitmapSource
 	{
 		public string Name { get; } = "Screen Grabber";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -31,7 +30,7 @@ namespace LibDmd.Input.ScreenGrabber
 
 		private IObservable<BitmapSource> _frames;
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<BitmapSource> GetBitmapFrames()
 		{
 			return _frames ?? (
 				_frames = Observable

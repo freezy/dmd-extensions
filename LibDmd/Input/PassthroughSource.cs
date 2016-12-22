@@ -9,10 +9,9 @@ namespace LibDmd.Input
 	/// <summary>
 	/// An input source just contains observables with all subjects.
 	/// </summary>
-	public class PassthroughSource : IGray2Source, IGray4Source, IRgb24Source
+	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source
 	{
 		public string Name { get; } = "Passthrough Source";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

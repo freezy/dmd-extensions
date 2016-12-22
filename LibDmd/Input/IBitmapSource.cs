@@ -16,6 +16,6 @@ namespace LibDmd.Input
 		/// Returns an observable that produces a sequence of frames.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<BitmapSource> GetFrames();
+		IObservable<BitmapSource> GetBitmapFrames();
 	}
 }

@@ -23,10 +23,9 @@ using static System.Reflection.Assembly;
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : IGray4Source, IBitmapSource
+	public class ProPinballSlave : AbstractSource, IGray4Source, IBitmapSource
 	{
 		public string Name { get; } = "Pro Pinball";
-		public BehaviorSubject<DisplaySize> Dimensions { get; } = new BehaviorSubject<DisplaySize>(new DisplaySize { Width = 128, Height = 32 });
 
 		public Color Color { get; set; } = Color.FromRgb(255, 191, 0);
 
@@ -52,7 +51,7 @@ namespace LibDmd.Input.ProPinball
 		}
 
 
-		public IObservable<BitmapSource> GetFrames()
+		public IObservable<BitmapSource> GetBitmapFrames()
 		{
 			if (_frames != null) {
 				return _frames;

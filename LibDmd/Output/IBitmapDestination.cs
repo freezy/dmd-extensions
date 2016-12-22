@@ -12,6 +12,6 @@ namespace LibDmd.Output
 		/// Renders a bitmap frame.
 		/// </summary>
 		/// <param name="bmp">Frame to render</param>
-		void Render(BitmapSource bmp);
+		void RenderBitmap(BitmapSource bmp);
 	}
 }
