@@ -102,6 +102,7 @@ namespace PinMameDevice
 				} else {
 					_dmd.Dispatcher.Invoke(() => {
 						SetupGraphs();
+						_dmd.Dmd.Init();
 						_dmd.Show();
 					});
 				}
@@ -143,8 +144,8 @@ namespace PinMameDevice
 					_dmd.Height = _config.VirtualDmd.Height;
 					_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
 					_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
+					_dmd.Dmd.Init();
 					_dmd.Show();
-					
 				});
 
 				_dmd.PositionChanged

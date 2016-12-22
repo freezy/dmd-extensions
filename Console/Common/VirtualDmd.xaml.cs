@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using LibDmd.Output.VirtualDmd;
+using NLog;
 
 namespace DmdExt.Common
 {
@@ -39,6 +40,8 @@ namespace DmdExt.Common
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		public VirtualDmd()
 		{
 			DataContext = this;
@@ -55,6 +58,7 @@ namespace DmdExt.Common
 
 		public void SetDimensions(int width, int height)
 		{
+			Logger.Info("Resizing Virtual DMD to {0}x{1}.", width, height);
 			_aspectRatio = (double)width / height;
 			Height = Width / _aspectRatio;
 		}

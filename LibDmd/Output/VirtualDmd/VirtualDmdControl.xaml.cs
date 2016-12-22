@@ -12,12 +12,12 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IFixedSizeDestination
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public int DmdWidth { get; private set; } = 192;
+		public int DmdHeight { get;private set; } = 64;
 
 		public bool IsAvailable { get; } = true;
 
@@ -75,8 +75,11 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void SetDimensions(int width, int height)
 		{
+			DmdWidth = width;
+			DmdHeight = height;
 			Effect.AspectRatio = (double)width / height;
 			Effect.BlockCount = Math.Max(width, height);
+			Effect.Max = Effect.AspectRatio * 0.375;
 			Host.SetDimensions(width, height);
 		}
 
@@ -87,7 +90,6 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void SetPalette(Color[] colors)
 		{
-			//Array.ForEach(colors, c => Logger.Trace("   " + c));
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
 		}

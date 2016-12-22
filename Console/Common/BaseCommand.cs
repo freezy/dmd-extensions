@@ -174,6 +174,7 @@ namespace DmdExt.Common
 				// When the window closes, shut down the dispatcher
 				dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				dmd.Dispatcher.Invoke(() => {
+					dmd.Dmd.Init();
 					dmd.Show();
 				});
 
