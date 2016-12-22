@@ -204,8 +204,6 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderRgb24(byte[] frame)
 		{
-			Logger.Info("Rendering {0}-byte frame as rgb24", frame.Length);
-
 			// copy data to frame buffer
 			Buffer.BlockCopy(frame, 0, _frameBufferRgb24, 1, frame.Length);
 

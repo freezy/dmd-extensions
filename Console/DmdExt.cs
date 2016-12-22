@@ -37,7 +37,10 @@ namespace DmdExt
 		{
 			// setup log config
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-			LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(assemblyPath, "dmdext.log.config"), true);
+			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
+			if (File.Exists(logConfigPath)) {
+				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
+			}
 
 			AssertDotNetVersion();
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

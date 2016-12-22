@@ -57,7 +57,11 @@ namespace PinMameDevice
 		public DmdExt()
 		{
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-			LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(AssemblyPath, "DmdDevice.Log.config"), true);
+
+			var logConfigPath = Path.Combine(AssemblyPath, "dmdext.log.config");
+			if (File.Exists(logConfigPath)) {
+				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
+			}
 		}
 
 		/// <summary>
