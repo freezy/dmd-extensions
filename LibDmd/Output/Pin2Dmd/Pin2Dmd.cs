@@ -26,8 +26,8 @@ namespace LibDmd.Output.Pin2Dmd
 		public int DmdHeight { get; private set; } = 32;
 
 		private UsbDevice _pin2DmdDevice;
-		private readonly byte[] _frameBufferRgb24;
-		private readonly byte[] _frameBufferGray4;
+		private byte[] _frameBufferRgb24;
+		private byte[] _frameBufferGray4;
 		private readonly byte[] _colorPalette;
 
 		private static Pin2Dmd _instance;
@@ -35,22 +35,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		private Pin2Dmd()
 		{
-			// 15 bits per pixel plus 4 init bytes
-			var size = (Width * Height * 15 / 8) + 4;
-			_frameBufferRgb24 = new byte[size];
-			_frameBufferRgb24[0] = 0x81; // frame sync bytes
-			_frameBufferRgb24[1] = 0xC3;
-			_frameBufferRgb24[2] = 0xE8;
-			_frameBufferRgb24[3] = 15;   // number of planes
-
-			// 4 bits per pixel plus 4 init bytes
-			size = (Width * Height * 4 / 8) + 4;
-			_frameBufferGray4 = new byte[size];
-			_frameBufferGray4[0] = 0x81; // frame sync bytes
-			_frameBufferGray4[1] = 0xC3;
-			_frameBufferGray4[2] = 0xE7;
-			_frameBufferGray4[3] = 0x00;
-
 			// color palette
 			_colorPalette = new byte[2052];
 			_colorPalette[0] = 0x81;
@@ -111,6 +95,22 @@ namespace LibDmd.Output.Pin2Dmd
 					Width = 192;
 					Height = 64;
 				}
+
+				// 15 bits per pixel plus 4 init bytes
+				var size = (Width * Height * 15 / 8) + 4;
+				_frameBufferRgb24 = new byte[size];
+				_frameBufferRgb24[0] = 0x81; // frame sync bytes
+				_frameBufferRgb24[1] = 0xC3;
+				_frameBufferRgb24[2] = 0xE8;
+				_frameBufferRgb24[3] = 15;   // number of planes
+
+				// 4 bits per pixel plus 4 init bytes
+				size = (Width * Height * 4 / 8) + 4;
+				_frameBufferGray4 = new byte[size];
+				_frameBufferGray4[0] = 0x81; // frame sync bytes
+				_frameBufferGray4[1] = 0xC3;
+				_frameBufferGray4[2] = 0xE7;
+				_frameBufferGray4[3] = 0x00;
 
 			} else {
 				Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
