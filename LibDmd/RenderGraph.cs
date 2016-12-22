@@ -94,7 +94,7 @@ namespace LibDmd
 		/// <summary>
 		/// How the image is resized for destinations with fixed width
 		/// </summary>
-		public ResizeMode Resize { get; set; } = ResizeMode.Fit;
+		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();

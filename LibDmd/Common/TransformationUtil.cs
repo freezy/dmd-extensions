@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Output;
+using NLog;
 using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd.Common
@@ -27,60 +28,117 @@ namespace LibDmd.Common
 
 			var srcAr = (double)bmp.PixelWidth / bmp.PixelHeight;
 			var destAr = (double)destWidth / destHeight;
+			var sameAr = Math.Abs(destAr - srcAr) < 0.01;
 
 			double width;
 			double height;
-			var crop = false;
-			var fit = false;
+			var marginX = 0;
+			var marginY = 0;
+			var cropX = 0;
+			var cropY = 0;
 
-			const double tolerance = 0.01;
 
-			// resize to fill
-			if (resize == ResizeMode.Fill && Math.Abs(destAr - srcAr) > tolerance) {
+			// image fits into dest, don't upscale, just adjust margins.
+			if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight) {
+				marginX = (destWidth - bmp.PixelWidth) / 2;
+				marginY = (destHeight - bmp.PixelHeight) / 2;
+				width = bmp.PixelWidth;
+				height = bmp.PixelHeight;
+
+			// width fits into dest, only scale y-axis
+			} else if (destWidth > bmp.PixelWidth) {
+				marginX = (destWidth - bmp.PixelWidth) / 2;
+				width = bmp.PixelWidth;
+				switch (resize) {
+					case ResizeMode.Stretch:
+						height = destHeight;
+						break;
+					case ResizeMode.Fill:
+						height = bmp.PixelHeight;
+						cropY = (int)((height - destHeight) / 2);
+						break;
+					case ResizeMode.Fit:
+						height = destHeight;
+						width = destHeight * srcAr;
+						marginX = (int)Math.Round((destWidth - width) / 2);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
+				}
+
+			// height fits into dest, only scale x-axis
+			} else if (destHeight > bmp.PixelHeight) {
+				marginY = (destHeight - bmp.PixelHeight) / 2;
+				height = bmp.PixelHeight;
+				switch (resize) {
+					case ResizeMode.Stretch:
+						width = destWidth;
+						break;
+					case ResizeMode.Fill:
+						width = bmp.PixelWidth;
+						cropX = (int)((width - destWidth) / 2);
+						break;
+					case ResizeMode.Fit:
+						width = destWidth;
+						height = destWidth / srcAr;
+						marginY = (int)Math.Round((destHeight - height) / 2);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
+				}
+
+			// now the most common case: do nothing.
+			} else if (destWidth == bmp.PixelWidth && destHeight == bmp.PixelHeight) { 
+				width = bmp.PixelWidth;
+				height = bmp.PixelHeight;
+
+			// downscale: resize to fill
+			} else if (!sameAr && resize == ResizeMode.Fill) {
 				if (destAr > srcAr) {
 					width = destWidth;
 					height = destWidth / srcAr;
+					cropY = (int)((height - destHeight) / 2);
 				} else {
 					width = destHeight * srcAr;
 					height = destHeight;
+					cropX = (int)((width - destWidth) / 2);
 				}
-				crop = true;
 
-			// resize to fit
-			} else if (resize == ResizeMode.Fit && Math.Abs(destAr - srcAr) > tolerance) {
+			// downscale: resize to fit
+			} else if (!sameAr && resize == ResizeMode.Fit) {
 				if (destAr > srcAr) {
 					width = destHeight * srcAr;
 					height = destHeight;
-					
+					marginX = (int)Math.Round((destWidth - width) / 2);
 				} else {
 					width = destWidth;
 					height = destWidth / srcAr;
+					marginY = (int)Math.Round((destHeight - height) / 2);
 				}
-				fit = true;
 
 			// otherwise, stretch.
 			} else {
 				width = destWidth;
 				height = destHeight;
 			}
+			Console.WriteLine("[{6}]: size: {0}x{1}, crop: {2}/{3}, margins: {4}/{5}", width, height, cropX, cropY, marginX, marginY, resize);
 
-			BitmapSource processedBmp = new TransformedBitmap(bmp, new ScaleTransform(width / bmp.PixelWidth * (flipHorizontally ? -1 : 1), height / bmp.PixelHeight * (flipVertically ? -1 : 1), (double)bmp.PixelWidth / 2, (double)bmp.PixelHeight / 2));
+			BitmapSource processedBmp;
+			if (bmp.PixelWidth == (int)width && bmp.PixelHeight == (int)height && !flipHorizontally && !flipVertically) {
+				processedBmp = bmp;
+			} else {
+				processedBmp = new TransformedBitmap(bmp, new ScaleTransform(width/bmp.PixelWidth*(flipHorizontally ? -1 : 1), height/bmp.PixelHeight*(flipVertically ? -1 : 1), (double) bmp.PixelWidth/2, (double) bmp.PixelHeight/2));
+			}
 
-			// filled needs cropping
-			if (crop) {
-				var cropParams = new Int32Rect(0, 0, destWidth, destHeight);
-				if (destAr > srcAr) {
-					cropParams.X = 0;
-					cropParams.Y = (int)((height - destHeight) / 2);
-				} else {
-					cropParams.X = (int)((width - destWidth) / 2);
-					cropParams.Y = 0;
-				}
+			// crop if necessary
+			if (cropX > 0 || cropY > 0) {
+				var cropParams = new Int32Rect(cropX, cropY, Math.Min(destWidth, processedBmp.PixelWidth), Math.Min(destHeight, processedBmp.PixelHeight));
 				processedBmp = new CroppedBitmap(processedBmp, cropParams);
+				Console.WriteLine("Cropped bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
 			}
 
 			// fit needs painting on new canvas
-			if (fit) {
+			if (marginX > 0 || marginY > 0) {
 				var bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
 				var blockSize = bytesPerPixel * processedBmp.PixelWidth * processedBmp.PixelHeight;
 				var buffer = new byte[blockSize];
@@ -92,17 +150,13 @@ namespace LibDmd.Common
 				// copy resized bitmap to new canvas
 				var rect = new Int32Rect(0, 0, processedBmp.PixelWidth, processedBmp.PixelHeight);
 				processedBmp.CopyPixels(rect, buffer, stride, 0);
-				if (destAr > srcAr) {
-					rect.X = (destWidth - processedBmp.PixelWidth) / 2;
-					rect.Y = 0;
-				} else {
-					rect.X = 0;
-					rect.Y = (destHeight - processedBmp.PixelHeight) / 2;
-				}
+				rect.X = marginX;
+				rect.Y = marginY;
 				emptyBmp.WritePixels(rect, buffer, stride, 0);
 				processedBmp = emptyBmp;
+				Console.WriteLine("Repainted bitmap: {0}x{1}", processedBmp.PixelWidth, processedBmp.PixelHeight);
 			}
-
+			
 			processedBmp.Freeze();
 			return processedBmp;
 		}

@@ -16,8 +16,8 @@ namespace LibDmd.Output.VirtualDmd
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		public int DmdWidth { get; } = 192;
-		public int DmdHeight { get; } = 64;
+		public int DmdWidth { get; } = 128;
+		public int DmdHeight { get; } = 32;
 
 		public bool IsAvailable { get; } = true;
 
@@ -105,7 +105,7 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void Init()
 		{
-			SetDimensions(DmdWidth, DmdHeight);
+			//SetDimensions(DmdWidth, DmdHeight);
 		}
 
 		public void Dispose()
