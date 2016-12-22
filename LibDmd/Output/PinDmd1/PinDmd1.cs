@@ -1,6 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Media.Imaging;
+﻿using System.Windows.Media.Imaging;
 using FTD2XX_NET;
 using LibDmd.Common;
 using NLog;
@@ -11,12 +9,10 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : BufferRenderer, IRawOutput, IGray2Destination, IBitmapDestination, IFixedSizeDestination
+	public class PinDmd1 : IRawOutput, IGray2Destination, IBitmapDestination, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v1";
-
-		public override int Width { get; set; } = 128;
-		public override int Height { get; set; } = 32;
+		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
@@ -32,7 +28,7 @@ namespace LibDmd.Output.PinDmd1
 		private PinDmd1()
 		{
 			// 2 bits per pixel + 4 init pixels
-			var size = (Width * Height / 4) * 4;
+			var size = (DmdWidth * DmdHeight / 4) * 4;
 			_frameBuffer = new byte[size];
 			_frameBuffer[0] = 0x81;    // frame sync bytes
 			_frameBuffer[1] = 0xC3;
@@ -130,25 +126,21 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			// copy bitmap to frame buffer
-			RenderGray2(bmp, _frameBuffer, 4);
-
-			// send frame buffer to device
-			RenderRaw(_frameBuffer);
-		}
-
 		public void RenderGray2(byte[] frame)
 		{
 			// split frame into 2-bit planes
-			var planes = FrameUtil.Split(Width, Height, 2, frame);
+			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
 
 			// copy planes into frame buffer
 			FrameUtil.Copy(planes, _frameBuffer, 4);
 
 			// send buffer to device
 			RenderRaw(_frameBuffer);
+		}
+
+		public void RenderBitmap(BitmapSource bmp)
+		{
+			RenderGray2(ImageUtil.ConvertToGray2(bmp));
 		}
 
 		public void RenderRaw(byte[] data)

@@ -68,7 +68,7 @@ namespace App
 				if (pinDmd.IsAvailable) {
 					renderers.Add(pinDmd);
 					Console.AppendText($"Added PinDMDv3 renderer.\n");
-					Console.AppendText($"PinDMDv3 detected at {pinDmd.Width}x{pinDmd.Height}\n");
+					Console.AppendText($"PinDMDv3 detected at {pinDmd.DmdWidth}x{pinDmd.DmdHeight}\n");
 					Console.AppendText($"Firmware: {pinDmd.Firmware}\n");
 				} else {
 					Console.AppendText("PinDMDv3 not connected.\n");

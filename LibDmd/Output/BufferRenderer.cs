@@ -27,6 +27,7 @@ namespace LibDmd.Output
 		/// <param name="bmp">Image source</param>
 		/// <param name="frameBuffer">Destination buffer</param>
 		/// <param name="startAt">Position to start writing</param>
+		[Obsolete("Use FrameUtil instead", true)]
 		protected void RenderGray2(BitmapSource bmp, byte[] frameBuffer, int startAt)
 		{
 			// make sure we can render

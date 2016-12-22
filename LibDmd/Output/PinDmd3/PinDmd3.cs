@@ -2,14 +2,10 @@
 using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibUsbDotNet;
-using LibUsbDotNet.Main;
 using NLog;
-using NLog.LayoutRenderers;
 using static System.Text.Encoding;
 
 namespace LibDmd.Output.PinDmd3
@@ -18,12 +14,10 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
+	public class PinDmd3 : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
-
-		public override int Width { get; set; } = 128;
-		public override int Height { get; set; } = 32;
+		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
@@ -31,6 +25,7 @@ namespace LibDmd.Output.PinDmd3
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
 		const byte Rgb24CommandByte = 0x02;
+		const byte Gray2CommandByte = 0x30;
 		const byte Gray4CommandByte = 0x31;
 
 		/// <summary>
@@ -47,6 +42,7 @@ namespace LibDmd.Output.PinDmd3
 		private static PinDmd3 _instance;
 		private readonly byte[] _frameBufferRgb24;
 		private readonly byte[] _frameBufferGray4;
+		private readonly byte[] _frameBufferGray2;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -88,14 +84,19 @@ namespace LibDmd.Output.PinDmd3
 		private PinDmd3()
 		{
 			// 3 bytes per pixel, 2 control bytes
-			_frameBufferRgb24 = new byte[Width * Height * 3 + 2];
+			_frameBufferRgb24 = new byte[DmdWidth * DmdHeight * 3 + 2];
 			_frameBufferRgb24[0] = Rgb24CommandByte;
-			_frameBufferRgb24[Width * Height * 3 + 1] = Rgb24CommandByte;
+			_frameBufferRgb24[DmdWidth * DmdHeight * 3 + 1] = Rgb24CommandByte;
 
 			// 4 bits per pixel, 14 control bytes
-			_frameBufferGray4 = new byte[Width * Height / 2 + 14];     
+			_frameBufferGray4 = new byte[DmdWidth * DmdHeight / 2 + 14];     
 			_frameBufferGray4[0] = Gray4CommandByte;
-			_frameBufferGray4[Width * Height / 2 + 13] = Gray4CommandByte;
+			_frameBufferGray4[DmdWidth * DmdHeight / 2 + 13] = Gray4CommandByte;
+			
+			// 2 bits per pixel, 14 control bytes
+			_frameBufferGray2 = new byte[DmdWidth * DmdHeight / 4 + 14];     
+			_frameBufferGray2[0] = Gray2CommandByte;
+			_frameBufferGray2[DmdWidth * DmdHeight / 4 + 13] = Gray2CommandByte;
 
 			ClearColor();
 		}
@@ -170,10 +171,6 @@ namespace LibDmd.Output.PinDmd3
 		/// <param name="bmp">Any bitmap</param>
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			Logger.Info("Rendering frame as bitmap");
-			// make sure we can render
-			AssertRenderReady(bmp);
-
 			// copy bmp to rgb24 buffer
 			ImageUtil.ConvertToRgb24(bmp, _frameBufferRgb24, 1);
 
@@ -183,17 +180,23 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderGray2(byte[] frame)
 		{
-			// copy frame to frame buffer
-			RenderGray4(FrameUtil.Map2To4(frame), _frameBufferGray4, 13);
+			// split to sub frames
+			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
+
+			// copy to frame buffer
+			FrameUtil.Copy(planes, _frameBufferGray2, 13);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray4);
+			RenderRaw(_frameBufferGray2);
 		}
 
 		public void RenderGray4(byte[] frame)
 		{
-			// copy frame to frame buffer
-			RenderGray4(frame, _frameBufferGray4, 13);
+			// split to sub frames
+			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+
+			// copy to frame buffer
+			FrameUtil.Copy(planes, _frameBufferGray4, 13);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
