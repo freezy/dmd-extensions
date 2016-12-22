@@ -28,7 +28,6 @@ namespace LibDmd.Output.PinDmd3
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
-
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
 		const byte Rgb24CommandByte = 0x02;

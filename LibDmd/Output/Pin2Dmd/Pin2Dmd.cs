@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
-using LibUsbDotNet.Info;
 using LibUsbDotNet.Main;
 using NLog;
 
@@ -15,12 +12,10 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : BufferRenderer, IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
-
-		public override int Width { get; set; } = 128;
-		public override int Height { get; set; } = 32;
+		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get; private set; } = 32;
@@ -92,12 +87,10 @@ namespace LibDmd.Output.Pin2Dmd
 				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL")) {
 					DmdWidth = 192;
 					DmdHeight = 64;
-					Width = 192;
-					Height = 64;
 				}
 
 				// 15 bits per pixel plus 4 init bytes
-				var size = (Width * Height * 15 / 8) + 4;
+				var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
 				_frameBufferRgb24 = new byte[size];
 				_frameBufferRgb24[0] = 0x81; // frame sync bytes
 				_frameBufferRgb24[1] = 0xC3;
@@ -105,7 +98,7 @@ namespace LibDmd.Output.Pin2Dmd
 				_frameBufferRgb24[3] = 15;   // number of planes
 
 				// 4 bits per pixel plus 4 init bytes
-				size = (Width * Height * 4 / 8) + 4;
+				size = (DmdWidth * DmdHeight * 4 / 8) + 4;
 				_frameBufferGray4 = new byte[size];
 				_frameBufferGray4[0] = 0x81; // frame sync bytes
 				_frameBufferGray4[1] = 0xC3;
@@ -133,8 +126,11 @@ namespace LibDmd.Output.Pin2Dmd
 		/// <param name="bmp">Any bitmap</param>
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			// copy bitmap to frame buffer
-			RenderRgb24(bmp, _frameBufferRgb24, 4);
+			// convert to rgb24
+			var frame = ImageUtil.ConvertToRgb24(bmp);
+
+			// split into sub frames
+			FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferRgb24);
@@ -142,8 +138,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderGray2(byte[] frame)
 		{
-			// copy frame to frame buffer
-			RenderGray4(FrameUtil.Map2To4(frame), _frameBufferGray4, 4);
+			// convert to bit planes
+			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, FrameUtil.Map2To4(frame));
+
+			// copy to buffer
+			FrameUtil.Copy(planes, _frameBufferGray4, 4);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
@@ -151,8 +150,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderGray4(byte[] frame)
 		{
-			// copy frame to frame buffer
-			RenderGray4(frame, _frameBufferGray4, 4);
+			// convert to bit planes
+			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+
+			// copy to buffer
+			FrameUtil.Copy(planes, _frameBufferGray4, 4);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
@@ -160,8 +162,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderRgb24(byte[] frame)
 		{
-			// TODO don't convert to bitmap but update buffer renderer to deal with rgb24 directly
-			RenderBitmap(ImageUtil.ConvertFromRgb24(Width, Height, frame));
+			// split into sub frames
+			FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
+
+			// send frame buffer to device
+			RenderRaw(_frameBufferRgb24);
 		}
 
 		public void RenderRaw(byte[] frame)

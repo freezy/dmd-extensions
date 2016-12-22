@@ -178,7 +178,6 @@ namespace LibDmd
 
 				foreach (var dest in Destinations) 
 				{
-					
 					// check for 2->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
 						var sourceGray2 = Source as IGray2Source;

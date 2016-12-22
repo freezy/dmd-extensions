@@ -63,6 +63,100 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Splits an RGB24 frame into each bit plane.
+		/// </summary>
+		/// <param name="width">Width of the frame</param>
+		/// <param name="height">Height of the frame</param>
+		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
+		/// <param name="frameBuffer">Destination buffer where planes are written</param>
+		/// <param name="offset">Start writing at this offset</param>
+		public static void SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
+		{
+			var byteIdx = offset;
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width; x += 8) {
+					byte r3 = 0;
+					byte r4 = 0;
+					byte r5 = 0;
+					byte r6 = 0;
+					byte r7 = 0;
+
+					byte g3 = 0;
+					byte g4 = 0;
+					byte g5 = 0;
+					byte g6 = 0;
+					byte g7 = 0;
+
+					byte b3 = 0;
+					byte b4 = 0;
+					byte b5 = 0;
+					byte b6 = 0;
+					byte b7 = 0;
+					for (var v = 7; v >= 0; v--) {
+						var pos = y * width + x + v;
+
+						var pixelr = frame[pos + 2];
+						var pixelg = frame[pos + 1];
+						var pixelb = frame[pos];
+
+						r3 <<= 1;
+						r4 <<= 1;
+						r5 <<= 1;
+						r6 <<= 1;
+						r7 <<= 1;
+						g3 <<= 1;
+						g4 <<= 1;
+						g5 <<= 1;
+						g6 <<= 1;
+						g7 <<= 1;
+						b3 <<= 1;
+						b4 <<= 1;
+						b5 <<= 1;
+						b6 <<= 1;
+						b7 <<= 1;
+
+						if ((pixelr & 8) != 0) r3 |= 1;
+						if ((pixelr & 16) != 0) r4 |= 1;
+						if ((pixelr & 32) != 0) r5 |= 1;
+						if ((pixelr & 64) != 0) r6 |= 1;
+						if ((pixelr & 128) != 0) r7 |= 1;
+
+						if ((pixelg & 8) != 0) g3 |= 1;
+						if ((pixelg & 16) != 0) g4 |= 1;
+						if ((pixelg & 32) != 0) g5 |= 1;
+						if ((pixelg & 64) != 0) g6 |= 1;
+						if ((pixelg & 128) != 0) g7 |= 1;
+
+						if ((pixelb & 8) != 0) b3 |= 1;
+						if ((pixelb & 16) != 0) b4 |= 1;
+						if ((pixelb & 32) != 0) b5 |= 1;
+						if ((pixelb & 64) != 0) b6 |= 1;
+						if ((pixelb & 128) != 0) b7 |= 1;
+					}
+
+					frameBuffer[byteIdx + 5120] = r3;
+					frameBuffer[byteIdx + 5632] = r4;
+					frameBuffer[byteIdx + 6144] = r5;
+					frameBuffer[byteIdx + 6656] = r6;
+					frameBuffer[byteIdx + 7168] = r7;
+
+					frameBuffer[byteIdx + 2560] = g3;
+					frameBuffer[byteIdx + 3072] = g4;
+					frameBuffer[byteIdx + 3584] = g5;
+					frameBuffer[byteIdx + 4096] = g6;
+					frameBuffer[byteIdx + 4608] = g7;
+
+					frameBuffer[byteIdx + 0] = b3;
+					frameBuffer[byteIdx + 512] = b4;
+					frameBuffer[byteIdx + 1024] = b5;
+					frameBuffer[byteIdx + 1536] = b6;
+					frameBuffer[byteIdx + 2048] = b7;
+					byteIdx++;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
 		/// <param name="width">Bräiti vom Biud</param>
