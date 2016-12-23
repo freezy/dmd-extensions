@@ -108,11 +108,7 @@ namespace PinMameDevice
 		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = CallingConvention.Cdecl)]
 		static void RenderAlphaNum(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
 		{
-			var segData = new byte[32];
-			var extSegData = new byte[32];
-			Marshal.Copy(seg_data, segData, 0, 32);
-			Marshal.Copy(seg_data2, extSegData, 0, 32);
-			_dmdExt.RenderAlphaNumeric(numericalLayout, segData, extSegData);
+			_dmdExt.RenderAlphaNumeric(numericalLayout, Copy(seg_data, 64), Copy(seg_data2, 64));
 		}
 
 		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
@@ -160,6 +156,18 @@ namespace PinMameDevice
 		private static Color ConvertColor(Rgb24 color)
 		{
 			return Color.FromRgb((byte) color.Red, (byte) color.Green, (byte) color.Blue);
+		}
+		
+		private static ushort[] Copy(IntPtr data, int length)
+		{
+			var buffer = new ushort[length];
+			var byteBuffer = new byte[length * 2];
+			Marshal.Copy(data, byteBuffer, 0, length * 2);
+			var pos = 0;
+			for (var i = 0; i < length; i += 2) {
+				buffer[pos++] = BitConverter.ToUInt16(byteBuffer, i);
+			}
+			return buffer;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

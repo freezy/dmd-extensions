@@ -10,10 +10,11 @@ namespace PinMameDevice
 	public class AlphaNumeric
 	{
 
-		static readonly byte[] frame_buf = new byte[3072];
-		static bool do16 = false;
+		static readonly byte[] FrameBuffer = new byte[4096];
+		static readonly byte[] BlankBuffer = new byte[4096];
+		static bool _do16 = false;
 
-		static byte[,] segSizes = {
+		static readonly byte[,] SegSizes = {
 			{5,5,5,5,5,5,2,2,5,5,5,2,5,5,5,1},
 			{5,5,5,5,5,5,5,2,0,0,0,0,0,0,0,0},
 			{5,5,5,5,5,5,5,2,5,5,0,0,0,0,0,0},
@@ -23,7 +24,7 @@ namespace PinMameDevice
 			{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 		};
 
-		static byte[,,,] segs = {	
+		static readonly byte[,,,] Segs = {	
 
 			// Alphanumeric display characters
 			{
@@ -162,480 +163,414 @@ namespace PinMameDevice
 			}
 		};
 
-
-		static void smoothDigitCorners(int x, int y)
+		static void SmoothDigitCorners(int x, int y)
 		{
-			if (getPixel(x, 1 + y) && getPixel(1 + x, y))
-				drawPixel(0 + x, y, 0);
-			if (getPixel(x + 6, 1 + y) && getPixel(5 + x, y))
-				drawPixel(6 + x, y, 0);
-			if (getPixel(x, 9 + y) && getPixel(1 + x, 10 + y))
-				drawPixel(0 + x, 10 + y, 0);
-			if (getPixel(x + 6, 9 + y) && getPixel(5 + x, 10 + y))
-				drawPixel(6 + x, 10 + y, 0);
+			if (GetPixel(x, 1 + y) && GetPixel(1 + x, y))
+				DrawPixel(0 + x, y, 0);
+			if (GetPixel(x + 6, 1 + y) && GetPixel(5 + x, y))
+				DrawPixel(6 + x, y, 0);
+			if (GetPixel(x, 9 + y) && GetPixel(1 + x, 10 + y))
+				DrawPixel(0 + x, 10 + y, 0);
+			if (GetPixel(x + 6, 9 + y) && GetPixel(5 + x, 10 + y))
+				DrawPixel(6 + x, 10 + y, 0);
 		}
 
-		static void drawSegment(int x, int y, byte type, byte seg, byte colour)
+		static void DrawSegment(int x, int y, byte type, ushort seg, byte colour)
 		{
 			int i;
-			for (i = 0; i < segSizes[type, seg]; i++) {
-				drawPixel(segs[type, seg, i, 0] + x, segs[type, seg, i, 1] + y, colour);
+			for (i = 0; i < SegSizes[type, seg]; i++) {
+				DrawPixel(Segs[type, seg, i, 0] + x, Segs[type, seg, i, 1] + y, colour);
 			}
 		}
 
-		static bool getPixel(int x, int y)
+		static bool GetPixel(int x, int y)
 		{
-			int v, z;
-			v = (y * 16) + (x / 8);
-			z = 1 << (x % 8);
-			// just check high buff
-			return ((frame_buf[v + 512 + 4] & z) != 0);
+			return FrameBuffer[y * 128 + x] > 0;
 		}
 
-		static void drawPixel(int x, int y, byte colour)
+		static void DrawPixel(int x, int y, byte colour)
 		{
-			byte v, z;
-			v = (byte)((y * 16) + (x / 8));
-			z = (byte)(1 << (x % 8));
-			// clear both low and high buffer pixel
-			frame_buf[v + 4] |= z;
-			frame_buf[v + 512 + 4] |= z;
-			frame_buf[v + 4] ^= z;
-			frame_buf[v + 512 + 4] ^= z;
-			if (do16) {
-				frame_buf[v + 1024 + 4] |= z;
-				frame_buf[v + 1536 + 4] |= z;
-				frame_buf[v + 1024 + 4] ^= z;
-				frame_buf[v + 1536 + 4] ^= z;
-			}
-			// set low buffer pixel
-			if ((colour & 1) > 0)
-				frame_buf[v + 4] |= z;
-			//set high buffer pixel
-			if ((colour & 2) > 0)
-				frame_buf[v + 512 + 4] ^= z;
-			// 16 colour mode
-			if (do16) {
-				if (colour != 0) {
-					frame_buf[v + 1024 + 4] |= z;
-					frame_buf[v + 1536 + 4] ^= z;
+			FrameBuffer[y * 128 + x] = colour;
+		}
+
+		static void Clear()
+		{
+			Buffer.BlockCopy(BlankBuffer, 0, FrameBuffer, 0, FrameBuffer.Length);
+		}
+
+		public static byte[] Render2x16Alpha(ushort[] seg_data)
+		{
+			Clear();
+			byte i, j;
+			for (i = 0; i < 16; i++) {
+				for (j = 0; j < 16; j++) {
+					if (((seg_data[i] >> j) & 0x1) > 0)
+						DrawSegment(i * 8, 2, 0, j, 3);
+					if (((seg_data[i + 16] >> j) & 0x1) > 0)
+						DrawSegment(i * 8, 19, 0, j, 3);
+					SmoothDigitCorners(i * 8, 2);
+					SmoothDigitCorners(i * 8, 19);
 				}
 			}
+			return FrameBuffer;
 		}
 
-
-
-
-
-
-		static void smoothDigitCorners(byte[] buffer, int x, int y)
+		public static byte[] Render2x20Alpha(ushort[] seg_data)
 		{
-			if (getPixel(buffer, x, 1 + y) && getPixel(buffer, 1 + x, y))
-				drawPixel(buffer, 0 + x, y, 0);
-			if (getPixel(buffer, x + 6, 1 + y) && getPixel(buffer, 5 + x, y))
-				drawPixel(buffer, 6 + x, y, 0);
-			if (getPixel(buffer, x, 9 + y) && getPixel(buffer, 1 + x, 10 + y))
-				drawPixel(buffer, 0 + x, 10 + y, 0);
-			if (getPixel(buffer, x + 6, 9 + y) && getPixel(buffer, 5 + x, 10 + y))
-				drawPixel(buffer, 6 + x, 10 + y, 0);
-		}
-
-		static void drawSegment(byte[] buffer, int x, int y, byte type, byte seg, byte colour)
-		{
-			int i;
-			for (i = 0; i < segSizes[type, seg]; i++) {
-				drawPixel(buffer, segs[type, seg, i, 0] + x, segs[type, seg, i, 1] + y, colour);
-			}
-		}
-
-		static bool getPixel(byte[] buffer, int x, int y)
-		{
-			int v, z;
-			v = (y * 16) + (x / 8);
-			z = 1 << (x % 8);
-			// just check high buff
-			return ((buffer[v + 512 + 4] & z) != 0);
-		}
-
-		static void drawPixel(byte[] buffer, int x, int y, byte colour)
-		{
-			byte v, z;
-			v = (byte)(((byte)y * 16) + ((byte)x / 8));
-			z = (byte)(1 << ((byte)x % 8));
-			// clear both low and high buffer pixel
-			buffer[v + 4] |= z;
-			buffer[v + 512 + 4] |= z;
-			buffer[v + 4] ^= z;
-			buffer[v + 512 + 4] ^= z;
-			if (do16) {
-				buffer[v + 1024 + 4] |= z;
-				buffer[v + 1536 + 4] |= z;
-				buffer[v + 1024 + 4] ^= z;
-				buffer[v + 1536 + 4] ^= z;
-			}
-			// set low buffer pixel
-			if ((colour & 1) > 0)
-				buffer[v + 4] |= z;
-			//set high buffer pixel
-			if ((colour & 2) > 0)
-				buffer[v + 512 + 4] ^= z;
-			// 16 colour mode
-			if (do16) {
-				if (colour != 0) {
-					buffer[v + 1024 + 4] |= z;
-					buffer[v + 1536 + 4] ^= z;
-				}
-			}
-		}
-
-		void _2x16Alpha(byte[] seg_data)
-		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 16; i++) {
 				for (j = 0; j < 16; j++) {
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment(i * 8, 2, 0, j, 3);
-					if (((seg_data[i + 16] >> j) & 0x1) != 0)
-						drawSegment(i * 8, 19, 0, j, 3);
-					smoothDigitCorners(i * 8, 2);
-					smoothDigitCorners(i * 8, 19);
-				}
-			}
-		}
-
-		void _2x20Alpha(byte[] seg_data)
-		{
-			byte i, j;
-			for (i = 0; i < 16; i++) {
-				for (j = 0; j < 16; j++) {
-					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment(i * 8, 2, 0, j, 3);
+						DrawSegment(i * 8, 2, 0, j, 3);
 					if (((seg_data[i + 20] >> j) & 0x1) != 0)
-						drawSegment(i * 8, 19, 0, j, 3);
-					smoothDigitCorners(i * 8, 2);
-					smoothDigitCorners(i * 8, 19);
+						DrawSegment(i * 8, 19, 0, j, 3);
+					SmoothDigitCorners(i * 8, 2);
+					SmoothDigitCorners(i * 8, 19);
 				}
 			}
+			return FrameBuffer;
 		}
 
-		void _2x7Alpha_2x7Num(byte[] seg_data)
+		public static byte[] Render2x7Alpha_2x7Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 alphanumeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 2, 0, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 2);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 2, 0, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 2);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 19, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 19);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 19, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 19);
 				}
 			}
+			return FrameBuffer;
 		}
 
-		void _2x7Alpha_2x7Num_4x1Num(byte[] seg_data)
+		public static byte[] Render2x7Alpha_2x7Num_4x1Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 alphanumeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 0, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 0, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 21, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 21);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 21, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 21);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[28] >> j) & 0x1) != 0)
-					drawSegment(8, 12, 5, j, 3);
+					DrawSegment(8, 12, 5, j, 3);
 				if (((seg_data[29] >> j) & 0x1) != 0)
-					drawSegment(16, 12, 5, j, 3);
+					DrawSegment(16, 12, 5, j, 3);
 				if (((seg_data[30] >> j) & 0x1) != 0)
-					drawSegment(32, 12, 5, j, 3);
+					DrawSegment(32, 12, 5, j, 3);
 				if (((seg_data[31] >> j) & 0x1) != 0)
-					drawSegment(40, 12, 5, j, 3);
+					DrawSegment(40, 12, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		void _2x6Num_2x6Num_4x1Num(byte[] seg_data)
+		public static byte[] Render2x6Num_2x6Num_4x1Num(ushort[] seg_data)
+		{
+			Clear();
+			byte i, j;
+			for (i = 0; i < 12; i++) {
+				for (j = 0; j < 16; j++) {
+					// 2x7 numeric
+					if (((seg_data[i] >> j) & 0x1) != 0)
+						DrawSegment((i + ((i < 6) ? 0 : 4)) * 8, 0, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 0);
+					// 2x7 numeric
+					if (((seg_data[i + 12] >> j) & 0x1) != 0)
+						DrawSegment((i + ((i < 6) ? 0 : 4)) * 8, 12, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 12);
+				}
+			}
+			// 4x1 numeric small
+			for (j = 0; j < 16; j++) {
+				if (((seg_data[24] >> j) & 0x1) != 0)
+					DrawSegment(8, 24, 5, j, 3);
+				if (((seg_data[25] >> j) & 0x1) != 0)
+					DrawSegment(16, 24, 5, j, 3);
+				if (((seg_data[26] >> j) & 0x1) != 0)
+					DrawSegment(32, 24, 5, j, 3);
+				if (((seg_data[27] >> j) & 0x1) != 0)
+					DrawSegment(40, 24, 5, j, 3);
+			}
+			return FrameBuffer;
+		}
+
+		public static byte[] Render2x6Num10_2x6Num10_4x1Num(ushort[] seg_data)
 		{
 			byte i, j;
 			for (i = 0; i < 12; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 6) ? 0 : 4)) * 8, 0, 1, j, 3);
-					smoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 0);
+						DrawSegment((i + ((i < 6) ? 0 : 4)) * 8, 0, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 0);
 					// 2x7 numeric
 					if (((seg_data[i + 12] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 6) ? 0 : 4)) * 8, 12, 1, j, 3);
-					smoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 12);
+						DrawSegment((i + ((i < 6) ? 0 : 4)) * 8, 20, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 20);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[24] >> j) & 0x1) != 0)
-					drawSegment(8, 24, 5, j, 3);
+					DrawSegment(8, 12, 5, j, 3);
 				if (((seg_data[25] >> j) & 0x1) != 0)
-					drawSegment(16, 24, 5, j, 3);
+					DrawSegment(16, 12, 5, j, 3);
 				if (((seg_data[26] >> j) & 0x1) != 0)
-					drawSegment(32, 24, 5, j, 3);
+					DrawSegment(32, 12, 5, j, 3);
 				if (((seg_data[27] >> j) & 0x1) != 0)
-					drawSegment(40, 24, 5, j, 3);
+					DrawSegment(40, 12, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		void _2x6Num10_2x6Num10_4x1Num(byte[] seg_data)
+		public static byte[] Render2x7Num_2x7Num_4x1Num(ushort[] seg_data)
 		{
-			byte i, j;
-			for (i = 0; i < 12; i++) {
-				for (j = 0; j < 16; j++) {
-					// 2x7 numeric
-					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 6) ? 0 : 4)) * 8, 0, 2, j, 3);
-					smoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 0);
-					// 2x7 numeric
-					if (((seg_data[i + 12] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 6) ? 0 : 4)) * 8, 20, 2, j, 3);
-					smoothDigitCorners((i + ((i < 6) ? 0 : 4)) * 8, 20);
-				}
-			}
-			// 4x1 numeric small
-			for (j = 0; j < 16; j++) {
-				if (((seg_data[24] >> j) & 0x1) != 0)
-					drawSegment(8, 12, 5, j, 3);
-				if (((seg_data[25] >> j) & 0x1) != 0)
-					drawSegment(16, 12, 5, j, 3);
-				if (((seg_data[26] >> j) & 0x1) != 0)
-					drawSegment(32, 12, 5, j, 3);
-				if (((seg_data[27] >> j) & 0x1) != 0)
-					drawSegment(40, 12, 5, j, 3);
-			}
-		}
-
-		void _2x7Num_2x7Num_4x1Num(byte[] seg_data)
-		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 12, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 12);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 12, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 12);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[28] >> j) & 0x1) != 0)
-					drawSegment(16, 24, 5, j, 3);
+					DrawSegment(16, 24, 5, j, 3);
 				if (((seg_data[29] >> j) & 0x1) != 0)
-					drawSegment(24, 24, 5, j, 3);
+					DrawSegment(24, 24, 5, j, 3);
 				if (((seg_data[30] >> j) & 0x1) != 0)
-					drawSegment(40, 24, 5, j, 3);
+					DrawSegment(40, 24, 5, j, 3);
 				if (((seg_data[31] >> j) & 0x1) != 0)
-					drawSegment(48, 24, 5, j, 3);
+					DrawSegment(48, 24, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		void _2x7Num_2x7Num_10x1Num(byte[] seg_data, byte[] extra_seg_data)
+		public static byte[] Render2x7Num_2x7Num_10x1Num(ushort[] seg_data, ushort[] extra_seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 12, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 12);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 12, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 12);
 				}
 			}
 			// 10x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[28] >> j) & 0x1) != 0)
-					drawSegment(16, 24, 5, j, 3);
+					DrawSegment(16, 24, 5, j, 3);
 				if (((seg_data[29] >> j) & 0x1) != 0)
-					drawSegment(24, 24, 5, j, 3);
+					DrawSegment(24, 24, 5, j, 3);
 				if (((seg_data[30] >> j) & 0x1) != 0)
-					drawSegment(40, 24, 5, j, 3);
+					DrawSegment(40, 24, 5, j, 3);
 				if (((seg_data[31] >> j) & 0x1) != 0)
-					drawSegment(48, 24, 5, j, 3);
+					DrawSegment(48, 24, 5, j, 3);
 				if (((extra_seg_data[0] >> j) & 0x1) != 0)
-					drawSegment(64, 24, 5, j, 3);
+					DrawSegment(64, 24, 5, j, 3);
 				if (((extra_seg_data[1] >> j) & 0x1) != 0)
-					drawSegment(72, 24, 5, j, 3);
+					DrawSegment(72, 24, 5, j, 3);
 				if (((extra_seg_data[2] >> j) & 0x1) != 0)
-					drawSegment(88, 24, 5, j, 3);
+					DrawSegment(88, 24, 5, j, 3);
 				if (((extra_seg_data[3] >> j) & 0x1) != 0)
-					drawSegment(96, 24, 5, j, 3);
+					DrawSegment(96, 24, 5, j, 3);
 				if (((extra_seg_data[4] >> j) & 0x1) != 0)
-					drawSegment(112, 24, 5, j, 3);
+					DrawSegment(112, 24, 5, j, 3);
 				if (((extra_seg_data[5] >> j) & 0x1) != 0)
-					drawSegment(120, 24, 5, j, 3);
+					DrawSegment(120, 24, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		void _2x7Num_2x7Num_4x1Num_gen7(byte[] seg_data)
+		public static byte[] Render2x7Num_2x7Num_4x1Num_gen7(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 21, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 21);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 21, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 21);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 1, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 1);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 1, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 1);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[28] >> j) & 0x1) != 0)
-					drawSegment(8, 13, 5, j, 3);
+					DrawSegment(8, 13, 5, j, 3);
 				if (((seg_data[29] >> j) & 0x1) != 0)
-					drawSegment(16, 13, 5, j, 3);
+					DrawSegment(16, 13, 5, j, 3);
 				if (((seg_data[30] >> j) & 0x1) != 0)
-					drawSegment(32, 13, 5, j, 3);
+					DrawSegment(32, 13, 5, j, 3);
 				if (((seg_data[31] >> j) & 0x1) != 0)
-					drawSegment(40, 13, 5, j, 3);
+					DrawSegment(40, 13, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		public static byte[] _2x7Num10_2x7Num10_4x1Num(byte[] seg_data)
+		public static byte[] Render2x7Num10_2x7Num10_4x1Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
-			var buffer = new byte[1028];
+			Clear();
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) > 0)
-						drawSegment(buffer, (i + ((i < 7) ? 0 : 2)) * 8, 0, 2, j, 3);
-					smoothDigitCorners(buffer, (i + ((i < 7) ? 0 : 2)) * 8, 0);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
 					// 2x7 numeric
 					if (((seg_data[i + 14] >> j) & 0x1) > 0)
-						drawSegment(buffer, (i + ((i < 7) ? 0 : 2)) * 8, 20, 2, j, 3);
-					smoothDigitCorners(buffer, (i + ((i < 7) ? 0 : 2)) * 8, 20);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 20, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 20);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[28] >> j) & 0x1) > 0)
-					drawSegment(buffer, 8, 12, 5, j, 3);
+					DrawSegment(8, 12, 5, j, 3);
 				if (((seg_data[29] >> j) & 0x1) > 0)
-					drawSegment(buffer, 16, 12, 5, j, 3);
+					DrawSegment(16, 12, 5, j, 3);
 				if (((seg_data[30] >> j) & 0x1) > 0)
-					drawSegment(buffer, 32, 12, 5, j, 3);
+					DrawSegment(32, 12, 5, j, 3);
 				if (((seg_data[31] >> j) & 0x1) > 0)
-					drawSegment(buffer, 40, 12, 5, j, 3);
+					DrawSegment(40, 12, 5, j, 3);
 			}
-			return buffer;
+			return FrameBuffer;
 		}
 
-		void _4x7Num10(byte[] seg_data)
+		public static byte[] Render4x7Num10(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric10
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 1, 2, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 1);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 1, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 1);
 					// 2x7 numeric10
 					if (((seg_data[i + 14] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 13, 2, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 13);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 13, 2, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 13);
 				}
 			}
+			return FrameBuffer;
 		}
 
-		void _6x4Num_4x1Num(byte[] seg_data)
+		public static byte[] Render6x4Num_4x1Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 8; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x4 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 4) ? 0 : 2)) * 8, 1, 5, j, 3);
-					smoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
+						DrawSegment((i + ((i < 4) ? 0 : 2)) * 8, 1, 5, j, 3);
+					SmoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
 					// 2x4 numeric
 					if (((seg_data[i + 8] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 4) ? 0 : 2)) * 8, 9, 5, j, 3);
-					smoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
+						DrawSegment((i + ((i < 4) ? 0 : 2)) * 8, 9, 5, j, 3);
+					SmoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
 					// 2x4 numeric
 					if (((seg_data[i + 16] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 4) ? 0 : 2)) * 8, 17, 5, j, 3);
-					smoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
+						DrawSegment((i + ((i < 4) ? 0 : 2)) * 8, 17, 5, j, 3);
+					SmoothDigitCorners((i + ((i < 4) ? 0 : 2)) * 8, 1);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[24] >> j) & 0x1) != 0)
-					drawSegment(16, 25, 5, j, 3);
+					DrawSegment(16, 25, 5, j, 3);
 				if (((seg_data[25] >> j) & 0x1) != 0)
-					drawSegment(24, 25, 5, j, 3);
+					DrawSegment(24, 25, 5, j, 3);
 				if (((seg_data[26] >> j) & 0x1) != 0)
-					drawSegment(48, 25, 5, j, 3);
+					DrawSegment(48, 25, 5, j, 3);
 				if (((seg_data[27] >> j) & 0x1) != 0)
-					drawSegment(56, 25, 5, j, 3);
+					DrawSegment(56, 25, 5, j, 3);
 			}
+			return FrameBuffer;
 		}
 
-		void _2x7Num_4x1Num_1x16Alpha(byte[] seg_data)
+		public static byte[] Render2x7Num_4x1Num_1x16Alpha(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
-					smoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
+						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 1, j, 3);
+					SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
 				}
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
 				if (((seg_data[14] >> j) & 0x1) != 0)
-					drawSegment(16, 12, 5, j, 3);
+					DrawSegment(16, 12, 5, j, 3);
 				if (((seg_data[15] >> j) & 0x1) != 0)
-					drawSegment(24, 12, 5, j, 3);
+					DrawSegment(24, 12, 5, j, 3);
 				if (((seg_data[16] >> j) & 0x1) != 0)
-					drawSegment(40, 12, 5, j, 3);
+					DrawSegment(40, 12, 5, j, 3);
 				if (((seg_data[17] >> j) & 0x1) != 0)
-					drawSegment(48, 12, 5, j, 3);
+					DrawSegment(48, 12, 5, j, 3);
 			}
 			// 1x16 alphanumeric
 			for (i = 0; i < 12; i++) {
 				for (j = 0; j < 16; j++) {
 					if (((seg_data[i + 18] >> j) & 0x1) != 0)
-						drawSegment((i * 8) + 16, 21, 0, j, 3);
-					smoothDigitCorners((i * 8) + 16, 21);
+						DrawSegment((i * 8) + 16, 21, 0, j, 3);
+					SmoothDigitCorners((i * 8) + 16, 21);
 				}
 			}
+			return FrameBuffer;
 		}
 
-		void _1x16Alpha_1x16Num_1x7Num(byte[] seg_data)
+		public static byte[] Render1x16Alpha_1x16Num_1x7Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 
 			// 1x16 alphanumeric
 			for (i = 0; i < 16; i++) {
 				for (j = 0; j < 16; j++) {
 					if (((seg_data[i] >> j) & 0x1) != 0)
-						drawSegment((i * 8), 1, 0, j, 3);
-					smoothDigitCorners((i * 8), 1);
+						DrawSegment((i * 8), 1, 0, j, 3);
+					SmoothDigitCorners((i * 8), 1);
 				}
 			}
 
@@ -643,8 +578,8 @@ namespace PinMameDevice
 			for (i = 0; i < 16; i++) {
 				for (j = 0; j < 16; j++) {
 					if (((seg_data[i + 16] >> j) & 0x1) != 0)
-						drawSegment((i * 8), 21, 1, j, 3);
-					smoothDigitCorners((i * 8), 21);
+						DrawSegment((i * 8), 21, 1, j, 3);
+					SmoothDigitCorners((i * 8), 21);
 				}
 			}
 
@@ -652,9 +587,10 @@ namespace PinMameDevice
 			for (i = 0; i < 7; i++) {
 				for (j = 0; j < 16; j++) {
 					if (((seg_data[i + 32] >> j) & 0x1) != 0)
-						drawSegment(i * 8, 13, 5, j, 3);
+						DrawSegment(i * 8, 13, 5, j, 3);
 				}
 			}
+			return FrameBuffer;
 		}
 	}
 }

@@ -23,9 +23,8 @@ namespace PinMameTest
 			Console.WriteLine("[{0}] Starting...", Thread.CurrentThread.ManagedThreadId);
 
 			Controller = new VPinMameController();
-			//Controller.Run("mm_109b").Subscribe(status => {
-			//Controller.Run("mm_109c").Subscribe(status => {
-			Controller.Run("sshtl_l7").Subscribe(status => {
+			//Controller.Run("sshtl_l7").Subscribe(status => {
+			Controller.Run("bttf_a20").Subscribe(status => {
 
 				Console.WriteLine("[{0}] Game status: {1}", Thread.CurrentThread.ManagedThreadId, status);
 			});

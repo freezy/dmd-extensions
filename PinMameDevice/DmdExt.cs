@@ -344,42 +344,54 @@ namespace PinMameDevice
 			_source.FramesRgb24.OnNext(frame);
 		}
 
-		public void RenderAlphaNumeric(DmdDevice.NumericalLayout layout, byte[] segData, byte[] segDataExtended)
+		public void RenderAlphaNumeric(DmdDevice.NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
-			Logger.Info("Alphanumeric: {0}", layout);
+			//Logger.Info("Alphanumeric: {0}", layout);
 			switch(layout)
 			{
 				case DmdDevice.NumericalLayout.None:
 					break;
 				case DmdDevice.NumericalLayout.__2x16Alpha:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x16Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x20Alpha:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x20Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Alpha_2x7Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_10x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					var planes = FrameUtil.Copy(128, 32, AlphaNumeric._2x7Num10_2x7Num10_4x1Num(segData), 2, 4);
-					_source.FramesGray2.OnNext(FrameUtil.Join(128, 32, planes));
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__4x7Num10:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render4x7Num10(segData));
 					break;
 				case DmdDevice.NumericalLayout.__6x4Num_4x1Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render6x4Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
+					_source.FramesGray2.OnNext(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
