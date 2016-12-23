@@ -92,12 +92,13 @@ namespace LibDmd.Common
 					byte b5 = 0;
 					byte b6 = 0;
 					byte b7 = 0;
-					for (var v = 7; v >= 0; v--) {
-						var pos = y * width + x + v;
 
-						var pixelr = frame[pos + 2];
+					for (var v = 7; v >= 0; v--) {
+						var pos = (y * width + x + v) * 3;
+
+						var pixelr = frame[pos];
 						var pixelg = frame[pos + 1];
-						var pixelb = frame[pos];
+						var pixelb = frame[pos + 2];
 
 						r3 <<= 1;
 						r4 <<= 1;
