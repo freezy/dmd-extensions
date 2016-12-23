@@ -60,14 +60,14 @@ namespace LibDmd
 		/// <summary>
 		/// If set, convert bitrate. Overrides <see cref="RenderAs"/>.
 		/// </summary>
-		public IConverter Converter { get; set; } 
+		public IConverter Converter { get; set; }
 
 		/// <summary>
 		/// True of the graph is currently active, i.e. if the source is
 		/// producing frames.
 		/// </summary>
 		public bool IsRendering { get; set; }
-
+		
 		/// <summary>
 		/// Produces frames before they get send through the processors.
 		/// 

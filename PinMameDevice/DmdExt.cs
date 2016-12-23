@@ -74,29 +74,34 @@ namespace PinMameDevice
 		/// </remarks>
 		public void Init()
 		{
-			var palPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.pal");
-			var fsqPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 
-			if (File.Exists(palPath)) {
-				try {
-					Logger.Info("Loading palette file at {0}...", palPath);
-					var coloring = new Coloring(palPath);
-					Animation[] animations = null;
+			if (_config.Global.Colorize) {
+				var palPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.pal");
+				var fsqPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
+				
+				if (File.Exists(palPath)) {
+					try {
+						Logger.Info("Loading palette file at {0}...", palPath);
+						var coloring = new Coloring(palPath);
+						Animation[] animations = null;
 
-					if (File.Exists(fsqPath)) {
-						Logger.Info("Loading animation file at {0}...", fsqPath);
-						animations = Animation.ReadFrameSequence(fsqPath, Width, Height);
+						if (File.Exists(fsqPath)) {
+							Logger.Info("Loading animation file at {0}...", fsqPath);
+							animations = Animation.ReadFrameSequence(fsqPath, Width, Height);
+						}
+						_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
+						_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
+
+					} catch (Exception e) {
+						Logger.Warn("Error initializing colorizer: {0}", e.Message);
 					}
-					_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
-					_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
-
-				} catch (Exception e) {
-					Logger.Warn("Error initializing colorizer: {0}", e.Message);
+				} else {
+					Logger.Debug("No palette file found at {0}.", palPath);
 				}
 			} else {
-				Logger.Debug("No palette file found at {0}.", palPath);
+				Logger.Info("Bit-convertion disabled.");
 			}
 
 			if (_config.VirtualDmd.Enabled) {

@@ -71,6 +71,15 @@ namespace PinMameDevice
 			set { Set("flipvertically", value); }
 		}
 
+#if DISABLE_COLORING
+		public bool Colorize { get; } = false;
+#else
+		public bool Colorize
+		{
+			get { return GetBoolean("colorize", true); }
+			set { Set("colorize", value); }
+		}
+#endif
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
