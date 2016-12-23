@@ -28,5 +28,12 @@ namespace LibDmd.Converter
 		/// </summary>
 		/// <param name="from">Source data</param>
 		byte[] Convert(byte[] from);
+
+		/// <summary>
+		/// Must be run when dimensions of the source change.
+		/// </summary>
+		/// <param name="width">New width of the source</param>
+		/// <param name="height">New height of the source</param>
+		void SetDimensions(int width, int height);
 	}
 }

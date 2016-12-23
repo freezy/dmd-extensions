@@ -41,9 +41,6 @@ namespace LibDmd.Converter
 	/// </remarks>
 	public abstract class AbstractColorizer : AbstractSource, IRgb24Source
 	{
-		public readonly int Width;
-		public readonly int Height;
-
 		public string Name { get; } = "Colorizer";
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }

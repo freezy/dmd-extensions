@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
 using LibDmd;
-using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Input;
@@ -328,12 +327,16 @@ namespace PinMameDevice
 
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
+			_gray2Colorizer?.SetDimensions(width, height);
+			_gray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray2.OnNext(frame);
 		}
 
 		public void RenderGray4(int width, int height, byte[] frame)
 		{
+			_gray2Colorizer?.SetDimensions(width, height);
+			_gray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray4.OnNext(frame);
 		}
