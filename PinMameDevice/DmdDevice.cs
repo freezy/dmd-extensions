@@ -117,7 +117,7 @@ namespace PinMameDevice
 
 		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
 		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
-		private static void SetGray2Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
+		static void SetGray2Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
 			Logger.Info("[vpm] Set_4_Colors_Palette()");
 			_dmdExt.SetPalette(new[] {ConvertColor(color0), ConvertColor(color33), ConvertColor(color66), ConvertColor(color100)});
@@ -125,14 +125,29 @@ namespace PinMameDevice
 
 		// void Set_16_Colors_Palette(Rgb24 *color)
 		[DllExport("Set_16_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
-		private static void SetGray4Palette(IntPtr palette)
+		static void SetGray4Palette(IntPtr palette)
 		{
 			Logger.Info("[vpm] Set_16_Colors_Palette()");
 			var size = Marshal.SizeOf(typeof (Rgb24));
 
 			// for some shit reason, using a loop fails compilation.
 			_dmdExt.SetPalette(new[] {
-				ConvertColor(GetColorAtPosition(palette, 0, size)), ConvertColor(GetColorAtPosition(palette, 1, size)), ConvertColor(GetColorAtPosition(palette, 2, size)), ConvertColor(GetColorAtPosition(palette, 3, size)), ConvertColor(GetColorAtPosition(palette, 4, size)), ConvertColor(GetColorAtPosition(palette, 5, size)), ConvertColor(GetColorAtPosition(palette, 6, size)), ConvertColor(GetColorAtPosition(palette, 7, size)), ConvertColor(GetColorAtPosition(palette, 8, size)), ConvertColor(GetColorAtPosition(palette, 9, size)), ConvertColor(GetColorAtPosition(palette, 10, size)), ConvertColor(GetColorAtPosition(palette, 11, size)), ConvertColor(GetColorAtPosition(palette, 12, size)), ConvertColor(GetColorAtPosition(palette, 13, size)), ConvertColor(GetColorAtPosition(palette, 14, size)), ConvertColor(GetColorAtPosition(palette, 15, size)),
+				ConvertColor(GetColorAtPosition(palette, 0, size)),
+				ConvertColor(GetColorAtPosition(palette, 1, size)),
+				ConvertColor(GetColorAtPosition(palette, 2, size)),
+				ConvertColor(GetColorAtPosition(palette, 3, size)),
+				ConvertColor(GetColorAtPosition(palette, 4, size)),
+				ConvertColor(GetColorAtPosition(palette, 5, size)),
+				ConvertColor(GetColorAtPosition(palette, 6, size)),
+				ConvertColor(GetColorAtPosition(palette, 7, size)),
+				ConvertColor(GetColorAtPosition(palette, 8, size)),
+				ConvertColor(GetColorAtPosition(palette, 9, size)),
+				ConvertColor(GetColorAtPosition(palette, 10, size)),
+				ConvertColor(GetColorAtPosition(palette, 11, size)),
+				ConvertColor(GetColorAtPosition(palette, 12, size)),
+				ConvertColor(GetColorAtPosition(palette, 13, size)),
+				ConvertColor(GetColorAtPosition(palette, 14, size)),
+				ConvertColor(GetColorAtPosition(palette, 15, size)),
 			});
 		}
 

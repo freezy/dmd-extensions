@@ -345,7 +345,7 @@ namespace PinMameDevice
 				return fallback;
 			}
 			try {
-				var e = (T)Enum.Parse(typeof(T), _data[Name][key].First().ToString().ToUpper() + _data[Name][key].Substring(1));
+				var e = (T)Enum.Parse(typeof(T), _data[Name][key].Substring(0, 1).ToUpper() + _data[Name][key].Substring(1));
 				if (!Enum.IsDefined(typeof(T), e)) {
 					throw new ArgumentException();
 				}
