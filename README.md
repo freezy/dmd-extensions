@@ -25,7 +25,7 @@ don't provide support out of the box. Supported games are:
 - **Pinball FX2** through frame grabbing from screen 
 - Farsight's **The Pinball Arcade** through grabbing the DMD texture from memory
 - **Pro Pinball Timeshock** through their message queue
-- **Visual PinMAME** through `dmddevice.dll` 
+- **Visual PinMAME** through `DmdDevice.dll` 
 
 The command line tool can also display image files on the DMD device and render
 frames to bitmap files.
@@ -109,6 +109,47 @@ rendering should go through dmdext.
 If you are a PC monitor user or have a RGB display (PinDMDv3 or PIN2DMD), the
 advantage of dmdext is that Lucky1's coloring features are fully supported.
 
+#### Configuration
+
+Since `DmdDevice.dll` is called by VPM, we can't pass any configuration 
+parameters to it. Instead, we use `DmdDevice.ini` which must be located
+in the same folder as `VPinMAME.dll`. The options are described by block below.
+
+- `[global]` - Global options that are applied to all display types
+  - `resize`- How to downscale SEGA 192x64 pixel games to smaller displays. Can 
+    have three values:
+    - `stretch` - Just fill the available space and ignore the aspect ratio
+    - `fill` - Fill it up so the whole DMD is filled while keeping aspect ratio
+      intact. Pixels will be cropped off.
+    - `fit` - Scale it so the whole image fits on the DMD while keeping aspect
+       ratio intact. There will be white space (uh, more like black space).
+  - `fliphorizontally` - Flips the image horizontally
+  - `flipvertically` - Flips the image vertically
+  - `colorize` - enable or disable frame-by-frame colorization (inactive in 
+    VPX bundle)
+- `[virtualdmd]` - A virtual DMD that renders on the computer screen somewhat
+   nicely
+  - `enabled` - If false, don't show it
+  - `stayontop` - Virtual dmd stays on top of most other windows 
+  - `hidegrip` - Hide the resize grip
+  - `left` - X-axis of the window position
+  - `top` - Y-axis of the window position
+  - `width` - Width of the DMD in monitor pixels
+  - `height` - Height of the dmd in monitor pixels
+- `[pindmd1]` Options for the 2-bit pinDMD display
+  - `enabled` - If false, doesn't bother looking for a pinDMD1
+- `[pindmd2]` Options for the 4-bit pinDMD2 display
+  - `enabled` - If false, doesn't bother looking for a pinDMD2
+- `[pindmd3]` Options for the RGB24 pinDMDv3 display
+  - `enabled` - If false, doesn't bother looking for a pinDMD3
+  - `port` - COM port, e.g. `COM3`
+- `[pin2dmd]` Options for the RGB24 PIN2DMD display
+  - `enabled` - If false, doesn't bother looking for a PIN2DMD
+- `[video]` - Allows creating an .avi video from the DMD frames.
+  - `enabled` - If enabled, write to an .avi file.   
+  - `path` - Path to folder or .avi file. If a folder is given, it will create
+    a file named after the current game.
+
 ## Documentation
 
 All options are documented in the tool.
@@ -116,7 +157,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.3.0-beta3
+DMD Extensions v1.4.0
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -132,7 +173,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.3.0-beta3
+DMD Extensions v1.4.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -224,7 +265,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.3.0-beta3
+DMD Extensions v1.4.0
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -277,7 +318,7 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.3.0-beta3
+DMD Extensions v1.4.0
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
@@ -352,6 +393,7 @@ have my sincerest sympathy, but that's as far as I go. ;)
 - [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
   code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
+- @lucky01 for instructions and details about the coloring feature
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 
 
