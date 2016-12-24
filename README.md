@@ -386,6 +386,25 @@ This application is based on .NET 4.5, which only runs on Windows 7 or later.
 Probably on Vista too, but who cares. If you're still running WinXP then you
 have my sincerest sympathy, but that's as far as I go. ;)
 
+## Code Structure
+
+All of the reusuable code logic can be found in the `DmdLib` project. This 
+contains code for reading from the various input sources, the processors,
+convertors and all the output devices.
+
+In order to hook all those components together, we use something called 
+`RenderGraph`. Below is a schema how this works.
+
+![Render Graph](https://raw.githubusercontent.com/freezy/dmd-extensions/master/LibDmd/RenderGraph.png)
+
+Per default the Bitmap column is used, i.e. everything is converted to and from
+a Bitmap. This can be overridden, e.g. when launching Pro Pinball, the paramter 
+`--render-as gray4` should be used so the image doesn't get unnecessarily up- 
+and down-converted. Automatically matching the best route is imaginable and 
+will probably be implemented at some point. 
+
+For the more tech documentation, see the inline comments of the corresponding 
+classes.
 
 ## Credits
 
@@ -393,7 +412,7 @@ have my sincerest sympathy, but that's as far as I go. ;)
 - [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
   code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
-- @lucky01 for instructions and details about the coloring feature
+- Lucky1 for instructions and details about the coloring feature
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 
 
