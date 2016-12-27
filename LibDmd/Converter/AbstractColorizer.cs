@@ -60,8 +60,9 @@ namespace LibDmd.Converter
 
 		private Palette _defaultPalette;
 		private IDisposable _paletteReset;
-		protected int _frameCounter = 0;
-		protected long _lastFrame = 0;
+		protected int FrameCounter;
+		protected long LastFrame;
+		protected uint LastChecksum;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -128,13 +129,17 @@ namespace LibDmd.Converter
 						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
-					Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
-					CurrentAnimation?.Stop();
-					CurrentEnhancer?.Stop();
-					CurrentAnimation = animation;
-					CurrentAnimation.Start(AnimationFrames, Palette);
-					_frameCounter = 0;
-					_lastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+					// Äs cha si das än Animazion mehrmaus dr gliichi Häsch hat am Aafang, i dem Fau nid looslah.
+					if (CurrentAnimation == null || checksum != LastChecksum) {
+						Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
+						CurrentAnimation?.Stop();
+						CurrentEnhancer?.Stop();
+						CurrentAnimation = animation;
+						CurrentAnimation.Start(AnimationFrames, Palette, () => LastChecksum = 0x0);
+						FrameCounter = 0;
+						LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+					}
+					LastChecksum = checksum;
 					return true;
 
 				// Ab etz wärdid d Biudli mit zwe Bit ergänzt
@@ -144,13 +149,14 @@ namespace LibDmd.Converter
 						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
 						return false;
 					}
-					if (CurrentEnhancer == null || !CurrentEnhancer.Equals(enhancer)) {
+					if (CurrentEnhancer == null || checksum != LastChecksum) {
 						Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);
 						CurrentAnimation?.Stop();
 						CurrentEnhancer?.Stop();
 						CurrentEnhancer = enhancer;
 						CurrentEnhancer.Start();
 					}
+					LastChecksum = checksum;
 					return true;
 				
 				default:

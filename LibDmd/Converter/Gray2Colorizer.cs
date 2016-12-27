@@ -63,7 +63,7 @@ namespace LibDmd.Converter
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			if (IsAnimationRunning) {
-				Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", _frameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - _lastFrame);
+				Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
 				return null;
 			}
 
@@ -78,6 +78,9 @@ namespace LibDmd.Converter
 					
 				} else {
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
+				}
+				if (!CurrentEnhancer.IsRunning) {
+					LastChecksum = 0x0;
 				}
 			}
 

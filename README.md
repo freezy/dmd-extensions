@@ -388,7 +388,7 @@ have my sincerest sympathy, but that's as far as I go. ;)
 
 ## Code Structure
 
-All of the reusuable code logic can be found in the `DmdLib` project. This 
+All of the reusuable code logic can be found in the `LibDmd` project. This 
 contains code for reading from the various input sources, the processors,
 convertors and all the output devices.
 
@@ -398,7 +398,7 @@ In order to hook all those components together, we use something called
 ![Render Graph](https://raw.githubusercontent.com/freezy/dmd-extensions/master/LibDmd/RenderGraph.png)
 
 Per default the Bitmap column is used, i.e. everything is converted to and from
-a Bitmap. This can be overridden, e.g. when launching Pro Pinball, the paramter 
+a Bitmap. This can be overridden, e.g. when launching Pro Pinball, the parameter 
 `--render-as gray4` should be used so the image doesn't get unnecessarily up- 
 and down-converted. Automatically matching the best route is imaginable and 
 will probably be implemented at some point. 

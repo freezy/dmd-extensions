@@ -73,7 +73,8 @@ namespace LibDmd.Converter.Colorize
 		/// </remarks>
 		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
-		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette)
+		/// <param name="completed">Run when animation is completed</param>
+		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette, Action completed = null)
 		{
 			Logger.Info("[fsq] Starting animation of {0} frames...", _frames.Length);
 			IsRunning = true;
@@ -93,7 +94,10 @@ namespace LibDmd.Converter.Colorize
 						.Never<Unit>()
 						.StartWith(Unit.Default)
 						.Delay(TimeSpan.FromMilliseconds(_frames[_frames.Length - 1].Delay))
-						.Subscribe(_ => IsRunning = false);
+						.Subscribe(_ => {
+							IsRunning = false;
+							completed?.Invoke();
+						});
 				});
 		}
 
