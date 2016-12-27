@@ -45,7 +45,12 @@ namespace PinMameDevice
 		public void Save()
 		{
 			Logger.Info("Saving config to {0}", _iniPath);
-			_parser.WriteFile(_iniPath, _data);
+			try {
+				_parser.WriteFile(_iniPath, _data);
+
+			} catch (UnauthorizedAccessException e) {
+				Logger.Error("Error writing to file: {0}", e.Message);
+			}
 		}
 	}
 

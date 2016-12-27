@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -53,15 +56,16 @@ namespace PinMameDevice
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+		private static string _altcolorPath;
 
 		public DmdExt()
 		{
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
 			var logConfigPath = Path.Combine(AssemblyPath, "DmdDevice.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
 			}
+			_altcolorPath = GetColorPath();
 		}
 
 		/// <summary>
@@ -76,9 +80,9 @@ namespace PinMameDevice
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 
-			if (_config.Global.Colorize) {
-				var palPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.pal");
-				var fsqPath = Path.Combine(AssemblyPath, "altcolor", _gameName, "pin2dmd.fsq");
+			if (_config.Global.Colorize && _altcolorPath != null) {
+				var palPath = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
+				var fsqPath = Path.Combine(_altcolorPath, _gameName, "pin2dmd.fsq");
 				
 				if (File.Exists(palPath)) {
 					try {
@@ -410,5 +414,52 @@ namespace PinMameDevice
 			}
 			Raygun.Send(ex);
 		}
+
+		private static string GetColorPath()
+		{
+			// first, try executing assembly.
+			var altcolor = Path.Combine(AssemblyPath, "altcolor");
+			if (Directory.Exists(altcolor)) {
+				Logger.Info("Determined color path from assembly path: {0}", altcolor);
+				return altcolor;
+			}
+
+			// then, try vpinmame location
+			var vpmPath = GetDllPath("VPinMAME.dll");
+			if (vpmPath == null) {
+				return null;
+			}
+			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
+			if (Directory.Exists(altcolor)) {
+				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
+				return altcolor;
+			}
+			Logger.Info("No altcolor folder found, ignoring palettes.");
+			return null;
+		}
+
+		private static string GetDllPath(string name)
+		{
+			const int maxPath = 260;
+			var builder = new StringBuilder(maxPath);
+			var hModule = GetModuleHandle(name);
+			if (hModule == IntPtr.Zero) {
+				return null;
+			}
+			var size = GetModuleFileName(hModule, builder, builder.Capacity);
+			return size <= 0 ? null : builder.ToString();
+		}
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[PreserveSig]
+		public static extern uint GetModuleFileName
+		(
+			[In] IntPtr hModule,
+			[Out] StringBuilder lpFilename,
+			[In][MarshalAs(UnmanagedType.U4)] int nSize
+		);
 	}
 }
