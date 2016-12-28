@@ -128,6 +128,7 @@
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
     <Compile Include="Common\ImageUtil.cs" />
+    <Compile Include="Common\InteropUtil.cs" />
     <Compile Include="Common\TransformationUtil.cs" />
     <Compile Include="Converter\AbstractColorizer.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
@@ -149,7 +150,7 @@
     <Compile Include="Output\IFixedSizeDestination.cs" />
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
-    <Compile Include="Common\BinaryReaderExtension.cs" />
+    <Compile Include="Common\BinaryReaderExtensions.cs" />
     <Compile Include="Converter\Colorize\Mapping.cs" />
     <Compile Include="Converter\Colorize\Palette.cs" />
     <Compile Include="Converter\Colorize\Coloring.cs" />

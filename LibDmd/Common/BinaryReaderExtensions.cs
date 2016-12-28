@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace LibDmd.Common
 {
 	// Note this MODIFIES THE GIVEN ARRAY then returns a reference to the modified array.
-	static class BinaryReaderExtension
+	static class BinaryReaderExtensions
 	{
 		public static byte[] Reverse(this byte[] b)
 		{
