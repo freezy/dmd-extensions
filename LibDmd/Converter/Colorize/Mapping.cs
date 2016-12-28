@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Windows;
 using LibDmd.Common;
 using NLog;
 
@@ -10,6 +11,11 @@ namespace LibDmd.Converter.Colorize
 	/// </summary>
 	public class Mapping
 	{
+		/// <summary>
+		/// Wefu Bytes äs Mäpping bruicht
+		/// </summary>
+		public static readonly int Length = 11;
+
 		/// <summary>
 		/// D Checkum vom Biud
 		/// </summary>

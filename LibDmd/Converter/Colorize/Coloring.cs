@@ -57,6 +57,14 @@ namespace LibDmd.Converter.Colorize
 
 			var numMappings = reader.ReadUInt16BE();
 			Logger.Trace("[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
+			if (reader.BaseStream.Length - reader.BaseStream.Position < Mapping.Length * numMappings) {
+				Logger.Warn("[{1}] Missing {0} bytes for {1} masks, ignoring.", Mapping.Length * numMappings - reader.BaseStream.Length + reader.BaseStream.Position, numMappings);
+				Mappings = new Mapping[0];
+				Masks = new byte[0][];
+				reader.Close();
+				return;
+			}
+
 			Mappings = new Mapping[numMappings];
 			for (var i = 0; i < numMappings; i++) {
 				Mappings[i] = new Mapping(reader);
@@ -73,6 +81,13 @@ namespace LibDmd.Converter.Colorize
 
 			var numMasks = reader.ReadByte();
 			Logger.Trace("[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
+			if (reader.BaseStream.Length - reader.BaseStream.Position < 512 * numMasks) {
+				Logger.Warn("Missing {0} bytes for {1} masks, ignoring.", 512 * numMasks - reader.BaseStream.Length + reader.BaseStream.Position, numMasks);
+				Mappings = new Mapping[0];
+				Masks = new byte[0][];
+				reader.Close();
+				return;
+			}
 			Masks = new byte[numMasks][];
 			for (var i = 0; i < numMasks; i++) {
 				Masks[i] = reader.ReadBytesRequired(512);
