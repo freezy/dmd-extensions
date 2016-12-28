@@ -81,9 +81,14 @@ namespace PinMameDevice
 			_gray4Colorizer = null;
 
 			if (_config.Global.Colorize && _altcolorPath != null) {
-				var palPath = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
-				var fsqPath = Path.Combine(_altcolorPath, _gameName, "pin2dmd.fsq");
+				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
+				var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
+				var fsqPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".fsq");
+				var fsqPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.fsq");
 				
+				var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
+				var fsqPath = File.Exists(fsqPath1) ? fsqPath1 : fsqPath2;
+
 				if (File.Exists(palPath)) {
 					try {
 						Logger.Info("Loading palette file at {0}...", palPath);
