@@ -240,6 +240,8 @@ namespace PinMameDevice
 				return;
 			}
 
+			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
+
 			// miär bruichid äi Render-Graph fir jedi Bitlängi
 			_graphs.Add(new RenderGraph {
 				Source = _source,

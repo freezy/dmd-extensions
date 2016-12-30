@@ -15,6 +15,25 @@ namespace LibDmd.Common
 {
 	public class TransformationUtil
 	{
+		public static byte[] Flip(int width, int height, int bytesPerPixel, byte[] frame, bool flipHorizontally, bool flipVertically)
+		{
+			if (!flipHorizontally && !flipVertically) {
+				return frame;
+			}
+			var pos = 0;
+			var flipped = new byte[frame.Length];
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width * bytesPerPixel; x += bytesPerPixel) {
+					var xFlipped = flipVertically ? (width - 1) * bytesPerPixel - x : x;
+					var yFlipped = flipHorizontally ? height - y - 1 : y;
+					for (var v = 0; v < bytesPerPixel; v++) {
+						flipped[pos + v] = frame[width * bytesPerPixel * yFlipped + xFlipped + v];
+					}
+					pos += bytesPerPixel;
+				}
+			}
+			return flipped;
+		}
 
 		public static BitmapSource Transform(BitmapSource bmp, int destWidth, int destHeight, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{

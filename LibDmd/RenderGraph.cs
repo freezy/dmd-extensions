@@ -178,6 +178,9 @@ namespace LibDmd
 
 				foreach (var dest in Destinations) 
 				{
+					var destFixedSize = dest as IFixedSizeDestination;
+					var destResizable = dest as IResizableDestination;
+
 					// check for 2->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
 						var sourceGray2 = Source as IGray2Source;
@@ -188,6 +191,7 @@ namespace LibDmd
 						var disposable = sourceGray2.GetGray2Frames()
 							.Select(Converter.Convert)
 							.Where(frame => frame != null)
+							.Select(frame => TransformRgb24(Source.Dimensions.Value.Width, Source.Dimensions.Value.Height, frame, destFixedSize))
 							.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
@@ -208,6 +212,7 @@ namespace LibDmd
 						var disposable = sourceGray4.GetGray4Frames()
 							.Select(Converter.Convert)
 							.Where(frame => frame != null)
+							.Select(frame => TransformRgb24(Source.Dimensions.Value.Width, Source.Dimensions.Value.Height, frame, destFixedSize))
 							.Subscribe(destRgb24.RenderRgb24, ex => { throw new Exception("Render error.", ex); });
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
@@ -222,8 +227,6 @@ namespace LibDmd
 						throw new NotImplementedException($"Frame convertion from ${Converter.From} to ${Converter.To} not implemented.");
 					}
 
-					var destFixedSize = dest as IFixedSizeDestination;
-					var destResizable = dest as IResizableDestination;
 					if (destResizable != null) {
 						Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
 					}
@@ -330,7 +333,7 @@ namespace LibDmd
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return frame;
+				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
 			var bmp = ImageUtil.ConvertFromGray2(width, height, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
@@ -341,7 +344,7 @@ namespace LibDmd
 		private byte[] TransformGray4(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return frame;
+				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
 			var bmp = ImageUtil.ConvertFromGray4(width, height, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
@@ -352,7 +355,7 @@ namespace LibDmd
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return frame;
+				return TransformationUtil.Flip(width, height, 3, frame, FlipHorizontally, FlipVertically);
 			}
 			var bmp = ImageUtil.ConvertFromRgb24(width, height, frame);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);

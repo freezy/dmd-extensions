@@ -150,7 +150,11 @@
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME"
+    <PostBuildEvent>if "$(Platform)"=="x64" (
+    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME\$(TargetName)64.dll"
+) else (
+    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME"
+)
 copy /Y "$(TargetDir)DmdDevice.log.config" "F:\Pinball\Visual Pinball\VPinMAME"
 
 </PostBuildEvent>
