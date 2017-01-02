@@ -232,23 +232,35 @@ namespace LibDmd.Output.PinDmd3
 			byte r, g, b;
 			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
 
-			_frameBufferGray4[1] = color.R; // 100%: red
-			_frameBufferGray4[2] = color.G; // 100%: green
-			_frameBufferGray4[3] = color.B; // 100%: blue
+			_frameBufferGray2[1] = color.R; // 100%: red
+			_frameBufferGray4[1] = color.R; 
+			_frameBufferGray2[2] = color.G; // 100%: green
+			_frameBufferGray4[2] = color.G;
+			_frameBufferGray2[3] = color.B; // 100%: blue
+			_frameBufferGray4[3] = color.B;
 
 			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.66, out r, out g, out b);
-			_frameBufferGray4[4] = r;  // 66%: red
-			_frameBufferGray4[5] = g;  // 66%: green
-			_frameBufferGray4[6] = b;  // 66%: blue
+			_frameBufferGray2[4] = r;  // 66%: red
+			_frameBufferGray4[4] = r;
+			_frameBufferGray2[5] = g;  // 66%: green
+			_frameBufferGray4[5] = g;
+			_frameBufferGray2[6] = b;  // 66%: blue
+			_frameBufferGray4[6] = b;
 
 			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.33, out r, out g, out b);
-			_frameBufferGray4[7] = r;  // 33%: red
-			_frameBufferGray4[8] = g;  // 33%: green
-			_frameBufferGray4[9] = b;  // 33%: blue
+			_frameBufferGray2[7] = r;  // 33%: red
+			_frameBufferGray4[7] = r;
+			_frameBufferGray2[8] = g;  // 33%: green
+			_frameBufferGray4[8] = g;
+			_frameBufferGray2[9] = b;  // 33%: blue
+			_frameBufferGray4[9] = b;
 
-			_frameBufferGray4[10] = 0x0; // 0%: red
-			_frameBufferGray4[11] = 0x0; // 0%: green
-			_frameBufferGray4[12] = 0x0; // 0%: blue
+			_frameBufferGray2[10] = 0x0; // 0%: red
+			_frameBufferGray4[10] = 0x0;
+			_frameBufferGray2[11] = 0x0; // 0%: green
+			_frameBufferGray4[11] = 0x0;
+			_frameBufferGray2[12] = 0x0; // 0%: blue
+			_frameBufferGray4[12] = 0x0;
 		}
 
 		public void SetPalette(Color[] colors)
@@ -256,8 +268,11 @@ namespace LibDmd.Output.PinDmd3
 			var palette = ColorUtil.GetPalette(colors, 4);
 			var pos = 1;
 			for (var i = 0; i < 4; i++) {
+				_frameBufferGray2[pos] = palette[3 - i].R;
 				_frameBufferGray4[pos] = palette[3 - i].R;
+				_frameBufferGray2[pos + 1] = palette[3 - i].G;
 				_frameBufferGray4[pos + 1] = palette[3 - i].G;
+				_frameBufferGray2[pos + 2] = palette[3 - i].B;
 				_frameBufferGray4[pos + 2] = palette[3 - i].B;
 				pos += 3;
 			}
