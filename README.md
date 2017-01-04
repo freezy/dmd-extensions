@@ -364,28 +364,6 @@ USAGE: dmdext test [--destination=<destination>]
                            provided folder.
 ```
 
-## Troubleshooting
-
-### Flickering with PinDMDv3
-
-Some users reported heavy flickering when running via PinballX. Seems that this
-is linked to the desktop settings. This seems to help:
-
-- Go to **My Computer**
-- Click on **Performance Information and Tools** on the bottom left
-- Click on **Adjust Visual Effects** at the top left.
-- When the Performance Window pops up, click on **Adjust for Best Appearance**. 
-  All the boxes should automatically get check marked.
-- Click on **Apply**, and then OK to get out.
-
-*Thanks xman72*
-
-## Compatibility
-
-This application is based on .NET 4.5, which only runs on Windows 7 or later.
-Probably on Vista too, but who cares. If you're still running WinXP then you
-have my sincerest sympathy, but that's as far as I go. ;)
-
 ## Code Structure
 
 All of the reusuable code logic can be found in the `LibDmd` project. This 
@@ -405,6 +383,39 @@ will probably be implemented at some point.
 
 For the more tech documentation, see the inline comments of the corresponding 
 classes.
+
+## Compatibility
+
+This application is based on .NET 4.5, which only runs on Windows 7 or later.
+Probably on Vista too, but who cares. If you're still running WinXP then you
+have my sincerest sympathy, but that's as far as I go. ;)
+
+
+## Troubleshooting
+
+### Flickering with PinDMDv3
+
+Some users reported heavy flickering when running via PinballX. Seems that this
+is linked to the desktop settings. This seems to help:
+
+- Go to **My Computer**
+- Click on **Performance Information and Tools** on the bottom left
+- Click on **Adjust Visual Effects** at the top left.
+- When the Performance Window pops up, click on **Adjust for Best Appearance**. 
+  All the boxes should automatically get check marked.
+- Click on **Apply**, and then OK to get out.
+
+*Thanks to xman72!*
+
+### Still flickering?
+
+Try boosting how fast dmdext grabs the frames. For example, for Pinball FX2, try:
+
+    dmdext mirror --source=pinballfx2 --no-virtual -q --fps 60
+
+Default is 25, which seems too slow for some games.
+
+*Thanks smoke007 for the tip!*
 
 ## Credits
 
