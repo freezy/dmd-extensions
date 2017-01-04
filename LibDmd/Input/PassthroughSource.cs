@@ -11,7 +11,7 @@ namespace LibDmd.Input
 	/// </summary>
 	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source
 	{
-		public string Name { get; } = "Passthrough Source";
+		public override string Name { get; } = "Passthrough Source";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

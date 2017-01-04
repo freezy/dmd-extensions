@@ -9,7 +9,7 @@ namespace LibDmd.Input.FileSystem
 {
 	public class RawSource : AbstractSource, IRawSource
 	{
-		public string Name { get; } = "Binary File";
+		public override string Name { get; } = "Binary File";
 
 		private readonly string _filename;
 

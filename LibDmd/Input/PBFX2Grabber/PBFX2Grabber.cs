@@ -27,7 +27,7 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// </remarks>
 	public class PBFX2Grabber : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
-		public string Name { get; } = "Pinball FX2";
+		public override string Name { get; } = "Pinball FX2";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

@@ -274,7 +274,7 @@ namespace PinMameDevice
 			for (var i = 0; i < renderers.Count; i++) {
 				var rgb24Renderer = renderers[i] as IRgb24Destination;
 				if (rgb24Renderer == null) {
-					Logger.Info("No coloring for non-RGB source {0}", renderers[i].Name);
+					Logger.Info("No coloring for non-RGB destination {0}", renderers[i].Name);
 					continue;
 				}
 				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {

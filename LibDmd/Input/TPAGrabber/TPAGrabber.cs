@@ -22,7 +22,7 @@ namespace LibDmd.Input.TPAGrabber
 	/// </remarks>
 	public class TPAGrabber : AbstractSource, IGray4Source, IBitmapSource
 	{
-		public string Name { get; } = "Pinball Arcade DX11";
+		public override string Name { get; } = "Pinball Arcade DX11";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

@@ -41,14 +41,13 @@ namespace LibDmd.Converter
 	/// </remarks>
 	public abstract class AbstractColorizer : AbstractSource, IRgb24Source
 	{
-		public string Name { get; } = "Colorizer";
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
 		protected abstract int BitLength { get; }
 		protected readonly Coloring Coloring;
 		protected readonly Animation[] Animations;
-		protected readonly byte[] ColoredFrame;
+		protected byte[] ColoredFrame;
 		protected readonly BehaviorSubject<Palette> Palette = new BehaviorSubject<Palette>(new Palette(new[]{Colors.Black, Colors.Cyan}));
 
 		protected Animation CurrentAnimation;
@@ -72,9 +71,10 @@ namespace LibDmd.Converter
 			Height = height;
 			Coloring = coloring;
 			Animations = animations;
-			ColoredFrame = new byte[width * height * 3];
 			SetPalette(Coloring.DefaultPalette, true);
 			Logger.Debug("[colorize] Initialized.");
+			ColoredFrame = new byte[width * height * 3];
+			Dimensions.Subscribe(dim => ColoredFrame = new byte[dim.Width * dim.Height * 3]);
 		}
 
 		/// <summary>

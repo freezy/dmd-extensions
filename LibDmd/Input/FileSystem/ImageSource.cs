@@ -11,7 +11,7 @@ namespace LibDmd.Input.FileSystem
 {
 	public class ImageSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
-		public string Name { get; } = "Image Source";
+		public override string Name { get; } = "Image Source";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

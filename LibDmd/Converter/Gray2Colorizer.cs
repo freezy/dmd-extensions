@@ -16,6 +16,7 @@ namespace LibDmd.Converter
 	/// </remarks>
 	public class Gray2Colorizer : AbstractColorizer, IConverter
 	{
+		public override string Name { get; } = "Gray2-Colorizer";
 		protected override int BitLength { get; } = 2;
 		public RenderBitLength From { get; } = RenderBitLength.Gray2;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
