@@ -33,11 +33,27 @@ namespace LibDmd.Converter
 				return null;
 			}
 
+			// Wenns erwiitered wordänisch, de dimmers Frame ersetzä
+			if (planes.Length > BitLength) {
+				frame = FrameUtil.Join(Width, Height, planes);
+			}
+
 			// Faus eppis zrugg cho isch timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(planes.Length), ColoredFrame);
 			return ColoredFrame;
 		}
 
+		/// <summary>
+		/// Tuät luägä obs Frame mit und ohni Maskä mätscht. Faus ja de wirds
+		/// grad aagwandt, d.h. Palettäwächsu odr Animazion, und d Planes womer
+		/// berächnet hend zrugggäh, und faus nei gits null zrugg.
+		/// </summary>
+		/// <remarks>
+		/// Äs cha si dass meh Planes as vorhär zruggäh wärdit, i dem Fau ischs
+		/// Frame erwiitered wordä.
+		/// </remarks>
+		/// <param name="frame">S Frame wo grad cho isch</param>
+		/// <returns></returns>
 		protected byte[][] HashFrame(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
@@ -81,22 +97,21 @@ namespace LibDmd.Converter
 				return null;
 			}
 
-			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrs einfach ersetzä
-			var bitlength = BitLength;
-			if (IsEnhancerRunning) {
-				var data = CurrentEnhancer.Next();
-				if (data.BitLength == 2) {
-					bitlength += 2;
-					var enhancedPlanes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] };
-					frame = FrameUtil.Join(Width, Height, enhancedPlanes.ToArray());
-					planes = enhancedPlanes.ToArray();
-					
-				} else {
-					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
-				}
-				if (!CurrentEnhancer.IsRunning) {
-					LastChecksum = 0x0;
-				}
+			// Wenn kä Erwiiterer am laifä nisch de simmer fertig
+			if (!IsEnhancerRunning) {
+				return planes;
+			}
+
+			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
+			var data = CurrentEnhancer.Next();
+			if (data.BitLength == 2) {
+				return new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
+			}
+			Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
+
+			// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
+			if (!CurrentEnhancer.IsRunning) {
+				LastChecksum = 0x0;
 			}
 			return planes;
 		}

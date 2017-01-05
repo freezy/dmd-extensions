@@ -12,9 +12,9 @@ namespace LibDmd.Converter
 	public class ColoredGray2Colorizer : Gray2Colorizer, IConverter<Tuple<byte[][], Color[]>>
 	{
 		public override string Name { get; } = "Colored Gray4 Colorizer";
-		protected override int BitLength { get; } = 4;
-		public new RenderBitLength From { get; } = RenderBitLength.Gray4;
-		public new RenderBitLength To { get; } = RenderBitLength.ColoredGray4;
+		protected override int BitLength { get; } = 2;
+		public new RenderBitLength From { get; } = RenderBitLength.Gray2;
+		public new RenderBitLength To { get; } = RenderBitLength.ColoredGray2;
 
 		public ColoredGray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null)
 			: base(width, height, coloring, animations)
