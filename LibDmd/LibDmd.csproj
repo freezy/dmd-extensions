@@ -134,11 +134,14 @@
     <Compile Include="Converter\Colorize\Animation.cs" />
     <Compile Include="Converter\Colorize\Frame.cs" />
     <Compile Include="Converter\Gray2Colorizer.cs" />
+    <Compile Include="Converter\ColoredGray4Colorizer.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\AbstractSource.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IBitmapSource.cs" />
+    <Compile Include="Input\IColoredGray4Source.cs" />
+    <Compile Include="Input\IColoredGray2Source.cs" />
     <Compile Include="Input\IGray2Source.cs" />
     <Compile Include="Input\IRgb24Source.cs" />
     <Compile Include="Input\IGray4Source.cs" />
@@ -146,6 +149,7 @@
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
+    <Compile Include="Output\IColoredGray2Destination.cs" />
     <Compile Include="Output\IGray2Destination.cs" />
     <Compile Include="Output\IFixedSizeDestination.cs" />
     <Compile Include="Output\IColoredGray4Destination.cs" />
