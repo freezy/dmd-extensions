@@ -18,6 +18,7 @@ namespace LibDmd.Converter
 	{
 		public override string Name { get; } = "Gray2-Colorizer";
 		protected override int BitLength { get; } = 2;
+
 		public RenderBitLength From { get; } = RenderBitLength.Gray2;
 		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
@@ -26,6 +27,18 @@ namespace LibDmd.Converter
 		}
 
 		public byte[] Convert(byte[] frame)
+		{
+			var planes = HashFrame(frame);
+			if (planes == null) {
+				return null;
+			}
+
+			// Faus eppis zrugg cho isch timmr eifach iifärbä.
+			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(planes.Length), ColoredFrame);
+			return ColoredFrame;
+		}
+
+		protected byte[][] HashFrame(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
 			var planes = FrameUtil.Split(Width, Height, 2, frame);
@@ -76,6 +89,7 @@ namespace LibDmd.Converter
 					bitlength += 2;
 					var enhancedPlanes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] };
 					frame = FrameUtil.Join(Width, Height, enhancedPlanes.ToArray());
+					planes = enhancedPlanes.ToArray();
 					
 				} else {
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
@@ -84,12 +98,11 @@ namespace LibDmd.Converter
 					LastChecksum = 0x0;
 				}
 			}
+			return planes;
+		}
 
-			//Logger.Trace("Palette: [ {0} ]", string.Join(", ", Palette.Value.Select(color => color.ToString())));
-
-			// Und sisch timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(bitlength), ColoredFrame);
-			return ColoredFrame;
+		protected override void StartAnimation() {
+			CurrentAnimation.Start(Rgb24AnimationFrames, Palette, () => LastChecksum = 0x0);
 		}
 	}
 }

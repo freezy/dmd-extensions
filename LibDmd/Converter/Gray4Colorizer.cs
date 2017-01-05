@@ -36,6 +36,13 @@ namespace LibDmd.Converter
 			return ColoredFrame;
 		}
 
+		/// <summary>
+		/// Tuät luägä obs Frame mit und ohni Maskä mätscht. Faus ja de wirds
+		/// grad aagwandt, d.h. Palettäwächsu odr Animazion, und d Planes womer
+		/// berächnet hend zrugggäh, und faus nei gits null zrugg.
+		/// </summary>
+		/// <param name="frame">S Frame wo grad cho isch</param>
+		/// <returns></returns>
 		protected byte[][] HashFrame(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
@@ -74,5 +81,8 @@ namespace LibDmd.Converter
 			return IsAnimationRunning ? null : planes;
 		}
 
+		protected override void StartAnimation() {
+			CurrentAnimation.Start(Rgb24AnimationFrames, Palette, () => LastChecksum = 0x0);
+		}
 	}
 }

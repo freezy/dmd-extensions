@@ -51,6 +51,8 @@ namespace PinMameDevice
 		private Color[] _palette;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
+		//private ColoredGray2Colorizer _coloredGray2Colorizer;
+		private ColoredGray4Colorizer _coloredGray4Colorizer;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -79,6 +81,7 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
+			_coloredGray4Colorizer = null;
 
 			if (_config.Global.Colorize && _altcolorPath != null) {
 				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
@@ -101,6 +104,7 @@ namespace PinMameDevice
 						}
 						_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
 						_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
+						_coloredGray4Colorizer = new ColoredGray4Colorizer(Width, Height, coloring, animations);
 
 					} catch (Exception e) {
 						Logger.Warn("Error initializing colorizer: {0}", e.Message);
@@ -137,6 +141,7 @@ namespace PinMameDevice
 		public void LoadPalette(uint num)
 		{
 			_gray4Colorizer?.LoadPalette(num);
+			_coloredGray4Colorizer?.LoadPalette(num);
 		}
 
 		/// <summary>
@@ -256,6 +261,7 @@ namespace PinMameDevice
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray4Colorizer,
+				PlaneConverter = _coloredGray4Colorizer,
 				RenderAs = RenderBitLength.Gray4,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -313,7 +319,9 @@ namespace PinMameDevice
 
 			_color = DefaultColor;
 			_palette = null;
+			_gray2Colorizer = null;
 			_gray4Colorizer = null;
+			_coloredGray4Colorizer = null;
 		}
 
 		public void SetGameName(string gameName)
@@ -342,6 +350,7 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
+			_coloredGray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray2.OnNext(frame);
 		}
@@ -350,6 +359,7 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
+			_coloredGray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray4.OnNext(frame);
 		}

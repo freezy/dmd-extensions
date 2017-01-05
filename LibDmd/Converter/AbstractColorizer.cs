@@ -39,7 +39,7 @@ namespace LibDmd.Converter
 	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
 	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public abstract class AbstractColorizer : AbstractSource, IRgb24Source
+	public abstract class AbstractColorizer : AbstractSource, IRgb24Source, IColoredGray4Source, IColoredGray2Source
 	{
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
@@ -52,7 +52,9 @@ namespace LibDmd.Converter
 
 		protected Animation CurrentAnimation;
 		protected Animation CurrentEnhancer;
-		protected readonly Subject<byte[]> AnimationFrames = new Subject<byte[]>();
+		protected readonly Subject<byte[]> Rgb24AnimationFrames = new Subject<byte[]>();
+		protected readonly Subject<Tuple<byte[][], Color[]>> ColoredGray2AnimationFrames = new Subject<Tuple<byte[][], Color[]>>();
+		protected readonly Subject<Tuple<byte[][], Color[]>> ColoredGray4AnimationFrames = new Subject<Tuple<byte[][], Color[]>>();
 		protected bool IsAnimationRunning => CurrentAnimation != null && CurrentAnimation.IsRunning;
 		protected bool IsEnhancerRunning => CurrentEnhancer != null && CurrentEnhancer.IsRunning;
 		protected int NumColors => (int)Math.Pow(2, BitLength);
@@ -135,7 +137,7 @@ namespace LibDmd.Converter
 						CurrentAnimation?.Stop();
 						CurrentEnhancer?.Stop();
 						CurrentAnimation = animation;
-						CurrentAnimation.Start(AnimationFrames, Palette, () => LastChecksum = 0x0);
+						StartAnimation();
 						FrameCounter = 0;
 						LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 					}
@@ -199,9 +201,25 @@ namespace LibDmd.Converter
 			}
 		}
 
+		/// <summary>
+		/// Depending on which colorizer output, the animation needs to be started
+		/// differently.
+		/// </summary>
+		protected abstract void StartAnimation();
+
 		public IObservable<byte[]> GetRgb24Frames()
 		{
-			return AnimationFrames;
+			return Rgb24AnimationFrames;
+		}
+
+		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
+		{
+			return ColoredGray2AnimationFrames;
+		}
+
+		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray4Frames()
+		{
+			return ColoredGray4AnimationFrames;
 		}
 	}
 }

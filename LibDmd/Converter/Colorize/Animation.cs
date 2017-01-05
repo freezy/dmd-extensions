@@ -73,10 +73,10 @@ namespace LibDmd.Converter.Colorize
 		/// </remarks>
 		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
-		/// <param name="completed">Run when animation is completed</param>
+		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
 		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette, Action completed = null)
 		{
-			Logger.Info("[fsq] Starting animation of {0} frames...", _frames.Length);
+			Logger.Info("[fsq] Starting RGB24 animation of {0} frames...", _frames.Length);
 			IsRunning = true;
 			var n = 0;
 			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
@@ -85,7 +85,7 @@ namespace LibDmd.Converter.Colorize
 				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)))
 				.Subscribe(frame => {
 					frameSource.OnNext(frame);
-					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					//Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					n++;
 				}, () => {
 
@@ -100,6 +100,35 @@ namespace LibDmd.Converter.Colorize
 						});
 				});
 		}
+
+		/// <summary>
+		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
+		/// uisgäh, abr etz aus Bitplanes.
+		/// </summary>
+		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
+		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
+		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
+		public void Start(Subject<Tuple<byte[][], Color[]>> frameSource, BehaviorSubject<Palette> palette, Action completed = null)
+		{
+			Logger.Info("[fsq] Starting colored gray4 animation of {0} frames...", _frames.Length);
+			IsRunning = true;
+			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			_animation = _frames.ToObservable()
+				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
+				.Subscribe(frame => frameSource.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength))), () => {
+
+					// nu uifs letschti biud wartä bis mer fertig sind
+					Observable
+						.Never<Unit>()
+						.StartWith(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(_frames[_frames.Length - 1].Delay))
+						.Subscribe(_ => {
+							IsRunning = false;
+							completed?.Invoke();
+						});
+				});
+		}
+
 
 		/// <summary>
 		/// Tuät d Animazion aus loosglah markiäre. Äs wird abr niit uisgäh.

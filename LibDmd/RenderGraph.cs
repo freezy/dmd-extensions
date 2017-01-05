@@ -209,8 +209,28 @@ namespace LibDmd
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
 							// for pre-recorded animations, a converter can become source.
-							Logger.Info("Added converter as additional RGB24 source.");
+							Logger.Info("Added 2->24 bit converter as additional RGB24 source.");
 							_activeSources.Add(converterSource.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
+						}
+						continue;
+					}
+
+					// check for 4->colored-4-bit converter
+					if (PlaneConverter?.From == RenderBitLength.Gray4 && PlaneConverter.To == RenderBitLength.ColoredGray4) {
+						var sourceGray4 = Source as IGray4Source;
+						var destColoredGray4 = dest as IColoredGray4Destination;
+						var converterSource = Converter as IColoredGray4Source;
+						AssertCompatibility(Source, sourceGray4, dest, destColoredGray4, "4-bit", "colored 4-bit");
+						Logger.Info("Sending 4-bit frames from \"{0}\" as colored 4-bit frames to \"{1}\"", Source.Name, dest.Name);
+						var disposable = sourceGray4.GetGray4Frames()
+							.Select(PlaneConverter.Convert)
+							.Where(frame => frame != null) // TODO tranform
+							.Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2), ex => { throw new Exception("Render error.", ex); });
+						_activeSources.Add(disposable);
+						if (converterSource != null) {
+							// for pre-recorded animations, a converter can become source.
+							Logger.Info("Added 4->colored-4-bit converter as additional colored gray 4 source.");
+							_activeSources.Add(converterSource.GetColoredGray4Frames().Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2)));
 						}
 						continue;
 					}
@@ -230,28 +250,8 @@ namespace LibDmd
 						_activeSources.Add(disposable);
 						if (converterSource != null) {
 							// for pre-recorded animations, a converter can become source.
-							Logger.Info("Added converter as additional RGB24 source.");
+							Logger.Info("Added 4->24 bit converter as additional RGB24 source.");
 							_activeSources.Add(converterSource.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
-						}
-						continue;
-					}
-
-					// check for 4->colored-4-bit converter
-					if (PlaneConverter?.From == RenderBitLength.Gray4 && PlaneConverter.To == RenderBitLength.ColoredGray4) {
-						var sourceGray4 = Source as IGray4Source;
-						var destColoredGray4 = dest as IColoredGray4Destination;
-						var converterSource = Converter as IColoredGray4Source;
-						AssertCompatibility(Source, sourceGray4, dest, destColoredGray4, "4-bit", "colored 4-bit");
-						Logger.Info("Sending 4-bit frames from \"{0}\" as colored 4-bit frames to \"{1}\"", Source.Name, dest.Name);
-						var disposable = sourceGray4.GetGray4Frames()
-							.Select(PlaneConverter.Convert)
-							.Where(frame => frame != null)
-							.Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2), ex => { throw new Exception("Render error.", ex); });
-						_activeSources.Add(disposable);
-						if (converterSource != null) {
-							// for pre-recorded animations, a converter can become source.
-							Logger.Info("Added converter as additional colored gray 4 source.");
-							_activeSources.Add(converterSource.GetColoredGray4Frames().Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2)));
 						}
 						continue;
 					}
