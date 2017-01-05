@@ -22,8 +22,8 @@ namespace LibDmd.Input.ScreenGrabber
 		public double FramesPerSecond { get; set; } = 15;
 		public int Left { get; set; }
 		public int Top { get; set; }
-		public int Width { get; set; } = 128;
-		public int Height { get; set; } = 32;
+		public new int Width { get; set; } = 128;
+		public new int Height { get; set; } = 32;
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();

@@ -14,7 +14,7 @@ namespace LibDmd.Converter
 	/// Je nach <see cref="Mapping.Mode"/> wird d Animazion komplett
 	/// abgschpiut oder numä mit Graidatä ergänzt.
 	/// </remarks>
-	public class Gray2Colorizer : AbstractColorizer, IConverter
+	public class Gray2Colorizer : AbstractColorizer, IConverter<byte[]>
 	{
 		public override string Name { get; } = "Gray2-Colorizer";
 		protected override int BitLength { get; } = 2;

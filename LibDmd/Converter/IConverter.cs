@@ -11,7 +11,7 @@ namespace LibDmd.Converter
 	/// <summary>
 	/// Converts a frame from a given bit length to another bit length.
 	/// </summary>
-	public interface IConverter
+	public interface IConverter<out T>
 	{
 		/// <summary>
 		/// Source bit length
@@ -27,7 +27,7 @@ namespace LibDmd.Converter
 		/// Converts from source to destination
 		/// </summary>
 		/// <param name="from">Source data</param>
-		byte[] Convert(byte[] from);
+		T Convert(byte[] from);
 
 		/// <summary>
 		/// Must be run when dimensions of the source change.

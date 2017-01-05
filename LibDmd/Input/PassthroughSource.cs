@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Input;
 
@@ -9,7 +10,7 @@ namespace LibDmd.Input
 	/// <summary>
 	/// An input source just contains observables with all subjects.
 	/// </summary>
-	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source
+	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IColoredGray2Source, IColoredGray4Source
 	{
 		public override string Name { get; } = "Passthrough Source";
 
@@ -22,6 +23,8 @@ namespace LibDmd.Input
 		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesGray4 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
+		public readonly Subject<Tuple<byte[][], Color[]>> FramesColoredGray2 = new Subject<Tuple<byte[][], Color[]>>();
+		public readonly Subject<Tuple<byte[][], Color[]>> FramesColoredGray4 = new Subject<Tuple<byte[][], Color[]>>();
 		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
 
 		public IObservable<BitmapSource> GetFrames()
@@ -37,6 +40,16 @@ namespace LibDmd.Input
 		public IObservable<byte[]> GetGray4Frames()
 		{
 			return FramesGray4;
+		}
+
+		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
+		{
+			return FramesColoredGray2;
+		}
+
+		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray4Frames()
+		{
+			return FramesColoredGray4;
 		}
 
 		public IObservable<byte[]> GetRgb24Frames()

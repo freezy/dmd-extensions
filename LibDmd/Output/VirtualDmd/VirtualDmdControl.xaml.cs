@@ -12,7 +12,7 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IColoredGray4Destination, IBitmapDestination, IResizableDestination
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
@@ -71,6 +71,12 @@ namespace LibDmd.Output.VirtualDmd
 				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Length + " isn't.");
 			}
 			RenderBitmap(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
+		}
+
+		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		{
+			SetPalette(palette);
+			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, planes));
 		}
 
 		public void SetDimensions(int width, int height)

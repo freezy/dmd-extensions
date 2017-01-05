@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 
@@ -12,7 +13,7 @@ namespace LibDmd.Converter
 	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
 	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
 	/// </remarks>
-	public class Gray4Colorizer : AbstractColorizer, IConverter
+	public class Gray4Colorizer : AbstractColorizer, IConverter<byte[]>
 	{
 		public override string Name { get; } = "Gray4-Colorizer";
 		protected override int BitLength { get; } = 4;
@@ -24,6 +25,18 @@ namespace LibDmd.Converter
 		}
 
 		public byte[] Convert(byte[] frame)
+		{
+			var planes = HashFrame(frame);
+			if (planes == null) {
+				return null;
+			}
+
+			// Faus eppis zrugg cho isch timmr eifach iifärbä.
+			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(BitLength), ColoredFrame);
+			return ColoredFrame;
+		}
+
+		protected byte[][] HashFrame(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
 			var planes = FrameUtil.Split(Width, Height, 4, frame);
@@ -58,13 +71,8 @@ namespace LibDmd.Converter
 			}
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
-			if (IsAnimationRunning) {
-				return null;
-			}
-
-			// Faus nid timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(BitLength), ColoredFrame);
-			return ColoredFrame;
+			return IsAnimationRunning ? null : planes;
 		}
+
 	}
 }

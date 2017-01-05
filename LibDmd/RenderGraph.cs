@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Converter;
@@ -60,7 +61,12 @@ namespace LibDmd
 		/// <summary>
 		/// If set, convert bitrate. Overrides <see cref="RenderAs"/>.
 		/// </summary>
-		public IConverter Converter { get; set; }
+		public IConverter<byte[]> Converter { get; set; }
+
+		/// <summary>
+		/// If set, convert bitrate using planes. Overrides <see cref="RenderAs"/>.
+		/// </summary>
+		public IConverter<Tuple<byte[][], Color[]>> PlaneConverter { get; set; }
 
 		/// <summary>
 		/// True of the graph is currently active, i.e. if the source is
@@ -134,6 +140,13 @@ namespace LibDmd
 						AssertCompatibility(dest, destBitmap, "Bitmap");
 						destBitmap.RenderBitmap(bmp);
 						break;
+
+					case RenderBitLength.ColoredGray2:
+						throw new ArgumentException("Cannot render a bitmap in colored 2-bit mode.");
+
+					case RenderBitLength.ColoredGray4:
+						throw new ArgumentException("Cannot render a bitmap in colored 4-bit mode.");
+
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -219,6 +232,26 @@ namespace LibDmd
 							// for pre-recorded animations, a converter can become source.
 							Logger.Info("Added converter as additional RGB24 source.");
 							_activeSources.Add(converterSource.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
+						}
+						continue;
+					}
+
+					// check for 4->colored-4-bit converter
+					if (PlaneConverter?.From == RenderBitLength.Gray4 && PlaneConverter.To == RenderBitLength.ColoredGray4) {
+						var sourceGray4 = Source as IGray4Source;
+						var destColoredGray4 = dest as IColoredGray4Destination;
+						var converterSource = Converter as IColoredGray4Source;
+						AssertCompatibility(Source, sourceGray4, dest, destColoredGray4, "4-bit", "colored 4-bit");
+						Logger.Info("Sending 4-bit frames from \"{0}\" as colored 4-bit frames to \"{1}\"", Source.Name, dest.Name);
+						var disposable = sourceGray4.GetGray4Frames()
+							.Select(PlaneConverter.Convert)
+							.Where(frame => frame != null)
+							.Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2), ex => { throw new Exception("Render error.", ex); });
+						_activeSources.Add(disposable);
+						if (converterSource != null) {
+							// for pre-recorded animations, a converter can become source.
+							Logger.Info("Added converter as additional colored gray 4 source.");
+							_activeSources.Add(converterSource.GetColoredGray4Frames().Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2)));
 						}
 						continue;
 					}
@@ -410,7 +443,9 @@ namespace LibDmd
 		Gray2,
 		Gray4,
 		Rgb24,
-		Bitmap
+		Bitmap,
+		ColoredGray2,
+		ColoredGray4
 	}
 
 	/// <summary>

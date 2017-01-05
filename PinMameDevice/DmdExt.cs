@@ -273,6 +273,7 @@ namespace PinMameDevice
 			// ReSharper disable once ForCanBeConvertedToForeach
 			for (var i = 0; i < renderers.Count; i++) {
 				var rgb24Renderer = renderers[i] as IRgb24Destination;
+				var coloredGray4Renderer = renderers[i] as IColoredGray4Destination;
 				if (rgb24Renderer == null) {
 					Logger.Info("No coloring for non-RGB destination {0}", renderers[i].Name);
 					continue;
