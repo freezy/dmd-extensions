@@ -39,7 +39,7 @@ namespace LibDmd.Converter
 	/// unsichtbarä) Datä vo VPM wiitr, das heisst dass Palettäwächsu odr sogar
 	/// nii Animazionä chend losgah.
 	/// </remarks>
-	public abstract class AbstractColorizer : AbstractSource, IRgb24Source, IColoredGray4Source, IColoredGray2Source
+	public abstract class AbstractColorizer : AbstractSource
 	{
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }

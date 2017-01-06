@@ -20,6 +20,7 @@ namespace LibDmd.Output.FileOutput
 		public string OutputFolder { get; set; }
 
 		public string Name { get; } = "File Writer";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
 		public bool IsAvailable { get; } = true;
 
 		private int _counter;

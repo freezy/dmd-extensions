@@ -37,8 +37,8 @@ namespace PinMameDevice
 		private static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly Configuration _config = new Configuration();
-		private readonly PassthroughSource _source = new PassthroughSource();
-		private readonly PassthroughSource _animationSource = new PassthroughSource();
+		private readonly PassthroughSource _source = new PassthroughSource(RenderBitLength.Gray4);
+		private readonly PassthroughSource _animationSource = new PassthroughSource(RenderBitLength.ColoredGray4);
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
@@ -256,8 +256,6 @@ namespace PinMameDevice
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray2Colorizer,
-				PlaneConverter = _coloredGray2Colorizer,
-				RenderAs = RenderBitLength.Gray2,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically =  _config.Global.FlipVertically
@@ -266,8 +264,6 @@ namespace PinMameDevice
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray4Colorizer,
-				PlaneConverter = _coloredGray4Colorizer,
-				RenderAs = RenderBitLength.Gray4,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically =  _config.Global.FlipVertically
@@ -275,7 +271,6 @@ namespace PinMameDevice
 			_graphs.Add(new RenderGraph {
 				Source = _source,
 				Destinations = renderers,
-				RenderAs = RenderBitLength.Rgb24,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically =  _config.Global.FlipVertically
@@ -285,7 +280,6 @@ namespace PinMameDevice
 			_graphs.Add(new RenderGraph {
 				Source = _animationSource,
 				Destinations = renderers,
-				RenderAs = RenderBitLength.Gray2,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically =  _config.Global.FlipVertically
@@ -293,7 +287,6 @@ namespace PinMameDevice
 			_graphs.Add(new RenderGraph {
 				Source = _animationSource,
 				Destinations = renderers,
-				RenderAs = RenderBitLength.Gray4,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically =  _config.Global.FlipVertically
@@ -303,11 +296,6 @@ namespace PinMameDevice
 			for (var i = 0; i < renderers.Count; i++) {
 				var rgb24Renderer = renderers[i] as IRgb24Destination;
 
-				if (_coloredGray2Colorizer != null) {
-					_coloredGray2Colorizer.Gray4Source = _animationSource.FramesColoredGray4;
-					_coloredGray2Colorizer.Rgb24FallbackSource = _animationSource.FramesRgb24;
-				}
-				
 				if (rgb24Renderer == null) {
 					Logger.Info("No coloring for non-RGB destination {0}", renderers[i].Name);
 					continue;

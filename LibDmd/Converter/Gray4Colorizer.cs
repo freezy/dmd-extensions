@@ -2,6 +2,7 @@
 using System.Collections;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Input;
 
 namespace LibDmd.Converter
 {
@@ -13,27 +14,27 @@ namespace LibDmd.Converter
 	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
 	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
 	/// </remarks>
-	public class Gray4Colorizer : AbstractColorizer, IConverter<byte[]>
+	public class Gray4Colorizer : AbstractColorizer, IConverter, IRgb24Source
 	{
 		public override string Name { get; } = "Gray4-Colorizer";
 		protected override int BitLength { get; } = 4;
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray4;
 		public RenderBitLength From { get; } = RenderBitLength.Gray4;
-		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
 		public Gray4Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
 		{
 		}
 
-		public byte[] Convert(byte[] frame)
+		public void Convert(byte[] frame)
 		{
 			var planes = HashFrame(frame);
 			if (planes == null) {
-				return null;
+				return;
 			}
 
 			// Faus eppis zrugg cho isch timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(BitLength), ColoredFrame);
-			return ColoredFrame;
+			Rgb24AnimationFrames.OnNext(ColoredFrame);
 		}
 
 		/// <summary>

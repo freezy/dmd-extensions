@@ -57,7 +57,6 @@ namespace DmdExt.Play
 					Source = frameSource,
 					//Processors = new List<AbstractProcessor> { transformationProcessor },
 					Destinations = renderers,
-					RenderAs = _options.RenderAs,
 					Resize = _options.Resize,
 					FlipHorizontally = _options.FlipHorizontally,
 					FlipVertically = _options.FlipVertically

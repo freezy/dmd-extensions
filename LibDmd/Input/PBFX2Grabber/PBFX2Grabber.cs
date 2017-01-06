@@ -25,9 +25,10 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
+	public class PBFX2Grabber : AbstractSource, IGray2Source, IGray4Source, IBitmapSource
 	{
 		public override string Name { get; } = "Pinball FX2";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

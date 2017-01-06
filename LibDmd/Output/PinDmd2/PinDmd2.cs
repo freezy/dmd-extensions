@@ -10,9 +10,10 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : IGray2Destination, IGray4Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
+	public class PinDmd2 : IGray2Destination, IGray4Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v2";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray4;
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;
@@ -91,11 +92,6 @@ namespace LibDmd.Output.PinDmd2
 				usbDevice.ClaimInterface(0);
 			}
 			IsAvailable = true;
-		}
-
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			RenderGray4(ImageUtil.ConvertToGray4(bmp));
 		}
 
 		public void RenderGray2(byte[] frame)

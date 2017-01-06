@@ -14,9 +14,10 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
+	public class PinDmd3 : IGray2Destination, IGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Rgb24;
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;
@@ -163,19 +164,6 @@ namespace LibDmd.Output.PinDmd3
 				}
 			}
 			return false;
-		}
-
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			// copy bmp to rgb24 buffer
-			ImageUtil.ConvertToRgb24(bmp, _frameBufferRgb24, 1);
-
-			// send frame buffer to device
-			RenderRaw(_frameBufferRgb24);
 		}
 
 		public void RenderGray2(byte[] frame)

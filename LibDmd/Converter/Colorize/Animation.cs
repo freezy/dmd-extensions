@@ -106,12 +106,11 @@ namespace LibDmd.Converter.Colorize
 		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
 		/// uisgäh, abr etz aus Bitplanes.
 		/// </summary>
-		/// <param name="gray2Source">Wenn meglich gahts da druif</param>
-		/// <param name="gray4Source">Wenns viärbittig isch, de wird dä zersch probiärt</param>
-		/// <param name="rgb24Source">Wenns viärbittig isch de isch das s Backup</param>
+		/// <param name="coloredGray2Source">Wenn meglich gahts da druif</param>
+		/// <param name="coloredGray4Source">Wenns viärbittig isch, de wird dä zersch probiärt</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
 		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		public void Start(Subject<Tuple<byte[][], Color[]>> gray2Source, Subject<Tuple<byte[][], Color[]>> gray4Source, Subject<byte[]> rgb24Source, BehaviorSubject<Palette> palette, Action completed = null)
+		public void Start(Subject<Tuple<byte[][], Color[]>> coloredGray2Source, Subject<Tuple<byte[][], Color[]>> coloredGray4Source, BehaviorSubject<Palette> palette, Action completed = null)
 		{
 			Logger.Info("[fsq] Starting colored gray4 animation of {0} frames...", _frames.Length);
 			IsRunning = true;
@@ -119,20 +118,11 @@ namespace LibDmd.Converter.Colorize
 			_animation = _frames.ToObservable()
 				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
 				.Subscribe(frame => {
-
-					// Wenn ä zwäibit-Queuä vorhandä isch und s Frame ai 2 Bit isch, de los.
-					if (frame.BitLength == 2 && gray2Source != null) {
-						gray2Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
-
-					// Wenns Frame abr viärbittig isch und ä viärbit-Queueä da isch de ai guät
-					} else if (frame.BitLength == 4 && gray4Source != null) {
-						gray4Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
-
-					// Und hiä ischs Backup wenner käi viärbit cha abr drfir RGB24.
+					if (frame.BitLength == 2) {
+						coloredGray2Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
 					} else {
-						rgb24Source?.OnNext(ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)));
+						coloredGray4Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
 					}
-
 				}, () => {
 
 					// nu uifs letschti biud wartä bis mer fertig sind

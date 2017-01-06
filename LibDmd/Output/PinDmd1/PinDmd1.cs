@@ -9,9 +9,10 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : IRawOutput, IGray2Destination, IBitmapDestination, IFixedSizeDestination
+	public class PinDmd1 : IRawOutput, IGray2Destination, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v1";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray2;
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;
@@ -136,11 +137,6 @@ namespace LibDmd.Output.PinDmd1
 
 			// send buffer to device
 			RenderRaw(_frameBuffer);
-		}
-
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			RenderGray2(ImageUtil.ConvertToGray2(bmp));
 		}
 
 		public void RenderRaw(byte[] data)

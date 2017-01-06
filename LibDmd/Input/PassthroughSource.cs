@@ -10,9 +10,10 @@ namespace LibDmd.Input
 	/// <summary>
 	/// An input source just contains observables with all subjects.
 	/// </summary>
-	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IColoredGray2Source, IColoredGray4Source
+	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IColoredGray2Source, IColoredGray4Source, IBitmapSource
 	{
 		public override string Name { get; } = "Passthrough Source";
+		public RenderBitLength NativeFormat { get; set; }
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -27,9 +28,9 @@ namespace LibDmd.Input
 		public readonly Subject<Tuple<byte[][], Color[]>> FramesColoredGray4 = new Subject<Tuple<byte[][], Color[]>>();
 		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
 
-		public IObservable<BitmapSource> GetFrames()
+		public PassthroughSource(RenderBitLength nativeFormat)
 		{
-			return FramesBitmap;
+			NativeFormat = nativeFormat;
 		}
 
 		public IObservable<byte[]> GetGray2Frames()
@@ -55,6 +56,11 @@ namespace LibDmd.Input
 		public IObservable<byte[]> GetRgb24Frames()
 		{
 			return FramesRgb24;
+		}
+
+		public IObservable<BitmapSource> GetBitmapFrames()
+		{
+			return FramesBitmap;
 		}
 	}
 }

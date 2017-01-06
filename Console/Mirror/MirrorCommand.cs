@@ -31,7 +31,6 @@ namespace DmdExt.Mirror
 			// create graph with renderers
 			_graph = new RenderGraph {
 				Destinations = GetRenderers(_options),
-				RenderAs = _options.RenderAs,
 				Resize = _options.Resize,
 				FlipHorizontally = _options.FlipHorizontally,
 				FlipVertically = _options.FlipVertically

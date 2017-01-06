@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Input;
 
 namespace LibDmd.Converter
 {
@@ -14,23 +15,23 @@ namespace LibDmd.Converter
 	/// Je nach <see cref="Mapping.Mode"/> wird d Animazion komplett
 	/// abgschpiut oder numä mit Graidatä ergänzt.
 	/// </remarks>
-	public class Gray2Colorizer : AbstractColorizer, IConverter<byte[]>
+	public class Gray2Colorizer : AbstractColorizer, IConverter, IRgb24Source
 	{
 		public override string Name { get; } = "Gray2-Colorizer";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray2;
 		protected override int BitLength { get; } = 2;
 
 		public RenderBitLength From { get; } = RenderBitLength.Gray2;
-		public RenderBitLength To { get; } = RenderBitLength.Rgb24;
 
 		public Gray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
 		{
 		}
 
-		public byte[] Convert(byte[] frame)
+		public void Convert(byte[] frame)
 		{
 			var planes = HashFrame(frame);
 			if (planes == null) {
-				return null;
+				return;
 			}
 
 			// Wenns erwiitered wordänisch, de dimmers Frame ersetzä
@@ -40,7 +41,7 @@ namespace LibDmd.Converter
 
 			// Faus eppis zrugg cho isch timmr eifach iifärbä.
 			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(planes.Length), ColoredFrame);
-			return ColoredFrame;
+			Rgb24AnimationFrames.OnNext(ColoredFrame);
 		}
 
 		/// <summary>

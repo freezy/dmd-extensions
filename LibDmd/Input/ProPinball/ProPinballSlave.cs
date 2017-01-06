@@ -26,6 +26,7 @@ namespace LibDmd.Input.ProPinball
 	public class ProPinballSlave : AbstractSource, IGray4Source, IBitmapSource
 	{
 		public override string Name { get; } = "Pro Pinball";
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.ColoredGray4;
 
 		public Color Color { get; set; } = Color.FromRgb(255, 191, 0);
 

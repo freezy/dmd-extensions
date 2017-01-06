@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using NLog;
 
 namespace LibDmd.Common
@@ -206,33 +207,24 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Converts a 2-bit frame to a 4-bit frame for PIN2DMD.
+		/// Converts a 2-bit frame to a 4-bit frame or vice versa
 		/// </summary>
-		/// 
-		/// <remarks>
-		/// It maps the 2-bit values to 0,1,4,15 within the 4-bit result.
-		/// </remarks>
-		/// <param name="frame2Bit">Top left bottom right pixels with values between 0 and 3</param>
+		/// <param name="srcFrame">Top left bottom right pixels with values between 0 and 3</param>
+		/// <param name="mapping">A list of values assigned to each of the pixels.</param>
 		/// <returns>Top left bottom right pixels with values between 0 and 15</returns>
-		public static byte[] Map2To4(byte[] frame2Bit)
+		public static byte[] ConvertGrayToGray(byte[] srcFrame, byte[] mapping)
 		{
-			var frame4Bit = new byte[frame2Bit.Length];
-			for (var i = 0; i < frame4Bit.Length; i++) {
-				switch (frame2Bit[i]) 
-				{
-					case 0x0:
-					case 0x01:
-						frame4Bit[i] = frame2Bit[i];
-						break;
-					case 0x02:
-						frame4Bit[i] = 0x04;
-						break;
-					case 0x03:
-						frame4Bit[i] = 0x0F;
-						break;
-				}
+			var destFrame = new byte[srcFrame.Length];
+			for (var i = 0; i < destFrame.Length; i++) {
+				destFrame[i] = mapping[destFrame[i]];
 			}
-			return frame4Bit;
+			return destFrame;
+		}
+
+		public static byte[] ConvertToRgb24(int width, int height, byte[][] planes, Color[] palette)
+		{
+			var frame = Join(width, height, planes);
+			return ColorUtil.ColorizeFrame(width, height, frame, palette);
 		}
 
 		/// <summary>

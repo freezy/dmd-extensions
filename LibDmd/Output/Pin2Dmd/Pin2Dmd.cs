@@ -12,10 +12,11 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : IGray2Destination, IGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.ColoredGray4;
 
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get; private set; } = 32;
@@ -120,26 +121,10 @@ namespace LibDmd.Output.Pin2Dmd
 			IsAvailable = true;
 		}
 
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			// convert to rgb24
-			var frame = ImageUtil.ConvertToRgb24(bmp);
-
-			// split into sub frames
-			FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
-
-			// send frame buffer to device
-			RenderRaw(_frameBufferRgb24);
-		}
-
 		public void RenderGray2(byte[] frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.Map2To4(frame));
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 		public void RenderGray4(byte[] frame)

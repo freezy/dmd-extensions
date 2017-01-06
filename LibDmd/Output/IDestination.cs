@@ -7,12 +7,18 @@ namespace LibDmd.Output
 	/// A destination where frames are rendered, like a physical display or
 	/// some sort of virtual DMD.
 	/// </summary>
+	/// <remarks>
+	/// When implementing a destination, make sure to only implement the "native"
+	/// bit lengths. Convertion if necessary is done in the render graph directly.
+	/// </remarks>
 	public interface IDestination : IDisposable
 	{
 		/// <summary>
 		/// A human-friendly name for the device
 		/// </summary>
 		string Name { get; }
+
+		RenderBitLength NativeFormat { get; }
 
 		/// <summary>
 		/// If true, destination is available and can be used as target.

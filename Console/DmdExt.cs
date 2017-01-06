@@ -145,6 +145,9 @@ namespace DmdExt
 			} catch (IncompatibleRenderer e) {
 				Logger.Error(e.Message);
 
+			} catch (IncompatibleSourceException e) {
+				Logger.Error(e.Message);
+
 			} finally {
 				Process.GetCurrentProcess().Kill();
 			}

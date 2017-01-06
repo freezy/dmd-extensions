@@ -41,6 +41,33 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts an RGB24 frame to a 2-bit grayscale array.
+		/// </summary>
+		/// <param name="width">Width in pixels</param>
+		/// <param name="height">Height in pixels</param>
+		/// <param name="frameRgb24">RGB24 frame, top left to bottom right, three bytes per pixel with values between 0 and 255</param>
+		/// <param name="numColors">Number of gray tones. 4 for 2 bit, 16 for 4 bit</param>
+		/// <returns>Gray2 frame, top left to bottom right, one byte per pixel with values between 0 and 3</returns>
+		public static byte[] ConvertToGray(int width, int height, byte[] frameRgb24, int numColors)
+		{
+			var frame = new byte[width * height];
+			var pos = 0;
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width * 3; x += 3) {
+					var rgbPos = y * width * 3 + x;
+
+					// convert to HSL
+					double hue;
+					double saturation;
+					double luminosity;
+					ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out hue, out saturation, out luminosity);
+					frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
+				}
+			}
+			return frame;
+		}
+
+		/// <summary>
 		/// Converts a bitmap to a 4-bit grayscale array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>

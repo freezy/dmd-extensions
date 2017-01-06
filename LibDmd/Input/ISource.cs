@@ -14,6 +14,10 @@ namespace LibDmd.Input
 	/// Since we want a contineous flow of frames, the method to override
 	/// returns an observable. Note that the producer decides on the frequency
 	/// in which frames are delivered to the consumer.
+	/// 
+	/// When implementing a source, make sure to only implement the "native"
+	/// bit lengths of the source. Convertion if necessary is done in the render
+	/// graph directly.
 	/// </remarks>
 	public interface ISource
 	{
@@ -21,6 +25,8 @@ namespace LibDmd.Input
 		/// A display name for the source
 		/// </summary>
 		string Name { get; }
+
+		RenderBitLength NativeFormat { get; }
 
 		/// <summary>
 		/// The size of the source. Can change any time.
