@@ -12,7 +12,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IGray2Destination, IGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
@@ -147,6 +147,30 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferRgb24);
+		}
+
+		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		{
+			// TODO only set when changed
+			SetPalette(palette);
+
+			// copy to buffer
+			FrameUtil.Copy(planes, _frameBufferGray4, 4);
+
+			// send frame buffer to device
+			RenderRaw(_frameBufferGray4);
+
+		}
+
+		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		{
+			// TODO only set when changed
+			SetPalette(palette);
+
+			var frame = FrameUtil.Join(DmdWidth, DmdHeight, planes);
+
+			// send frame buffer to device
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 		public void RenderRaw(byte[] frame)

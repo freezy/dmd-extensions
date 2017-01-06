@@ -242,33 +242,38 @@ namespace PinMameDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-			// miär bruichid äi Render-Graph fir jedi Bitlängi
-			_graphs.Add(new RenderGraph {
-				Name = "2-bit Colored VPM Graph",
-				Source = _source,
-				Destinations = renderers,
-				Converter = _gray2Colorizer,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically =  _config.Global.FlipVertically
-			});
-			_graphs.Add(new RenderGraph {
-				Name = "4-bit Colored VPM Graph",
-				Source = _source,
-				Destinations = renderers,
-				Converter = _gray4Colorizer,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically =  _config.Global.FlipVertically
-			});
-			_graphs.Add(new RenderGraph {
-				Name = "Plain VPM Render Graph",
-				Source = _source,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically =  _config.Global.FlipVertically
-			});
+			if (_gray2Colorizer != null) {
+				_graphs.Add(new RenderGraph {
+					Name = "2-bit Colored VPM Graph",
+					Source = _source,
+					Destinations = renderers,
+					Converter = _gray2Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+			}
+			if (_gray4Colorizer != null) {
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit Colored VPM Graph",
+					Source = _source,
+					Destinations = renderers,
+					Converter = _gray4Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+			}
+			if (_gray2Colorizer == null && _gray4Colorizer == null) {
+				_graphs.Add(new RenderGraph {
+					Name = "Plain VPM Render Graph",
+					Source = _source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+			}
 
 			// ReSharper disable once ForCanBeConvertedToForeach
 			for (var i = 0; i < renderers.Count; i++) {
