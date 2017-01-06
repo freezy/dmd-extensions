@@ -52,9 +52,9 @@ namespace LibDmd.Converter
 
 		protected Animation CurrentAnimation;
 		protected Animation CurrentEnhancer;
-		protected readonly Subject<byte[]> Rgb24AnimationFrames = new Subject<byte[]>();
 		protected readonly Subject<Tuple<byte[][], Color[]>> ColoredGray2AnimationFrames = new Subject<Tuple<byte[][], Color[]>>();
 		protected readonly Subject<Tuple<byte[][], Color[]>> ColoredGray4AnimationFrames = new Subject<Tuple<byte[][], Color[]>>();
+		protected readonly Subject<byte[]> Rgb24AnimationFrames = new Subject<byte[]>();
 		protected bool IsAnimationRunning => CurrentAnimation != null && CurrentAnimation.IsRunning;
 		protected bool IsEnhancerRunning => CurrentEnhancer != null && CurrentEnhancer.IsRunning;
 		protected int NumColors => (int)Math.Pow(2, BitLength);

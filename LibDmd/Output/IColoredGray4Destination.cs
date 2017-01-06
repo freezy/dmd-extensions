@@ -7,7 +7,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render 4-bit frames as colored bit planes.
 	/// </summary>
-	public interface IColoredGray4Destination : IDestination
+	public interface IColoredGray4Destination : IRgb24Destination
 	{
 		/// <summary>
 		/// Renders a colored frame in 4 bits.

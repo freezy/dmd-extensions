@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
@@ -16,6 +17,11 @@ namespace LibDmd.Converter
 		public new RenderBitLength From { get; } = RenderBitLength.Gray4;
 		public new RenderBitLength To { get; } = RenderBitLength.ColoredGray4;
 
+		/// <summary>
+		/// Es cha ja si, dass än Animazion 2-bit Frames het, de bruichr mr dä
+		/// </summary>
+		public Subject<Tuple<byte[][], Color[]>> Gray2Source { get; set; }
+
 		public ColoredGray4Colorizer(int width, int height, Coloring coloring, Animation[] animations = null)
 			: base(width, height, coloring, animations)
 		{
@@ -28,7 +34,7 @@ namespace LibDmd.Converter
 		}
 
 		protected override void StartAnimation() {
-			CurrentAnimation.Start(ColoredGray4AnimationFrames, Palette, () => LastChecksum = 0x0);
+			CurrentAnimation.Start(Gray2Source, ColoredGray4AnimationFrames, null, Palette, () => LastChecksum = 0x0);
 		}
 	}
 }

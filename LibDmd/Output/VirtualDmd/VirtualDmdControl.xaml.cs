@@ -12,7 +12,7 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IColoredGray4Destination, IBitmapDestination, IResizableDestination
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IColoredGray2Destination, IColoredGray4Destination, IBitmapDestination, IResizableDestination
 	{
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
@@ -72,6 +72,13 @@ namespace LibDmd.Output.VirtualDmd
 			}
 			RenderBitmap(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
 		}
+
+		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		{
+			SetPalette(palette);
+			RenderGray2(FrameUtil.Join(DmdWidth, DmdHeight, planes));
+		}
+
 
 		public void RenderColoredGray4(byte[][] planes, Color[] palette)
 		{

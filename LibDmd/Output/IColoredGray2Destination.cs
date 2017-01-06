@@ -7,7 +7,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render 2-bit frames as colored bit planes.
 	/// </summary>
-	public interface IColoredGray2Destination : IDestination
+	public interface IColoredGray2Destination : IRgb24Destination
 	{
 		/// <summary>
 		/// Renders a colored frame in 2 bits.

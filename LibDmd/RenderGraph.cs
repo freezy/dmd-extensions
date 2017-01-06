@@ -188,15 +188,50 @@ namespace LibDmd
 			IsRendering = true;
 
 			try {
+				var sourceGray2 = Source as IGray2Source;
+				var sourceGray4 = Source as IGray4Source;
 
 				foreach (var dest in Destinations) 
 				{
 					var destFixedSize = dest as IFixedSizeDestination;
 					var destResizable = dest as IResizableDestination;
 
+					// check for 2->colored-2-bit converter
+					if (PlaneConverter?.From == RenderBitLength.Gray2 && PlaneConverter.To == RenderBitLength.ColoredGray2) {
+						var destColoredGray2 = dest as IColoredGray2Destination;
+						var destColoredGray4 = dest as IColoredGray4Destination;
+						var destRgb24 = dest as IRgb24Destination;
+						var converterSourceGray2 = PlaneConverter as IColoredGray2Source;
+						var converterSourceGray4 = PlaneConverter as IColoredGray4Source;
+						var converterSourceRgb24 = PlaneConverter as IRgb24Source;
+						AssertCompatibility(Source, sourceGray2, dest, destColoredGray2, "2-bit", "colored 2-bit");
+						Logger.Info("Sending 2-bit frames from \"{0}\" as colored 2-bit frames to \"{1}\"", Source.Name, dest.Name);
+						var disposable = sourceGray2.GetGray2Frames()
+							.Select(PlaneConverter.Convert)
+							.Where(frame => frame != null) // TODO tranform
+							.Subscribe(x => destColoredGray2.RenderColoredGray2(x.Item1, x.Item2), ex => { throw new Exception("Render error.", ex); });
+						_activeSources.Add(disposable);
+						
+						if (converterSourceGray2 != null) {
+							// for pre-recorded animations, a converter can become source.
+							Logger.Info("Added 2->colored-2-bit converter as additional colored gray 2 source.");
+							_activeSources.Add(converterSourceGray2.GetColoredGray2Frames().Subscribe(x => destColoredGray2.RenderColoredGray2(x.Item1, x.Item2)));
+						}
+						// for this particular case, it can also become a 4-bit source when frames are enhanced
+						if (converterSourceGray4 != null && destColoredGray4 != null) {
+							Logger.Info("Added 2->colored-2-bit converter as additional colored gray 4 source.");
+							_activeSources.Add(converterSourceGray4.GetColoredGray4Frames().Subscribe(x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2)));
+
+						} else if (converterSourceRgb24 != null && destRgb24 != null) {
+							// or, if the display doesn't support that, an rgb24 source
+							Logger.Info("Added 2->colored-2-bit converter as additional RGB24 fallback source.");
+							_activeSources.Add(converterSourceRgb24.GetRgb24Frames().Subscribe(destRgb24.RenderRgb24));
+						}
+						continue;
+					}
+
 					// check for 2->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray2 && Converter.To == RenderBitLength.Rgb24) {
-						var sourceGray2 = Source as IGray2Source;
 						var destRgb24 = dest as IRgb24Destination;
 						var converterSource = Converter as IRgb24Source;
 						AssertCompatibility(Source, sourceGray2, dest, destRgb24, "2-bit", "24-bit");
@@ -217,9 +252,8 @@ namespace LibDmd
 
 					// check for 4->colored-4-bit converter
 					if (PlaneConverter?.From == RenderBitLength.Gray4 && PlaneConverter.To == RenderBitLength.ColoredGray4) {
-						var sourceGray4 = Source as IGray4Source;
 						var destColoredGray4 = dest as IColoredGray4Destination;
-						var converterSource = Converter as IColoredGray4Source;
+						var converterSource = PlaneConverter as IColoredGray4Source;
 						AssertCompatibility(Source, sourceGray4, dest, destColoredGray4, "4-bit", "colored 4-bit");
 						Logger.Info("Sending 4-bit frames from \"{0}\" as colored 4-bit frames to \"{1}\"", Source.Name, dest.Name);
 						var disposable = sourceGray4.GetGray4Frames()
@@ -237,7 +271,6 @@ namespace LibDmd
 					
 					// check for 4->24 bit converter
 					if (Converter?.From == RenderBitLength.Gray4 && Converter.To == RenderBitLength.Rgb24) {
-						var sourceGray4 = Source as IGray4Source;
 						var destRgb24 = dest as IRgb24Destination;
 						var converterSource = Converter as IRgb24Source;
 						AssertCompatibility(Source, sourceGray4, dest, destRgb24, "4-bit", "24-bit");
@@ -266,7 +299,6 @@ namespace LibDmd
 					switch (RenderAs)
 					{
 						case RenderBitLength.Gray2: {
-							var sourceGray2 = Source as IGray2Source;
 							var destGray2 = dest as IGray2Destination;
 							AssertCompatibility(Source, sourceGray2, dest, destGray2, "2-bit");
 							Logger.Info("Sending unprocessed 2-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);
@@ -278,7 +310,6 @@ namespace LibDmd
 							break;
 						}
 						case RenderBitLength.Gray4: {
-							var sourceGray4 = Source as IGray4Source;
 							var destGray4 = dest as IGray4Destination;
 							AssertCompatibility(Source, sourceGray4, dest, destGray4, "4-bit");
 							Logger.Info("Sending unprocessed 4-bit data from \"{0}\" to \"{1}\"", Source.Name, dest.Name);

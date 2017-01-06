@@ -38,6 +38,7 @@ namespace PinMameDevice
 
 		private readonly Configuration _config = new Configuration();
 		private readonly PassthroughSource _source = new PassthroughSource();
+		private readonly PassthroughSource _animationSource = new PassthroughSource();
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
@@ -51,7 +52,7 @@ namespace PinMameDevice
 		private Color[] _palette;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
-		//private ColoredGray2Colorizer _coloredGray2Colorizer;
+		private ColoredGray2Colorizer _coloredGray2Colorizer;
 		private ColoredGray4Colorizer _coloredGray4Colorizer;
 
 		// Wärchziig
@@ -81,6 +82,7 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
+			_coloredGray2Colorizer = null;
 			_coloredGray4Colorizer = null;
 
 			if (_config.Global.Colorize && _altcolorPath != null) {
@@ -104,6 +106,7 @@ namespace PinMameDevice
 						}
 						_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
 						_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
+						_coloredGray2Colorizer = new ColoredGray2Colorizer(Width, Height, coloring, animations);
 						_coloredGray4Colorizer = new ColoredGray4Colorizer(Width, Height, coloring, animations);
 
 					} catch (Exception e) {
@@ -141,6 +144,7 @@ namespace PinMameDevice
 		public void LoadPalette(uint num)
 		{
 			_gray4Colorizer?.LoadPalette(num);
+			_coloredGray2Colorizer?.LoadPalette(num);
 			_coloredGray4Colorizer?.LoadPalette(num);
 		}
 
@@ -252,6 +256,7 @@ namespace PinMameDevice
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray2Colorizer,
+				PlaneConverter = _coloredGray2Colorizer,
 				RenderAs = RenderBitLength.Gray2,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -276,10 +281,33 @@ namespace PinMameDevice
 				FlipVertically =  _config.Global.FlipVertically
 			});
 
+			// und du nu einisch zwe fird Animazionä
+			_graphs.Add(new RenderGraph {
+				Source = _animationSource,
+				Destinations = renderers,
+				RenderAs = RenderBitLength.Gray2,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically =  _config.Global.FlipVertically
+			});
+			_graphs.Add(new RenderGraph {
+				Source = _animationSource,
+				Destinations = renderers,
+				RenderAs = RenderBitLength.Gray4,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically =  _config.Global.FlipVertically
+			});
+
 			// ReSharper disable once ForCanBeConvertedToForeach
 			for (var i = 0; i < renderers.Count; i++) {
 				var rgb24Renderer = renderers[i] as IRgb24Destination;
-				var coloredGray4Renderer = renderers[i] as IColoredGray4Destination;
+
+				if (_coloredGray2Colorizer != null) {
+					_coloredGray2Colorizer.Gray4Source = _animationSource.FramesColoredGray4;
+					_coloredGray2Colorizer.Rgb24FallbackSource = _animationSource.FramesRgb24;
+				}
+				
 				if (rgb24Renderer == null) {
 					Logger.Info("No coloring for non-RGB destination {0}", renderers[i].Name);
 					continue;
