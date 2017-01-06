@@ -20,36 +20,35 @@ using ResizeMode = LibDmd.Input.ResizeMode;
 namespace LibDmd
 {
 	/// <summary>
-	/// A primitive render pipeline which consists of one source and any number
-	/// of processors and destinations.
+	/// A render pipeline. This the core of LibDmd.
 	/// 
-	/// Every frame produced by the source goes through all processors and is then
-	/// dispatched to all destinations.
+	/// Every render graph has one <see cref="ISource"/> and one or more 
+	/// <see cref="IDestination"/>. Frames produced by the source are 
+	/// dispatched to all destinations. Sources and destinations can be re-used
+	/// in other graphs.
+	/// 
+	/// It's one of the graph's duties to figure out in which format the frames
+	/// should be retrieved and sent to the destinations in the most efficient
+	/// way. It does also the conversion between non-matching source and
+	/// destination. 
+	/// 
+	/// A render graph can also contain an <see cref="IConverter"/>. These are
+	/// classes that for a defined input format produce different output 
+	/// formats. An example would be a 2-bit source that gets converted to
+	/// RGB24, or, to colored 2- and 4-bit.
 	/// </summary>
-	/// 
-	/// <remarks>
-	/// Sources, processors and destinations can be re-used in other graphs. It 
-	/// should even be possible to have them running at the same time, e.g. a 
-	/// graph withe same source and different processors to different outputs.
-	/// </remarks>
 	public class RenderGraph : IRenderer
 	{
+		/// <summary>
+		/// The render graph's name, mainly for logging purpose.
+		/// </summary>
+		public string Name { get; set; } = "Render Graph";
+
 		/// <summary>
 		/// A source is something that produces frames at an arbitrary resolution with
 		/// an arbitrary framerate.
 		/// </summary>
 		public ISource Source { get; set; }
-
-		/// <summary>
-		/// A processor is something that receives a frame, does some processing
-		/// on it, and returns the processed frame.
-		/// 
-		/// All frames from the source are passed through all processors before
-		/// the reach their destinations.
-		/// 
-		/// Examples of processors are convert to gray scale or resize.
-		/// </summary>
-		public List<AbstractProcessor> Processors { get; set; }
 
 		/// <summary>
 		/// Destinations are output devices that can render frames.
@@ -94,7 +93,7 @@ namespace LibDmd
 		/// </summary>
 		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
-		public Color[] Palette { get; set; } = { Colors.OrangeRed, Colors.Black };
+		public Color[] Palette { get; set; } = { Colors.Black, Colors.OrangeRed };
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
@@ -107,7 +106,7 @@ namespace LibDmd
 		/// <param name="onCompleted">If set, this action is executed once the bitmap is displayed.</param>
 		public void Render(BitmapSource bmp, Action onCompleted = null)
 		{
-			var source = new PassthroughSource(RenderBitLength.Bitmap);
+			var source = new PassthroughSource("Bitmap Source", RenderBitLength.Bitmap);
 			Source = source;
 			StartRendering(onCompleted);
 			source.FramesBitmap.OnNext(bmp);
@@ -146,14 +145,12 @@ namespace LibDmd
 			}
 			IsRendering = true;
 
-
 			try {
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
-
+				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 				foreach (var dest in Destinations) 
 				{
-					var destFixedSize = dest as IFixedSizeDestination;
 					var destResizable = dest as IResizableDestination;
 
 					var destColoredGray2 = dest as IColoredGray2Destination;
@@ -184,6 +181,8 @@ namespace LibDmd
 						var coloredGray4SourceConverter = Converter as IColoredGray4Source;
 						var rgb24SourceConverter = Converter as IRgb24Source;
 
+						Logger.Info("Connecting converter sources for {0}...", dest.Name);
+
 						// send frames to converter
 						switch (Converter.From) {
 							case RenderBitLength.Gray2:
@@ -206,12 +205,12 @@ namespace LibDmd
 						if (coloredGray2SourceConverter != null) {
 							// if destination can render colored gray-2 frames...
 							if (destColoredGray2 != null) {
-								Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
+								//Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
 								Connect(coloredGray2SourceConverter, destColoredGray2, RenderBitLength.ColoredGray2, RenderBitLength.ColoredGray2);
 
 							// otherwise, try to convert to rgb24
 							} else if (destRgb24 != null) {
-								Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
+								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
 								Connect(coloredGray2SourceConverter, destRgb24, RenderBitLength.ColoredGray2, RenderBitLength.Rgb24);
 								
 							} else {
@@ -223,12 +222,12 @@ namespace LibDmd
 						if (coloredGray4SourceConverter != null) {
 							// if destination can render colored gray-4 frames...
 							if (destColoredGray4 != null) {
-								Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
+								//Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
 								Connect(coloredGray4SourceConverter, destColoredGray4, RenderBitLength.ColoredGray4, RenderBitLength.ColoredGray4);
 
 							// otherwise, convert to rgb24
 							} else if (destRgb24 != null) {
-								Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
+								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
 								Connect(coloredGray4SourceConverter, destRgb24, RenderBitLength.ColoredGray4, RenderBitLength.Rgb24);
 
 							} else {
@@ -277,11 +276,13 @@ namespace LibDmd
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
 
+					Logger.Info("Connecting source for {0}...", dest.Name);
+
 					// native -> native
-					if (Source.NativeFormat == dest.NativeFormat) {
+					/*if (Source.NativeFormat == dest.NativeFormat) {
 						Connect(Source, dest, Source.NativeFormat, dest.NativeFormat);
 						continue;
-					}
+					}*/
 
 					// gray2 as source:
 					if (sourceGray2 != null) {
@@ -303,7 +304,7 @@ namespace LibDmd
 					}
 
 					// gray4 as source:
-					if (sourceGray2 != null) {
+					if (sourceGray4 != null) {
 						// gray4 -> gray4
 						if (destGray4 != null) {
 							Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Gray4);
@@ -525,7 +526,7 @@ namespace LibDmd
 
 						// gray4 -> gray4
 						case RenderBitLength.Gray4:
-							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
+							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
 							_activeSources.Add(sourceGray4.GetGray4Frames()
 								.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destGray4.RenderGray4));

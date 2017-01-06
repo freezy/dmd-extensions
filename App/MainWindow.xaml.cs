@@ -128,17 +128,17 @@ namespace App
 			_screenGraph = new RenderGraph {
 				Source = grabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { transformationProcessor, monochromeProcessor }
+				//Processors = new List<AbstractProcessor> { transformationProcessor, monochromeProcessor }
 			};
 			_pbfxGraph = new RenderGraph {
 				Source = _pbfxGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { _pbfxGridProcessor, transformationProcessor, _pbfxShadeProcessor }
+				//Processors = new List<AbstractProcessor> { _pbfxGridProcessor, transformationProcessor, _pbfxShadeProcessor }
 			};
 			_tpaGraph = new RenderGraph {
 				Source = _tpaGrabber,
 				Destinations = renderers,
-				Processors = new List<AbstractProcessor> { transformationProcessor, _tpaShadeProcessor }
+				//Processors = new List<AbstractProcessor> { transformationProcessor, _tpaShadeProcessor }
 			};
 
 			// init grabber window and link it to grabber

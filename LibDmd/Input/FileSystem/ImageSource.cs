@@ -9,7 +9,7 @@ using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
+	public class ImageSource : AbstractSource, IBitmapSource
 	{
 		public override string Name { get; } = "Image Source";
 		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
@@ -21,17 +21,11 @@ namespace LibDmd.Input.FileSystem
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly BehaviorSubject<BitmapSource> _frames;
-		private readonly BehaviorSubject<byte[]> _framesGray2;
-		private readonly BehaviorSubject<byte[]> _framesGray4;
-		private readonly BehaviorSubject<byte[]> _framesRgb24;
 
 		public ImageSource(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
-			_framesGray2 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
-			_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
-			_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToRgb24(bmp));
 		}
 
 		public ImageSource(string fileName)
@@ -48,9 +42,6 @@ namespace LibDmd.Input.FileSystem
 
 				SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 				_frames = new BehaviorSubject<BitmapSource>(bmp);
-				_framesGray2 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
-				_framesGray4 =  new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
-				_framesRgb24 = new BehaviorSubject<byte[]>(ImageUtil.ConvertToRgb24(bmp));
 
 			} catch (UriFormatException) {
 				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");
@@ -68,20 +59,6 @@ namespace LibDmd.Input.FileSystem
 			return _frames;
 		}
 
-		public IObservable<byte[]> GetGray4Frames()
-		{
-			return _framesGray4;
-		}
-
-		public IObservable<byte[]> GetGray2Frames()
-		{
-			return _framesGray2;
-		}
-
-		public IObservable<byte[]> GetRgb24Frames()
-		{
-			return _framesRgb24;
-		}
 	}
 
 	public class WrongFormatException : Exception

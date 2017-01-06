@@ -75,6 +75,7 @@ namespace LibDmd.Converter.Colorize
 		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
 		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
+		[Obsolete("Use the planes one, this is one does convertion which should be done by the render graph.", true)]
 		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette, Action completed = null)
 		{
 			Logger.Info("[fsq] Starting RGB24 animation of {0} frames...", _frames.Length);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 using LibDmd.Input;
@@ -14,9 +15,9 @@ namespace LibDmd.Converter
 	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
 	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
 	/// </remarks>
-	public class Gray4Colorizer : AbstractColorizer, IConverter, IRgb24Source
+	public class Gray4Colorizer : AbstractColorizer, IConverter, IColoredGray2Source, IColoredGray4Source
 	{
-		public override string Name { get; } = "Gray4-Colorizer";
+		public override string Name { get; } = "4 Bit Colorizer";
 		protected override int BitLength { get; } = 4;
 		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray4;
 		public RenderBitLength From { get; } = RenderBitLength.Gray4;
@@ -28,13 +29,9 @@ namespace LibDmd.Converter
 		public void Convert(byte[] frame)
 		{
 			var planes = HashFrame(frame);
-			if (planes == null) {
-				return;
+			if (planes != null) {
+				ColoredGray4AnimationFrames.OnNext(new Tuple<byte[][], Color[]>(planes, Palette.Value.GetColors(BitLength)));
 			}
-
-			// Faus eppis zrugg cho isch timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(BitLength), ColoredFrame);
-			Rgb24AnimationFrames.OnNext(ColoredFrame);
 		}
 
 		/// <summary>
@@ -80,10 +77,6 @@ namespace LibDmd.Converter
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			return IsAnimationRunning ? null : planes;
-		}
-
-		protected override void StartAnimation() {
-			CurrentAnimation.Start(Rgb24AnimationFrames, Palette, () => LastChecksum = 0x0);
 		}
 	}
 }

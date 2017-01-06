@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 using LibDmd.Input;
@@ -15,9 +16,9 @@ namespace LibDmd.Converter
 	/// Je nach <see cref="Mapping.Mode"/> wird d Animazion komplett
 	/// abgschpiut oder numä mit Graidatä ergänzt.
 	/// </remarks>
-	public class Gray2Colorizer : AbstractColorizer, IConverter, IRgb24Source
+	public class Gray2Colorizer : AbstractColorizer, IConverter, IColoredGray2Source, IColoredGray4Source
 	{
-		public override string Name { get; } = "Gray2-Colorizer";
+		public override string Name { get; } = "2 Bit Colorizer";
 		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray2;
 		protected override int BitLength { get; } = 2;
 
@@ -30,18 +31,20 @@ namespace LibDmd.Converter
 		public void Convert(byte[] frame)
 		{
 			var planes = HashFrame(frame);
+
 			if (planes == null) {
 				return;
 			}
 
-			// Wenns erwiitered wordänisch, de dimmers Frame ersetzä
-			if (planes.Length > BitLength) {
-				frame = FrameUtil.Join(Width, Height, planes);
+			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
+			if (planes.Length == BitLength) {
+				ColoredGray2AnimationFrames.OnNext(new Tuple<byte[][], Color[]>(planes, Palette.Value.GetColors(planes.Length)));
 			}
 
-			// Faus eppis zrugg cho isch timmr eifach iifärbä.
-			ColorUtil.ColorizeFrame(Width, Height, frame, Palette.Value.GetColors(planes.Length), ColoredFrame);
-			Rgb24AnimationFrames.OnNext(ColoredFrame);
+			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
+			if (planes.Length == 4) {
+				ColoredGray4AnimationFrames.OnNext(new Tuple<byte[][], Color[]>(planes, Palette.Value.GetColors(planes.Length)));
+			}
 		}
 
 		/// <summary>
@@ -115,10 +118,6 @@ namespace LibDmd.Converter
 				LastChecksum = 0x0;
 			}
 			return planes;
-		}
-
-		protected override void StartAnimation() {
-			CurrentAnimation.Start(Rgb24AnimationFrames, Palette, () => LastChecksum = 0x0);
 		}
 	}
 }

@@ -137,7 +137,7 @@ namespace LibDmd.Converter
 						CurrentAnimation?.Stop();
 						CurrentEnhancer?.Stop();
 						CurrentAnimation = animation;
-						StartAnimation();
+						CurrentAnimation.Start(ColoredGray2AnimationFrames, ColoredGray4AnimationFrames, Palette, () => LastChecksum = 0x0);
 						FrameCounter = 0;
 						LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 					}
@@ -200,12 +200,6 @@ namespace LibDmd.Converter
 				Logger.Warn("[colorize] No palette with index {0} found to load through side channel.", index);
 			}
 		}
-
-		/// <summary>
-		/// Depending on which colorizer output, the animation needs to be started
-		/// differently.
-		/// </summary>
-		protected abstract void StartAnimation();
 
 		public IObservable<byte[]> GetRgb24Frames()
 		{

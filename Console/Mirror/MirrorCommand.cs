@@ -71,11 +71,12 @@ namespace DmdExt.Mirror
 						Intensity = _options.ShadeIntensity,
 						Brightness = _options.ShadeBrightness
 					};
+					/*
 					_graph.Processors = new List<AbstractProcessor> {
 						gridProcessor,
 						//transformationProcessor,
 						shadeProcessor
-					};
+					};*/
 					break;
 				}
 
@@ -88,19 +89,17 @@ namespace DmdExt.Mirror
 						Intensity = 1.9,
 						Brightness = 0
 					};
+					/*
 					_graph.Processors = new List<AbstractProcessor>() {
 						//transformationProcessor,
 						shadeProcessor
-					};
+					};*/
 					break;
 				}
 
 				case SourceType.ProPinball: {
 					
 					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
-					_graph.Processors = new List<AbstractProcessor> {
-						//transformationProcessor
-					};
 					break;
 				}
 
@@ -115,7 +114,6 @@ namespace DmdExt.Mirror
 						Width = _options.Position[2],
 						Height = _options.Position[3]
 					};
-					_graph.Processors = new List<AbstractProcessor>() /*{ transformationProcessor }*/;
 					break;
 
 				default:

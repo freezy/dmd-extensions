@@ -131,11 +131,9 @@
     <Compile Include="Common\InteropUtil.cs" />
     <Compile Include="Common\TransformationUtil.cs" />
     <Compile Include="Converter\AbstractColorizer.cs" />
-    <Compile Include="Converter\ColoredGray2Colorizer.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
     <Compile Include="Converter\Colorize\Frame.cs" />
     <Compile Include="Converter\Gray2Colorizer.cs" />
-    <Compile Include="Converter\ColoredGray4Colorizer.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\AbstractSource.cs" />

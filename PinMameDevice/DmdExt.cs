@@ -37,8 +37,7 @@ namespace PinMameDevice
 		private static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly Configuration _config = new Configuration();
-		private readonly PassthroughSource _source = new PassthroughSource(RenderBitLength.Gray4);
-		private readonly PassthroughSource _animationSource = new PassthroughSource(RenderBitLength.ColoredGray4);
+		private readonly PassthroughSource _source = new PassthroughSource("VPM Source", RenderBitLength.Gray4);
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private VirtualDmd _dmd;
@@ -52,8 +51,6 @@ namespace PinMameDevice
 		private Color[] _palette;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
-		private ColoredGray2Colorizer _coloredGray2Colorizer;
-		private ColoredGray4Colorizer _coloredGray4Colorizer;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -82,8 +79,6 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
-			_coloredGray2Colorizer = null;
-			_coloredGray4Colorizer = null;
 
 			if (_config.Global.Colorize && _altcolorPath != null) {
 				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
@@ -106,8 +101,6 @@ namespace PinMameDevice
 						}
 						_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
 						_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
-						_coloredGray2Colorizer = new ColoredGray2Colorizer(Width, Height, coloring, animations);
-						_coloredGray4Colorizer = new ColoredGray4Colorizer(Width, Height, coloring, animations);
 
 					} catch (Exception e) {
 						Logger.Warn("Error initializing colorizer: {0}", e.Message);
@@ -144,8 +137,6 @@ namespace PinMameDevice
 		public void LoadPalette(uint num)
 		{
 			_gray4Colorizer?.LoadPalette(num);
-			_coloredGray2Colorizer?.LoadPalette(num);
-			_coloredGray4Colorizer?.LoadPalette(num);
 		}
 
 		/// <summary>
@@ -253,6 +244,7 @@ namespace PinMameDevice
 
 			// miär bruichid äi Render-Graph fir jedi Bitlängi
 			_graphs.Add(new RenderGraph {
+				Name = "2-bit Colored VPM Graph",
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray2Colorizer,
@@ -261,6 +253,7 @@ namespace PinMameDevice
 				FlipVertically =  _config.Global.FlipVertically
 			});
 			_graphs.Add(new RenderGraph {
+				Name = "4-bit Colored VPM Graph",
 				Source = _source,
 				Destinations = renderers,
 				Converter = _gray4Colorizer,
@@ -269,23 +262,8 @@ namespace PinMameDevice
 				FlipVertically =  _config.Global.FlipVertically
 			});
 			_graphs.Add(new RenderGraph {
+				Name = "Plain VPM Render Graph",
 				Source = _source,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically =  _config.Global.FlipVertically
-			});
-
-			// und du nu einisch zwe fird Animazionä
-			_graphs.Add(new RenderGraph {
-				Source = _animationSource,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically =  _config.Global.FlipVertically
-			});
-			_graphs.Add(new RenderGraph {
-				Source = _animationSource,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -337,7 +315,6 @@ namespace PinMameDevice
 			_palette = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
-			_coloredGray4Colorizer = null;
 		}
 
 		public void SetGameName(string gameName)
@@ -366,7 +343,6 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
-			_coloredGray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray2.OnNext(frame);
 		}
@@ -375,7 +351,6 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
-			_coloredGray4Colorizer?.SetDimensions(width, height);
 			_source.SetDimensions(width, height);
 			_source.FramesGray4.OnNext(frame);
 		}
