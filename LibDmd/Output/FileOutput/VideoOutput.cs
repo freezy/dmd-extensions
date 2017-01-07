@@ -19,7 +19,6 @@ namespace LibDmd.Output.FileOutput
 		public readonly int Height = 32;
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
 		public bool IsAvailable { get; } = true;
 
 		private AviWriter _writer;

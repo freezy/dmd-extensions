@@ -12,7 +12,6 @@ namespace LibDmd.Input.Passthrough
 	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IColoredGray2Source, IColoredGray4Source, IBitmapSource
 	{
 		public override string Name { get; }
-		public RenderBitLength NativeFormat { get; set; }
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -27,10 +26,9 @@ namespace LibDmd.Input.Passthrough
 		public readonly Subject<Tuple<byte[][], Color[]>> FramesColoredGray4 = new Subject<Tuple<byte[][], Color[]>>();
 		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
 
-		public PassthroughSource(string name, RenderBitLength nativeFormat)
+		public PassthroughSource(string name)
 		{
 			Name = name;
-			NativeFormat = nativeFormat;
 		}
 
 		public IObservable<byte[]> GetGray2Frames()

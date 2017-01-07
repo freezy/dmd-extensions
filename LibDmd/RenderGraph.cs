@@ -120,7 +120,7 @@ namespace LibDmd
 		/// <param name="onCompleted">If set, this action is executed once the bitmap is displayed.</param>
 		public void Render(BitmapSource bmp, Action onCompleted = null)
 		{
-			var source = new PassthroughSource("Bitmap Source", RenderBitLength.Bitmap);
+			var source = new PassthroughSource("Bitmap Source");
 			Source = source;
 			StartRendering(onCompleted);
 			source.FramesBitmap.OnNext(bmp);
@@ -190,7 +190,7 @@ namespace LibDmd
 					// it up to RGB24, otherwise fails. For example, PinDMD3 which only supports
 					// IColoredGray2Source but not IColoredGray4Source due to bad software design
 					// will get the IColoredGray4Source converted up to RGB24.
-					if (Converter != null) {
+					if (Converter != null && destRgb24 != null) {
 						var coloredGray2SourceConverter = Converter as IColoredGray2Source;
 						var coloredGray4SourceConverter = Converter as IColoredGray4Source;
 						var rgb24SourceConverter = Converter as IRgb24Source;
@@ -223,12 +223,9 @@ namespace LibDmd
 								Connect(coloredGray2SourceConverter, destColoredGray2, RenderBitLength.ColoredGray2, RenderBitLength.ColoredGray2);
 
 							// otherwise, try to convert to rgb24
-							} else if (destRgb24 != null) {
+							} else {
 								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
 								Connect(coloredGray2SourceConverter, destRgb24, RenderBitLength.ColoredGray2, RenderBitLength.Rgb24);
-								
-							} else {
-								throw new IncompatibleRenderer($"Cannot render colored 2-bit frames on {dest.Name}.");
 							}
 						}
 
@@ -240,25 +237,16 @@ namespace LibDmd
 								Connect(coloredGray4SourceConverter, destColoredGray4, RenderBitLength.ColoredGray4, RenderBitLength.ColoredGray4);
 
 							// otherwise, convert to rgb24
-							} else if (destRgb24 != null) {
+							} else {
 								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
 								Connect(coloredGray4SourceConverter, destRgb24, RenderBitLength.ColoredGray4, RenderBitLength.Rgb24);
-
-							} else {
-								throw new IncompatibleRenderer($"Cannot render colored 4-bit frames on {dest.Name}.");
 							}
 						}
 
 						// if converter emits RGB24 frames..
 						if (rgb24SourceConverter != null) {
-							// if destination can render rgb24 frames...
-							if (destRgb24 != null) {
-								Logger.Info("Hooking RGB24 source of {0} converter to {1}.", rgb24SourceConverter.Name, dest.Name);
-								Connect(rgb24SourceConverter, destRgb24, RenderBitLength.Rgb24, RenderBitLength.Rgb24);
-
-							} else {
-								throw new IncompatibleRenderer($"Cannot render RGB24 frames on {dest.Name}.");
-							}
+							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", rgb24SourceConverter.Name, dest.Name);
+							Connect(rgb24SourceConverter, destRgb24, RenderBitLength.Rgb24, RenderBitLength.Rgb24);
 						}
 
 						// render graph is already set up through converters, so we skip the rest below
@@ -291,12 +279,6 @@ namespace LibDmd
 					var sourceBitmap = Source as IBitmapSource;
 
 					Logger.Info("Connecting source for {0}...", dest.Name);
-
-					// native -> native
-					/*if (Source.NativeFormat == dest.NativeFormat) {
-						Connect(Source, dest, Source.NativeFormat, dest.NativeFormat);
-						continue;
-					}*/
 
 					// first, check if we do without conversion
 					// gray2 -> gray2

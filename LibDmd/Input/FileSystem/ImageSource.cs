@@ -12,7 +12,6 @@ namespace LibDmd.Input.FileSystem
 	public class ImageSource : AbstractSource, IBitmapSource
 	{
 		public override string Name { get; } = "Image Source";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

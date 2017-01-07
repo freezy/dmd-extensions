@@ -12,7 +12,6 @@ namespace LibDmd.Output.PinDmd1
 	public class PinDmd1 : IRawOutput, IGray2Destination, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v1";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray2;
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;

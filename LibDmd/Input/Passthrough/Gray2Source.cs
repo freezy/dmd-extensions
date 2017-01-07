@@ -10,7 +10,6 @@ namespace LibDmd.Input.Passthrough
 	public class Gray2Source : AbstractSource, IGray2Source
 	{
 		public override string Name { get; }
-		public RenderBitLength NativeFormat { get; set; } = RenderBitLength.Gray2;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

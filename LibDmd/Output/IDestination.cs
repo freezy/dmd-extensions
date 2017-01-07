@@ -18,8 +18,6 @@ namespace LibDmd.Output
 		/// </summary>
 		string Name { get; }
 
-		RenderBitLength NativeFormat { get; }
-
 		/// <summary>
 		/// If true, destination is available and can be used as target.
 		/// </summary>

@@ -16,7 +16,6 @@ namespace LibDmd.Output.Pin2Dmd
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.ColoredGray4;
 
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get; private set; } = 32;

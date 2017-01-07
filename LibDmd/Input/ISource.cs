@@ -26,8 +26,6 @@ namespace LibDmd.Input
 		/// </summary>
 		string Name { get; }
 
-		RenderBitLength NativeFormat { get; }
-
 		/// <summary>
 		/// The size of the source. Can change any time.
 		/// </summary>

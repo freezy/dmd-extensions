@@ -29,7 +29,6 @@ namespace LibDmd.Input.PBFX2Grabber
 	public class PBFX2Grabber : AbstractSource, IColoredGray2Source, IRgb24Source
 	{
 		public override string Name { get; } = "Pinball FX2";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Rgb24;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

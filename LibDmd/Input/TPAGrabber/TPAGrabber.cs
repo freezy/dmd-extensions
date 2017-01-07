@@ -23,7 +23,6 @@ namespace LibDmd.Input.TPAGrabber
 	public class TPAGrabber : AbstractSource, IGray4Source, IBitmapSource
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray4;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;

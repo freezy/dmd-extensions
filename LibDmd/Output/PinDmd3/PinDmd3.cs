@@ -17,7 +17,6 @@ namespace LibDmd.Output.PinDmd3
 	public class PinDmd3 : IGray2Destination, IGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Rgb24;
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; } = 128;

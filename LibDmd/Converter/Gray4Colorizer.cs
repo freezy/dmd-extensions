@@ -19,7 +19,6 @@ namespace LibDmd.Converter
 	{
 		public override string Name { get; } = "4 Bit Colorizer";
 		protected override int BitLength { get; } = 4;
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Gray4;
 		public RenderBitLength From { get; } = RenderBitLength.Gray4;
 
 		public Gray4Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)

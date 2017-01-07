@@ -15,7 +15,6 @@ namespace LibDmd.Input.ScreenGrabber
 	public class ScreenGrabber : AbstractSource, IBitmapSource
 	{
 		public override string Name { get; } = "Screen Grabber";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
