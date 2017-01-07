@@ -150,7 +150,7 @@ namespace LibDmd.Input.PBFX2Grabber
 						var frame = ImageUtil.ConvertToGray2(bmp, 5, out hue);
 						if (palette == null || Math.Abs(hue - lastHue) > 0.01) {
 							byte r, g, b;
-							ColorUtil.HslToRgb(hue, 1, 1, out r, out g, out b);
+							ColorUtil.HslToRgb(hue, 1, 0.5, out r, out g, out b);
 							var color = Color.FromRgb(r, g, b);
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;

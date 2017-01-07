@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
-	/// An input source just contains observables with all subjects.
+	/// An input source that just contains a 4-bit observable.
 	/// </summary>
 	public class Gray4Source : AbstractSource, IGray4Source
 	{

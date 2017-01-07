@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
-	/// An input source just contains observables with all subjects.
+	/// An input source that just contains a 24-bit observable.
 	/// </summary>
 	public class Rgb24Source : AbstractSource, IRgb24Source
 	{

@@ -17,7 +17,6 @@ namespace PinMameTest
 
 		public MainWindow()
 		{
-
 			InitializeComponent();
 
 			Console.WriteLine("[{0}] Starting...", Thread.CurrentThread.ManagedThreadId);
