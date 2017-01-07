@@ -11,6 +11,7 @@ using LibDmd.Common;
 using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
+using LibDmd.Input.Passthrough;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
@@ -297,135 +298,116 @@ namespace LibDmd
 						continue;
 					}*/
 
-					// gray2 as source:
-					if (sourceGray2 != null) {
-						// gray2 -> gray2
-						if (destGray2 != null) {
-							Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Gray2);
-							continue;
-						}
-						// gray2 -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Rgb24);
-							continue;
-						}
-						// gray2 -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Bitmap);
-							continue;
-						}
+					// first, check if we do without conversion
+					// gray2 -> gray2
+					if (sourceGray2 != null && destGray2 != null) {
+						Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Gray2);
+						continue;
+					}
+					// gray4 -> gray4
+					if (sourceGray4 != null && destGray4 != null) {
+						Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Gray4);
+						continue;
+					}
+					// colored gray2 -> colored gray2
+					if (sourceColoredGray2 != null && destColoredGray2 != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.ColoredGray2);
+						continue;
+					}
+					// colored gray4 -> colored gray4
+					if (sourceColoredGray4 != null && destColoredGray4 != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.ColoredGray4);
+						continue;
+					}
+					// rgb24 -> rgb24
+					if (sourceRgb24 != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Rgb24);
+						continue;
+					}
+					// bitmap -> bitmap
+					if (sourceBitmap != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Bitmap);
+						continue;
 					}
 
-					// gray4 as source:
-					if (sourceGray4 != null) {
-						// gray4 -> gray4
-						if (destGray4 != null) {
-							Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Gray4);
-							continue;
-						}
-						// gray4 -> gray2
-						if (destGray2 != null) {
-							Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Gray2);
-							continue;
-						}
-						// gray4 -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Rgb24);
-							continue;
-						}
-						// gray4 -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Bitmap);
-							continue;
-						}
+					// then, start at the bottom
+					// gray2 -> rgb24
+					if (sourceGray2 != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Rgb24);
+						continue;
+					}
+					// gray2 -> bitmap
+					if (sourceGray2 != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.Gray2, RenderBitLength.Bitmap);
+						continue;
+					}
+					// gray4 -> rgb24
+					if (sourceGray4 != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Rgb24);
+						continue;
+					}
+					// gray4 -> bitmap
+					if (sourceGray4 != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Bitmap);
+						continue;
+					}
+					// rgb24 -> bitmap
+					if (sourceRgb24 != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Bitmap);
+						continue;
+					}
+					// bitmap -> rgb24
+					if (sourceBitmap != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Rgb24);
+						continue;
+					}
+					// colored gray2 -> rgb24
+					if (sourceColoredGray2 != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.Rgb24);
+						continue;
+					}
+					// colored gray2 -> bitmap
+					if (sourceColoredGray2 != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.Bitmap);
+						continue;
+					}
+					// colored gray4 -> rgb24
+					if (sourceColoredGray4 != null && destRgb24 != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.Rgb24);
+						continue;
+					}
+					// colored gray4 -> bitmap
+					if (sourceColoredGray4 != null && destBitmap != null) {
+						Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.Bitmap);
+						continue;
 					}
 
-					// rgb24 as source:
-					if (sourceRgb24 != null) {
-						// rgb24 -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Rgb24);
-							continue;
-						}
-						// rgb24 -> gray2
-						if (destGray2 != null) {
-							Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Gray2);
-							continue;
-						}
-						// rgb24 -> gray4
-						if (destGray4 != null) {
-							Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Gray4);
-							continue;
-						}
-						// rgb24 -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Bitmap);
-							continue;
-						}
+					// finally, here we lose data
+					// gray4 -> gray2
+					if (sourceGray4 != null && destGray2 != null) {
+						Connect(Source, dest, RenderBitLength.Gray4, RenderBitLength.Gray2);
+						continue;
 					}
-
-					// bitmap as source:
-					if (sourceBitmap != null) {
-						// bitmap -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Bitmap);
-							continue;
-						}
-						// bitmap -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Rgb24);
-							continue;
-						}
-						// bitmap -> gray4
-						if (destGray4 != null) {
-							Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Gray4);
-							continue;
-						}
-						// bitmap -> gray2
-						if (destGray2 != null) {
-							Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Gray2);
-							continue;
-						}
+					// rgb24 -> gray2
+					if (sourceRgb24 != null && destGray2 != null) {
+						Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Gray2);
+						continue;
 					}
-
-					// colored gray2 as source:
-					if (sourceColoredGray2 != null) {
-						// colored gray2 -> colored gray2
-						if (destColoredGray2 != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.ColoredGray2);
-							continue;
-						}
-						// colored gray2 -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.Rgb24);
-							continue;
-						}
-						// colored gray2 -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray2, RenderBitLength.Bitmap);
-							continue;
-						}
+					// rgb24 -> gray4
+					if (sourceRgb24 != null && destGray4 != null) {
+						Connect(Source, dest, RenderBitLength.Rgb24, RenderBitLength.Gray4);
+						continue;
 					}
-
-					// colored gray4 as source:
-					if (sourceColoredGray4 != null) {
-						// colored gray4 -> colored gray4
-						if (destColoredGray4 != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.ColoredGray4);
-							continue;
-						}
-						// colored gray4 -> rgb24
-						if (destRgb24 != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.Rgb24);
-							continue;
-						}
-						// colored gray4 -> bitmap
-						if (destBitmap != null) {
-							Connect(Source, dest, RenderBitLength.ColoredGray4, RenderBitLength.Bitmap);
-							continue;
-						}
+					// bitmap -> gray4
+					if (sourceBitmap != null && destGray4 != null) {
+						Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Gray4);
+						continue;
 					}
-					
+					// bitmap -> gray2
+					if (sourceBitmap != null && destGray2 != null) {
+						Connect(Source, dest, RenderBitLength.Bitmap, RenderBitLength.Gray2);
+						continue;
+					}
 
 					// log status
 					Source.OnResume.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });

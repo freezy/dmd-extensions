@@ -3,9 +3,8 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using LibDmd.Input;
 
-namespace LibDmd.Input
+namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// An input source just contains observables with all subjects.

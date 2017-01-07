@@ -144,7 +144,10 @@
     <Compile Include="Input\IGray2Source.cs" />
     <Compile Include="Input\IRgb24Source.cs" />
     <Compile Include="Input\IGray4Source.cs" />
-    <Compile Include="Input\PassthroughSource.cs" />
+    <Compile Include="Input\Passthrough\Rgb24Source.cs" />
+    <Compile Include="Input\Passthrough\Gray4Source.cs" />
+    <Compile Include="Input\Passthrough\Gray2Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />

@@ -14,6 +14,7 @@ using LibDmd.Common;
 using NLog;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Processor;
+using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Input.PBFX2Grabber
 {
@@ -25,10 +26,10 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : AbstractSource, IGray2Source, IGray4Source, IBitmapSource
+	public class PBFX2Grabber : AbstractSource, IColoredGray2Source, IRgb24Source
 	{
 		public override string Name { get; } = "Pinball FX2";
-		public RenderBitLength NativeFormat { get; } = RenderBitLength.Bitmap;
+		public RenderBitLength NativeFormat { get; } = RenderBitLength.Rgb24;
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -52,10 +53,8 @@ namespace LibDmd.Input.PBFX2Grabber
 		public int CropRight { get; set; } = 8;
 		public int CropBottom { get; set; } = 12;
 
-		private IConnectableObservable<BitmapSource> _frames;
-		private IConnectableObservable<byte[]> _framesGray2;
-		private IConnectableObservable<byte[]> _framesGray4;
 		private IConnectableObservable<byte[]> _framesRgb24;
+		private IConnectableObservable<Tuple<byte[][], Color[]>> _framesColoredGray2;
 
 		private IDisposable _capturer;
 		private IntPtr _handle;
@@ -91,17 +90,11 @@ namespace LibDmd.Input.PBFX2Grabber
 		{
 			switch (_bitLength)
 			{
-				case RenderBitLength.Gray2:
-					_capturer = _framesGray2.Connect();
-					break;
-				case RenderBitLength.Gray4:
-					_capturer = _framesGray4.Connect();
+				case RenderBitLength.ColoredGray2:
+					_capturer = _framesColoredGray2.Connect();
 					break;
 				case RenderBitLength.Rgb24:
 					_capturer = _framesRgb24.Connect();
-					break;
-				case RenderBitLength.Bitmap:
-					_capturer = _frames.Connect();
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -121,76 +114,54 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-		public IObservable<BitmapSource> GetBitmapFrames()
-		{
-			_bitLength = RenderBitLength.Bitmap;
-			if (_frames == null) {
-				_frames = Observable
-					.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
-					.Select(x => CaptureWindow())
-					.Where(bmp => bmp != null)
-					.Publish();
-
-				StartPolling();
-			}
-			return _frames;
-		}
-
-		public IObservable<byte[]> GetGray2Frames()
-		{
-			_bitLength = RenderBitLength.Gray2;
-			if (_framesGray2 == null) {
-				var resizeProcessor = new TransformationProcessor();
-				var gridProcessor = new GridProcessor { Spacing = 1d };
-				_framesGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
-					.Select(x => CaptureWindow())
-					.Where(bmp => bmp != null)
-					.Select(bmp => gridProcessor.Process(bmp, null))
-					.Select(bmp => resizeProcessor.Process(bmp, null))
-					.Select(bmp => ImageUtil.ConvertToGray2(bmp, 5))
-					.Publish();
-
-				StartPolling();
-			}
-			return _framesGray2;
-		}
-
-		public IObservable<byte[]> GetGray4Frames()
-		{
-			_bitLength = RenderBitLength.Gray4;
-			if (_framesGray4 == null) {
-				var resizeProcessor = new TransformationProcessor();
-				var gridProcessor = new GridProcessor { Spacing = 1d };
-				_framesGray4 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
-					.Select(x => CaptureWindow())
-					.Where(bmp => bmp != null)
-					.Select(bmp => gridProcessor.Process(bmp, null))
-					.Select(bmp => resizeProcessor.Process(bmp, null))
-					.Select(bmp => ImageUtil.ConvertToGray4(bmp, 5))
-					.Publish();
-
-				StartPolling();
-			}
-			return _framesGray4;
-		}
-
 		public IObservable<byte[]> GetRgb24Frames()
 		{
-			_bitLength = RenderBitLength.Rgb24;
+			_bitLength = RenderBitLength.Gray2;
 			if (_framesRgb24 == null) {
-				var resizeProcessor = new TransformationProcessor();
 				var gridProcessor = new GridProcessor { Spacing = 1d };
-				_framesRgb24 = Observable.Interval(TimeSpan.FromMilliseconds(1000/FramesPerSecond))
+				_framesRgb24 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
 					.Select(bmp => gridProcessor.Process(bmp, null))
-					.Select(bmp => resizeProcessor.Process(bmp, null))
+					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
 					.Select(bmp => ImageUtil.ConvertToRgb24(bmp, 2))
 					.Publish();
 
 				StartPolling();
 			}
 			return _framesRgb24;
+		}
+
+		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
+		{
+			double lastHue = 0;
+			Color[] palette = null;
+
+			_bitLength = RenderBitLength.ColoredGray2;
+			if (_framesColoredGray2 == null) {
+				var gridProcessor = new GridProcessor { Spacing = 1d };
+				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+					.Select(x => CaptureWindow())
+					.Where(bmp => bmp != null)
+					.Select(bmp => gridProcessor.Process(bmp, null))
+					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
+					.Select(bmp => {
+						double hue;
+						var frame = ImageUtil.ConvertToGray2(bmp, 5, out hue);
+						if (palette == null || Math.Abs(hue - lastHue) > 0.01) {
+							byte r, g, b;
+							ColorUtil.HslToRgb(hue, 1, 1, out r, out g, out b);
+							var color = Color.FromRgb(r, g, b);
+							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
+							lastHue = hue;
+						}
+						return new Tuple<byte[][], Color[]>(FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, frame), palette);
+					})
+					.Publish();
+
+				StartPolling();
+			}
+			return _framesColoredGray2;
 		}
 
 		public BitmapSource CaptureWindow()

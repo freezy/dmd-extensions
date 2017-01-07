@@ -9,18 +9,25 @@ namespace LibDmd.Common
 	{
 		private static readonly Frame FrameData = new Frame();
 
+		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
+		{
+			double devnull;
+			return ConvertToGray2(bmp, lum, out devnull);
+		}
+
 		/// <summary>
 		/// Converts a bitmap to a 2-bit grayscale array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
-		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
+		public static byte[] ConvertToGray2(BitmapSource bmp, double lum, out double hue)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
 			var bytes = new byte[bytesPerPixel];
 			var rect = new Int32Rect(0, 0, 1, 1);
+			double imageHue = 0;
 			for (var y = 0; y < bmp.PixelHeight; y++) {
 				rect.Y = y;
 				for (var x = 0; x < bmp.PixelWidth; x++) {
@@ -29,19 +36,24 @@ namespace LibDmd.Common
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 					// convert to HSL
-					double hue;
+					double h;
 					double saturation;
 					double luminosity;
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out h, out saturation, out luminosity);
 
 					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 3d * lum);
+
+					if (luminosity > 0) {
+						imageHue = h;
+					}
 				}
 			}
+			hue = imageHue;
 			return frame;
 		}
 
 		/// <summary>
-		/// Converts an RGB24 frame to a 2-bit grayscale array.
+		/// Converts an RGB24 frame to a grayscale array.
 		/// </summary>
 		/// <param name="width">Width in pixels</param>
 		/// <param name="height">Height in pixels</param>
