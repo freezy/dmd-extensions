@@ -220,7 +220,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void ClearColor()
 		{
-			SetColor(Colors.OrangeRed);
+			SetColor(RenderGraph.DefaultColor);
 		}
 
 		public void Dispose()

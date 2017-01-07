@@ -34,7 +34,6 @@ namespace PinMameDevice
 	{
 		private static readonly int Width = 128;
 		private static readonly int Height = 32;
-		private static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly Configuration _config = new Configuration();
 		private readonly PassthroughSource _source = new PassthroughSource("VPM Source", RenderBitLength.Gray4);
@@ -45,7 +44,7 @@ namespace PinMameDevice
 		// Ziigs vo VPM
 		private string _gameName;
 		private bool _colorize;
-		private Color _color = DefaultColor;
+		private Color _color = RenderGraph.DefaultColor;
 
 		// Iifärbigsziig
 		private Color[] _palette;
@@ -276,26 +275,21 @@ namespace PinMameDevice
 			}
 
 			// ReSharper disable once ForCanBeConvertedToForeach
-			for (var i = 0; i < renderers.Count; i++) {
-				var rgb24Renderer = renderers[i] as IRgb24Destination;
-
-				if (rgb24Renderer == null) {
-					Logger.Info("No coloring for non-RGB destination {0}", renderers[i].Name);
-					continue;
-				}
+			foreach (var graph in _graphs)
+			{
 				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
 					Logger.Info("Just clearing palette, colorization is done by converter.");
-					rgb24Renderer.ClearColor();
+					graph.ClearColor();
 
 				} else if (_colorize && _palette != null) {
-					Logger.Info("Applying palette to DMD...");
-					rgb24Renderer.ClearColor();
-					rgb24Renderer.SetPalette(_palette);
+					Logger.Info("Applying palette to {0}...", graph.Name);
+					graph.ClearColor();
+					graph.SetPalette(_palette);
 
 				} else {
-					Logger.Info("Applying color to DMD...");
-					rgb24Renderer.ClearPalette();
-					rgb24Renderer.SetColor(_color);	
+					Logger.Info("Applying color to {0}...", graph.Name);
+					graph.ClearPalette();
+					graph.SetColor(_color);	
 				}
 			}
 
@@ -316,7 +310,7 @@ namespace PinMameDevice
 				_dmd.Hide();
 			});
 
-			_color = DefaultColor;
+			_color = RenderGraph.DefaultColor;
 			_palette = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;

@@ -30,9 +30,6 @@ namespace DmdExt.Common
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Four values: <Left> <Top> <Width> [<Height>]. Height is optional and can be used for custom aspect ratio. Default: \"0 0 1024\".")]
 		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
-		[Option("render-as", HelpText = "Internally process at a given bit length. One of: [ gray2, gray4, rgb24, bitmap ]. Default: \"bitmap\"")]
-		public RenderBitLength RenderAs { get; set; } = RenderBitLength.Bitmap;
-
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 

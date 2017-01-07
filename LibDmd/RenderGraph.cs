@@ -93,11 +93,24 @@ namespace LibDmd
 		/// </summary>
 		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
-		public Color[] Palette { get; set; } = { Colors.Black, Colors.OrangeRed };
+		/// <summary>
+		/// The default color used if there are no palette is defined
+		/// </summary>
+		public static readonly Color DefaultColor = Colors.OrangeRed;
 
 		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		private Color[] _gray2Colors; 
+		private Color[] _gray4Colors; 
+		private Color[] _gray2Palette;
+		private Color[] _gray4Palette;
+
+		public RenderGraph()
+		{
+			ClearColor();
+		}
 
 		/// <summary>
 		/// Renders a single bitmap on all destinations.
@@ -480,7 +493,7 @@ namespace LibDmd
 						case RenderBitLength.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
 							_activeSources.Add(sourceGray2.GetGray2Frames()
-								.Select(frame => ColorUtil.ColorizeFrame(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, ColorUtil.GetPalette(Palette, 4)))
+								.Select(frame => ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 								.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destRgb24.RenderRgb24));
 							break;
@@ -491,8 +504,8 @@ namespace LibDmd
 							_activeSources.Add(sourceGray2.GetGray2Frames()
 								.Select(frame => ImageUtil.ConvertFromRgb24(
 									source.Dimensions.Value.Width,
-									source.Dimensions.Value.Height, 
-									ColorUtil.ColorizeFrame(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, ColorUtil.GetPalette(Palette, 4))
+									source.Dimensions.Value.Height,
+									ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame)
 								))
 								.Select(bmp => Transform(bmp, destFixedSize))
 								.Subscribe(destBitmap.RenderBitmap));
@@ -536,7 +549,7 @@ namespace LibDmd
 						case RenderBitLength.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
 							_activeSources.Add(sourceGray4.GetGray4Frames()
-								.Select(frame => ColorUtil.ColorizeFrame(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, ColorUtil.GetPalette(Palette, 16)))
+								.Select(frame => ColorizeGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 								.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
 								.Subscribe(destRgb24.RenderRgb24));
 							break;
@@ -548,7 +561,7 @@ namespace LibDmd
 								.Select(frame => ImageUtil.ConvertFromRgb24(
 									source.Dimensions.Value.Width,
 									source.Dimensions.Value.Height,
-									ColorUtil.ColorizeFrame(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, ColorUtil.GetPalette(Palette, 16))
+									ColorizeGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame)
 								))
 								.Select(bmp => Transform(bmp, destFixedSize))
 								.Subscribe(destBitmap.RenderBitmap));
@@ -790,6 +803,82 @@ namespace LibDmd
 			}
 		}
 
+		private byte[] ColorizeGray2(int width, int height, byte[] frame)
+		{
+			return ColorUtil.ColorizeFrame(width, height, frame, _gray2Palette ?? _gray2Colors);
+		}
+
+		private byte[] ColorizeGray4(int width, int height, byte[] frame)
+		{
+			return ColorUtil.ColorizeFrame(width, height, frame, _gray4Palette ?? _gray4Colors);
+		}
+
+		/// <summary>
+		/// Sets the color with which a grayscale source is rendered on the RGB display.
+		/// </summary>
+		/// <param name="color">Rendered color</param>
+		public void SetColor(Color color)
+		{
+			// set color for internal coloring
+			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
+			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+
+			// set color for external coloring
+			if (Destinations == null){
+				return;
+			}
+			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
+				rgbDest?.SetColor(color);
+			}
+		}
+
+		/// <summary>
+		/// Sets the palette for rendering grayscale images.
+		/// </summary>
+		/// <param name="colors"></param>
+		public void SetPalette(Color[] colors)
+		{
+			_gray2Palette = ColorUtil.GetPalette(colors, 4);
+			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+
+			if (Destinations == null) {
+				return;
+			}
+			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
+				rgbDest?.SetPalette(colors);
+			}
+		}
+
+		/// <summary>
+		/// Removes a previously set palette
+		/// </summary>
+		public void ClearPalette()
+		{
+			_gray2Palette = null;
+			_gray4Palette = null;
+			if (Destinations == null) {
+				return;
+			}
+			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
+				rgbDest?.ClearPalette();
+
+			}
+		}
+
+		/// <summary>
+		/// Resets the color
+		/// </summary>
+		public void ClearColor()
+		{
+			SetColor(DefaultColor);
+			if (Destinations == null) {
+				return;
+			}
+			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
+				rgbDest?.ClearColor();
+			}
+		}
+
 
 		/// <summary>
 		/// Disposes the graph and all elements.
@@ -802,6 +891,9 @@ namespace LibDmd
 			Logger.Debug("Disposing render graph.");
 			if (IsRendering) {
 				throw new Exception("Must dispose renderer first!");
+			}
+			if (Destinations == null) {
+				return;
 			}
 			foreach (var dest in Destinations) {
 				dest.Dispose();

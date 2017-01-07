@@ -23,8 +23,6 @@ namespace LibDmd.Output.PinDmd3
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
-		public static readonly Color DefaultColor = Colors.OrangeRed;
-
 		const byte Rgb24CommandByte = 0x02;
 		const byte Gray2CommandByte = 0x30;
 		const byte Gray4CommandByte = 0x31;
@@ -273,7 +271,7 @@ namespace LibDmd.Output.PinDmd3
 
 		public void ClearColor()
 		{
-			SetColor(DefaultColor);
+			SetColor(RenderGraph.DefaultColor);
 		}
 
 		public void Dispose()
