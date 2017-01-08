@@ -33,8 +33,8 @@ namespace PinMameDevice
 	/// <seealso cref="DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
 	public class DmdExt
 	{
-		private static readonly int Width = 128;
-		private static readonly int Height = 32;
+		private const int Width = 128;
+		private const int Height = 32;
 
 		private readonly Configuration _config = new Configuration();
 		private readonly Gray2Source _gray2Source = new Gray2Source("VPM 2-bit Source");

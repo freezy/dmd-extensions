@@ -12,7 +12,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
@@ -150,7 +150,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray4(byte[][] planes, Color[] palette)
 		{
-			// TODO only set when changed
 			SetPalette(palette);
 
 			// copy to buffer
@@ -163,7 +162,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray2(byte[][] planes, Color[] palette)
 		{
-			// TODO only set when changed
 			SetPalette(palette);
 
 			var frame = FrameUtil.Join(DmdWidth, DmdHeight, planes);
@@ -202,14 +200,19 @@ namespace LibDmd.Output.Pin2Dmd
 		public void SetPalette(Color[] colors)
 		{
 			var palette = ColorUtil.GetPalette(colors, 16);
-			const int pos = 7;
+			var identical = true;
+			var pos = 7;
 			for (var i = 0; i < 16; i++) {
 				var color = palette[i];
-				_colorPalette[pos + (i * 3)] = color.R;
-				_colorPalette[pos + (i * 3) + 1] = color.G;
-				_colorPalette[pos + (i * 3) + 2] = color.B;
+				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
+				_colorPalette[pos] = color.R;
+				_colorPalette[pos + 1] = color.G;
+				_colorPalette[pos + 2] = color.B;
+				pos += 3;
 			}
-			RenderRaw(_colorPalette);
+			if (!identical) {
+				RenderRaw(_colorPalette);
+			}
 		}
 
 		public void ClearPalette()

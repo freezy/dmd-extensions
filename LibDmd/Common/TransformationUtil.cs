@@ -95,7 +95,6 @@ namespace LibDmd.Common
 			if (bmp.PixelWidth == destWidth && bmp.PixelHeight == destHeight && !flipHorizontally && !flipVertically) {
 				return bmp;
 			}
-			Console.WriteLine("Transforming from {0}x{1} to {2}x{3} ({4}/{5})...", bmp.PixelWidth, bmp.PixelHeight, destWidth, destHeight, flipHorizontally, flipVertically);
 
 			var sw = new Stopwatch();
 			sw.Start();

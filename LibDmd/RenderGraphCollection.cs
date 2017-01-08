@@ -22,11 +22,11 @@ namespace LibDmd
 	{
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
-
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
 
 		public void Add(RenderGraph renderGraph)
 		{
+			// use a common observable for all sources so we get proper notification when any of them changes size
 			renderGraph.Source.Dimensions = _dimensions;
 			_graphs.Add(renderGraph);
 		}
