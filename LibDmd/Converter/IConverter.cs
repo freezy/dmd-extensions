@@ -16,12 +16,12 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Source bit length
 		/// </summary>
-		RenderBitLength From { get; }
+		FrameFormat From { get; }
 
 		/// <summary>
 		/// Destination bit length
 		/// </summary>
-		//RenderBitLength To { get; }
+		//FrameFormat To { get; }
 
 		/// <summary>
 		/// Converts from source to destination

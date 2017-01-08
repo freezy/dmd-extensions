@@ -21,7 +21,7 @@ namespace LibDmd.Converter
 		public override string Name { get; } = "2 Bit Colorizer";
 		protected override int BitLength { get; } = 2;
 
-		public RenderBitLength From { get; } = RenderBitLength.Gray2;
+		public FrameFormat From { get; } = FrameFormat.Gray2;
 
 		public Gray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
 		{

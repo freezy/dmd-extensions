@@ -57,7 +57,7 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		private IDisposable _capturer;
 		private IntPtr _handle;
-		private RenderBitLength _bitLength = RenderBitLength.Bitmap;
+		private FrameFormat _frameFormat = FrameFormat.Bitmap;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
@@ -87,12 +87,12 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// </summary>
 		private void StartCapturing()
 		{
-			switch (_bitLength)
+			switch (_frameFormat)
 			{
-				case RenderBitLength.ColoredGray2:
+				case FrameFormat.ColoredGray2:
 					_capturer = _framesColoredGray2.Connect();
 					break;
-				case RenderBitLength.Rgb24:
+				case FrameFormat.Rgb24:
 					_capturer = _framesRgb24.Connect();
 					break;
 				default:
@@ -115,7 +115,7 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		public IObservable<byte[]> GetRgb24Frames()
 		{
-			_bitLength = RenderBitLength.Gray2;
+			_frameFormat = FrameFormat.Gray2;
 			if (_framesRgb24 == null) {
 				var gridProcessor = new GridProcessor { Spacing = 1d };
 				_framesRgb24 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
@@ -136,7 +136,7 @@ namespace LibDmd.Input.PBFX2Grabber
 			double lastHue = 0;
 			Color[] palette = null;
 
-			_bitLength = RenderBitLength.ColoredGray2;
+			_frameFormat = FrameFormat.ColoredGray2;
 			if (_framesColoredGray2 == null) {
 				var gridProcessor = new GridProcessor { Spacing = 1d };
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))

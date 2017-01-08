@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,17 @@ namespace LibDmd.Common
 {
 	public class TransformationUtil
 	{
+
+		/// <summary>
+		/// Flips a top-left to bottom-right array of pixels with a given number of bytes per pixel.
+		/// </summary>
+		/// <param name="width">Pixel width</param>
+		/// <param name="height">Pixel height</param>
+		/// <param name="bytesPerPixel">How many bytes per pixel</param>
+		/// <param name="frame">Pixel data</param>
+		/// <param name="flipHorizontally">If true, flip horizontally</param>
+		/// <param name="flipVertically">If true, flip vertically</param>
+		/// <returns></returns>
 		public static byte[] Flip(int width, int height, int bytesPerPixel, byte[] frame, bool flipHorizontally, bool flipVertically)
 		{
 			if (!flipHorizontally && !flipVertically) {
@@ -34,6 +46,41 @@ namespace LibDmd.Common
 			}
 			return flipped;
 		}
+
+		/// <summary>
+		/// Flips a given number of bit planes.
+		/// </summary>
+		/// <param name="width">Pixel width</param>
+		/// <param name="height">Pixel height</param>
+		/// <param name="planes">Bit planes</param>
+		/// <param name="flipHorizontally">If true, flip horizontally</param>
+		/// <param name="flipVertically">If true, flip vertically</param>
+		/// <returns></returns>
+		public static byte[][] Flip(int width, int height, byte[][] planes, bool flipHorizontally, bool flipVertically)
+		{
+			if (!flipHorizontally && !flipVertically) {
+				return planes;
+			}
+			var flippedPlanes = new byte[planes.Length][];
+			for (var n = 0; n < planes.Length; n++) {
+				var pos = 0;
+				var plane = new BitArray(planes[n]);
+				var flippedPlane = new BitArray(plane.Length);
+				for (var y = 0; y < height; y++) {
+					for (var x = 0; x < width; x ++) {
+						var xFlipped = flipVertically ? (width - 1) - x : x;
+						var yFlipped = flipHorizontally ? height - y - 1 : y;
+						flippedPlane.Set(pos, plane[width * yFlipped + xFlipped]);
+						pos++;
+					}
+				}
+				var fp = new byte[planes[n].Length];
+				flippedPlane.CopyTo(fp, 0);
+				flippedPlanes[n] = fp;
+			}
+			return flippedPlanes;
+		}
+
 
 		public static BitmapSource Transform(BitmapSource bmp, int destWidth, int destHeight, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{
