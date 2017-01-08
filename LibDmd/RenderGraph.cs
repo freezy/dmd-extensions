@@ -76,12 +76,12 @@ namespace LibDmd
 		public IObservable<BitmapSource> BeforeProcessed => _beforeProcessed;
 
 		/// <summary>
-		/// If set, flips the image vertically.
+		/// If set, flips the image vertically (top/down).
 		/// </summary>
 		public bool FlipVertically { get; set; }
 
 		/// <summary>
-		/// If set, flips the image horizontally.
+		/// If set, flips the image horizontally (left/right).
 		/// </summary>
 		public bool FlipHorizontally { get; set; }
 

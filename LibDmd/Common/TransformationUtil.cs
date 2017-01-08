@@ -24,8 +24,8 @@ namespace LibDmd.Common
 		/// <param name="height">Pixel height</param>
 		/// <param name="bytesPerPixel">How many bytes per pixel</param>
 		/// <param name="frame">Pixel data</param>
-		/// <param name="flipHorizontally">If true, flip horizontally</param>
-		/// <param name="flipVertically">If true, flip vertically</param>
+		/// <param name="flipHorizontally">If true, flip horizontally (left/right)</param>
+		/// <param name="flipVertically">If true, flip vertically (top/down)</param>
 		/// <returns></returns>
 		public static byte[] Flip(int width, int height, int bytesPerPixel, byte[] frame, bool flipHorizontally, bool flipVertically)
 		{
@@ -36,8 +36,8 @@ namespace LibDmd.Common
 			var flipped = new byte[frame.Length];
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width * bytesPerPixel; x += bytesPerPixel) {
-					var xFlipped = flipVertically ? (width - 1) * bytesPerPixel - x : x;
-					var yFlipped = flipHorizontally ? height - y - 1 : y;
+					var xFlipped = flipHorizontally ? (width - 1) * bytesPerPixel - x : x;
+					var yFlipped = flipVertically ? height - y - 1 : y;
 					for (var v = 0; v < bytesPerPixel; v++) {
 						flipped[pos + v] = frame[width * bytesPerPixel * yFlipped + xFlipped + v];
 					}
@@ -53,8 +53,8 @@ namespace LibDmd.Common
 		/// <param name="width">Pixel width</param>
 		/// <param name="height">Pixel height</param>
 		/// <param name="planes">Bit planes</param>
-		/// <param name="flipHorizontally">If true, flip horizontally</param>
-		/// <param name="flipVertically">If true, flip vertically</param>
+		/// <param name="flipHorizontally">If true, flip horizontally (left/right)</param>
+		/// <param name="flipVertically">If true, flip vertically (top/down)</param>
 		/// <returns></returns>
 		public static byte[][] Flip(int width, int height, byte[][] planes, bool flipHorizontally, bool flipVertically)
 		{
@@ -68,8 +68,8 @@ namespace LibDmd.Common
 				var flippedPlane = new BitArray(plane.Length);
 				for (var y = 0; y < height; y++) {
 					for (var x = 0; x < width; x ++) {
-						var xFlipped = flipVertically ? (width - 1) - x : x;
-						var yFlipped = flipHorizontally ? height - y - 1 : y;
+						var xFlipped = flipHorizontally ? (width - 1) - x : x;
+						var yFlipped = flipVertically ? height - y - 1 : y;
 						flippedPlane.Set(pos, plane[width * yFlipped + xFlipped]);
 						pos++;
 					}

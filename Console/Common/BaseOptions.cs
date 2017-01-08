@@ -33,10 +33,10 @@ namespace DmdExt.Common
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 
-		[Option("flip-x", HelpText = "Flips the image horizontally. Default: false.")]
+		[Option("flip-x", HelpText = "Flips the image horizontally (left/right). Default: false.")]
 		public bool FlipHorizontally { get; set; } = false;
 
-		[Option("flip-y", HelpText = "Flips the image vertically. Default: false.")]
+		[Option("flip-y", HelpText = "Flips the image vertically (top/down). Default: false.")]
 		public bool FlipVertically { get; set; } = false;
 
 		[Option('p', "port", HelpText = "Force COM port for PinDMDv3 devices. Example: \"COM3\".")]

@@ -42,20 +42,11 @@ namespace DmdExt.Play
 
 			// define renderers
 			var renderers = GetRenderers(_options);
-
-			// define processors
-			/*var transformationProcessor = new TransformationProcessor {
-				FlipVertically = _options.FlipVertically,
-				FlipHorizontally = _options.FlipHorizontally,
-				Resize = _options.Resize
-			};*/
-
 			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up
 				return new RenderGraph {
 					Source = frameSource,
-					//Processors = new List<AbstractProcessor> { transformationProcessor },
 					Destinations = renderers,
 					Resize = _options.Resize,
 					FlipHorizontally = _options.FlipHorizontally,

@@ -123,8 +123,8 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
       intact. Pixels will be cropped off.
     - `fit` - Scale it so the whole image fits on the DMD while keeping aspect
        ratio intact. There will be white space (uh, more like black space).
-  - `fliphorizontally` - Flips the image horizontally
-  - `flipvertically` - Flips the image vertically
+  - `fliphorizontally` - Flips the image horizontally (left/right)
+  - `flipvertically` - Flips the image vertically (top/down)
   - `colorize` - enable or disable frame-by-frame colorization (inactive in 
     VPX bundle)
 - `[virtualdmd]` - A virtual DMD that renders on the computer screen somewhat

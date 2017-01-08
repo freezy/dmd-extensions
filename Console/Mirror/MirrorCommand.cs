@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
 using DmdExt.Common;
 using LibDmd;
-using LibDmd.Common;
-using LibDmd.Input;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
-using LibDmd.Processor;
 
 namespace DmdExt.Mirror
 {
@@ -36,17 +28,10 @@ namespace DmdExt.Mirror
 				FlipVertically = _options.FlipVertically
 			};
 
-			/*var transformationProcessor = new TransformationProcessor {
-				FlipVertically = _options.FlipVertically,
-				FlipHorizontally = _options.FlipHorizontally,
-				Resize = _options.Resize
-			};*/
-
 			// setup source and additional processors
 			switch (_options.Source) {
 
 				case SourceType.PinballFX2: {
-
 					if (_options.GridSize.Length != 2) {
 						throw new InvalidOptionException("Argument --grid-size must have two values: \"<Width> <Height>\".");
 					}
@@ -60,45 +45,15 @@ namespace DmdExt.Mirror
 						CropRight = _options.DmdCrop[2],
 						CropBottom = _options.DmdCrop[3]
 					};
-					var gridProcessor = new GridProcessor {
-						Spacing = _options.GridSpacing,
-						Width = _options.GridSize[0],
-						Height = _options.GridSize[1]
-					};
-					var shadeProcessor = new ShadeProcessor {
-						Enabled = !_options.DisableShading,
-						NumShades = _options.NumShades,
-						Intensity = _options.ShadeIntensity,
-						Brightness = _options.ShadeBrightness
-					};
-					/*
-					_graph.Processors = new List<AbstractProcessor> {
-						gridProcessor,
-						//transformationProcessor,
-						shadeProcessor
-					};*/
 					break;
 				}
 
 				case SourceType.PinballArcade: { 
 					_graph.Source = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
-					var shadeProcessor = new ShadeProcessor {
-						Enabled = !_options.DisableShading,
-						NumShades = 4,
-						Shades = new[]{ 0d, 0.22, 0.35, 0.55 },
-						Intensity = 1.9,
-						Brightness = 0
-					};
-					/*
-					_graph.Processors = new List<AbstractProcessor>() {
-						//transformationProcessor,
-						shadeProcessor
-					};*/
 					break;
 				}
 
 				case SourceType.ProPinball: {
-					
 					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
 					break;
 				}
