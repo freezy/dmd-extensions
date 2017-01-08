@@ -866,6 +866,9 @@ namespace LibDmd
 			if (dest == null) {
 				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
+				return frame;
+			}
 			var bmp = ImageUtil.ConvertFromGray2(width, height, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
@@ -876,6 +879,9 @@ namespace LibDmd
 		{
 			if (dest == null) {
 				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
+			}
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
+				return frame;
 			}
 			var bmp = ImageUtil.ConvertFromGray4(width, height, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
@@ -888,9 +894,13 @@ namespace LibDmd
 			if (dest == null) {
 				return new Tuple<byte[][], Color[]>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette);
 			}
-
-			//TODO implement
-			return new Tuple<byte[][], Color[]>(planes, palette);
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
+				return new Tuple<byte[][], Color[]>(planes, palette);
+			}
+			var bmp = ImageUtil.ConvertFromGray2(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
+			return new Tuple<byte[][], Color[]>(FrameUtil.Split(width, height, 2, transformedFrame), palette);
 		}
 
 		private Tuple<byte[][], Color[]> TransformColoredGray4(int width, int height, byte[][] planes, Color[] palette, IFixedSizeDestination dest)
@@ -898,9 +908,13 @@ namespace LibDmd
 			if (dest == null) {
 				return new Tuple<byte[][], Color[]>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette);
 			}
-
-			//TODO implement
-			return new Tuple<byte[][], Color[]>(planes, palette);
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
+				return new Tuple<byte[][], Color[]>(planes, palette);
+			}
+			var bmp = ImageUtil.ConvertFromGray4(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
+			return new Tuple<byte[][], Color[]>(FrameUtil.Split(width, height, 4, transformedFrame), palette);
 		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)

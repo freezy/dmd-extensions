@@ -12,12 +12,13 @@ namespace LibDmd.Output.VirtualDmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
+	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination
 	// these others are for debugging purpose. basically you can make the virtual dmd 
 	// behave like any other display by adding/removing interfaces
-	/*
-	IGray2Destination, IGray4Destination, 
-	IColoredGray2Destination, IColoredGray4Destination*/
+	// standard (aka production); IRgb24Destination, IBitmapDestination,
+	// pindmd1/2: IGray2Destination, IGray4Destination, 
+	// pin2dmd: IColoredGray2Destination, IColoredGray4Destination
+	// pindmd3: IColoredGray2Destination
 	{
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get;private set; } = 32;
@@ -91,6 +92,7 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void SetDimensions(int width, int height)
 		{
+			Logger.Debug("Resizing virtual DMD to {0}x{1}", width, height);
 			DmdWidth = width;
 			DmdHeight = height;
 			Dispatcher.Invoke(() => {

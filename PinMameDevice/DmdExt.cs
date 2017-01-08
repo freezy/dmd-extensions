@@ -40,8 +40,7 @@ namespace PinMameDevice
 		private readonly Gray2Source _gray2Source = new Gray2Source("VPM 2-bit Source");
 		private readonly Gray4Source _gray4Source = new Gray4Source("VPM 4-bit Source");
 		private readonly Rgb24Source _rgb24Source = new Rgb24Source("VPM RGB24 Source");
-		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
-		private readonly List<IDisposable> _renderers = new List<IDisposable>();
+		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private VirtualDmd _dmd;
 
 		// Ziigs vo VPM
@@ -244,7 +243,8 @@ namespace PinMameDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-			if (_gray2Colorizer != null) {
+			// 2-bit graph
+			if (_colorize && _gray2Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
 					Source = _gray2Source,
@@ -254,19 +254,8 @@ namespace PinMameDevice
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically
 				});
-			}
-			if (_gray4Colorizer != null) {
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colored VPM Graph",
-					Source = _gray4Source,
-					Destinations = renderers,
-					Converter = _gray4Colorizer,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically
-				});
-			}
-			if (_gray2Colorizer == null) {
+
+			} else {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit VPM Graph",
 					Source = _gray2Source,
@@ -276,7 +265,20 @@ namespace PinMameDevice
 					FlipVertically = _config.Global.FlipVertically
 				});
 			}
-			if (_gray4Colorizer == null) {
+
+			// 4-bit graph
+			if (_colorize && _gray4Colorizer != null) {
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit Colored VPM Graph",
+					Source = _gray4Source,
+					Destinations = renderers,
+					Converter = _gray4Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+
+			} else {
 				_graphs.Add(new RenderGraph {
 					Name = "4-bit VPM Graph",
 					Source = _gray4Source,
@@ -286,6 +288,8 @@ namespace PinMameDevice
 					FlipVertically = _config.Global.FlipVertically
 				});
 			}
+
+			// rgb24 graph
 			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
 				Source = _rgb24Source,
@@ -295,26 +299,22 @@ namespace PinMameDevice
 				FlipVertically = _config.Global.FlipVertically
 			});
 
-			// ReSharper disable once ForCanBeConvertedToForeach
-			foreach (var graph in _graphs)
-			{
-				if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
-					Logger.Info("Just clearing palette, colorization is done by converter.");
-					graph.ClearColor();
+			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
+				Logger.Info("Just clearing palette, colorization is done by converter.");
+				_graphs.ClearColor();
 
-				} else if (_colorize && _palette != null) {
-					Logger.Info("Applying palette to {0}...", graph.Name);
-					graph.ClearColor();
-					graph.SetPalette(_palette);
+			} else if (_colorize && _palette != null) {
+				Logger.Info("Applying palette to render graphs.");
+				_graphs.ClearColor();
+				_graphs.SetPalette(_palette);
 
-				} else {
-					Logger.Info("Applying color to {0}...", graph.Name);
-					graph.ClearPalette();
-					graph.SetColor(_color);	
-				}
+			} else {
+				Logger.Info("Applying color to render graphs.");
+				_graphs.ClearPalette();
+				_graphs.SetColor(_color);	
 			}
 
-			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
+			_graphs.StartRendering();
 		}
 
 		/// <summary>
@@ -323,10 +323,7 @@ namespace PinMameDevice
 		public void Close()
 		{
 			Logger.Info("Closing up.");
-			_renderers.ForEach(r => r.Dispose());
-			_renderers.Clear();
-			_graphs.ForEach(graph => graph.Dispose());
-			_graphs.Clear();
+			_graphs.Dispose();
 			_dmd?.Dispatcher.Invoke(() => {
 				_dmd.Hide();
 			});

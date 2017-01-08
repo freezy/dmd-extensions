@@ -16,7 +16,6 @@ namespace LibDmd.Common
 {
 	public class TransformationUtil
 	{
-
 		/// <summary>
 		/// Flips a top-left to bottom-right array of pixels with a given number of bytes per pixel.
 		/// </summary>
@@ -81,13 +80,22 @@ namespace LibDmd.Common
 			return flippedPlanes;
 		}
 
-
+		/// <summary>
+		/// Resizes and flips an image
+		/// </summary>
+		/// <param name="bmp">Source image</param>
+		/// <param name="destWidth">Resize to this width</param>
+		/// <param name="destHeight">Resize to this height</param>
+		/// <param name="resize">How to scale down</param>
+		/// <param name="flipHorizontally">If true, flip horizontally (left/right)</param>
+		/// <param name="flipVertically">If true, flip vertically (top/down)</param>
+		/// <returns>New transformed image or the same image if new dimensions are identical and no flipping taking place</returns>
 		public static BitmapSource Transform(BitmapSource bmp, int destWidth, int destHeight, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{
 			if (bmp.PixelWidth == destWidth && bmp.PixelHeight == destHeight && !flipHorizontally && !flipVertically) {
 				return bmp;
 			}
-			//Console.WriteLine("Transforming from {0}x{1} to {2}x{3}...", bmp.PixelWidth, bmp.PixelHeight, destWidth, destHeight);
+			Console.WriteLine("Transforming from {0}x{1} to {2}x{3} ({4}/{5})...", bmp.PixelWidth, bmp.PixelHeight, destWidth, destHeight, flipHorizontally, flipVertically);
 
 			var sw = new Stopwatch();
 			sw.Start();
@@ -192,7 +200,7 @@ namespace LibDmd.Common
 			if (bmp.PixelWidth == (int)width && bmp.PixelHeight == (int)height && !flipHorizontally && !flipVertically) {
 				processedBmp = bmp;
 			} else {
-				processedBmp = new TransformedBitmap(bmp, new ScaleTransform(width/bmp.PixelWidth*(flipHorizontally ? -1 : 1), height/bmp.PixelHeight*(flipVertically ? -1 : 1), (double) bmp.PixelWidth/2, (double) bmp.PixelHeight/2));
+				processedBmp = new TransformedBitmap(bmp, new ScaleTransform(width / bmp.PixelWidth * (flipHorizontally ? -1 : 1), height / bmp.PixelHeight * (flipVertically ? -1 : 1), (double) bmp.PixelWidth/2, (double) bmp.PixelHeight/2));
 			}
 
 			// crop if necessary

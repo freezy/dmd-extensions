@@ -29,7 +29,7 @@ namespace LibDmd.Input
 		/// <summary>
 		/// The size of the source. Can change any time.
 		/// </summary>
-		BehaviorSubject<Dimensions> Dimensions { get; }
+		BehaviorSubject<Dimensions> Dimensions { get; set; }
 
 		/// <summary>
 		/// An observable that triggers when the source starts providing frames.
