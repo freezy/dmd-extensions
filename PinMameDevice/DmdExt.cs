@@ -157,6 +157,7 @@ namespace PinMameDevice
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(() => {
+					_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 					_dmd.Left = _config.VirtualDmd.Left;
 					_dmd.Top = _config.VirtualDmd.Top;
 					_dmd.Width = _config.VirtualDmd.Width;

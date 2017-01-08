@@ -132,6 +132,7 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `enabled` - If false, don't show it
   - `stayontop` - Virtual dmd stays on top of most other windows 
   - `hidegrip` - Hide the resize grip
+  - `ignorear` - If true, allow free resizing of the virtual DMD.
   - `left` - X-axis of the window position
   - `top` - Y-axis of the window position
   - `width` - Width of the DMD in monitor pixels

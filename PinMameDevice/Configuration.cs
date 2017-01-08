@@ -172,6 +172,12 @@ namespace PinMameDevice
 			set { Set("stayontop", value); }
 		}
 
+		public bool IgnoreAr
+		{
+			get { return GetBoolean("ignorear", false); }
+			set { Set("ignorear", value); }
+		}
+
 		public bool HideGrip
 		{
 			get { return GetBoolean("hidegrip", false); }
