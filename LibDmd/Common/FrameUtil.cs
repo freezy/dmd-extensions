@@ -217,7 +217,7 @@ namespace LibDmd.Common
 		{
 			var destFrame = new byte[srcFrame.Length];
 			for (var i = 0; i < destFrame.Length; i++) {
-				destFrame[i] = mapping[destFrame[i]];
+				destFrame[i] = mapping[srcFrame[i]];
 			}
 			return destFrame;
 		}
