@@ -45,7 +45,7 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// <summary>
 		/// Frequency with which frames are pulled off the display.
 		/// </summary>
-		public double FramesPerSecond { get; set; } = 15;
+		public double FramesPerSecond { get; set; } = 60;
 
 		public int CropLeft { get; set; } = 12;
 		public int CropTop { get; set; } = 8;
@@ -56,7 +56,6 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		private IDisposable _capturer;
 		private IntPtr _handle;
-		private FrameFormat _frameFormat = FrameFormat.Bitmap;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
@@ -108,10 +107,10 @@ namespace LibDmd.Input.PBFX2Grabber
 			double lastHue = 0;
 			Color[] palette = null;
 
-			_frameFormat = FrameFormat.ColoredGray2;
 			if (_framesColoredGray2 == null) {
 				var gridProcessor = new GridProcessor { Spacing = 1d };
-				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
+				Logger.Info("Capturing at {0} frames per second...", FramesPerSecond);
+				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
 					.Select(bmp => gridProcessor.Process(bmp, null))

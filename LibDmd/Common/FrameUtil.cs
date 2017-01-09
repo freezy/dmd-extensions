@@ -198,7 +198,7 @@ namespace LibDmd.Common
 				Buffer.BlockCopy(plane, 0, frame, offset, plane.Length);
 				offset += plane.Length;
 			}
-			return identical;
+			return !identical;
 		}
 
 		public static byte[][] Copy(int width, int height, byte[] planes, int bitlength, int offset)
@@ -359,7 +359,7 @@ namespace LibDmd.Common
 		{
 			fixed (byte* b1 = buffer1, b2 = buffer2)
 			{
-				return memcmp(b1 + offset1, b2 + offset2, count) != 0;
+				return memcmp(b1 + offset1, b2 + offset2, count) == 0;
 			}
 		}
 	}

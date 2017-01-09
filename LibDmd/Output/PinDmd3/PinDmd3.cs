@@ -41,6 +41,8 @@ namespace LibDmd.Output.PinDmd3
 		private readonly byte[] _frameBufferRgb24;
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
+		//private readonly byte[] _lastBuffer;
+		//private long _lastTick;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -95,6 +97,8 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferGray2 = new byte[DmdWidth * DmdHeight / 4 + 14];     
 			_frameBufferGray2[0] = Gray2CommandByte;
 			_frameBufferGray2[DmdWidth * DmdHeight / 4 + 13] = Gray2CommandByte;
+
+			//_lastBuffer = new byte[DmdWidth * DmdHeight * 3 + 2];
 
 			ClearColor();
 		}
@@ -218,7 +222,19 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderRaw(byte[] data)
 		{
+			//var start = DateTime.Now.Ticks;
+			//var lastFrame = start - _lastTick;
 			_serialPort.Write(data, 0, data.Length);
+			/*var ticks = DateTime.Now.Ticks - start;
+			var seconds = (double)ticks / TimeSpan.TicksPerSecond;
+			Logger.Debug("{0}ms for {1} bytes ({2} baud), {3}ms ({4} fps)", 
+				Math.Round((double)ticks / TimeSpan.TicksPerMillisecond * 1000) / 1000, 
+				data.Length, 
+				(double)data.Length * 8 / seconds,
+				Math.Round((double)lastFrame / TimeSpan.TicksPerMillisecond * 1000) / 1000, 
+				Math.Round((double)TimeSpan.TicksPerSecond / lastFrame * 1000) / 1000
+				);
+			_lastTick = start;*/
 		}
 
 		public void RenderBlank()
