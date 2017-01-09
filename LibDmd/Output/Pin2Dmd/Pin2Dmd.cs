@@ -162,7 +162,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray2(byte[][] planes, Color[] palette)
 		{
-			SetPalette(new[] );
+			SetPalette(palette);
 
 			var frame = FrameUtil.Join(DmdWidth, DmdHeight, planes);
 
