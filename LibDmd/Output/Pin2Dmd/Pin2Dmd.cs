@@ -132,11 +132,12 @@ namespace LibDmd.Output.Pin2Dmd
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
 			// copy to buffer
-			FrameUtil.Copy(planes, _frameBufferGray4, 4);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray4);
-
+			if (changed) {
+				RenderRaw(_frameBufferGray4);	
+			}
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -153,11 +154,12 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(palette);
 
 			// copy to buffer
-			FrameUtil.Copy(planes, _frameBufferGray4, 4);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray4);
-
+			if (changed) {
+				RenderRaw(_frameBufferGray4);
+			}
 		}
 
 		public void RenderColoredGray2(byte[][] planes, Color[] palette)

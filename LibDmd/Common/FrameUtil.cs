@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -185,15 +186,19 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Merges an array of bit planes into one single array.
 		/// </summary>
-		/// <param name="planes">Source pla nes</param>
+		/// <param name="planes">Source planes</param>
 		/// <param name="frame">Destination array</param>
 		/// <param name="offset">Where to start copying at destination</param>
-		public static void Copy(byte[][] planes, byte[] frame, int offset)
+		/// <returns>True if destination array changed, false otherwise.</returns>
+		public static bool Copy(byte[][] planes, byte[] frame, int offset)
 		{
+			var identical = true;
 			foreach (var plane in planes) {
+				identical = identical && CompareBuffers(plane, 0, frame, offset, plane.Length);
 				Buffer.BlockCopy(plane, 0, frame, offset, plane.Length);
 				offset += plane.Length;
 			}
+			return identical;
 		}
 
 		public static byte[][] Copy(int width, int height, byte[] planes, int bitlength, int offset)
@@ -205,6 +210,20 @@ namespace LibDmd.Common
 				Buffer.BlockCopy(planes, offset + i * planeSize, copy[i], 0, planeSize);
 			}
 			return copy;
+		}
+
+		/// <summary>
+		/// Copies a byte array to another byte array.
+		/// </summary>
+		/// <param name="frame">Source array</param>
+		/// <param name="dest">Destination array</param>
+		/// <param name="offset">Offset at destination</param>
+		/// <returns>True if destination array changed, false otherwise.</returns>
+		public static bool Copy(byte[] frame, byte[] dest, int offset)
+		{
+			var identical = CompareBuffers(frame, 0, dest, offset, frame.Length);
+			Buffer.BlockCopy(frame, 0, dest, offset, frame.Length);
+			return identical;
 		}
 
 		/// <summary>
@@ -333,5 +352,15 @@ namespace LibDmd.Common
 			}
 		}
 
+		[DllImport("msvcrt.dll", CallingConvention=CallingConvention.Cdecl)]
+		private static extern unsafe int memcmp(byte* b1, byte* b2, int count);
+
+		public static unsafe bool CompareBuffers(byte[] buffer1, int offset1, byte[] buffer2, int offset2, int count)
+		{
+			fixed (byte* b1 = buffer1, b2 = buffer2)
+			{
+				return memcmp(b1 + offset1, b2 + offset2, count) != 0;
+			}
+		}
 	}
 }

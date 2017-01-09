@@ -132,7 +132,7 @@ namespace LibDmd.Output.PinDmd3
 			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
 			try {
 				Logger.Debug("Checking port {0} for PinDMDv3...", port);
-				_serialPort = new SerialPort(port, 921600, Parity.None, 8, StopBits.One);
+				_serialPort = new SerialPort(port, 8176000, Parity.None, 8, StopBits.One);
 				_serialPort.Open();
 				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
 				System.Threading.Thread.Sleep(100); // duh...
@@ -169,10 +169,12 @@ namespace LibDmd.Output.PinDmd3
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
 
 			// copy to frame buffer
-			FrameUtil.Copy(planes, _frameBufferGray2, 13);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray2);
+			if (changed) {
+				RenderRaw(_frameBufferGray2);
+			}
 		}
 
 		public void RenderColoredGray2(byte[][] planes, Color[] palette)
@@ -181,10 +183,12 @@ namespace LibDmd.Output.PinDmd3
 			SetPalette(palette);
 
 			// copy to frame buffer
-			FrameUtil.Copy(planes, _frameBufferGray2, 13);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray2);
+			if (changed) {
+				RenderRaw(_frameBufferGray2);
+			}
 		}
 
 		public void RenderGray4(byte[] frame)
@@ -193,19 +197,23 @@ namespace LibDmd.Output.PinDmd3
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
 			// copy to frame buffer
-			FrameUtil.Copy(planes, _frameBufferGray4, 13);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferGray4);
+			if (changed) {
+				RenderRaw(_frameBufferGray4);
+			}
 		}
 
 		public void RenderRgb24(byte[] frame)
 		{
 			// copy data to frame buffer
-			Buffer.BlockCopy(frame, 0, _frameBufferRgb24, 1, frame.Length);
+			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 
 			// can directly be sent to the device.
-			RenderRaw(_frameBufferRgb24);
+			if (changed) {
+				RenderRaw(_frameBufferRgb24);
+			}
 		}
 
 		public void RenderRaw(byte[] data)

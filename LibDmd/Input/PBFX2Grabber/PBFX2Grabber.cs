@@ -26,7 +26,7 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : AbstractSource, IColoredGray2Source, IRgb24Source
+	public class PBFX2Grabber : AbstractSource, IColoredGray2Source
 	{
 		public override string Name { get; } = "Pinball FX2";
 
@@ -52,7 +52,6 @@ namespace LibDmd.Input.PBFX2Grabber
 		public int CropRight { get; set; } = 8;
 		public int CropBottom { get; set; } = 12;
 
-		private IConnectableObservable<byte[]> _framesRgb24;
 		private IConnectableObservable<Tuple<byte[][], Color[]>> _framesColoredGray2;
 
 		private IDisposable _capturer;
@@ -87,17 +86,7 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// </summary>
 		private void StartCapturing()
 		{
-			switch (_frameFormat)
-			{
-				case FrameFormat.ColoredGray2:
-					_capturer = _framesColoredGray2.Connect();
-					break;
-				case FrameFormat.Rgb24:
-					_capturer = _framesRgb24.Connect();
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+			_capturer = _framesColoredGray2.Connect();
 			_onResume.OnNext(Unit.Default);
 		}
 
@@ -113,23 +102,6 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-		public IObservable<byte[]> GetRgb24Frames()
-		{
-			_frameFormat = FrameFormat.Gray2;
-			if (_framesRgb24 == null) {
-				var gridProcessor = new GridProcessor { Spacing = 1d };
-				_framesRgb24 = Observable.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-					.Select(x => CaptureWindow())
-					.Where(bmp => bmp != null)
-					.Select(bmp => gridProcessor.Process(bmp, null))
-					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
-					.Select(bmp => ImageUtil.ConvertToRgb24(bmp, 2))
-					.Publish();
-
-				StartPolling();
-			}
-			return _framesRgb24;
-		}
 
 		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
 		{
@@ -169,30 +141,23 @@ namespace LibDmd.Input.PBFX2Grabber
 			GetWindowRect(_handle, out rc);
 
 			// rect contains 0 values if handler not available anymore
-			if (rc.Width == 0 || rc.Height == 0)
-			{
+			if (rc.Width == 0 || rc.Height == 0) {
 				Logger.Debug("Handle lost, stopping capture.");
 				_handle = IntPtr.Zero;
 				StopCapturing();
 				return null;
 			}
 
-			using (var bmp = new Bitmap(rc.Width, rc.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
-			{
-				using (var gfxBmp = Graphics.FromImage(bmp))
-				{
+			using (var bmp = new Bitmap(rc.Width, rc.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
+				using (var gfxBmp = Graphics.FromImage(bmp)) {
 					var hdcBitmap = gfxBmp.GetHdc();
-					try
-					{
+					try {
 						var succeeded = PrintWindow(_handle, hdcBitmap, 0);
-						if (!succeeded)
-						{
+						if (!succeeded) {
 							Logger.Error("Could not retrieve image data from handle {0}", _handle);
 							return null;
 						}
-					}
-					finally
-					{
+					} finally {
 						gfxBmp.ReleaseHdc(hdcBitmap);
 					}
 					return Convert(bmp);
@@ -202,20 +167,16 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		private static IntPtr FindDmdHandle()
 		{
-			foreach (var proc in Process.GetProcessesByName("Pinball FX2"))
-			{
+			foreach (var proc in Process.GetProcessesByName("Pinball FX2")) {
 				var handles = GetRootWindowsOfProcess(proc.Id);
-				foreach (var handle in handles)
-				{
+				foreach (var handle in handles) {
 					NativeCapture.RECT rc;
 					GetWindowRect(handle, out rc);
-					if (rc.Width == 0 || rc.Height == 0)
-					{
+					if (rc.Width == 0 || rc.Height == 0) {
 						continue;
 					}
-					var ar = rc.Width/rc.Height;
-					if (ar >= 3 && ar < 4.2)
-					{
+					var ar = rc.Width / rc.Height;
+					if (ar >= 3 && ar < 4.2) {
 						return handle;
 					}
 				}
@@ -285,12 +246,10 @@ namespace LibDmd.Input.PBFX2Grabber
 			var cropTop = Math.Max(0, CropTop);
 			var cropRight = Math.Max(0, CropRight);
 			var cropBottom = Math.Max(0, CropBottom);
-			if (bitmapSource.PixelWidth - cropLeft - cropRight <= 0)
-			{
+			if (bitmapSource.PixelWidth - cropLeft - cropRight <= 0) {
 				throw new CropRectangleOutOfRangeException("With a width of " + bitmapSource.PixelWidth + ", left crop of " + cropLeft + " and right crop of " + cropRight + ", there is no surface left to grab.");
 			}
-			if (bitmapSource.PixelHeight - cropTop - cropBottom <= 0)
-			{
+			if (bitmapSource.PixelHeight - cropTop - cropBottom <= 0) {
 				throw new CropRectangleOutOfRangeException("With a height of " + bitmapSource.PixelHeight + ", top crop of " + cropTop + " and bottom crop of " + cropBottom + ", there is no surface left to grab.");
 			}
 			var rect = new Int32Rect(cropLeft, cropTop, bitmapSource.PixelWidth - cropLeft - cropRight, bitmapSource.PixelHeight - cropTop - cropBottom);
