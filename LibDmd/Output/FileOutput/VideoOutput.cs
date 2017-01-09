@@ -11,7 +11,7 @@ using SharpAvi.Output;
 
 namespace LibDmd.Output.FileOutput
 {
-	public class VideoOutput : IRgb24Destination, IBitmapDestination
+	public class VideoOutput : IRgb24Destination
 	{
 		public string VideoPath { get; set; }
 
@@ -83,15 +83,6 @@ namespace LibDmd.Output.FileOutput
 			Logger.Info("Writing video to {0}.", VideoPath);
 		}
 
-		/// <summary>
-		/// Renders an image to the display.
-		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
-		public void RenderBitmap(BitmapSource bmp)
-		{
-			throw new NotImplementedException();
-		}
-
 		public void Dispose()
 		{
 			_animation.Dispose();
@@ -111,22 +102,22 @@ namespace LibDmd.Output.FileOutput
 
 		public void SetColor(Color color)
 		{
-			throw new NotImplementedException();
+			// ignore
 		}
 
 		public void SetPalette(Color[] colors)
 		{
-			throw new NotImplementedException();
+			// ignore
 		}
 
 		public void ClearPalette()
 		{
-			throw new NotImplementedException();
+			// ignore
 		}
 
 		public void ClearColor()
 		{
-			throw new NotImplementedException();
+			// ignore
 		}
 	}
 

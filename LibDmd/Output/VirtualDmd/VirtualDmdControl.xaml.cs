@@ -17,8 +17,8 @@ namespace LibDmd.Output.VirtualDmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination,
 	// pindmd1/2: IGray2Destination, IGray4Destination, 
-	// pin2dmd: IColoredGray2Destination, IColoredGray4Destination
-	// pindmd3: IColoredGray2Destination
+	// pin2dmd: IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination
+	// pindmd3: IGray2Destination, IGray4Destination, IColoredGray2Destination
 	{
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get;private set; } = 32;
