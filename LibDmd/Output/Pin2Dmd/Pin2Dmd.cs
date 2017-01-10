@@ -143,10 +143,12 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
+			var changed = FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
 
 			// send frame buffer to device
-			RenderRaw(_frameBufferRgb24);
+			if (changed) {
+				RenderRaw(_frameBufferRgb24);
+			}
 		}
 
 		public void RenderColoredGray4(byte[][] planes, Color[] palette)
@@ -185,17 +187,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void SetColor(Color color)
 		{
-			double hue, saturation, luminosity;
-			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
-			const int pos = 7;
-			for (var i = 0; i < 16; i++) {
-				var lum = (double)i / 15;
-				byte r, g, b;
-				ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
-				_colorPalette[pos + (i * 3)] = r;
-				_colorPalette[pos + (i * 3) + 1] = g;
-				_colorPalette[pos + (i * 3) + 2] = b;
-			}
+			SetPalette(new [] {Colors.Black, color});
 			RenderRaw(_colorPalette);
 		}
 
