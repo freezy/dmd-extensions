@@ -73,9 +73,11 @@ namespace LibDmd.Common
 		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
 		/// <param name="frameBuffer">Destination buffer where planes are written</param>
 		/// <param name="offset">Start writing at this offset</param>
-		public static void SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
+		/// <returns>True if destination buffer changed, false otherwise.</returns>
+		public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
 		{
 			var byteIdx = offset;
+			var identical = true;
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x += 8) {
 					byte r3 = 0;
@@ -138,6 +140,26 @@ namespace LibDmd.Common
 						if ((pixelb & 128) != 0) b7 |= 1;
 					}
 
+					identical = identical &&
+						frameBuffer[byteIdx + 5120] == r3 &&
+						frameBuffer[byteIdx + 5632] == r4 &&
+						frameBuffer[byteIdx + 6144] == r5 &&
+						frameBuffer[byteIdx + 6656] == r6 &&
+						frameBuffer[byteIdx + 7168] == r7 &&
+
+						frameBuffer[byteIdx + 2560] == g3 &&
+						frameBuffer[byteIdx + 3072] == g4 &&
+						frameBuffer[byteIdx + 3584] == g5 &&
+						frameBuffer[byteIdx + 4096] == g6 &&
+						frameBuffer[byteIdx + 4608] == g7 &&
+
+						frameBuffer[byteIdx + 0] == b3 &&
+						frameBuffer[byteIdx + 512] == b4 &&
+						frameBuffer[byteIdx + 1024] == b5 &&
+						frameBuffer[byteIdx + 1536] == b6 &&
+						frameBuffer[byteIdx + 2048] == b7;
+
+
 					frameBuffer[byteIdx + 5120] = r3;
 					frameBuffer[byteIdx + 5632] = r4;
 					frameBuffer[byteIdx + 6144] = r5;
@@ -158,6 +180,7 @@ namespace LibDmd.Common
 					byteIdx++;
 				}
 			}
+			return !identical;
 		}
 
 		/// <summary>
@@ -223,7 +246,7 @@ namespace LibDmd.Common
 		{
 			var identical = CompareBuffers(frame, 0, dest, offset, frame.Length);
 			Buffer.BlockCopy(frame, 0, dest, offset, frame.Length);
-			return identical;
+			return !identical;
 		}
 
 		/// <summary>

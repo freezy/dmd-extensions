@@ -310,7 +310,7 @@ namespace PinMameDevice
 				_graphs.SetPalette(_palette);
 
 			} else {
-				Logger.Info("Applying color to render graphs.");
+				Logger.Info("Applying default color to render graphs ({0}).", _color);
 				_graphs.ClearPalette();
 				_graphs.SetColor(_color);	
 			}

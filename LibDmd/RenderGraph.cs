@@ -785,7 +785,7 @@ namespace LibDmd
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
 
 			// set color for external coloring
-			if (Destinations == null){
+			if (Destinations == null) {
 				return;
 			}
 			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
@@ -822,7 +822,6 @@ namespace LibDmd
 			}
 			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
 				rgbDest?.ClearPalette();
-
 			}
 		}
 
