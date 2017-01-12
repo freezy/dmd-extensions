@@ -774,65 +774,37 @@ namespace LibDmd
 		/// Sets the color with which a grayscale source is rendered on the RGB display.
 		/// </summary>
 		/// <param name="color">Rendered color</param>
-		public void SetColor(Color color)
+		internal void SetColor(Color color)
 		{
-			// set color for internal coloring
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
-
-			// set color for external coloring
-			if (Destinations == null) {
-				return;
-			}
-			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
-				rgbDest?.SetColor(color);
-			}
 		}
 
 		/// <summary>
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
 		/// <param name="colors"></param>
-		public void SetPalette(Color[] colors)
+		internal void SetPalette(Color[] colors)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
-
-			if (Destinations == null) {
-				return;
-			}
-			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
-				rgbDest?.SetPalette(colors);
-			}
 		}
 
 		/// <summary>
 		/// Removes a previously set palette
 		/// </summary>
-		public void ClearPalette()
+		internal void ClearPalette()
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
-			if (Destinations == null) {
-				return;
-			}
-			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
-				rgbDest?.ClearPalette();
-			}
 		}
 
 		/// <summary>
 		/// Resets the color
 		/// </summary>
-		public void ClearColor()
+		internal void ClearColor()
 		{
 			SetColor(DefaultColor);
-			if (Destinations == null) {
-				return;
-			}
-			foreach (var rgbDest in Destinations.Select(d => d as IRgb24Destination)) {
-				rgbDest?.ClearColor();
-			}
 		}
 
 
