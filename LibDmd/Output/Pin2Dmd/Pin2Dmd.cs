@@ -188,7 +188,6 @@ namespace LibDmd.Output.Pin2Dmd
 		public void SetColor(Color color)
 		{
 			SetPalette(new [] {Colors.Black, color});
-			RenderRaw(_colorPalette);
 		}
 
 		public void SetPalette(Color[] colors)
@@ -206,6 +205,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 			if (!identical) {
 				RenderRaw(_colorPalette);
+				System.Threading.Thread.Sleep(50);
 			}
 		}
 

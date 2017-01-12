@@ -192,8 +192,6 @@ namespace LibDmd
 						// ReSharper disable once SuspiciousTypeConversion.Global
 						var rgb24SourceConverter = Converter as IRgb24Source;
 
-						Logger.Info("Connecting converter sources for {0}...", dest.Name);
-
 						// send frames to converter
 						switch (Converter.From) {
 							case FrameFormat.Gray2:
@@ -274,8 +272,6 @@ namespace LibDmd
 					var sourceColoredGray4 = Source as IColoredGray4Source;
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
-
-					Logger.Info("Connecting source for {0}...", dest.Name);
 
 					// first, check if we do without conversion
 					// gray2 -> gray2
