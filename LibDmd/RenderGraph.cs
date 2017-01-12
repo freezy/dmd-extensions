@@ -384,14 +384,14 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Gray2);
 						continue;
 					}
-
-					// log status
-					Source.OnResume.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });
-					Source.OnPause.Subscribe(x => {
-						Logger.Info("Frames stopped from {0}.", Source.Name);
-						onCompleted?.Invoke();
-					});
 				}
+
+				// log status
+				Source.OnResume.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });
+				Source.OnPause.Subscribe(x => {
+					Logger.Info("Frames stopped from {0}.", Source.Name);
+					onCompleted?.Invoke();
+				});
 
 			} catch (AdminRightsRequiredException ex) {
 				IsRendering = false;
