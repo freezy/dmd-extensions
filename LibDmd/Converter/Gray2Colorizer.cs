@@ -121,6 +121,8 @@ namespace LibDmd.Converter
 
 			// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
 			if (!CurrentEnhancer.IsRunning) {
+				Logger.Trace("[timing] Waiting {0}ms for last frame to finish...", CurrentEnhancer.LastFrame.Delay);
+
 				// nu uifs letschti biud wartä bis mer fertig sind
 				Observable
 					.Never<Unit>()
