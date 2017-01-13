@@ -68,10 +68,15 @@ namespace LibDmd.Converter
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
 						var checksum = FrameUtil.Checksum(maskedPlane);
 						if (ApplyMapping(checksum, "masked")) {
+							match = true;
 							break;
 						}
 					}
 				}
+			}
+
+			if (!match) {
+				LastChecksum = 0x0;
 			}
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh

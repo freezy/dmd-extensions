@@ -137,7 +137,7 @@ namespace LibDmd.Converter
 						CurrentAnimation?.Stop();
 						CurrentEnhancer?.Stop();
 						CurrentAnimation = animation;
-						CurrentAnimation.Start(ColoredGray2AnimationFrames, ColoredGray4AnimationFrames, Palette, () => LastChecksum = 0x0);
+						CurrentAnimation.Start(ColoredGray2AnimationFrames, ColoredGray4AnimationFrames, Palette, AnimationFinished);
 						FrameCounter = 0;
 						LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 					}
@@ -199,6 +199,17 @@ namespace LibDmd.Converter
 			} else {
 				Logger.Warn("[colorize] No palette with index {0} found to load through side channel.", index);
 			}
+		}
+
+		/// <summary>
+		/// Wird uisgfiährt wenn än Animazion fertig isch, cha irgend ä Modus si.
+		/// </summary>
+		protected void AnimationFinished()
+		{
+			LastChecksum = 0x0;
+			SetPalette(_defaultPalette);
+			CurrentAnimation = null;
+			CurrentEnhancer = null;
 		}
 
 		public IObservable<byte[]> GetRgb24Frames()
