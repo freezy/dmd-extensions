@@ -38,7 +38,7 @@ namespace LibDmd.Converter
 			}
 
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
-			if (planes.Length == BitLength) {
+			if (planes.Length == 2) {
 				ColoredGray2AnimationFrames.OnNext(new Tuple<byte[][], Color[]>(planes, Palette.Value.GetColors(planes.Length)));
 			}
 
@@ -63,6 +63,33 @@ namespace LibDmd.Converter
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
 			var planes = FrameUtil.Split(Width, Height, 2, frame);
+
+			// Enhancer isch um eis verschobä, das heisst äs wird erscht hiä gluägt (bim Frame nachem Häschä)
+			if (IsEnhancerRunning) {
+				
+				// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
+				var data = CurrentEnhancer.Next();
+				
+				// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
+				if (!CurrentEnhancer.IsRunning) {
+					Logger.Trace("[timing] Waiting {0}ms for last frame to finish...", CurrentEnhancer.LastFrame.Delay);
+
+					// nu uifs letschti biud wartä bis mer fertig sind
+					Observable
+						.Never<Unit>()
+						.StartWith(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(CurrentEnhancer.LastFrame.Delay))
+						.Subscribe(_ => AnimationFinished());
+				}
+
+				if (data.BitLength == 2) {
+					planes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
+				} else {
+					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);	
+				}
+				return planes;
+			}
+
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht
@@ -106,30 +133,6 @@ namespace LibDmd.Converter
 				return null;
 			}
 
-			// Wenn kä Erwiiterer am laifä nisch de simmer fertig
-			if (!IsEnhancerRunning) {
-				return planes;
-			}
-
-			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
-			var data = CurrentEnhancer.Next();
-			if (data.BitLength == 2) {
-				planes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
-			} else {
-				Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);	
-			}
-
-			// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
-			if (!CurrentEnhancer.IsRunning) {
-				Logger.Trace("[timing] Waiting {0}ms for last frame to finish...", CurrentEnhancer.LastFrame.Delay);
-
-				// nu uifs letschti biud wartä bis mer fertig sind
-				Observable
-					.Never<Unit>()
-					.StartWith(Unit.Default)
-					.Delay(TimeSpan.FromMilliseconds(CurrentEnhancer.LastFrame.Delay))
-					.Subscribe(_ => AnimationFinished());
-			}
 			return planes;
 		}
 	}
