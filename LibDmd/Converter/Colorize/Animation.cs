@@ -32,6 +32,7 @@ namespace LibDmd.Converter.Colorize
 		public bool IsRunning { get; private set; }
 		public readonly long Offset;
 		public int NumFrames => _frames.Length;
+		public Frame LastFrame => _frames[_frames.Length - 1];
 
 		private readonly Frame[] _frames;
 		private readonly int _width;
@@ -39,6 +40,7 @@ namespace LibDmd.Converter.Colorize
 		private IDisposable _animation;
 
 		private uint _frameIndex;
+		private long _animationStarted;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -87,7 +89,7 @@ namespace LibDmd.Converter.Colorize
 				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)))
 				.Subscribe(frame => {
 					frameSource.OnNext(frame);
-					//Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					n++;
 				}, () => {
 
@@ -116,14 +118,17 @@ namespace LibDmd.Converter.Colorize
 			Logger.Info("[fsq] Starting colored gray4 animation of {0} frames...", _frames.Length);
 			IsRunning = true;
 			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			var n = 0;
 			_animation = _frames.ToObservable()
 				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
 				.Subscribe(frame => {
+					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					if (frame.BitLength == 2) {
 						coloredGray2Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
 					} else {
 						coloredGray4Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
 					}
+					n++;
 				}, () => {
 
 					// nu uifs letschti biud wartä bis mer fertig sind
@@ -151,6 +156,7 @@ namespace LibDmd.Converter.Colorize
 		public void Start()
 		{
 			_frameIndex = 0;
+			_animationStarted = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			IsRunning = true;
 		}
 
@@ -166,6 +172,7 @@ namespace LibDmd.Converter.Colorize
 			if (_frames.Length == _frameIndex + 1) {
 				IsRunning = false;
 			}
+			Logger.Trace("[timing] FSQ Frame #{0} enhanced ({1} ms, theory: {2} ms).", _frameIndex, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - _animationStarted, _frames[_frameIndex].Time);
 			return _frames[_frameIndex++];
 		}
 

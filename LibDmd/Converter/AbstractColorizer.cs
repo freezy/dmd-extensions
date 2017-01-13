@@ -100,12 +100,14 @@ namespace LibDmd.Converter
 				Logger.Warn("[colorize] No palette found at index {0} for {1} frame.", mapping.PaletteIndex, masked);
 				return false;
 			}
-			Logger.Info("[colorize] Setting palette {0} of {1} colors via {2} frame: [ {3} ]", mapping.PaletteIndex, palette.Colors.Length, masked, string.Join(" ", palette.Colors.Select(c => c.ToString())));
-			_paletteReset?.Dispose();
-			_paletteReset = null;
 
-			SetPalette(palette);
-
+			if (checksum != LastChecksum) {
+				Logger.Info("[colorize] Setting palette {0} of {1} colors via {2} frame:", mapping.PaletteIndex, palette.Colors.Length, masked);
+				_paletteReset?.Dispose();
+				_paletteReset = null;
+				SetPalette(palette);
+			}
+			
 			switch (mapping.Mode)
 			{
 				// Numä iifärbä (hemmr scho) und guät isch
@@ -206,6 +208,7 @@ namespace LibDmd.Converter
 		/// </summary>
 		protected void AnimationFinished()
 		{
+			Logger.Trace("[timing] Animation finished.");
 			LastChecksum = 0x0;
 			SetPalette(_defaultPalette);
 			CurrentAnimation = null;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
@@ -112,13 +114,19 @@ namespace LibDmd.Converter
 			// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
 			var data = CurrentEnhancer.Next();
 			if (data.BitLength == 2) {
-				return new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
+				planes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
+			} else {
+				Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);	
 			}
-			Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);
 
 			// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
 			if (!CurrentEnhancer.IsRunning) {
-				AnimationFinished();
+				// nu uifs letschti biud wartä bis mer fertig sind
+				Observable
+					.Never<Unit>()
+					.StartWith(Unit.Default)
+					.Delay(TimeSpan.FromMilliseconds(CurrentEnhancer.LastFrame.Delay))
+					.Subscribe(_ => AnimationFinished());
 			}
 			return planes;
 		}
