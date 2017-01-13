@@ -181,7 +181,6 @@ namespace LibDmd.Output.Pin2Dmd
 			var error = writer.Write(frame, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
-				throw new Exception(UsbDevice.LastErrorString);
 			}
 		}
 

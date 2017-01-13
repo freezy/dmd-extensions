@@ -67,7 +67,6 @@ namespace LibDmd.Converter
 			// Enhancer isch um eis verschobä, das heisst äs wird erscht hiä gluägt (bim Frame nachem Häschä)
 			if (IsEnhancerRunning) {
 				
-				// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
 				var data = CurrentEnhancer.Next();
 				
 				// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
@@ -82,8 +81,10 @@ namespace LibDmd.Converter
 						.Subscribe(_ => AnimationFinished());
 				}
 
+				// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
 				if (data.BitLength == 2) {
-					planes = new List<byte[]>(planes) { data.Planes[0], data.Planes[1] }.ToArray();
+					planes = new []{ planes[0], planes[1], data.Planes[0], data.Planes[1] };
+
 				} else {
 					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);	
 				}

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -13,7 +12,6 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
-using LibDmd.Input;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -23,6 +21,7 @@ using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using Mindscape.Raygun4Net;
 using NLog;
+using NLog.Targets;
 using static System.Windows.Threading.Dispatcher;
 
 namespace PinMameDevice
@@ -58,6 +57,7 @@ namespace PinMameDevice
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static string _altcolorPath;
+		private static readonly MemoryTarget MemLogger = new MemoryTarget();
 
 		public DmdExt()
 		{
@@ -67,6 +67,9 @@ namespace PinMameDevice
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
 			}
 			_altcolorPath = GetColorPath();
+
+			MemLogger.Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}";
+			NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 		}
 
 		/// <summary>
@@ -438,9 +441,9 @@ namespace PinMameDevice
 			var ex = e.ExceptionObject as Exception;
 			if (ex != null) {
 				Logger.Error(ex.Message);
-				Logger.Error(ex.StackTrace);
+				Logger.Error(ex.ToString());
 			}
-			Raygun.Send(ex);
+			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });
 		}
 
 		private static string GetColorPath()
