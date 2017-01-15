@@ -5,6 +5,7 @@ using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
+using LibDmd.Processor;
 
 namespace DmdExt.Mirror
 {
@@ -32,19 +33,7 @@ namespace DmdExt.Mirror
 			switch (_options.Source) {
 
 				case SourceType.PinballFX2: {
-					if (_options.GridSize.Length != 2) {
-						throw new InvalidOptionException("Argument --grid-size must have two values: \"<Width> <Height>\".");
-					}
-					if (_options.DmdCrop.Length != 4) {
-						throw new InvalidOptionException("Argument --dmd-crop must have four values: \"<Left> <Top> <Right> <Bottom>\".");
-					}
-					_graph.Source = new PBFX2Grabber {
-						FramesPerSecond = _options.FramesPerSecond,
-						CropLeft = _options.DmdCrop[0],
-						CropTop = _options.DmdCrop[1],
-						CropRight = _options.DmdCrop[2],
-						CropBottom = _options.DmdCrop[3]
-					};
+					_graph.Source = new PBFX2Grabber { FramesPerSecond = _options.FramesPerSecond };
 					break;
 				}
 
@@ -62,13 +51,27 @@ namespace DmdExt.Mirror
 					if (_options.Position.Length != 4) {
 						throw new InvalidOptionException("Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
 					}
-					_graph.Source = new ScreenGrabber {
+					if (_options.ResizeTo.Length != 2) {
+						throw new InvalidOptionException("Argument --resize-to must have two values: \"<Width> <Height>\".");
+					}
+					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
 						Top = _options.Position[1],
 						Width = _options.Position[2],
-						Height = _options.Position[3]
+						Height = _options.Position[3],
+						DestinationWidth = _options.ResizeTo[0],
+						DestinationHeight = _options.ResizeTo[1]
 					};
+					if (_options.GridSpacing > 0) {
+						grabber.Processors.Add(new GridProcessor {
+							Width = _options.ResizeTo[0],
+							Height = _options.ResizeTo[1],
+							Spacing = _options.GridSpacing
+						});
+					}
+
+					_graph.Source = grabber;
 					break;
 
 				default:

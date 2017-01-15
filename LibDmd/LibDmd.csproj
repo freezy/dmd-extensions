@@ -187,9 +187,6 @@
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
-    <Compile Include="Processor\MonochromeProcessor.cs" />
-    <Compile Include="Processor\ShadeProcessor.cs" />
-    <Compile Include="Processor\TransformationProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Input\ScreenGrabber\ScreenGrabber.cs" />
     <Compile Include="RenderGraph.cs" />

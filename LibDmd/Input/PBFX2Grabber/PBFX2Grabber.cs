@@ -113,7 +113,7 @@ namespace LibDmd.Input.PBFX2Grabber
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Select(bmp => gridProcessor.Process(bmp, null))
+					.Select(bmp => gridProcessor.Process(bmp))
 					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;

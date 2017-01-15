@@ -27,18 +27,8 @@ namespace LibDmd.Processor
 		/// Processes a frame
 		/// </summary>
 		/// <param name="bmp">Unprocessed frame</param>
-		/// <param name="dest">The destination for which the frame is processed.</param>
 		/// <returns>Processed frame</returns>
-		public abstract BitmapSource Process(BitmapSource bmp, IDestination dest);
-
-		/// <summary>
-		/// If false, non-RGB displays will skip this processor.
-		/// </summary>
-		/// <remarks>
-		/// This is useful because we don't want to artificially monochromify
-		/// frames that are sent to a monochrome display anyway.
-		/// </remarks>
-		public virtual bool IsGrayscaleCompatible { get; } = true;
+		public abstract BitmapSource Process(BitmapSource bmp);
 
 		protected Subject<BitmapSource> _whenProcessed = new Subject<BitmapSource>();
 
