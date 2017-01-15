@@ -797,7 +797,7 @@ namespace LibDmd
 		/// Sets the color with which a grayscale source is rendered on the RGB display.
 		/// </summary>
 		/// <param name="color">Rendered color</param>
-		internal void SetColor(Color color)
+		public void SetColor(Color color)
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
@@ -807,7 +807,7 @@ namespace LibDmd
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
 		/// <param name="colors"></param>
-		internal void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
@@ -816,7 +816,7 @@ namespace LibDmd
 		/// <summary>
 		/// Removes a previously set palette
 		/// </summary>
-		internal void ClearPalette()
+		public void ClearPalette()
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
@@ -825,7 +825,7 @@ namespace LibDmd
 		/// <summary>
 		/// Resets the color
 		/// </summary>
-		internal void ClearColor()
+		public void ClearColor()
 		{
 			SetColor(DefaultColor);
 		}

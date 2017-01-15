@@ -1,6 +1,7 @@
 ﻿using System;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
@@ -26,8 +27,9 @@ namespace DmdExt.Mirror
 				Destinations = GetRenderers(_options),
 				Resize = _options.Resize,
 				FlipHorizontally = _options.FlipHorizontally,
-				FlipVertically = _options.FlipVertically
+				FlipVertically = _options.FlipVertically,
 			};
+			_graph.SetColor(ColorUtil.ParseColor(_options.RenderColor));
 
 			// setup source and additional processors
 			switch (_options.Source) {
