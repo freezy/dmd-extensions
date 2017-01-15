@@ -1,29 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using LibDmd.Common;
 using NLog;
-using static System.Reflection.Assembly;
 
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : AbstractSource, IGray4Source, IBitmapSource
+	public class ProPinballSlave : AbstractSource, IGray4Source
 	{
 		public override string Name { get; } = "Pro Pinball";
 
@@ -37,8 +27,7 @@ namespace LibDmd.Input.ProPinball
 
 		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
-		private IObservable<BitmapSource> _frames;
-		private IObservable<byte[]> _framesGrey4;
+		private IObservable<byte[]> _framesGray4;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -50,58 +39,15 @@ namespace LibDmd.Input.ProPinball
 			}
 		}
 
-
-		public IObservable<BitmapSource> GetBitmapFrames()
-		{
-			if (_frames != null) {
-				return _frames;
-			}
-			CreateBridge();
-
-			double hue, saturation, luminosity;
-			ColorUtil.RgbToHsl(Color.R, Color.G, Color.B, out hue, out saturation, out luminosity);
-			Logger.Info("Subscribing to Pro Pinball's message queue...");
-
-			_frames = Observable.Create<BitmapSource>(o => {
-
-				// this is blocking, so use a new thread
-				var thread = new Thread(() => {
-					unsafe {
-						_bridge.GetFrames(frame => {
-							o.OnNext(ImageUtil.ConvertFromGray4(Dimensions.Value.Width, Dimensions.Value.Width, frame, hue, saturation, luminosity));
-
-						}, err => {
-							throw new ProPinballSlaveException(new string(err));
-
-						}, () => {
-							Logger.Debug("Received exit signal from Pro Pinball, closing.");
-
-							// spent 2 days figuring out why instantiating boost::interprocess::message_queue
-							// in c++ would crash (or block) the app. fuck it, let's just kill the process.
-							Process.GetCurrentProcess().Kill();
-						});
-					}
-				});
-				thread.Start();
-				Logger.Debug("Subscribed to Pro Pinball's message queue.");
-
-				return Disposable.Create(() => {
-					thread.Abort();
-					Logger.Debug("Disposing Pro Pinball's message queue...");
-				});
-			});
-			return _frames;
-		}
-
 		public IObservable<byte[]> GetGray4Frames()
 		{
-			if (_framesGrey4 != null) {
-				return _framesGrey4;
+			if (_framesGray4 != null) {
+				return _framesGray4;
 			}
 			CreateBridge();
 
 			Logger.Info("Subscribing to Pro Pinball's message queue...");
-			_framesGrey4 = Observable.Create<byte[]>(o => {
+			_framesGray4 = Observable.Create<byte[]>(o => {
 
 				var len = Dimensions.Value.Width * Dimensions.Value.Height;
 
@@ -130,7 +76,7 @@ namespace LibDmd.Input.ProPinball
 					Logger.Debug("Disposing Pro Pinball's message queue...");
 				});
 			});
-			return _framesGrey4;
+			return _framesGray4;
 		}
 
 		private void CreateBridge()
