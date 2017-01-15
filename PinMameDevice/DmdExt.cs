@@ -61,15 +61,20 @@ namespace PinMameDevice
 
 		public DmdExt()
 		{
+			MemLogger.Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}";
+			MemLogger.Name = "Raygun Logger";
+
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			var logConfigPath = Path.Combine(AssemblyPath, "DmdDevice.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
+				LogManager.Configuration.AddTarget(MemLogger);
+
+			} else {
+				NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
+
 			}
 			_altcolorPath = GetColorPath();
-
-			MemLogger.Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}";
-			NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 		}
 
 		/// <summary>

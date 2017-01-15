@@ -21,6 +21,7 @@ using LibDmd.Output.FileOutput;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
+using NLog.Targets;
 
 namespace DmdExt
 {
@@ -31,15 +32,24 @@ namespace DmdExt
 		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static BaseCommand _command;
 		private static EventHandler _handler;
+		private static readonly MemoryTarget MemLogger = new MemoryTarget();
 
 		[STAThread]
 		static void Main(string[] args)
 		{
 			// setup log config
+			MemLogger.Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}";
+			MemLogger.Name = "Raygun Logger";
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
+#if !DEBUG
+				LogManager.Configuration.AddTarget(MemLogger);
+#endif
+
+			} else {
+				NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 			}
 
 			AssertDotNetVersion();
@@ -167,12 +177,17 @@ namespace DmdExt
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
+			var ex = e.ExceptionObject as Exception;
+			if (ex != null) {
+				Logger.Error(ex.Message);
+				Logger.Error(ex.ToString());
+			}
 #if !DEBUG
 			Raygun.Send(e.ExceptionObject as Exception);
 #endif
 		}
 
-		#region Exit Handling
+#region Exit Handling
 
 		[DllImport("Kernel32")]
 		private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
@@ -201,6 +216,6 @@ namespace DmdExt
 			CTRL_SHUTDOWN_EVENT = 6
 		}
 
-		#endregion
+#endregion
 	}
 }
