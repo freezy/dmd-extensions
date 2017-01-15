@@ -33,11 +33,8 @@ frames to bitmap files.
 ### Colors
 
 If you have an RGB display, you can override the color tone in which the output
-is rendered. However, in order to do this, you must force the source to produce
-grayscale frames. You can do this by using the `--render-as` parameter. Then
-use the `--color` parameter to specify the color. Example:
-
-    dmdext test -d virtual --render-as gray4 --color=8080ff
+is rendered. Note that this only works for non-colored games. Use the `--color`
+parameter for that.
 
 ## Install Instructions
 
