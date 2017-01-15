@@ -40,8 +40,6 @@ namespace App
 		private readonly RenderGraph _tpaGraph;
 		private readonly GridProcessor _pbfxGridProcessor;
 		private readonly GridProcessor _tpaGridProcessor;
-		private readonly ShadeProcessor _pbfxShadeProcessor;
-		private readonly ShadeProcessor _tpaShadeProcessor;
 		private readonly PBFX2Grabber _pbfxGrabber;
 		private readonly TPAGrabber _tpaGrabber;
 
@@ -110,19 +108,6 @@ namespace App
 			// define processors
 			_pbfxGridProcessor = new GridProcessor { Enabled = true, Spacing = 1 };
 			_tpaGridProcessor = new GridProcessor { Enabled = true, Spacing = 0, CropRight = 0, CropBottom = 1 };
-			var transformationProcessor = new TransformationProcessor { Enabled = true, FlipVertically = false, FlipHorizontally = false };
-			var monochromeProcessor = new MonochromeProcessor {
-				Enabled = true,
-				PixelFormat = PixelFormats.Gray16,
-				Tint = System.Windows.Media.Color.FromRgb(255, 155, 0)
-			};
-			_pbfxShadeProcessor = new ShadeProcessor { NumShades = 4, Intensity = 2.5, Brightness = 0 };
-			_tpaShadeProcessor = new ShadeProcessor {
-				NumShades = 4,
-				Intensity = 1.9,
-				Brightness = 0,
-				Shades = new[] { 0d, 0.22, 0.35, 0.55 }
-			};
 
 			// chain them up
 			_screenGraph = new RenderGraph {
@@ -167,17 +152,11 @@ namespace App
 					ProcessedGrid.Source = bmp;
 				});
 			});
-			transformationProcessor.WhenProcessed.Subscribe(bmp => {
-				ProcessedGrid.Dispatcher.Invoke(() => {
-					ProcessedGrid.Source = bmp;
-				});
-			});
 		}
 
 		private void HotKey(object sender, KeyEventArgs e)
 		{
 			var gridProcessor = _tpaGraph.IsRendering ? _tpaGridProcessor : _pbfxGridProcessor;
-			var shadingProcessor = _tpaGraph.IsRendering ? _tpaShadeProcessor : _pbfxShadeProcessor;
 
 			if (e.IsDown) {
 				switch (e.Key) {
@@ -191,24 +170,6 @@ namespace App
 							gridProcessor.Spacing -= 0.1;
 							Console.AppendText("Grid padding: " + gridProcessor.Spacing + "\n");
 						}
-						break;
-
-					case Key.Q:
-						shadingProcessor.Intensity -= 0.1;
-						Console.AppendText("Intensity: " + shadingProcessor.Intensity + "\n");
-						break;
-					case Key.W:
-						shadingProcessor.Intensity += 0.1;
-						Console.AppendText("Intensity: " + shadingProcessor.Intensity + "\n");
-						break;
-
-					case Key.E:
-						shadingProcessor.Brightness -= 0.1;
-						Console.AppendText("Lightness: " + shadingProcessor.Brightness + "\n");
-						break;
-					case Key.R:
-						shadingProcessor.Brightness += 0.1;
-						Console.AppendText("Lightness: " + shadingProcessor.Brightness + "\n");
 						break;
 
 					case Key.A:
