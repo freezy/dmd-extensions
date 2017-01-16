@@ -148,6 +148,26 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `path` - Path to folder or .avi file. If a folder is given, it will create
     a file named after the current game.
 
+You can also override all options per game by using the game's name as section 
+name and pre-fixing options with the name of the section (apart from `[global]`
+options, which aren't prefixed). For example if you have a PinDMD2 and don't
+want to use it for Baywatch which has a different resolution, you would create
+a section like this:
+
+```
+[baywatch]
+pindmd2 enabled = false
+virtualdmd enabled = true
+virtualdmd left = 2500
+virtualdmd top = 800
+virtualdmd width = 1024
+virtualdmd height = 256
+```
+
+This is also useful if you just want to fit the virtual DMD onto different
+backglasses which have slightly different positions.
+    
+
 ## Documentation
 
 All options are documented in the tool.

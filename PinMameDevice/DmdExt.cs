@@ -129,8 +129,7 @@ namespace PinMameDevice
 				} else {
 					_dmd.Dispatcher.Invoke(() => {
 						SetupGraphs();
-						_dmd.Dmd.Init();
-						_dmd.Show();
+						SetupVirtualDmd();
 					});
 				}
 			} else { 				
@@ -164,17 +163,7 @@ namespace PinMameDevice
 
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				_dmd.Dispatcher.Invoke(() => {
-					_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
-					_dmd.Left = _config.VirtualDmd.Left;
-					_dmd.Top = _config.VirtualDmd.Top;
-					_dmd.Width = _config.VirtualDmd.Width;
-					_dmd.Height = _config.VirtualDmd.Height;
-					_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
-					_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
-					_dmd.Dmd.Init();
-					_dmd.Show();
-				});
+				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
 
 				// Start the Dispatcher Processing
 				Run();
@@ -323,6 +312,22 @@ namespace PinMameDevice
 		}
 
 		/// <summary>
+		/// Sets the virtual DMD's parameters, initializes it and shows it.
+		/// </summary>
+		private void SetupVirtualDmd()
+		{
+			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
+			_dmd.Left = _config.VirtualDmd.Left;
+			_dmd.Top = _config.VirtualDmd.Top;
+			_dmd.Width = _config.VirtualDmd.Width;
+			_dmd.Height = _config.VirtualDmd.Height;
+			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
+			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
+			_dmd.Dmd.Init();
+			_dmd.Show();
+		}
+
+		/// <summary>
 		/// Tuät aui Renderer ahautä unds virtueua DMD vrschteckä.
 		/// </summary>
 		public void Close()
@@ -343,6 +348,7 @@ namespace PinMameDevice
 		{
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
+			_config.GameName = gameName;
 		}
 
 		public void SetColorize(bool colorize)
@@ -441,7 +447,6 @@ namespace PinMameDevice
 		{
 			var ex = e.ExceptionObject as Exception;
 			if (ex != null) {
-				Logger.Error(ex.Message);
 				Logger.Error(ex.ToString());
 			}
 			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using IniParser;
@@ -19,10 +20,20 @@ namespace PinMameDevice
 		public readonly PinDmd3Config PinDmd3;
 		public readonly Pin2DmdConfig Pin2Dmd;
 		public readonly VideoConfig Video;
+		public string GameName {
+			get { return _gameName; }
+			set {
+				_gameName = value;
+				var gameSection = _data.Sections.FirstOrDefault(s => s.SectionName == _gameName);
+				GameConfig = gameSection != null ? new GameConfig(gameSection.SectionName, _data, this) : null;
+			}
+		}
+		public GameConfig GameConfig { get; private set; }
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
 		private readonly IniData _data;
+		private string _gameName;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -54,10 +65,18 @@ namespace PinMameDevice
 		}
 	}
 
+	public class GameConfig : AbstractConfiguration
+	{
+		public override string Name { get; }
+		public GameConfig(string name, IniData data, Configuration parent) : base(data, parent)
+		{
+			Name = name;
+		}
+	}
+
 	public class GlobalConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "global";
-
 		public ResizeMode Resize => GetEnum("resize", ResizeMode.Fit);
 		public bool FlipHorizontally => GetBoolean("fliphorizontally", false);
 		public bool FlipVertically => GetBoolean("flipvertically", false);
@@ -136,12 +155,12 @@ namespace PinMameDevice
 		}
 	}
 
-
 	public abstract class AbstractConfiguration
 	{
 		public abstract string Name { get; }
 		private readonly IniData _data;
 		private readonly Configuration _parent;
+		private string GameOverridePrefix => Name == "global" ? "" : $"{Name} ";
 
 		protected bool DoWrite = true;
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -157,19 +176,13 @@ namespace PinMameDevice
 			DoWrite = true;
 			_parent.Save();
 		}
-		protected void Set(string key, bool value)
-		{
-			if (_data[Name] == null) {
-				_data.Sections.Add(new SectionData(Name));
-			}
-			_data[Name][key] = value ? "true" : "false";
-			if (DoWrite) {
-				_parent.Save();
-			}
-		}
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
+			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+				return _parent.GameConfig.GetBoolean(GameOverridePrefix + key, fallback);
+			}
+
 			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
@@ -179,6 +192,86 @@ namespace PinMameDevice
 			} catch (FormatException e) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
 				return fallback;
+			}
+		}
+
+		protected int GetInt(string key, int fallback)
+		{
+			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+				return _parent.GameConfig.GetInt(GameOverridePrefix + key, fallback);
+			}
+
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				return fallback;
+			}
+
+			try {
+				return int.Parse(_data[Name][key]);
+			} catch (FormatException e) {
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
+				return fallback;
+			}
+		}
+
+		protected double GetDouble(string key, double fallback)
+		{
+			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+				return _parent.GameConfig.GetDouble(GameOverridePrefix + key, fallback);
+			}
+
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				return fallback;
+			}
+
+			try {
+				return double.Parse(_data[Name][key]);
+			} catch (FormatException) {
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
+				return fallback;
+			}
+		}
+
+		protected string GetString(string key, string fallback)
+		{
+			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+				return _parent.GameConfig.GetString(GameOverridePrefix + key, fallback);
+			}
+
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				return fallback;
+			}
+			return _data[Name][key];
+		}
+
+		protected T GetEnum<T>(string key, T fallback)
+		{
+			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+				return _parent.GameConfig.GetEnum(GameOverridePrefix + key, fallback);
+			}
+
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				return fallback;
+			}
+			try {
+				var e = (T)Enum.Parse(typeof(T), _data[Name][key].Substring(0, 1).ToUpper() + _data[Name][key].Substring(1));
+				if (!Enum.IsDefined(typeof(T), e)) {
+					throw new ArgumentException();
+				}
+				return e;
+			} catch (ArgumentException) {
+				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
+				return fallback;
+			}
+		}
+
+		protected void Set(string key, bool value)
+		{
+			if (_data[Name] == null) {
+				_data.Sections.Add(new SectionData(Name));
+			}
+			_data[Name][key] = value ? "true" : "false";
+			if (DoWrite) {
+				_parent.Save();
 			}
 		}
 
@@ -193,20 +286,6 @@ namespace PinMameDevice
 			}
 		}
 
-		protected int GetInt(string key, int fallback)
-		{
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
-				return fallback;
-			}
-
-			try {
-				return int.Parse(_data[Name][key]);
-			} catch (FormatException e) {
-				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
-				return fallback;
-			}
-		}
-
 		protected void Set(string key, double value)
 		{
 			if (_data[Name] == null) {
@@ -218,20 +297,6 @@ namespace PinMameDevice
 			}
 		}
 
-		protected double GetDouble(string key, double fallback)
-		{
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
-				return fallback;
-			}
-
-			try {
-				return double.Parse(_data[Name][key]);
-			} catch (FormatException) {
-				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
-				return fallback;
-			}
-		}
-
 		protected void Set(string key, string value)
 		{
 			if (_data[Name] == null) {
@@ -240,31 +305,6 @@ namespace PinMameDevice
 			_data[Name][key] = value;
 			if (DoWrite) {
 				_parent.Save();
-			}
-		}
-
-		protected string GetString(string key, string fallback)
-		{
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
-				return fallback;
-			}
-			return _data[Name][key];
-		}
-
-		protected T GetEnum<T>(string key, T fallback)
-		{
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
-				return fallback;
-			}
-			try {
-				var e = (T)Enum.Parse(typeof(T), _data[Name][key].Substring(0, 1).ToUpper() + _data[Name][key].Substring(1));
-				if (!Enum.IsDefined(typeof(T), e)) {
-					throw new ArgumentException();
-				}
-				return e;
-			} catch (ArgumentException) {
-				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
-				return fallback;
 			}
 		}
 
