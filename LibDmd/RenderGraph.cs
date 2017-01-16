@@ -160,6 +160,37 @@ namespace LibDmd
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
+
+				// init converters
+				IColoredGray2Source coloredGray2SourceConverter = null;
+				IColoredGray4Source coloredGray4SourceConverter = null;
+				IRgb24Source rgb24SourceConverter = null;
+
+				if (Converter != null && HasRgb24Destination()) {
+					coloredGray2SourceConverter = Converter as IColoredGray2Source;
+					coloredGray4SourceConverter = Converter as IColoredGray4Source;
+					rgb24SourceConverter = Converter as IRgb24Source;
+					
+					// send frames to converter
+					switch (Converter.From) {
+						case FrameFormat.Gray2:
+							if (sourceGray2 == null) {
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {rgb24SourceConverter?.Name}.");
+							}
+							_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+							break;
+						case FrameFormat.Gray4:
+							if (sourceGray4 == null) {
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {rgb24SourceConverter?.Name}.");
+							}
+							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+							break;
+						default:
+							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
+					}
+				}
+				
+
 				foreach (var dest in Destinations) 
 				{
 					var destResizable = dest as IResizableDestination;
@@ -187,30 +218,8 @@ namespace LibDmd
 					// it up to RGB24, otherwise fails. For example, PinDMD3 which only supports
 					// IColoredGray2Source but not IColoredGray4Source due to bad software design
 					// will get the IColoredGray4Source converted up to RGB24.
-					if (Converter != null && destRgb24 != null) {
-						var coloredGray2SourceConverter = Converter as IColoredGray2Source;
-						var coloredGray4SourceConverter = Converter as IColoredGray4Source;
-						// ReSharper disable once SuspiciousTypeConversion.Global
-						var rgb24SourceConverter = Converter as IRgb24Source;
-
-						// send frames to converter
-						switch (Converter.From) {
-							case FrameFormat.Gray2:
-								if (sourceGray2 == null) {
-									throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {rgb24SourceConverter?.Name}.");
-								}
-								_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
-								break;
-							case FrameFormat.Gray4:
-								if (sourceGray4 == null) {
-									throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {rgb24SourceConverter?.Name}.");
-								}
-								_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
-								break;
-							default:
-								throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
-						}
-
+					if (destRgb24 != null) {
+						
 						// if converter emits colored gray-2 frames..
 						if (coloredGray2SourceConverter != null) {
 							// if destination can render colored gray-2 frames...
@@ -791,6 +800,11 @@ namespace LibDmd
 		private byte[] ColorizeGray4(int width, int height, byte[] frame)
 		{
 			return ColorUtil.ColorizeFrame(width, height, frame, _gray4Palette ?? _gray4Colors);
+		}
+
+		private bool HasRgb24Destination()
+		{
+			return Destinations.OfType<IRgb24Destination>().Any();
 		}
 
 		/// <summary>
