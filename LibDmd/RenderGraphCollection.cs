@@ -24,6 +24,7 @@ namespace LibDmd
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
 		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
+		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
 
 		public void Add(RenderGraph renderGraph)
@@ -33,15 +34,20 @@ namespace LibDmd
 			_graphs.Add(renderGraph);
 
 			renderGraph.Destinations.ForEach(dest => {
-				var d = dest as IRgb24Destination;
-				if (!_rgb24Destinations.Contains(d)) {
-					_rgb24Destinations.Add(d);
+				var rgb24Destination = dest as IRgb24Destination;
+				var resizableDestinations = dest as IResizableDestination;
+				if (rgb24Destination != null && !_rgb24Destinations.Contains(rgb24Destination)) {
+					_rgb24Destinations.Add(rgb24Destination);
+				}
+				if (resizableDestinations != null && !_resizableDestinations.Contains(resizableDestinations)) {
+					_resizableDestinations.Add(resizableDestinations);
 				}
 			});
 		}
 
 		public void StartRendering()
 		{
+			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dim => dest.SetDimensions(dim.Width, dim.Height)));
 			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
 		}
 

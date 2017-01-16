@@ -62,7 +62,7 @@ namespace LibDmd.Converter
 		protected byte[][] HashFrame(byte[] frame)
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
-			var planes = FrameUtil.Split(Width, Height, 2, frame);
+			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame);
 
 			// Enhancer isch um eis verschobä, das heisst äs wird erscht hiä gluägt (bim Frame nachem Häschä)
 			if (IsEnhancerRunning) {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -189,7 +190,6 @@ namespace LibDmd
 							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
 					}
 				}
-				
 
 				foreach (var dest in Destinations) 
 				{
@@ -199,7 +199,9 @@ namespace LibDmd
 					var destColoredGray4 = dest as IColoredGray4Destination;
 					var destRgb24 = dest as IRgb24Destination;
 
-					if (destResizable != null) {
+					// if there are multiple render graphs, Source.Dimensions would already be set.
+					if (destResizable != null && Source.Dimensions == null) {
+						Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
 						Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
 					}
 

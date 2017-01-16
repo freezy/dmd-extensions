@@ -69,13 +69,11 @@ namespace LibDmd.Converter
 
 		protected AbstractColorizer(int width, int height, Coloring coloring, Animation[] animations)
 		{
-			Width = width;
-			Height = height;
 			Coloring = coloring;
 			Animations = animations;
 			SetPalette(Coloring.DefaultPalette, true);
 			Logger.Debug("[colorize] Initialized.");
-			ColoredFrame = new byte[width * height * 3];
+			SetDimensions(width, height);
 			Dimensions.Subscribe(dim => ColoredFrame = new byte[dim.Width * dim.Height * 3]);
 		}
 
