@@ -58,32 +58,14 @@ namespace PinMameDevice
 	{
 		public override string Name { get; } = "global";
 
-		public ResizeMode Resize
-		{
-			get { return GetEnum("resize", ResizeMode.Fit); }
-			set { Set("resize", value); }
-		}
-
-		public bool FlipHorizontally
-		{
-			get { return GetBoolean("fliphorizontally", false); }
-			set { Set("fliphorizontally", value); }
-		}
-
-		public bool FlipVertically
-		{
-			get { return GetBoolean("flipvertically", false); }
-			set { Set("flipvertically", value); }
-		}
+		public ResizeMode Resize => GetEnum("resize", ResizeMode.Fit);
+		public bool FlipHorizontally => GetBoolean("fliphorizontally", false);
+		public bool FlipVertically => GetBoolean("flipvertically", false);
 
 #if DISABLE_COLORING
 		public bool Colorize { get; } = false;
 #else
-		public bool Colorize
-		{
-			get { return GetBoolean("colorize", true); }
-			set { Set("colorize", value); }
-		}
+		public bool Colorize => GetBoolean("colorize", true);
 #endif
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -93,13 +75,7 @@ namespace PinMameDevice
 	public class PinDmd1Config : AbstractConfiguration
 	{
 		public override string Name { get; } = "pindmd1";
-
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", true); }
-			set { Set("enabled", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", true);
 		public PinDmd1Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -108,13 +84,7 @@ namespace PinMameDevice
 	public class PinDmd2Config : AbstractConfiguration
 	{
 		public override string Name { get; } = "pindmd2";
-
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", true); }
-			set { Set("enabled", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", true);
 		public PinDmd2Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -123,19 +93,8 @@ namespace PinMameDevice
 	public class PinDmd3Config : AbstractConfiguration
 	{
 		public override string Name { get; } = "pindmd3";
-
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", true); }
-			set { Set("enabled", value); }
-		}
-
-		public string Port
-		{
-			get { return GetString("port", null); }
-			set { Set("port", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", true);
+		public string Port => GetString("port", null);
 		public PinDmd3Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -144,13 +103,7 @@ namespace PinMameDevice
 	public class Pin2DmdConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "pin2dmd";
-
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", true); }
-			set { Set("enabled", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", true);
 		public Pin2DmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -160,85 +113,24 @@ namespace PinMameDevice
 	{
 		public override string Name { get; } = "virtualdmd";
 
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", true); }
-			set { Set("enabled", value); }
-		}
-
-		public bool StayOnTop
-		{
-			get { return GetBoolean("stayontop", false); }
-			set { Set("stayontop", value); }
-		}
-
-		public bool IgnoreAr
-		{
-			get { return GetBoolean("ignorear", false); }
-			set { Set("ignorear", value); }
-		}
-
-		public bool HideGrip
-		{
-			get { return GetBoolean("hidegrip", false); }
-			set { Set("hidegrip", value); }
-		}
-
-		public double Left
-		{
-			get { return GetDouble("left", 0); }
-			set { Set("left", value); }
-		}
-
-		public double Top
-		{
-			get { return GetDouble("top", 0); }
-			set { Set("top", value); }
-		}
-
-		public double Width
-		{
-			get { return GetDouble("width", 1024); }
-			set { Set("width", value); }
-		}
-
-		public double Height
-		{
-			get { return GetDouble("height", 256); }
-			set { Set("height", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", true);
+		public bool StayOnTop => GetBoolean("stayontop", false);
+		public bool IgnoreAr => GetBoolean("ignorear", false);
+		public bool HideGrip => GetBoolean("hidegrip", false);
+		public double Left => GetDouble("left", 0);
+		public double Top => GetDouble("top", 0);
+		public double Width => GetDouble("width", 1024);
+		public double Height => GetDouble("height", 256);
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
-		}
-
-		public void SetPosition(double left, double top, double width, double height)
-		{
-			DoWrite = false;
-			Left = left;
-			Top = top;
-			Width = width;
-			Height = height;
-			Save();
 		}
 	}
 
 	public class VideoConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "video";
-
-		public bool Enabled
-		{
-			get { return GetBoolean("enabled", false); }
-			set { Set("enabled", value); }
-		}
-
-		public string Path
-		{
-			get { return GetString("path", "."); }
-			set { Set("path", value); }
-		}
-
+		public bool Enabled => GetBoolean("enabled", false);
+		public string Path => GetString("path", ".");
 		public VideoConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -334,7 +226,7 @@ namespace PinMameDevice
 
 			try {
 				return double.Parse(_data[Name][key]);
-			} catch (FormatException e) {
+			} catch (FormatException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
 				return fallback;
 			}

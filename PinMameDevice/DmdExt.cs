@@ -176,10 +176,6 @@ namespace PinMameDevice
 					_dmd.Show();
 				});
 
-				_dmd.PositionChanged
-					.Throttle(TimeSpan.FromSeconds(1))
-					.Subscribe(pos => _config.VirtualDmd.SetPosition(pos.Left, pos.Top, pos.Width, pos.Height));
-
 				// Start the Dispatcher Processing
 				Run();
 			});
