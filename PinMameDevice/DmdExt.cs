@@ -108,11 +108,11 @@ namespace PinMameDevice
 							Logger.Info("Loading animation file at {0}...", fsqPath);
 							animations = Animation.ReadFrameSequence(fsqPath, Width, Height);
 						}
-						_gray2Colorizer = new Gray2Colorizer(Width, Height, coloring, animations);
-						_gray4Colorizer = new Gray4Colorizer(Width, Height, coloring, animations);
+						_gray2Colorizer = new Gray2Colorizer(coloring, animations);
+						_gray4Colorizer = new Gray4Colorizer(coloring, animations);
 
 					} catch (Exception e) {
-						Logger.Warn("Error initializing colorizer: {0}", e.Message);
+						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 					}
 				} else {
 					Logger.Debug("No palette file found at {0}.", palPath);
@@ -319,7 +319,7 @@ namespace PinMameDevice
 				_graphs.SetColor(_color);	
 			}
 
-			_graphs.StartRendering();
+			_graphs.Init().StartRendering();
 		}
 
 		/// <summary>

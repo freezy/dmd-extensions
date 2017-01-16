@@ -188,7 +188,7 @@ namespace DmdExt.Common
 
 		public void Execute(Action onCompleted, Action<Exception> onError)
 		{
-			_renderer = GetRenderGraph().StartRendering(onCompleted, onError);
+			_renderer = GetRenderGraph().Init().StartRendering(onCompleted, onError);
 		}
 
 		public void Dispose()

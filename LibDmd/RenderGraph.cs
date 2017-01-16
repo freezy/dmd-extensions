@@ -112,6 +112,35 @@ namespace LibDmd
 		}
 
 		/// <summary>
+		/// Run before <see cref="StartRendering(System.Action{System.Exception})"/>
+		/// </summary>
+		/// <remarks>
+		/// Either that or <see cref="RenderGraphCollection.Init"/> must be run. The latter does
+		/// this in a global manner (i.e. doesn't just run this method on each RenderGraph).
+		/// </remarks>
+		/// <returns>This instance</returns>
+		public IRenderer Init()
+		{
+			// set up the dimension change producer
+			Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
+			Destinations.ForEach(dest => {
+				var destResizable = dest as IResizableDestination;
+				if (destResizable != null) {
+					Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
+				}
+			});
+
+			// initialize converter
+			var converter = Converter as ISource;
+			if (converter != null) {
+				converter.Dimensions = Source.Dimensions;
+			}
+			Converter?.Init();
+
+			return this;
+		}
+
+		/// <summary>
 		/// Renders a single bitmap on all destinations.
 		/// </summary>
 		/// <param name="bmp">Bitmap to render</param>
@@ -120,7 +149,7 @@ namespace LibDmd
 		{
 			var source = new PassthroughSource("Bitmap Source");
 			Source = source;
-			StartRendering(onCompleted);
+			Init().StartRendering(onCompleted);
 			source.FramesBitmap.OnNext(bmp);
 		}
 
@@ -193,17 +222,9 @@ namespace LibDmd
 
 				foreach (var dest in Destinations) 
 				{
-					var destResizable = dest as IResizableDestination;
-
 					var destColoredGray2 = dest as IColoredGray2Destination;
 					var destColoredGray4 = dest as IColoredGray4Destination;
 					var destRgb24 = dest as IRgb24Destination;
-
-					// if there are multiple render graphs, Source.Dimensions would already be set.
-					if (destResizable != null && Source.Dimensions == null) {
-						Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
-						Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
-					}
 
 					// So here's how convertors work:
 					// They have one input type, given by IConvertor.From, but they can randomly 
@@ -220,7 +241,7 @@ namespace LibDmd
 					// it up to RGB24, otherwise fails. For example, PinDMD3 which only supports
 					// IColoredGray2Source but not IColoredGray4Source due to bad software design
 					// will get the IColoredGray4Source converted up to RGB24.
-					if (destRgb24 != null) {
+					if (Converter != null && destRgb24 != null) {
 						
 						// if converter emits colored gray-2 frames..
 						if (coloredGray2SourceConverter != null) {

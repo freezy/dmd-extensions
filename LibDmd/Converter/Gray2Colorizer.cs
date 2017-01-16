@@ -25,7 +25,7 @@ namespace LibDmd.Converter
 
 		public FrameFormat From { get; } = FrameFormat.Gray2;
 
-		public Gray2Colorizer(int width, int height, Coloring coloring, Animation[] animations = null) : base(width, height, coloring, animations)
+		public Gray2Colorizer(Coloring coloring, Animation[] animations = null) : base(coloring, animations)
 		{
 		}
 

@@ -15,6 +15,12 @@ namespace LibDmd
 			_output = output;
 		}
 
+		public IRenderer Init()
+		{
+			// nothing to init
+			return this;
+		}
+
 		public IDisposable StartRendering(Action onCompleted, Action<Exception> onError = null)
 		{
 			return _source.GetRawdata().Subscribe(_output.RenderRaw, onCompleted);

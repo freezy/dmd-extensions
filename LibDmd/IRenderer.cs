@@ -9,6 +9,15 @@ namespace LibDmd
 	public interface IRenderer : IDisposable
 	{
 		/// <summary>
+		/// Run before <see cref="StartRendering"/>
+		/// </summary>
+		/// <remarks>
+		/// Either that or <see cref="RenderGraphCollection.Init"/> must be run.
+		/// </remarks>
+		/// <returns>This instance</returns>
+		IRenderer Init();
+
+		/// <summary>
 		/// Subscribes to the source and hence starts receiving and processing data
 		/// as soon as the source produces them.
 		/// </summary>

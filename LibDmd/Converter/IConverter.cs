@@ -30,6 +30,13 @@ namespace LibDmd.Converter
 		void Convert(byte[] from);
 
 		/// <summary>
+		/// Initializes the converter. Run before rendering is started and after
+		/// Dimensions have been initialized.
+		/// </summary>
+		/// <returns></returns>
+		void Init();
+
+		/// <summary>
 		/// Must be run when dimensions of the source change.
 		/// </summary>
 		/// <param name="width">New width of the source</param>

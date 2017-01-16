@@ -67,13 +67,16 @@ namespace LibDmd.Converter
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		protected AbstractColorizer(int width, int height, Coloring coloring, Animation[] animations)
+		protected AbstractColorizer(Coloring coloring, Animation[] animations)
 		{
 			Coloring = coloring;
 			Animations = animations;
 			SetPalette(Coloring.DefaultPalette, true);
 			Logger.Debug("[colorize] Initialized.");
-			SetDimensions(width, height);
+		}
+
+		public void Init()
+		{
 			Dimensions.Subscribe(dim => ColoredFrame = new byte[dim.Width * dim.Height * 3]);
 		}
 
