@@ -29,6 +29,7 @@ namespace PinMameDevice
 			}
 		}
 		public GameConfig GameConfig { get; private set; }
+		public readonly VpdbConfig VpdbStream;
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
@@ -51,6 +52,7 @@ namespace PinMameDevice
 			PinDmd3 = new PinDmd3Config(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Video = new VideoConfig(_data, this);
+			VpdbStream = new VpdbConfig(_data, this);
 		}
 
 		public void Save()
@@ -151,6 +153,15 @@ namespace PinMameDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Path => GetString("path", ".");
 		public VideoConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class VpdbConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "vpdbstream";
+		public bool Enabled => GetBoolean("enabled", false);
+		public VpdbConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

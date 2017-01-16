@@ -15,6 +15,7 @@ using LibDmd.Converter.Colorize;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
+using LibDmd.Output.Network;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
@@ -228,6 +229,9 @@ namespace PinMameDevice
 				} else {
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
 				}
+			}
+			if (_config.VpdbStream.Enabled) {
+				renderers.Add(new VpdbStream());
 			}
 
 			if (renderers.Count == 0) {
