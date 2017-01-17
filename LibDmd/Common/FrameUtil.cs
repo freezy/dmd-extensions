@@ -378,6 +378,15 @@ namespace LibDmd.Common
 		[DllImport("msvcrt.dll", CallingConvention=CallingConvention.Cdecl)]
 		private static extern unsafe int memcmp(byte* b1, byte* b2, int count);
 
+		/// <summary>
+		/// Compares two byte arrays and returns true if they are identical.
+		/// </summary>
+		/// <param name="buffer1">First buffer to compare</param>
+		/// <param name="offset1">Offset in first buffer</param>
+		/// <param name="buffer2">Second buffer to compare</param>
+		/// <param name="offset2">Offset of second buffer</param>
+		/// <param name="count">Byte length to compare</param>
+		/// <returns></returns>
 		public static unsafe bool CompareBuffers(byte[] buffer1, int offset1, byte[] buffer2, int offset2, int count)
 		{
 			fixed (byte* b1 = buffer1, b2 = buffer2)

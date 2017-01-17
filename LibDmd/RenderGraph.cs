@@ -11,7 +11,7 @@ using LibDmd.Common;
 using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
-using LibDmd.Input.Passthrough;
+using LibDmd.Input.FileSystem;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
 using ResizeMode = LibDmd.Input.ResizeMode;
