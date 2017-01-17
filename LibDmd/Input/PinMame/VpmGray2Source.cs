@@ -12,7 +12,7 @@ namespace LibDmd.Input.PinMame
 	/// </summary>
 	public class VpmGray2Source : AbstractSource, IGray2Source
 	{
-		public override string Name { get; }
+		public override string Name { get; } = "VPM 2-bit Source";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -23,12 +23,7 @@ namespace LibDmd.Input.PinMame
 		private readonly Subject<byte[]> _framesGray2 = new Subject<byte[]>();
 		private byte[] _lastFrame;
 
-		public VpmGray2Source(string name)
-		{
-			Name = name;
-		}
-
-		public void NextFrame(byte[] frame)
+		public void NextFrame(int width, int height, byte[] frame)
 		{
 			if (_lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
 				// identical frame, skip.
@@ -37,6 +32,7 @@ namespace LibDmd.Input.PinMame
 			if (_lastFrame?.Length != frame.Length) {
 				_lastFrame = new byte[frame.Length];
 			}
+			SetDimensions(width, height);
 			_framesGray2.OnNext(frame);
 			Buffer.BlockCopy(frame, 0, _lastFrame, 0, frame.Length);
 		}

@@ -11,7 +11,7 @@ namespace LibDmd.Input.PinMame
 	/// </summary>
 	public class VpmRgb24Source : AbstractSource, IRgb24Source
 	{
-		public override string Name { get; }
+		public override string Name { get; } = "VPM RGB24 Source";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -22,12 +22,7 @@ namespace LibDmd.Input.PinMame
 		private readonly Subject<byte[]> _framesRgb24 = new Subject<byte[]>();
 		private byte[] _lastFrame;
 
-		public VpmRgb24Source(string name)
-		{
-			Name = name;
-		}
-
-		public void NextFrame(byte[] frame)
+		public void NextFrame(int width, int height, byte[] frame)
 		{
 			if (_lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
 				// identical frame, drop.
@@ -36,6 +31,7 @@ namespace LibDmd.Input.PinMame
 			if (_lastFrame?.Length != frame.Length) {
 				_lastFrame = new byte[frame.Length];
 			}
+			SetDimensions(width, height);
 			_framesRgb24.OnNext(frame);
 			Buffer.BlockCopy(frame, 0, _lastFrame, 0, frame.Length);
 		}

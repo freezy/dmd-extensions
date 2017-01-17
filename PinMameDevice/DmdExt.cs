@@ -36,9 +36,9 @@ namespace PinMameDevice
 		private const int Height = 32;
 
 		private readonly Configuration _config = new Configuration();
-		private readonly VpmGray2Source _vpmGray2Source = new VpmGray2Source("VPM 2-bit Source");
-		private readonly VpmGray4Source _vpmGray4Source = new VpmGray4Source("VPM 4-bit Source");
-		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source("VPM RGB24 Source");
+		private readonly VpmGray2Source _vpmGray2Source = new VpmGray2Source();
+		private readonly VpmGray4Source _vpmGray4Source = new VpmGray4Source();
+		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private VirtualDmd _dmd;
 
@@ -371,22 +371,19 @@ namespace PinMameDevice
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
-			_vpmGray2Source.SetDimensions(width, height);
-			_vpmGray2Source.NextFrame(frame);
+			_vpmGray2Source.NextFrame(width, height, frame);
 		}
 
 		public void RenderGray4(int width, int height, byte[] frame)
 		{
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
-			_vpmGray4Source.SetDimensions(width, height);
-			_vpmGray4Source.NextFrame(frame);
+			_vpmGray4Source.NextFrame(width, height, frame);
 		}
 
 		public void RenderRgb24(int width, int height, byte[] frame)
 		{
-			_vpmRgb24Source.SetDimensions(width, height);
-			_vpmRgb24Source.NextFrame(frame);
+			_vpmRgb24Source.NextFrame(width, height, frame);
 		}
 
 		public void RenderAlphaNumeric(DmdDevice.NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
@@ -397,46 +394,46 @@ namespace PinMameDevice
 				case DmdDevice.NumericalLayout.None:
 					break;
 				case DmdDevice.NumericalLayout.__2x16Alpha:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x16Alpha(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x16Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x20Alpha:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x20Alpha(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x20Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Alpha_2x7Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Alpha_2x7Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__4x7Num10:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render4x7Num10(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render4x7Num10(segData));
 					break;
 				case DmdDevice.NumericalLayout.__6x4Num_4x1Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render6x4Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render6x4Num_4x1Num(segData));
 					break;
 				case DmdDevice.NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData));
 					break;
 				case DmdDevice.NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_vpmGray2Source.NextFrame(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData));
+					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
