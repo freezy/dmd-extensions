@@ -9,7 +9,7 @@ using Quobject.SocketIoClientDotNet.Client;
 
 namespace LibDmd.Output.Network
 {
-	public class VpdbStream : IGray2Destination, IColoredGray2Destination
+	public class VpdbStream : IGray2Destination, IColoredGray2Destination, IResizableDestination
 	{
 		public string Name { get; } = "VPDB Streamer";
 		public bool IsAvailable { get; } = true;
@@ -20,6 +20,7 @@ namespace LibDmd.Output.Network
 		public string AuthPass { get; set; }
 
 		private Socket _socket;
+		private bool _connected;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -28,18 +29,32 @@ namespace LibDmd.Output.Network
 			Logger.Info("Connecting to VPDB...");
 			_socket = IO.Socket(EndPoint);
 			_socket.On(Socket.EVENT_CONNECT, () => {
-				Logger.Info("Connected!");
+				_connected = true;
+				Logger.Info("Connected to VPDB.");
+				_socket.Emit("produce");
 			});
-			_socket.On("news", x => Logger.Info("Got news: {0}", x));
+			_socket.On(Socket.EVENT_DISCONNECT, () => {
+				_connected = false;
+				Logger.Info("Disconnected from VPDB.");
+			});
 		}
 
 		public void Init()
 		{
 		}
 
+		public void SetDimensions(int width, int height)
+		{
+			if (_connected) {
+				_socket.Emit("dimensions", new []{ width, height });
+			}
+		}
+
 		public void RenderGray2(byte[] frame)
 		{
-			_socket.Emit("gray2frame", frame);
+			if (_connected) {
+				_socket.Emit("gray2frame", frame);
+			}
 		}
 
 		public void RenderRgb24(byte[] frame)
