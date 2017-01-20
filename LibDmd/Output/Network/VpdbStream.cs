@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using LibDmd.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Quobject.SocketIoClientDotNet.Client;
@@ -16,12 +19,12 @@ namespace LibDmd.Output.Network
 		public bool IsAvailable { get; } = true;
 
 		public string ApiKey { get; set; }
-		public string EndPoint { get; set; } = "https://api-test.vpdb.io/";
-		//public string EndPoint { get; set; } = "http://127.0.0.1:3000/";
+		//public string EndPoint { get; set; } = "https://api-test.vpdb.io/";
+		public string EndPoint { get; set; } = "http://127.0.0.1:3000/";
 		public string AuthUser { get; set; }
 		public string AuthPass { get; set; }
 
-		private Socket _socket;
+		private readonly Socket _socket;
 		private bool _connected;
 		private int _width;
 		private int _height;
@@ -56,25 +59,32 @@ namespace LibDmd.Output.Network
 		{
 			_width = width;
 			_height = height;
-			if (_connected) {
-				try {
-					_socket.Emit("dimensions", new JObject { { "width", width }, { "height", height } });
-				} catch (Exception e) {
-					Logger.Error(e, "Error sending frame to socket.");
-					_connected = false;
-				}
+			if (!_connected) {
+				return;
+			}
+			try {
+				_socket.Emit("dimensions", new JObject { { "width", width }, { "height", height } });
+			} catch (Exception e) {
+				Logger.Error(e, "Error sending frame to socket.");
+				_connected = false;
 			}
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			if (_connected) {
-				try {
-					_socket.Emit("gray2frame", frame);
-				} catch (Exception e) {
-					Logger.Error(e, "Error sending frame to socket.");
-					_connected = false;
-				}
+			if (!_connected) {
+				return;
+			}
+			try {
+				//_socket.Emit("gray2frame", frame);
+				var planes = new byte[frame.Length / 4];
+				FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), planes, 0);
+				//var planesCompressed = Compress(planes);
+				//Logger.Debug("Compressed frame: {0} bytes", planesCompressed.Length);
+				_socket.Emit("gray2planes", planes);
+			} catch (Exception e) {
+				Logger.Error(e, "Error sending frame to socket.");
+				_connected = false;
 			}
 		}
 
@@ -110,6 +120,15 @@ namespace LibDmd.Output.Network
 		{
 			_socket?.Emit("stop");
 			_socket?.Close();
+		}
+
+		public static byte[] Compress(byte[] raw)
+		{
+			using (var memory = new MemoryStream()) {
+				using (var gzip = new GZipStream(memory, CompressionMode.Compress, true)) { gzip.Write(raw, 0, raw.Length);
+				}
+				return memory.ToArray();
+			}
 		}
 	}
 }

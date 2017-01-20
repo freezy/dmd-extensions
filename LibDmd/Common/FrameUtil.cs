@@ -192,18 +192,18 @@ namespace LibDmd.Common
 		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
 		public static byte[] Join(int width, int height, byte[][] bitPlanes)
 		{
-			var fr = new byte[width * height];
+			var frame = new byte[width * height];
 			var planes = new BitArray[bitPlanes.Length];
 			for (var i = 0; i < bitPlanes.Length; i++) {
 				planes[i] = new BitArray(bitPlanes[i]);
 			}
-			for (var f = 0; f < fr.Length; f++) {
+			for (var f = 0; f < frame.Length; f++) {
 				for (var p = 0; p < bitPlanes.Length; p++) {
 					var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
-					fr[f] |= (byte)(bit << p);
+					frame[f] |= (byte)(bit << p);
 				}
 			}
-			return fr;
+			return frame;
 		}
 
 		/// <summary>
