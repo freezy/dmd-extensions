@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.Common;
 using Newtonsoft.Json.Linq;
@@ -13,7 +11,7 @@ using Quobject.SocketIoClientDotNet.Client;
 
 namespace LibDmd.Output.Network
 {
-	public class VpdbStream : IGray2Destination, IColoredGray2Destination, IResizableDestination
+	public class VpdbStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
 		public string Name { get; } = "VPDB Stream";
 		public bool IsAvailable { get; } = true;
@@ -28,6 +26,15 @@ namespace LibDmd.Output.Network
 		private bool _connected;
 		private int _width;
 		private int _height;
+		private Color _color = RenderGraph.DefaultColor;
+		private Color[] _palette;
+		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+		private JObject Welcome => new JObject {
+			{ "width", _width },
+			{ "height", _height },
+			{ "color", ColorUtil.ToInt(_color) },
+			{ "palette", new JArray(ColorUtil.ToIntArray(_palette)) }
+		};
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -38,12 +45,12 @@ namespace LibDmd.Output.Network
 			_socket.On(Socket.EVENT_CONNECT, () => {
 				_connected = true;
 				Logger.Info("Connected to VPDB.");
-				_socket.Emit("produce", new JObject { { "width", _width }, { "height", _height } });
+				_socket.Emit("produce", Welcome);
 			});
 			_socket.On(Socket.EVENT_RECONNECT, () => {
 				_connected = true;
 				Logger.Info("Reconnected to VPDB.");
-				_socket.Emit("produce", new JObject { { "width", _width }, { "height", _height } });
+				_socket.Emit("produce", Welcome);
 			});
 			_socket.On(Socket.EVENT_DISCONNECT, () => {
 				_connected = false;
@@ -59,67 +66,132 @@ namespace LibDmd.Output.Network
 		{
 			_width = width;
 			_height = height;
+			EmitObject("dimensions", new JObject { { "width", width }, { "height", height } });
+		}
+
+		/// <summary>
+		/// Adds a timestamp to a byte array and sends it to the socket.
+		/// </summary>
+		/// <param name="eventName">Name of the event</param>
+		/// <param name="dataLength">Length of the payload to send (without time stamp)</param>
+		/// <param name="copy">Function that copies data to the provided array. Input: array with 8 bytes of timestamp and dataLength bytes to write</param>
+		private void EmitTimestampedData(string eventName, int dataLength, Action<byte[], int> copy)
+		{
 			if (!_connected) {
 				return;
 			}
 			try {
-				_socket.Emit("dimensions", new JObject { { "width", width }, { "height", height } });
+				var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+				var data = new byte[dataLength + 8];
+				Buffer.BlockCopy(BitConverter.GetBytes(timestamp - _startedAt), 0, data, 0, 8);
+				copy(data, 8);
+				_socket.Emit(eventName, data);
+
 			} catch (Exception e) {
-				Logger.Error(e, "Error sending frame to socket.");
+				Logger.Error(e, "Error sending " + eventName + " to socket.");
 				_connected = false;
 			}
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			if (!_connected) {
-				return;
-			}
-			try {
-				//_socket.Emit("gray2frame", frame);
-				var planes = new byte[frame.Length / 4];
-				FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), planes, 0);
-				//var planesCompressed = Compress(planes);
-				//Logger.Debug("Compressed frame: {0} bytes", planesCompressed.Length);
-				_socket.Emit("gray2planes", planes);
-			} catch (Exception e) {
-				Logger.Error(e, "Error sending frame to socket.");
-				_connected = false;
-			}
+			EmitTimestampedData("gray2planes", frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), data, offset));
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderGray4(byte[] frame)
 		{
+			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 4, frame), data, offset));
 		}
 
 		public void RenderColoredGray2(byte[][] planes, Color[] palette)
 		{
+			if (planes.Length == 0) {
+				return;
+			}
+			const int numColors = 4;
+			const int bytesPerColor = 3;
+			var dataLength = bytesPerColor * numColors + planes[0].Length * planes.Length;
+			EmitTimestampedData("coloredgray2", dataLength, (data, offset) => {
+				Buffer.BlockCopy(ColorUtil.ToByteArray(palette), 0, data, offset, bytesPerColor * numColors);
+				FrameUtil.Copy(planes, data, offset + bytesPerColor * numColors);
+			});
+		}
+
+		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		{
+			if (planes.Length == 0) {
+				return;
+			}
+			const int numColors = 16;
+			const int bytesPerColor = 3;
+			var dataLength = bytesPerColor * numColors + planes[0].Length * planes.Length;
+			EmitTimestampedData("coloredgray4", dataLength, (data, offset) => {
+				Buffer.BlockCopy(ColorUtil.ToByteArray(palette), 0, data, offset, bytesPerColor * numColors);
+				FrameUtil.Copy(planes, data, offset + bytesPerColor * numColors);
+			});
+		}
+
+		public void RenderRgb24(byte[] frame)
+		{
+			EmitTimestampedData("rgb24frame", frame.Length, (data, offset) => Buffer.BlockCopy(frame, 0, data, offset, frame.Length));
 		}
 
 		public void SetColor(Color color)
 		{
-			// ignore
+			_color = color;
+			EmitObject("color", new JObject { { "color", ColorUtil.ToInt(color) } });
 		}
 
 		public void SetPalette(Color[] colors)
 		{
-			// ignore
+			_palette = colors;
+			EmitObject("palette", new JObject { { "palette", new JArray(ColorUtil.ToIntArray(colors)) } });
 		}
 
 		public void ClearPalette()
 		{
-			// ignore
+			EmitData("clearPalette");
 		}
 
 		public void ClearColor()
 		{
-			// ignore
+			EmitData("clearColor");
 		}
 
 		public void Dispose()
 		{
 			_socket?.Emit("stop");
 			_socket?.Close();
+		}
+
+		private void EmitObject(string eventName, JObject data)
+		{
+			if (!_connected) {
+				return;
+			}
+			try {
+				_socket.Emit(eventName, data);
+			} catch (Exception e) {
+				Logger.Error(e, "Error sending " + eventName + " to socket.");
+				_connected = false;
+			}
+		}
+
+		private void EmitData(string eventName, IEnumerable data = null)
+		{
+			if (!_connected) {
+				return;
+			}
+			try {
+				if (data == null) {
+					_socket.Emit(eventName);
+				} else {
+					_socket.Emit(eventName, data);
+				}
+			} catch (Exception e) {
+				Logger.Error(e, "Error sending " + data + " to socket.");
+				_connected = false;
+			}
 		}
 
 		public static byte[] Compress(byte[] raw)

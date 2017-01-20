@@ -172,6 +172,64 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts a color to an RGB24 array.
+		/// </summary>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		public static byte[] ToByteArray(Color color)
+		{
+			return new[] { color.R, color.G, color.B };
+		}
+
+		/// <summary>
+		/// Converts multiple colors to an RGB24 array.
+		/// </summary>
+		/// <param name="colors">Color to convert</param>
+		/// <returns>Array of RGB bytes with a length of number of colors times 3</returns>
+		public static byte[] ToByteArray(Color[] colors)
+		{
+			var arr = new byte[colors.Length * 3];
+			var pos = 0;
+			foreach (var color in colors) {
+				arr[pos] = color.R;
+				arr[pos + 1] = color.G;
+				arr[pos + 2] = color.B;
+				pos += 3;
+			}
+			return arr;
+		}
+
+		/// <summary>
+		/// Converts a color to a single integer.
+		/// </summary>
+		/// <param name="color">Color to convert</param>
+		/// <returns>>Color as single int, e.g. 0xff00ff</returns>
+		public static int ToInt(Color color)
+		{
+			return (color.R << 16) + (color.G << 8) + color.B;
+		}
+
+		/// <summary>
+		/// Converts a palette to an array of single integers.
+		/// </summary>
+		/// <param name="colors"></param>
+		/// <seealso cref="ToInt"/>
+		/// <returns>Array of single integers, one per color</returns>
+		public static int[] ToIntArray(Color[] colors)
+		{
+			if (colors == null) {
+				return new int[0];
+			}
+			var arr = new int[colors.Length];
+			var pos = 0;
+			foreach (var color in colors) {
+				arr[pos] = ToInt(color);
+				pos++;
+			}
+			return arr;
+		}
+
+		/// <summary>
 		/// Returns an RGB24 array with colors from the palette applied to the frame.
 		/// 
 		/// Note that the size of the palette must be as large as the largest integer of 
