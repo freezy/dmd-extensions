@@ -24,6 +24,7 @@ namespace LibDmd.Output.Network
 
 		private readonly Socket _socket;
 		private bool _connected;
+		private bool _streaming = false;
 		private int _width;
 		private int _height;
 		private Color _color = RenderGraph.DefaultColor;
@@ -56,6 +57,14 @@ namespace LibDmd.Output.Network
 				_connected = false;
 				Logger.Info("Disconnected from VPDB.");
 			});
+			_socket.On("resume", () => {
+				_streaming = true;
+				Logger.Info("Resuming streaming frames...");
+			});
+			_socket.On("pause", () => {
+				_streaming = false;
+				Logger.Info("Pausing streaming frames...");
+			});
 		}
 
 		public void Init()
@@ -67,30 +76,6 @@ namespace LibDmd.Output.Network
 			_width = width;
 			_height = height;
 			EmitObject("dimensions", new JObject { { "width", width }, { "height", height } });
-		}
-
-		/// <summary>
-		/// Adds a timestamp to a byte array and sends it to the socket.
-		/// </summary>
-		/// <param name="eventName">Name of the event</param>
-		/// <param name="dataLength">Length of the payload to send (without time stamp)</param>
-		/// <param name="copy">Function that copies data to the provided array. Input: array with 8 bytes of timestamp and dataLength bytes to write</param>
-		private void EmitTimestampedData(string eventName, int dataLength, Action<byte[], int> copy)
-		{
-			if (!_connected) {
-				return;
-			}
-			try {
-				var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-				var data = new byte[dataLength + 8];
-				Buffer.BlockCopy(BitConverter.GetBytes(timestamp - _startedAt), 0, data, 0, 8);
-				copy(data, 8);
-				_socket.Emit(eventName, data);
-
-			} catch (Exception e) {
-				Logger.Error(e, "Error sending " + eventName + " to socket.");
-				_connected = false;
-			}
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -164,9 +149,33 @@ namespace LibDmd.Output.Network
 			_socket?.Close();
 		}
 
+		/// <summary>
+		/// Adds a timestamp to a byte array and sends it to the socket.
+		/// </summary>
+		/// <param name="eventName">Name of the event</param>
+		/// <param name="dataLength">Length of the payload to send (without time stamp)</param>
+		/// <param name="copy">Function that copies data to the provided array. Input: array with 8 bytes of timestamp and dataLength bytes to write</param>
+		private void EmitTimestampedData(string eventName, int dataLength, Action<byte[], int> copy)
+		{
+			if (!_connected || !_streaming) {
+				return;
+			}
+			try {
+				var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+				var data = new byte[dataLength + 8];
+				Buffer.BlockCopy(BitConverter.GetBytes(timestamp - _startedAt), 0, data, 0, 8);
+				copy(data, 8);
+				_socket.Emit(eventName, data);
+
+			} catch (Exception e) {
+				Logger.Error(e, "Error sending " + eventName + " to socket.");
+				_connected = false;
+			}
+		}
+
 		private void EmitObject(string eventName, JObject data)
 		{
-			if (!_connected) {
+			if (!_connected || !_streaming) {
 				return;
 			}
 			try {
@@ -179,7 +188,7 @@ namespace LibDmd.Output.Network
 
 		private void EmitData(string eventName, IEnumerable data = null)
 		{
-			if (!_connected) {
+			if (!_connected || !_streaming) {
 				return;
 			}
 			try {
