@@ -51,7 +51,7 @@ namespace LibDmd.Converter
 				var checksum = FrameUtil.Checksum(planes[i]);
 
 				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
-				match = ApplyMapping(checksum, "unmasked");
+				match = ApplyMapping(planes, checksum, "unmasked");
 
 				// Faus ja de grad awändä und guät isch
 				if (match) {
@@ -67,7 +67,7 @@ namespace LibDmd.Converter
 						var plane = new BitArray(planes[i]);
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
 						var checksum = FrameUtil.Checksum(maskedPlane);
-						if (ApplyMapping(checksum, "masked")) {
+						if (ApplyMapping(planes, checksum, "masked")) {
 							match = true;
 							break;
 						}

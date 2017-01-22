@@ -83,10 +83,11 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Luägt obdr Häsch neimä umä isch und tuät je nach Modus Ziigs machä.
 		/// </summary>
+		/// <param name="planes">The current frame</param>
 		/// <param name="checksum">Dr Häsch</param>
 		/// <param name="masked">Zum scheen loggä</param>
 		/// <returns>Wenn eppis gladä wordä isch de <c>true</c>, sisch <c>false</c>.</returns>
-		protected bool ApplyMapping(uint checksum, string masked)
+		protected bool ApplyMapping(byte[][] planes, uint checksum, string masked)
 		{
 			var mapping = Coloring.FindMapping(checksum);
 
@@ -109,65 +110,54 @@ namespace LibDmd.Converter
 				SetPalette(palette);
 			}
 			
-			switch (mapping.Mode)
-			{
+			if (mapping.Mode == 0) {
 				// Numä iifärbä (hemmr scho) und guät isch
-				case 0:
-					if (mapping.Duration > 0) {
-						_paletteReset = Observable
-							.Never<Unit>()
-							.StartWith(Unit.Default)
-							.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
-								if (_defaultPalette != null) {
-									Logger.Info("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
-									SetPalette(_defaultPalette);
-								}
-								_paletteReset = null;
-							});
-					}
-					return true;
-
-				// Än Animazion wird losgla
-				case 1:
-					var animation = Animation.Find(Animations, mapping.Duration);
-					if (animation == null) {
-						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
-						return false;
-					}
-					// Äs cha si das än Animazion mehrmaus dr gliichi Häsch hat am Aafang, i dem Fau nid looslah.
-					if (CurrentAnimation == null || checksum != LastChecksum) {
-						Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
-						CurrentAnimation?.Stop();
-						CurrentEnhancer?.Stop();
-						CurrentAnimation = animation;
-						CurrentAnimation.Start(ColoredGray2AnimationFrames, ColoredGray4AnimationFrames, Palette, AnimationFinished);
-						FrameCounter = 0;
-						LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-					}
-					LastChecksum = checksum;
-					return true;
-
-				// Ab etz wärdid d Biudli mit zwe Bit ergänzt
-				case 2:
-					var enhancer = Animation.Find(Animations, mapping.Duration);
-					if (enhancer == null) {
-						Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
-						return false;
-					}
-					if (CurrentEnhancer == null || checksum != LastChecksum) {
-						Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", enhancer.NumFrames, masked);
-						CurrentAnimation?.Stop();
-						CurrentEnhancer?.Stop();
-						CurrentEnhancer = enhancer;
-						CurrentEnhancer.Start();
-					}
-					LastChecksum = checksum;
-					return true;
-				
-				default:
-					Logger.Warn("[colorize] Unknown mode {0}.", mapping.Mode);
-					return false;
+				if (mapping.Duration > 0) {
+					_paletteReset = Observable
+						.Never<Unit>()
+						.StartWith(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
+							if (_defaultPalette != null) {
+								Logger.Info("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
+								SetPalette(_defaultPalette);
+							}
+							_paletteReset = null;
+						});
+				}
+				return true;
 			}
+
+			// Sisch wird än Animazion wird losgla
+			var animation = Animation.Find(Animations, mapping.Duration);
+			if (animation == null) {
+				Logger.Warn("[colorize] No animation found at position {0} for {1} frame.", mapping.Duration, masked);
+				return false;
+			}
+
+			// Modus eis: Äs cha si das än Animazion mehrmaus dr gliichi Häsch hat am Aafang, i dem Fau nid looslah.
+			if (mapping.Mode == 1 && (CurrentAnimation == null || checksum != LastChecksum)) {
+				Logger.Info("[colorize] Playing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
+				CurrentAnimation?.Stop();
+				CurrentEnhancer?.Stop();
+				CurrentAnimation = animation;
+				CurrentAnimation.StartReplace(ColoredGray2AnimationFrames, ColoredGray4AnimationFrames, Palette, AnimationFinished);
+				FrameCounter = 0;
+				LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			}
+
+			// Modus zwei: Gliichi Kondizionä wiä obä, aber uifäas anders Objäkt
+			if (mapping.Mode == 2 && (CurrentEnhancer == null || checksum != LastChecksum)) {
+				Logger.Info("[colorize] Enhancing animation of {0} frames via {1} frame.", animation.NumFrames, masked);
+				CurrentAnimation?.Stop();
+				CurrentEnhancer?.Stop();
+				CurrentEnhancer = animation;
+				CurrentEnhancer.StartEnhance(planes, ColoredGray4AnimationFrames, Palette, AnimationFinished);
+				FrameCounter = 0;
+				LastFrame = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			}
+
+			LastChecksum = checksum;
+			return true;
 		}
 
 		/// <summary>

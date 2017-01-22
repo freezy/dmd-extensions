@@ -63,34 +63,6 @@ namespace LibDmd.Converter
 		{
 			// Zersch dimmer s Frame i Planes uifteilä
 			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame);
-
-			// Enhancer isch um eis verschobä, das heisst äs wird erscht hiä gluägt (bim Frame nachem Häschä)
-			if (IsEnhancerRunning) {
-				
-				var data = CurrentEnhancer.Next();
-				
-				// Wenns letschtä Frame vodr Animazion gsi isch de chemmr d Checksum wird resettä
-				if (!CurrentEnhancer.IsRunning) {
-					Logger.Trace("[timing] Waiting {0}ms for last frame to finish...", CurrentEnhancer.LastFrame.Delay);
-
-					// nu uifs letschti biud wartä bis mer fertig sind
-					Observable
-						.Never<Unit>()
-						.StartWith(Unit.Default)
-						.Delay(TimeSpan.FromMilliseconds(CurrentEnhancer.LastFrame.Delay))
-						.Subscribe(_ => AnimationFinished());
-				}
-
-				// Wenns Biud mit zwe Bytes muäss ergänzt wärdä de timmrd planes erwiitärä
-				if (data.BitLength == 2) {
-					planes = new []{ planes[0], planes[1], data.Planes[0], data.Planes[1] };
-
-				} else {
-					Logger.Warn("Got a bit enhancer that gave us a {0}-bit frame. Duh, ignoring.", data.BitLength);	
-				}
-				return planes;
-			}
-
 			var match = false;
 
 			// Jedi Plane wird einisch duräghäscht
@@ -101,7 +73,7 @@ namespace LibDmd.Converter
 				//Logger.Trace("Hash bit {0}: {1}", i, checksum.ToString("X"));
 
 				// Wemer dr Häsch hett de luägemr grad obs ächt äs Mäpping drzuäg git
-				match = ApplyMapping(checksum, "unmasked");
+				match = ApplyMapping(planes, checksum, "unmasked");
 
 				// Faus ja de grad awändä und guät isch
 				if (match) {
@@ -117,7 +89,7 @@ namespace LibDmd.Converter
 						var plane = new BitArray(planes[i]);
 						plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
 						var checksum = FrameUtil.Checksum(maskedPlane);
-						if (ApplyMapping(checksum, "masked")) {
+						if (ApplyMapping(planes, checksum, "masked")) {
 							match = true;
 							break;
 						}
@@ -131,6 +103,13 @@ namespace LibDmd.Converter
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			if (IsAnimationRunning) {
 				Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
+				return null;
+			}
+
+			// Wenn än Enhancer am laifä nisch de wirds Biud a däh gschickt
+			if (IsEnhancerRunning) {
+				CurrentEnhancer.NextVpmFrame(planes);
+				Logger.Trace("[timing] VPM Frame #{0} updated ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
 				return null;
 			}
 

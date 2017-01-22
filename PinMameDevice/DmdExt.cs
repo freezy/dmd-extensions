@@ -107,7 +107,7 @@ namespace PinMameDevice
 
 						if (File.Exists(fsqPath)) {
 							Logger.Info("Loading animation file at {0}...", fsqPath);
-							animations = Animation.ReadFrameSequence(fsqPath, Width, Height);
+							animations = Animation.ReadFrameSequence(fsqPath);
 						}
 						_gray2Colorizer = new Gray2Colorizer(coloring, animations);
 						_gray4Colorizer = new Gray4Colorizer(coloring, animations);

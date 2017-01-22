@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using LibDmd.Common;
 using NLog;
+using ProPinballBridge;
 
 namespace LibDmd.Converter.Colorize
 {
@@ -30,17 +31,15 @@ namespace LibDmd.Converter.Colorize
 	public class Animation
 	{
 		public bool IsRunning { get; private set; }
+
 		public readonly long Offset;
 		public int NumFrames => _frames.Length;
 		public Frame LastFrame => _frames[_frames.Length - 1];
 
 		private readonly Frame[] _frames;
-		private readonly int _width;
-		private readonly int _height;
+		private readonly IObservable<Frame> _fsqFrames;
+		private BehaviorSubject<byte[][]> _vpmFrames;
 		private IDisposable _animation;
-
-		private uint _frameIndex;
-		private long _animationStarted;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -48,12 +47,8 @@ namespace LibDmd.Converter.Colorize
 		/// Kreiärt ä nii Animazion
 		/// </summary>
 		/// <param name="reader">S Feil wod Animazion dinnä staht</param>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
-		public Animation(BinaryReader reader, int width, int height)
+		public Animation(BinaryReader reader)
 		{
-			_width = width;
-			_height = height;
 			Offset = reader.BaseStream.Position;
 			var numFrames = reader.ReadUInt16BE();
 			//Logger.Trace("  [{1}] [fsq] Reading {0} frames", numFrames, reader.BaseStream.Position);
@@ -63,64 +58,30 @@ namespace LibDmd.Converter.Colorize
 				_frames[i] = new Frame(reader, time);
 				time += _frames[i].Delay;
 			}
+			_fsqFrames = _frames
+				.ToObservable()
+				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)));
 		}
 
 		/// <summary>
 		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
 		/// uisgäh.
 		/// </summary>
-		/// 
 		/// <remarks>
 		/// Das hiä isch dr Fau wo diä gsamti Animazion uisgäh und VPM ignoriärt
 		/// wird (dr Modus eis).
 		/// </remarks>
-		/// <param name="frameSource">Det wärdid Biudli uisgäh</param>
-		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
-		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		[Obsolete("Use the planes one, this is one does convertion which should be done by the render graph.", true)]
-		public void Start(Subject<byte[]> frameSource, BehaviorSubject<Palette> palette, Action completed = null)
-		{
-			Logger.Info("[fsq] Starting RGB24 animation of {0} frames...", _frames.Length);
-			IsRunning = true;
-			var n = 0;
-			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-			_animation = _frames.ToObservable()
-				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
-				.Select(frame => ColorUtil.ColorizeFrame(_width, _height, frame.GetFrame(_width, _height), palette.Value.GetColors(frame.BitLength)))
-				.Subscribe(frame => {
-					frameSource.OnNext(frame);
-					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
-					n++;
-				}, () => {
-
-					// nu uifs letschti biud wartä bis mer fertig sind
-					Observable
-						.Never<Unit>()
-						.StartWith(Unit.Default)
-						.Delay(TimeSpan.FromMilliseconds(_frames[_frames.Length - 1].Delay))
-						.Subscribe(_ => {
-							IsRunning = false;
-							completed?.Invoke();
-						});
-				});
-		}
-
-		/// <summary>
-		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
-		/// uisgäh, abr etz aus Bitplanes.
-		/// </summary>
 		/// <param name="coloredGray2Source">Wenn meglich gahts da druif</param>
 		/// <param name="coloredGray4Source">Wenns viärbittig isch, de wird dä zersch probiärt</param>
 		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
 		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		public void Start(Subject<Tuple<byte[][], Color[]>> coloredGray2Source, Subject<Tuple<byte[][], Color[]>> coloredGray4Source, BehaviorSubject<Palette> palette, Action completed = null)
+		public void StartReplace(Subject<Tuple<byte[][], Color[]>> coloredGray2Source, Subject<Tuple<byte[][], Color[]>> coloredGray4Source, BehaviorSubject<Palette> palette, Action completed = null)
 		{
 			Logger.Info("[fsq] Starting colored gray4 animation of {0} frames...", _frames.Length);
 			IsRunning = true;
 			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var n = 0;
-			_animation = _frames.ToObservable()
-				.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
+			_animation = _fsqFrames
 				.Subscribe(frame => {
 					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					if (frame.BitLength == 2) {
@@ -143,37 +104,60 @@ namespace LibDmd.Converter.Colorize
 				});
 		}
 
-
 		/// <summary>
-		/// Tuät d Animazion aus loosglah markiäre. Äs wird abr niit uisgäh.
+		/// Tuät d Animazion looslah und d Biudli uifd viärbit-Queuä uisgäh
 		/// </summary>
-		/// 
 		/// <remarks>
-		/// Das hiä isch dr Fau wo zur Bit-Erwiiterig diänt (Modus zwäi). Dr 
-		/// Konvärtr chunnt säuber ibr <see cref="Next"/> d Biudr go abholä
-		/// bisses käni me hett odr d Animazion gschtoppt wird.
+		/// Das hiä isch dr Fau wo Buider vo VPM mit zwe Bits erwiiterid wärdid.
+		/// 
+		/// S Timing wird wiä im Modus eis vo dr Animazion vorgäh, das heisst s 
+		/// letschtä Biud vo VPM definiärt diä erschtä zwäi Bits unds jedes Biud
+		/// vord Animazion tuät diä reschtlichä zwäi Bits ergänzä unds de uifd
+		/// Viärbit-Queuä uisgäh.
 		/// </remarks>
-		public void Start()
+		/// <param name="firstFrame">S Buid vo VPM wod Animazion losgla het</param>
+		/// <param name="coloredGray4Source">D Uisgab vord erwiitertä Frames</param>
+		/// <param name="palette">D Palettä wo zum iifärbä bruicht wird</param>
+		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
+		public void StartEnhance(byte[][] firstFrame, Subject<Tuple<byte[][], Color[]>> coloredGray4Source, BehaviorSubject<Palette> palette, Action completed = null)
 		{
-			_frameIndex = 0;
-			_animationStarted = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			Logger.Info("[fsq] Starting enhanced animation of {0} frames...", _frames.Length);
 			IsRunning = true;
+			var t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			var n = 0;
+			_vpmFrames = new BehaviorSubject<byte[][]>(firstFrame);
+			_animation = _fsqFrames
+				.Select(fsqFrame => new []{ _vpmFrames.Value[0], _vpmFrames.Value[1], fsqFrame.Planes[0], fsqFrame.Planes[1] })
+				.Subscribe(planes => {
+					Logger.Trace("[timing] FSQ enhanced Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					coloredGray4Source.OnNext(new Tuple<byte[][], Color[]>(planes, palette.Value.GetColors(planes.Length)));
+					n++;
+				}, () => {
+					Logger.Trace("[timing] Last frame enhanced, waiting {0}ms for last frame to finish playing.", _frames[_frames.Length - 1].Delay);
+
+					// nu uifs letschti biud wartä bis mer fertig sind
+					Observable
+						.Never<Unit>()
+						.StartWith(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(_frames[_frames.Length - 1].Delay))
+						.Subscribe(_ => {
+							IsRunning = false;
+							completed?.Invoke();
+						});
+				});
 		}
 
 		/// <summary>
-		/// Gits nächschtä Biud zrugg.
+		/// Tuäts nächschti Buid vo VPM setzä wos de mitr laifendä Animazion
+		/// ergänzt wird.
 		/// </summary>
-		/// <returns>S nächschtä Biud idr Animazion</returns>
-		public Frame Next()
+		/// <remarks>
+		/// Aui Buidr minnd zwäi Bit sii.
+		/// </remarks>
+		/// <param name="planes">S zwäibittigä Biud, aus Bitplanes</param>
+		public void NextVpmFrame(byte[][] planes)
 		{
-			if (!IsRunning) {
-				throw new InvalidOperationException("Cannot retrieve next frame of stopped animation.");
-			}
-			if (_frames.Length == _frameIndex + 1) {
-				IsRunning = false;
-			}
-			Logger.Trace("[timing] FSQ Frame #{0} enhanced ({1} ms, theory: {2} ms).", _frameIndex, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - _animationStarted, _frames[_frameIndex].Time);
-			return _frames[_frameIndex++];
+			_vpmFrames?.OnNext(planes);
 		}
 
 		/// <summary>
@@ -206,10 +190,8 @@ namespace LibDmd.Converter.Colorize
 		/// Tuät aui Animazionä vom Feil uisälääsä.
 		/// </summary>
 		/// <param name="filename">Dr Pfad zum Feil</param>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
 		/// <returns></returns>
-		public static Animation[] ReadFrameSequence(string filename, int width, int height)
+		public static Animation[] ReadFrameSequence(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
@@ -217,7 +199,7 @@ namespace LibDmd.Converter.Colorize
 			Logger.Trace("  [{1}] [fsq] Reading {0} animations", numAnimations, reader.BaseStream.Position);
 			var animations = new Animation[numAnimations];
 			for (var i = 0; i < numAnimations; i++) {
-				animations[i] = new Animation(reader, width, height);
+				animations[i] = new Animation(reader);
 			}
 			return animations;
 		}
