@@ -17,8 +17,8 @@ namespace LibDmd.Output.Network
 		public bool IsAvailable { get; } = true;
 
 		public string ApiKey { get; set; }
-		//public string EndPoint { get; set; } = "https://api-test.vpdb.io/";
-		public string EndPoint { get; set; } = "http://127.0.0.1:3000/";
+		public string EndPoint { get; set; } = "https://api-test.vpdb.io/";
+		//public string EndPoint { get; set; } = "http://127.0.0.1:3000/";
 		public string AuthUser { get; set; }
 		public string AuthPass { get; set; }
 
@@ -57,6 +57,34 @@ namespace LibDmd.Output.Network
 				_connected = false;
 				Logger.Info("Disconnected from VPDB.");
 			});
+			_socket.On(Socket.EVENT_MESSAGE, data => {
+				Logger.Info("Streaming message: {0}", data);
+			});
+			_socket.On(Socket.EVENT_DISCONNECT, data => {
+				Logger.Info("Stream disconnected.");
+			});
+			_socket.On(Socket.EVENT_CONNECT_ERROR, data => {
+				Logger.Warn("Streaming connection error: {0}", data);
+			});
+			_socket.On(Socket.EVENT_CONNECT_TIMEOUT, data => {
+				Logger.Info("Streaming connection timeout.", data);
+			});
+			_socket.On(Socket.EVENT_ERROR, data => {
+				Logger.Warn("Streaming error: {0}", data);
+			});
+			_socket.On(Socket.EVENT_RECONNECTING, data => {
+				Logger.Info("Streaming reconnecting..");
+			});
+			_socket.On(Socket.EVENT_RECONNECT_ERROR, data => {
+				Logger.Info("Streaming reconnection error.");
+			});
+			_socket.On(Socket.EVENT_RECONNECT_ATTEMPT, data => {
+				Logger.Info("Streaming reconnection attempt {0}.", data);
+			});
+			_socket.On(Socket.EVENT_RECONNECT_FAILED, data => {
+				Logger.Warn("Streaming reconnection failed.");
+			});
+
 			_socket.On("resume", () => {
 				_streaming = true;
 				Logger.Info("Resuming streaming frames...");

@@ -50,7 +50,7 @@ namespace DmdExt.Common
 			Deactivated += Window_Deactivated;
 			LocationChanged += LocationChanged_Event;
 			SizeChanged += LocationChanged_Event;
-
+			ShowActivated = false;
 			Dmd.Host = this;
 			PositionChanged = new BehaviorSubject<DmdPosition>(new DmdPosition(Left, Top, Width, Height));
 		}
