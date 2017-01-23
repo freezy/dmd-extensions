@@ -151,11 +151,11 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>if "$(Platform)"=="x64" (
-    copy /Y "$(TargetDir)$(TargetName).dll" "c:\Games\Visual Pinball\VPinMAME\$(TargetName)64.dll"
+    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME\$(TargetName)64.dll"
 ) else (
-    copy /Y "$(TargetDir)$(TargetName).dll" "C:\Games\Visual Pinball\VPinMAME"
+    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME"
 )
-copy /Y "$(TargetDir)DmdDevice.log.config" "C:\Games\Visual Pinball\VPinMAME"
+copy /Y "$(TargetDir)DmdDevice.log.config" "F:\Pinball\Visual Pinball\VPinMAME"
 
 </PostBuildEvent>
   </PropertyGroup>

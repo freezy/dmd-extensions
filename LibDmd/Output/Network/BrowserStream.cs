@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,24 +10,27 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MimeTypes;
 using NLog;
+using WebSocketSharp.Server;
 
 namespace LibDmd.Output.Network
 {
-	public class BrowserStream : IGray2Destination
+	public class BrowserStream : WebSocketBehavior, IGray2Destination
 	{
 		public string Name { get; } = "Browser Stream";
 		public bool IsAvailable { get; } = true;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
-		private Dictionary<string, string> _www = new Dictionary<string, string>(); 
+		private readonly Dictionary<string, string> _www = new Dictionary<string, string>(); 
+		private readonly CancellationToken _token = new CancellationToken();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public BrowserStream()
 		{
 			// LibDmd.Output.Network.www.index.html
-			var prefix = "LibDmd.Output.Network.www.";
+			const string prefix = "LibDmd.Output.Network.www.";
 			Logger.Info("Resource names = {0}", string.Join(", ", _assembly.GetManifestResourceNames()));
 			_assembly.GetManifestResourceNames()
 				.Where(res => res.StartsWith(prefix))
@@ -34,8 +38,7 @@ namespace LibDmd.Output.Network
 				.ForEach(res => _www["/" + res.Substring(0, prefix.Length)] = res);
 			_www["/"] = prefix + "index.html";
 				
-			var token = new CancellationToken();
-			Listen("http://*:9090/", 4, token);
+			Listen("http://*:9090/", 4, _token);
 			
 		}
 
@@ -46,11 +49,11 @@ namespace LibDmd.Output.Network
 			listener.Start();
 
 			var requests = new HashSet<Task>();
-			for (int i = 0; i < maxConcurrentRequests; i++)
+			for (var i = 0; i < maxConcurrentRequests; i++)
 				requests.Add(listener.GetContextAsync());
 
 			while (!token.IsCancellationRequested) {
-				Task t = await Task.WhenAny(requests);
+				var t = await Task.WhenAny(requests);
 				requests.Remove(t);
 
 				if (t is Task<HttpListenerContext>) {
@@ -66,9 +69,10 @@ namespace LibDmd.Output.Network
 			var request = context.Request;
 			var response = context.Response;
 			var output = response.OutputStream;
-
+			
 			if (request.HttpMethod == HttpMethod.Get.Method && _www.ContainsKey(request.Url.AbsolutePath)) {
 				response.StatusCode = 200;
+				response.ContentType = GetMimeType(Path.GetExtension(request.Url.AbsolutePath));
 				using (var input = _assembly.GetManifestResourceStream(_www[request.Url.AbsolutePath])) {
 					response.ContentLength64 = input.Length;
 					CopyStream(input, output);
@@ -79,7 +83,13 @@ namespace LibDmd.Output.Network
 			output.Close();
 		}
 
-		public static void CopyStream(Stream input, Stream output)
+		
+		private static string GetMimeType(string ext)
+		{
+			return string.IsNullOrEmpty(ext) ? "text/html" : MimeTypeMap.GetMimeType(ext);
+		}
+
+		private static void CopyStream(Stream input, Stream output)
 		{
 			// Insert null checking here for production
 			var buffer = new byte[8192];
@@ -90,16 +100,17 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void Init()
-		{
-		}
-
 		public void RenderGray2(byte[] frame)
 		{
 		}
 
 		public void Dispose()
 		{
+		}
+		
+		public void Init()
+		{
+			// no init
 		}
 	}
 }
