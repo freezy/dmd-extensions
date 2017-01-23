@@ -236,7 +236,7 @@
     <EmbeddedResource Include="Output\Network\www\main.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Output\Network\www\sockjs.min.js">
+    <EmbeddedResource Include="Output\Network\www\reconnecting-websocket.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <Content Include="Output\VirtualDmd\Dmd.fx" />

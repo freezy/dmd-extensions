@@ -1,24 +1,20 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Media;
-using LibDmd.Common;
 using MimeTypes;
 using NLog;
+using WebSocketSharp;
 using WebSocketSharp.Server;
+using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
+using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
 
 namespace LibDmd.Output.Network
 {
-	public class BrowserStream : WebSocketBehavior, IGray2Destination, IResizableDestination
+	public class BrowserStream : IGray2Destination, IResizableDestination
 	{
 		public string Name { get; } = "Browser Stream";
 		public bool IsAvailable { get; } = true;
@@ -26,6 +22,7 @@ namespace LibDmd.Output.Network
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 		private readonly Dictionary<string, string> _www = new Dictionary<string, string>(); 
 		private readonly HttpServer _server;
+		private readonly List<DmdSocket>  _sockets = new List<DmdSocket>();
 
 		private int _width;
 		private int _height;
@@ -33,10 +30,7 @@ namespace LibDmd.Output.Network
 		private Color[] _palette;
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-		public static readonly byte Dimensions = 0x1;
-		public static readonly byte Gray2Planes = 0x10;
+		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public BrowserStream()
 		{
@@ -50,8 +44,10 @@ namespace LibDmd.Output.Network
 			_www["/"] = prefix + "index.html";
 			
 			Logger.Debug("Allowed Paths: {0}", string.Join(", ", _www.Keys));
-				
-			_server = new HttpServer(9090);
+
+			_server = new HttpServer(9090) {
+				RootPath = "."
+			};
 			_server.OnGet += (sender, e) => {
 
 				var req = e.Request;
@@ -73,6 +69,11 @@ namespace LibDmd.Output.Network
 					res.StatusCode = (int)HttpStatusCode.NotFound;
 				}
 			};
+			_server.AddWebSocketService("/dmd", () => {
+				var socket = new DmdSocket(this);
+				_sockets.Add(socket);
+				return socket;
+			});
 			_server.Start();
 			if (_server.IsListening) {
 				Logger.Info("Listening on port {0}, and providing WebSocket services:", _server.Port);
@@ -87,16 +88,25 @@ namespace LibDmd.Output.Network
 			//EmitTimestampedData(Gray2Planes, frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), data, offset));
 		}
 
+		public void Init(DmdSocket socket)
+		{
+			Logger.Debug("Init socket");
+			socket.SetDimensions(_width, _height);
+		}
+
+		public void Closed(DmdSocket socket)
+		{
+			_sockets.Remove(socket);
+			Logger.Debug("Socket closed");
+		}
 		
 		public void SetDimensions(int width, int height)
 		{
 			_width = width;
 			_height = height;
-			var data = new[] { Dimensions }.Concat(BitConverter.GetBytes(width)).Concat(BitConverter.GetBytes(height));
-			Send(data.ToArray());
-			Logger.Info("Sent dimensions to socket.");
+			_sockets.ForEach(s => s.SetDimensions(width, height));
 		}
-		
+
 		/// <summary>
 		/// Adds a timestamp to a byte array and sends it to the socket.
 		/// </summary>
@@ -111,7 +121,7 @@ namespace LibDmd.Output.Network
 				data[0] = eventType;
 				Buffer.BlockCopy(BitConverter.GetBytes(timestamp - _startedAt), 0, data, 0, 9);
 				copy(data, 8);
-				Send(data);
+				//Send(data);
 
 			} catch (Exception e) {
 				Logger.Error(e, "Error sending event " + eventType + " to socket.");
@@ -143,5 +153,52 @@ namespace LibDmd.Output.Network
 		{
 			// no init
 		}
+
 	}
+
+	public class DmdSocket : WebSocketBehavior
+	{
+		private readonly BrowserStream _dest;
+
+		public static readonly byte Dimensions = 0x1;
+		public static readonly byte Gray2Planes = 0x10;
+		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public DmdSocket(BrowserStream dest)
+		{
+			_dest = dest;
+		}
+
+		public void SetDimensions(int width, int height)
+		{
+			var data = new[] { Dimensions }.Concat(BitConverter.GetBytes(width)).Concat(BitConverter.GetBytes(height));
+			Send(data.ToArray());
+			Logger.Info("Sent dimensions to socket.");
+		}
+
+		protected override void OnMessage(MessageEventArgs e)
+		{
+			if (e.Data == "init") {
+				_dest.Init(this);
+			}
+			Logger.Info("Got message from client: {0}", e.Data);
+		}
+
+		protected override void OnError(ErrorEventArgs e)
+		{
+			Logger.Error(e.Exception, "Websock error: {0}", e.Message);
+			_dest.Closed(this);
+		}
+
+		protected override void OnOpen()
+		{
+			Logger.Info("Websocket opened.");
+		}
+
+		protected override void OnClose(CloseEventArgs e)
+		{
+			_dest.Closed(this);
+		}
+	}
+
 }

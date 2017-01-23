@@ -24,7 +24,7 @@ namespace LibDmd.Output.Network
 
 		private readonly Socket _socket;
 		private bool _connected;
-		private bool _streaming = false;
+		private bool _streaming;
 		private int _width;
 		private int _height;
 		private Color _color = RenderGraph.DefaultColor;
