@@ -233,6 +233,7 @@ namespace PinMameDevice
 			if (_config.VpdbStream.Enabled) {
 				renderers.Add(new VpdbStream());
 			}
+			renderers.Add(new BrowserStream());
 
 			if (renderers.Count == 0) {
 				Logger.Error("No renderers found, exiting.");

@@ -178,6 +178,7 @@
     <Compile Include="Converter\Colorize\Mapping.cs" />
     <Compile Include="Converter\Colorize\Palette.cs" />
     <Compile Include="Converter\Colorize\Coloring.cs" />
+    <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
@@ -221,6 +222,9 @@
     </Content>
     <EmbeddedResource Include="Costura32\ftd2xx.dll" />
     <Content Include="FTD2XX_NET.XML" />
+    <EmbeddedResource Include="Output\Network\www\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
   </ItemGroup>
