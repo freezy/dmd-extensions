@@ -66,6 +66,7 @@ var controller = {
 
 	// scene
 	_camera: null,
+	_scene: null,
 	_renderer: null,
 	_dmdMesh: null,
 	_dotsComposer: null,
@@ -86,19 +87,22 @@ var controller = {
 		stencilBufer: false
 	},
 	_dotMatrixParams: {
-		size: 3,
-		blur: 1
+		size: 2,
+		blur: 1.1
 	},
 	_glowParams: {
 		amount: 1.6,
-		blur: 1
+		blur: 1.1
 	},
 
 	init: function() {
 
 		var that = this;
+
+		if (!this._color) {
+			this.setColor(defaultColor);
+		}
 		
-		this.setColor(defaultColor);
 		this._ar = this._width / this._height;
 		this._screen = this.getDimensions();
 
@@ -107,7 +111,7 @@ var controller = {
 		this._camera.position.y = 10;
 		this._camera.position.z = 615;
 
-		var scene = new THREE.Scene();
+		this._scene = new THREE.Scene();
 
 		// texture
 		var blankFrame = new Uint8Array(this._width * this._height * 3);
@@ -119,12 +123,15 @@ var controller = {
 		// plane
 		var planeGeometry = new THREE.PlaneGeometry(this._width, this._height, 1, 1);
 		this._dmdMesh = new THREE.Mesh(planeGeometry, dmdMaterial);
-		scene.add(this._dmdMesh);
+		this._scene.add(this._dmdMesh);
 		this._dmdMesh.z = 0;
-		this._dmdMesh.scale.x = this._dmdMesh.scale.y = 20;
+		this._dmdMesh.scale.x = this._dmdMesh.scale.y = 30 - 0.3125 * this._height; // 128: 20, 192: 10
 
 		// renderer
 		this._renderer = new THREE.WebGLRenderer();
+		if (document.getElementsByTagName('canvas').length > 0) {
+			document.getElementsByTagName('canvas')[0].remove();
+		}
 		document.body.appendChild(this._renderer.domElement);
 
 		// POST PROCESSING
@@ -138,7 +145,7 @@ var controller = {
 		// dots Composer renders the dot effect
 		this._dotsComposer = new THREE.EffectComposer(this._renderer, this._renderTargetDots);
 
-		var renderPass = new THREE.RenderPass(scene, this._camera);
+		var renderPass = new THREE.RenderPass(this._scene, this._camera);
 
 		// a shader pass applies a shader effect to a texture (usually the previous shader output)
 		this._dotMatrixPass = new THREE.ShaderPass(THREE.DotMatrixShader);
@@ -171,6 +178,8 @@ var controller = {
 		this.onParamsChange();
 		this.onResize();
 		this._dotMatrixPass.uniforms['resolution'].value = new THREE.Vector2(this._screen.width, this._screen.height);
+		this._dotMatrixPass.uniforms['dimension'].value = new THREE.Vector2(this._width, this._height);
+		console.log('dim =', this._dotMatrixPass.uniforms['dimension'].value);
 
 		// setup network
 		this.websocket = new ReconnectingWebSocket(url);
@@ -230,6 +239,7 @@ var controller = {
 		};
 
 		this.websocket.onclose = function (e) {
+			that.clear();
 			console.log('Connection closed');
 		};
 	},
@@ -263,10 +273,17 @@ var controller = {
 		}, delay);
 	},
 
-	setDimensions: function(dim) {
+	setDimensions: function (dim) {
+		var dimensionsChanged = false;
+		if (this._width !== dim.width || this._height !== dim.height) {
+			dimensionsChanged = true;
+		}
 		this._width = dim.width;
 		this._height = dim.height;
 		console.log('New dimensions: %sx%s', this._width, this._height);
+		if (dimensionsChanged) {
+			this.init();
+		}
 	},
 
 	setColor: function (color) {
@@ -284,6 +301,13 @@ var controller = {
 			console.log('Setting palette to %s colors.', palette.length);
 			this._gray4Palette = palette;
 		}
+	},
+
+	clear: function () {
+		var frame = new Uint8Array(this._width * this._height * 3);
+		this._dmdMesh.material.map.image.data = frame;
+		this._dmdMesh.material.map.needsUpdate = true;
+		this.renderCanvas();
 	},
 
 	clearColor: function () {
@@ -304,6 +328,7 @@ var controller = {
 		this._dotsComposer.render();
 		this._glowComposer.render();
 		this._blendComposer.render();
+		//this._renderer.render(this._scene, this._camera);
 	},
 
 	onParamsChange: function () {
@@ -392,7 +417,7 @@ var controller = {
 	},
 
 	isBitSet: function (byte, pos) {
-		return (byte & (1 << pos)) != 0;
+		return (byte & (1 << pos)) !== 0;
 	}
 }
 

@@ -187,22 +187,17 @@ THREE.HorizontalBlurShader = {
 THREE.AdditiveBlendShader = {
 
 	uniforms: {
-
 		"tBase": { type: "t", value: null },
 		"tAdd": { type: "t", value: null },
 		"amount": { type: "f", value: 1.0 }
-
 	},
 
 	vertexShader: [
 
 		"varying vec2 vUv;",
-
 		"void main() {",
-
 			"vUv = uv;",
 			"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-
 		"}"
 
 	].join("\n"),
@@ -250,18 +245,14 @@ THREE.DotMatrixShader = {
 		"blur": { type: "f", value: 4.0 },
 		"dimension": { type: "v2", value: new THREE.Vector2(128, 32) },
 		"resolution": { type: "v2", value: new THREE.Vector2(1280, 320) }
-
 	},
 
 	vertexShader: [
 
 	"varying vec2 vUv;",
-
 	"void main() {",
-
-	"vUv = uv;",
-	"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-
+		"vUv = uv;",
+		"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 	"}"
 
 	].join("\n"),
@@ -277,7 +268,6 @@ THREE.DotMatrixShader = {
 	"varying vec2 vUv;",
 
 	"void main() {",
-
 		"vec2 count = dimension;",
 		"vec2 spacing = vec2(resolution/count);",
 		"vec2 p = floor(vUv*count)/count;",
@@ -287,8 +277,7 @@ THREE.DotMatrixShader = {
 		"vec2 pos = mod(gl_FragCoord.xy, vec2(spacing)) - vec2(spacing/2.0);",
 		"float dist_squared = dot(pos, pos);",
 		"gl_FragColor = mix(color, vec4(0.0), smoothstep(size, size + blur, dist_squared));",
-
-		"}"
+	"}"
 
 	].join("\n")
 
