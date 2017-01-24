@@ -181,32 +181,39 @@ var controller = {
 		this.websocket.onmessage = function (e) {
 			jBinary.load(e.data, typeSet).then(function (binary) {
 				var data = binary.read('Data');
+				var frame = data.data;
 				switch (data.name) {
 					case 'gray2Planes':
-						that.renderFrame(data.data, function () {
-							return that.graytoRgb24(that.joinPlanes(2, data.data.planes), 4);
+						that.renderFrame(frame, function () {
+							return that.graytoRgb24(that.joinPlanes(2, frame.planes), 4);
 						});
 						break;
 					case 'gray4Planes':
-						that.renderGray4(data.data);
+						that.renderFrame(frame, function () {
+							return that.graytoRgb24(that.joinPlanes(4, frame.planes), 16);
+						});
 						break;
 					case 'coloredGray2':
-						that.renderColoredGray2(data.data);
+						that.renderFrame(frame, function () {
+							return that.graytoRgb24(that.joinPlanes(2, frame.planes), frame.palette.colors);
+						});
 						break;
 					case 'coloredGray4':
-						that.renderColoredGray4(data.data);
+						that.renderFrame(frame, function () {
+							return that.graytoRgb24(that.joinPlanes(4, frame.planes), frame.palette.colors);
+						});
 						break;
 					case 'rgb24':
-						that.renderRgb24(data.data);
+						that.renderRgb24(frame);
 						break;
 					case 'dimensions':
-						that.setDimensions(data.data);
+						that.setDimensions(frame);
 						break;
 					case 'color':
-						that.setColor(data.data.color);
+						that.setColor(frame.color);
 						break;
 					case 'palette':
-						that.setPalette(data.data.palette);
+						that.setPalette(frame.palette.colors);
 						break;
 					case 'clearColor':
 						that.clearColor();
@@ -225,22 +232,6 @@ var controller = {
 		this.websocket.onclose = function (e) {
 			console.log('Connection closed');
 		};
-	},
-
-	renderGray2(frame) {
-		//console.log('Gray2 Frame: %s', frame.timestamp);
-	},
-
-	renderGray4(frame) {
-		console.log('Gray4 Frame: %s', frame.timestamp);
-	},
-
-	renderColoredGray2(frame) {
-		console.log('Colored Gray 4 Frame: %s', frame.timestamp);
-	},
-
-	renderColoredGray4(frame) {
-		console.log('Colored Gray 4 Frame: %s', frame.timestamp);
 	},
 
 	renderRgb24(frame) {
@@ -281,7 +272,7 @@ var controller = {
 	setColor: function (color) {
 		this._color = new THREE.Color(color);
 		this._hsl = this._color.getHSL();
-		console.log('New color:', this._color.toString(16));
+		console.log('New color:', color.toString(16));
 	},
 
 	setPalette: function (palette) {
