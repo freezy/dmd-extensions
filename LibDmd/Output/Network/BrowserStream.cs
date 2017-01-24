@@ -199,7 +199,7 @@ namespace LibDmd.Output.Network
 		{
 			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var data = Encoding.ASCII
-				.GetBytes("gray4")
+				.GetBytes("gray" + bitlength + "Planes")
 				.Concat(new byte[] {0x0})
 				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
 				.Concat(FrameUtil.Split(_width, _height, bitlength, frame).SelectMany(p => p));

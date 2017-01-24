@@ -245,6 +245,15 @@
     <EmbeddedResource Include="Output\Network\www\jdataview.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Output\Network\www\composer.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Output\Network\www\shaders.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Output\Network\www\three.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Content Include="Output\VirtualDmd\Dmd.fx" />
     <Resource Include="Output\VirtualDmd\red-128x32.png" />
   </ItemGroup>
