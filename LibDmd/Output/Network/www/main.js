@@ -304,7 +304,6 @@ var controller = {
 		this._dotsComposer.render();
 		this._glowComposer.render();
 		this._blendComposer.render();
-		//renderer.render(scene, camera);
 	},
 
 	onParamsChange: function () {
@@ -330,6 +329,7 @@ var controller = {
 
 		this._renderer.setSize(dim.width, dim.height);
 		this._camera.updateProjectionMatrix();
+		this.renderCanvas();
 	},
 
 	getDimensions: function() {
