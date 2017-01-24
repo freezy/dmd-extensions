@@ -7,7 +7,6 @@ using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using MimeTypes;
-using Newtonsoft.Json.Linq;
 using NLog;
 using WebSocketSharp;
 using WebSocketSharp.Server;
@@ -16,7 +15,7 @@ using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
 
 namespace LibDmd.Output.Network
 {
-	public class BrowserStream : IGray2Destination, IColoredGray4Destination, IResizableDestination
+	public class BrowserStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
 		public string Name { get; } = "Browser Stream";
 		public bool IsAvailable { get; } = true;
@@ -30,7 +29,6 @@ namespace LibDmd.Output.Network
 		private int _height;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
-		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -84,16 +82,74 @@ namespace LibDmd.Output.Network
 				}
 			}
 		}
-
-		public void RenderGray2(byte[] frame)
+				
+		public void Init()
 		{
-			//EmitTimestampedData(Gray2Planes, frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), data, offset));
+			// nothing to init
 		}
 
 		public void Init(DmdSocket socket)
 		{
 			Logger.Debug("Init socket");
-			socket.SetDimensions(_width, _height);
+			socket.SendDimensions(_width, _height);
+			socket.SendColor(_color);
+			if (_palette != null) {
+				socket.SendPalette(_palette);
+			}
+		}
+
+		public void RenderGray2(byte[] frame)
+		{
+			_sockets.ForEach(s => s.SendGray(frame, 2));
+		}
+
+		public void RenderGray4(byte[] frame)
+		{
+			_sockets.ForEach(s => s.SendGray(frame, 4));
+		}
+
+		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		{
+			_sockets.ForEach(s => s.SendColoredGray("coloredGray2", planes, palette));
+		}
+
+		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		{
+			_sockets.ForEach(s => s.SendColoredGray("coloredGray4",planes, palette));
+		}
+
+		public void RenderRgb24(byte[] frame)
+		{
+			_sockets.ForEach(s => s.SendRgb24(frame));
+		}
+
+		public void SetDimensions(int width, int height)
+		{
+			_width = width;
+			_height = height;
+			_sockets.ForEach(s => s.SendDimensions(width, height));
+		}
+
+		public void SetColor(Color color)
+		{
+			_color = color;
+			_sockets.ForEach(s => s.SendColor(color));
+		}
+
+		public void SetPalette(Color[] colors)
+		{
+			_palette = colors;
+			_sockets.ForEach(s => s.SendPalette(colors));
+		}
+
+		public void ClearPalette()
+		{
+			_sockets.ForEach(s => s.SendClearPalette());
+		}
+
+		public void ClearColor()
+		{
+			_sockets.ForEach(s => s.SendClearColor());
 		}
 
 		public void Closed(DmdSocket socket)
@@ -102,34 +158,11 @@ namespace LibDmd.Output.Network
 			Logger.Debug("Socket closed");
 		}
 		
-		public void SetDimensions(int width, int height)
+		public void Dispose()
 		{
-			_width = width;
-			_height = height;
-			_sockets.ForEach(s => s.SetDimensions(width, height));
+			_server.Stop();
 		}
-
-		/// <summary>
-		/// Adds a timestamp to a byte array and sends it to the socket.
-		/// </summary>
-		/// <param name="eventType">Name of the event</param>
-		/// <param name="dataLength">Length of the payload to send (without time stamp)</param>
-		/// <param name="copy">Function that copies data to the provided array. Input: array with 8 bytes of timestamp and dataLength bytes to write</param>
-		private void EmitTimestampedData(byte eventType, int dataLength, Action<byte[], int> copy)
-		{
-			try {
-				var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-				var data = new byte[dataLength + 9];
-				data[0] = eventType;
-				Buffer.BlockCopy(BitConverter.GetBytes(timestamp - _startedAt), 0, data, 0, 9);
-				copy(data, 8);
-				//Send(data);
-
-			} catch (Exception e) {
-				Logger.Error(e, "Error sending event " + eventType + " to socket.");
-			}
-		}
-
+			
 		private static string GetMimeType(string ext)
 		{
 			return string.IsNullOrEmpty(ext) ? "text/html" : MimeTypeMap.GetMimeType(ext);
@@ -146,48 +179,6 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void Dispose()
-		{
-			_server.Stop();
-		}
-		
-		public void Init()
-		{
-			// no init
-		}
-
-		public void RenderRgb24(byte[] frame)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetColor(Color color)
-		{
-			_color = color;
-			_sockets.ForEach(s => s.SetColor(color));
-			
-		}
-
-		public void SetPalette(Color[] colors)
-		{
-			_palette = colors;
-			_sockets.ForEach(s => s.SetPalette(colors));
-		}
-
-		public void ClearPalette()
-		{
-			_sockets.ForEach(s => s.ClearPalette());
-		}
-
-		public void ClearColor()
-		{
-			_sockets.ForEach(s => s.ClearColor());
-		}
-
-		public void RenderColoredGray4(byte[][] planes, Color[] palette)
-		{
-			throw new NotImplementedException();
-		}
 	}
 
 	public class DmdSocket : WebSocketBehavior
@@ -196,42 +187,67 @@ namespace LibDmd.Output.Network
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+		private int _width = 128;
+		private int _height = 32;
 
 		public DmdSocket(BrowserStream dest)
 		{
 			_dest = dest;
 		}
 
-		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		public void SendGray(byte[] frame, int bitlength)
+		{
+			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			var data = Encoding.ASCII
+				.GetBytes("gray4")
+				.Concat(new byte[] {0x0})
+				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
+				.Concat(FrameUtil.Split(_width, _height, bitlength, frame).SelectMany(p => p));
+
+			Send(data.ToArray());
+		}
+
+		public void SendColoredGray(string name, byte[][] planes, Color[] palette)
 		{
 			if (planes.Length == 0) {
 				return;
 			}
 			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var data = Encoding.ASCII
-				.GetBytes("coloredgray4")
+				.GetBytes(name)
 				.Concat(new byte[] {0x0})
+				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
 				.Concat(BitConverter.GetBytes(palette.Length))
 				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
-				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
 				.Concat(planes.SelectMany(p => p));
-
 			Send(data.ToArray());
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SendRgb24(byte[] frame)
 		{
+			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			var data = Encoding.ASCII
+				.GetBytes("rgb24")
+				.Concat(new byte[] {0x0})
+				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
+				.Concat(frame);
+			Send(data.ToArray());
+		}
+
+		public void SendDimensions(int width, int height)
+		{
+			_width = width;
+			_height = height;
 			var data = Encoding.ASCII
 				.GetBytes("dimensions")
 				.Concat(new byte[] {0x0})
 				.Concat(BitConverter.GetBytes(width))
 				.Concat(BitConverter.GetBytes(height));
-
 			Send(data.ToArray());
 			Logger.Info("Sent dimensions to socket.");
 		}
 
-		public void SetColor(Color color)
+		public void SendColor(Color color)
 		{
 			var data = Encoding.ASCII
 				.GetBytes("color")
@@ -240,7 +256,7 @@ namespace LibDmd.Output.Network
 			Send(data.ToArray());
 		}
 
-		public void SetPalette(Color[] colors)
+		public void SendPalette(Color[] colors)
 		{
 			var data = Encoding.ASCII
 				.GetBytes("palette")
@@ -250,7 +266,7 @@ namespace LibDmd.Output.Network
 			Send(data.ToArray());
 		}
 
-		public void ClearColor()
+		public void SendClearColor()
 		{
 			var data = Encoding.ASCII
 				.GetBytes("clearColor")
@@ -258,7 +274,7 @@ namespace LibDmd.Output.Network
 			Send(data.ToArray());
 		}
 
-		public void ClearPalette()
+		public void SendClearPalette()
 		{
 			var data = Encoding.ASCII
 				.GetBytes("clearPalette")

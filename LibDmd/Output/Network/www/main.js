@@ -1,6 +1,28 @@
 ﻿var url = "ws://localhost:9090/dmd";
 var typeSet = {
 	'jBinary.littleEndian': true,
+	gray2: {
+		timestamp: 'uint32',
+		planes: 'blob'
+	},
+	gray4: {
+		timestamp: 'uint32',
+		planes: 'blob'
+	},
+	coloredGray2: {
+		timestamp: 'uint32',
+		palette: 'palette',
+		planes: 'blob'
+	},
+	coloredGray4: {
+		timestamp: 'uint32',
+		palette: 'palette',
+		planes: 'blob'
+	},
+	rgb24: {
+		timestamp: 'uint32',
+		planes: 'blob'
+	},
 	dimensions: {
 		width: 'int32',
 		height: 'int32'
@@ -14,11 +36,6 @@ var typeSet = {
 	},
 	clearColor: 'blob',
 	clearPalette: 'blob',
-	coloredgray4: {
-		palette: 'palette',
-		timestamp: 'uint32',
-		planes: 'blob'
-	},
 	Data: {
 		name: 'string0',
 		data: jBinary.Template({
@@ -49,14 +66,29 @@ var controller = {
 			jBinary.load(e.data, typeSet).then(function (binary) {
 				var data = binary.read('Data');
 				switch (data.name) {
+					case 'gray2':
+						that.renderGray2(data.data);
+						break;
+					case 'gray4':
+						that.renderGray4(data.data);
+						break;
+					case 'coloredGray2':
+						that.renderColoredGray2(data.data);
+						break;
+					case 'coloredGray4':
+						that.renderColoredGray4(data.data);
+						break;
+					case 'rgb24':
+						that.renderRgb24(data.data);
+						break;
 					case 'dimensions':
 						that.setDimensions(data.data);
 						break;
 					case 'color':
-						that.setColor(data.data);
+						that.setColor(data.data.color);
 						break;
 					case 'palette':
-						that.setPalette(data.data);
+						that.setPalette(data.data.palette);
 						break;
 					case 'clearColor':
 						that.clearColor();
@@ -64,8 +96,6 @@ var controller = {
 					case 'clearPalette':
 						that.clearPalette();
 						break;
-					case 'coloredgray4':
-						that.renderColoredGray4(data.data);
 				}
 			});
 		};
@@ -79,8 +109,24 @@ var controller = {
 		};
 	},
 
+	renderGray2(frame) {
+		//console.log('Gray2 Frame: %s', frame.timestamp);
+	},
+
+	renderGray4(frame) {
+		console.log('Gray4 Frame: %s', frame.timestamp);
+	},
+
+	renderColoredGray2(frame) {
+		console.log('Colored Gray 4 Frame: %s', frame.timestamp);
+	},
+
 	renderColoredGray4(frame) {
-		console.log('Frame: %s', frame.timestamp);
+		console.log('Colored Gray 4 Frame: %s', frame.timestamp);
+	},
+
+	renderRgb24(frame) {
+		console.log('Colored rgb24 Frame: %s', frame.timestamp);
 	},
 
 	setDimensions: function(dim) {
@@ -91,7 +137,7 @@ var controller = {
 
 	setColor: function(color) {
 		this._color = color;
-		console.log('New color: %s', this._color.toString(16));
+		console.log('New color:', this._color.toString(16));
 	},
 
 	setPalette: function(palette) {

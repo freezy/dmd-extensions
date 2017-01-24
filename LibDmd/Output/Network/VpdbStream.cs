@@ -29,6 +29,7 @@ namespace LibDmd.Output.Network
 		private int _height;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
+
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 		private JObject Welcome => new JObject {
 			{ "width", _width },
