@@ -32,22 +32,17 @@ namespace LibDmd.Output.Network
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public BrowserStream()
+		public BrowserStream(int port)
 		{
 			// map embedded www resources to _www
 			const string prefix = "LibDmd.Output.Network.www.";
-			Logger.Info("Resource names = {0}", string.Join(", ", _assembly.GetManifestResourceNames())); // LibDmd.Output.Network.www.index.html
 			_assembly.GetManifestResourceNames()
 				.Where(res => res.StartsWith(prefix))
 				.ToList()
 				.ForEach(res => _www["/" + res.Substring(prefix.Length)] = res);
 			_www["/"] = prefix + "index.html";
-			
-			Logger.Debug("Allowed Paths: {0}", string.Join(", ", _www.Keys));
 
-			_server = new HttpServer(9090) {
-				RootPath = "."
-			};
+			_server = new HttpServer(port);
 			_server.OnGet += (sender, e) => {
 
 				var req = e.Request;

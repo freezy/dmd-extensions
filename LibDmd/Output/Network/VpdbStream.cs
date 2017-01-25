@@ -18,7 +18,6 @@ namespace LibDmd.Output.Network
 
 		public string ApiKey { get; set; }
 		public string EndPoint { get; set; } = "https://api-test.vpdb.io/";
-		//public string EndPoint { get; set; } = "http://127.0.0.1:3000/";
 		public string AuthUser { get; set; }
 		public string AuthPass { get; set; }
 

@@ -1,4 +1,4 @@
-﻿var url = "ws://localhost:9090/dmd";
+﻿var url = 'ws://' + window.location.host + '/dmd';
 var typeSet = {
 	'jBinary.littleEndian': true,
 	gray2Planes: {

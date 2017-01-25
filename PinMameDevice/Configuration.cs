@@ -30,6 +30,7 @@ namespace PinMameDevice
 		}
 		public GameConfig GameConfig { get; private set; }
 		public readonly VpdbConfig VpdbStream;
+		public readonly BrowserConfig BrowserStream;
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
@@ -43,7 +44,13 @@ namespace PinMameDevice
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
 			_parser = new FileIniDataParser();
-			_data = File.Exists(_iniPath) ? _parser.ReadFile(_iniPath) : new IniData();
+
+			try {
+				_data = File.Exists(_iniPath) ? _parser.ReadFile(_iniPath) : new IniData();
+			} catch (Exception e) {
+				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
+				_data = new IniData();
+			}
 
 			Global = new GlobalConfig(_data, this);
 			VirtualDmd = new VirtualDmdConfig(_data, this);
@@ -53,6 +60,7 @@ namespace PinMameDevice
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Video = new VideoConfig(_data, this);
 			VpdbStream = new VpdbConfig(_data, this);
+			BrowserStream = new BrowserConfig(_data, this);
 		}
 
 		public void Save()
@@ -156,11 +164,22 @@ namespace PinMameDevice
 		{
 		}
 	}
+	
+	public class BrowserConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "browserstream";
+		public bool Enabled => GetBoolean("enabled", false);
+		public int Port => GetInt("port", 9090);
+		public BrowserConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
 
 	public class VpdbConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "vpdbstream";
 		public bool Enabled => GetBoolean("enabled", false);
+		public string EndPoint => GetString("endpoint", "https://api-test.vpdb.io/");
 		public VpdbConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

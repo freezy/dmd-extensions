@@ -36,7 +36,7 @@ namespace PinMameDevice
 		private const int Width = 128;
 		private const int Height = 32;
 
-		private readonly Configuration _config = new Configuration();
+		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source = new VpmGray2Source();
 		private readonly VpmGray4Source _vpmGray4Source = new VpmGray4Source();
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
@@ -73,8 +73,8 @@ namespace PinMameDevice
 
 			} else {
 				NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
-
 			}
+			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 		}
 
@@ -231,9 +231,11 @@ namespace PinMameDevice
 				}
 			}
 			if (_config.VpdbStream.Enabled) {
-				renderers.Add(new VpdbStream());
+				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
 			}
-			renderers.Add(new BrowserStream());
+			if (_config.BrowserStream.Enabled) {
+				renderers.Add(new BrowserStream(_config.BrowserStream.Port));
+			}
 
 			if (renderers.Count == 0) {
 				Logger.Error("No renderers found, exiting.");
