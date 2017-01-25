@@ -147,6 +147,9 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `enabled` - If enabled, write to an .avi file.   
   - `path` - Path to folder or .avi file. If a folder is given, it will create
     a file named after the current game.
+- `[browserstream]` - Streams the DMD in real time to your browser in your LAN
+  - `enabled` - If true, start a small web server
+  - `port` - Port of the web server
 
 You can also override all options per game by using the game's name as section 
 name and pre-fixing options with the name of the section (apart from `[global]`
@@ -175,7 +178,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.4.0
+DMD Extensions v1.5.0
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -195,45 +198,28 @@ DMD Extensions v1.4.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
-                           from. One of: [ pinballfx2, pinballarcade, screen ].
+                           from. One of: [ pinballfx2, pinballarcade,
+                           propinball, screen ].
 
   -f, --fps                How many frames per second should be mirrored.
                            Default: 25
 
-  -p, --position           [screen] Position and size of screen grabber source.
+  --position               [screen] Position and size of screen grabber source.
                            Four values: <Left> <Top> <Width> <Height>. Default:
                            "0 0 128 32".
 
-  --grid-spacing           [pinballfx2] How much of the white space around the
-                           dot should be cut off. 1 means same size as the dot,
-                           0.5 half size, etc. 0 for disable. Default: 1.
+  --resize-to              [screen] Resize captured screen to this size. Two
+                           values: <Width> <Height>. Default: "128 32".
 
-  --grid-size              [pinballfx2] Number of horizontal and vertical dots
-                           when removing grid spacing. Two values: <Width>
-                           <Height>. Default: "128 32".
-
-  --no-shading             [pinballfx2, pinballarcade] Disable shading, i.e.
-                           artificial downsampling for RGB displays. Default:
-                           false.
-
-  --shading-numshades      [pinballfx2] Number of shades for artifical
-                           downsampling for RGB displays. Default: 4
-
-  --shading-intensity      [pinballfx2] Multiplies luminosity of the parsed dot
-                           so it covers the whole spectrum before downsampling.
-                           Default: 2.5.
-
-  --shading-brightness     [pinballfx2] Adds luminosity to the parsed dot after
-                           being multiplied. Useful if even black dots should
-                           be slightly illuminated. Default: 0.1.
-
-  --dmd-crop               [pinballfx2] How many pixels should be cropped off
-                           the DMD window. Four values: <Left> <Top> <Right>
-                           <Bottom>. Default: "12 8 8 12".
+  --grid-spacing           [screen] How much of the white space around the dot
+                           should be cut off (grid size is defined by
+                           --resize-to). 1 means same size as the dot, 0.5 half
+                           size, etc. 0 for disable. Default: 0.
 
   --propinball-args        [propinball] Arguments send from the Pro Pinball
                            master process. Usually something like: "ndmd
-                           w0_0_0_0_w m392".
+                           w0_0_0_0_w m392". Will be set autmatically when
+                           called through Pro Pinball.
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
@@ -257,15 +243,14 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
-  --render-as              Internally process at a given bit length. One of: [
-                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
-
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
-  --flip-x                 Flips the image horizontally. Default: false.
+  --flip-x                 Flips the image horizontally (left/right). Default:
+                           false.
 
-  --flip-y                 Flips the image vertically. Default: false.
+  --flip-y                 Flips the image vertically (top/down). Default:
+                           false.
 
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
@@ -283,7 +268,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.4.0
+DMD Extensions v1.5.0
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -311,15 +296,14 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
-  --render-as              Internally process at a given bit length. One of: [
-                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
-
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
-  --flip-x                 Flips the image horizontally. Default: false.
+  --flip-x                 Flips the image horizontally (left/right). Default:
+                           false.
 
-  --flip-y                 Flips the image vertically. Default: false.
+  --flip-y                 Flips the image vertically (top/down). Default:
+                           false.
 
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
@@ -361,15 +345,14 @@ USAGE: dmdext test [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
-  --render-as              Internally process at a given bit length. One of: [
-                           gray2, gray4, rgb24, bitmap ]. Default: "bitmap"
-
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
-  --flip-x                 Flips the image horizontally. Default: false.
+  --flip-x                 Flips the image horizontally (left/right). Default:
+                           false.
 
-  --flip-y                 Flips the image vertically. Default: false.
+  --flip-y                 Flips the image vertically (top/down). Default:
+                           false.
 
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
