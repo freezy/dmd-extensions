@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DmdExt.Common;
@@ -341,9 +342,13 @@ namespace PinMameDevice
 		{
 			Logger.Info("Closing up.");
 			_graphs.Dispose();
-			_dmd?.Dispatcher.Invoke(() => {
-				_dmd.Hide();
-			});
+			try {
+				_dmd?.Dispatcher.Invoke(() => {
+					_dmd.Hide();
+				});
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
+			}
 
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
