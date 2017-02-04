@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -48,7 +49,11 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			Dispatcher.Invoke(() => Dmd.Source = bmp);
+			try {
+				Dispatcher.Invoke(() => Dmd.Source = bmp);
+			} catch (TaskCanceledException e) {
+				Logger.Error(e, "Virtual DMD renderer task seems to be lost.");
+			}
 		}
 
 		public void RenderGray2(byte[] frame)
