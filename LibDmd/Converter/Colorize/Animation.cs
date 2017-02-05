@@ -83,7 +83,7 @@ namespace LibDmd.Converter.Colorize
 			var n = 0;
 			_animation = _fsqFrames
 				.Subscribe(frame => {
-					Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					//Logger.Trace("[timing] FSQ Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					if (frame.BitLength == 2) {
 						coloredGray2Source.OnNext(new Tuple<byte[][], Color[]>(frame.Planes, palette.Value.GetColors(frame.BitLength)));
 					} else {
@@ -129,11 +129,11 @@ namespace LibDmd.Converter.Colorize
 			_animation = _fsqFrames
 				.Select(fsqFrame => new []{ _vpmFrames.Value[0], _vpmFrames.Value[1], fsqFrame.Planes[0], fsqFrame.Planes[1] })
 				.Subscribe(planes => {
-					Logger.Trace("[timing] FSQ enhanced Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
+					//Logger.Trace("[timing] FSQ enhanced Frame #{0} played ({1} ms, theory: {2} ms).", n, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - t, _frames[n].Time);
 					coloredGray4Source.OnNext(new Tuple<byte[][], Color[]>(planes, palette.Value.GetColors(planes.Length)));
 					n++;
 				}, () => {
-					Logger.Trace("[timing] Last frame enhanced, waiting {0}ms for last frame to finish playing.", _frames[_frames.Length - 1].Delay);
+					//Logger.Trace("[timing] Last frame enhanced, waiting {0}ms for last frame to finish playing.", _frames[_frames.Length - 1].Delay);
 
 					// nu uifs letschti biud wartä bis mer fertig sind
 					Observable

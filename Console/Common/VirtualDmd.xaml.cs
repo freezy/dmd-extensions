@@ -13,7 +13,7 @@ namespace DmdExt.Common
 	/// <summary>
 	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
 	/// </summary>
-	public partial class VirtualDmd : Window, DmdWindow
+	public partial class VirtualDmd : Window, IDmdWindow
 	{
 		/// <summary>
 		/// If true, the DMD stays on top of all other application windows.

@@ -68,6 +68,7 @@ namespace PinMameDevice
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			var logConfigPath = Path.Combine(AssemblyPath, "DmdDevice.log.config");
+
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
 				LogManager.Configuration.AddTarget(MemLogger);

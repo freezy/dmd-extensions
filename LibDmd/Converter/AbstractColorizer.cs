@@ -199,7 +199,7 @@ namespace LibDmd.Converter
 		/// </summary>
 		protected void AnimationFinished()
 		{
-			Logger.Trace("[timing] Animation finished.");
+			//Logger.Trace("[timing] Animation finished.");
 			LastChecksum = 0x0;
 			SetPalette(_defaultPalette);
 			CurrentAnimation = null;

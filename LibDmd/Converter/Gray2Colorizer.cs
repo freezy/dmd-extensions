@@ -102,14 +102,14 @@ namespace LibDmd.Converter
 
 			// Wenn än Animazion am laifä nisch de wird niid zrugg gäh
 			if (IsAnimationRunning) {
-				Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
+				//Logger.Trace("[timing] VPM Frame #{0} dropped ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
 				return null;
 			}
 
 			// Wenn än Enhancer am laifä nisch de wirds Biud a däh gschickt
 			if (IsEnhancerRunning) {
 				CurrentEnhancer.NextVpmFrame(planes);
-				Logger.Trace("[timing] VPM Frame #{0} updated ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
+				//Logger.Trace("[timing] VPM Frame #{0} updated ({1} ms).", FrameCounter++, (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - LastFrame);
 				return null;
 			}
 

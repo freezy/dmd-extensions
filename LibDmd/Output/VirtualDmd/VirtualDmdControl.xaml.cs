@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.VirtualDmd
@@ -26,7 +23,7 @@ namespace LibDmd.Output.VirtualDmd
 
 		public bool IsAvailable { get; } = true;
 
-		public DmdWindow Host { set; get; }
+		public IDmdWindow Host { set; get; }
 		public bool IgnoreAspectRatio {
 			get { return Dmd.Stretch == Stretch.UniformToFill; }
 			set { Dmd.Stretch = value ? Stretch.Fill : Stretch.UniformToFill; }
@@ -52,7 +49,7 @@ namespace LibDmd.Output.VirtualDmd
 			try {
 				Dispatcher.Invoke(() => Dmd.Source = bmp);
 			} catch (TaskCanceledException e) {
-				Logger.Error(e, "Virtual DMD renderer task seems to be lost.");
+				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
 			}
 		}
 
@@ -132,6 +129,7 @@ namespace LibDmd.Output.VirtualDmd
 
 		public void Init()
 		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (this is IFixedSizeDestination) {
 				SetDimensions(DmdWidth, DmdHeight);
 			}
@@ -144,7 +142,7 @@ namespace LibDmd.Output.VirtualDmd
 		}
 	}
 
-	public interface DmdWindow
+	public interface IDmdWindow
 	{
 		void SetDimensions(int width, int height);
 	}
