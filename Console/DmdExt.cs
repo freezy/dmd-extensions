@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using DmdExt.Common;
 using DmdExt.Mirror;
@@ -21,6 +17,7 @@ using LibDmd.Output.FileOutput;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
+using NLog.Config;
 using NLog.Targets;
 
 namespace DmdExt
@@ -32,26 +29,30 @@ namespace DmdExt
 		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static BaseCommand _command;
 		private static EventHandler _handler;
-		private static readonly MemoryTarget MemLogger = new MemoryTarget();
+		private static readonly MemoryTarget MemLogger = new MemoryTarget {
+			Name = "Raygun Logger",
+			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
+		};
 
 		[STAThread]
 		static void Main(string[] args)
 		{
-			// setup log config
-			MemLogger.Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}";
-			MemLogger.Name = "Raygun Logger";
+			// setup logger
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
 			if (File.Exists(logConfigPath)) {
-				LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(logConfigPath, true);
+				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
 #if !DEBUG
-				LogManager.Configuration.AddTarget(MemLogger);
+				LogManager.Configuration.AddTarget("memory", MemLogger);
+				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, MemLogger));
+				LogManager.ReconfigExistingLoggers();
 #endif
-
-			} else {
-				NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
+			} 
+#if !DEBUG			
+			else {
+				SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 			}
-
+#endif
 			AssertDotNetVersion();
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -183,7 +184,7 @@ namespace DmdExt
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			Raygun.Send(e.ExceptionObject as Exception);
+			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });
 #endif
 		}
 
