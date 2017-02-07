@@ -73,6 +73,7 @@ namespace DmdExt
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
+			Logger.Info("Launching console tool.");
 			BaseOptions baseOptions;
 			switch (invokedVerb) {
 				case "mirror":

@@ -86,6 +86,8 @@ namespace PinMameDevice
 #endif
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
+
+			Logger.Info("Launching VPinMAME API.");
 		}
 
 		/// <summary>
