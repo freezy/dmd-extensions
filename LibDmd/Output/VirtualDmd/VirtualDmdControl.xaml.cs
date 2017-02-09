@@ -13,10 +13,10 @@ namespace LibDmd.Output.VirtualDmd
 	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination
 	// these others are for debugging purpose. basically you can make the virtual dmd 
 	// behave like any other display by adding/removing interfaces
-	// standard (aka production); IRgb24Destination, IBitmapDestination,
-	// pindmd1/2: IGray2Destination, IGray4Destination, 
-	// pin2dmd: IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination
-	// pindmd3: IGray2Destination, IGray4Destination, IColoredGray2Destination
+	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
+	// pindmd1/2: IGray2Destination, IGray4Destination, IResizableDestination, IFixedSizeDestination
+	// pin2dmd: IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IFixedSizeDestination
+	// pindmd3: IGray2Destination, IGray4Destination, IColoredGray2Destination, IFixedSizeDestination
 	{
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get;private set; } = 32;
