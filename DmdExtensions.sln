@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibDmd", "LibDmd\LibDmd.csproj", "{0318CC71-57C6-4F46-9495-6CACF0CF1505}"
 EndProject
@@ -111,10 +111,10 @@ Global
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release - Coloring Disabled|x86.ActiveCfg = Release|Any CPU
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x64.ActiveCfg = Release|Any CPU
-		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x64.Build.0 = Release|Any CPU
-		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.ActiveCfg = Release|Any CPU
-		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.Build.0 = Release|Any CPU
+		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x64.ActiveCfg = Release|x64
+		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x64.Build.0 = Release|x64
+		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.ActiveCfg = Release|x86
+		{A4568212-D058-419F-A328-CFF92BD666CE}.Release|x86.Build.0 = Release|x86
 		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x64.ActiveCfg = Debug|x64
 		{AD8F664A-B792-4D67-BAAB-F19654A59697}.Debug|x64.Build.0 = Debug|x64

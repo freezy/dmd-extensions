@@ -87,7 +87,7 @@ namespace PinMameDevice
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 
-			Logger.Info("Launching VPinMAME API.");
+			Logger.Info("Starting VPinMAME API through {0}.exe.", System.Diagnostics.Process.GetCurrentProcess().ProcessName);
 		}
 
 		/// <summary>
@@ -469,7 +469,10 @@ namespace PinMameDevice
 			if (ex != null) {
 				Logger.Error(ex.ToString());
 			}
-			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });
+			Raygun.Send(ex, 
+				new List<string> { System.Diagnostics.Process.GetCurrentProcess().ProcessName }, 
+				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }
+			);
 		}
 
 		private static string GetColorPath()
