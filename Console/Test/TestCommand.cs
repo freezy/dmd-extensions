@@ -3,7 +3,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
-using LibDmd.Converter.Colorize;
 using LibDmd.Output;
 using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 

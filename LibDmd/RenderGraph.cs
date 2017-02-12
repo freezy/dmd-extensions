@@ -958,7 +958,18 @@ namespace LibDmd
 
 		private BitmapSource Transform(BitmapSource bmp, IFixedSizeDestination dest)
 		{
-			return dest == null ? bmp : TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			if (dest == null && !FlipHorizontally && !FlipVertically) {
+				return bmp;
+			}
+			int width, height;
+			if (dest == null) {
+				width = bmp.PixelWidth;
+				height = bmp.PixelHeight;
+			} else {
+				width = dest.DmdWidth;
+				height = dest.DmdHeight;
+			}
+			return TransformationUtil.Transform(bmp, width, height, Resize, FlipHorizontally, FlipVertically);
 		}
 
 		/// <summary>
