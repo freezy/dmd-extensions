@@ -32,7 +32,7 @@ namespace LibDmd.Input.PBFX2Grabber
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
-
+	
 		/// <summary>
 		/// Wait time between polls for the Pinball FX2 process. Stops polling as soon
 		/// as the process is found. 
@@ -101,7 +101,6 @@ namespace LibDmd.Input.PBFX2Grabber
 			StartPolling();
 		}
 
-
 		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
 		{
 			double lastHue = 0;
@@ -117,7 +116,7 @@ namespace LibDmd.Input.PBFX2Grabber
 					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;
-						var frame = ImageUtil.ConvertToGray2(bmp, 5, out hue);
+						var frame = ImageUtil.ConvertToGray2(bmp, 3, out hue);
 						if (palette == null || Math.Abs(hue - lastHue) > 0.01) {
 							byte r, g, b;
 							ColorUtil.HslToRgb(hue, 1, 0.5, out r, out g, out b);

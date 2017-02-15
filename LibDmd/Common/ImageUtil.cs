@@ -41,6 +41,7 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="lum">Multiply luminosity</param>
+		/// <param name="hue">Detected hue</param>
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
 		public static byte[] ConvertToGray2(BitmapSource bmp, double lum, out double hue)
 		{
@@ -62,7 +63,7 @@ namespace LibDmd.Common
 					double luminosity;
 					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out h, out saturation, out luminosity);
 
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 3d * lum);
+					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(Math.Min(1, luminosity * lum) * 3d);
 
 					if (luminosity > 0) {
 						imageHue = h;
