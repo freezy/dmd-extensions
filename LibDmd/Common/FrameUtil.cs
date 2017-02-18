@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
+using NLog.Fluent;
 
 namespace LibDmd.Common
 {
@@ -199,8 +200,13 @@ namespace LibDmd.Common
 			}
 			for (var f = 0; f < frame.Length; f++) {
 				for (var p = 0; p < bitPlanes.Length; p++) {
-					var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
-					frame[f] |= (byte)(bit << p);
+					try {
+						var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
+						frame[f] |= (byte)(bit << p);
+					} catch (ArgumentOutOfRangeException) {
+						Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, width, height, planes[p].Length);
+						throw;
+					}
 				}
 			}
 			return frame;

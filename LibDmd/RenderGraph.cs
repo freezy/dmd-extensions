@@ -927,7 +927,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray2(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return new Tuple<byte[][], Color[]>(FrameUtil.Split(width, height, 2, transformedFrame), palette);
+			return new Tuple<byte[][], Color[]>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 2, transformedFrame), palette);
 		}
 
 		private Tuple<byte[][], Color[]> TransformColoredGray4(int width, int height, byte[][] planes, Color[] palette, IFixedSizeDestination dest)
@@ -941,7 +941,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray4(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new Tuple<byte[][], Color[]>(FrameUtil.Split(width, height, 4, transformedFrame), palette);
+			return new Tuple<byte[][], Color[]>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 4, transformedFrame), palette);
 		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)
