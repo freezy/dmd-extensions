@@ -42,6 +42,7 @@ parameter for that.
    copy the content of the zip file to your hard drive, preferable in your `PATH`,
    and unblock the `.exe` file (right-click, properties, unblock).
 2. Download and install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
+3. If you haven't already, download and install the [.NET Framework 4.6.1](https://www.microsoft.com/en-us/download/details.aspx?id=49981).
 
 ### Test
 
