@@ -407,7 +407,7 @@ premises for the log to be created:
 
 1. You need a log config file. If there's no log config file, no log is created.
    The log config file is called `DmdDevice.log.config` for `DmdDevice.dll` and
-   `dmdext.log.config` for `dmdext.exe`. They must be at the same place of the DLL
+   `dmdext.log.config` for `dmdext.exe`. They must be at the same place as the DLL
    and EXE respectively.
 2. The user running the host app must have write permissions to the log folder.
    Per default that's the current directory. If you have copied the DLL to the
@@ -423,7 +423,11 @@ premises for the log to be created:
 
 If you have a crash, please also include which OS/bitness you're using. If it's
 about the DLL, let us know where you copied the DLL and which host application
-you're using (VPM's `setup.exe` or`vpinball.exe`, which version).
+you're using (VPM's `setup.exe` or`vpinball.exe`, also which version).
+
+You can post bugs at [VPF](http://www.vpforums.org/index.php?showtopic=36915) or 
+[VPU](http://vpuniverse.com/forums/forums/topic/2728-sam-build-with-modular-dmd-drivers-for-pindmd123-and-pin2dmd/),
+but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 
 ## Credits
 
