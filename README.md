@@ -415,11 +415,11 @@ premises for the log to be created:
    to write the log elsewhere. You can do that by editing the log config file.
    The format of the log file is XML. To change the log file location, find this line:
    
-       <target xsi:type="File" name="file" fileName="DmdDevice.log"
+       `<target xsi:type="File" name="file" fileName="DmdDevice.log"`
 
    And change the `fileName` attribute to somewhere you can write, for example:
 
-       <target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log" 
+       `<target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log"`
 
 If you have a crash, please also include which OS/bitness you're using. If it's
 about the DLL, let us know where you copied the DLL and which host application
