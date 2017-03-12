@@ -366,26 +366,6 @@ USAGE: dmdext test [--destination=<destination>]
                            provided folder.
 ```
 
-## Code Structure
-
-All of the reusuable code logic can be found in the `LibDmd` project. This 
-contains code for reading from the various input sources, the processors,
-convertors and all the output devices.
-
-In order to hook all those components together, we use something called 
-`RenderGraph`. Below is a schema how this works.
-
-![Render Graph](https://raw.githubusercontent.com/freezy/dmd-extensions/master/LibDmd/RenderGraph.png)
-
-Per default the Bitmap column is used, i.e. everything is converted to and from
-a Bitmap. This can be overridden, e.g. when launching Pro Pinball, the parameter 
-`--render-as gray4` should be used so the image doesn't get unnecessarily up- 
-and down-converted. Automatically matching the best route is imaginable and 
-will probably be implemented at some point. 
-
-For the more tech documentation, see the inline comments of the corresponding 
-classes.
-
 ## Compatibility
 
 This application is based on .NET 4.5, which only runs on Windows 7 or later.
@@ -418,6 +398,32 @@ Try boosting how fast dmdext grabs the frames. For example, for Pinball FX2, try
 Default is 25, which seems too slow for some games.
 
 *Thanks smoke007 for the tip!*
+
+## Reporting Bugs
+
+Make sure you include the application log. You can *usually* find it at the same 
+place you copied your `DmdDevice.dll` or `dmdext.exe`. However, there are two
+premises for the log to be created:
+
+1. You need a log config file. If there's no log config file, no log is created.
+   The log config file is called `DmdDevice.log.config` for `DmdDevice.dll` and
+   `dmdext.log.config` for `dmdext.exe`. They must be at the same place of the DLL
+   and EXE respectively.
+2. The user running the host app must have write permissions to the log folder.
+   Per default that's the current directory. If you have copied the DLL to the
+   `Windows\SysWOW64` folder, you don't have write access. In this case you need
+   to write the log elsewhere. You can do that by editing the log config file.
+   The format of the log file is XML. To change the log file location, find this line:
+   
+       <target xsi:type="File" name="file" fileName="DmdDevice.log"
+
+   And change the `fileName` attribute to somewhere you can write, for example:
+
+       <target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log" 
+
+If you have a crash, please also include which OS/bitness you're using. If it's
+about the DLL, let us know where you copied the DLL and which host application
+you're using (VPM's `setup.exe` or`vpinball.exe`, which version).
 
 ## Credits
 
