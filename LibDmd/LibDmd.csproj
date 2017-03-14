@@ -155,6 +155,9 @@
     <Compile Include="Common\ImageUtil.cs" />
     <Compile Include="Common\InteropUtil.cs" />
     <Compile Include="Common\TransformationUtil.cs" />
+    <Compile Include="Common\VirtualDmd.xaml.cs">
+      <DependentUpon>VirtualDmd.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converter\AbstractColorizer.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
     <Compile Include="Converter\Colorize\Frame.cs" />
@@ -205,10 +208,10 @@
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
-    <Compile Include="Output\VirtualDmd\DmdEffect.cs" />
+    <Compile Include="Output\Virtual\DmdEffect.cs" />
     <Compile Include="Output\IDestination.cs" />
     <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
-    <Compile Include="Output\VirtualDmd\VirtualDmdControl.xaml.cs">
+    <Compile Include="Output\Virtual\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
@@ -220,7 +223,7 @@
     <Compile Include="RenderGraphCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Output\VirtualDmd\Dmd.ps" />
+    <Resource Include="Output\Virtual\Dmd.ps" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -257,15 +260,19 @@
     <EmbeddedResource Include="Output\Network\www\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <Content Include="Output\VirtualDmd\Dmd.fx" />
-    <Resource Include="Output\VirtualDmd\red-128x32.png" />
+    <Content Include="Output\Virtual\Dmd.fx" />
+    <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Common\VirtualDmd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Input\ScreenGrabber\GrabberWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Output\VirtualDmd\VirtualDmdControl.xaml">
+    <Page Include="Output\Virtual\VirtualDmdControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

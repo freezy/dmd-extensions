@@ -5,10 +5,10 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using LibDmd.Output.VirtualDmd;
+using LibDmd.Output.Virtual;
 using NLog;
 
-namespace DmdExt.Common
+namespace LibDmd.Common
 {
 	/// <summary>
 	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)

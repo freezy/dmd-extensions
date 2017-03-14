@@ -123,9 +123,6 @@
   <ItemGroup>
     <Compile Include="Common\BaseCommand.cs" />
     <Compile Include="Common\BaseOptions.cs" />
-    <Compile Include="Common\VirtualDmd.xaml.cs">
-      <DependentUpon>VirtualDmd.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Mirror\MirrorCommand.cs" />
     <Compile Include="Mirror\MirrorOptions.cs" />
     <Compile Include="Common\Options.cs" />
@@ -153,12 +150,6 @@
       <Project>{0318cc71-57c6-4f46-9495-6cacf0cf1505}</Project>
       <Name>LibDmd</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="Common\VirtualDmd.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <UsingTask TaskName="CosturaCleanup" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" TaskFactory="CodeTaskFactory">

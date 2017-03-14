@@ -134,10 +134,6 @@
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Console\Console.csproj">
-      <Project>{82B73D4F-B16C-4684-B96B-249F6D35C3CF}</Project>
-      <Name>Console</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LibDmd\LibDmd.csproj">
       <Project>{0318CC71-57C6-4F46-9495-6CACF0CF1505}</Project>
       <Name>LibDmd</Name>
@@ -154,11 +150,11 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>if "$(Platform)"=="x64" (
-    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME\$(TargetName)64.dll"
+    copy /Y "$(TargetDir)$(TargetName).dll" "C:\Games\Visual Pinball\VPinMAME\$(TargetName)64.dll"
 ) else (
-    copy /Y "$(TargetDir)$(TargetName).dll" "F:\Pinball\Visual Pinball\VPinMAME"
+    copy /Y "$(TargetDir)$(TargetName).dll" "C:\Games\Visual Pinball\VPinMAME"
 )
-copy /Y "$(TargetDir)DmdDevice.log.config" "F:\Pinball\Visual Pinball\VPinMAME"
+copy /Y "$(TargetDir)DmdDevice.log.config" "C:\Games\Visual Pinball\VPinMAME"
 
 </PostBuildEvent>
   </PropertyGroup>
