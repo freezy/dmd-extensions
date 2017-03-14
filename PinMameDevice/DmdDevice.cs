@@ -71,7 +71,12 @@ namespace PinMameDevice
 			}
 			CData.RemoveFirst();
 			if (CData.First.Value == 'P') {
-				_dmdExt.LoadPalette(Convert.ToUInt32(new string(new[] { CData.First.Next.Value, CData.First.Next.Next.Value }), 16));
+				var num = new string(new[] { CData.First.Next.Value, CData.First.Next.Next.Value });
+				try {
+					_dmdExt.LoadPalette(Convert.ToUInt32(num, 16));
+				} catch (FormatException e) {
+					Logger.Warn(e, "Could not parse \"{0}\" as hex number.", num);
+				}
 			}
 		}
 
