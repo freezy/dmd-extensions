@@ -185,6 +185,7 @@ namespace DmdExt
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
+			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
 			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });
 #endif
 		}

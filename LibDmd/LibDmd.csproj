@@ -221,6 +221,7 @@
     <Compile Include="Input\ScreenGrabber\ScreenGrabber.cs" />
     <Compile Include="RenderGraph.cs" />
     <Compile Include="RenderGraphCollection.cs" />
+    <Compile Include="Version.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Output\Virtual\Dmd.ps" />

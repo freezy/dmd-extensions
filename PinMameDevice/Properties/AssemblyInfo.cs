@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DmdDevice")]
-[assembly: AssemblyDescription("DmdDevice for Visual PinMAME")]
+[assembly: AssemblyTitle("DmdDevice.dll")]
+[assembly: AssemblyProduct("Universal DmdDevice.dll for Visual PinMAME")]
+[assembly: AssemblyDescription("Universal DmdDevice.dll for Visual PinMAME for all displays, inclusively frame-by-frame coloring support.")]
+[assembly: AssemblyCopyright("Copyright © 2017 freezy@vpdb.io")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PinMameDevice")]
-[assembly: AssemblyCopyright("Copyright © 2016 freezy@vpdb.io")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.5.1.0")]
-[assembly: AssemblyFileVersion("1.5.1.0")]
-[assembly: AssemblyInformationalVersionAttribute("1.5.1")]
+[assembly: AssemblyVersion(LibDmd.Version.AssemblyVersion)]
+[assembly: AssemblyFileVersion(LibDmd.Version.AssemblyFileVersion)]
+[assembly: AssemblyInformationalVersionAttribute(LibDmd.Version.AssemblyInformationalVersionAttribute)]
 
