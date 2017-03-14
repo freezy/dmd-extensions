@@ -469,6 +469,7 @@ namespace PinMameDevice
 			if (ex != null) {
 				Logger.Error(ex.ToString());
 			}
+			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
 			Raygun.Send(ex, 
 				new List<string> { System.Diagnostics.Process.GetCurrentProcess().ProcessName }, 
 				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }
