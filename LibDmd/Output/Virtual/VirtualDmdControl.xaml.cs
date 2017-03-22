@@ -135,6 +135,11 @@ namespace LibDmd.Output.Virtual
 			}
 		}
 
+		public void ClearDisplay()
+		{
+			// nothing to clear
+		}
+
 		public void Dispose()
 		{
 			// nothing to dispose
