@@ -14,6 +14,7 @@ using DmdExt.Play;
 using DmdExt.Test;
 using LibDmd;
 using LibDmd.Input.FileSystem;
+using LibDmd.Input.PBFX2Grabber;
 using LibDmd.Input.ProPinball;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -173,6 +174,10 @@ namespace DmdExt
 
 			} catch (IncompatibleSourceException e) {
 				Logger.Error(e.Message);
+
+			} catch (CropRectangleOutOfRangeException e) {
+				Logger.Error(e.Message);
+				Logger.Error("Are you running PinballFX2 in cabinet mode with the DMD at 1040x272?");
 
 			} finally {
 				Process.GetCurrentProcess().Kill();
