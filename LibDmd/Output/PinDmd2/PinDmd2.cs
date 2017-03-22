@@ -132,6 +132,11 @@ namespace LibDmd.Output.PinDmd2
 			}
 		}
 
+		public void ClearDisplay()
+		{
+			RenderGray2(new byte[DmdWidth * DmdHeight]);
+		}
+
 		public void Dispose()
 		{
 			if (_pinDmd2Device != null && _pinDmd2Device.IsOpen) {

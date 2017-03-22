@@ -28,6 +28,11 @@ namespace LibDmd.Output
 		/// after running this.
 		/// </summary>
 		void Init();
+
+		/// <summary>
+		/// Clears the display.
+		/// </summary>
+		void ClearDisplay();
 	}
 
 	/// <summary>

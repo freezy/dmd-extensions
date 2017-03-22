@@ -119,6 +119,11 @@ namespace LibDmd.Output.FileOutput
 		{
 			// ignore
 		}
+
+		public void ClearDisplay()
+		{
+			// ignore
+		}
 	}
 
 }

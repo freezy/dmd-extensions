@@ -218,18 +218,21 @@ namespace LibDmd.Output.Pin2Dmd
 			SetColor(RenderGraph.DefaultColor);
 		}
 
+		public void ClearDisplay()
+		{
+			var buffer = new byte[2052];
+			buffer[0] = 0x81;
+			buffer[1] = 0xC3;
+			buffer[2] = 0xE7;
+			buffer[3] = 0x00;
+			RenderRaw(buffer);
+			System.Threading.Thread.Sleep(50);
+		}
+
 		public void Dispose()
 		{
 			if (_pin2DmdDevice != null) {
 				var buffer = new byte[2052];
-
-				// clear screen
-				buffer[0] = 0x81;
-				buffer[1] = 0xC3;
-				buffer[2] = 0xE7;
-				buffer[3] = 0x00;
-				RenderRaw(buffer);
-				System.Threading.Thread.Sleep(50);
 
 				// reset settings
 				buffer[0] = 0x81;

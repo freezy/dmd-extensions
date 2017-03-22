@@ -110,7 +110,7 @@ namespace LibDmd.Output.Network
 
 		public void RenderColoredGray4(byte[][] planes, Color[] palette)
 		{
-			_sockets.ForEach(s => s.SendColoredGray("coloredGray4",planes, palette));
+			_sockets.ForEach(s => s.SendColoredGray("coloredGray4", planes, palette));
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -151,6 +151,11 @@ namespace LibDmd.Output.Network
 		{
 			_sockets.Remove(socket);
 			Logger.Debug("Socket closed");
+		}
+
+		public void ClearDisplay()
+		{
+			// ignore
 		}
 		
 		public void Dispose()

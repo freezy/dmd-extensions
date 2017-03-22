@@ -25,5 +25,10 @@ namespace LibDmd
 		/// <param name="onError">When a known error occurs.</param>
 		/// <returns>An IDisposable that stops rendering when disposed.</returns>
 		IDisposable StartRendering(Action onCompleted, Action<Exception> onError = null);
+
+		/// <summary>
+		/// Clears the displays on all destinations.
+		/// </summary>
+		void ClearDisplay();
 	}
 }

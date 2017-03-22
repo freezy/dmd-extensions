@@ -70,6 +70,11 @@ namespace LibDmd.Output.FileOutput
 		{
 			_hashProvider.Dispose();
 		}
+
+		public void ClearDisplay()
+		{
+			// no, we don't write a blank image.
+		}
 	}
 
 	public class InvalidFolderException : Exception

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -97,7 +98,7 @@ namespace LibDmd
 		/// </summary>
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		private readonly List<IDisposable> _activeSources = new List<IDisposable>();
+		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
 		private readonly Subject<BitmapSource> _beforeProcessed = new Subject<BitmapSource>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -867,6 +868,13 @@ namespace LibDmd
 			SetColor(DefaultColor);
 		}
 
+		/// <summary>
+		/// Clears the display on all destinations.
+		/// </summary>
+		public void ClearDisplay()
+		{
+			Destinations.ForEach(dest => dest.ClearDisplay());
+		}
 
 		/// <summary>
 		/// Disposes the graph and all elements.
@@ -1060,10 +1068,10 @@ namespace LibDmd
 	internal class RenderDisposable : IDisposable
 	{
 		private readonly RenderGraph _graph;
-		private readonly List<IDisposable> _activeSources;
+		private readonly CompositeDisposable _activeSources;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public RenderDisposable(RenderGraph graph, List<IDisposable> activeSources)
+		public RenderDisposable(RenderGraph graph, CompositeDisposable activeSources)
 		{
 			_graph = graph;
 			_activeSources = activeSources;

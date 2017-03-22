@@ -237,7 +237,7 @@ namespace LibDmd.Output.PinDmd3
 			_lastTick = start;*/
 		}
 
-		public void RenderBlank()
+		public void ClearDisplay()
 		{
 			for (var i = 1; i < _frameBufferRgb24.Length - 1; i++) {
 				_frameBufferRgb24[i] = 0;
@@ -311,7 +311,6 @@ namespace LibDmd.Output.PinDmd3
 
 		public void Dispose()
 		{
-			RenderBlank();
 			if (_serialPort.IsOpen) {
 				_serialPort.Close();
 			}

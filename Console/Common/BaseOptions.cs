@@ -48,6 +48,9 @@ namespace DmdExt.Common
 		[Option("quit-after", HelpText = "Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. Default: -1")]
 		public int QuitAfter { get; set; } = -1;
 
+		[Option("no-clear", HelpText = "Don't clear screen when quitting. Default: false.")]
+		public bool NoClear { get; set; } = false;
+
 		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
 		public string SaveToFile { get; set; }
 

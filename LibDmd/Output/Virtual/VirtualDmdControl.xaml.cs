@@ -133,7 +133,6 @@ namespace LibDmd.Output.Virtual
 			if (this is IFixedSizeDestination) {
 				SetDimensions(DmdWidth, DmdHeight);
 			}
-			
 		}
 
 		public void Dispose()

@@ -26,6 +26,7 @@ namespace DmdExt.Common
 
 		private IRenderer _graph;
 		private IDisposable _renderer;
+		private BaseOptions _options;
 
 		protected abstract IRenderer CreateRenderGraph();
 
@@ -102,6 +103,7 @@ namespace DmdExt.Common
 				var rgb24 = renderer as IRgb24Destination;
 				rgb24?.SetColor(ColorUtil.ParseColor(options.RenderColor));
 			}
+			_options = options;
 			return renderers;
 		}
 
@@ -193,6 +195,9 @@ namespace DmdExt.Common
 
 		public void Dispose()
 		{
+			if (_options == null || !_options.NoClear) {
+				_graph?.ClearDisplay();
+			}
 			_renderer?.Dispose();
 			_graph?.Dispose();
 		}

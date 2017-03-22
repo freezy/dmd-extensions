@@ -91,6 +91,11 @@ namespace LibDmd
 			_rgb24Destinations.ForEach(dest => dest.ClearPalette());
 		}
 
+		public void ClearDisplay()
+		{
+			_graphs.ForEach(graph => graph.ClearDisplay());
+		}
+
 		public void Dispose()
 		{
 			_renderers.ForEach(r => r.Dispose());

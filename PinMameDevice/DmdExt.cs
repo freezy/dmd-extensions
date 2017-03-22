@@ -352,6 +352,7 @@ namespace PinMameDevice
 		public void Close()
 		{
 			Logger.Info("Closing up.");
+			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
 				_dmd?.Dispatcher.Invoke(() => {

@@ -171,6 +171,11 @@ namespace LibDmd.Output.Network
 			EmitData("clearColor");
 		}
 
+		public void ClearDisplay()
+		{
+			EmitData("clearDisplay");
+		}
+
 		public void Dispose()
 		{
 			_socket?.Emit("stop");

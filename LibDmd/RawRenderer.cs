@@ -26,6 +26,11 @@ namespace LibDmd
 			return _source.GetRawdata().Subscribe(_output.RenderRaw, onCompleted);
 		}
 
+		public void ClearDisplay()
+		{
+			// nothing to clear
+		}
+
 		public void Dispose()
 		{
 			_output.Dispose();
