@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -113,7 +116,18 @@ namespace DmdExt
 					_command?.Dispose();
 					Environment.Exit(0);
 				});
-				Logger.Info("Press CTRL+C to close.");
+
+				if (baseOptions.QuitAfter > -1) {
+					Logger.Info("Quitting in {0}ms...", baseOptions.QuitAfter);
+					Observable
+						.Return(Unit.Default)
+						.Delay(TimeSpan.FromMilliseconds(baseOptions.QuitAfter))
+						.Subscribe(_ => WinApp.Dispatcher.Invoke(() => WinApp.Shutdown()));
+
+				} else {
+					Logger.Info("Press CTRL+C to close.");
+				}
+				
 				WinApp.Run();
 
 			} catch (DeviceNotAvailableException e) {

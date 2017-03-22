@@ -45,6 +45,9 @@ namespace DmdExt.Common
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 
+		[Option("quit-after", HelpText = "Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. Default: -1")]
+		public int QuitAfter { get; set; } = -1;
+
 		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
 		public string SaveToFile { get; set; }
 
