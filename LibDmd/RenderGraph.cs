@@ -397,9 +397,9 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
 						continue;
 					}
-					// rgb24 -> gray2
-					if (sourceRgb24 != null && destGray2 != null) {
-						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Gray2);
+					// colored gray4 -> gray4
+					if (sourceColoredGray4 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray4);
 						continue;
 					}
 					// rgb24 -> gray4
@@ -410,6 +410,21 @@ namespace LibDmd
 					// bitmap -> gray4
 					if (sourceBitmap != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Gray4);
+						continue;
+					}
+					// colored gray2 -> gray2
+					if (sourceColoredGray2 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Gray2);
+						continue;
+					}
+					// colored gray4 -> gray2
+					if (sourceColoredGray4 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray2);
+						continue;
+					}
+					// rgb24 -> gray2
+					if (sourceRgb24 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Gray2);
 						continue;
 					}
 					// bitmap -> gray2
@@ -695,9 +710,16 @@ namespace LibDmd
 				case FrameFormat.ColoredGray2:
 					var sourceColoredGray2 = source as IColoredGray2Source;
 					switch (to) {
+
 						// colored gray2 -> gray2
 						case FrameFormat.Gray2:
-							throw new NotImplementedException("Cannot convert from colored gray2 to gray2 (just use gray2 without palette!)");
+							AssertCompatibility(source, sourceColoredGray2, dest, destGray2, from, to);
+							_activeSources.Add(sourceColoredGray2.GetColoredGray2Frames()
+								.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
+								.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
+								.ObserveOn(scheduler)
+								.Subscribe(destGray2.RenderGray2));
+							break;
 
 						// colored gray2 -> gray4
 						case FrameFormat.Gray4:
@@ -756,13 +778,27 @@ namespace LibDmd
 				case FrameFormat.ColoredGray4:
 					var sourceColoredGray4 = source as IColoredGray4Source;
 					switch (to) {
+
 						// colored gray4 -> gray2
 						case FrameFormat.Gray2:
-							throw new NotImplementedException("Cannot convert from colored gray4 to gray2 (use gray4 without palette)");
+							AssertCompatibility(source, sourceColoredGray4, dest, destGray2, from, to);
+							_activeSources.Add(sourceColoredGray4.GetColoredGray4Frames()
+								.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
+								.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
+								.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
+								.ObserveOn(scheduler)
+								.Subscribe(destGray2.RenderGray2));
+							break;
 
 						// colored gray4 -> gray4
 						case FrameFormat.Gray4:
-							throw new NotImplementedException("Cannot convert from colored gray4 to gray4 (just use gray4 without palette!)");
+							AssertCompatibility(source, sourceColoredGray4, dest, destGray4, from, to);
+							_activeSources.Add(sourceColoredGray4.GetColoredGray4Frames()
+								.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
+								.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize))
+								.ObserveOn(scheduler)
+								.Subscribe(destGray4.RenderGray4));
+							break;
 
 						// colored gray4 -> rgb24
 						case FrameFormat.Rgb24:
