@@ -18,6 +18,9 @@ namespace DmdExt.Mirror
 		[Option('f', "fps", HelpText = "How many frames per second should be mirrored. Default: 25")]
 		public double FramesPerSecond { get; set; } = 25d;
 
+		[Option("idle-duration", HelpText = "Wait for number of milliseconds until clearing the screen. Disable with 0. Default: 0.")]
+		public int IdleDuration { get; set; } = 0;
+
 		[OptionArray("position", HelpText = "[screen] Position and size of screen grabber source. Four values: <Left> <Top> <Width> <Height>. Default: \"0 0 128 32\".")]
 		public int[] Position { get; set; } = { 0, 0, 128, 32 };
 
