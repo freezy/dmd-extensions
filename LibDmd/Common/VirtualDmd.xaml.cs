@@ -57,10 +57,10 @@ namespace LibDmd.Common
 
 		public void SetDimensions(int width, int height)
 		{
-			//Logger.Info("Resizing Virtual DMD to {0}x{1}.", width, height);
 			if (_ignoreAr) {
 				return;
 			}
+			Logger.Info("Resizing Virtual DMD to {0}x{1}.", width, height);
 			Dispatcher.Invoke(() => {
 				_aspectRatio = (double)width / height;
 				Height = Width / _aspectRatio;

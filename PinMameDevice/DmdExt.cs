@@ -392,11 +392,14 @@ namespace PinMameDevice
 		/// </summary>
 		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
 		{
+			var aspectRatio = _dmd.Width / _dmd.Height;
 			_dmd.Left = _config.VirtualDmd.HasGameOverride("left") || x < 0 ? _config.VirtualDmd.Left : x;
 			_dmd.Top = _config.VirtualDmd.HasGameOverride("top") || y < 0 ? _config.VirtualDmd.Top : y;
 			_dmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
 			if (_config.VirtualDmd.IgnoreAr) {
 				_dmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
+			} else {
+				_dmd.Height = _dmd.Width / aspectRatio;
 			}
 		}
 
