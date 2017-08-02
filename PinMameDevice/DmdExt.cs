@@ -357,14 +357,12 @@ namespace PinMameDevice
 					if (key != null) {
 						var values = key.GetValueNames();
 						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
-							Logger.Info("Using VPM's registry for virtual DMD position.");
-							_dmd.Left = Convert.ToInt64(key.GetValue("dmd_pos_x").ToString());
-							_dmd.Top = Convert.ToInt64(key.GetValue("dmd_pos_y").ToString());
-							_dmd.Width = Convert.ToInt64(key.GetValue("dmd_width").ToString());
-							if (_config.VirtualDmd.IgnoreAr) {
-								_dmd.Height = Convert.ToInt64(key.GetValue("dmd_height").ToString());
-							}
-							
+							SetVirtualDmdDefaultPosition(
+								Convert.ToInt64(key.GetValue("dmd_pos_x").ToString()), 
+								Convert.ToInt64(key.GetValue("dmd_pos_y").ToString()), 
+								Convert.ToInt64(key.GetValue("dmd_width").ToString()), 
+								Convert.ToInt64(key.GetValue("dmd_height").ToString())
+							);
 						} else {
 							Logger.Warn("Ignoring VPM registry for DMD position because not all values were found at HKEY_CURRENT_USER\\{0}. Found keys: [ {1} ]", regPath, string.Join(", ", values));
 							SetVirtualDmdDefaultPosition();
@@ -392,12 +390,14 @@ namespace PinMameDevice
 		/// <summary>
 		/// Sets the position of the DMD as defined in the .ini file.
 		/// </summary>
-		private void SetVirtualDmdDefaultPosition()
+		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
 		{
-			_dmd.Left = _config.VirtualDmd.Left;
-			_dmd.Top = _config.VirtualDmd.Top;
-			_dmd.Width = _config.VirtualDmd.Width;
-			_dmd.Height = _config.VirtualDmd.Height;
+			_dmd.Left = _config.VirtualDmd.HasGameOverride("left") || x < 0 ? _config.VirtualDmd.Left : x;
+			_dmd.Top = _config.VirtualDmd.HasGameOverride("top") || y < 0 ? _config.VirtualDmd.Top : y;
+			_dmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
+			if (_config.VirtualDmd.IgnoreAr) {
+				_dmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
+			}
 		}
 
 		/// <summary>

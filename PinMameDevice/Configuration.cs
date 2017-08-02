@@ -197,6 +197,11 @@ namespace PinMameDevice
 		protected bool DoWrite = true;
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		public bool HasGameOverride(string key)
+		{
+			return Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key);
+		}
+
 		protected AbstractConfiguration(IniData data, Configuration parent)
 		{
 			_parent = parent;
