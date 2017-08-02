@@ -131,6 +131,7 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `stayontop` - Virtual dmd stays on top of most other windows 
   - `hidegrip` - Hide the resize grip
   - `ignorear` - If true, allow free resizing of the virtual DMD.
+  - `ignoreregistry` - If true, don't read the virtual DMD position from VPM's registry.
   - `left` - X-axis of the window position
   - `top` - Y-axis of the window position
   - `width` - Width of the DMD in monitor pixels
@@ -169,7 +170,11 @@ virtualdmd height = 256
 ```
 
 This is also useful if you just want to fit the virtual DMD onto different
-backglasses which have slightly different positions.
+backglasses which have slightly different positions. Note however that
+per default, dmdext tries to retrieve the DMD's position from VPM's registry
+setting. That means you can use VPM to position the DMD and dmdext will take
+the same setting for each game (this behavior can be disabled using the 
+`ignoreregistry` option).
     
 
 ## Documentation

@@ -145,11 +145,13 @@ namespace PinMameDevice
 		public bool Enabled => GetBoolean("enabled", true);
 		public bool StayOnTop => GetBoolean("stayontop", false);
 		public bool IgnoreAr => GetBoolean("ignorear", false);
+		public bool IgnoreRegistryPosition => GetBoolean("ignoreregistry", false);
 		public bool HideGrip => GetBoolean("hidegrip", false);
 		public double Left => GetDouble("left", 0);
 		public double Top => GetDouble("top", 0);
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
+
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

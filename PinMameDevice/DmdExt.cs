@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -21,6 +22,7 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
+using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
@@ -336,14 +338,66 @@ namespace PinMameDevice
 		private void SetupVirtualDmd()
 		{
 			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
+			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
+			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
+
+			// find the game's dmd position in VPM's registry
+			if (!_config.VirtualDmd.IgnoreRegistryPosition) {
+				try {
+					var regPath = @"Software\Freeware\Visual PinMame\" + _gameName;
+					var key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
+					key = key.OpenSubKey(regPath);
+
+					if (key == null) {
+						// couldn't find the value in the 32-bit view so grab the 64-bit view
+						key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+						key = key.OpenSubKey(regPath);
+					}
+
+					if (key != null) {
+						var values = key.GetValueNames();
+						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
+							Logger.Info("Using VPM's registry for virtual DMD position.");
+							_dmd.Left = Convert.ToInt64(key.GetValue("dmd_pos_x").ToString());
+							_dmd.Top = Convert.ToInt64(key.GetValue("dmd_pos_y").ToString());
+							_dmd.Width = Convert.ToInt64(key.GetValue("dmd_width").ToString());
+							if (_config.VirtualDmd.IgnoreAr) {
+								_dmd.Height = Convert.ToInt64(key.GetValue("dmd_height").ToString());
+							}
+							
+						} else {
+							Logger.Warn("Ignoring VPM registry for DMD position because not all values were found at HKEY_CURRENT_USER\\{0}. Found keys: [ {1} ]", regPath, string.Join(", ", values));
+							SetVirtualDmdDefaultPosition();
+						}
+					} else {
+						Logger.Warn("Ignoring VPM registry for DMD position because key was not found at HKEY_CURRENT_USER\\{0}", regPath);
+						SetVirtualDmdDefaultPosition();
+					}
+					key?.Dispose();
+
+				} catch (Exception ex) {
+					Logger.Warn(ex, "Could not retrieve registry values for DMD position for game \"" + _gameName + "\".");
+					SetVirtualDmdDefaultPosition();
+				}
+
+			} else {
+				Logger.Debug("DMD position: No registry because it's ignored.");
+				SetVirtualDmdDefaultPosition();
+			}
+
+			_dmd.Dmd.Init();
+			_dmd.Show();
+		}
+
+		/// <summary>
+		/// Sets the position of the DMD as defined in the .ini file.
+		/// </summary>
+		private void SetVirtualDmdDefaultPosition()
+		{
 			_dmd.Left = _config.VirtualDmd.Left;
 			_dmd.Top = _config.VirtualDmd.Top;
 			_dmd.Width = _config.VirtualDmd.Width;
 			_dmd.Height = _config.VirtualDmd.Height;
-			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
-			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
-			_dmd.Dmd.Init();
-			_dmd.Show();
 		}
 
 		/// <summary>
