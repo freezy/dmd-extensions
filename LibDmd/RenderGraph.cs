@@ -89,7 +89,7 @@ namespace LibDmd
 		/// <summary>
 		/// If >0, add a timer to each pipeline that clears the screen after n milliseconds.
 		/// </summary>
-		public int IdleDuration { get; set; } = 0;
+		public int IdleAfter { get; set; } = 0;
 
 		/// <summary>
 		/// The default color used if there are no palette is defined
@@ -488,7 +488,7 @@ namespace LibDmd
 						// gray2 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
-							SubscribeSource(sourceGray2.GetGray2Frames()
+							Subscribe(sourceGray2.GetGray2Frames()
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
@@ -500,7 +500,7 @@ namespace LibDmd
 						// gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
-							SubscribeSource(sourceGray2.GetGray2Frames()
+							Subscribe(sourceGray2.GetGray2Frames()
 									.Select(frame => ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
@@ -509,7 +509,7 @@ namespace LibDmd
 						// gray2 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
-							SubscribeSource(sourceGray2.GetGray2Frames()
+							Subscribe(sourceGray2.GetGray2Frames()
 									.Select(frame => ImageUtil.ConvertFromRgb24(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height,
@@ -539,7 +539,7 @@ namespace LibDmd
 						// gray4 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
-							SubscribeSource(sourceGray4.GetGray4Frames()
+							Subscribe(sourceGray4.GetGray4Frames()
 									.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
@@ -548,7 +548,7 @@ namespace LibDmd
 						// gray4 -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
-							SubscribeSource(sourceGray4.GetGray4Frames()
+							Subscribe(sourceGray4.GetGray4Frames()
 									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
@@ -556,7 +556,7 @@ namespace LibDmd
 						// gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
-							SubscribeSource(sourceGray4.GetGray4Frames()
+							Subscribe(sourceGray4.GetGray4Frames()
 									.Select(frame => ColorizeGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
@@ -565,7 +565,7 @@ namespace LibDmd
 						// gray4 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray4, dest, destBitmap, from, to);
-							SubscribeSource(sourceGray4.GetGray4Frames()
+							Subscribe(sourceGray4.GetGray4Frames()
 									.Select(frame => ImageUtil.ConvertFromRgb24(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height,
@@ -595,7 +595,7 @@ namespace LibDmd
 						// rgb24 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceRgb24, dest, destGray2, from, to);
-							SubscribeSource(sourceRgb24.GetRgb24Frames()
+							Subscribe(sourceRgb24.GetRgb24Frames()
 									.Select(frame => ImageUtil.ConvertToGray(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, 4))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
@@ -604,7 +604,7 @@ namespace LibDmd
 						// rgb24 -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceRgb24, dest, destGray4, from, to);
-							SubscribeSource(sourceRgb24.GetRgb24Frames()
+							Subscribe(sourceRgb24.GetRgb24Frames()
 									.Select(frame => ImageUtil.ConvertToGray(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, 16))
 									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
@@ -613,7 +613,7 @@ namespace LibDmd
 						// rgb24 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceRgb24, dest, destRgb24, from, to);
-							SubscribeSource(sourceRgb24.GetRgb24Frames()
+							Subscribe(sourceRgb24.GetRgb24Frames()
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
@@ -621,7 +621,7 @@ namespace LibDmd
 						// rgb24 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceRgb24, dest, destBitmap, from, to);
-							SubscribeSource(sourceRgb24.GetRgb24Frames()
+							Subscribe(sourceRgb24.GetRgb24Frames()
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
@@ -647,7 +647,7 @@ namespace LibDmd
 						// bitmap -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceBitmap, dest, destGray2, from, to);
-							SubscribeSource(sourceBitmap.GetBitmapFrames()
+							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => ImageUtil.ConvertToGray2(bmp))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
@@ -656,7 +656,7 @@ namespace LibDmd
 						// bitmap -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceBitmap, dest, destGray4, from, to);
-							SubscribeSource(sourceBitmap.GetBitmapFrames()
+							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => ImageUtil.ConvertToGray4(bmp))
 									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
@@ -665,7 +665,7 @@ namespace LibDmd
 						// bitmap -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
-							SubscribeSource(sourceBitmap.GetBitmapFrames()
+							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => ImageUtil.ConvertToRgb24(bmp))
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
@@ -674,7 +674,7 @@ namespace LibDmd
 						// bitmap -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(Source, sourceBitmap, dest, destBitmap, from, to);
-							SubscribeSource(sourceBitmap.GetBitmapFrames()
+							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
@@ -700,7 +700,7 @@ namespace LibDmd
 						// colored gray2 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceColoredGray2, dest, destGray2, from, to);
-							SubscribeSource(sourceColoredGray2.GetColoredGray2Frames()
+							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
 									.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
@@ -713,7 +713,7 @@ namespace LibDmd
 						// colored gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray2, dest, destRgb24, from, to);
-							SubscribeSource(sourceColoredGray2.GetColoredGray2Frames()
+							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
 									.Select(x => ColorUtil.ColorizeFrame(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height, 
@@ -727,7 +727,7 @@ namespace LibDmd
 						// colored gray2 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceColoredGray2, dest, destBitmap, from, to);
-							SubscribeSource(sourceColoredGray2.GetColoredGray2Frames()
+							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
 									.Select(x => ColorUtil.ColorizeFrame(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height,
@@ -742,7 +742,7 @@ namespace LibDmd
 						// colored gray2 -> colored gray2
 						case FrameFormat.ColoredGray2:
 							AssertCompatibility(source, sourceColoredGray2, dest, destColoredGray2, from, to);
-							SubscribeSource(sourceColoredGray2.GetColoredGray2Frames()
+							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
 									.Select(x => TransformColoredGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, destFixedSize)),
 								x => destColoredGray2.RenderColoredGray2(x.Item1, x.Item2));
 							break;
@@ -764,7 +764,7 @@ namespace LibDmd
 						// colored gray4 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceColoredGray4, dest, destGray2, from, to);
-							SubscribeSource(sourceColoredGray4.GetColoredGray4Frames()
+							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
 									.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
@@ -774,7 +774,7 @@ namespace LibDmd
 						// colored gray4 -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceColoredGray4, dest, destGray4, from, to);
-							SubscribeSource(sourceColoredGray4.GetColoredGray4Frames()
+							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(x => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1))
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
@@ -783,7 +783,7 @@ namespace LibDmd
 						// colored gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray4, dest, destRgb24, from, to);
-							SubscribeSource(sourceColoredGray4.GetColoredGray4Frames()
+							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(x => ColorUtil.ColorizeFrame(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height,
@@ -797,7 +797,7 @@ namespace LibDmd
 						// colored gray4 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceColoredGray4, dest, destBitmap, from, to);
-							SubscribeSource(
+							Subscribe(
 								sourceColoredGray4.GetColoredGray4Frames()
 									.Select(x => ColorUtil.ColorizeFrame(
 										source.Dimensions.Value.Width,
@@ -817,7 +817,7 @@ namespace LibDmd
 						// colored gray4 -> colored gray4
 						case FrameFormat.ColoredGray4:
 							AssertCompatibility(source, sourceColoredGray4, dest, destColoredGray4, from, to);
-							SubscribeSource(sourceColoredGray4.GetColoredGray4Frames()
+							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(x => TransformColoredGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, destFixedSize)),
 								x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2));
 							break;
@@ -842,19 +842,19 @@ namespace LibDmd
 		/// <typeparam name="T">Frame type, already converted to match destination</typeparam>
 		/// <param name="src">Source observable</param>
 		/// <param name="onNext">Action to run on destination</param>
-		private void SubscribeSource<T>(IObservable<T> src, Action<T> onNext) where T : class
+		private void Subscribe<T>(IObservable<T> src, Action<T> onNext) where T : class
 		{
 			// always observe on default thread
 			src = src.ObserveOn(Scheduler.Default);
 
 			// set idle timeout if enabled
-			if (IdleDuration > 0) {
+			if (IdleAfter > 0) {
 
 				// So we want the sequence to continue after the timeout, which is why 
 				// IObservable.Timeout is not well suited.
 				// A better approach is to run onNext with IObservable.Do and subscribe
 				// to the timeout through IObservable.Throttle.
-				Logger.Info("Setting idle timeout to {0}ms.", IdleDuration);
+				Logger.Info("Setting idle timeout to {0}ms.", IdleAfter);
 
 				// filter dupe frames so we can actually detect the idle
 				T lastFrame = null;
@@ -886,9 +886,9 @@ namespace LibDmd
 				src = src.Do(onNext);
 
 				// but subscribe to a throttled idle action
-				src = src.Throttle(TimeSpan.FromMilliseconds(IdleDuration));
+				src = src.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
 				_activeSources.Add(src.Subscribe(f => {
-					Logger.Info("Idle timeout ({0}ms), clearing display.", IdleDuration);
+					Logger.Info("Idle timeout ({0}ms), clearing display.", IdleAfter);
 					ClearDisplay();
 				}));
 
