@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
+using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
 using NLog;
@@ -15,6 +19,7 @@ using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
+using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd
@@ -92,6 +97,11 @@ namespace LibDmd
 		public int IdleAfter { get; set; } = 0;
 
 		/// <summary>
+		/// When IdleAfter is enabled, play this (blank screen if null)
+		/// </summary>
+		public string IdlePlay { get; set; }
+
+		/// <summary>
 		/// The default color used if there are no palette is defined
 		/// </summary>
 		public static readonly Color DefaultColor = Colors.OrangeRed;
@@ -103,6 +113,9 @@ namespace LibDmd
 		private Color[] _gray4Colors; 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+
+		private IDisposable _idleRenderer;
+		private RenderGraph _idleRenderGraph;
 
 		public RenderGraph()
 		{
@@ -883,18 +896,78 @@ namespace LibDmd
 				});
 
 				// now render it
+				src = src.Do(_ => StopIdleing());
 				src = src.Do(onNext);
 
 				// but subscribe to a throttled idle action
 				src = src.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
-				_activeSources.Add(src.Subscribe(f => {
-					Logger.Info("Idle timeout ({0}ms), clearing display.", IdleAfter);
-					ClearDisplay();
-				}));
+
+				// execute on main thread
+				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+				src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+				_activeSources.Add(src.Subscribe(f => StartIdleing()));
 
 			} else {
 				// subscribe and add to active sources
 				_activeSources.Add(src.Subscribe(onNext));
+			}
+		}
+
+		/// <summary>
+		/// Starts playing the idle animation, picture or just clears the screen,
+		/// depending on configuration.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// This sets up a new render graph with the current destinations.
+		/// </remarks>
+		private void StartIdleing()
+		{
+			if (IdlePlay != null) {
+				ISource source;
+				Logger.Info("Idle timeout ({0}ms), playing {1}.", IdleAfter, IdlePlay);
+				switch (Path.GetExtension(IdlePlay.ToLower())) {
+					case ".png":
+					case ".jpg":
+						source = new ImageSource(IdlePlay);
+						break;
+
+					case ".gif":
+						source = new GifSource(IdlePlay);
+						break;
+
+					default:
+						Logger.Error("Unsupported format " + Path.GetExtension(IdlePlay.ToLower()) + ". Supported formats: png, jpg, gif.");
+						return;
+				}
+				_idleRenderGraph = new RenderGraph {
+					Name = "Idle Renderer",
+					Source = source,
+					Destinations = Destinations,
+					Resize = Resize,
+					FlipHorizontally = FlipHorizontally,
+					FlipVertically = FlipVertically
+				};
+				_idleRenderer = _idleRenderGraph.StartRendering();
+
+			} else {
+				Logger.Info("Idle timeout ({0}ms), clearing display.", IdleAfter);
+				ClearDisplay();
+			}
+		}
+
+		/// <summary>
+		/// Stops idling source.
+		/// </summary>
+		private void StopIdleing()
+		{
+			if (_idleRenderer != null) {
+				_idleRenderer.Dispose();
+				_idleRenderer = null;
+			}
+			if (_idleRenderGraph != null) {
+				_idleRenderGraph.Dispose();
+				_idleRenderGraph = null;
 			}
 		}
 
@@ -970,7 +1043,7 @@ namespace LibDmd
 		/// </remarks>
 		public void Dispose()
 		{
-			Logger.Debug("Disposing render graph.");
+			Logger.Debug("Disposing {0}...", Name);
 			if (IsRendering) {
 				throw new Exception("Must dispose renderer first!");
 			}

@@ -21,6 +21,9 @@ namespace DmdExt.Mirror
 		[Option("idle-after", HelpText = "Wait for number of milliseconds until clearing the screen. Disable with 0. Default: 0.")]
 		public int IdleAfter { get; set; } = 0;
 
+		[Option("idle-play", HelpText = "Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.")]
+		public string IdlePlay { get; set; }
+
 		[OptionArray("position", HelpText = "[screen] Position and size of screen grabber source. Four values: <Left> <Top> <Width> <Height>. Default: \"0 0 128 32\".")]
 		public int[] Position { get; set; } = { 0, 0, 128, 32 };
 
