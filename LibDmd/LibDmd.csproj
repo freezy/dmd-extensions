@@ -165,6 +165,7 @@
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Input\AbstractSource.cs" />
+    <Compile Include="Input\FileSystem\GifSource.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IBitmapSource.cs" />
     <Compile Include="Input\IColoredGray4Source.cs" />

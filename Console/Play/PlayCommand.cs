@@ -31,13 +31,17 @@ namespace DmdExt.Play
 					source = new ImageSource(_options.FileName);
 					break;
 
+				case ".gif":
+					source = new GifSource(_options.FileName);
+					break;
+
 				case ".bin":
 					source = new RawSource(_options.FileName);
 					break;
 
 				default:
 					throw new UnknownFormatException("Unknown format " + Path.GetExtension(_options.FileName.ToLower()) + 
-						". Known formats: png, jpg, bin.");
+						". Known formats: png, jpg, gif, bin.");
 			}
 
 			// define renderers

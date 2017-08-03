@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace LibDmd.Common
 {
@@ -181,6 +184,24 @@ namespace LibDmd.Common
 					pos += 3;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Converts an image to a BitmapSouce
+		/// </summary>
+		/// <param name="img">Image to convert</param>
+		/// <returns>Converted bitmap</returns>
+		public static BitmapSource ConvertFromImage(Image img)
+		{
+			var bitmap = new Bitmap(img);
+			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
+
+			var bitmapSource = BitmapSource.Create(
+				bitmapData.Width, bitmapData.Height, 96, 96, ConvertPixelFormat(bitmap.PixelFormat), null,
+				bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+
+			bitmap.UnlockBits(bitmapData);
+			return bitmapSource;
 		}
 
 		public static void ConvertRgb24ToDIB(int width, int height, byte[] from, byte[] to)
@@ -411,6 +432,42 @@ namespace LibDmd.Common
 		public static BitmapSource ConvertFromRgb24(int width, int height, byte[] frame)
 		{
 			return ConvertFromRgb24(width, height, FrameData(width, height).With(frame));
+		}
+
+
+		/// <summary>
+		/// Converts between pixel formats.
+		/// </summary>
+		/// <param name="sourceFormat">Source format</param>
+		/// <returns>Destination format</returns>
+		private static System.Windows.Media.PixelFormat ConvertPixelFormat(PixelFormat sourceFormat)
+		{
+			switch (sourceFormat) {
+				case PixelFormat.Format24bppRgb: return PixelFormats.Bgr24;
+				case PixelFormat.Format32bppArgb: return PixelFormats.Bgra32;
+				case PixelFormat.Format32bppRgb: return PixelFormats.Bgr32;
+				case PixelFormat.Indexed: return PixelFormats.Indexed1;
+				case PixelFormat.Format1bppIndexed: return PixelFormats.Indexed1;
+				case PixelFormat.Format4bppIndexed: return PixelFormats.Indexed4;
+				case PixelFormat.Format8bppIndexed: return PixelFormats.Indexed8;
+				case PixelFormat.Format16bppGrayScale: return PixelFormats.Gray16;
+				case PixelFormat.Format16bppRgb555: return PixelFormats.Bgr555;
+				case PixelFormat.Format16bppRgb565: return PixelFormats.Bgr565;
+				case PixelFormat.Format16bppArgb1555: return PixelFormats.Bgr101010;
+				case PixelFormat.Format32bppPArgb: return PixelFormats.Pbgra32;
+				case PixelFormat.Format48bppRgb: return PixelFormats.Rgb48;
+				case PixelFormat.Format64bppArgb: return PixelFormats.Rgba64;
+				case PixelFormat.Format64bppPArgb: return PixelFormats.Prgba64;
+				case PixelFormat.Gdi:
+				case PixelFormat.Alpha:
+				case PixelFormat.PAlpha:
+				case PixelFormat.Extended:
+				case PixelFormat.Canonical:
+				case PixelFormat.Undefined:
+				case PixelFormat.Max:
+				default:
+					return new System.Windows.Media.PixelFormat();
+			}
 		}
 
 		/// <summary>
