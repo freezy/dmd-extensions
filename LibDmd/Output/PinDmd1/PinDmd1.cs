@@ -1,4 +1,4 @@
-﻿using System.Windows.Media.Imaging;
+﻿using System;
 using FTD2XX_NET;
 using LibDmd.Common;
 using NLog;
@@ -21,12 +21,20 @@ namespace LibDmd.Output.PinDmd1
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
 		private readonly byte[] _frameBuffer;
 
-		private static readonly FTDI Ftdi = new FTDI();
+		private static FTDI _ftdi;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static PinDmd1 _instance;
-		
+
 		private PinDmd1()
 		{
+			if (_ftdi == null) {
+				try {
+					_ftdi = new FTDI();
+				} catch (Exception e) {
+					Logger.Error(e, "Error initializing FTDI USB driver.");
+				}
+			}
+
 			// 2 bits per pixel + 4 init pixels
 			var size = (DmdWidth * DmdHeight / 4) * 4;
 			_frameBuffer = new byte[size];
@@ -38,9 +46,13 @@ namespace LibDmd.Output.PinDmd1
 
 		public void Init()
 		{
+			if (_ftdi == null) {
+				return;
+			}
+
 			// get number of FTDI devices connected to the machine
 			uint ftdiDeviceCount = 0;
-			var status = Ftdi.GetNumberOfDevices(ref ftdiDeviceCount);
+			var status = _ftdi.GetNumberOfDevices(ref ftdiDeviceCount);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Logger.Error("Failed to get number of FTDI devices: {0}", status);
 				return;
@@ -56,7 +68,7 @@ namespace LibDmd.Output.PinDmd1
 			var ftdiDeviceList = new FTDI.FT_DEVICE_INFO_NODE[ftdiDeviceCount];
 
 			// populate device list
-			status = Ftdi.GetDeviceList(ftdiDeviceList);
+			status = _ftdi.GetDeviceList(ftdiDeviceList);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Logger.Error("Failed to get FTDI devices: {0}", status);
 				return;
@@ -87,7 +99,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			// open device by serial number
-			status = Ftdi.OpenBySerialNumber(_pinDmd1Device.SerialNumber);
+			status = _ftdi.OpenBySerialNumber(_pinDmd1Device.SerialNumber);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Logger.Error("Failed to open device: {0}", status);
 				IsAvailable = false;
@@ -95,7 +107,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			// set bit mode
-			status = Ftdi.SetBitMode(0xff, 0x1);
+			status = _ftdi.SetBitMode(0xff, 0x1);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Logger.Error("Failed to set bit mode: {0}", status);
 				IsAvailable = false;
@@ -103,7 +115,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			// set baud rate
-			status = Ftdi.SetBaudRate(12000);
+			status = _ftdi.SetBaudRate(12000);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				Logger.Error("Failed to set baud rate: {0}", status);
 				IsAvailable = false;
@@ -143,7 +155,7 @@ namespace LibDmd.Output.PinDmd1
 		public void RenderRaw(byte[] data)
 		{
 			uint numBytesWritten = 0;
-			var status = Ftdi.Write(data, data.Length, ref numBytesWritten);
+			var status = _ftdi.Write(data, data.Length, ref numBytesWritten);
 			if (status != FTDI.FT_STATUS.FT_OK) {
 				throw new RenderException("Error writing to FTDI device: " + status);
 			}
@@ -157,8 +169,8 @@ namespace LibDmd.Output.PinDmd1
 		public void Dispose()
 		{
 			if (_pinDmd1Device != null) {
-				Ftdi.SetBitMode(0x00, 0x0);
-				Ftdi.Close();
+				_ftdi.SetBitMode(0x00, 0x0);
+				_ftdi.Close();
 				_pinDmd1Device = null;
 				IsAvailable = false;
 			}
