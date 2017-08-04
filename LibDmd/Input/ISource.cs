@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Security.RightsManagement;
-using System.Windows.Media.Imaging;
-using LibDmd.Output;
 
 namespace LibDmd.Input
 {
 	/// <summary>
 	/// Acts as source for any frames ending up on the DMD.
 	/// </summary>
+	/// 
 	/// <remarks>
 	/// Since we want a contineous flow of frames, the method to override
 	/// returns an observable. Note that the producer decides on the frequency
 	/// in which frames are delivered to the consumer.
 	/// 
 	/// When implementing a source, make sure to only implement the "native"
-	/// bit lengths of the source. Convertion if necessary is done in the render
-	/// graph directly.
+	/// bit lengths of the source. Convertion if necessary is done in the Render
+	/// Graph directly.
 	/// </remarks>
 	public interface ISource
 	{
@@ -42,6 +40,9 @@ namespace LibDmd.Input
 		IObservable<Unit> OnPause { get; }
 	}
 
+	/// <summary>
+	/// A set of dimensions, in pixel.
+	/// </summary>
 	public struct Dimensions
 	{
 		public int Width { get; set; }

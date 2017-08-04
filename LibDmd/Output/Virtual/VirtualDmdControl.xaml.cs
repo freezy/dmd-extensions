@@ -19,7 +19,7 @@ namespace LibDmd.Output.Virtual
 	// pindmd3: IGray2Destination, IGray4Destination, IColoredGray2Destination, IFixedSizeDestination
 	{
 		public int DmdWidth { get; private set; } = 128;
-		public int DmdHeight { get;private set; } = 32;
+		public int DmdHeight { get; private set; } = 32;
 
 		public bool IsAvailable { get; } = true;
 
@@ -137,7 +137,7 @@ namespace LibDmd.Output.Virtual
 
 		public void ClearDisplay()
 		{
-			// nothing to clear
+			RenderGray4(new byte[DmdWidth * DmdHeight]);
 		}
 
 		public void Dispose()

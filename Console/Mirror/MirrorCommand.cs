@@ -28,6 +28,8 @@ namespace DmdExt.Mirror
 				Resize = _options.Resize,
 				FlipHorizontally = _options.FlipHorizontally,
 				FlipVertically = _options.FlipVertically,
+				IdleAfter = _options.IdleAfter,
+				IdlePlay = _options.IdlePlay
 			};
 			_graph.SetColor(ColorUtil.ParseColor(_options.RenderColor));
 
