@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
+using Point = System.Drawing.Point;
 
 namespace LibDmd.Common
 {
@@ -191,7 +192,7 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="img">Image to convert</param>
 		/// <returns>Converted bitmap</returns>
-		public static BitmapSource ConvertFromImage(Image img)
+		public static BitmapSource ConvertToBitmap(Image img)
 		{
 			var bitmap = new Bitmap(img);
 			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
@@ -202,6 +203,24 @@ namespace LibDmd.Common
 
 			bitmap.UnlockBits(bitmapData);
 			return bitmapSource;
+		}
+
+		public static Image ConvertToImage(BitmapSource bitmapsource)
+		{
+			// convert image format
+			var src = new FormatConvertedBitmap();
+			src.BeginInit();
+			src.Source = bitmapsource;
+			src.DestinationFormat = PixelFormats.Bgra32;
+			src.EndInit();
+
+			// copy to bitmap
+			var bitmap = new Bitmap(src.PixelWidth, src.PixelHeight, PixelFormat.Format32bppArgb);
+			var data = bitmap.LockBits(new Rectangle(Point.Empty, bitmap.Size), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+			src.CopyPixels(System.Windows.Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
+			bitmap.UnlockBits(data);
+
+			return bitmap;
 		}
 
 		public static void ConvertRgb24ToDIB(int width, int height, byte[] from, byte[] to)

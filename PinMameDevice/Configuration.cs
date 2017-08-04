@@ -20,6 +20,7 @@ namespace PinMameDevice
 		public readonly PinDmd3Config PinDmd3;
 		public readonly Pin2DmdConfig Pin2Dmd;
 		public readonly VideoConfig Video;
+		public readonly GifConfig Gif;
 		public string GameName {
 			get { return _gameName; }
 			set {
@@ -59,6 +60,7 @@ namespace PinMameDevice
 			PinDmd3 = new PinDmd3Config(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Video = new VideoConfig(_data, this);
+			Gif = new GifConfig(_data, this);
 			VpdbStream = new VpdbConfig(_data, this);
 			BrowserStream = new BrowserConfig(_data, this);
 		}
@@ -166,7 +168,15 @@ namespace PinMameDevice
 		{
 		}
 	}
-	
+
+	public class GifConfig : VideoConfig
+	{
+		public override string Name { get; } = "gif";
+		public GifConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
 	public class BrowserConfig : AbstractConfiguration
 	{
 		public override string Name { get; } = "browserstream";

@@ -178,6 +178,7 @@
     <Compile Include="Input\PinMame\VpmGray2Source.cs" />
     <Compile Include="Input\FileSystem\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
+    <Compile Include="Output\FileOutput\GifOutput.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
     <Compile Include="Output\IColoredGray2Destination.cs" />

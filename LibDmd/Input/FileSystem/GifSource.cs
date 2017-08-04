@@ -44,7 +44,7 @@ namespace LibDmd.Input.FileSystem
 				for (var i = 0; i < frameCount; i++) {
 					var delay = BitConverter.ToInt32(gif.GetPropertyItem(20736).Value, index) * 10;
 					gif.SelectActiveFrame(dim, i);
-					gifFrames[i] = new GifFrame(ImageUtil.ConvertFromImage(gif), time);
+					gifFrames[i] = new GifFrame(ImageUtil.ConvertToBitmap(gif), time);
 					index += 4;
 					time += delay;
 				}
@@ -63,7 +63,7 @@ namespace LibDmd.Input.FileSystem
 				_frames = _frames.Publish().RefCount();
 
 			} else {
-				_frames = new BehaviorSubject<BitmapSource>(ImageUtil.ConvertFromImage(gif));
+				_frames = new BehaviorSubject<BitmapSource>(ImageUtil.ConvertToBitmap(gif));
 			}
 		}
 

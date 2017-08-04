@@ -244,6 +244,22 @@ namespace PinMameDevice
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
 				}
 			}
+			if (_config.Gif.Enabled) {
+
+				var rootPath = "";
+				var dirPath = Path.GetDirectoryName(_config.Gif.Path);
+				if (string.IsNullOrEmpty(dirPath) || !Path.IsPathRooted(_config.Video.Path)) {
+					rootPath = AssemblyPath;
+				}
+				var path = Path.Combine(rootPath, _config.Gif.Path);
+				if (Directory.Exists(Path.GetDirectoryName(path))) {
+					renderers.Add(new GifOutput(path));
+					Logger.Info("Added animated GIF renderer, saving to {0}", path);
+
+				} else {
+					Logger.Warn("Ignoring animated GIF renderer for non-existing path \"{0}\"", Path.GetDirectoryName(path));
+				}
+			}
 			if (_config.VpdbStream.Enabled) {
 				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
 			}
@@ -527,11 +543,13 @@ namespace PinMameDevice
 			if (ex != null) {
 				Logger.Error(ex.ToString());
 			}
+#if !DEBUG
 			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
 			Raygun.Send(ex, 
 				new List<string> { System.Diagnostics.Process.GetCurrentProcess().ProcessName }, 
 				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }
 			);
+#endif
 		}
 
 		private static string GetColorPath()
