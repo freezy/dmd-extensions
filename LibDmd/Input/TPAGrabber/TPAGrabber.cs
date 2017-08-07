@@ -20,7 +20,7 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : AbstractSource, IGray4Source, IBitmapSource
+	public class TPAGrabber : AbstractSource, IGray4Source
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
 

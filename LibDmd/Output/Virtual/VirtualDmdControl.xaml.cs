@@ -100,7 +100,7 @@ namespace LibDmd.Output.Virtual
 			Dispatcher.Invoke(() => {
 				Effect.AspectRatio = (double)width / height;
 				Effect.BlockCount = Math.Max(width, height);
-				Effect.Max = Effect.AspectRatio * 0.375;
+				Effect.Max = Effect.AspectRatio * 0.47;
 			});
 			Host.SetDimensions(width, height);
 		}
