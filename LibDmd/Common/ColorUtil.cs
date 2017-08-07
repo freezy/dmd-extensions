@@ -246,13 +246,17 @@ namespace LibDmd.Common
 		{
 			colorizedFrame = colorizedFrame ?? new byte[width * height * 3];
 			var pos = 0;
+            var maxPalette = palette.Length - 1;
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x++) {
 					var pixel = frame[y * width + x];
-					colorizedFrame[pos] = palette[pixel].R;
-					colorizedFrame[pos + 1] = palette[pixel].G;
-					colorizedFrame[pos + 2] = palette[pixel].B;
-					pos += 3;
+                    if (pixel <= maxPalette)
+                    { 
+					    colorizedFrame[pos] = palette[pixel].R;
+					    colorizedFrame[pos + 1] = palette[pixel].G;
+					    colorizedFrame[pos + 2] = palette[pixel].B;
+                    }
+                    pos += 3;
 				}
 			}
 			return colorizedFrame;
