@@ -869,32 +869,6 @@ namespace LibDmd
 				// to the timeout through IObservable.Throttle.
 				Logger.Info("Setting idle timeout to {0}ms.", IdleAfter);
 
-				// filter dupe frames so we can actually detect the idle
-				T lastFrame = null;
-				src = src.Where(f => {
-					var identical = false;
-
-					// byte arrays
-					if (f is byte[]) {
-						var frame = f as byte[];
-						identical = lastFrame != null && FrameUtil.CompareBuffers(frame, 0, lastFrame as byte[], 0, frame.Length);
-					}
-
-					// bitmaps
-					else if (f is BitmapSource) {
-						var frame = ImageUtil.ConvertToRgb24(f as BitmapSource);
-						var last = lastFrame == null ? null : ImageUtil.ConvertToRgb24(lastFrame as BitmapSource);
-						identical = last != null && FrameUtil.CompareBuffers(frame, 0, last, 0, frame.Length);
-					}
-
-					// TODO bit planes
-
-					// TODO colored bit planes
-
-					lastFrame = f;
-					return !identical;
-				});
-
 				// now render it
 				src = src.Do(_ => StopIdleing());
 				src = src.Do(onNext);
