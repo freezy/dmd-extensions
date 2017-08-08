@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -168,7 +170,14 @@ namespace LibDmd.Input.TPAGrabber
 					ColorUtil.RgbToHsl(RawDMD[rawPixelIndex], RawDMD[rawPixelIndex + 1], RawDMD[rawPixelIndex + 2], out hue, out sat, out lum);
 
 					var pos = dmdY * DMDWidth + dmdX;
-					var pixel = (byte)(lum * 15 * 1.5);
+					//var pixel = (byte)Math.Max(0, lum * 15 * 3 - 12); // [ 0,4,10,15 ]
+					//var pixel = (byte)(lum * 15 * 1.5);               // [ 0,8,11,13 ]
+					var pixel = (byte)(lum * 15 * 1.6);                 // [ 0,8,12,14 ]
+
+					// drop garbage frames
+					if (pixel > 15) {
+						return null;
+					}
 
 					if (identical && (_lastFrame == null || _lastFrame[pos] == pixel)) {
 						identical = false;
@@ -181,7 +190,6 @@ namespace LibDmd.Input.TPAGrabber
 				// Jump to the next DMD line.
 				rawPixelIndex += LineJump * 2 + DMDWidth * 8;
 			}
-
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
