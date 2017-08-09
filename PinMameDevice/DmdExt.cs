@@ -358,7 +358,7 @@ namespace PinMameDevice
 			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
 
 			// find the game's dmd position in VPM's registry
-			if (!_config.VirtualDmd.IgnoreRegistryPosition) {
+			if (_config.VirtualDmd.UseRegistryPosition) {
 				try {
 					var regPath = @"Software\Freeware\Visual PinMame\" + _gameName;
 					var key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);

@@ -170,11 +170,12 @@ virtualdmd height = 256
 ```
 
 This is also useful if you just want to fit the virtual DMD onto different
-backglasses which have slightly different positions. Note however that
-per default, dmdext tries to retrieve the DMD's position from VPM's registry
-setting. That means you can use VPM to position the DMD and dmdext will take
-the same setting for each game (this behavior can be disabled using the 
-`ignoreregistry` option).
+backglasses which have slightly different positions. 
+
+Also note that dmdext can retrieve the DMD's position from VPM's registry 
+setting. That means you can use VPM to position the DMD and dmdext will take 
+the same setting for each game. This behavior can be enabled using the 
+`useregistry` option.
     
 
 ## Documentation

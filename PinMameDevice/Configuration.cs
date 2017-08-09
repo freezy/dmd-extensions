@@ -147,7 +147,7 @@ namespace PinMameDevice
 		public bool Enabled => GetBoolean("enabled", true);
 		public bool StayOnTop => GetBoolean("stayontop", false);
 		public bool IgnoreAr => GetBoolean("ignorear", false);
-		public bool IgnoreRegistryPosition => GetBoolean("ignoreregistry", false);
+		public bool UseRegistryPosition => GetBoolean("useregistry", false);
 		public bool HideGrip => GetBoolean("hidegrip", false);
 		public double Left => GetDouble("left", 0);
 		public double Top => GetDouble("top", 0);
