@@ -131,7 +131,7 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `stayontop` - Virtual dmd stays on top of most other windows 
   - `hidegrip` - Hide the resize grip
   - `ignorear` - If true, allow free resizing of the virtual DMD.
-  - `ignoreregistry` - If true, don't read the virtual DMD position from VPM's registry.
+  - `useregistry` - If true, read the virtual DMD position from VPM's registry.
   - `left` - X-axis of the window position
   - `top` - Y-axis of the window position
   - `width` - Width of the DMD in monitor pixels
