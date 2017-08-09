@@ -2,29 +2,29 @@
 /// <type>Single</type>
 /// <minValue>2</minValue>
 /// <maxValue>500</maxValue>
-/// <defaultValue>34</defaultValue>
+/// <defaultValue>128</defaultValue>
 float BlockCount : register(C0);
 
 /// <summary>The rounding of a pixel block.</summary>
 /// <type>Single</type>
 /// <minValue>0</minValue>
-/// <maxValue>1</maxValue>
-/// <defaultValue>0.45</defaultValue>
+/// <maxValue>5</maxValue>
+/// <defaultValue>1.88</defaultValue>
 float Max : register(C2);
 
 /// <summary>The aspect ratio of the image.</summary>
 /// <type>Single</type>
 /// <minValue>0</minValue>
 /// <maxValue>10</maxValue>
-/// <defaultValue>1.55</defaultValue>
+/// <defaultValue>4</defaultValue>
 float AspectRatio : register(C3);
 
 /// <summary>The monochrome color used to tint the input.</summary>
-/// <defaultValue>Yellow</defaultValue>
+/// <defaultValue>Red</defaultValue>
 float4 FilterColor : register(C1);
 
 /// <summary>monochrome.</summary>
-/// <defaultValue>1</defaultValue>
+/// <defaultValue>0</defaultValue>
 float IsMonochrome : register(C4);
 
 // Sampler
