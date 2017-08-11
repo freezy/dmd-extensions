@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -53,6 +55,7 @@ namespace LibDmd.Common
 			ShowActivated = false;
 			Dmd.Host = this;
 			PositionChanged = new BehaviorSubject<DmdPosition>(new DmdPosition(Left, Top, Width, Height));
+			ForceOnTop();
 		}
 
 		public void SetDimensions(int width, int height)
@@ -64,6 +67,20 @@ namespace LibDmd.Common
 				_aspectRatio = (double)width / height;
 				Height = Width / _aspectRatio;
 			});
+		}
+
+		private void ForceOnTop()
+		{
+			var window = (Window)this;
+			window.Topmost = true;
+			
+			var processes = Process.GetProcesses();
+			var b2s = processes.FirstOrDefault(process => process.ProcessName == "B2SBackglassServerEXE");
+			if (b2s != null) {
+				Logger.Info("Found B2S, moving behind DMD.");
+				SetWindowPos(b2s.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			}
+			SetWindowPos(Process.GetCurrentProcess().MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 		}
 
 		private void LocationChanged_Event(object sender, EventArgs e)
@@ -88,8 +105,7 @@ namespace LibDmd.Common
 		private void Window_Deactivated(object sender, EventArgs e)
 		{
 			if (AlwaysOnTop) {
-				var window = (Window)sender;
-				window.Topmost = true;
+				ForceOnTop();
 			}
 		}
 
@@ -183,6 +199,15 @@ namespace LibDmd.Common
 		[DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool GetCursorPos(ref Win32Point pt);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, int uFlags);
+		private const int HWND_TOPMOST = -1;
+		private const int HWND_BOTTOM = 1;
+		private const int HWND_NOTOPMOST = -2;
+		private const int SWP_NOMOVE = 0x0002;
+		private const int SWP_NOSIZE = 0x0001;
 	}
 
 	public class DmdPosition
