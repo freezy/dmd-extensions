@@ -107,8 +107,8 @@ var controller = {
 		this._screen = this.getDimensions();
 
 		this._camera = new THREE.PerspectiveCamera(55, this._ar, 20, 3000);
-		this._camera.position.x = 10;
-		this._camera.position.y = 10;
+		this._camera.position.x = 5 * (this._ar - 2);
+		this._camera.position.y = 5 * (this._ar - 2);
 		this._camera.position.z = 615;
 
 		this._scene = new THREE.Scene();
@@ -280,8 +280,8 @@ var controller = {
 		}
 		this._width = dim.width;
 		this._height = dim.height;
-		console.log('New dimensions: %sx%s', this._width, this._height);
 		if (dimensionsChanged) {
+			console.log('New dimensions: %sx%s', this._width, this._height);
 			this.init();
 		}
 	},

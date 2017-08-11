@@ -71,10 +71,7 @@ namespace LibDmd.Output.Network
 			});
 			_server.Start();
 			if (_server.IsListening) {
-				Logger.Info("Listening on port {0}, and providing WebSocket services:", _server.Port);
-				foreach (var path in _server.WebSocketServices.Paths) {
-					Logger.Info ("- {0}", path);
-				}
+				Logger.Info("Listening on port {0}, and providing WebSocket services: [ {1} ]", _server.Port, string.Join(", ", _server.WebSocketServices.Paths));
 			}
 		}
 				

@@ -28,10 +28,12 @@ namespace LibDmd.Common
 		private static Frame FrameData(int width, int height)
 		{
 			var key = width * height;
-			if (!FrameDatas.ContainsKey(key)) {
-				FrameDatas.Add(key, new Frame());
+			lock (FrameDatas) {
+				if (!FrameDatas.ContainsKey(key)) {
+					FrameDatas.Add(key, new Frame());
+				}
+				return FrameDatas[key];
 			}
-			return FrameDatas[key];
 		}
 
 		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)

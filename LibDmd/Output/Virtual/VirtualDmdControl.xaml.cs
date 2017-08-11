@@ -94,7 +94,7 @@ namespace LibDmd.Output.Virtual
 
 		public void SetDimensions(int width, int height)
 		{
-			Logger.Debug("Resizing virtual DMD to {0}x{1}", width, height);
+			Logger.Info("Resizing virtual DMD to {0}x{1}", width, height);
 			DmdWidth = width;
 			DmdHeight = height;
 			Dispatcher.Invoke(() => {
