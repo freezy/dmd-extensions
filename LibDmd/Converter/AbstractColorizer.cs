@@ -127,6 +127,11 @@ namespace LibDmd.Converter
 				return true;
 			}
 
+			if (Animations == null) {
+				Logger.Warn("[colorize] Colorizer does not contain any animations, skipping lookup for position {0}.", mapping.Duration);
+				return false;
+			}
+
 			// Sisch wird än Animazion wird losgla
 			var animation = Animation.Find(Animations, mapping.Duration);
 			if (animation == null) {
