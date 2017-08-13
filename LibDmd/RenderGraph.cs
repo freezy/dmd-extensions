@@ -115,6 +115,7 @@ namespace LibDmd
 		private Color[] _gray4Palette;
 
 		private IDisposable _idleRenderer;
+		private IDisposable _activeRenderer;
 		private RenderGraph _idleRenderGraph;
 
 		public RenderGraph()
@@ -160,7 +161,7 @@ namespace LibDmd
 		{
 			var source = new PassthroughSource("Bitmap Source");
 			Source = source;
-			Init().StartRendering(onCompleted);
+			_activeRenderer = Init().StartRendering(onCompleted);
 			source.FramesBitmap.OnNext(bmp);
 		}
 
@@ -463,7 +464,8 @@ namespace LibDmd
 					throw;
 				}
 			}
-			return new RenderDisposable(this, _activeSources);
+			_activeRenderer = new RenderDisposable(this, _activeSources);
+			return _activeRenderer;
 		}
 
 		/// <summary>
@@ -1018,8 +1020,9 @@ namespace LibDmd
 		public void Dispose()
 		{
 			Logger.Debug("Disposing {0}...", Name);
-			if (IsRendering) {
-				throw new Exception("Must dispose renderer first!");
+			if (_activeRenderer != null) {
+				_activeRenderer.Dispose();
+				_activeRenderer = null;
 			}
 			if (Destinations == null) {
 				return;

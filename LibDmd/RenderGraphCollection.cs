@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using LibDmd.Converter;
 using LibDmd.Input;
@@ -23,7 +20,6 @@ namespace LibDmd
 	public class RenderGraphCollection : IDisposable
 	{
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
-		private readonly List<IDisposable> _renderers = new List<IDisposable>();
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly List<IConverter> _converters = new List<IConverter>();
@@ -64,7 +60,7 @@ namespace LibDmd
 
 		public void StartRendering()
 		{
-			_graphs.ForEach(graph => _renderers.Add(graph.StartRendering()));
+			_graphs.ForEach(graph => graph.StartRendering());
 		}
 
 		public void SetColor(Color color)
@@ -98,8 +94,6 @@ namespace LibDmd
 
 		public void Dispose()
 		{
-			_renderers.ForEach(r => r.Dispose());
-			_renderers.Clear();
 			_rgb24Destinations.Clear();
 			_graphs.ForEach(graph => graph.Dispose());
 			_graphs.Clear();

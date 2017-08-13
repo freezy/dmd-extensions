@@ -24,7 +24,7 @@ namespace PinMameDevice
 		static readonly DmdExt _dmdExt = new DmdExt();
 		static readonly LinkedList<char> CData = new LinkedList<char>();
 
-			// int Open()
+		// int Open()
 		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
 		static int Open()
 		{

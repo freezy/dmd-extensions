@@ -25,7 +25,6 @@ namespace DmdExt.Common
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private IRenderer _graph;
-		private IDisposable _renderer;
 		private BaseOptions _options;
 
 		protected abstract IRenderer CreateRenderGraph();
@@ -190,7 +189,7 @@ namespace DmdExt.Common
 
 		public void Execute(Action onCompleted, Action<Exception> onError)
 		{
-			_renderer = GetRenderGraph().Init().StartRendering(onCompleted, onError);
+			GetRenderGraph().Init().StartRendering(onCompleted, onError);
 		}
 
 		public void Dispose()
@@ -198,7 +197,6 @@ namespace DmdExt.Common
 			if (_options == null || !_options.NoClear) {
 				_graph?.ClearDisplay();
 			}
-			_renderer?.Dispose();
 			_graph?.Dispose();
 		}
 	}
