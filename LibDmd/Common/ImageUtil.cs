@@ -28,12 +28,10 @@ namespace LibDmd.Common
 		private static Frame FrameData(int width, int height)
 		{
 			var key = width * height;
-			lock (FrameDatas) {
-				if (!FrameDatas.ContainsKey(key)) {
-					FrameDatas.Add(key, new Frame());
-				}
-				return FrameDatas[key];
+			if (!FrameDatas.ContainsKey(key)) {
+				FrameDatas.Add(key, new Frame());
 			}
+			return FrameDatas[key];
 		}
 
 		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
@@ -383,7 +381,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray2(int width, int height, byte* frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray2(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			lock (FrameDatas) {
+				return ConvertFromGray2(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
 		}
 
 		/// <summary>
@@ -398,7 +398,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray2(int width, int height, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray2(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			lock (FrameDatas) {
+				return ConvertFromGray2(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
 		}
 
 		/// <summary>
@@ -413,7 +415,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray4(int width, int height, byte* frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray4(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			lock (FrameDatas) {
+				return ConvertFromGray4(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
 		}
 
 		/// <summary>
@@ -428,7 +432,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray4(int width, int height, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			return ConvertFromGray4(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			lock (FrameDatas) {
+				return ConvertFromGray4(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
 		}
 
 		/// <summary>
@@ -440,7 +446,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromRgb24(int width, int height, byte* frame)
 		{
-			return ConvertFromRgb24(width, height, FrameData(width, height).With(frame));
+			lock (FrameDatas) {
+				return ConvertFromRgb24(width, height, FrameData(width, height).With(frame));
+			}
 		}
 
 		/// <summary>
@@ -452,7 +460,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromRgb24(int width, int height, byte[] frame)
 		{
-			return ConvertFromRgb24(width, height, FrameData(width, height).With(frame));
+			lock (FrameDatas) {
+				return ConvertFromRgb24(width, height, FrameData(width, height).With(frame));
+			}
 		}
 
 
