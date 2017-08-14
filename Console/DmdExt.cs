@@ -37,10 +37,13 @@ namespace DmdExt
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
+		private static string[] _commandLineArgs;
 
 		[STAThread]
 		static void Main(string[] args)
 		{
+			_commandLineArgs = args;
+
 			// setup logger
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
@@ -205,7 +208,7 @@ namespace DmdExt
 			}
 #if !DEBUG
 			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
-			Raygun.Send(ex, null, new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } });
+			Raygun.Send(ex, null, new Dictionary<string, string> { {"args", string.Join(" ", _commandLineArgs) }, {"log", string.Join("\n", MemLogger.Logs) } });
 #endif
 		}
 
