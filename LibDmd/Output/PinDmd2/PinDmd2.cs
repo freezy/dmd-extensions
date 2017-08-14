@@ -123,6 +123,10 @@ namespace LibDmd.Output.PinDmd2
 
 		public void RenderRaw(byte[] data)
 		{
+			if (!_pinDmd2Device.IsOpen) {
+				Logger.Warn("Ignoring frame for already closed USB device.");
+				return;
+			}
 			var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
 			var error = writer.Write(data, 2000, out bytesWritten);

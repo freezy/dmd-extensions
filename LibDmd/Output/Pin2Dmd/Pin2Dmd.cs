@@ -62,7 +62,7 @@ namespace LibDmd.Output.Pin2Dmd
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
-					if (device.Info.Descriptor.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
+					if (device?.Info?.Descriptor?.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
 						_pin2DmdDevice = device;
 						break;
 					}
