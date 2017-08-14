@@ -242,13 +242,20 @@ namespace LibDmd.Common
 		/// <param name="palette">Colors to use for coloring</param>
 		/// <param name="colorizedFrame">If set, write data into this array</param>
 		/// <returns>Colorized frame</returns>
+		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
+			if (colorizedFrame != null && colorizedFrame.Length != width * height * 3) {
+				throw new ArgumentException("Provided destination array must be of size " + (width * height * 3) + " but is of size " + colorizedFrame.Length + ".");
+			}
 			colorizedFrame = colorizedFrame ?? new byte[width * height * 3];
 			var pos = 0;
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x++) {
 					var pixel = frame[y * width + x];
+					if (pixel >= palette.Length) {
+						throw new ArgumentException("Tried to retrieve color " + pixel + " but only " + palette.Length + " colors were provided (" + string.Join(", ", palette) + ").");
+					}
 					colorizedFrame[pos] = palette[pixel].R;
 					colorizedFrame[pos + 1] = palette[pixel].G;
 					colorizedFrame[pos + 2] = palette[pixel].B;
