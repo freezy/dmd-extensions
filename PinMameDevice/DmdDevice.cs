@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
-using RGiesecke.DllExport;
 
 namespace PinMameDevice
 {
