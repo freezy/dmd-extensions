@@ -173,6 +173,8 @@
     <Compile Include="Input\IGray2Source.cs" />
     <Compile Include="Input\IRgb24Source.cs" />
     <Compile Include="Input\IGray4Source.cs" />
+    <Compile Include="Input\PinballFX\PinballFX3Grabber.cs" />
+    <Compile Include="Input\PinballFX\PinballFX2Grabber.cs" />
     <Compile Include="Input\PinMame\VpmRgb24Source.cs" />
     <Compile Include="Input\PinMame\VpmGray4Source.cs" />
     <Compile Include="Input\PinMame\VpmGray2Source.cs" />
@@ -197,7 +199,7 @@
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\ISource.cs" />
     <Compile Include="Input\IRawSource.cs" />
-    <Compile Include="Input\PBFX2Grabber\PBFX2Grabber.cs" />
+    <Compile Include="Input\PinballFX\PinballFXGrabber.cs" />
     <Compile Include="Input\ScreenGrabber\GrabberWindow.xaml.cs">
       <DependentUpon>GrabberWindow.xaml</DependentUpon>
     </Compile>

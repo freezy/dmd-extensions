@@ -12,7 +12,7 @@ namespace DmdExt.Mirror
 {
 	class MirrorOptions : BaseOptions
 	{
-		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballarcade, propinball, screen ].")]
+		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballarcade, propinball, screen ].")]
 		public SourceType Source { get; set; }
 
 		[Option('f', "fps", HelpText = "How many frames per second should be mirrored. Default: 25")]
@@ -43,6 +43,7 @@ namespace DmdExt.Mirror
 	enum SourceType
 	{
 		PinballFX2,
+		PinballFX3,
 		Screen,
 		PinballArcade,
 		ProPinball

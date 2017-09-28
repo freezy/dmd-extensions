@@ -22,7 +22,7 @@ Currently supported displays:
 The primary goal of this project was to add support real DMDs for games that
 don't provide support out of the box. Supported games are:
 
-- **Pinball FX2** through frame grabbing from screen 
+- **Pinball FX2/3** through frame grabbing from screen 
 - Farsight's **The Pinball Arcade** through grabbing the DMD texture from memory
 - **Pro Pinball Timeshock** through their message queue
 - **Visual PinMAME** through `DmdDevice.dll` 
@@ -51,7 +51,7 @@ parameter for that.
 
 You should see a test image on your DMD as well as on a virtual DMD.
 
-### Pinball FX2
+### Pinball FX2/3
 
 1. Enable cabinet options in Pinball FX2
 2. Resize the DMD to:
@@ -60,8 +60,8 @@ You should see a test image on your DMD as well as on a virtual DMD.
 3. Move the DMD to somewhere hidden like off-screen or behind the playfield
    (usually at `0`/`0`).
 4. Open a command prompt ([Windows]+[R], `cmd`, [enter])
-5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter]
-6. Start Pinball FX2
+5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter] (or `pinballfx3` for FX3)
+6. Start Pinball FX2/3
 
 For further tweaking, see options below.
 

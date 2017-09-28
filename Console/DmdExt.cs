@@ -14,7 +14,7 @@ using DmdExt.Play;
 using DmdExt.Test;
 using LibDmd;
 using LibDmd.Input.FileSystem;
-using LibDmd.Input.PBFX2Grabber;
+using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;

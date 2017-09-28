@@ -2,7 +2,7 @@
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
-using LibDmd.Input.PBFX2Grabber;
+using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
@@ -37,7 +37,12 @@ namespace DmdExt.Mirror
 			switch (_options.Source) {
 
 				case SourceType.PinballFX2: {
-					_graph.Source = new PBFX2Grabber { FramesPerSecond = _options.FramesPerSecond };
+					_graph.Source = new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond };
+					break;
+				}
+
+				case SourceType.PinballFX3: {
+					_graph.Source = new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond };
 					break;
 				}
 

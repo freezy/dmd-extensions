@@ -11,12 +11,12 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using NLog;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Processor;
+using NLog;
 using Color = System.Windows.Media.Color;
 
-namespace LibDmd.Input.PBFX2Grabber
+namespace LibDmd.Input.PinballFX
 {
 	/// <summary>
 	/// Polls for the Pinball FX2 process, searches for the DMD display grabs pixels off
@@ -26,9 +26,9 @@ namespace LibDmd.Input.PBFX2Grabber
 	/// Can be launched any time. Will wait with sending frames until Pinball FX2 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PBFX2Grabber : AbstractSource, IColoredGray2Source
+	public abstract class PinballFXGrabber : AbstractSource, IColoredGray2Source
 	{
-		public override string Name { get; } = "Pinball FX2";
+		protected abstract string GetProcessName();
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -66,7 +66,7 @@ namespace LibDmd.Input.PBFX2Grabber
 		/// </summary>
 		private void StartPolling()
 		{
-			Logger.Info("Waiting for Pinball FX2 to spawn...");
+			Logger.Info("Waiting for {0} to spawn...", Name);
 			var success = new Subject<Unit>();
 			Observable
 				.Timer(TimeSpan.Zero, PollForProcessDelay)
@@ -163,9 +163,9 @@ namespace LibDmd.Input.PBFX2Grabber
 			}
 		}
 
-		private static IntPtr FindDmdHandle()
+		private IntPtr FindDmdHandle()
 		{
-			foreach (var proc in Process.GetProcessesByName("Pinball FX2")) {
+			foreach (var proc in Process.GetProcessesByName(GetProcessName())) {
 				var handles = GetRootWindowsOfProcess(proc.Id);
 				foreach (var handle in handles) {
 					NativeCapture.RECT rc;
@@ -178,7 +178,7 @@ namespace LibDmd.Input.PBFX2Grabber
 						return handle;
 					}
 				}
-				Logger.Warn("Pinball FX2 process found (pid {0}) but DMD not. No game running?", proc.Id);
+				Logger.Warn("{0} process found (pid {1}) but DMD not. No game running?", GetProcessName(), proc.Id);
 			}
 			return IntPtr.Zero;
 		}
