@@ -6,7 +6,6 @@ Real DMDs for virtual pinball cabinets are pretty cool but they need to be
 supported by the software running the games. This is an attempt to fill some
 gaps.
 
-
 ## Supported Displays
 
 Currently supported displays:
@@ -28,7 +27,8 @@ don't provide support out of the box. Supported games are:
 - **Visual PinMAME** through `DmdDevice.dll` 
 
 The command line tool can also display image files on the DMD device and render
-frames to bitmap files.
+frames to bitmap files. Many features like this are described in the command 
+line options below, so have a close look at those as well.
 
 ### Colors
 
@@ -80,6 +80,10 @@ addressed soon.
 
 Also note that currently only 128x32 DMD games are supported, that means no
 EM games neither Frankenstein which has a different resolution.
+
+If you happen switch tables often and the last DMD frame gets stuck on your DMD
+when changing to an EM game, you can use the `--idle-after` option to clear the
+screen.
 
 ### Pro Pinball Ultra
 
