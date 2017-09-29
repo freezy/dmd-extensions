@@ -136,6 +136,7 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
   - `top` - Y-axis of the window position
   - `width` - Width of the DMD in monitor pixels
   - `height` - Height of the dmd in monitor pixels
+  - `dotsize` - Scale dot size. Use `0.8` for previous default setting
 - `[pindmd1]` Options for the 2-bit pinDMD display
   - `enabled` - If false, doesn't bother looking for a pinDMD1
 - `[pindmd2]` Options for the 4-bit pinDMD2 display
@@ -185,7 +186,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.5.1
+DMD Extensions v1.6.0
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -201,15 +202,22 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.5.1
+DMD Extensions v1.6.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
-                           from. One of: [ pinballfx2, pinballarcade,
-                           propinball, screen ].
+                           from. One of: [ pinballfx2, pinballfx3,
+                           pinballarcade, propinball, screen ].
 
   -f, --fps                How many frames per second should be mirrored.
                            Default: 25
+
+  --idle-after             Wait for number of milliseconds until clearing the
+                           screen. Disable with 0. Default: 0.
+
+  --idle-play              Play this file while idleing instead of blank
+                           screen. Supported formats: JPG, PNG, GIF. Animated
+                           GIFs are supported.
 
   --position               [screen] Position and size of screen grabber source.
                            Four values: <Left> <Top> <Width> <Height>. Default:
@@ -250,6 +258,8 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
+  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
+
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
@@ -266,6 +276,12 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            FX2 doesn't receive any frames anymore. Default:
                            false
 
+  --quit-after             Exit after n milliseconds. If set to -1, waits
+                           indefinitely or until source finishes when -q used.
+                           Default: -1
+
+  --no-clear               Don't clear screen when quitting. Default: false.
+
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
 ```
@@ -275,7 +291,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.5.1
+DMD Extensions v1.6.0
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -303,6 +319,8 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
+  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
+
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
@@ -319,6 +337,12 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
                            FX2 doesn't receive any frames anymore. Default:
                            false
 
+  --quit-after             Exit after n milliseconds. If set to -1, waits
+                           indefinitely or until source finishes when -q used.
+                           Default: -1
+
+  --no-clear               Don't clear screen when quitting. Default: false.
+
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
 ```
@@ -327,7 +351,7 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.5.1
+DMD Extensions v1.6.0
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
@@ -352,6 +376,8 @@ USAGE: dmdext test [--destination=<destination>]
                            and can be used for custom aspect ratio. Default: "0
                            0 1024".
 
+  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
+
   -c, --color              Sets the color of a grayscale source that is
                            rendered on an RGB destination. Default: ff3000
 
@@ -367,6 +393,12 @@ USAGE: dmdext test [--destination=<destination>]
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
+
+  --quit-after             Exit after n milliseconds. If set to -1, waits
+                           indefinitely or until source finishes when -q used.
+                           Default: -1
+
+  --no-clear               Don't clear screen when quitting. Default: false.
 
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
