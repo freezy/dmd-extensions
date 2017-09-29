@@ -23,6 +23,8 @@ namespace LibDmd.Output.Virtual
 
 		public bool IsAvailable { get; } = true;
 
+		public double DotSize { get; set; } = 1;
+
 		public IDmdWindow Host { set; get; }
 		public bool IgnoreAspectRatio {
 			get { return Dmd.Stretch == Stretch.UniformToFill; }
@@ -100,7 +102,7 @@ namespace LibDmd.Output.Virtual
 			Dispatcher.Invoke(() => {
 				Effect.AspectRatio = (double)width / height;
 				Effect.BlockCount = Math.Max(width, height);
-				Effect.Max = Effect.AspectRatio * 0.47;
+				Effect.Max = Effect.AspectRatio * 0.47 * DotSize;
 			});
 			Host.SetDimensions(width, height);
 		}

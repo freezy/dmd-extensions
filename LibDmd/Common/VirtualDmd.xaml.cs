@@ -35,6 +35,15 @@ namespace LibDmd.Common
 			}
 		}
 
+		public double DotSize
+		{
+			set {
+				if (Dmd != null) {
+					Dmd.DotSize = value;
+				}
+			}
+		}
+
 		public Brush GripColor { get; set; } = Brushes.White;
 
 		private bool _ignoreAr;

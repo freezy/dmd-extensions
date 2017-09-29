@@ -150,6 +150,9 @@ namespace DmdExt.Common
 			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
 				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
 			}
+			if (options.VirtualDmdDotSize <= 0 || options.VirtualDmdDotSize > 2) {
+				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
+			}
 			int height; bool ignoreAr;
 			if (options.VirtualDmdPosition.Length == 4) {
 				height = options.VirtualDmdPosition[3];
@@ -165,7 +168,8 @@ namespace DmdExt.Common
 				Top = options.VirtualDmdPosition[1],
 				Width = options.VirtualDmdPosition[2],
 				Height = height,
-				IgnoreAspectRatio = ignoreAr
+				IgnoreAspectRatio = ignoreAr,
+				DotSize = options.VirtualDmdDotSize
 			};
 			var thread = new Thread(() => {
 				

@@ -30,6 +30,9 @@ namespace DmdExt.Common
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Four values: <Left> <Top> <Width> [<Height>]. Height is optional and can be used for custom aspect ratio. Default: \"0 0 1024\".")]
 		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
+		[Option("virtual-dotsize", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
+		public double VirtualDmdDotSize { get; set; } = 1;
+
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 
