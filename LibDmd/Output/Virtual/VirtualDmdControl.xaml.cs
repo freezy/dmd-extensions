@@ -23,7 +23,10 @@ namespace LibDmd.Output.Virtual
 
 		public bool IsAvailable { get; } = true;
 
-		public double DotSize { get; set; } = 1;
+		public double DotSize {
+			get { return _dotSize; }
+			set { _dotSize = value; UpdateEffectParams(); }
+		}
 
 		public IDmdWindow Host { set; get; }
 		public bool IgnoreAspectRatio {
@@ -35,6 +38,7 @@ namespace LibDmd.Output.Virtual
 		private double _sat;
 		private double _lum;
 
+		private double _dotSize = 1.0;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 
@@ -99,12 +103,17 @@ namespace LibDmd.Output.Virtual
 			Logger.Info("Resizing virtual DMD to {0}x{1}", width, height);
 			DmdWidth = width;
 			DmdHeight = height;
-			Dispatcher.Invoke(() => {
-				Effect.AspectRatio = (double)width / height;
-				Effect.BlockCount = Math.Max(width, height);
-				Effect.Max = Effect.AspectRatio * 0.47 * DotSize;
-			});
+			UpdateEffectParams();
 			Host.SetDimensions(width, height);
+		}
+
+		private void UpdateEffectParams()
+		{
+			Dispatcher.Invoke(() => {
+				Effect.AspectRatio = (double)DmdWidth / DmdHeight;
+				Effect.BlockCount = Math.Max(DmdWidth, DmdHeight);
+				Effect.Max = Effect.AspectRatio * 0.47 * _dotSize;
+			});
 		}
 
 		public void SetColor(Color color)

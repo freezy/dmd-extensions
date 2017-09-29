@@ -356,6 +356,7 @@ namespace PinMameDevice
 			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
 			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
+			_dmd.DotSize = _config.VirtualDmd.DotSize;
 
 			// find the game's dmd position in VPM's registry
 			if (_config.VirtualDmd.UseRegistryPosition) {
