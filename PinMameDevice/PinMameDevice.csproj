@@ -131,6 +131,7 @@
     </Content>
     <None Include="DmdDevice.ini" />
     <None Include="packages.config" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />

@@ -89,7 +89,6 @@ namespace LibDmd.Common
 				Logger.Info("Found B2S, moving behind DMD.");
 				SetWindowPos(b2s.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 			}
-			SetWindowPos(Process.GetCurrentProcess().MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 		}
 
 		private void LocationChanged_Event(object sender, EventArgs e)
