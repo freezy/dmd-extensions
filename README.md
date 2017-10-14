@@ -181,6 +181,9 @@ Also note that dmdext can retrieve the DMD's position from VPM's registry
 setting. That means you can use VPM to position the DMD and dmdext will take 
 the same setting for each game. This behavior can be enabled using the 
 `useregistry` option.
+
+Finally, be aware that `DmdDevice.ini` is exclusively read by `DmdDevice.dll`.
+Options for `dmdext.exe` are passed as command line options as documented below.
     
 
 ## Documentation
@@ -440,6 +443,15 @@ Try boosting how fast dmdext grabs the frames. For example, for Pinball FX2, try
 Default is 25, which seems too slow for some games.
 
 *Thanks smoke007 for the tip!*
+
+### DmdDevice.ini Ignored?
+
+This project comes bundled in two versions: A library which is loaded by VPM
+called `DmdDevice.dll`, and an executable, `dmdext.exe` for all the other
+applications.
+
+The executable ignores `DmdDevice.ini` because it's configured through command
+line options.
 
 ## Reporting Bugs
 
