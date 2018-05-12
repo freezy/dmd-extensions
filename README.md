@@ -453,6 +453,12 @@ applications.
 The executable ignores `DmdDevice.ini` because it's configured through command
 line options.
 
+### Slow rendering on certain ROMs with VPM?
+
+Use VPM 3.1. If you can't wait there's a beta build [here](http://vpuniverse.com/forums/topic/3461-sambuild31-beta-thread/?page=2&tab=comments#comment-39309).
+
+*Thanks to djrobx for the fix an all others at [#52](https://github.com/freezy/dmd-extensions/issues/52) for reporting.*
+
 ## Reporting Bugs
 
 Make sure you include the application log. You can *usually* find it at the same 
