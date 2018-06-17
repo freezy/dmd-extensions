@@ -55,21 +55,21 @@ namespace LibDmd.Input.TPAGrabber
 		private const int MemBlockSize = 0x1FC02;
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 
-        private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
-        private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
+		private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
+		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
 
-        private static IntPtr _dmdPatch = IntPtr.Zero;
-        private static IntPtr _gameState = IntPtr.Zero;
-        private static IntPtr _codeCave = IntPtr.Zero;
+		private static IntPtr _dmdPatch = IntPtr.Zero;
+		private static IntPtr _gameState = IntPtr.Zero;
+		private static IntPtr _codeCave = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
 
 		private byte[] _lastFrame;
 
-        /// <summary>
-        /// Waits for the Pinball Arcade DX11 process.
-        /// </summary>
-        /// 
-        private void StartPolling()
+		/// <summary>
+		/// Waits for the Pinball Arcade DX11 process.
+		/// </summary>
+		/// 
+		private void StartPolling()
 		{
 			var curIdentity = WindowsIdentity.GetCurrent();
 			var myPrincipal = new WindowsPrincipal(curIdentity);
@@ -201,13 +201,13 @@ namespace LibDmd.Input.TPAGrabber
 		{
 			var processList = Process.GetProcesses();
 			foreach (var p in processList) {
-				if (p.ProcessName == "PinballArcade11") {
-                    // When the process is found, find needed offsets..
-                    FindOffsets(p);
-                    // ...then write the codecave.
-                    var processHandle = PatchCodeCave(p);
-                    return processHandle;
-                }
+				if (p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet") {
+					// When the process is found, find needed offsets..
+					FindOffsets(p);
+					// ...then write the codecave.
+					var processHandle = PatchCodeCave(p);
+					return processHandle;
+				}
 			}
 			return IntPtr.Zero;
 		}
@@ -279,26 +279,26 @@ namespace LibDmd.Input.TPAGrabber
 			return new byte[] { 0xE9, JMPbytes[0], JMPbytes[1], JMPbytes[2], JMPbytes[3] };
 		}
 
-        private static void FindOffsets(Process gameProc)
-        {
-            // Get game process base address
-            var gameBase = (int)BaseAddress(gameProc);
+		private static void FindOffsets(Process gameProc)
+		{
+			// Get game process base address
+			var gameBase = (int)BaseAddress(gameProc);
 
-            // Retrieve DMD creation offset
-            _dmdPatch = FindPattern(gameProc, gameBase, 0xFFFFFF, DMDCreationSignature, 0) - gameBase;
+			// Retrieve DMD creation offset
+			_dmdPatch = FindPattern(gameProc, gameBase, 0xFFFFFF, DMDCreationSignature, 0) - gameBase;
 
-            // Retrieve game state pointer + offset
-            var gameStatePointer = FindPattern(gameProc, gameBase, 0xFFFFFF, GameStateSignature, 34);
-            var pointerOffset = new byte[4];
-            ReadProcessMemory((int)gameProc.Handle, (int)gameStatePointer, pointerOffset, pointerOffset.Length, 0);
-            _gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0) - gameBase);
-        }
+			// Retrieve game state pointer + offset
+			var gameStatePointer = FindPattern(gameProc, gameBase, 0xFFFFFF, GameStateSignature, 34);
+			var pointerOffset = new byte[4];
+			ReadProcessMemory((int)gameProc.Handle, (int)gameStatePointer, pointerOffset, pointerOffset.Length, 0);
+			_gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0) - gameBase);
+		}
 
-        // Function to search byte pattern in process memory then return its offset.
-        private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int Offset)
-        {
-            // Create a byte array to store memory region.
-            var memoryRegion = new byte[size];
+		// Function to search byte pattern in process memory then return its offset.
+		private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int Offset)
+		{
+			// Create a byte array to store memory region.
+			var memoryRegion = new byte[size];
 
 			// Dump process memory into the array. 
 			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
@@ -322,13 +322,13 @@ namespace LibDmd.Input.TPAGrabber
 						return new IntPtr(gameBase + Offset + x); // Return the offset.
 				}
 			}
-            // We've reached the end of memory region, offset not found.
-            return IntPtr.Zero;
-        }
+			// We've reached the end of memory region, offset not found.
+			return IntPtr.Zero;
+		}
 
-        #region Dll Imports
+		#region Dll Imports
 
-        [DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll")]
 		public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
 
 		[DllImport("kernel32.dll")]

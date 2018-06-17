@@ -19,7 +19,7 @@ namespace PinMameDevice
 	/// </remarks>
 	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
 	public static class DmdDevice
-    {
+	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static readonly IDmdDevice _dmdDevice = new LibDmd.DmdDevice.DmdDevice();

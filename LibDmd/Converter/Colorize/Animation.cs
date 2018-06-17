@@ -85,7 +85,7 @@ namespace LibDmd.Converter.Colorize
 		private IObservable<AnimationFrame> _frames;
 		private Action<byte[][]> _currentRender;
 		private int _lastTick;
-        private uint _timer;
+		private uint _timer;
 		private IDisposable _animation;
 		private IDisposable _terminator;
 
@@ -152,25 +152,25 @@ namespace LibDmd.Converter.Colorize
 
 			if (NumFrames == 1) {
 				Logger.Info("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, Frames[0].Delay, Name);
-                _timer = AnimationDuration;
+				_timer = AnimationDuration;
 			} else {
 				Logger.Info("[vni][{0}] Starting enhanced animation of {1} frame{2} ({3})...", SwitchMode, NumFrames, NumFrames == 1 ? "" : "s", Name);
 			}
-        }
+		}
 
-        /// <summary>
-        /// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
-        /// uisgäh.
-        /// </summary>
-        /// 
-        /// <remarks>
-        /// Das hiä isch dr Fau wo diä gsamti Animazion uisgäh und VPM ignoriärt
-        /// wird (dr Modus eis).
-        /// </remarks>
-        /// 
-        /// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
-        /// <param name="completed">Wird uisgfiärt wenn fertig</param>
-        private void StartReplace(Action<byte[][]> render, Action completed = null)
+		/// <summary>
+		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
+		/// uisgäh.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Das hiä isch dr Fau wo diä gsamti Animazion uisgäh und VPM ignoriärt
+		/// wird (dr Modus eis).
+		/// </remarks>
+		/// 
+		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
+		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
+		private void StartReplace(Action<byte[][]> render, Action completed = null)
 		{
 			if (Frames.Length == 1) {
 				Logger.Info("[vni][{0}] Replacing one frame ({1}).", SwitchMode, Name);
@@ -194,48 +194,41 @@ namespace LibDmd.Converter.Colorize
 		{
 			var delay = Environment.TickCount - _lastTick;
 
-            if (_timer > (uint)delay)
-                _timer -= (uint)delay;
-            else
-                _timer = 0;
-
-			
+			if (_timer > (uint)delay) {
+				_timer -= (uint)delay;
+			} else {
+				_timer = 0;
+			}
 
 			if (_frameIndex >= NumFrames) {
 				Logger.Error("[vni][{0}] No more frames in animation ({1}).", SwitchMode, NumFrames);
 				return;
 			}
 
-            if (vpmFrame.Length == 2)
-            {
-                if (Frames[_frameIndex].Planes.Count < 2)
-                {
-                    Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
-                    return;
-                }
-                _currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane });
-            }
-            else
-            {
-                // Not supported.   SMB colorization gets here often, though, so we pass frames through.
-                // Logger.Warn("[vni][{0}] Cannot enhance 4 bitplane sources.", SwitchMode, Frames[_frameIndex].Planes.Count);
-                _currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3] });
-            }
+			if (vpmFrame.Length == 2) {
+				if (Frames[_frameIndex].Planes.Count < 2) {
+					Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+					return;
+				}
+				_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane });
+			} else {
+				// Not supported.   SMB colorization gets here often, though, so we pass frames through.
+				// Logger.Warn("[vni][{0}] Cannot enhance 4 bitplane sources.", SwitchMode, Frames[_frameIndex].Planes.Count);
+				_currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3] });
+			}
 
-            _lastTick = Environment.TickCount;
+			_lastTick = Environment.TickCount;
 
-            if (NumFrames == 1 && _timer != 0) {
-                return;
-            }
-            _frameIndex++;
+			if (NumFrames == 1 && _timer != 0) {
+				return;
+			}
+			_frameIndex++;
 
-            if (_frameIndex == NumFrames)
-            {
-                Stop("finished");
-                completed?.Invoke();
-            }
-
-        }
+			if (_frameIndex == NumFrames) {
+				Stop("finished");
+				completed?.Invoke();
+			}
+		}
 
 		/// <summary>
 		/// Tuät d Animazion nachärä gwissä Ziit aahautä
@@ -264,7 +257,7 @@ namespace LibDmd.Converter.Colorize
 		{
 			if (IsRunning && AddPlanes) {
 				EnhanceFrame(planes, completed);
-            } else {
+			} else {
 				Logger.Warn("[vni][{0}] Ignoring VPM frame (is running: {1}, add planes: {2}).", SwitchMode, IsRunning, AddPlanes);
 			}
 		}
