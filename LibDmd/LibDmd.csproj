@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -90,12 +91,23 @@
       <HintPath>..\packages\FTD2XX.Net.1.0.14\lib\FTD2XX_NET.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="INIFileParser, Version=2.3.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.3.0\lib\net20\INIFileParser.dll</HintPath>
+    </Reference>
     <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\LibUsbDotNet.2.2.8\lib\LibUsbDotNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MimeTypeMap, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MediaTypeMap.2.1.0.0\lib\net40\MimeTypeMap.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mindscape.Raygun4Net, Version=5.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mindscape.Raygun4Net.5.5.1\lib\net40\Mindscape.Raygun4Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mindscape.Raygun4Net4, Version=5.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mindscape.Raygun4Net.5.5.1\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -150,20 +162,35 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DmdDevice\AlphaNumeric.cs" />
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
+    <Compile Include="Common\HeatShrink\HeatShrinkDecoder.cs" />
+    <Compile Include="Common\HeatShrink\HeatShrinkEncoder.cs" />
+    <Compile Include="Common\HeatShrink\OutputInfo.cs" />
+    <Compile Include="Common\HeatShrink\Result.cs" />
     <Compile Include="Common\ImageUtil.cs" />
     <Compile Include="Common\InteropUtil.cs" />
+    <Compile Include="Common\Profiler.cs" />
     <Compile Include="Common\TransformationUtil.cs" />
     <Compile Include="Common\VirtualDmd.xaml.cs">
       <DependentUpon>VirtualDmd.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converter\AbstractColorizer.cs" />
+    <Compile Include="Converter\Colorize\AnimationFrame.cs" />
+    <Compile Include="Converter\Colorize\AnimationPlane.cs" />
+    <Compile Include="Converter\Colorize\AnimationSet.cs" />
+    <Compile Include="Converter\Colorize\SwitchMode.cs" />
+    <Compile Include="Converter\Colorize\VniAnimation.cs" />
     <Compile Include="Converter\Colorize\Animation.cs" />
-    <Compile Include="Converter\Colorize\Frame.cs" />
+    <Compile Include="Converter\Colorize\VniAnimationFrame.cs" />
+    <Compile Include="Converter\Colorize\VniAnimationPlane.cs" />
+    <Compile Include="Converter\Colorize\VniAnimationSet.cs" />
     <Compile Include="Converter\Gray2Colorizer.cs" />
     <Compile Include="Converter\Gray4Colorizer.cs" />
     <Compile Include="Converter\IConverter.cs" />
+    <Compile Include="DmdDevice\Configuration.cs" />
+    <Compile Include="DmdDevice\DmdDevice.cs" />
+    <Compile Include="DmdDevice\IDmdDevice.cs" />
     <Compile Include="Input\AbstractSource.cs" />
     <Compile Include="Input\FileSystem\GifSource.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
@@ -182,6 +209,7 @@
     <Compile Include="Input\FileSystem\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\GifOutput.cs" />
+    <Compile Include="Output\FileOutput\PinUPOutput.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
     <Compile Include="Output\IColoredGray2Destination.cs" />

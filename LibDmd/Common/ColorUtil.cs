@@ -229,41 +229,61 @@ namespace LibDmd.Common
 			return arr;
 		}
 
-		/// <summary>
-		/// Returns an RGB24 array with colors from the palette applied to the frame.
-		/// 
-		/// Note that the size of the palette must be as large as the largest integer of 
-		/// the frame to color, or in other words, the bit length is given by the size of
-		/// the palette and the values of the frame.
-		/// </summary>
-		/// <param name="width">Width of the frame to color</param>
-		/// <param name="height">Height of the frame to color</param>
-		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
-		/// <param name="palette">Colors to use for coloring</param>
-		/// <param name="colorizedFrame">If set, write data into this array</param>
-		/// <returns>Colorized frame</returns>
-		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
-		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
-		{
-			if (colorizedFrame != null && colorizedFrame.Length != width * height * 3) {
-				throw new ArgumentException("Provided destination array must be of size " + (width * height * 3) + " but is of size " + colorizedFrame.Length + ".");
-			}
-			colorizedFrame = colorizedFrame ?? new byte[width * height * 3];
-			var pos = 0;
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x++) {
-					var pixel = frame[y * width + x];
-					if (pixel >= palette.Length) {
-						throw new ArgumentException("Tried to retrieve color " + pixel + " but only " + palette.Length + " colors were provided (" + string.Join(", ", palette) + ").");
-					}
-					colorizedFrame[pos] = palette[pixel].R;
-					colorizedFrame[pos + 1] = palette[pixel].G;
-					colorizedFrame[pos + 2] = palette[pixel].B;
-					pos += 3;
-				}
-			}
-			return colorizedFrame;
-		}
+        /// <summary>
+        /// Returns an RGB24 array with colors from the palette applied to the frame.
+        /// 
+        /// Note that the size of the palette must be as large as the largest integer of 
+        /// the frame to color, or in other words, the bit length is given by the size of
+        /// the palette and the values of the frame.
+        /// </summary>
+        /// <param name="width">Width of the frame to color</param>
+        /// <param name="height">Height of the frame to color</param>
+        /// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
+        /// <param name="palette">Colors to use for coloring</param>
+        /// <param name="colorizedFrame">If set, write data into this array</param>
+        /// <returns>Colorized frame</returns>
+        /// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
+        public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
+        {
+            int frameLength = width * height * 3;
+
+            if (colorizedFrame == null)
+            {
+                colorizedFrame = new byte[frameLength];
+            }
+            else if (colorizedFrame.Length != frameLength)
+            {
+                throw new ArgumentException("Provided destination array must be of size " + (width * height * 3) + " but is of size " + colorizedFrame.Length + ".");
+            }
+            var rpalvalues = new byte[palette.Length];
+            var gpalvalues = new byte[palette.Length];
+            var bpalvalues = new byte[palette.Length];
+
+            for (var i = 0; i < palette.Length; i++)
+            {
+                rpalvalues[i] = palette[i].R;
+                gpalvalues[i] = palette[i].G;
+                bpalvalues[i] = palette[i].B;
+            }
+
+            unsafe
+            {
+                fixed (byte* pFrame = frame, pcolorFrame = colorizedFrame)
+                {
+                    byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
+                    byte* pColorFrameCur = pcolorFrame;
+
+                    for(;pFrameCur < pFEnd;pFrameCur++,pColorFrameCur+=3)
+                    {
+                        var pixel = *pFrameCur;
+                        *pColorFrameCur = rpalvalues[pixel];
+                        *(pColorFrameCur+1) = gpalvalues[pixel];
+                        *(pColorFrameCur + 2) = bpalvalues[pixel];
+                    }
+                }
+            }
+            return colorizedFrame;
+        }
 
 		/// <summary>
 		/// Mixes two colors in a give proportion

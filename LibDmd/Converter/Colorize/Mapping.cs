@@ -23,19 +23,13 @@ namespace LibDmd.Converter.Colorize
 
 		/// <summary>
 		/// Dr Modus. 
-		/// 
-		/// Vo dem gits drii vrschidini: 
-		/// 
-		///  - `0`: Nii Palettä muäss gladä wärdä. Drbii isch dr `PaletteIndex`
-		///    d Numärä vo dr Palettä uism Palettä-Feil. Wiä lang d Palettä
-		///    gladä wird chunnt vo dr `Duration`.
-		///  - `1`: Än Animazion uism FSQ-Feil wird abgschpiut. Weli genai
-		///    definiärt d `Duration`. Drbii wird wiä im Modus 0 ai d Palettä gladä.
-		///  - `2`: Aui Biudr wo chemid wärdid mit dä Zweibit-Datä uism FSQ-Feil
-		///    erwiitered. D Idee isch dass uis Zwäibit-Datä Viärbit-Datä wärdid.
-		///    D Palettä wird wiä obä ai gladä.
 		/// </summary>
-		public readonly int Mode;
+		/// 
+		/// <remarks>
+		/// Dr Modus beschribt was genai passiert und wiäd Animazion faus gladä
+		/// aagwändet wird.
+		/// </remarks>
+		public readonly SwitchMode Mode;
 
 		/// <summary>
 		/// Dr Palettäindex
@@ -43,23 +37,38 @@ namespace LibDmd.Converter.Colorize
 		public readonly ushort PaletteIndex;
 
 		/// <summary>
-		/// Im Modus 0 ischs wiä lang's gaht bis mr zrugg zur Standard-Palettä wächslet (wenn 0 gar nid zrugg wächslä).
-		/// Im Modus eis odr zwäi ischs d Byte-Position vodr Animazion im FSQ-Feil.
+		/// Wiä lang's gaht bis mr zrugg zur Standard-Palettä wächslet (wenn 0 gar nid zrugg wächslä).
 		/// </summary>
 		public readonly uint Duration;
+
+		/// <summary>
+		/// D Byte-Position vodr Animazion im FSQ/VNI-Feil.
+		/// </summary>
+		public readonly uint Offset;
+
+		/// <summary>
+		/// Wenn ja, de tiämmer än Animazion uisäsuächä und loslah, sisch ischs numä ä
+		/// Palettäwächsü oder sisch ä Seich.
+		/// </summary>
+		public bool IsAnimation => Mode == SwitchMode.Replace || Mode == SwitchMode.ColorMask || Mode == SwitchMode.Follow;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public Mapping(BinaryReader reader)
 		{
 			Checksum = reader.ReadUInt32BE();
-			Logger.Trace("  [{1}] [palette] Read checksum as {0}", Checksum, reader.BaseStream.Position);
-			Mode = reader.ReadByte();
-			Logger.Trace("  [{1}] [palette] Read mode as {0}", Mode, reader.BaseStream.Position);
+			//Logger.Trace("  [{1}] [palette] Read checksum as {0}", Checksum, reader.BaseStream.Position);
+			Mode = (SwitchMode)reader.ReadByte();
+			//Logger.Trace("  [{1}] [palette] Read mode as {0}", Mode, reader.BaseStream.Position);
 			PaletteIndex = reader.ReadUInt16BE();
-			Logger.Trace("  [{1}] [palette] Read index as {0}", PaletteIndex, reader.BaseStream.Position);
-			Duration = reader.ReadUInt32BE();
-			Logger.Trace("  [{1}] [palette] Read duration as {0}", Duration, reader.BaseStream.Position);
+			//Logger.Trace("  [{1}] [palette] Read index as {0}", PaletteIndex, reader.BaseStream.Position);
+			if (Mode == SwitchMode.Palette) {
+				Duration = reader.ReadUInt32BE();
+				//Logger.Trace("  [{1}] [palette] Read duration as {0}", Duration, reader.BaseStream.Position);
+			} else {
+				Offset = reader.ReadUInt32BE();
+				//Logger.Trace("  [{1}] [palette] Read offset as {0}", Offset, reader.BaseStream.Position);
+			}
 		}
 	}
 }

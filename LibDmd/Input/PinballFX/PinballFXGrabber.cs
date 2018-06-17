@@ -52,7 +52,7 @@ namespace LibDmd.Input.PinballFX
 		public int CropRight { get; set; } = 8;
 		public int CropBottom { get; set; } = 12;
 
-		private IConnectableObservable<Tuple<byte[][], Color[]>> _framesColoredGray2;
+		private IConnectableObservable<Tuple<byte[][], Color[], int>> _framesColoredGray2;
 
 		private IDisposable _capturer;
 		private IntPtr _handle;
@@ -101,10 +101,11 @@ namespace LibDmd.Input.PinballFX
 			StartPolling();
 		}
 
-		public IObservable<Tuple<byte[][], Color[]>> GetColoredGray2Frames()
+		public IObservable<Tuple<byte[][], Color[], int>> GetColoredGray2Frames()
 		{
 			double lastHue = 0;
 			Color[] palette = null;
+            int index = -1;
 
 			if (_framesColoredGray2 == null) {
 				var gridProcessor = new GridProcessor { Spacing = 1d };
@@ -124,7 +125,7 @@ namespace LibDmd.Input.PinballFX
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;
 						}
-						return new Tuple<byte[][], Color[]>(FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, frame), palette);
+						return new Tuple<byte[][], Color[], int>(FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, frame), palette, index);
 					})
 					.Publish();
 

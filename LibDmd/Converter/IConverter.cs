@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using LibDmd.Input;
 using LibDmd.Output;
 
@@ -19,15 +20,19 @@ namespace LibDmd.Converter
 		FrameFormat From { get; }
 
 		/// <summary>
-		/// Destination bit length
+		/// Receives frames and outputs them to the output sources the converter implements.
 		/// </summary>
-		//FrameFormat To { get; }
-
-		/// <summary>
-		/// Converts from source to destination
-		/// </summary>
-		/// <param name="from">Source data</param>
-		void Convert(byte[] from);
+		/// 
+		/// <remarks>
+		/// Note that if your convertor doesn't implement any ISource interface,
+		/// frames will just be dropped.
+		/// 
+		/// If this method doesn't send anything to its output sources, the frame is
+		/// equally dropped.
+		/// </remarks>
+		/// 
+		/// <param name="frame">Source frame, as top-left to bottom-right pixel array</param>
+		void Convert(byte[] frame);
 
 		/// <summary>
 		/// Initializes the converter. Run before rendering is started and after

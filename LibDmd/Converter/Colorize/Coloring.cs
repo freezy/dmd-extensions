@@ -14,34 +14,42 @@ namespace LibDmd.Converter.Colorize
 	public class Coloring
 	{
 		public readonly string Filename;
+		/// <summary>
+		/// File version. 1 = FSQ, 2 = VNI (but we don't really care, we fetch what we get)
+		/// </summary>
 		public readonly int Version;
 		public readonly Palette[] Palettes;
-		public readonly Mapping[] Mappings;
+		public readonly System.Collections.Generic.Dictionary<uint, Mapping> Mappings;
 		public readonly byte[][] Masks;
 		public readonly Palette DefaultPalette;
+        public readonly ushort DefaultPaletteIndex;
+        public readonly int numPalettes;
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// List di ganzi Konfig vom File inä.
 		/// </summary>
 		/// <param name="filename">Dr Pfad zum File</param>
-		public Coloring(string filename)
+		public Coloring(string filename, int width = 128, int height = 32)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
 
-			Filename = filename;
+            Mappings = null;
+        	Filename = filename;
 			Version = reader.ReadByte();
-			Logger.Trace("[{1}] Read version as {0}", Version, reader.BaseStream.Position);
+			Logger.Trace("PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
 
-			var numPalettes = reader.ReadUInt16BE();
-			Logger.Trace("[{1}] Read number of palettes as {0}", numPalettes, reader.BaseStream.Position);
+			numPalettes = reader.ReadUInt16BE();
+			Logger.Trace("PAL[{1}] Read number of palettes as {0}", numPalettes, reader.BaseStream.Position);
 			Palettes = new Palette[numPalettes];
 			for (var i = 0; i < numPalettes; i++) {
 				Palettes[i] = new Palette(reader);
 				if (DefaultPalette == null && Palettes[i].IsDefault) {
 					DefaultPalette = Palettes[i];
+                    DefaultPaletteIndex = (ushort)i;
 				}
 			}
 			if (DefaultPalette == null && Palettes.Length > 0) {
@@ -49,30 +57,32 @@ namespace LibDmd.Converter.Colorize
 			}
 
 			if (reader.BaseStream.Position == reader.BaseStream.Length) {
-				Mappings = new Mapping[0];
 				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
 
 			var numMappings = reader.ReadUInt16BE();
-			Logger.Trace("[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
+			Logger.Trace("PAL[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
 			if (reader.BaseStream.Length - reader.BaseStream.Position < Mapping.Length * numMappings) {
 				Logger.Warn("[{1}] Missing {0} bytes for {1} masks, ignoring.", Mapping.Length * numMappings - reader.BaseStream.Length + reader.BaseStream.Position, numMappings);
-				Mappings = new Mapping[0];
 				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
 
-			Mappings = new Mapping[numMappings];
-			for (var i = 0; i < numMappings; i++) {
-				Mappings[i] = new Mapping(reader);
-			}
-
-			if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
+            if (numMappings > 0)
+            {
+                Mappings = new System.Collections.Generic.Dictionary<uint, Mapping>();
+                for (var i = 0; i < numMappings; i++)
+                {
+                    var mapping = new Mapping(reader);
+                    Mappings.Add(mapping.Checksum, mapping);
+                }
+            }
+            else if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
-					Logger.Warn("[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
+					Logger.Warn("PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
 				}
 				Masks = new byte[0][];
 				reader.Close();
@@ -80,22 +90,28 @@ namespace LibDmd.Converter.Colorize
 			}
 
 			var numMasks = reader.ReadByte();
-			Logger.Trace("[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
-			if (reader.BaseStream.Length - reader.BaseStream.Position < 512 * numMasks) {
-				Logger.Warn("Missing {0} bytes for {1} masks, ignoring.", 512 * numMasks - reader.BaseStream.Length + reader.BaseStream.Position, numMasks);
-				Mappings = new Mapping[0];
-				Masks = new byte[0][];
-				reader.Close();
-				return;
-			}
-			Masks = new byte[numMasks][];
-			for (var i = 0; i < numMasks; i++) {
-				Masks[i] = reader.ReadBytesRequired(512);
-				// Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
-			}
+			Logger.Trace("PAL[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
+            if (numMasks > 0)
+            {
+                int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
+
+                if (maskBytes != 512 && maskBytes != 1536)
+                {
+                    Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
+                    Masks = new byte[0][];
+                    reader.Close();
+                    return;
+                }
+                Masks = new byte[numMasks][];
+                for (var i = 0; i < numMasks; i++)
+                {
+                    Masks[i] = reader.ReadBytesRequired(maskBytes);
+                    // Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
+                }
+            }
 
 			if (reader.BaseStream.Position != reader.BaseStream.Length) {
-				throw new IOException("Read error, finished parsing but there are still " + (reader.BaseStream.Length - reader.BaseStream.Position) + " bytes to read.");
+				 throw new IOException("Read error, finished parsing but there are still " + (reader.BaseStream.Length - reader.BaseStream.Position) + " bytes to read.");
 			}
 
 			reader.Close();
@@ -109,15 +125,14 @@ namespace LibDmd.Converter.Colorize
 
 		public Mapping FindMapping(uint checksum)
 		{
-			// TODO index bruichä
-			return Mappings.FirstOrDefault(m => m.Checksum == checksum);
+            Mapping mapping;
+            Mappings.TryGetValue(checksum, out mapping);
+            return mapping;
 		}
 
 		public override string ToString()
 		{
-			return $"{Path.GetFileName(Filename)}: v{Version}, {Palettes.Length} palette(s), {Mappings.Length} mapping(s), {Masks.Length} mask(s)";
+			return $"{Path.GetFileName(Filename)}: v{Version}, {Palettes.Length} palette(s), {Mappings.Count} mapping(s), {Masks.Length} mask(s)";
 		}
-
-		
 	}
 }
