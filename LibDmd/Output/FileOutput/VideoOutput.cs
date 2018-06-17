@@ -105,7 +105,7 @@ namespace LibDmd.Output.FileOutput
 			// ignore
 		}
 
-		public void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors, int index = -1)
 		{
 			// ignore
 		}

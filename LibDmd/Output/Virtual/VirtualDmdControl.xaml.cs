@@ -121,7 +121,7 @@ namespace LibDmd.Output.Virtual
 			ColorUtil.RgbToHsl(color.R, color.G, color.B, out _hue, out _sat, out _lum);
 		}
 
-		public void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors, int index = -1)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);

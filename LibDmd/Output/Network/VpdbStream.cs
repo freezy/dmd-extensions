@@ -116,7 +116,7 @@ namespace LibDmd.Output.Network
 			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 4, frame), data, offset));
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		public void RenderColoredGray2(byte[][] planes, Color[] palette, int index)
 		{
 			if (planes.Length == 0) {
 				return;
@@ -130,7 +130,7 @@ namespace LibDmd.Output.Network
 			});
 		}
 
-		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		public void RenderColoredGray4(byte[][] planes, Color[] palette, int index)
 		{
 			if (planes.Length == 0) {
 				return;
@@ -155,7 +155,7 @@ namespace LibDmd.Output.Network
 			EmitObject("color", new JObject { { "color", ColorUtil.ToInt(color) } });
 		}
 
-		public void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors , int index = -1)
 		{
 			_palette = colors;
 			EmitObject("palette", new JObject { { "palette", new JArray(ColorUtil.ToIntArray(colors)) } });

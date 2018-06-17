@@ -29,10 +29,10 @@ namespace LibDmd.Input
 		/// </summary>
 		BehaviorSubject<Dimensions> Dimensions { get; set; }
 
-		/// <summary>
-		/// An observable that triggers when the source starts providing frames.
-		/// </summary>
-		IObservable<Unit> OnResume { get; }
+        /// <summary>
+        /// An observable that triggers when the source starts providing frames.
+        /// </summary>
+        IObservable<Unit> OnResume { get; }
 
 		/// <summary>
 		/// An observable that triggers when the source is interrupted, e.g. a game is stopped.
@@ -47,7 +47,7 @@ namespace LibDmd.Input
 	{
 		public int Width { get; set; }
 		public int Height { get; set; }
-	}
+    }
 
 	public enum ResizeMode
 	{

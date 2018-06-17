@@ -31,7 +31,7 @@ namespace LibDmd.Output
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
 		/// <param name="colors"></param>
-		void SetPalette(Color[] colors);
+		void SetPalette(Color[] colors, int index = -1);
 
 		/// <summary>
 		/// Removes a previously set palette

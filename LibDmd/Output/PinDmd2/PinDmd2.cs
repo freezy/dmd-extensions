@@ -56,10 +56,7 @@ namespace LibDmd.Output.PinDmd2
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
-					if (device?.Info?.Descriptor?.VendorID == 0x0314 && 
-						(device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457 &&
-						device.Info.ProductString.Contains("pinDMD V2")) {
-
+					if (device?.Info?.Descriptor?.VendorID == 0x0314 && (device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
 						_pinDmd2Device = device;
 						break;
 					}
@@ -74,11 +71,19 @@ namespace LibDmd.Output.PinDmd2
 			}
 			_pinDmd2Device.Open();
 
-			Logger.Info("Found PinDMDv2 device.");
-			Logger.Debug("   Manufacturer: {0}", _pinDmd2Device.Info.ManufacturerString);
-			Logger.Debug("   Product:      {0}", _pinDmd2Device.Info.ProductString);
-			Logger.Debug("   Serial:       {0}", _pinDmd2Device.Info.SerialString);
-			Logger.Debug("   Language ID:  {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+			if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
+				Logger.Info("Found PinDMDv2 device.");
+				Logger.Debug("   Manufacturer: {0}", _pinDmd2Device.Info.ManufacturerString);
+				Logger.Debug("   Product:      {0}", _pinDmd2Device.Info.ProductString);
+				Logger.Debug("   Serial:       {0}", _pinDmd2Device.Info.SerialString);
+				Logger.Debug("   Language ID:  {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+
+			} else {
+				Logger.Debug("Device found but it's not a PinDMDv2 device ({0}).", _pinDmd2Device.Info.ProductString);
+				IsAvailable = false;
+				Dispose();
+				return;
+			}
 
 			var usbDevice = _pinDmd2Device as IUsbDevice;
 			if (!ReferenceEquals(usbDevice, null)) {

@@ -10,7 +10,6 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.TextFormatting;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
@@ -113,6 +112,7 @@ namespace LibDmd
 		private Color[] _gray4Colors; 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+        private int _PaletteIndex = -1;
 
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
@@ -450,8 +450,8 @@ namespace LibDmd
 				}
 
 				// log status
-				Source.OnResume.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });
-				Source.OnPause.Subscribe(x => {
+				Source.OnResume?.Subscribe(x => { Logger.Info("Frames coming in from {0}.", Source.Name); });
+				Source.OnPause?.Subscribe(x => {
 					Logger.Info("Frames stopped from {0}.", Source.Name);
 					onCompleted?.Invoke();
 				});
@@ -758,8 +758,8 @@ namespace LibDmd
 						case FrameFormat.ColoredGray2:
 							AssertCompatibility(source, sourceColoredGray2, dest, destColoredGray2, from, to);
 							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
-									.Select(x => TransformColoredGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, destFixedSize)),
-								x => destColoredGray2.RenderColoredGray2(x.Item1, x.Item2));
+									.Select(x => TransformColoredGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, x.Item3, destFixedSize)),
+								x => destColoredGray2.RenderColoredGray2(x.Item1, x.Item2, x.Item3));
 							break;
 
 						// colored gray2 -> colored gray4
@@ -833,8 +833,8 @@ namespace LibDmd
 						case FrameFormat.ColoredGray4:
 							AssertCompatibility(source, sourceColoredGray4, dest, destColoredGray4, from, to);
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
-									.Select(x => TransformColoredGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, destFixedSize)),
-								x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2));
+									.Select(x => TransformColoredGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, x.Item1, x.Item2, x.Item3, destFixedSize)),
+								x => destColoredGray4.RenderColoredGray4(x.Item1, x.Item2, x.Item3 ));
 							break;
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -974,16 +974,18 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+            _PaletteIndex = -1;
 		}
 
 		/// <summary>
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
 		/// <param name="colors"></param>
-		public void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors, int index = -1)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+            _PaletteIndex = index;
 		}
 
 		/// <summary>
@@ -993,6 +995,7 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
+            _PaletteIndex = -1;
 		}
 
 		/// <summary>
@@ -1060,32 +1063,32 @@ namespace LibDmd
 			return transformedFrame;
 		}
 
-		private Tuple<byte[][], Color[]> TransformColoredGray2(int width, int height, byte[][] planes, Color[] palette, IFixedSizeDestination dest)
+		private Tuple<byte[][], Color[], int> TransformColoredGray2(int width, int height, byte[][] planes, Color[] palette, int index, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new Tuple<byte[][], Color[]>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette);
+				return new Tuple<byte[][], Color[], int>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette, index);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
-				return new Tuple<byte[][], Color[]>(planes, palette);
+				return new Tuple<byte[][], Color[], int>(planes, palette, index);
 			}
 			var bmp = ImageUtil.ConvertFromGray2(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return new Tuple<byte[][], Color[]>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 2, transformedFrame), palette);
+			return new Tuple<byte[][], Color[], int>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 2, transformedFrame), palette, index);
 		}
 
-		private Tuple<byte[][], Color[]> TransformColoredGray4(int width, int height, byte[][] planes, Color[] palette, IFixedSizeDestination dest)
+		private Tuple<byte[][], Color[], int> TransformColoredGray4(int width, int height, byte[][] planes, Color[] palette, int index, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new Tuple<byte[][], Color[]>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette);
+				return new Tuple<byte[][], Color[], int>(TransformationUtil.Flip(width, height, planes, FlipHorizontally, FlipVertically), palette, index);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
-				return new Tuple<byte[][], Color[]>(planes, palette);
+				return new Tuple<byte[][], Color[], int>(planes, palette, index);
 			}
 			var bmp = ImageUtil.ConvertFromGray4(width, height, FrameUtil.Join(width, height, planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new Tuple<byte[][], Color[]>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 4, transformedFrame), palette);
+			return new Tuple<byte[][], Color[], int>(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 4, transformedFrame), palette, index);
 		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)

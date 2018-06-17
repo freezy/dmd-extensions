@@ -14,6 +14,6 @@ namespace LibDmd.Output
 		/// </summary>
 		/// <param name="planes">Array for 4-bit planes</param>
 		/// <param name="palette">Four colors for each bit</param>
-		void RenderColoredGray4(byte[][] planes, Color[] palette);
+		void RenderColoredGray4(byte[][] planes, Color[] palette, int index);
 	}
 }

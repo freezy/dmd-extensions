@@ -181,7 +181,7 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		public void RenderColoredGray2(byte[][] planes, Color[] palette, int index)
 		{
 			// update palette
 			SetPalette(palette);
@@ -284,7 +284,7 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferGray4[12] = 0x0;
 		}
 
-		public void SetPalette(Color[] colors)
+		public void SetPalette(Color[] colors, int index = -1)
 		{
 			var palette = ColorUtil.GetPalette(colors, 4);
 			var pos = 1;

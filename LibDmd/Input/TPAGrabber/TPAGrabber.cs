@@ -68,7 +68,7 @@ namespace LibDmd.Input.TPAGrabber
         /// <summary>
         /// Waits for the Pinball Arcade DX11 process.
         /// </summary>
-        ///
+        /// 
         private void StartPolling()
 		{
 			var curIdentity = WindowsIdentity.GetCurrent();
@@ -201,7 +201,7 @@ namespace LibDmd.Input.TPAGrabber
 		{
 			var processList = Process.GetProcesses();
 			foreach (var p in processList) {
-				if (p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet") {
+				if (p.ProcessName == "PinballArcade11") {
                     // When the process is found, find needed offsets..
                     FindOffsets(p);
                     // ...then write the codecave.
@@ -300,7 +300,7 @@ namespace LibDmd.Input.TPAGrabber
             // Create a byte array to store memory region.
             var memoryRegion = new byte[size];
 
-			// Dump process memory into the array.
+			// Dump process memory into the array. 
 			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
 
 			// Loop into dumped memory region to find the pattern.
