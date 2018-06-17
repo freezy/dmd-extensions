@@ -112,7 +112,7 @@ namespace LibDmd
 		private Color[] _gray4Colors; 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-        private int _PaletteIndex = -1;
+		private int _paletteIndex = -1;
 
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
@@ -974,18 +974,19 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
-            _PaletteIndex = -1;
+			_paletteIndex = -1;
 		}
 
 		/// <summary>
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
-		/// <param name="colors"></param>
+		/// <param name="colors">Pallette to set</param>
+		/// <param name="index">Palette index</param>
 		public void SetPalette(Color[] colors, int index = -1)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
-            _PaletteIndex = index;
+			_paletteIndex = index;
 		}
 
 		/// <summary>
@@ -995,7 +996,7 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
-            _PaletteIndex = -1;
+			_paletteIndex = -1;
 		}
 
 		/// <summary>

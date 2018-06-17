@@ -22,11 +22,10 @@ namespace LibDmd.Converter.Colorize
 		public readonly System.Collections.Generic.Dictionary<uint, Mapping> Mappings;
 		public readonly byte[][] Masks;
 		public readonly Palette DefaultPalette;
-        public readonly ushort DefaultPaletteIndex;
-        public readonly int numPalettes;
+		public readonly ushort DefaultPaletteIndex;
+		public readonly int numPalettes;
 
-
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// List di ganzi Konfig vom File inä.
@@ -37,8 +36,8 @@ namespace LibDmd.Converter.Colorize
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
 
-            Mappings = null;
-        	Filename = filename;
+			Mappings = null;
+			Filename = filename;
 			Version = reader.ReadByte();
 			Logger.Trace("PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
 
@@ -49,7 +48,7 @@ namespace LibDmd.Converter.Colorize
 				Palettes[i] = new Palette(reader);
 				if (DefaultPalette == null && Palettes[i].IsDefault) {
 					DefaultPalette = Palettes[i];
-                    DefaultPaletteIndex = (ushort)i;
+					DefaultPaletteIndex = (ushort)i;
 				}
 			}
 			if (DefaultPalette == null && Palettes.Length > 0) {
@@ -71,16 +70,13 @@ namespace LibDmd.Converter.Colorize
 				return;
 			}
 
-            if (numMappings > 0)
-            {
-                Mappings = new System.Collections.Generic.Dictionary<uint, Mapping>();
-                for (var i = 0; i < numMappings; i++)
-                {
-                    var mapping = new Mapping(reader);
-                    Mappings.Add(mapping.Checksum, mapping);
-                }
-            }
-            else if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
+			if (numMappings > 0) {
+				Mappings = new System.Collections.Generic.Dictionary<uint, Mapping>();
+				for (var i = 0; i < numMappings; i++) {
+					var mapping = new Mapping(reader);
+					Mappings.Add(mapping.Checksum, mapping);
+				}
+			} else if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
 					Logger.Warn("PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
 				}
@@ -91,27 +87,24 @@ namespace LibDmd.Converter.Colorize
 
 			var numMasks = reader.ReadByte();
 			Logger.Trace("PAL[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
-            if (numMasks > 0)
-            {
-                int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
+			if (numMasks > 0) {
+				int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
 
-                if (maskBytes != 512 && maskBytes != 1536)
-                {
-                    Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
-                    Masks = new byte[0][];
-                    reader.Close();
-                    return;
-                }
-                Masks = new byte[numMasks][];
-                for (var i = 0; i < numMasks; i++)
-                {
-                    Masks[i] = reader.ReadBytesRequired(maskBytes);
-                    // Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
-                }
-            }
+				if (maskBytes != 512 && maskBytes != 1536) {
+					Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
+					Masks = new byte[0][];
+					reader.Close();
+					return;
+				}
+				Masks = new byte[numMasks][];
+				for (var i = 0; i < numMasks; i++) {
+					Masks[i] = reader.ReadBytesRequired(maskBytes);
+					// Logger.Trace("[{1}] Read number of {0} bytes of mask", Masks[i].Length, reader.BaseStream.Position);
+				}
+			}
 
 			if (reader.BaseStream.Position != reader.BaseStream.Length) {
-				 throw new IOException("Read error, finished parsing but there are still " + (reader.BaseStream.Length - reader.BaseStream.Position) + " bytes to read.");
+				throw new IOException("Read error, finished parsing but there are still " + (reader.BaseStream.Length - reader.BaseStream.Position) + " bytes to read.");
 			}
 
 			reader.Close();
@@ -125,9 +118,9 @@ namespace LibDmd.Converter.Colorize
 
 		public Mapping FindMapping(uint checksum)
 		{
-            Mapping mapping;
-            Mappings.TryGetValue(checksum, out mapping);
-            return mapping;
+			Mapping mapping;
+			Mappings.TryGetValue(checksum, out mapping);
+			return mapping;
 		}
 
 		public override string ToString()

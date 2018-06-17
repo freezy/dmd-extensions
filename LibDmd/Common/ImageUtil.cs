@@ -156,52 +156,45 @@ namespace LibDmd.Common
 		/// <param name="buffer">Destination buffer. Will be filled with RGB values for each pixel between 0 and 255.</param>
 		/// <param name="offset">Offset in destination array</param>
 		/// <param name="lum">Multiply luminosity</param>
+		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, int offset = 0, double lum = 1)
+		{
+			var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
 
-        public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, int offset = 0, double lum = 1)
-        { 
-            var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-            int stride = (int)bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
+			var bytes = new byte[bmp.PixelHeight * stride];
+			bmp.CopyPixels(bytes, stride, 0);
 
-            byte[] bytes = new byte[(int)bmp.PixelHeight * stride];
-            bmp.CopyPixels(bytes, stride, 0);
+			if (Math.Abs(lum - 1) > 0.01) {
+				for (var i = 0; i < bytes.Length; i += 3) {
+					double hue, saturation, luminosity;
+					byte r, g, b;
+					ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out hue, out saturation, out luminosity);
+					ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
+					buffer[i] = r;
+					buffer[i + 1] = g;
+					buffer[i + 2] = b;
+				}
+			} else {
+				unsafe
+				{
+					fixed (byte* pBuffer = buffer, pBytes = bytes)
+					{
+						byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
+						for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
+							*(pB) = *(pByte + 2);
+							*(pB + 1) = *(pByte + 1);
+							*(pB + 2) = *(pByte);
+						}
+					}
+				}
+			}
+		}
 
-            if (Math.Abs(lum - 1) > 0.01)
-            {
-                for (var i = 0; i < bytes.Length; i += 3)
-                {
-                    double hue, saturation, luminosity;
-                    byte r, g, b;
-                    ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out hue, out saturation, out luminosity);
-                    ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
-                    buffer[i] = r;
-                    buffer[i + 1] = g;
-                    buffer[i + 2] = b;
-                }
-            }
-            else
-            {
-                unsafe
-                {
-                    fixed (byte* pBuffer = buffer, pBytes = bytes)
-                    {
-                        byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
-                        for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3)
-                        {
-                            *(pB) = *(pByte + 2);
-                            *(pB + 1) = *(pByte + 1);
-                            *(pB + 2) = *(pByte);
-                        }
-                    }                    
-                }
-            }
-        }
-
-        /// <summary>
-        /// Converts an image to a BitmapSouce
-        /// </summary>
-        /// <param name="img">Image to convert</param>
-        /// <returns>Converted bitmap</returns>
-        public static BitmapSource ConvertToBitmap(Image img)
+		/// <summary>
+		/// Converts an image to a BitmapSouce
+		/// </summary>
+		/// <param name="img">Image to convert</param>
+		/// <returns>Converted bitmap</returns>
+		public static BitmapSource ConvertToBitmap(Image img)
 		{
 			var bitmap = new Bitmap(img);
 			var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
@@ -355,45 +348,44 @@ namespace LibDmd.Common
 		/// <param name="frame">RGB values for each pixel between 0 and 255</param>
 		/// <returns>Bitmap</returns>
 		private static BitmapSource ConvertFromRgb24(int width, int height, Frame frame)
-        {
-            var bmp = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
-            var bufferSize = (Math.Abs(bmp.BackBufferStride) * height + 2);
-            var frameBuffer = new byte[bufferSize];
+		{
+			var bmp = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+			var bufferSize = (Math.Abs(bmp.BackBufferStride) * height + 2);
+			var frameBuffer = new byte[bufferSize];
 
-            unsafe
-            {
-                fixed (byte* pFrameArray = frame._arraySrc, pDestArray = frameBuffer)
-                {
-                    byte* srcPtr = (frame._isPointer) ? frame._pointerSrc : pFrameArray;
-                    byte* srcEnd = srcPtr + width * height * 3;
-                    byte* dstPtr = pDestArray;
+			unsafe
+			{
+				fixed (byte* pFrameArray = frame.ArraySrc, pDestArray = frameBuffer)
+				{
+					byte* srcPtr = (frame.IsPointer) ? frame.PointerSrc : pFrameArray;
+					byte* srcEnd = srcPtr + width * height * 3;
+					byte* dstPtr = pDestArray;
 
-                    for (; srcPtr < srcEnd; srcPtr += 3, dstPtr += 4)
-                    {
-                        *dstPtr = *(srcPtr + 2);
-                        *(dstPtr + 1) = *(srcPtr + 1);
-                        *(dstPtr + 2) = *(srcPtr);
-                    }
-                }
-            }
-            bmp.Lock();
-            bmp.WritePixels(new Int32Rect(0, 0, width, height), frameBuffer, bmp.BackBufferStride, 0);
-            bmp.Unlock();
-            bmp.Freeze();
-            return bmp;
-        }
+					for (; srcPtr < srcEnd; srcPtr += 3, dstPtr += 4) {
+						*dstPtr = *(srcPtr + 2);
+						*(dstPtr + 1) = *(srcPtr + 1);
+						*(dstPtr + 2) = *(srcPtr);
+					}
+				}
+			}
+			bmp.Lock();
+			bmp.WritePixels(new Int32Rect(0, 0, width, height), frameBuffer, bmp.BackBufferStride, 0);
+			bmp.Unlock();
+			bmp.Freeze();
+			return bmp;
+		}
 
-        /// <summary>
-        /// Converts an 2-bit grayscale array to a bitmap.
-        /// </summary>
-        /// <param name="width">Width of the image</param>
-        /// <param name="height">Height of the image</param>
-        /// <param name="frame">2-bit grayscale array</param>
-        /// <param name="hue">Hue in which the bitmap will be created</param>
-        /// <param name="saturation">Saturation in which the bitmap will be created</param>
-        /// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
-        /// <returns>Bitmap</returns>
-        public static unsafe BitmapSource ConvertFromGray2(int width, int height, byte* frame, double hue, double saturation, double luminosity)
+		/// <summary>
+		/// Converts an 2-bit grayscale array to a bitmap.
+		/// </summary>
+		/// <param name="width">Width of the image</param>
+		/// <param name="height">Height of the image</param>
+		/// <param name="frame">2-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
+		/// <returns>Bitmap</returns>
+		public static unsafe BitmapSource ConvertFromGray2(int width, int height, byte* frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDatas) {
 				return ConvertFromGray2(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
@@ -521,29 +513,29 @@ namespace LibDmd.Common
 		/// </summary>
 		private unsafe class Frame
 		{
-			public int Size => _isPointer ? -1 : _arraySrc.Length;
+			public int Size => IsPointer ? -1 : ArraySrc.Length;
 
-			public byte* _pointerSrc;
-			public byte[] _arraySrc;
-			public bool _isPointer;
+			public byte* PointerSrc;
+			public byte[] ArraySrc;
+			public bool IsPointer;
 
 			public Frame With(byte* src)
 			{
-				_pointerSrc = src;
-				_isPointer = true;
+				PointerSrc = src;
+				IsPointer = true;
 				return this;
 			}
 
 			public Frame With(byte[] src)
 			{
-				_arraySrc = src;
-				_isPointer = false;
+				ArraySrc = src;
+				IsPointer = false;
 				return this;
 			}
 
 			public byte Get(int pos)
 			{
-				return _isPointer ? _pointerSrc[pos] : _arraySrc[pos];
+				return IsPointer ? PointerSrc[pos] : ArraySrc[pos];
 			}
 		}
 	}

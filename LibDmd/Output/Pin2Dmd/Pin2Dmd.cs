@@ -25,10 +25,10 @@ namespace LibDmd.Output.Pin2Dmd
 		private UsbDevice _pin2DmdDevice;
 		private byte[] _frameBufferRgb24;
 		private byte[] _frameBufferGray4;
-        private readonly byte[] _colorPalette;
-        private int _currentPreloadedPalette;
-        private bool _paletteIsPreloaded;
-        private static Pin2Dmd _instance;
+		private readonly byte[] _colorPalette;
+		private int _currentPreloadedPalette;
+		private bool _paletteIsPreloaded;
+		private static Pin2Dmd _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private Pin2Dmd()
@@ -40,7 +40,7 @@ namespace LibDmd.Output.Pin2Dmd
 			_colorPalette[2] = 0xE7;
 			_colorPalette[3] = 0xFF;
 			_colorPalette[4] = 0x04;
-            _paletteIsPreloaded = false;
+			_paletteIsPreloaded = false;
 		}
 
 		/// <summary>
@@ -59,9 +59,9 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void Init()
 		{
-            // find and open the usb device.
 #if (!TEST_WITHOUT_PIN2DMD)
-            var allDevices = UsbDevice.AllDevices;
+			// find and open the usb device.
+			var allDevices = UsbDevice.AllDevices;
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
@@ -114,33 +114,33 @@ namespace LibDmd.Output.Pin2Dmd
 				Dispose();
 				return;
 			}
-			
+
 			var usbDevice = _pin2DmdDevice as IUsbDevice;
 			if (!ReferenceEquals(usbDevice, null)) {
 				usbDevice.SetConfiguration(1);
 				usbDevice.ClaimInterface(0);
 			}
 #else
-            DmdWidth = 192;
-            DmdHeight = 64;
-            // 15 bits per pixel plus 4 init bytes
-            var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
-            _frameBufferRgb24 = new byte[size];
-            _frameBufferRgb24[0] = 0x81; // frame sync bytes
-            _frameBufferRgb24[1] = 0xC3;
-            _frameBufferRgb24[2] = 0xE8;
-            _frameBufferRgb24[3] = 15;   // number of planes
+			DmdWidth = 192;
+			DmdHeight = 64;
+			// 15 bits per pixel plus 4 init bytes
+			var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
+			_frameBufferRgb24 = new byte[size];
+			_frameBufferRgb24[0] = 0x81; // frame sync bytes
+			_frameBufferRgb24[1] = 0xC3;
+			_frameBufferRgb24[2] = 0xE8;
+			_frameBufferRgb24[3] = 15;   // number of planes
 
-            // 4 bits per pixel plus 4 init bytes
-            size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-            _frameBufferGray4 = new byte[size];
-            _frameBufferGray4[0] = 0x81; // frame sync bytes
-            _frameBufferGray4[1] = 0xC3;
-            _frameBufferGray4[2] = 0xE7;
-            _frameBufferGray4[3] = 0x00;
+			// 4 bits per pixel plus 4 init bytes
+			size = (DmdWidth * DmdHeight * 4 / 8) + 4;
+			_frameBufferGray4 = new byte[size];
+			_frameBufferGray4[0] = 0x81; // frame sync bytes
+			_frameBufferGray4[1] = 0xC3;
+			_frameBufferGray4[2] = 0xE7;
+			_frameBufferGray4[3] = 0x00;
 #endif
-            IsAvailable = true;
-            _currentPreloadedPalette = -1;
+			IsAvailable = true;
+			_currentPreloadedPalette = -1;
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -160,7 +160,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			if (changed) {
-				RenderRaw(_frameBufferGray4);	
+				RenderRaw(_frameBufferGray4);
 			}
 		}
 
@@ -201,115 +201,107 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRaw(byte[] frame)
 		{
 #if (!TEST_WITHOUT_PIN2DMD)
-            var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
+			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 			int bytesWritten;
 			var error = writer.Write(frame, 2000, out bytesWritten);
 			if (error != ErrorCode.None) {
 				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 			}
 #endif
-        }
+		}
 
-        public void SetColor(Color color)
+		public void SetColor(Color color)
 		{
-          SetSinglePalette(new[] { Colors.Black, color});
-     	}
+			SetSinglePalette(new[] { Colors.Black, color });
+		}
 
-        public void SetSinglePalette(Color[] colors)
-        {
-            var palette = ColorUtil.GetPalette(colors, 16);
-            var identical = true;
-            var pos = 7;
-            _colorPalette[5] = 0x00;  
-            _colorPalette[6] = 0x01;  
-            for (var i = 0; i < 16; i++)
-            {
-                var color = palette[i];
-                identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-                _colorPalette[pos] = color.R;
-                _colorPalette[pos + 1] = color.G;
-                _colorPalette[pos + 2] = color.B;
-                pos += 3;
-            }
-            if (!identical)
-            {
-                RenderRaw(_colorPalette);
-                System.Threading.Thread.Sleep(50);
-            }
-        }
+		public void SetSinglePalette(Color[] colors)
+		{
+			var palette = ColorUtil.GetPalette(colors, 16);
+			var identical = true;
+			var pos = 7;
+			_colorPalette[5] = 0x00;
+			_colorPalette[6] = 0x01;
+			for (var i = 0; i < 16; i++) {
+				var color = palette[i];
+				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
+				_colorPalette[pos] = color.R;
+				_colorPalette[pos + 1] = color.G;
+				_colorPalette[pos + 2] = color.B;
+				pos += 3;
+			}
+			if (!identical) {
+				RenderRaw(_colorPalette);
+				System.Threading.Thread.Sleep(50);
+			}
+		}
 
-        public void SetPalette(Color[] colors, int index)
-        {
-            if (index >= 0 && _paletteIsPreloaded)
-            {
-                if (index == _currentPreloadedPalette)
-                    return;
-                Logger.Debug("[Pin2DMD] Switch to index " + index.ToString());
-                SwitchToPreloadedPalette((ushort)index);
-                _currentPreloadedPalette = index;
-            }
-            else
-            { // We have a palette request not associated with an index
-                Logger.Debug("[Pin2DMD] Palette switch without index");
+		public void SetPalette(Color[] colors, int index)
+		{
+			if (index >= 0 && _paletteIsPreloaded) {
+				if (index == _currentPreloadedPalette)
+					return;
+				Logger.Debug("[Pin2DMD] Switch to index " + index.ToString());
+				SwitchToPreloadedPalette((ushort)index);
+				_currentPreloadedPalette = index;
+			} else { // We have a palette request not associated with an index
+				Logger.Debug("[Pin2DMD] Palette switch without index");
 
-                SetSinglePalette(colors);
-                _currentPreloadedPalette = -1;
-                if (_paletteIsPreloaded)
-                {
-                    Logger.Warn("[Pin2DMD] Request to change without index, preloaded palette lost.");
-                    _paletteIsPreloaded = false;
-                }
-            }
-        }
+				SetSinglePalette(colors);
+				_currentPreloadedPalette = -1;
+				if (_paletteIsPreloaded) {
+					Logger.Warn("[Pin2DMD] Request to change without index, preloaded palette lost.");
+					_paletteIsPreloaded = false;
+				}
+			}
+		}
 
-        public void PreloadPalettes(LibDmd.Converter.Colorize.Coloring coloring)
-        {
-            Logger.Debug("[Pin2DMD] Preloading " + coloring.Palettes.Length + "palettes.");
-            foreach (var palette in coloring.Palettes)
-            {
-                var pos = 7;
-                for (var i = 0; i < 16; i++)
-                {
-                    var color = palette.Colors[i];
-                    _colorPalette[pos] = color.R;
-                    _colorPalette[pos + 1] = color.G;
-                    _colorPalette[pos + 2] = color.B;
-                    pos += 3;
-                }
-                _colorPalette[5] = (byte)palette.Index;
-                _colorPalette[6] = (byte)palette.Type;
+		public void PreloadPalettes(LibDmd.Converter.Colorize.Coloring coloring)
+		{
+			Logger.Debug("[Pin2DMD] Preloading " + coloring.Palettes.Length + "palettes.");
+			foreach (var palette in coloring.Palettes) {
+				var pos = 7;
+				for (var i = 0; i < 16; i++) {
+					var color = palette.Colors[i];
+					_colorPalette[pos] = color.R;
+					_colorPalette[pos + 1] = color.G;
+					_colorPalette[pos + 2] = color.B;
+					pos += 3;
+				}
+				_colorPalette[5] = (byte)palette.Index;
+				_colorPalette[6] = (byte)palette.Type;
 
-                RenderRaw(_colorPalette);
-                System.Threading.Thread.Sleep(100);
-            }
-            _paletteIsPreloaded = true;
-        }
+				RenderRaw(_colorPalette);
+				System.Threading.Thread.Sleep(100);
+			}
+			_paletteIsPreloaded = true;
+		}
 
 
-        public void SwitchToPreloadedPalette (uint Index)
-        {
-            var hexIndexStr = Index.ToString("X2");
+		public void SwitchToPreloadedPalette(uint Index)
+		{
+			var hexIndexStr = Index.ToString("X2");
 
-            var buffer = new byte[64];
-            buffer[0] = 0x01;
-            buffer[1] = 0xC3;
-            buffer[2] = 0xE7;
-            buffer[3] = (byte)hexIndexStr[0];
-            buffer[4] = (byte)hexIndexStr[1];
-            RenderRaw(buffer);
-         }
-        
-        public void ClearPalette()
+			var buffer = new byte[64];
+			buffer[0] = 0x01;
+			buffer[1] = 0xC3;
+			buffer[2] = 0xE7;
+			buffer[3] = (byte)hexIndexStr[0];
+			buffer[4] = (byte)hexIndexStr[1];
+			RenderRaw(buffer);
+		}
+
+		public void ClearPalette()
 		{
 			ClearColor();
 		}
 
 		public void ClearColor()
 		{
-            // Skip if a palette is preloaded, as it will wipe it out, 
-            // and we know palettes will be selected by the colorizer.
-            if (!_paletteIsPreloaded)
-                SetColor(RenderGraph.DefaultColor);
+			// Skip if a palette is preloaded, as it will wipe it out, 
+			// and we know palettes will be selected by the colorizer.
+			if (!_paletteIsPreloaded)
+				SetColor(RenderGraph.DefaultColor);
 		}
 
 		public void ClearDisplay()
