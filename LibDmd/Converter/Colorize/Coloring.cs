@@ -23,7 +23,7 @@ namespace LibDmd.Converter.Colorize
 		public readonly byte[][] Masks;
 		public readonly Palette DefaultPalette;
 		public readonly ushort DefaultPaletteIndex;
-		public readonly int numPalettes;
+		public readonly int NumPalettes;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -31,7 +31,7 @@ namespace LibDmd.Converter.Colorize
 		/// List di ganzi Konfig vom File inä.
 		/// </summary>
 		/// <param name="filename">Dr Pfad zum File</param>
-		public Coloring(string filename, int width = 128, int height = 32)
+		public Coloring(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
@@ -41,10 +41,10 @@ namespace LibDmd.Converter.Colorize
 			Version = reader.ReadByte();
 			Logger.Trace("PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
 
-			numPalettes = reader.ReadUInt16BE();
-			Logger.Trace("PAL[{1}] Read number of palettes as {0}", numPalettes, reader.BaseStream.Position);
-			Palettes = new Palette[numPalettes];
-			for (var i = 0; i < numPalettes; i++) {
+			NumPalettes = reader.ReadUInt16BE();
+			Logger.Trace("PAL[{1}] Read number of palettes as {0}", NumPalettes, reader.BaseStream.Position);
+			Palettes = new Palette[NumPalettes];
+			for (var i = 0; i < NumPalettes; i++) {
 				Palettes[i] = new Palette(reader);
 				if (DefaultPalette == null && Palettes[i].IsDefault) {
 					DefaultPalette = Palettes[i];
@@ -118,8 +118,7 @@ namespace LibDmd.Converter.Colorize
 
 		public Mapping FindMapping(uint checksum)
 		{
-			Mapping mapping;
-			Mappings.TryGetValue(checksum, out mapping);
+			Mappings.TryGetValue(checksum, out var mapping);
 			return mapping;
 		}
 

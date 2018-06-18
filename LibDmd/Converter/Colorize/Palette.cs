@@ -32,6 +32,10 @@ namespace LibDmd.Converter.Colorize
 		/// Isch true wenns d Haiptpalettä isch
 		/// </summary>
 		public bool IsDefault => (Type == 1 || Type == 2);
+
+		/// <summary>
+		/// Diä wo immer da isch
+		/// </summary>
 		public bool IsPersistent => (Type == 1);
 
 		private readonly Dictionary<int, Color[]> _colors = new Dictionary<int, Color[]>();

@@ -118,16 +118,15 @@ namespace LibDmd.Converter.Colorize
 		/// </summary>
 		/// 
 		/// <param name="mode">Dr Modus i welem d Animazion laift (chunnt uifs Mappind druif ah)</param>
-		/// <param name="firstFrame">S Buid vo VPM wod Animazion losgla het</param>
 		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
 		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		public void Start(SwitchMode mode, byte[][] firstFrame, Action<byte[][]> render, Action completed = null)
+		public void Start(SwitchMode mode, Action<byte[][]> render, Action completed = null)
 		{
 			IsRunning = true;
 			SwitchMode = mode;
 			_frameIndex = 0;
 			if (AddPlanes) {
-				StartEnhance(firstFrame, render, completed);
+				StartEnhance(render);
 			} else {
 				StartReplace(render, completed);
 			}
@@ -143,10 +142,8 @@ namespace LibDmd.Converter.Colorize
 		/// vom Schtapu zum Erwiitärä bis es keini me hed. 
 		/// </remarks>
 		/// 
-		/// <param name="firstFrame">S Buid vo VPM wod Animazion losgla het</param>
 		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
-		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		private void StartEnhance(byte[][] firstFrame, Action<byte[][]> render, Action completed = null)
+		private void StartEnhance(Action<byte[][]> render)
 		{
 			_currentRender = render;
 
@@ -190,6 +187,7 @@ namespace LibDmd.Converter.Colorize
 		/// Tuät s gegäbänä Biud mit dä Bitplanes vom nächschtä Biud vo dr Animazion erwiitärä.
 		/// </summary>
 		/// <param name="vpmFrame">S Biud wo erwiitered wird</param>
+		/// <param name="completed">Wird uisfiährt wenns fertig erwiitered het</param>
 		private void EnhanceFrame(byte[][] vpmFrame, Action completed = null)
 		{
 			var delay = Environment.TickCount - _lastTick;
@@ -253,6 +251,7 @@ namespace LibDmd.Converter.Colorize
 		/// Modus <see cref="AddPlanes"/> definiärt.
 		/// </summary>
 		/// <param name="planes">S VPM Frame i Bitplanes uifgschplittet</param>
+		/// <param name="completed">Wird uisfiährt wenns fertig erwiitered het</param>
 		public void NextFrame(byte[][] planes, Action completed = null)
 		{
 			if (IsRunning && AddPlanes) {

@@ -245,10 +245,11 @@ namespace LibDmd.Common
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
-			int frameLength = width * height * 3;
+			var frameLength = width * height * 3;
 
 			if (colorizedFrame == null) {
 				colorizedFrame = new byte[frameLength];
+
 			} else if (colorizedFrame.Length != frameLength) {
 				throw new ArgumentException("Provided destination array must be of size " + (width * height * 3) + " but is of size " + colorizedFrame.Length + ".");
 			}

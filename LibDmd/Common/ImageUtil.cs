@@ -36,8 +36,7 @@ namespace LibDmd.Common
 
 		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
 		{
-			double devnull;
-			return ConvertToGray2(bmp, lum, out devnull);
+			return ConvertToGray2(bmp, lum, out _);
 		}
 
 		/// <summary>
