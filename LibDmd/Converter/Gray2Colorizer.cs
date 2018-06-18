@@ -41,12 +41,22 @@ namespace LibDmd.Converter
 		/// Die etzigi Palettä
 		/// </summary>
 		private Palette _palette;
+
+		/// <summary>
+		/// Dr aktueui Palettä-Index. Da wird bruicht damit s PIN2DMD schnäuer cha 
+		/// Palettä wächslä, wuis d Palettä a sich schon hett und nur nu än Index
+		/// bruicht.
+		/// </summary>
 		private int _paletteIndex;
 
 		/// <summary>
 		/// D Standardpalettä wo bruicht wird wenn grad nid erkennt wordä isch
 		/// </summary>
 		private Palette _defaultPalette;
+
+		/// <summary>
+		/// Dr Index wo ufd Standardpalettä zeigt
+		/// </summary>
 		private int _defaultPaletteIndex;
 
 		/// <summary>
@@ -148,7 +158,7 @@ namespace LibDmd.Converter
 					return;
 				}
 
-				_activeAnimation.Start(mapping.Mode, planes, Render, AnimationFinished);
+				_activeAnimation.Start(mapping.Mode, Render, AnimationFinished);
 			}
 		}
 

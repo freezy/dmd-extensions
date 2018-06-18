@@ -115,8 +115,7 @@ namespace LibDmd.Output.Pin2Dmd
 				return;
 			}
 
-			var usbDevice = _pin2DmdDevice as IUsbDevice;
-			if (!ReferenceEquals(usbDevice, null)) {
+			if (_pin2DmdDevice is IUsbDevice usbDevice) {
 				usbDevice.SetConfiguration(1);
 				usbDevice.ClaimInterface(0);
 			}
@@ -151,7 +150,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderGray4(byte[] frame)
 		{
-
 			// convert to bit planes
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
@@ -256,7 +254,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void PreloadPalettes(LibDmd.Converter.Colorize.Coloring coloring)
+		public void PreloadPalettes(Coloring coloring)
 		{
 			Logger.Debug("[Pin2DMD] Preloading " + coloring.Palettes.Length + "palettes.");
 			foreach (var palette in coloring.Palettes) {
@@ -277,10 +275,9 @@ namespace LibDmd.Output.Pin2Dmd
 			_paletteIsPreloaded = true;
 		}
 
-
-		public void SwitchToPreloadedPalette(uint Index)
+		public void SwitchToPreloadedPalette(uint index)
 		{
-			var hexIndexStr = Index.ToString("X2");
+			var hexIndexStr = index.ToString("X2");
 
 			var buffer = new byte[64];
 			buffer[0] = 0x01;
@@ -332,9 +329,7 @@ namespace LibDmd.Output.Pin2Dmd
 				// close device
 				if (_pin2DmdDevice.IsOpen) {
 					var wholeUsbDevice = _pin2DmdDevice as IUsbDevice;
-					if (!ReferenceEquals(wholeUsbDevice, null)) {
-						wholeUsbDevice.ReleaseInterface(0);
-					}
+					wholeUsbDevice?.ReleaseInterface(0);
 					_pin2DmdDevice.Close();
 				}
 			}

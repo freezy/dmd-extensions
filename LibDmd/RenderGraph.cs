@@ -101,7 +101,7 @@ namespace LibDmd
 		public string IdlePlay { get; set; }
 
 		/// <summary>
-		/// The default color used if there are no palette is defined
+		/// The default color used if there is no palette defined
 		/// </summary>
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
@@ -112,7 +112,6 @@ namespace LibDmd
 		private Color[] _gray4Colors; 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-		private int _paletteIndex = -1;
 
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
@@ -136,15 +135,13 @@ namespace LibDmd
 			// set up the dimension change producer
 			Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
 			Destinations.ForEach(dest => {
-				var destResizable = dest as IResizableDestination;
-				if (destResizable != null) {
+				if (dest is IResizableDestination destResizable) {
 					Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
 				}
 			});
 
 			// initialize converter
-			var converter = Converter as ISource;
-			if (converter != null) {
+			if (Converter is ISource converter) {
 				converter.Dimensions = Source.Dimensions;
 			}
 			Converter?.Init();
@@ -974,7 +971,6 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
-			_paletteIndex = -1;
 		}
 
 		/// <summary>
@@ -986,7 +982,6 @@ namespace LibDmd
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
-			_paletteIndex = index;
 		}
 
 		/// <summary>
@@ -996,7 +991,6 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
-			_paletteIndex = -1;
 		}
 
 		/// <summary>

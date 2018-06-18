@@ -184,7 +184,7 @@ namespace LibDmd.Converter
 					return;
 				}
 
-				_activeAnimation.Start(mapping.Mode, planes, Render, AnimationFinished);
+				_activeAnimation.Start(mapping.Mode, Render, AnimationFinished);
 			}
 		}
 
