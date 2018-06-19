@@ -232,13 +232,12 @@ namespace LibDmd.DmdDevice
 
 				var rootPath = "";
 				//PINUP use Video Output Option
-#if PINUP_SUPPORT
+
 				if (_config.Video.Path.ToUpper() == "PINUP") {
 					renderers.Add(new PinUPOutput(_gameName));
 					Logger.Info("PinUP Started");
 				}
 				else 
-#endif
 				{
 					if (_config.Video.Path.Length == 0 || !Path.IsPathRooted(_config.Video.Path)) {
 						rootPath = AssemblyPath;
