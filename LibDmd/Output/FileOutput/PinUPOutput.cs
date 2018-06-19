@@ -137,13 +137,7 @@ namespace LibDmd.Output.FileOutput
 		//Render Bitmap gets called by dmdext console with the -o PINUP option.  (pinball fx2/3 type support)
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel * bmp.PixelWidth * bmp.PixelHeight];
-			var rect = new Int32Rect(0, 0, bmp.PixelWidth, bmp.PixelHeight);
-
-			bmp.CopyPixels(rect, bytes, bmp.PixelWidth * bytesPerPixel, 0);
-            
-			RenderRgb24(bytes);
+			RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
 		}
 
 		public void Dispose()
