@@ -53,7 +53,7 @@ namespace LibDmd.DmdDevice
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
-        private bool isOpen = false;
+		private bool _isOpen = false;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -148,7 +148,7 @@ namespace LibDmd.DmdDevice
 			} else {
 				SetupGraphs();
 			}
-            isOpen = true;
+            _isOpen = true;
 		}
 
 		/// <summary>
@@ -458,7 +458,7 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;
-            isOpen = false;
+            _isOpen = false;
 
 		}
 
@@ -488,8 +488,9 @@ namespace LibDmd.DmdDevice
 
 		public void RenderGray2(int width, int height, byte[] frame)
 		{
-            if (!isOpen)
-                Init();
+			if (!_isOpen) {
+				Init();
+			}
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
 			_vpmGray2Source.NextFrame(width, height, frame);
@@ -497,8 +498,9 @@ namespace LibDmd.DmdDevice
 
 		public void RenderGray4(int width, int height, byte[] frame)
 		{
-            if (!isOpen)
-                Init();
+			if (!_isOpen) {
+				Init();
+			}
 			_gray2Colorizer?.SetDimensions(width, height);
 			_gray4Colorizer?.SetDimensions(width, height);
 			_vpmGray4Source.NextFrame(width, height, frame);
@@ -506,15 +508,17 @@ namespace LibDmd.DmdDevice
 
 		public void RenderRgb24(int width, int height, byte[] frame)
 		{
-            if (!isOpen)
-                Init();
+			if (!_isOpen) {
+				Init();
+			}
 			_vpmRgb24Source.NextFrame(width, height, frame);
 		}
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
-            if (!isOpen)
-                Init();
+			if (!_isOpen) {
+				Init();
+			}
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.None:
