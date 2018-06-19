@@ -18,6 +18,6 @@ namespace LibDmd.Input
 		/// with a 4-color palette.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<Tuple<byte[][], Color[], int>> GetColoredGray2Frames();
+		IObservable<ColoredFrame> GetColoredGray2Frames();
 	}
 }

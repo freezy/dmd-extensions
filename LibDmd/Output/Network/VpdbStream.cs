@@ -116,31 +116,31 @@ namespace LibDmd.Output.Network
 			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 4, frame), data, offset));
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette, int index)
+		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			if (planes.Length == 0) {
+			if (frame.Planes.Length == 0) {
 				return;
 			}
 			const int numColors = 4;
 			const int bytesPerColor = 3;
-			var dataLength = bytesPerColor * numColors + planes[0].Length * planes.Length;
+			var dataLength = bytesPerColor * numColors + frame.Planes[0].Length * frame.Planes.Length;
 			EmitTimestampedData("coloredgray2", dataLength, (data, offset) => {
-				Buffer.BlockCopy(ColorUtil.ToByteArray(palette), 0, data, offset, bytesPerColor * numColors);
-				FrameUtil.Copy(planes, data, offset + bytesPerColor * numColors);
+				Buffer.BlockCopy(ColorUtil.ToByteArray(frame.Palette), 0, data, offset, bytesPerColor * numColors);
+				FrameUtil.Copy(frame.Planes, data, offset + bytesPerColor * numColors);
 			});
 		}
 
-		public void RenderColoredGray4(byte[][] planes, Color[] palette, int index)
+		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			if (planes.Length == 0) {
+			if (frame.Planes.Length == 0) {
 				return;
 			}
 			const int numColors = 16;
 			const int bytesPerColor = 3;
-			var dataLength = bytesPerColor * numColors + planes[0].Length * planes.Length;
+			var dataLength = bytesPerColor * numColors + frame.Planes[0].Length * frame.Planes.Length;
 			EmitTimestampedData("coloredgray4", dataLength, (data, offset) => {
-				Buffer.BlockCopy(ColorUtil.ToByteArray(palette), 0, data, offset, bytesPerColor * numColors);
-				FrameUtil.Copy(planes, data, offset + bytesPerColor * numColors);
+				Buffer.BlockCopy(ColorUtil.ToByteArray(frame.Palette), 0, data, offset, bytesPerColor * numColors);
+				FrameUtil.Copy(frame.Planes, data, offset + bytesPerColor * numColors);
 			});
 		}
 

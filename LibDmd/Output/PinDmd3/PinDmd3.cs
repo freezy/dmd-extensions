@@ -181,13 +181,13 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette, int index)
+		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			// update palette
-			SetPalette(palette);
+			SetPalette(frame.Palette);
 
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
+			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 13);
 
 			// send frame buffer to device
 			if (changed) {

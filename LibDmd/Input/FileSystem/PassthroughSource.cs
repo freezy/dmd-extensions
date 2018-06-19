@@ -22,8 +22,8 @@ namespace LibDmd.Input.FileSystem
 		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesGray4 = new Subject<byte[]>();
 		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
-		public readonly Subject<Tuple<byte[][], Color[], int>> FramesColoredGray2 = new Subject<Tuple<byte[][], Color[], int>>();
-		public readonly Subject<Tuple<byte[][], Color[], int>> FramesColoredGray4 = new Subject<Tuple<byte[][], Color[], int>>();
+		public readonly Subject<ColoredFrame> FramesColoredGray2 = new Subject<ColoredFrame>();
+		public readonly Subject<ColoredFrame> FramesColoredGray4 = new Subject<ColoredFrame>();
 		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
 
 		public PassthroughSource(string name)
@@ -41,12 +41,12 @@ namespace LibDmd.Input.FileSystem
 			return FramesGray4;
 		}
 
-		public IObservable<Tuple<byte[][], Color[], int>> GetColoredGray2Frames()
+		public IObservable<ColoredFrame> GetColoredGray2Frames()
 		{
 			return FramesColoredGray2;
 		}
 
-		public IObservable<Tuple<byte[][], Color[], int>> GetColoredGray4Frames()
+		public IObservable<ColoredFrame> GetColoredGray4Frames()
 		{
 			return FramesColoredGray4;
 		}

@@ -12,8 +12,7 @@ namespace LibDmd.Output
 		/// <summary>
 		/// Renders a colored frame in 4 bits.
 		/// </summary>
-		/// <param name="planes">Array for 4-bit planes</param>
-		/// <param name="palette">Four colors for each bit</param>
-		void RenderColoredGray4(byte[][] planes, Color[] palette, int index);
+		/// <param name="frame">Frame to render</param>
+		void RenderColoredGray4(ColoredFrame frame);
 	}
 }

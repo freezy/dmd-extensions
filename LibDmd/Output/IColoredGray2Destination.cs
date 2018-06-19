@@ -12,8 +12,7 @@ namespace LibDmd.Output
 		/// <summary>
 		/// Renders a colored frame in 2 bits.
 		/// </summary>
-		/// <param name="planes">Array for 2-bit planes</param>
-		/// <param name="palette">Two colors for each bit</param>
-		void RenderColoredGray2(byte[][] planes, Color[] palette, int index);
+		/// <param name="frame">Frame to render</param>
+		void RenderColoredGray2(ColoredFrame frame);
 	}
 }
