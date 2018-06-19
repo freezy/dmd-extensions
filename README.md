@@ -30,6 +30,9 @@ The command line tool can also display image files on the DMD device and render
 frames to bitmap files. Many features like this are described in the command 
 line options below, so have a close look at those as well.
 
+With v1.7, DMD Extensions also supports dynamic DMD coloring previously only
+available for PIN2DMD displays.
+
 ### Colors
 
 If you have an RGB display, you can override the color tone in which the output
@@ -109,7 +112,15 @@ You can enable this by copying the included `DmdDevice.dll` to the location of
 rendering should go through dmdext.
 
 If you are a PC monitor user or have a RGB display (PinDMDv3 or PIN2DMD), the
-advantage of dmdext is that Lucky1's coloring features are fully supported.
+advantage of dmdext is that Lucky1's coloring features are fully supported. You
+can set this up as you would for a PIN2DMD:
+
+1. Create an `altcolor` folder where VPM is installed (usually `Visual Pinball\VPinMAME`)
+2. In that folder, create another one named after the ROM (e.g. `simpprty`)
+3. Download the `.pal` and `.vni` file from your favorite virtual pinball
+   site, put them into that folder and name them `pin2dmd.pal` and `pin2dmd.vni`
+4. Run VPM setup, open the ROM's game options and enable *Use external DMD (dll)*
+   as well as *Colorize DMD*.
 
 #### Configuration
 
@@ -492,10 +503,9 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 ## Credits
 
 - NoEx for the excellent TPA grabber code.
-- [Cropper](http://cropper.codeplex.com/) for some of the neat screen capture 
-  code
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
 - Lucky1 for instructions and details about the coloring feature
+- DJRobX for helping with the dynamic coloring, better performance and much more.
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 
 
