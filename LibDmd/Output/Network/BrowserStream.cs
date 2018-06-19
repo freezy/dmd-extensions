@@ -100,14 +100,14 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendGray(frame, 4));
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette, int index)
+		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray("coloredGray2", planes, palette));
+			_sockets.ForEach(s => s.SendColoredGray("coloredGray2", frame.Planes, frame.Palette));
 		}
 
-		public void RenderColoredGray4(byte[][] planes, Color[] palette, int index)
+		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray("coloredGray4", planes, palette));
+			_sockets.ForEach(s => s.SendColoredGray("coloredGray4", frame.Planes, frame.Palette));
 		}
 
 		public void RenderRgb24(byte[] frame)

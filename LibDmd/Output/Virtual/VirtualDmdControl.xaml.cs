@@ -85,17 +85,17 @@ namespace LibDmd.Output.Virtual
 			RenderBitmap(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
 		}
 
-		public void RenderColoredGray2(byte[][] planes, Color[] palette)
+		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			SetPalette(palette);
-			RenderGray2(FrameUtil.Join(DmdWidth, DmdHeight, planes));
+			SetPalette(frame.Palette);
+			RenderGray2(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
 		}
 
 
-		public void RenderColoredGray4(byte[][] planes, Color[] palette)
+		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			SetPalette(palette);
-			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, planes));
+			SetPalette(frame.Palette);
+			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
 		}
 
 		public void SetDimensions(int width, int height)

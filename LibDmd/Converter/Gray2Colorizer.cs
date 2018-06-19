@@ -19,8 +19,8 @@ namespace LibDmd.Converter
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
-		protected readonly Subject<Tuple<byte[][], Color[], int>> ColoredGray2AnimationFrames = new Subject<Tuple<byte[][], Color[], int>>();
-		protected readonly Subject<Tuple<byte[][], Color[], int>> ColoredGray4AnimationFrames = new Subject<Tuple<byte[][], Color[], int>>();
+		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
+		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
 
 		/// <summary>
 		/// Datä vomer uism .pal-Feil uisägläsä hend
@@ -209,12 +209,12 @@ namespace LibDmd.Converter
 		{
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2) {
-				ColoredGray2AnimationFrames.OnNext(new Tuple<byte[][], Color[], int>(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4) {
-				ColoredGray4AnimationFrames.OnNext(new Tuple<byte[][], Color[], int>(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 		}
 
@@ -250,12 +250,12 @@ namespace LibDmd.Converter
 			_activeAnimation = null;
 		}
 
-		public IObservable<Tuple<byte[][], Color[], int>> GetColoredGray2Frames()
+		public IObservable<ColoredFrame> GetColoredGray2Frames()
 		{
 			return ColoredGray2AnimationFrames;
 		}
 
-		public IObservable<Tuple<byte[][], Color[], int>> GetColoredGray4Frames()
+		public IObservable<ColoredFrame> GetColoredGray4Frames()
 		{
 			return ColoredGray4AnimationFrames;
 		}
