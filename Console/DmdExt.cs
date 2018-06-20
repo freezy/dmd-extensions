@@ -18,6 +18,7 @@ using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
+using LibDmd.Output.PinUp;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -110,7 +111,7 @@ namespace DmdExt
 				}
 
 				if (baseOptions.EnablePinUp) {
-					(renderer as RenderGraph)?.Destinations.Add(new PinUPOutput(baseOptions.SaveToFile));
+					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput("PINUP"));
 				}
 
 				_command.Execute(() => {

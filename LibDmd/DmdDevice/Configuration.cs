@@ -30,6 +30,7 @@ namespace LibDmd.DmdDevice
 		public GameConfig GameConfig { get; private set; }
 		public readonly VpdbConfig VpdbStream;
 		public readonly BrowserConfig BrowserStream;
+		public readonly PinUpConfig PinUp;
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
@@ -61,6 +62,7 @@ namespace LibDmd.DmdDevice
 			Gif = new GifConfig(_data, this);
 			VpdbStream = new VpdbConfig(_data, this);
 			BrowserStream = new BrowserConfig(_data, this);
+			PinUp = new PinUpConfig(_data, this);
 		}
 
 		public void Save()
@@ -192,6 +194,15 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public string EndPoint => GetString("endpoint", "https://api-test.vpdb.io/");
 		public VpdbConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class PinUpConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "pinup";
+		public bool Enabled => GetBoolean("enabled", false);
+		public PinUpConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

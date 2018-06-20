@@ -19,6 +19,7 @@ using LibDmd.Output.Network;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
+using LibDmd.Output.PinUp;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -231,29 +232,24 @@ namespace LibDmd.DmdDevice
 			if (_config.Video.Enabled) {
 
 				var rootPath = "";
-				//PINUP use Video Output Option
-
-				if (_config.Video.Path.ToUpper() == "PINUP") {
-					renderers.Add(new PinUPOutput(_gameName));
-					Logger.Info("PinUP Started");
+				if (_config.Video.Path.Length == 0 || !Path.IsPathRooted(_config.Video.Path)) {
+					rootPath = AssemblyPath;
 				}
-				else 
-				{
-					if (_config.Video.Path.Length == 0 || !Path.IsPathRooted(_config.Video.Path)) {
-						rootPath = AssemblyPath;
-					}
-					if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-						renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
-						Logger.Info("Added video renderer.");
+				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
+					Logger.Info("Added video renderer.");
 
-					} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-						renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
-						Logger.Info("Added video renderer.");
+				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
+					Logger.Info("Added video renderer.");
 
-					} else {
-						Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
-					}
+				} else {
+					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
 				}
+			}
+			if (_config.PinUp.Enabled) {
+				renderers.Add(new PinUpOutput(_gameName));
+				Logger.Info("Added PinUP renderer.");
 			}
 			if (_config.Gif.Enabled) {
 

@@ -179,6 +179,8 @@ in the same folder as `VPinMAME.dll`. The options are described by block below.
 - `[browserstream]` - Streams the DMD in real time to your browser in your LAN
   - `enabled` - If true, start a small web server
   - `port` - Port of the web server
+- `[pinup]` - Enables output to PinUP.
+  - `enabled` - If true, send frames to PinUP.
 
 You can also override all options per game by using the game's name as section 
 name and pre-fixing options with the name of the section (apart from `[global]`
