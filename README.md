@@ -492,6 +492,18 @@ premises for the log to be created:
 
        `<target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log"`
 
+For problems with DmdDevice.dll, specially with coloring, set the log level to
+`Trace` and reproduce the problem. You can do that by editing `DmdDevice.log.config`
+and setting: 
+
+```xml
+<logger name="*" minlevel="Info" writeTo="file" />
+```
+to
+```xml
+<logger name="*" minlevel="Trace" writeTo="file" />
+```
+
 If you have a crash, please also include which OS/bitness you're using. If it's
 about the DLL, let us know where you copied the DLL and which host application
 you're using (VPM's `setup.exe` or`vpinball.exe`, also which version).
