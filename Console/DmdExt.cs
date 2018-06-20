@@ -110,8 +110,8 @@ namespace DmdExt
 					(renderer as RenderGraph)?.Destinations.Add(new BitmapOutput(baseOptions.SaveToFile));
 				}
 
-				if (baseOptions.EnablePinUp) {
-					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput("PINUP"));
+				if (baseOptions.PinUp != null) {
+					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(baseOptions.PinUp));
 				}
 
 				_command.Execute(() => {
