@@ -1,10 +1,12 @@
 # DMD Extensions
 
-*Features for DMD owners that aren't officially supported*
+*Features for DMD owners\* that aren't officially supported*
 
 Real DMDs for virtual pinball cabinets are pretty cool but they need to be
 supported by the software running the games. This is an attempt to fill some
-gaps.
+gaps. 
+
+\* And even if you don't have a real DMD, there's awesome stuff too!
 
 ## Supported Displays
 
@@ -14,11 +16,13 @@ Currently supported displays:
 - **PinDMD v2**, 4 bit (16 shades) support
 - **PinDMD v1**, 2 bit (4 shades) support
 - **PIN2DMD**, full RGB support
-- **Virtual DMD** on a computer monitor, renders nice dots and is useful for debugging.
+- **Virtual DMD** on a computer monitor, renders nice dots and is useful for 
+  debugging.
+- You can also stream the DMD to a browser in your LAN, because, why not!
 
 ## Features
 
-The primary goal of this project was to add support real DMDs for games that
+The primary goal of this project was to add support for real DMDs for games that
 don't provide support out of the box. Supported games are:
 
 - **Pinball FX2/3** through frame grabbing from screen 
@@ -30,14 +34,8 @@ The command line tool can also display image files on the DMD device and render
 frames to bitmap files. Many features like this are described in the command 
 line options below, so have a close look at those as well.
 
-With v1.7, DMD Extensions also supports dynamic DMD coloring previously only
-available for PIN2DMD displays.
-
-### Colors
-
-If you have an RGB display, you can override the color tone in which the output
-is rendered. Note that this only works for non-colored games. Use the `--color`
-parameter for that.
+Since v1.7, DMD Extensions also support dynamic DMD coloring previously only
+available for PIN2DMD displays (both side-channel and VNI).
 
 ## Install Instructions
 
@@ -46,6 +44,17 @@ parameter for that.
    and unblock the `.exe` file (right-click, properties, unblock).
 2. Download and install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
 3. If you haven't already, download and install the [.NET Framework 4.5.2](https://www.microsoft.com/en-us/download/details.aspx?id=42643).
+
+If you want to use DMD Extensions with VisualPinMAME:
+
+1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your 
+   VPM folder (usually at `Visual Pinball\VPinMAME`).
+2. Run the VPM setup
+3. Click on *Test*, select the game and click on *Game Options*.
+4. Enable *Use External DMD* and optionally disable *Show DMD*.
+
+You can also set this as the default by selecting *Default Options* in the VPM
+setup, however note that games that you've already configured won't be affected.
 
 ### Test
 
@@ -63,7 +72,8 @@ You should see a test image on your DMD as well as on a virtual DMD.
 3. Move the DMD to somewhere hidden like off-screen or behind the playfield
    (usually at `0`/`0`).
 4. Open a command prompt ([Windows]+[R], `cmd`, [enter])
-5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter] (or `pinballfx3` for FX3)
+5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter] (or 
+   `pinballfx3` for FX3)
 6. Start Pinball FX2/3
 
 For further tweaking, see options below.
@@ -73,10 +83,12 @@ For further tweaking, see options below.
 For TPA we're pulling frames off the DMD texture from TPA's memory. Thus, you
 must be running the tool as administrator.
 
-1. Open an administrator command prompt ([Windows], type `cmd`, right-click on `cmd.exe`, click on "Run as administrator")
+1. Open an administrator command prompt ([Windows], type `cmd`, right-click on 
+   `cmd.exe`, click on "Run as administrator")
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
 3. Start the DX11 version of The Pinball Arcade.
-4. Select and **start** a game (*only then* it starts mirroring, during attract mode it doesn't, even though TPA does display the DMD).
+4. Select and **start** a game (*only then* it starts mirroring, during attract
+   mode it doesn't, even though TPA does display the DMD).
 
 Currently re-running `dmdext` while TPA is running doesn't work and will be 
 addressed soon.
@@ -94,22 +106,21 @@ In version 1.2.1, Barnstorm Games added support for external hardware through
 a message queue. To get it running, do the following:
 
 1. Make sure you have `dmdext.exe` in your `PATH`
-2. Copy `ProPinballSlave.bat` to the Pro Pinball installation folder (usually at `%PROGRAMFILES(X86)%\Steam\SteamLibrary\steamapps\common\Pro Pinball Ultra`)
-3. Add the following command line parameters when launching `ProPinball.exe`: `m3 dProPinballSlave`
+2. Copy `ProPinballSlave.bat` to the Pro Pinball installation folder 
+   (usually at `%PROGRAMFILES(X86)%\Steam\SteamLibrary\steamapps\common\Pro Pinball Ultra`)
+3. Add the following command line parameters when launching `ProPinball.exe`:
+   `m3 dProPinballSlave`
 
-Note that this currently works only with the 64-bit version of Pro Pinball. 32 bit binaries will
-be provided with a later release. If you want to change the options (e.g. show the virtual DMD), 
-edit `ProPinballSlave.bat` and adopt accordingly.
+Note that this currently works only with the 64-bit version of Pro Pinball. 32
+bit binaries will be provided with a later release. If you want to change the
+options (e.g. show the virtual DMD), edit `ProPinballSlave.bat` and adopt 
+accordingly.
 
 ### Visual PinMAME
 
-VPM recently introduced the possibility of delegating DMD rendering to an external
-DLL. The main motivation is being able to ship a single build instead of having to
+VPM introduced the possibility of delegating DMD rendering to an external DLL.
+The main motivation is being able to ship a single build instead of having to
 release multiple binaries for multiple DMDs. 
-
-You can enable this by copying the included `DmdDevice.dll` to the location of
-`VPinMAME.dll`. In VPM you then need to enable *Use External DMD* and then 
-rendering should go through dmdext.
 
 If you are a PC monitor user or have a RGB display (PinDMDv3 or PIN2DMD), the
 advantage of dmdext is that Lucky1's coloring features are fully supported. You
@@ -486,15 +497,15 @@ premises for the log to be created:
    to write the log elsewhere. You can do that by editing the log config file.
    The format of the log file is XML. To change the log file location, find this line:
    
-       `<target xsi:type="File" name="file" fileName="DmdDevice.log"`
+       <target xsi:type="File" name="file" fileName="DmdDevice.log"
 
    And change the `fileName` attribute to somewhere you can write, for example:
 
-       `<target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log"`
+       <target xsi:type="File" name="file" fileName="C:\Users\youruser\DmdDevice.log"
 
 For problems with DmdDevice.dll, specially with coloring, set the log level to
 `Trace` and reproduce the problem. You can do that by editing `DmdDevice.log.config`
-and setting: 
+and changing: 
 
 ```xml
 <logger name="*" minlevel="Info" writeTo="file" />
