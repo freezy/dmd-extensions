@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DmdDevice.dll")]
 [assembly: AssemblyProduct("Universal DmdDevice.dll for Visual PinMAME")]
 [assembly: AssemblyDescription("Universal DmdDevice.dll for Visual PinMAME for all displays, inclusively frame-by-frame coloring support.")]
-[assembly: AssemblyCopyright("Copyright © 2017 freezy@vpdb.io")]
+[assembly: AssemblyCopyright("Copyright © 2018 freezy@vpdb.io")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyTrademark("")]

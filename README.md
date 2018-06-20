@@ -217,7 +217,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.6.0
+DMD Extensions v1.7.0
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -233,7 +233,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.6.0
+DMD Extensions v1.7.0
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -315,6 +315,9 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
+
+  --pinup                  If set, enable output to PinUP. The value is the
+                           name of the game.
 ```
 
 ### Media
@@ -322,7 +325,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.6.0
+DMD Extensions v1.7.0
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -376,13 +379,16 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
+
+  --pinup                  If set, enable output to PinUP. The value is the
+                           name of the game.
 ```
 ### Test
 
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.6.0
+DMD Extensions v1.7.0
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
@@ -433,6 +439,9 @@ USAGE: dmdext test [--destination=<destination>]
 
   -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
                            provided folder.
+
+  --pinup                  If set, enable output to PinUP. The value is the
+                           name of the game.
 ```
 
 ## Compatibility

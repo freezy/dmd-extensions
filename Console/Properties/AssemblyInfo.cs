@@ -11,7 +11,7 @@ using CommandLine;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DMD Extensions")]
-[assembly: AssemblyCopyright("Copyright (C) 2017 <freezy@vpdb.io>")]
+[assembly: AssemblyCopyright("Copyright (C) 2018 <freezy@vpdb.io>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyUsage("\nUSAGE: dmdext <command> [<args>]")]
