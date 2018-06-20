@@ -57,6 +57,9 @@ namespace DmdExt.Common
 		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
 		public string SaveToFile { get; set; }
 
+		[Option("enable-pinup", HelpText = "If set, enable output to PinUP. Default: false.")]
+		public bool EnablePinUp { get; set; } = false;
+
 		public enum DestinationType
 		{
 			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual
