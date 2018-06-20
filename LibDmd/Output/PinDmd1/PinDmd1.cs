@@ -60,7 +60,7 @@ namespace LibDmd.Output.PinDmd1
 
 			// if no FTDI device found, return.
 			if (ftdiDeviceCount == 0) {
-				Logger.Debug("PinDMDv1 device not found.");
+				Logger.Info("PinDMDv1 device not found.");
 				return;
 			}
 
@@ -94,7 +94,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			if (!IsAvailable) {
-				Logger.Debug("PinDMDv1 device not found.");
+				Logger.Info("PinDMDv1 device not found.");
 				return;
 			}
 

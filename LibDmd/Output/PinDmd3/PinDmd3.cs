@@ -119,7 +119,7 @@ namespace LibDmd.Output.PinDmd3
 			}
 
 			if (!IsAvailable) {
-				Logger.Debug("PinDMDv3 device not found.");
+				Logger.Info("PinDMDv3 device not found.");
 				return;
 			}
 
@@ -135,7 +135,7 @@ namespace LibDmd.Output.PinDmd3
 		{
 			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
 			try {
-				Logger.Debug("Checking port {0} for PinDMDv3...", port);
+				Logger.Info("Checking port {0} for PinDMDv3...", port);
 				_serialPort = new SerialPort(port, 8176000, Parity.None, 8, StopBits.One);
 				_serialPort.Open();
 				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
@@ -159,7 +159,7 @@ namespace LibDmd.Output.PinDmd3
 				}
 
 			} catch (Exception e) {
-				Logger.Debug("Error: {0}", e.Message.Trim());
+				Logger.Error("Error: {0}", e.Message.Trim());
 				if (_serialPort != null && _serialPort.IsOpen) {
 					_serialPort.Close();
 				}

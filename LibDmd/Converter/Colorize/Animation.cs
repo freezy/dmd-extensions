@@ -148,10 +148,10 @@ namespace LibDmd.Converter.Colorize
 			_currentRender = render;
 
 			if (NumFrames == 1) {
-				Logger.Info("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, Frames[0].Delay, Name);
+				Logger.Debug("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, Frames[0].Delay, Name);
 				_timer = AnimationDuration;
 			} else {
-				Logger.Info("[vni][{0}] Starting enhanced animation of {1} frame{2} ({3})...", SwitchMode, NumFrames, NumFrames == 1 ? "" : "s", Name);
+				Logger.Debug("[vni][{0}] Starting enhanced animation of {1} frame{2} ({3})...", SwitchMode, NumFrames, NumFrames == 1 ? "" : "s", Name);
 			}
 		}
 
@@ -170,12 +170,12 @@ namespace LibDmd.Converter.Colorize
 		private void StartReplace(Action<byte[][]> render, Action completed = null)
 		{
 			if (Frames.Length == 1) {
-				Logger.Info("[vni][{0}] Replacing one frame ({1}).", SwitchMode, Name);
+				Logger.Debug("[vni][{0}] Replacing one frame ({1}).", SwitchMode, Name);
 				render(Frames[0].PlaneData);
 				FinishIn(Frames[0].Delay, completed);
 				return;
 			}
-			Logger.Info("[vni][{0}] Starting colored gray4 animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
+			Logger.Debug("[vni][{0}] Starting colored gray4 animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_frames = Frames.ToObservable().Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)));
 			_animation = _frames
 				.Do(_ => _frameIndex++)
@@ -257,7 +257,7 @@ namespace LibDmd.Converter.Colorize
 			if (IsRunning && AddPlanes) {
 				EnhanceFrame(planes, completed);
 			} else {
-				Logger.Warn("[vni][{0}] Ignoring VPM frame (is running: {1}, add planes: {2}).", SwitchMode, IsRunning, AddPlanes);
+				Logger.Debug("[vni][{0}] Ignoring VPM frame (is running: {1}, add planes: {2}).", SwitchMode, IsRunning, AddPlanes);
 			}
 		}
 

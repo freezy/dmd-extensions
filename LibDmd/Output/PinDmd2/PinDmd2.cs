@@ -67,7 +67,7 @@ namespace LibDmd.Output.PinDmd2
 
 			// if the device is open and ready
 			if (_pinDmd2Device == null) {
-				Logger.Debug("PinDMDv2 device not found.");
+				Logger.Info("PinDMDv2 device not found.");
 				IsAvailable = false;
 				return;
 			}
@@ -81,7 +81,7 @@ namespace LibDmd.Output.PinDmd2
 				Logger.Debug("   Language ID:  {0}", _pinDmd2Device.Info.CurrentCultureLangID);
 
 			} else {
-				Logger.Debug("Device found but it's not a PinDMDv2 device ({0}).", _pinDmd2Device.Info.ProductString);
+				Logger.Info("Device found but it's not a PinDMDv2 device ({0}).", _pinDmd2Device.Info.ProductString);
 				IsAvailable = false;
 				Dispose();
 				return;

@@ -128,7 +128,7 @@ namespace LibDmd.DmdDevice
 						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 					}
 				} else {
-					Logger.Debug("No palette file found at {0}.", palPath);
+					Logger.Info("No palette file found at {0}.", palPath);
 				}
 			} else {
 				Logger.Info("Bit-convertion disabled.");

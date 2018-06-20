@@ -38,7 +38,7 @@ namespace LibDmd.Common
 
 		public static void Print()
 		{
-			Logger.Info("Profiling data:");
+			Logger.Debug("Profiling data:");
 			RootProfiles.ForEach(p => p.Print());
 		}
 
@@ -105,7 +105,7 @@ namespace LibDmd.Common
 
 		public void Print()
 		{
-			Logger.Info(this);
+			Logger.Debug(this);
 			Children.ForEach(c => c.Print());
 		}
 

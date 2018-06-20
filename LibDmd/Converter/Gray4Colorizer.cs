@@ -150,7 +150,7 @@ namespace LibDmd.Converter
 				Logger.Warn("[colorize] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
-			Logger.Info("[colorize] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
+			Logger.Debug("[colorize] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
 			SetPalette(palette, mapping.PaletteIndex);
@@ -162,7 +162,7 @@ namespace LibDmd.Converter
 					.StartWith(Unit.Default)
 					.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
 						if (_defaultPalette != null) {
-							Logger.Info("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
+							Logger.Debug("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette, _defaultPaletteIndex);
 						}
 						_paletteReset = null;
