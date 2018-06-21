@@ -56,6 +56,13 @@ If you want to use DMD Extensions with VisualPinMAME:
 You can also set this as the default by selecting *Default Options* in the VPM
 setup, however note that games that you've already configured won't be affected.
 
+### x64 vs x86
+
+- For `dmdext.exe`, take the bitness of your OS. This is important for Pro 
+  Pinball, where the bitness of the binary must be the same as dmdext's.
+- For `dmddevice.dll` you probably want the 32-bit version unless you've set up
+  VPM with `Setup64.exe` and you know what you're doing.
+
 ### Test
 
 1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
