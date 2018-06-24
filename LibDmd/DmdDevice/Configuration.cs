@@ -46,7 +46,12 @@ namespace LibDmd.DmdDevice
 			_parser = new FileIniDataParser();
 
 			try {
-				_data = File.Exists(_iniPath) ? _parser.ReadFile(_iniPath) : new IniData();
+				if (File.Exists(_iniPath)) {
+					_data = _parser.ReadFile(_iniPath);
+				} else {
+					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
+					_data = new IniData();
+				}
 			} catch (Exception e) {
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
