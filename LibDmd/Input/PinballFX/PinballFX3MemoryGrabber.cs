@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Windows.Media;
 using NLog;
 
 namespace LibDmd.Input.PinballFX
@@ -55,8 +56,9 @@ namespace LibDmd.Input.PinballFX
         private static IntPtr _pBaseAddress = IntPtr.Zero;
         private static IntPtr _dmdOffset = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
+        private static String _dmdColor = String.Empty;
 
-		private byte[] _lastFrame;
+        private byte[] _lastFrame;
 
         /// <summary>
         /// Waits for the Pinball FX3 process.
@@ -136,6 +138,10 @@ namespace LibDmd.Input.PinballFX
                 return frame;
 			}
 
+            // Retrieve DMD color from memory.
+            _dmdColor = getDMDColor((int)_handle); // Return RGB hex color value of DMD (return null value if the color cannot be retrieved). 
+            // TODO - APPLY COLOR TO THE DMD
+
             // Grab the whole raw DMD block from game's memory.
             ReadProcessMemory((int)_handle, (int)_dmdOffset, RawDMD, RawDMD.Length, 0);
 
@@ -210,6 +216,42 @@ namespace LibDmd.Input.PinballFX
             ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
             ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x34, pAddress, pAddress.Length, 0);
             return new IntPtr(BitConverter.ToInt32(pAddress, 0));
+        }
+
+        private static String getDMDColor(int processHandle)
+        {
+            // Retrieve DMD color in memory using pointers.
+            var pAddress = new byte[4];
+            var colorBytes = new byte[4];
+            ReadProcessMemory(processHandle, (int)_gameBase + (int)_pBaseAddress, pAddress, pAddress.Length, 0);
+            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
+            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x64, pAddress, pAddress.Length, 0);
+            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x184, pAddress, pAddress.Length, 0);
+            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0), colorBytes, colorBytes.Length, 0);
+            if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
+            var colorCode = BitConverter.ToInt32(colorBytes, 0);
+
+            // Switch among color codes in memory and return corresponding RGB color (hex).
+            switch (colorCode) {
+                case 0x003333FF: // Yellow
+                    return "#FFFF00";
+                case 0x330033FF: // Magenta
+                    return "#FF00FF";
+                case 0x333300FF: // Aqua
+                    return "#00FFFF";
+                case 0x113300FF: // Green
+                    return "#00FF66";
+                case 0x331111FF: // Blue
+                    return "#6666FF";
+                case 0x001133FF: // Orange
+                    return "#FF6600";
+                case 0x003311FF: // Bright Green
+                    return "#66FF00";
+                case 0x111133FF: // Salmon
+                    return "#FF6666";
+                default: // Cannot get DMD color for some reason...
+                    return null;
+            }
         }
 
         private static IntPtr getPointerBaseAddress(Process gameProc)
