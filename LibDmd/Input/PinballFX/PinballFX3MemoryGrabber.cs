@@ -12,14 +12,14 @@ using NLog;
 
 namespace LibDmd.Input.PinballFX
 {
-    /// <summary>
-    /// Polls for the Pinball FX3 process, grabs the DMD display from the memory.
-    /// </summary>
-    /// <remarks>
-    /// Can be launched any time. Will wait with sending frames until Pinball FX3 is
-    /// launched and stop sending when it exits.
-    /// </remarks>
-    public class PinballFX3MemoryGrabber : AbstractSource, IGray2Source
+	/// <summary>
+	/// Polls for the Pinball FX3 process, grabs the DMD display from the memory.
+	/// </summary>
+	/// <remarks>
+	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
+	/// launched and stop sending when it exits.
+	/// </remarks>
+	public class PinballFX3MemoryGrabber : AbstractSource, IGray2Source
 	{
 		public override string Name { get; } = "Pinball FX3";
 
@@ -27,12 +27,12 @@ namespace LibDmd.Input.PinballFX
 		public IObservable<Unit> OnPause => _onPause;
 
 		/// <summary>
-        /// Wait time between polls for the Pinball FX3 process. Stops polling as soon
-        /// as the process is found.
-        ///
-        /// Can be set quite high, just about as long as it takes for Pinball FX3 to start.
-        /// </summary>
-        public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(10);
+		/// Wait time between polls for the Pinball FX3 process. Stops polling as soon
+		/// as the process is found.
+		///
+		/// Can be set quite high, just about as long as it takes for Pinball FX3 to start.
+		/// </summary>
+		public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(10);
 
 		/// <summary>
 		/// Frequency with which frames are pulled off the memory.
@@ -52,19 +52,19 @@ namespace LibDmd.Input.PinballFX
 		private const int DMDHeight = 32;
 		private static readonly byte[] RawDMD = new byte[DMDWidth * DMDHeight];
 
-        private static readonly byte[] DMDPointerSig = new byte[] { 0x83, 0xB8, 0xE4, 0x00, 0x00, 0x00, 0x00, 0x74, 0x34, 0x8B, 0x0D, 0xFF, 0xFF, 0xFF, 0xFF, 0xE8, 0xFF, 0xFF, 0xFF, 0xFF, 0x84, 0xC0, 0x75, 0x25, 0xA1 };
-        private static IntPtr _pBaseAddress = IntPtr.Zero;
-        private static IntPtr _dmdOffset = IntPtr.Zero;
+		private static readonly byte[] DMDPointerSig = new byte[] { 0x83, 0xB8, 0xE4, 0x00, 0x00, 0x00, 0x00, 0x74, 0x34, 0x8B, 0x0D, 0xFF, 0xFF, 0xFF, 0xFF, 0xE8, 0xFF, 0xFF, 0xFF, 0xFF, 0x84, 0xC0, 0x75, 0x25, 0xA1 };
+		private static IntPtr _pBaseAddress = IntPtr.Zero;
+		private static IntPtr _dmdOffset = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
-        private static String _dmdColor = String.Empty;
+		private static String _dmdColor = String.Empty;
 
-        private byte[] _lastFrame;
+		private byte[] _lastFrame;
 
-        /// <summary>
-        /// Waits for the Pinball FX3 process.
-        /// </summary>
-        /// 
-        private void StartPolling()
+		/// <summary>
+		/// Waits for the Pinball FX3 process.
+		/// </summary>
+		/// 
+		private void StartPolling()
 		{
 			var curIdentity = WindowsIdentity.GetCurrent();
 			var myPrincipal = new WindowsPrincipal(curIdentity);
@@ -96,11 +96,11 @@ namespace LibDmd.Input.PinballFX
 			_onResume.OnNext(Unit.Default);
 		}
 
-        /// <summary>
-        /// Stops sending frames because we couldn't aquire the game handle anymore,
-        /// usually because Pinball FX3 was closed.
-        /// </summary>
-        private void StopCapturing()
+		/// <summary>
+		/// Stops sending frames because we couldn't aquire the game handle anymore,
+		/// usually because Pinball FX3 was closed.
+		/// </summary>
+		private void StopCapturing()
 		{
 			// TODO send blank frame
 			_capturer.Dispose();
@@ -129,26 +129,25 @@ namespace LibDmd.Input.PinballFX
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
-            // Check if a table is loaded... and retrieve DMD offset in memory.
-            _dmdOffset = getDMDOffset((int)_handle);
+			// Check if a table is loaded... and retrieve DMD offset in memory.
+			_dmdOffset = GetDMDOffset((int)_handle);
 
-            // ..if not, return an empty frame (blank DMD).
-            if (_dmdOffset == IntPtr.Zero)
-            {
-                return frame;
+			// ..if not, return an empty frame (blank DMD).
+			if (_dmdOffset == IntPtr.Zero) {
+				return frame;
 			}
 
-            // Retrieve DMD color from memory.
-            _dmdColor = getDMDColor((int)_handle); // Return RGB hex color value of DMD (return null value if the color cannot be retrieved). 
-            // TODO - APPLY COLOR TO THE DMD
+			// Retrieve DMD color from memory.
+			_dmdColor = GetDMDColor((int)_handle); // Return RGB hex color value of DMD (return null value if the color cannot be retrieved). 
+												   // TODO - APPLY COLOR TO THE DMD
 
-            // Grab the whole raw DMD block from game's memory.
-            ReadProcessMemory((int)_handle, (int)_dmdOffset, RawDMD, RawDMD.Length, 0);
+			// Grab the whole raw DMD block from game's memory.
+			ReadProcessMemory((int)_handle, (int)_dmdOffset, RawDMD, RawDMD.Length, 0);
 
-            // Used to parse pixel bytes of the DMD memory block.
-            var rawPixelIndex = 0;
+			// Used to parse pixel bytes of the DMD memory block.
+			var rawPixelIndex = 0;
 
-            var identical = true;
+			var identical = true;
 
 			// For each pixel on Y axis.
 			for (var dmdY = 0; dmdY < DMDHeight; dmdY++) {
@@ -156,14 +155,14 @@ namespace LibDmd.Input.PinballFX
 				// For each pixel on X axis.
 				for (var dmdX = 0; dmdX < DMDWidth; dmdX++) {
 
-                    var pos = dmdY * DMDWidth + dmdX;
+					var pos = dmdY * DMDWidth + dmdX;
 
-                    var pixelByte = RawDMD[rawPixelIndex];
+					var pixelByte = RawDMD[rawPixelIndex];
 
-                    // drop garbage frames
-                    if (pixelByte > 3) {
-                        return null;
-                    }
+					// drop garbage frames
+					if (pixelByte > 3) {
+						return null;
+					}
 
 					// Pinball FX doesn't seem to have more than pixels between 0-2, so make the shade 3 lighter.
 					if (pixelByte == 2) {
@@ -171,7 +170,7 @@ namespace LibDmd.Input.PinballFX
 					}
 
 					// set pixel
-                    frame[pos] = Math.Max((byte) 0, Math.Min((byte) 3, pixelByte));
+					frame[pos] = Math.Max((byte)0, Math.Min((byte)3, pixelByte));
 
 					// check for identical frame
 					if (identical && (_lastFrame == null || _lastFrame[pos] == frame[pos])) {
@@ -184,9 +183,9 @@ namespace LibDmd.Input.PinballFX
 			}
 			_lastFrame = frame;
 
-            // Return the DMD bitmap we've created or null if frame was identical to previous.
-            return identical ? null : frame;
-        }
+			// Return the DMD bitmap we've created or null if frame was identical to previous.
+			return identical ? null : frame;
+		}
 
 		// Check if the game is started and return its process handle.
 		private static IntPtr FindGameHandle()
@@ -194,10 +193,10 @@ namespace LibDmd.Input.PinballFX
 			var processList = Process.GetProcesses();
 			foreach (var p in processList) {
 				if (p.ProcessName == "Pinball FX3") {
-                    // When the process is found, retrieve DMD pointer base address and return process handle.
-                    return getPointerBaseAddress(p); // This func returns process handle.
-                }
-            }
+					// When the process is found, retrieve DMD pointer base address and return process handle.
+					return GetPointerBaseAddress(p); // This func returns process handle.
+				}
+			}
 			return IntPtr.Zero;
 		}
 
@@ -208,112 +207,108 @@ namespace LibDmd.Input.PinballFX
 			return procMod.BaseAddress;
 		}
 
-        private static IntPtr getDMDOffset(int processHandle)
-        {
-            // Retrieve DMD offset in memory using pointers.
-            var pAddress = new byte[4];
-            ReadProcessMemory(processHandle, (int)_gameBase + (int)_pBaseAddress, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x34, pAddress, pAddress.Length, 0);
-            return new IntPtr(BitConverter.ToInt32(pAddress, 0));
-        }
+		private static IntPtr GetDMDOffset(int processHandle)
+		{
+			// Retrieve DMD offset in memory using pointers.
+			var pAddress = new byte[4];
+			ReadProcessMemory(processHandle, (int)_gameBase + (int)_pBaseAddress, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x34, pAddress, pAddress.Length, 0);
+			return new IntPtr(BitConverter.ToInt32(pAddress, 0));
+		}
 
-        private static String getDMDColor(int processHandle)
-        {
-            // Retrieve DMD color in memory using pointers.
-            var pAddress = new byte[4];
-            var colorBytes = new byte[4];
-            ReadProcessMemory(processHandle, (int)_gameBase + (int)_pBaseAddress, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x64, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x184, pAddress, pAddress.Length, 0);
-            ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0), colorBytes, colorBytes.Length, 0);
-            if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
-            var colorCode = BitConverter.ToInt32(colorBytes, 0);
+		private static string GetDMDColor(int processHandle)
+		{
+			// Retrieve DMD color in memory using pointers.
+			var pAddress = new byte[4];
+			var colorBytes = new byte[4];
+			ReadProcessMemory(processHandle, (int)_gameBase + (int)_pBaseAddress, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0xE8, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x64, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0) + 0x184, pAddress, pAddress.Length, 0);
+			ReadProcessMemory(processHandle, BitConverter.ToInt32(pAddress, 0), colorBytes, colorBytes.Length, 0);
+			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
+			var colorCode = BitConverter.ToInt32(colorBytes, 0);
 
-            // Switch among color codes in memory and return corresponding RGB color (hex).
-            switch (colorCode) {
-                case 0x003333FF: // Yellow
-                    return "#FFFF00";
-                case 0x330033FF: // Magenta
-                    return "#FF00FF";
-                case 0x333300FF: // Aqua
-                    return "#00FFFF";
-                case 0x113300FF: // Green
-                    return "#00FF66";
-                case 0x331111FF: // Blue
-                    return "#6666FF";
-                case 0x001133FF: // Orange
-                    return "#FF6600";
-                case 0x003311FF: // Bright Green
-                    return "#66FF00";
-                case 0x111133FF: // Salmon
-                    return "#FF6666";
-                default: // Cannot get DMD color for some reason...
-                    return null;
-            }
-        }
+			// Switch among color codes in memory and return corresponding RGB color (hex).
+			switch (colorCode) {
+				case 0x003333FF: // Yellow
+					return "#FFFF00";
+				case 0x330033FF: // Magenta
+					return "#FF00FF";
+				case 0x333300FF: // Aqua
+					return "#00FFFF";
+				case 0x113300FF: // Green
+					return "#00FF66";
+				case 0x331111FF: // Blue
+					return "#6666FF";
+				case 0x001133FF: // Orange
+					return "#FF6600";
+				case 0x003311FF: // Bright Green
+					return "#66FF00";
+				case 0x111133FF: // Salmon
+					return "#FF6666";
+				default: // Cannot get DMD color for some reason...
+					return null;
+			}
+		}
 
-        private static IntPtr getPointerBaseAddress(Process gameProc)
-        {
-            // Get game process base address.
-            _gameBase = BaseAddress(gameProc);
-            
-            // Read access rights to the process.
-            const int PROCESS_VM_READ = 0x0010;
+		private static IntPtr GetPointerBaseAddress(Process gameProc)
+		{
+			// Get game process base address.
+			_gameBase = BaseAddress(gameProc);
 
-            // Open the process to allow memory operations.
-            var processHandle = OpenProcess(PROCESS_VM_READ, false, gameProc.Id);
+			// Read access rights to the process.
+			const int PROCESS_VM_READ = 0x0010;
 
-            // Find DMD pointer base address offset in memory with its signature pattern.
-            IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), 0xFFFFFF, DMDPointerSig, 25);
-            var OffsetBytes = new byte[4];
-            ReadProcessMemory((int)gameProc.Handle, (int)baseOffset, OffsetBytes, OffsetBytes.Length, 0);
-            _pBaseAddress = new IntPtr(BitConverter.ToInt32(OffsetBytes, 0) - (int)_gameBase);
+			// Open the process to allow memory operations.
+			var processHandle = OpenProcess(PROCESS_VM_READ, false, gameProc.Id);
 
-            // Return game's process handle.
-            return processHandle;
-        }
+			// Find DMD pointer base address offset in memory with its signature pattern.
+			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), 0xFFFFFF, DMDPointerSig, 25);
+			var offsetBytes = new byte[4];
+			ReadProcessMemory((int)gameProc.Handle, (int)baseOffset, offsetBytes, offsetBytes.Length, 0);
+			_pBaseAddress = new IntPtr(BitConverter.ToInt32(offsetBytes, 0) - (int)_gameBase);
 
-        // Function to search byte pattern in process memory then return its offset.
-        private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int Offset)
-        {
-            // Create a byte array to store memory region.
-            var memoryRegion = new byte[size];
+			// Return game's process handle.
+			return processHandle;
+		}
 
-            // Dump process memory into the array. 
-            ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
+		// Function to search byte pattern in process memory then return its offset.
+		private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int offset)
+		{
+			// Create a byte array to store memory region.
+			var memoryRegion = new byte[size];
 
-            // Loop into dumped memory region to find the pattern.
-            for (var x = 0; x < memoryRegion.Length; x++)
-            {
+			// Dump process memory into the array. 
+			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
 
-                // If we find the first pattern's byte in memory, loop through the entire array.
-                for (var y = 0; y < bytePattern.Length; y++)
-                {
+			// Loop into dumped memory region to find the pattern.
+			for (var x = 0; x < memoryRegion.Length; x++) {
 
-                    // If pattern byte is 0xFF, this is a joker, continue pattern loop.
-                    if (bytePattern[y] == 0xFF)
-                    {
-                        continue;
-                    }
-                    // If pattern byte is different than memory byte, we're not at the right place, back to the memory region loop...
-                    if (bytePattern[y] != memoryRegion[x + y])
-                    {
-                        break;
-                    }
-                    // We've reached the end of the pattern array, we've found the offset.
-                    if (y == bytePattern.Length - 1)
-                        return new IntPtr(gameBase + Offset + x); // Return the offset.
-                }
-            }
-            // We've reached the end of memory region, offset not found.
-            return IntPtr.Zero;
-        }
+				// If we find the first pattern's byte in memory, loop through the entire array.
+				for (var y = 0; y < bytePattern.Length; y++) {
 
-        #region Dll Imports
+					// If pattern byte is 0xFF, this is a joker, continue pattern loop.
+					if (bytePattern[y] == 0xFF) {
+						continue;
+					}
+					// If pattern byte is different than memory byte, we're not at the right place, back to the memory region loop...
+					if (bytePattern[y] != memoryRegion[x + y]) {
+						break;
+					}
+					// We've reached the end of the pattern array, we've found the offset.
+					if (y == bytePattern.Length - 1)
+						return new IntPtr(gameBase + offset + x); // Return the offset.
+				}
+			}
+			// We've reached the end of memory region, offset not found.
+			return IntPtr.Zero;
+		}
 
-        [DllImport("kernel32.dll")]
+		#region Dll Imports
+
+		[DllImport("kernel32.dll")]
 		public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
 
 		[DllImport("kernel32.dll")]
