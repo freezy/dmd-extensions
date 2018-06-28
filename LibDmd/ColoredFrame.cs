@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using LibDmd.Common;
 
 namespace LibDmd
 {
@@ -36,6 +37,12 @@ namespace LibDmd
 			Planes = planes;
 			Palette = palette;
 			PaletteIndex = -1;
+		}
+
+		public ColoredFrame(int width, int height, byte[] frame, Color color)
+		{
+			Planes = FrameUtil.Split(width, height, 2, frame);
+			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
 		}
 	}
 }

@@ -42,7 +42,7 @@ namespace DmdExt.Mirror
 				}
 
 				case SourceType.PinballFX3: {
-					_graph.Source = new PinballFX3Grabber() { FramesPerSecond = _options.FramesPerSecond };
+					_graph.Source = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
 					break;
 				}
 

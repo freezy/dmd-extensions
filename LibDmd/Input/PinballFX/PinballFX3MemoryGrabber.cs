@@ -19,7 +19,7 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3MemoryGrabber : AbstractSource, IGray2Source
+	public class PinballFX3MemoryGrabber : AbstractSource, IColoredGray2Source
 	{
 		public override string Name { get; } = "Pinball FX3";
 
@@ -39,7 +39,7 @@ namespace LibDmd.Input.PinballFX
 		/// </summary>
 		public double FramesPerSecond { get; set; } = 60;
 
-		private IConnectableObservable<byte[]> _framesGray2;
+		private IConnectableObservable<ColoredFrame> _framesColoredGray2;
 		private IDisposable _capturer;
 		private IntPtr _handle;
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
@@ -56,7 +56,7 @@ namespace LibDmd.Input.PinballFX
 		private static IntPtr _pBaseAddress = IntPtr.Zero;
 		private static IntPtr _dmdOffset = IntPtr.Zero;
 		private static IntPtr _gameBase = IntPtr.Zero;
-		private static String _dmdColor = String.Empty;
+		private static Color _dmdColor = Colors.OrangeRed;
 
 		private byte[] _lastFrame;
 
@@ -92,7 +92,7 @@ namespace LibDmd.Input.PinballFX
 		private void StartCapturing()
 		{
 			Logger.Info($"Reading DMD data from Pinball FX3's memory at {FramesPerSecond} fps...");
-			_capturer = _framesGray2.Connect();
+			_capturer = _framesColoredGray2.Connect();
 			_onResume.OnNext(Unit.Default);
 		}
 
@@ -108,23 +108,24 @@ namespace LibDmd.Input.PinballFX
 			StartPolling();
 		}
 
-		public IObservable<byte[]> GetGray2Frames()
+		public IObservable<ColoredFrame> GetColoredGray2Frames()
 		{
-			if (_framesGray2 != null)
-			{
-				return _framesGray2;
+			if (_framesColoredGray2!= null) {
+				return _framesColoredGray2;
 			}
-			_framesGray2 = Observable
+			_framesColoredGray2 = Observable
 				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
 				.Select(x => CaptureDMD())
 				.Where(frame => frame != null)
 				.Publish();
 
 			StartPolling();
-			return _framesGray2;
+			return _framesColoredGray2;
+
 		}
-		
-		public byte[] CaptureDMD()
+
+
+		public ColoredFrame CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
@@ -134,7 +135,7 @@ namespace LibDmd.Input.PinballFX
 
 			// ..if not, return an empty frame (blank DMD).
 			if (_dmdOffset == IntPtr.Zero) {
-				return frame;
+				return new ColoredFrame(128, 32, frame, Color.FromRgb(0, 0, 0));
 			}
 
 			// Retrieve DMD color from memory.
@@ -184,7 +185,7 @@ namespace LibDmd.Input.PinballFX
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : frame;
+			return identical ? null : new ColoredFrame(128, 32, frame, _dmdColor);
 		}
 
 		// Check if the game is started and return its process handle.
@@ -217,7 +218,7 @@ namespace LibDmd.Input.PinballFX
 			return new IntPtr(BitConverter.ToInt32(pAddress, 0));
 		}
 
-		private static string GetDMDColor(int processHandle)
+		private static Color GetDMDColor(int processHandle)
 		{
 			// Retrieve DMD color in memory using pointers.
 			var pAddress = new byte[4];
@@ -233,23 +234,23 @@ namespace LibDmd.Input.PinballFX
 			// Switch among color codes in memory and return corresponding RGB color (hex).
 			switch (colorCode) {
 				case 0x003333FF: // Yellow
-					return "#FFFF00";
+					return Color.FromRgb(0xff, 0xff, 0);
 				case 0x330033FF: // Magenta
-					return "#FF00FF";
+					return Color.FromRgb(0xff, 0x00, 0xff);
 				case 0x333300FF: // Aqua
-					return "#00FFFF";
+					return Color.FromRgb(0x00, 0xff, 0xff);
 				case 0x113300FF: // Green
-					return "#00FF66";
+					return Color.FromRgb(0x00, 0xff, 0x66);
 				case 0x331111FF: // Blue
-					return "#6666FF";
+					return Color.FromRgb(0x66, 0x66, 0xff);
 				case 0x001133FF: // Orange
-					return "#FF6600";
+					return Color.FromRgb(0xff, 0x66, 0x00);
 				case 0x003311FF: // Bright Green
-					return "#66FF00";
+					return Color.FromRgb(0x66, 0xff, 0x00);
 				case 0x111133FF: // Salmon
-					return "#FF6666";
+					return Color.FromRgb(0xff, 0x66, 0x66);
 				default: // Cannot get DMD color for some reason...
-					return null;
+					return Colors.OrangeRed;
 			}
 		}
 
