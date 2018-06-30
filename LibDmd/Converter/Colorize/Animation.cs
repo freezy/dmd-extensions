@@ -82,10 +82,20 @@ namespace LibDmd.Converter.Colorize
 		/// </summary>
 		public bool IsRunning { get; private set; }
 
+		/// <summary>
+		/// Set by matching routine if follow mask is found
+		/// </summary>
+		public bool FoundFollowMatch { get; set; }
+
+		/// <summary>
+		/// Current frame's following mask
+		/// </summary>
+		public byte[] FollowMask { get; private set; }
+
 		private IObservable<AnimationFrame> _frames;
 		private Action<byte[][]> _currentRender;
 		private int _lastTick;
-		private uint _timer;
+		private int _timer;
 		private IDisposable _animation;
 		private IDisposable _terminator;
 
@@ -145,11 +155,14 @@ namespace LibDmd.Converter.Colorize
 		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
 		private void StartEnhance(Action<byte[][]> render)
 		{
+			_lastTick = Environment.TickCount;
+			_timer = 0;
 			_currentRender = render;
+			InitializeFrame();
 
 			if (NumFrames == 1) {
-				Logger.Debug("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, Frames[0].Delay, Name);
-				_timer = AnimationDuration;
+				Logger.Debug("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, AnimationDuration, Name);
+				_timer = (int)AnimationDuration;
 			} else {
 				Logger.Debug("[vni][{0}] Starting enhanced animation of {1} frame{2} ({3})...", SwitchMode, NumFrames, NumFrames == 1 ? "" : "s", Name);
 			}
@@ -191,13 +204,9 @@ namespace LibDmd.Converter.Colorize
 		private void EnhanceFrame(byte[][] vpmFrame, Action completed = null)
 		{
 			var delay = Environment.TickCount - _lastTick;
+			_lastTick = Environment.TickCount;
 
-			if (_timer > (uint)delay) {
-				_timer -= (uint)delay;
-			} else {
-				_timer = 0;
-			}
-
+			_timer -= delay;
 			if (_frameIndex >= NumFrames) {
 				Logger.Error("[vni][{0}] No more frames in animation ({1}).", SwitchMode, NumFrames);
 				return;
@@ -215,16 +224,27 @@ namespace LibDmd.Converter.Colorize
 				_currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3] });
 			}
 
-			_lastTick = Environment.TickCount;
-
-			if (NumFrames == 1 && _timer != 0) {
-				return;
+			if (_timer <= 0 || (SwitchMode == SwitchMode.Follow && FoundFollowMatch))
+			{
+				_frameIndex++;
+				if (_frameIndex == NumFrames)
+				{
+					Stop("finished");
+					completed?.Invoke();
+				}
+				else
+				{
+					InitializeFrame();
+				}
 			}
-			_frameIndex++;
+		}
 
-			if (_frameIndex == NumFrames) {
-				Stop("finished");
-				completed?.Invoke();
+		private void InitializeFrame()
+		{
+			_timer += (int)Frames[_frameIndex].Delay;
+			if (SwitchMode == SwitchMode.Follow)
+			{
+				FollowMask = Frames[_frameIndex].Mask;
 			}
 		}
 

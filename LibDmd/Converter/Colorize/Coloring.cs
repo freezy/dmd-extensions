@@ -90,7 +90,7 @@ namespace LibDmd.Converter.Colorize
 			if (numMasks > 0) {
 				int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
 
-				if (maskBytes != 512 && maskBytes != 1536) {
+				if (maskBytes != 256 && maskBytes != 512 && maskBytes != 1536) {
 					Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
 					Masks = new byte[0][];
 					reader.Close();

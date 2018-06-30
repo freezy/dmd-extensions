@@ -24,10 +24,6 @@ namespace LibDmd.Input.PinMame
 
 		public void NextFrame(int width, int height, byte[] frame)
 		{
-			if (_lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
-				// identical frame, skip.
-				return;
-			}
 			if (_lastFrame?.Length != frame.Length) {
 				_lastFrame = new byte[frame.Length];
 			}
