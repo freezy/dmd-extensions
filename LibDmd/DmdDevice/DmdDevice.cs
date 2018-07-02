@@ -51,6 +51,7 @@ namespace LibDmd.DmdDevice
 
 		// Iifärbigsziig
 		private Color[] _palette;
+		byte[] _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
@@ -489,9 +490,23 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			_gray2Colorizer?.SetDimensions(width, height);
-			_gray4Colorizer?.SetDimensions(width, height);
-			_vpmGray2Source.NextFrame(width, height, frame);
+			if (_gray2Colorizer != null && width == 128 && height == 16 && _gray2Colorizer.Has512ByteMask)
+			{
+				// Pin2DMD colorization may have 512 byte masks with a 128x16 source, 
+				// indicating this should be upsized and treated as a centered 128x32 DMD.
+				height *= 2;
+				_gray2Colorizer.SetDimensions(width, height);
+				if (_upsizedFrame == null)
+					_upsizedFrame = new byte[width * height];
+				Buffer.BlockCopy(frame, 0, _upsizedFrame, 8*width, frame.Length);
+				_vpmGray2Source.NextFrame(width, height, _upsizedFrame);
+			}
+			else
+			{
+				_gray2Colorizer?.SetDimensions(width, height);
+				_gray4Colorizer?.SetDimensions(width, height);
+				_vpmGray2Source.NextFrame(width, height, frame);
+			}
 		}
 
 		public void RenderGray4(int width, int height, byte[] frame)
