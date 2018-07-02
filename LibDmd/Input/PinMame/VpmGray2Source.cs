@@ -22,16 +22,11 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<byte[]> _framesGray2 = new Subject<byte[]>();
-		private byte[] _lastFrame;
-
+		
 		public void NextFrame(int width, int height, byte[] frame)
 		{
-			if (_lastFrame?.Length != frame.Length) {
-				_lastFrame = new byte[frame.Length];
-			}
 			SetDimensions(width, height);
 			_framesGray2.OnNext(frame);
-			Buffer.BlockCopy(frame, 0, _lastFrame, 0, frame.Length);
 		}
 
 		public IObservable<byte[]> GetGray2Frames()
