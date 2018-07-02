@@ -490,7 +490,7 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			if (_gray2Colorizer != null && width == 128 && height == 16 && _gray2Colorizer.Has512ByteMask)
+			if (_gray2Colorizer != null && width == 128 && height == 16 && _gray2Colorizer.Has128x32Animation)
 			{
 				// Pin2DMD colorization may have 512 byte masks with a 128x16 source, 
 				// indicating this should be upsized and treated as a centered 128x32 DMD.

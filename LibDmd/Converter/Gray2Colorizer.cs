@@ -18,7 +18,7 @@ namespace LibDmd.Converter
 		public FrameFormat From { get; } = FrameFormat.Gray2;
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
-		public bool Has512ByteMask { get; set; }
+		public bool Has128x32Animation { get; set; }
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
 
@@ -70,7 +70,7 @@ namespace LibDmd.Converter
 		{
 			_coloring = coloring;
 			_animations = animations;
-			Has512ByteMask = (_coloring.Masks != null && _coloring.Masks.Length >= 1 && _coloring.Masks[0].Length == 512);
+			Has128x32Animation = (_coloring.Masks != null && _coloring.Masks.Length >= 1 && _coloring.Masks[0].Length == 512);
 			SetPalette(coloring.DefaultPalette, coloring.DefaultPaletteIndex, true);
 		}
 
