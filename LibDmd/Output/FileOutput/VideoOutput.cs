@@ -11,12 +11,13 @@ using SharpAvi.Output;
 
 namespace LibDmd.Output.FileOutput
 {
-	public class VideoOutput : IRgb24Destination
+	public class VideoOutput : IRgb24Destination, IFixedSizeDestination
 	{
 		public string VideoPath { get; set; }
 
-		public readonly int Width = 128;
-		public readonly int Height = 32;
+		public int DmdWidth { get; } = 128;
+		public int DmdHeight { get; } = 32;
+
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
 		public bool IsAvailable { get; } = true;
@@ -46,7 +47,7 @@ namespace LibDmd.Output.FileOutput
 			};
 
 			try {
-				_stream = _writer.AddMpeg4VideoStream(Width, Height, Fps,
+				_stream = _writer.AddMpeg4VideoStream(DmdWidth, DmdHeight, Fps,
 					quality: 100, 
 					codec: KnownFourCCs.Codecs.X264, 
 					forceSingleThreadedAccess: true
@@ -59,7 +60,7 @@ namespace LibDmd.Output.FileOutput
 
 			try {
 				if (_stream == null) {
-					_stream = _writer.AddMotionJpegVideoStream(Width, Height,
+					_stream = _writer.AddMotionJpegVideoStream(DmdWidth, DmdHeight,
 						quality: 100
 					);
 				}
@@ -95,9 +96,9 @@ namespace LibDmd.Output.FileOutput
 				return;
 			}
 			if (_frame == null) {
-				_frame = new byte[Width * Height * 4];
+				_frame = new byte[DmdWidth * DmdHeight * 4];
 			}
-			ImageUtil.ConvertRgb24ToBgr32(Width, Height, frame, _frame);
+			ImageUtil.ConvertRgb24ToBgr32(DmdWidth, DmdHeight, frame, _frame);
 		}
 
 		public void SetColor(Color color)
