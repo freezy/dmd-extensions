@@ -41,6 +41,8 @@ namespace LibDmd.Output.PinDmd3
 		private readonly byte[] _frameBufferRgb24;
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
+		private bool _lastFrameFailed = false;
+
 		//private readonly byte[] _lastBuffer;
 		//private long _lastTick;
 
@@ -224,7 +226,17 @@ namespace LibDmd.Output.PinDmd3
 		{
 			//var start = DateTime.Now.Ticks;
 			//var lastFrame = start - _lastTick;
-			_serialPort.Write(data, 0, data.Length);
+			try {
+				_serialPort.Write(data, 0, data.Length);
+				_lastFrameFailed = false;
+
+			} catch (Exception e) {
+				if (!_lastFrameFailed) {
+					Logger.Error("Error writing to serial port: {0}", e.Message);
+					_lastFrameFailed = true;
+				}
+			}
+
 			/*var ticks = DateTime.Now.Ticks - start;
 			var seconds = (double)ticks / TimeSpan.TicksPerSecond;
 			Logger.Debug("{0}ms for {1} bytes ({2} baud), {3}ms ({4} fps)", 
