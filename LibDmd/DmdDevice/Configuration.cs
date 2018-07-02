@@ -11,6 +11,7 @@ namespace LibDmd.DmdDevice
 {
 	public class Configuration
 	{
+		public static readonly string EnvConfig = "DMDDEVICE_CONFIG";
 		public readonly GlobalConfig Global;
 		public readonly VirtualDmdConfig VirtualDmd;
 		public readonly PinDmd1Config PinDmd1;
@@ -41,13 +42,19 @@ namespace LibDmd.DmdDevice
 
 		public Configuration()
 		{
-			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-			_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
+			if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
+				_iniPath = Environment.GetEnvironmentVariable(EnvConfig);
+
+			} else {
+				var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+				_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
+			}
 			_parser = new FileIniDataParser();
 
 			try {
 				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);
+					Logger.Info("Successfully loaded config from {0}.", _iniPath);
 				} else {
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
 					_data = new IniData();

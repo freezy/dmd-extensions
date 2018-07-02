@@ -162,7 +162,10 @@ can set this up as you would for a PIN2DMD:
 
 Since `DmdDevice.dll` is called by VPM, we can't pass any configuration 
 parameters to it. Instead, we use `DmdDevice.ini` which must be located
-in the same folder as `VPinMAME.dll`. The options are described by block below.
+in the same folder as `VPinMAME.dll` or at the path where the `DMDDEVICE_CONFIG`
+environment variable is pointing to.
+
+The options are described by block below.
 
 - `[global]` - Global options that are applied to all display types
   - `resize`- How to downscale SEGA 192x64 pixel games to smaller displays. Can 
