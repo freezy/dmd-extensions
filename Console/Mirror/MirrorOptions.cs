@@ -36,6 +36,9 @@ namespace DmdExt.Mirror
 		[Option("propinball-args", HelpText = "[propinball] Arguments send from the Pro Pinball master process. Usually something like: \"ndmd w0_0_0_0_w m392\". Will be set autmatically when called through Pro Pinball.")]
 		public string ProPinballArgs { get; set; } = "ndmd w0_0_0_0_w m392";
 
+		[Option("fx3-legacy", HelpText = "[pinballfx3] If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2. Default: false.")]
+		public bool Fx3GrabScreen { get; set; } = false;
+
 		[ParserState]
 		public IParserState LastParserState { get; set; }
 	}

@@ -70,7 +70,7 @@ setup, however note that games that you've already configured won't be affected.
 
 You should see a test image on your DMD as well as on a virtual DMD.
 
-### Pinball FX2/3
+### Pinball FX2
 
 1. Enable cabinet options in Pinball FX2
 2. Resize the DMD to:
@@ -84,6 +84,24 @@ You should see a test image on your DMD as well as on a virtual DMD.
 6. Start Pinball FX2/3
 
 For further tweaking, see options below.
+
+### Pinball FX3
+
+Per default, the DMD of Pinball FX3 is retrieved from the process' memory. For
+this reason, `dmdext` must be run as Administrator.
+
+1. Open an administrator command prompt ([Windows], type `cmd`, right-click on 
+   `cmd.exe`, click on "Run as administrator")
+2. Type `dmdext mirror --source=pinballfx3 --no-virtual` [enter]
+3. Start Pinball FX3 and play a game.
+
+It doesn't matter whether Pinball FX3 is started before or after `dmdext`, and
+it works with or without cabinet mode.
+
+Note that while the current memory grabber code should also work for future 
+Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
+`dmdext`, you should still be able to fall back to the screen grabber that is
+used by Pinball FX2 by using the `--fx3-legacy` flag.
 
 ### The Pinball Arcade
 
@@ -543,7 +561,7 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 
 ## Credits
 
-- NoEx for the excellent TPA grabber code.
+- NoEx for the excellent TPA grabber code, as well as the Pinball FX3 memory grabber.
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
 - Lucky1 for instructions and details about the coloring feature
 - DJRobX for helping with the dynamic coloring, better performance and much more.
