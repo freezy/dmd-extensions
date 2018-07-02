@@ -88,6 +88,7 @@ namespace LibDmd.Output.FileOutput
 		{
 			_animation.Dispose();
 			_writer.Close();
+			_stream = null;
 		}
 
 		public void RenderRgb24(byte[] frame)
