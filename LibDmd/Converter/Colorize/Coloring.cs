@@ -37,6 +37,7 @@ namespace LibDmd.Converter.Colorize
 			var reader = new BinaryReader(fs);
 
 			Mappings = null;
+			Masks = null;
 			Filename = filename;
 			Version = reader.ReadByte();
 			Logger.Trace("PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
@@ -56,7 +57,6 @@ namespace LibDmd.Converter.Colorize
 			}
 
 			if (reader.BaseStream.Position == reader.BaseStream.Length) {
-				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
@@ -65,7 +65,6 @@ namespace LibDmd.Converter.Colorize
 			Logger.Trace("PAL[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
 			if (reader.BaseStream.Length - reader.BaseStream.Position < Mapping.Length * numMappings) {
 				Logger.Warn("[{1}] Missing {0} bytes for {1} masks, ignoring.", Mapping.Length * numMappings - reader.BaseStream.Length + reader.BaseStream.Position, numMappings);
-				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
@@ -80,7 +79,6 @@ namespace LibDmd.Converter.Colorize
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
 					Logger.Warn("PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
 				}
-				Masks = new byte[0][];
 				reader.Close();
 				return;
 			}
@@ -92,7 +90,6 @@ namespace LibDmd.Converter.Colorize
 
 				if (maskBytes != 256 && maskBytes != 512 && maskBytes != 1536) {
 					Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
-					Masks = new byte[0][];
 					reader.Close();
 					return;
 				}

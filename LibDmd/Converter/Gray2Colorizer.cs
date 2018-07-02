@@ -70,7 +70,7 @@ namespace LibDmd.Converter
 		{
 			_coloring = coloring;
 			_animations = animations;
-			Has512ByteMask = (_coloring.Mappings != null && _coloring.Masks[0].Length == 512);
+			Has512ByteMask = (_coloring.Masks != null && _coloring.Masks.Length >= 1 && _coloring.Masks[0].Length == 512);
 			SetPalette(coloring.DefaultPalette, coloring.DefaultPaletteIndex, true);
 		}
 
