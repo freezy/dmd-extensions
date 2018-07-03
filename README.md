@@ -261,7 +261,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.7.0
+DMD Extensions v1.7.1
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -294,6 +294,10 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
                            master process. Usually something like: "ndmd
                            w0_0_0_0_w m392". Will be set autmatically when
                            called through Pro Pinball.
+
+  --fx3-legacy             [pinballfx3] If set, don't use the memory grabber
+                           but the legacy screen grabber, like Pinball FX2.
+                           Default: false.
 
   -d, --destination        The destination where the DMD data is sent to. One
                            of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
@@ -353,7 +357,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.7.0
+DMD Extensions v1.7.1
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -416,7 +420,7 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.7.0
+DMD Extensions v1.7.1
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
