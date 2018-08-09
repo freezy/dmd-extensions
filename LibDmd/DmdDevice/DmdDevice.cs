@@ -101,8 +101,9 @@ namespace LibDmd.DmdDevice
 		/// </remarks>
 		public void Init()
 		{
-			if (_isOpen)
+			if (_isOpen) { 
 				return;
+			}
 
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
