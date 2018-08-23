@@ -1027,6 +1027,9 @@ namespace LibDmd
 			foreach (var dest in Destinations) {
 				dest.Dispose();
 			}
+			foreach (var source in _activeSources) {
+				source.Dispose();
+			}
 		}
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
