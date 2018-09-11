@@ -267,9 +267,13 @@ namespace LibDmd.Input.PinballFX
 
 			// Read access rights to the process.
 			const int PROCESS_VM_READ = 0x0010;
+			const int SYNCHRONIZE = 0x00100000;
 
 			// Open the process to allow memory operations.
-			var processHandle = OpenProcess(PROCESS_VM_READ, false, gameProc.Id);
+			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
+			if (processHandle == IntPtr.Zero) {
+				return processHandle;
+			}
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
 			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), 0xFFFFFF, DMDPointerSig, 25);
