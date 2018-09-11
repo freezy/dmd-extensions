@@ -273,7 +273,7 @@ namespace LibDmd.Input.PinballFX
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
 				return processHandle;
-			}				
+			}
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
 			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 25);
