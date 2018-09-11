@@ -66,11 +66,8 @@ namespace LibDmd.Input.PinballFX
 		/// 
 		private void StartPolling()
 		{
-			var curIdentity = WindowsIdentity.GetCurrent();
-			var myPrincipal = new WindowsPrincipal(curIdentity);
-			if (!myPrincipal.IsInRole(WindowsBuiltInRole.Administrator)) {
-				throw new AdminRightsRequiredException("You need to run this as Administrator if you want to grab the DMD from the Pinball FX3's memory.");
-			}
+			// enable debug privileges to gain access to FX3's memory space
+			SetDebugPrivilege();
 
 			Logger.Info("Waiting for Pinball FX3 to spawn...");
 			var success = new Subject<Unit>();
@@ -127,6 +124,15 @@ namespace LibDmd.Input.PinballFX
 
 		public ColoredFrame CaptureDMD()
 		{
+			// if the process has exited, stop capture
+			if (WaitForSingleObject(_handle, 0) == WAIT_OBJECT_0)
+			{
+				CloseHandle(_handle);
+				_handle = IntPtr.Zero;
+				StopCapturing();
+				return null;
+			}
+
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
@@ -261,9 +267,13 @@ namespace LibDmd.Input.PinballFX
 
 			// Read access rights to the process.
 			const int PROCESS_VM_READ = 0x0010;
+			const int SYNCHRONIZE = 0x00100000;
 
 			// Open the process to allow memory operations.
-			var processHandle = OpenProcess(PROCESS_VM_READ, false, gameProc.Id);
+			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
+			if (processHandle == IntPtr.Zero) {
+				return processHandle;
+			}				
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
 			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), 0xFFFFFF, DMDPointerSig, 25);
@@ -323,12 +333,5 @@ namespace LibDmd.Input.PinballFX
 
 		#endregion
 
-	}
-
-	public class AdminRightsRequiredException : Exception
-	{
-		public AdminRightsRequiredException(string message) : base(message)
-		{
-		}
 	}
 }
