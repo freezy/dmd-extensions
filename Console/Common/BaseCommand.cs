@@ -172,12 +172,11 @@ namespace DmdExt.Common
 				DotSize = options.VirtualDmdDotSize
 			};
 			var thread = new Thread(() => {
-				
+
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
 
-				// When the window closes, shut down the dispatcher
-				dmd.Closed += (s, e) => CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+				// create the window
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
 					dmd.Show();
@@ -186,6 +185,13 @@ namespace DmdExt.Common
 				// Start the Dispatcher Processing
 				Run();
 			});
+
+			// On closing the window, shut down the dispatcher associated with the thread.
+			// This will allow the thread to exit after the window is closed and all of
+			// the events resulting from the window close have been processed.
+			dmd.Closed += (s, e) => Dispatcher.FromThread(thread).BeginInvokeShutdown(DispatcherPriority.Background);
+
+			// run the thread
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
 			return dmd.Dmd;

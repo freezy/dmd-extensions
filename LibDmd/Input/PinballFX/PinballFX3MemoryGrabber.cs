@@ -66,11 +66,8 @@ namespace LibDmd.Input.PinballFX
 		/// 
 		private void StartPolling()
 		{
-			var curIdentity = WindowsIdentity.GetCurrent();
-			var myPrincipal = new WindowsPrincipal(curIdentity);
-			if (!myPrincipal.IsInRole(WindowsBuiltInRole.Administrator)) {
-				throw new AdminRightsRequiredException("You need to run this as Administrator if you want to grab the DMD from the Pinball FX3's memory.");
-			}
+			// we might need debug privileges to snoop on the process
+			SetDebugPrivilege();
 
 			Logger.Info("Waiting for Pinball FX3 to spawn...");
 			var success = new Subject<Unit>();
@@ -127,6 +124,15 @@ namespace LibDmd.Input.PinballFX
 
 		public ColoredFrame CaptureDMD()
 		{
+			// if the process has exited, stop capture
+			if (WaitForSingleObject(_handle, 0) == WAIT_OBJECT_0)
+			{
+				CloseHandle(_handle);
+				_handle = IntPtr.Zero;
+				StopCapturing();
+				return null;
+			}
+
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
@@ -321,14 +327,17 @@ namespace LibDmd.Input.PinballFX
 		[DllImport("kernel32.dll")]
 		public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
 
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+		public static extern UInt32 WaitForSingleObject(IntPtr hWaitHandle, UInt32 dwMilliseconds);
+		const UInt32 INFINITE = 0xFFFFFFFF;
+		const UInt32 WAIT_ABANDONED = 0x00000080;
+		const UInt32 WAIT_OBJECT_0 = 0x00000000;
+		const UInt32 WAIT_TIMEOUT = 0x00000102;
+
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
+		static extern bool CloseHandle(IntPtr handle);
+
 		#endregion
 
-	}
-
-	public class AdminRightsRequiredException : Exception
-	{
-		public AdminRightsRequiredException(string message) : base(message)
-		{
-		}
 	}
 }

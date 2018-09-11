@@ -453,7 +453,7 @@ namespace LibDmd
 					onCompleted?.Invoke();
 				});
 
-			} catch (AdminRightsRequiredException ex) {
+			} catch (DebugPrivilegeException ex) {
 				IsRendering = false;
 				if (onError != null) {
 					onError.Invoke(ex);

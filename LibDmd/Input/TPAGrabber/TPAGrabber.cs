@@ -71,11 +71,8 @@ namespace LibDmd.Input.TPAGrabber
 		/// 
 		private void StartPolling()
 		{
-			var curIdentity = WindowsIdentity.GetCurrent();
-			var myPrincipal = new WindowsPrincipal(curIdentity);
-			if (!myPrincipal.IsInRole(WindowsBuiltInRole.Administrator)) {
-				throw new AdminRightsRequiredException("You need to run this as Administrator if you want to grab the DMD from the Pinball Arcade's memory.");
-			}
+			// We need debug privileges to snoop on PBA's memory space
+			SetDebugPrivilege();
 
 			Logger.Info("Waiting for Pinball Arcade DX11 to spawn...");
 			var success = new Subject<Unit>();
@@ -129,6 +126,15 @@ namespace LibDmd.Input.TPAGrabber
 
 		public byte[] CaptureDMD()
 		{
+			// if the process has exited, stop capture
+			if (WaitForSingleObject(_handle, 0) == WAIT_OBJECT_0)
+			{
+				CloseHandle(_handle);
+				_handle = IntPtr.Zero;
+				StopCapturing();
+				return null;
+			}
+
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
@@ -231,9 +237,13 @@ namespace LibDmd.Input.TPAGrabber
 			const int PROCESS_VM_OPERATION = 0x0008;
 			const int PROCESS_VM_READ = 0x0010;
 			const int PROCESS_VM_WRITE = 0x0020;
+			const int SYNCHRONIZE = 0x00100000;
 
 			// Open the process to allow memory operations + return process handle.
-			var processHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
+			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
+			if (processHandle == IntPtr.Zero) {
+				return processHandle;
+			}
 
 			// Allocating memory to write the codecave.
 			_codeCave = VirtualAllocEx(processHandle, IntPtr.Zero, 0x100, 0x1000, 0x40);
@@ -328,26 +338,29 @@ namespace LibDmd.Input.TPAGrabber
 
 		#region Dll Imports
 
-		[DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
 
-		[DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, int lpNumberOfBytesWritten);
 
-		[DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
-		[DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
 
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+		public static extern UInt32 WaitForSingleObject(IntPtr hWaitHandle, UInt32 dwMilliseconds);
+		const UInt32 INFINITE = 0xFFFFFFFF;
+		const UInt32 WAIT_ABANDONED = 0x00000080;
+		const UInt32 WAIT_OBJECT_0 = 0x00000000;
+		const UInt32 WAIT_TIMEOUT = 0x00000102;
+
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
+		static extern bool CloseHandle(IntPtr handle);
+		
 		#endregion
 
-	}
-
-	public class AdminRightsRequiredException : Exception
-	{
-		public AdminRightsRequiredException(string message) : base(message)
-		{
-		}
 	}
 }
