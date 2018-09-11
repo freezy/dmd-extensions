@@ -136,7 +136,7 @@ namespace DmdExt
 				} else {
 					Logger.Info("Press CTRL+C to close.");
 				}
-				
+
 				WinApp.Run();
 
 			} catch (DeviceNotAvailableException e) {

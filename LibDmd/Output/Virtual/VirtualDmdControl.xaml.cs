@@ -154,11 +154,13 @@ namespace LibDmd.Output.Virtual
 		public void Dispose()
 		{
 			// nothing to dispose
+			Host.DisposingControlWindow();
 		}
 	}
 
 	public interface IDmdWindow
 	{
 		void SetDimensions(int width, int height);
+		void DisposingControlWindow();
 	}
 }

@@ -350,6 +350,13 @@ namespace LibDmd.Input.TPAGrabber
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
 
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+		public static extern UInt32 WaitForSingleObject(IntPtr hWaitHandle, UInt32 dwMilliseconds);
+		const UInt32 INFINITE = 0xFFFFFFFF;
+		const UInt32 WAIT_ABANDONED = 0x00000080;
+		const UInt32 WAIT_OBJECT_0 = 0x00000000;
+		const UInt32 WAIT_TIMEOUT = 0x00000102;
+
 		#endregion
 
 	}
