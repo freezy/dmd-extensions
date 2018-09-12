@@ -109,35 +109,8 @@ namespace LibDmd.DmdDevice
 			_gray4Colorizer = null;
 			_coloring = null;
 
-			if (_config.Global.Colorize && _altcolorPath != null) {
-				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
-				var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
-				var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
-				var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
-
-				var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-				var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-
-				if (File.Exists(palPath)) {
-					try {
-						Logger.Info("Loading palette file at {0}...", palPath);
-						_coloring = new Coloring(palPath);
-						VniAnimationSet vni = null;
-						if (File.Exists(vniPath)) {
-							Logger.Info("Loading virtual animation file at {0}...", vniPath);
-							vni = new VniAnimationSet(vniPath);
-							Logger.Info("Loaded animation set {0}", vni);
-						}
-						_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
-						_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
-					} catch (Exception e) {
-						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
-					}
-				} else {
-					Logger.Info("No palette file found at {0}.", palPath);
-				}
-			} else {
-				Logger.Info("Bit-convertion disabled.");
+			if (_config.Global.Colorize && _altcolorPath != null && _gameName != null) {
+				SetupColorizer();
 			}
 
 			if (_config.VirtualDmd.Enabled) {
@@ -154,7 +127,7 @@ namespace LibDmd.DmdDevice
 			} else {
 				SetupGraphs();
 			}
-            _isOpen = true;
+			_isOpen = true;
 		}
 
 		/// <summary>
@@ -165,6 +138,39 @@ namespace LibDmd.DmdDevice
 		public void LoadPalette(uint num)
 		{
 			_gray4Colorizer?.LoadPalette(num);
+		}
+
+		private void SetupColorizer()
+		{
+			if (_gray2Colorizer != null || _gray4Colorizer != null) {
+				return;
+			}
+			var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
+			var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
+			var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
+			var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
+
+			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
+			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
+
+			if (File.Exists(palPath)) {
+				try {
+					Logger.Info("Loading palette file at {0}...", palPath);
+					_coloring = new Coloring(palPath);
+					VniAnimationSet vni = null;
+					if (File.Exists(vniPath)) {
+						Logger.Info("Loading virtual animation file at {0}...", vniPath);
+						vni = new VniAnimationSet(vniPath);
+						Logger.Info("Loaded animation set {0}", vni);
+					}
+					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
+					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
+				} catch (Exception e) {
+					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+				}
+			} else {
+				Logger.Info("No palette file found at {0}.", palPath);
+			}
 		}
 
 		/// <summary>
@@ -461,8 +467,7 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;
-            _isOpen = false;
-
+			_isOpen = false;
 		}
 
 		public void SetGameName(string gameName)
@@ -470,6 +475,10 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
+
+			if (_config.Global.Colorize && _altcolorPath != null && _gameName != null) {
+				SetupColorizer();
+			}
 		}
 
 		public void SetColorize(bool colorize)
