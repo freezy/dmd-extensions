@@ -285,10 +285,10 @@ namespace LibDmd.Input.TPAGrabber
 			var gameBase = (int)BaseAddress(gameProc);
 
 			// Retrieve DMD creation offset
-			_dmdPatch = FindPattern(gameProc, gameBase, 0xFFFFFF, DMDCreationSignature, 0) - gameBase;
+			_dmdPatch = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0) - gameBase;
 
 			// Retrieve game state pointer + offset
-			var gameStatePointer = FindPattern(gameProc, gameBase, 0xFFFFFF, GameStateSignature, 34);
+			var gameStatePointer = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, GameStateSignature, 34);
 			var pointerOffset = new byte[4];
 			ReadProcessMemory((int)gameProc.Handle, (int)gameStatePointer, pointerOffset, pointerOffset.Length, 0);
 			_gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0) - gameBase);
@@ -304,7 +304,7 @@ namespace LibDmd.Input.TPAGrabber
 			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
 
 			// Loop into dumped memory region to find the pattern.
-			for (var x = 0; x < memoryRegion.Length; x++) {
+			for (var x = 0; x < memoryRegion.Length - bytePattern.Length; x++) {
 
 				// If we find the first pattern's byte in memory, loop through the entire array.
 				for (var y = 0; y < bytePattern.Length; y++) {

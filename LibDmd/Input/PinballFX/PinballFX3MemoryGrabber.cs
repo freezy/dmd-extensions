@@ -266,7 +266,7 @@ namespace LibDmd.Input.PinballFX
 			var processHandle = OpenProcess(PROCESS_VM_READ, false, gameProc.Id);
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
-			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), 0xFFFFFF, DMDPointerSig, 25);
+			IntPtr baseOffset = FindPattern(gameProc, (int)BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 25);
 			var offsetBytes = new byte[4];
 			ReadProcessMemory((int)gameProc.Handle, (int)baseOffset, offsetBytes, offsetBytes.Length, 0);
 			_pBaseAddress = new IntPtr(BitConverter.ToInt32(offsetBytes, 0) - (int)_gameBase);
@@ -285,7 +285,7 @@ namespace LibDmd.Input.PinballFX
 			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
 
 			// Loop into dumped memory region to find the pattern.
-			for (var x = 0; x < memoryRegion.Length; x++) {
+			for (var x = 0; x < memoryRegion.Length - bytePattern.Length; x++) {
 
 				// If we find the first pattern's byte in memory, loop through the entire array.
 				for (var y = 0; y < bytePattern.Length; y++) {
