@@ -78,13 +78,6 @@ namespace LibDmd.Common
 			});
 		}
 
-		public void DisposingControlWindow()
-		{
-			Dispatcher.Invoke(() => {
-				Close();
-			});
-		}
-
 		private void ForceOnTop()
 		{
 			var window = (Window)this;
