@@ -66,7 +66,11 @@ namespace LibDmd.Input.PinballFX
 		/// 
 		private void StartPolling()
 		{
+<<<<<<< HEAD
 			// enable debug privileges to gain access to FX3's memory space
+=======
+			// we might need debug privileges to snoop on the process
+>>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 			SetDebugPrivilege();
 
 			Logger.Info("Waiting for Pinball FX3 to spawn...");
@@ -350,6 +354,12 @@ namespace LibDmd.Input.PinballFX
 		const UInt32 WAIT_OBJECT_0 = 0x00000000;
 		const UInt32 WAIT_TIMEOUT = 0x00000102;
 
+<<<<<<< HEAD
+=======
+		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+		static extern bool CloseHandle(IntPtr handle);
+
+>>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 		#endregion
 
 	}
