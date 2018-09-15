@@ -134,13 +134,13 @@ namespace LibDmd.Input.TPAGrabber
 				StopCapturing();
 				return null;
 			}
-			
+
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
-			ReadProcessMemory((int)_handle, (int)_gameBase + (int)_gameState, tableLoaded, 1, 0);
+			ReadProcessMemory(_handle, _gameState, tableLoaded, 1, 0);
 
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
@@ -149,13 +149,13 @@ namespace LibDmd.Input.TPAGrabber
 
 			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
 			var eax = new byte[4];
-			ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
+			ReadProcessMemory(_handle, _codeCave, eax, 4, 0);
 
 			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
+			var dmdOffset = new IntPtr(BitConverter.ToInt32(eax, 0) - 0x1F406);
 
 			// Grab the whole raw DMD block from game's memory.
-			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
+			ReadProcessMemory(_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
 			if (RawDMD[0] != 0x02) return null;
@@ -231,7 +231,7 @@ namespace LibDmd.Input.TPAGrabber
 		{
 			// Defines offset address of our codecave.
 			_gameBase = BaseAddress(gameProc);
-			var patchOffset = _gameBase + (int)_dmdPatch;
+			var patchOffset = _dmdPatch;
 
 			// Access rights to the process.
 			const int PROCESS_VM_OPERATION = 0x0008;
@@ -243,7 +243,7 @@ namespace LibDmd.Input.TPAGrabber
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
 				return processHandle;
-			}				
+			}
 
 			// Allocating memory to write the codecave.
 			_codeCave = VirtualAllocEx(processHandle, IntPtr.Zero, 0x100, 0x1000, 0x40);
@@ -292,26 +292,28 @@ namespace LibDmd.Input.TPAGrabber
 		private static void FindOffsets(Process gameProc)
 		{
 			// Get game process base address
-			var gameBase = (int)BaseAddress(gameProc);
+			var gameBase = BaseAddress(gameProc);
 
 			// Retrieve DMD creation offset
-			_dmdPatch = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0) - gameBase;
+			_dmdPatch = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0);
+			Logger.Info("DMD patch address = " + _dmdPatch.ToString("x"));
 
 			// Retrieve game state pointer + offset
 			var gameStatePointer = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, GameStateSignature, 34);
 			var pointerOffset = new byte[4];
-			ReadProcessMemory((int)gameProc.Handle, (int)gameStatePointer, pointerOffset, pointerOffset.Length, 0);
-			_gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0) - gameBase);
+			ReadProcessMemory(gameProc.Handle, gameStatePointer, pointerOffset, pointerOffset.Length, 0);
+			_gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0));
+			Logger.Info("Game state address = " + _gameState.ToString("x"));
 		}
 
 		// Function to search byte pattern in process memory then return its offset.
-		private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int Offset)
+		private static IntPtr FindPattern(Process gameProc, IntPtr gameBase, int size, byte[] bytePattern, int Offset)
 		{
 			// Create a byte array to store memory region.
 			var memoryRegion = new byte[size];
 
 			// Dump process memory into the array. 
-			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
+			ReadProcessMemory(gameProc.Handle, gameBase, memoryRegion, size, 0);
 
 			// Loop into dumped memory region to find the pattern.
 			for (var x = 0; x < memoryRegion.Length - bytePattern.Length; x++) {
@@ -329,7 +331,7 @@ namespace LibDmd.Input.TPAGrabber
 					}
 					// We've reached the end of the pattern array, we've found the offset.
 					if (y == bytePattern.Length - 1)
-						return new IntPtr(gameBase + Offset + x); // Return the offset.
+						return gameBase + Offset + x; // Return the offset.
 				}
 			}
 			// We've reached the end of memory region, offset not found.
@@ -339,7 +341,7 @@ namespace LibDmd.Input.TPAGrabber
 		#region Dll Imports
 
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
+		public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
 
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, int lpNumberOfBytesWritten);

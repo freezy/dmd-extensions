@@ -316,7 +316,6 @@
     <ProjectReference Include="..\ProPinballBridge\ProPinballBridge.vcxproj">
       <Project>{668cdaaf-49e4-4b01-bd9d-37d5ae89ddac}</Project>
       <Name>ProPinballBridge</Name>
-      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

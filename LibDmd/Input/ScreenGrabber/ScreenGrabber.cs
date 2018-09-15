@@ -27,8 +27,8 @@ namespace LibDmd.Input.ScreenGrabber
 		public double FramesPerSecond { get; set; } = 30;
 		public int Left { get; set; }
 		public int Top { get; set; }
-		public new int Width = 128;
-		public new int Height = 32;
+		public int Width = 128;
+		public int Height = 32;
 		public int DestinationWidth
 		{
 			get { return _destWidth; }
