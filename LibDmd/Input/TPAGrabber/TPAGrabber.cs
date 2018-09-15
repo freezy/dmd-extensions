@@ -71,11 +71,7 @@ namespace LibDmd.Input.TPAGrabber
 		/// 
 		private void StartPolling()
 		{
-<<<<<<< HEAD
 			// enable debug privileges to allow access to the target process's memory space
-=======
-			// We need debug privileges to snoop on PBA's memory space
->>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 			SetDebugPrivilege();
 
 			Logger.Info("Waiting for Pinball Arcade DX11 to spawn...");
@@ -138,11 +134,7 @@ namespace LibDmd.Input.TPAGrabber
 				StopCapturing();
 				return null;
 			}
-<<<<<<< HEAD
-			
-=======
 
->>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
@@ -251,11 +243,7 @@ namespace LibDmd.Input.TPAGrabber
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
 				return processHandle;
-<<<<<<< HEAD
-			}				
-=======
 			}
->>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 
 			// Allocating memory to write the codecave.
 			_codeCave = VirtualAllocEx(processHandle, IntPtr.Zero, 0x100, 0x1000, 0x40);
@@ -364,19 +352,6 @@ namespace LibDmd.Input.TPAGrabber
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
 
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		public static extern UInt32 WaitForSingleObject(IntPtr hWaitHandle, UInt32 dwMilliseconds);
-		const UInt32 INFINITE = 0xFFFFFFFF;
-		const UInt32 WAIT_ABANDONED = 0x00000080;
-		const UInt32 WAIT_OBJECT_0 = 0x00000000;
-		const UInt32 WAIT_TIMEOUT = 0x00000102;
-
-<<<<<<< HEAD
-=======
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		static extern bool CloseHandle(IntPtr handle);
-		
->>>>>>> 4144728a8d29134d8188dc7010e3d2f322cc93cb
 		#endregion
 
 	}
