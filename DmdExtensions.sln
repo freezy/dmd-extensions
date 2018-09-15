@@ -16,6 +16,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProPinballBridge", "ProPinballBridge\ProPinballBridge.vcxproj", "{668CDAAF-49E4-4B01-BD9D-37D5AE89DDAC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProPinballDmdSlave", "ProPinballDmdSlave\ProPinballDmdSlave.csproj", "{A4568212-D058-419F-A328-CFF92BD666CE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{668CDAAF-49E4-4B01-BD9D-37D5AE89DDAC} = {668CDAAF-49E4-4B01-BD9D-37D5AE89DDAC}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProPinballSlave", "ProPinballSlave\ProPinballSlave.vcxproj", "{AD8F664A-B792-4D67-BAAB-F19654A59697}"
 EndProject
@@ -120,5 +123,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {31E4A9AD-1672-4456-BB06-DDAF3173A9CF}
 	EndGlobalSection
 EndGlobal
