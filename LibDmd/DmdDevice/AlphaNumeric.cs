@@ -7,7 +7,6 @@ namespace LibDmd.DmdDevice
 
 		static readonly byte[] FrameBuffer = new byte[4096];
 		static readonly byte[] BlankBuffer = new byte[4096];
-		static bool _do16 = false;
 
 		static readonly byte[,] SegSizes = {
 			{5,5,5,5,5,5,2,2,5,5,5,2,5,5,5,1},
