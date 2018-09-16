@@ -20,127 +20,29 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : AbstractSource, IGray4Source
+	public class TPAGrabber : MemoryGrabber<byte[]>, IGray4Source
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
 
-		public IObservable<Unit> OnResume => _onResume;
-		public IObservable<Unit> OnPause => _onPause;
-
-		/// <summary>
-		/// Wait time between polls for the Pinball Arcade DX11 process. Stops polling as soon
-		/// as the process is found.
-		///
-		/// Can be set quite high, just about as long as it takes for Pinball Arcade DX11 to start.
-		/// </summary>
-		public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(10);
-
-		/// <summary>
-		/// Frequency with which frames are pulled off the display.
-		/// </summary>
-		public double FramesPerSecond { get; set; } = 25;
-
-		private IConnectableObservable<byte[]> _framesGray4;
-		private IDisposable _capturer;
-		private IntPtr _handle;
-		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
-		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
-
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-		// DMD Stuff + Codecave
-		private const int DMDWidth = 128;
-		private const int DMDHeight = 32;
-		private const int LineJump = 0x400;
-		private const int MemBlockSize = 0x1FC02;
-		private static readonly byte[] RawDMD = new byte[MemBlockSize];
-
-		private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
-		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
-
-		private static IntPtr _dmdPatch = IntPtr.Zero;
-		private static IntPtr _gameState = IntPtr.Zero;
-		private static IntPtr _codeCave = IntPtr.Zero;
-		private static IntPtr _gameBase = IntPtr.Zero;
-
-		private byte[] _lastFrame;
-
-		/// <summary>
-		/// Waits for the Pinball Arcade DX11 process.
-		/// </summary>
-		/// 
-		private void StartPolling()
-		{
-			// enable debug privileges to allow access to the target process's memory space
-			SetDebugPrivilege();
-
-			Logger.Info("Waiting for Pinball Arcade DX11 to spawn...");
-			var success = new Subject<Unit>();
-			Observable
-				.Timer(TimeSpan.Zero, PollForProcessDelay)
-				.TakeUntil(success)
-				.Subscribe(x => {
-					_handle = FindGameHandle();
-					if (_handle != IntPtr.Zero) {
-						StartCapturing();
-						success.OnNext(Unit.Default);
-					}
-				});
-		}
-
-		/// <summary>
-		/// Starts sending frames.
-		/// </summary>
-		private void StartCapturing()
-		{
-			_capturer = _framesGray4.Connect();
-			_onResume.OnNext(Unit.Default);
-		}
-
-		/// <summary>
-		/// Stops sending frames because we couldn't aquire the game handle anymore,
-		/// usually because Pinball Arcade DX11 was closed.
-		/// </summary>
-		private void StopCapturing()
-		{
-			// TODO send blank frame
-			_capturer.Dispose();
-			_onPause.OnNext(Unit.Default);
-			StartPolling();
-		}
-
 		public IObservable<byte[]> GetGray4Frames()
 		{
-			if (_framesGray4 != null) {
-				return _framesGray4;
-			}
-			_framesGray4 = Observable
-				.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
-				.Select(x => CaptureDMD())
-				.Where(frame => frame != null)
-				.Publish();
-
-			StartPolling();
-			return _framesGray4;
+			return GetFrames();
 		}
 
-		public byte[] CaptureDMD()
+		// DMD Stuff
+		private const int DMDWidth = 128;
+		private const int DMDHeight = 32;
+		private static readonly byte[] RawDMD = new byte[MemBlockSize];
+		private byte[] _lastFrame;
+
+		protected override byte[] CaptureDMD()
 		{
-			// if the process has exited, stop capture
-			if (WaitForSingleObject(_handle, 0) == WAIT_OBJECT_0)
-			{
-				CloseHandle(_handle);
-				_handle = IntPtr.Zero;
-				StopCapturing();
-				return null;
-			}
-			
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
-			ReadProcessMemory((int)_handle, (int)_gameBase + (int)_gameState, tableLoaded, 1, 0);
+			ReadProcessMemory(_hProcess, _gameStateAddr, tableLoaded, 1, IntPtr.Zero);
 
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
@@ -149,13 +51,13 @@ namespace LibDmd.Input.TPAGrabber
 
 			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
 			var eax = new byte[4];
-			ReadProcessMemory((int)_handle, (int)_codeCave, eax, 4, 0);
+			ReadProcessMemory(_hProcess, _codeCave, eax, 4, IntPtr.Zero);
 
 			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			var dmdOffset = BitConverter.ToInt32(eax, 0) - 0x1F406;
+			var dmdOffset = B4ToPointer(eax) - 0x1F406;
 
 			// Grab the whole raw DMD block from game's memory.
-			ReadProcessMemory((int)_handle, dmdOffset, RawDMD, MemBlockSize + 2, 0);
+			ReadProcessMemory(_hProcess, dmdOffset, RawDMD, MemBlockSize + 2, IntPtr.Zero);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
 			if (RawDMD[0] != 0x02) return null;
@@ -202,44 +104,38 @@ namespace LibDmd.Input.TPAGrabber
 			return identical ? null : frame;
 		}
 
-		// Check if the game is started and return its process handle.
-		private static IntPtr FindGameHandle()
+		// try attaching to a process
+		protected override IntPtr AttachGameProcess(Process p)
 		{
-			var processList = Process.GetProcesses();
-			foreach (var p in processList) {
-				if (p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet") {
-					// When the process is found, find needed offsets..
-					FindOffsets(p);
-					// ...then write the codecave.
-					var processHandle = PatchCodeCave(p);
-					return processHandle;
-				}
+			// checkj the process name
+			if ((p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet")
+				&& FindOffsets(p))
+			{
+				// write the codecave
+				var processHandle = PatchCodeCave(p);
+
+				// success
+				return processHandle;
 			}
+
+			// not our process
 			return IntPtr.Zero;
 		}
 
-		// Helper function to retrieve process base address.
-		private static IntPtr BaseAddress(Process process)
-		{
-			var procMod = process.MainModule;
-			return procMod.BaseAddress;
-		}
+		// Codecave parameters
+		private const int LineJump = 0x400;
+		private const int MemBlockSize = 0x1FC02;
+
+		// addresses in the target process
+		private static IntPtr _dmdPatchAddr = IntPtr.Zero;
+		private static IntPtr _gameStateAddr = IntPtr.Zero;
+		private static IntPtr _codeCave = IntPtr.Zero;
 
 		// Not fully commented.. basically we're creating a codecave to let the game retrieve for us the DMD location in memory.
 		[SuppressMessage("ReSharper", "InconsistentNaming")]
 		private static IntPtr PatchCodeCave(Process gameProc)
 		{
-			// Defines offset address of our codecave.
-			_gameBase = BaseAddress(gameProc);
-			var patchOffset = _gameBase + (int)_dmdPatch;
-
-			// Access rights to the process.
-			const int PROCESS_VM_OPERATION = 0x0008;
-			const int PROCESS_VM_READ = 0x0010;
-			const int PROCESS_VM_WRITE = 0x0020;
-			const int SYNCHRONIZE = 0x00100000;
-
-			// Open the process to allow memory operations + return process handle.
+			// Open the process for wait, read, and write operations
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
 				return processHandle;
@@ -250,7 +146,7 @@ namespace LibDmd.Input.TPAGrabber
 			var mem = BitConverter.GetBytes((int)_codeCave);
 
 			// Build the JMP to the original code.
-			var joc = ASMJump(_codeCave + 17, patchOffset + 13);
+			var joc = ASMJump(_codeCave + 17, _dmdPatchAddr + 13);
 
 			// Build the codecave.
 			var dmdCodeCave = new byte[] {
@@ -263,10 +159,10 @@ namespace LibDmd.Input.TPAGrabber
 			};
 
 			// Write the codecave into memory.
-			WriteProcessMemory(processHandle, _codeCave + 4, dmdCodeCave, dmdCodeCave.Length, 0);
+			WriteProcessMemory(processHandle, _codeCave + 4, dmdCodeCave, dmdCodeCave.Length, IntPtr.Zero);
 
 			// Build the JMP to the codecave.
-			var jcc = ASMJump(patchOffset + 5, _codeCave + 4);
+			var jcc = ASMJump(_dmdPatchAddr + 5, _codeCave + 4);
 
 			// Build the jump to the codecave.
 			var jmpToCC = new byte[] {
@@ -275,7 +171,7 @@ namespace LibDmd.Input.TPAGrabber
 				0x90, 0x90, 0x90                      // NOP NOP NOP
 			};
 			// Write the jump into memory.
-			WriteProcessMemory(processHandle, patchOffset, jmpToCC, jmpToCC.Length, 0);
+			WriteProcessMemory(processHandle, _dmdPatchAddr, jmpToCC, jmpToCC.Length, IntPtr.Zero);
 
 			// Return the process handle.
 			return processHandle;
@@ -289,68 +185,29 @@ namespace LibDmd.Input.TPAGrabber
 			return new byte[] { 0xE9, JMPbytes[0], JMPbytes[1], JMPbytes[2], JMPbytes[3] };
 		}
 
-		private static void FindOffsets(Process gameProc)
+		// byte patterns to find DMD structs in the target process
+		private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
+		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
+
+		private static bool FindOffsets(Process gameProc)
 		{
 			// Get game process base address
-			var gameBase = (int)BaseAddress(gameProc);
+			var gameBase = BaseAddress(gameProc);
 
-			// Retrieve DMD creation offset
-			_dmdPatch = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0) - gameBase;
+			// Find DMD creation location in memory by looking for the signature pattern
+			_dmdPatchAddr = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0);
+			if (_dmdPatchAddr == IntPtr.Zero) {
+				return false;
+			}
 
 			// Retrieve game state pointer + offset
 			var gameStatePointer = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, GameStateSignature, 34);
-			var pointerOffset = new byte[4];
-			ReadProcessMemory((int)gameProc.Handle, (int)gameStatePointer, pointerOffset, pointerOffset.Length, 0);
-			_gameState = new IntPtr(BitConverter.ToInt32(pointerOffset, 0) - gameBase);
+			var pointerBuf = new byte[4];
+			ReadProcessMemory(gameProc.Handle, gameStatePointer, pointerBuf, pointerBuf.Length, IntPtr.Zero);
+			_gameStateAddr = B4ToPointer(pointerBuf);
+
+			// success
+			return true;
 		}
-
-		// Function to search byte pattern in process memory then return its offset.
-		private static IntPtr FindPattern(Process gameProc, int gameBase, int size, byte[] bytePattern, int Offset)
-		{
-			// Create a byte array to store memory region.
-			var memoryRegion = new byte[size];
-
-			// Dump process memory into the array. 
-			ReadProcessMemory((int)gameProc.Handle, gameBase, memoryRegion, size, 0);
-
-			// Loop into dumped memory region to find the pattern.
-			for (var x = 0; x < memoryRegion.Length - bytePattern.Length; x++) {
-
-				// If we find the first pattern's byte in memory, loop through the entire array.
-				for (var y = 0; y < bytePattern.Length; y++) {
-
-					// If pattern byte is 0xFF, this is a joker, continue pattern loop.
-					if (bytePattern[y] == 0xFF) {
-						continue;
-					}
-					// If pattern byte is different than memory byte, we're not at the right place, back to the memory region loop...
-					if (bytePattern[y] != memoryRegion[x + y]) {
-						break;
-					}
-					// We've reached the end of the pattern array, we've found the offset.
-					if (y == bytePattern.Length - 1)
-						return new IntPtr(gameBase + Offset + x); // Return the offset.
-				}
-			}
-			// We've reached the end of memory region, offset not found.
-			return IntPtr.Zero;
-		}
-
-		#region Dll Imports
-
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] buffer, int size, int lpNumberOfBytesRead);
-
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, int lpNumberOfBytesWritten);
-
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-		public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
-
-		#endregion
-
 	}
 }

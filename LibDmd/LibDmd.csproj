@@ -201,6 +201,8 @@
     <Compile Include="Input\IGray2Source.cs" />
     <Compile Include="Input\IRgb24Source.cs" />
     <Compile Include="Input\IGray4Source.cs" />
+    <Compile Include="Input\MemoryGrabber.cs" />
+    <Compile Include="Input\MemoryGrabberBase.cs" />
     <Compile Include="Input\PinballFX\PinballFX3MemoryGrabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX3Grabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX2Grabber.cs" />
