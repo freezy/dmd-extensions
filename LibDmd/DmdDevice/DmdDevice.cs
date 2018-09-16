@@ -183,8 +183,13 @@ namespace LibDmd.DmdDevice
 		/// </summary>
 		private void CreateVirtualDmd()
 		{
+			// set up an event object to synchronize with the thread startup
+			var ev = new EventWaitHandle(false, EventResetMode.AutoReset);
+
+			// launch a thrtead for the virtual DMD window event handler
 			var thread = new Thread(() => {
 
+				// create the virtual DMD window and create the render grahps
 				_dmd = new VirtualDmd();
 				SetupGraphs();
 
@@ -192,14 +197,22 @@ namespace LibDmd.DmdDevice
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 
 				// When the window closes, shut down the dispatcher
-				_dmd.Closed += (s, e) => Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+				_dmd.Closed += (s, e) => _dmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
+
+				// we're done with the setup - let the calling thread proceed
+				ev.Set();
 
 				// Start the Dispatcher Processing
 				Dispatcher.Run();
 			});
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
+
+			// wait until the virtual DMD window is fully set up, to avoid any
+			// race conditions with the UI thread
+			ev.WaitOne();
+			ev.Dispose();
 		}
 
 		/// <summary>
@@ -208,6 +221,8 @@ namespace LibDmd.DmdDevice
 		/// </summary>
 		private void SetupGraphs()
 		{
+			_graphs.Dispose();
+
 			var renderers = new List<IDestination>();
 			if (_config.PinDmd1.Enabled) {
 				var pinDmd1 = PinDmd1.GetInstance();
