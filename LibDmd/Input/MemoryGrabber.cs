@@ -76,7 +76,7 @@ namespace LibDmd.Input
 		/// 
 		private void StartPolling()
 		{
-			// enable debug privileges to gain access to FX3's memory space
+			// enable debug privileges to gain access to the target process's memory space
 			SetDebugPrivilege();
 
 			Logger.Info($"Waiting for {Name} process to start...");
