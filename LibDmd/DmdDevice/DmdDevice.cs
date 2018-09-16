@@ -109,9 +109,7 @@ namespace LibDmd.DmdDevice
 			_gray4Colorizer = null;
 			_coloring = null;
 
-			if (_config.Global.Colorize && _altcolorPath != null && _gameName != null) {
-				SetupColorizer();
-			}
+			SetupColorizer();
 
 			if (_config.VirtualDmd.Enabled) {
 				if (_dmd == null) {
@@ -142,6 +140,12 @@ namespace LibDmd.DmdDevice
 
 		private void SetupColorizer()
 		{
+			// only setup if enabled and path is set
+			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null) {
+				return;
+			}
+
+			// abort if already setup
 			if (_gray2Colorizer != null || _gray4Colorizer != null) {
 				return;
 			}
@@ -476,9 +480,7 @@ namespace LibDmd.DmdDevice
 			_gameName = gameName;
 			_config.GameName = gameName;
 
-			if (_config.Global.Colorize && _altcolorPath != null && _gameName != null) {
-				SetupColorizer();
-			}
+			SetupColorizer();
 		}
 
 		public void SetColorize(bool colorize)
