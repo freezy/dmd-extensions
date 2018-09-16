@@ -26,6 +26,13 @@ namespace LibDmd.Input
 		protected abstract IntPtr AttachGameProcess(Process p);
 
 		/// <summary>
+		/// Do the DMD capture from memory.  This is called once per frame, on
+		/// the FPS timer.
+		/// </summary>
+		/// <returns></returns>
+		protected abstract FrameType CaptureDMD();
+
+		/// <summary>
 		/// Wait time between polls for the subject process. Stops polling as soon
 		/// as the process is found.
 		///
@@ -123,8 +130,6 @@ namespace LibDmd.Input
 			return _framesObservable;
 		}
 
-		protected abstract FrameType CaptureDMD();
-
 		/// <summary>
 		/// Starts sending frames.
 		/// </summary>
@@ -154,8 +159,6 @@ namespace LibDmd.Input
 		// Reactive pause/resume observables
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
-
-
 
 		// Get the base address of a process's memory space
 		protected static IntPtr BaseAddress(Process process)
