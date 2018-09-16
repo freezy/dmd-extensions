@@ -87,11 +87,9 @@ For further tweaking, see options below.
 
 ### Pinball FX3
 
-Per default, the DMD of Pinball FX3 is retrieved from the process' memory. For
-this reason, `dmdext` must be run as Administrator.
+The DMD from Pinball FX3 is pulled directly from the memory.
 
-1. Open an administrator command prompt ([Windows], type `cmd`, right-click on 
-   `cmd.exe`, click on "Run as administrator")
+1. Open a command line prompt ([Windows], type `cmd`, [enter])
 2. Type `dmdext mirror --source=pinballfx3 --no-virtual` [enter]
 3. Start Pinball FX3 and play a game.
 
@@ -100,16 +98,16 @@ it works with or without cabinet mode.
 
 Note that while the current memory grabber code should also work for future 
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
-`dmdext`, you should still be able to fall back to the screen grabber that is
-used by Pinball FX2 by using the `--fx3-legacy` flag.
+`dmdext`, you should still be able to fall back to the legacz screen grabber
+that is used by Pinball FX2 by using the `--fx3-legacy` flag.
+
+Also note that the grabber currently doesn't work for the new Williams beta.
 
 ### The Pinball Arcade
 
-For TPA we're pulling frames off the DMD texture from TPA's memory. Thus, you
-must be running the tool as administrator.
+For TPA we're pulling frames off the DMD texture from TPA's memory. 
 
-1. Open an administrator command prompt ([Windows], type `cmd`, right-click on 
-   `cmd.exe`, click on "Run as administrator")
+1. Open a command line prompt ([Windows], type `cmd`, [enter])
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
 3. Start the DX11 version of The Pinball Arcade.
 4. Select and **start** a game (*only then* it starts mirroring, during attract
@@ -572,6 +570,7 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
 - Lucky1 for instructions and details about the coloring feature
 - DJRobX for helping with the dynamic coloring, better performance and much more.
+- mjrgh for debugging and optimizing stuff.
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 
 
