@@ -246,7 +246,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
-				var pin2Dmd = LibDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance();
+				var pin2Dmd = LibDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					if (_coloring != null) {

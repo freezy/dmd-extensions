@@ -22,6 +22,11 @@ namespace LibDmd.Output.Pin2Dmd
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get; private set; } = 32;
 
+		/// <summary>
+		/// How long to wait after sending data, in milliseconds
+		/// </summary>
+		public int Delay { get; set; } = 25;
+
 		private UsbDevice _pin2DmdDevice;
 		private byte[] _frameBufferRgb24;
 		private byte[] _frameBufferGray4;
@@ -48,10 +53,10 @@ namespace LibDmd.Output.Pin2Dmd
 		/// the instance get (re-)initialized.
 		/// </summary>
 		/// <returns></returns>
-		public static Pin2Dmd GetInstance()
+		public static Pin2Dmd GetInstance(int outputDelay)
 		{
 			if (_instance == null) {
-				_instance = new Pin2Dmd();
+				_instance = new Pin2Dmd { Delay = outputDelay };
 			}
 			_instance.Init();
 			return _instance;
@@ -230,7 +235,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 			if (!identical) {
 				RenderRaw(_colorPalette);
-				System.Threading.Thread.Sleep(50);
+				System.Threading.Thread.Sleep(Delay);
 			}
 		}
 
@@ -270,7 +275,7 @@ namespace LibDmd.Output.Pin2Dmd
 				_colorPalette[6] = (byte)palette.Type;
 
 				RenderRaw(_colorPalette);
-				System.Threading.Thread.Sleep(100);
+				System.Threading.Thread.Sleep(Delay);
 			}
 			_paletteIsPreloaded = true;
 		}
@@ -309,7 +314,7 @@ namespace LibDmd.Output.Pin2Dmd
 			buffer[2] = 0xE7;
 			buffer[3] = 0x00;
 			RenderRaw(buffer);
-			System.Threading.Thread.Sleep(50);
+			System.Threading.Thread.Sleep(Delay);
 		}
 
 		public void Dispose()
@@ -324,7 +329,7 @@ namespace LibDmd.Output.Pin2Dmd
 				buffer[3] = 0xFF;
 				buffer[4] = 0x07;
 				RenderRaw(buffer);
-				System.Threading.Thread.Sleep(50);
+				System.Threading.Thread.Sleep(Delay);
 
 				// close device
 				if (_pin2DmdDevice.IsOpen) {

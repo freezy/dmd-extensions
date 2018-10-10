@@ -73,7 +73,7 @@ namespace DmdExt.Common
 					break;
 					
 				case PIN2DMD:
-					var pin2Dmd = Pin2Dmd.GetInstance();
+					var pin2Dmd = Pin2Dmd.GetInstance(options.OutputDelay);
 					if (pin2Dmd.IsAvailable) {
 						renderers.Add(pin2Dmd);
 						Logger.Info("Added PIN2DMD renderer.");
@@ -113,7 +113,7 @@ namespace DmdExt.Common
 				var pinDmd1 = PinDmd1.GetInstance();
 				var pinDmd2 = PinDmd2.GetInstance();
 				var pinDmd3 = PinDmd3.GetInstance(options.Port);
-				var pin2Dmd = Pin2Dmd.GetInstance();
+				var pin2Dmd = Pin2Dmd.GetInstance(options.OutputDelay);
 
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);

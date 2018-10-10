@@ -19,6 +19,7 @@ namespace LibDmd.Output.PinDmd3
 		public string Name { get; } = "PinDMD v3";
 		public bool IsAvailable { get; private set; }
 
+		public int Delay { get; set; } = 100;
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
@@ -127,7 +128,7 @@ namespace LibDmd.Output.PinDmd3
 
 			// TODO decrypt these
 			_serialPort.Write(new byte[] { 0x43, 0x13, 0x55, 0xdb, 0x5c, 0x94, 0x4e, 0x0, 0x0, 0x43 }, 0, 10);
-			System.Threading.Thread.Sleep(100); // duuh...
+			System.Threading.Thread.Sleep(Delay); // duuh...
 
 			var result = new byte[20];
 			_serialPort.Read(result, 0, 20); // no idea what this is
@@ -141,7 +142,7 @@ namespace LibDmd.Output.PinDmd3
 				_serialPort = new SerialPort(port, 8176000, Parity.None, 8, StopBits.One);
 				_serialPort.Open();
 				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
-				System.Threading.Thread.Sleep(100); // duh...
+				System.Threading.Thread.Sleep(Delay); // duh...
 
 				var result = new byte[100];
 				_serialPort.Read(result, 0, 100);

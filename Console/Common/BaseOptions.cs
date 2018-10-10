@@ -45,6 +45,9 @@ namespace DmdExt.Common
 		[Option('p', "port", HelpText = "Force COM port for PinDMDv3 devices. Example: \"COM3\".")]
 		public string Port { get; set; } = null;
 
+		[Option("output-delay", HelpText = "How long to wait in milliseconds for data to be sent to the device. Default: 25.")]
+		public int OutputDelay { get; set; } = 25;
+
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 

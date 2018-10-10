@@ -147,6 +147,7 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "pin2dmd";
 		public bool Enabled => GetBoolean("enabled", true);
+		public int Delay => GetInt("delay", 25);
 		public Pin2DmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
