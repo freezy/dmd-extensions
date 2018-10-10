@@ -25,6 +25,7 @@ namespace LibDmd.Output.PinDmd3
 		const byte Rgb24CommandByte = 0x02;
 		const byte Gray2CommandByte = 0x30;
 		const byte Gray4CommandByte = 0x31;
+		const byte ColoredGray4CommandByte = 0x32;
 
 		/// <summary>
 		/// Firmware string read from the device if connected
@@ -39,6 +40,7 @@ namespace LibDmd.Output.PinDmd3
 
 		private static PinDmd3 _instance;
 		private readonly byte[] _frameBufferRgb24;
+		private readonly byte[] _frameBufferColoredGray4;
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
 		private bool _lastFrameFailed = false;
@@ -89,6 +91,10 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferRgb24 = new byte[DmdWidth * DmdHeight * 3 + 2];
 			_frameBufferRgb24[0] = Rgb24CommandByte;
 			_frameBufferRgb24[DmdWidth * DmdHeight * 3 + 1] = Rgb24CommandByte;
+
+			// 4 bits per pixel
+			_frameBufferColoredGray4 = new byte[1 + 16 * 3 + 1 + DmdWidth * DmdHeight / 2];
+			_frameBufferColoredGray4[0] = ColoredGray4CommandByte;
 
 			// 4 bits per pixel, 14 control bytes
 			_frameBufferGray4 = new byte[DmdWidth * DmdHeight / 2 + 14];     
