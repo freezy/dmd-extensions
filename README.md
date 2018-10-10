@@ -98,10 +98,9 @@ it works with or without cabinet mode.
 
 Note that while the current memory grabber code should also work for future 
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
-`dmdext`, you should still be able to fall back to the legacz screen grabber
+`dmdext`, you should still be able to fall back to the legacy screen grabber
 that is used by Pinball FX2 by using the `--fx3-legacy` flag.
 
-Also note that the grabber currently doesn't work for the new Williams beta.
 
 ### The Pinball Arcade
 
