@@ -198,6 +198,7 @@ The options are described by block below.
   - `port` - COM port, e.g. `COM3`
 - `[pin2dmd]` Options for the RGB24 PIN2DMD display
   - `enabled` - If false, doesn't bother looking for a PIN2DMD
+  - `delay` - Delay in milliseconds to wait after loading a palette.
 - `[video]` - Allows creating an .avi video from the DMD frames.
   - `enabled` - If enabled, write to an .avi file.   
   - `path` - Path to folder or .avi file. If a folder is given, it will create
@@ -243,7 +244,7 @@ All options are documented in the tool.
 ```
 C:\>dmdext
 
-DMD Extensions v1.7.0
+DMD Extensions v1.7.2
 USAGE: dmdext <command> [<options>]
 
   mirror    Mirrors pixel data from the screen or memory to all available
@@ -259,7 +260,7 @@ USAGE: dmdext <command> [<options>]
 ```
 C:\>dmdext mirror --help
 
-DMD Extensions v1.7.1
+DMD Extensions v1.7.2
 USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 
   -s, --source             Required. The source you want to retrieve DMD data
@@ -333,6 +334,9 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
 
+  --output-delay           How long to wait in milliseconds for data to be sent
+                           to the device. Default: 25.
+
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
@@ -355,7 +359,7 @@ USAGE: dmdext mirror --source=<source> [--destination=<destination>]
 ```
 C:\>dmdext play --help
 
-DMD Extensions v1.7.1
+DMD Extensions v1.7.2
 USAGE: dmdext play --file=<image path> [--destination=<destination>]
 
   -f, --file               Required. Path to the file to play. Currently
@@ -397,6 +401,9 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
 
+  --output-delay           How long to wait in milliseconds for data to be sent
+                           to the device. Default: 25.
+
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
                            false
@@ -418,7 +425,7 @@ USAGE: dmdext play --file=<image path> [--destination=<destination>]
 ```
 C:\>dmdext test --help
 
-DMD Extensions v1.7.1
+DMD Extensions v1.7.2
 USAGE: dmdext test [--destination=<destination>]
 
   -d, --destination        The destination where the DMD data is sent to. One
@@ -456,6 +463,9 @@ USAGE: dmdext test [--destination=<destination>]
 
   -p, --port               Force COM port for PinDMDv3 devices. Example:
                            "COM3".
+
+  --output-delay           How long to wait in milliseconds for data to be sent
+                           to the device. Default: 25.
 
   -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
                            FX2 doesn't receive any frames anymore. Default:
