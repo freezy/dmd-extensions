@@ -116,7 +116,7 @@ namespace LibDmd.Input.PinballFX
 			// Retrieve DMD offset in memory using pointers.
 			var buf = new byte[4];
 			ReadProcessMemory(hProcess, _pBaseAddress, buf, buf.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(buf) + 0xE8, buf, buf.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(buf) + 0xF0, buf, buf.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(buf) + 0x34, buf, buf.Length, IntPtr.Zero);
 			return B4ToPointer(buf);
 		}
@@ -127,9 +127,9 @@ namespace LibDmd.Input.PinballFX
 			var pAddress = new byte[4];
 			var colorBytes = new byte[4];
 			ReadProcessMemory(hProcess, _pBaseAddress, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xE8, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x64, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x184, pAddress, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xF0, pAddress, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x50, pAddress, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress), colorBytes, colorBytes.Length, IntPtr.Zero);
 			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
 			var colorCode = BitConverter.ToInt32(colorBytes, 0);
@@ -158,7 +158,7 @@ namespace LibDmd.Input.PinballFX
 		}
 
 		// Byte pattern we use to identify the DMD memory struct in the FX3 process
-		private static readonly byte[] DMDPointerSig = new byte[] { 0x83, 0xB8, 0xE4, 0x00, 0x00, 0x00, 0x00, 0x74, 0x34, 0x8B, 0x0D, 0xFF, 0xFF, 0xFF, 0xFF, 0xE8, 0xFF, 0xFF, 0xFF, 0xFF, 0x84, 0xC0, 0x75, 0x25, 0xA1 };
+		private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x44, 0x24, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x44, 0x24, 0xFF, 0xA1 };
 
 		private static IntPtr GetPointerBaseAddress(Process gameProc)
 		{
@@ -169,7 +169,7 @@ namespace LibDmd.Input.PinballFX
 			}
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
-			IntPtr baseOffset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 25);
+			IntPtr baseOffset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 21);
 			var pointerBuf = new byte[4];
 			ReadProcessMemory(gameProc.Handle, baseOffset, pointerBuf, pointerBuf.Length, IntPtr.Zero);
 			_pBaseAddress = B4ToPointer(pointerBuf);
