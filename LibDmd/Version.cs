@@ -8,8 +8,8 @@ namespace LibDmd
 {
 	public class Version
 	{
-		public const string AssemblyVersion = "1.7.2.0";
-		public const string AssemblyFileVersion = "1.7.2.0";
-		public const string AssemblyInformationalVersionAttribute = "1.7.2";
+		public const string AssemblyVersion = "1.7.3.0";
+		public const string AssemblyFileVersion = "1.7.3.0";
+		public const string AssemblyInformationalVersionAttribute = "1.7.3";
 	}
 }
