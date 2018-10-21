@@ -582,6 +582,10 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 - mjrgh for debugging and optimizing stuff.
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 
+<a title="IntelliJ IDEA" href="https://www.jetbrains.com/resharper/"><img src="https://raw.githubusercontent.com/freezy/dmd-extensions/master/resharper.svg?sanitize=true" alt="IntelliJ Resharper" width="250"></a>
+
+Finally, thanks to JetBrains for their awesome tools and support of the Open Source Community!
+
 
 ## License
 
