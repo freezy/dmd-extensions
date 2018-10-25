@@ -38,7 +38,7 @@ namespace LibDmd.Input
 		///
 		/// Can be set quite high, just about as long as it takes for subject to start.
 		/// </summary>
-		public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(10);
+		public TimeSpan PollForProcessDelay { get; set; } = TimeSpan.FromSeconds(1);
 
 		/// <summary>
 		/// Frequency with which frames are pulled off the memory.
@@ -95,6 +95,7 @@ namespace LibDmd.Input
 					_hProcess = FindGameHandle();
 					if (_hProcess != IntPtr.Zero)
 					{
+						Logger.Info($"Process found, starting capturing...");
 						StartCapturing();
 						success.OnNext(Unit.Default);
 					}

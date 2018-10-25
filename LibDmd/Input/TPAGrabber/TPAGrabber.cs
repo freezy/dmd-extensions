@@ -34,11 +34,17 @@ namespace LibDmd.Input.TPAGrabber
 		private const int DMDHeight = 32;
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
+		private static bool sternInit = false;
+
+		private static HashSet<double> lums = new HashSet<double>();
 
 		protected override byte[] CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
+
+			// Init DMD hack for Stern tables.
+			InitSternDMD(_hProcess, false);
 
 			// Check if a table is loaded..
 			var tableLoaded = new byte[1];
@@ -46,8 +52,12 @@ namespace LibDmd.Input.TPAGrabber
 
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
+				sternInit = false; // Reset Stern DMD hack state.
 				return frame;
 			}
+
+			// Table is loaded, reset Stern DMD hack.
+			InitSternDMD(_hProcess, true);
 
 			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
 			var eax = new byte[4];
@@ -60,7 +70,9 @@ namespace LibDmd.Input.TPAGrabber
 			ReadProcessMemory(_hProcess, dmdOffset, RawDMD, MemBlockSize + 2, IntPtr.Zero);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
-			if (RawDMD[0] != 0x02) return null;
+			if (RawDMD[0] != 0x02) {
+				return null;
+			}
 
 			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
 			var rawPixelIndex = 2;
@@ -80,7 +92,24 @@ namespace LibDmd.Input.TPAGrabber
 					var pos = dmdY * DMDWidth + dmdX;
 					//var pixel = (byte)Math.Max(0, lum * 15 * 3 - 12); // [ 0,4,10,15 ]
 					//var pixel = (byte)(lum * 15 * 1.5);               // [ 0,8,11,13 ]
-					var pixel = (byte)(lum * 15 * 1.6);                 // [ 0,8,12,14 ]
+					
+					byte pixel;
+					if (sternInit) {
+						// from STERN, we get: [ 0, 0.0666666666666667, 0.135294117647059, 0.203921568627451, 0.272549019607843, 0.341176470588235, 0.409803921568627, 0.47843137254902 ]
+						pixel = (byte)(lum * 15 * 2);
+					} else {
+						// from others, we get: [ 0, 0.366666666666667, 0.509803921568627, 0.605882352941176 ]
+						pixel = (byte)(lum * 15 * 1.6);
+					}
+					if (pixel > 0) {
+						pixel++;
+					}
+
+
+					if (!lums.Contains(lum)) {
+						lums.Add(lum);
+						Logger.Trace(String.Join(" ", lums.ToArray().OrderBy(l => l)));
+					}
 
 					// drop garbage frames
 					if (pixel > 15) {
@@ -107,10 +136,8 @@ namespace LibDmd.Input.TPAGrabber
 		// try attaching to a process
 		protected override IntPtr AttachGameProcess(Process p)
 		{
-			// checkj the process name
-			if ((p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet")
-				&& FindOffsets(p))
-			{
+			// check the process name
+			if ((p.ProcessName == "PinballArcade11" || p.ProcessName == "PinballArcadeCabinet") && FindOffsets(p)) {
 				// write the codecave
 				var processHandle = PatchCodeCave(p);
 
@@ -129,6 +156,7 @@ namespace LibDmd.Input.TPAGrabber
 		// addresses in the target process
 		private static IntPtr _dmdPatchAddr = IntPtr.Zero;
 		private static IntPtr _gameStateAddr = IntPtr.Zero;
+		private static IntPtr _dmdSternAddr = IntPtr.Zero;
 		private static IntPtr _codeCave = IntPtr.Zero;
 
 		// Not fully commented.. basically we're creating a codecave to let the game retrieve for us the DMD location in memory.
@@ -139,7 +167,7 @@ namespace LibDmd.Input.TPAGrabber
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
 				return processHandle;
-			}				
+			}
 
 			// Allocating memory to write the codecave.
 			_codeCave = VirtualAllocEx(processHandle, IntPtr.Zero, 0x100, 0x1000, 0x40);
@@ -185,9 +213,31 @@ namespace LibDmd.Input.TPAGrabber
 			return new byte[] { 0xE9, JMPbytes[0], JMPbytes[1], JMPbytes[2], JMPbytes[3] };
 		}
 
+		// Stern DMD Memory hack function.
+		private static void InitSternDMD(IntPtr procHandle, bool reset)
+		{
+			// Stern DMD hack patch bytes.
+			var sternPatch = new byte[] { 0xB8, 0x00, 0x00, 0x00, 0x00 };
+			// Stern DMD original code.
+			var sternOrig = new byte[] { 0x83, 0xF8, 0x4F, 0x74, 0x4B };
+			// If the hack has not been initialized yet..
+			if (!sternInit) {
+				if (!reset)
+					// Write the hack into memory.
+					WriteProcessMemory(procHandle, _dmdSternAddr, sternPatch, sternPatch.Length, IntPtr.Zero);
+				else {
+					// Reset the code to its initial state.
+					WriteProcessMemory(procHandle, _dmdSternAddr, sternOrig, sternOrig.Length, IntPtr.Zero);
+					// Ready!
+					sternInit = true;
+				}
+			}
+		}
+
 		// byte patterns to find DMD structs in the target process
 		private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
 		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
+		private static readonly byte[] SternDMDSignature = new byte[] { 0x75, 0x0A, 0xBA, 0x3E, 0x01, 0x00, 0x00, 0xB9, 0x3E, 0x00, 0x00, 0x00, 0x8B, 0x86, 0xD8, 0x29, 0x06, 0x00 };
 
 		private static bool FindOffsets(Process gameProc)
 		{
@@ -197,6 +247,12 @@ namespace LibDmd.Input.TPAGrabber
 			// Find DMD creation location in memory by looking for the signature pattern
 			_dmdPatchAddr = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0);
 			if (_dmdPatchAddr == IntPtr.Zero) {
+				return false;
+			}
+
+			// Find Stern DMD handling location in memory by looking for the signature pattern
+			_dmdSternAddr = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, SternDMDSignature, 18);
+			if (_dmdSternAddr == IntPtr.Zero) {
 				return false;
 			}
 
