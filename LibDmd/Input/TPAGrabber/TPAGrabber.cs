@@ -90,18 +90,17 @@ namespace LibDmd.Input.TPAGrabber
 					ColorUtil.RgbToHsl(RawDMD[rawPixelIndex], RawDMD[rawPixelIndex + 1], RawDMD[rawPixelIndex + 2], out hue, out sat, out lum);
 
 					var pos = dmdY * DMDWidth + dmdX;
-					//var pixel = (byte)Math.Max(0, lum * 15 * 3 - 12); // [ 0,4,10,15 ]
-					//var pixel = (byte)(lum * 15 * 1.5);               // [ 0,8,11,13 ]
-					
+
 					byte pixel;
-					if (sternInit) {
+					// NoEx: how to check if it's stern?
+//					if (isStern) {
 						// from STERN, we get: [ 0, 0.0666666666666667, 0.135294117647059, 0.203921568627451, 0.272549019607843, 0.341176470588235, 0.409803921568627, 0.47843137254902 ]
-						pixel = (byte)(lum * 15 * 2);
-					} else {
+//						pixel = (byte)(lum * 15 * 2);
+//					} else {
 						// from others, we get: [ 0, 0.366666666666667, 0.509803921568627, 0.605882352941176 ]
 						pixel = (byte)(lum * 15 * 1.6);
-					}
-					if (pixel > 0) {
+//					}
+					if (pixel > 0 && pixel < 15) {
 						pixel++;
 					}
 
