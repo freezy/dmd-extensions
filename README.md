@@ -63,6 +63,14 @@ setup, however note that games that you've already configured won't be affected.
 - For `dmddevice.dll` you probably want the 32-bit version unless you've set up
   VPM with `Setup64.exe` and you know what you're doing.
 
+## Build Instructions
+
+1. Download and install [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+2. The unmanaged exports library needs MS Build tools, which come with .NET 3.5. [Install Instructions](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows-10)
+4. *Optional:* If you want `DmdDevice.dll` copied to your VPM folder after build, point the `VPM_HOME` environment variable to your VPM installation folder.
+5. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
+3. Open the `.sln` file in Visual Studio and build the solution.
+
 ### Test
 
 1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
