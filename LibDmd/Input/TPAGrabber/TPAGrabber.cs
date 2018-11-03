@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text;
 using LibDmd.Common;
 using NLog;
 
@@ -40,8 +41,8 @@ namespace LibDmd.Input.TPAGrabber
 
 		protected override byte[] CaptureDMD()
 		{
-			// Initialize a new writeable bitmap to receive DMD pixels.
-			var frame = new byte[DMDWidth * DMDHeight];
+		// Initialize a new writeable bitmap to receive DMD pixels.
+		var frame = new byte[DMDWidth * DMDHeight];
 
 			// Init DMD hack for Stern tables.
 			InitSternDMD(_hProcess, false);
@@ -93,17 +94,17 @@ namespace LibDmd.Input.TPAGrabber
 
 					byte pixel;
 					// NoEx: how to check if it's stern?
-//					if (isStern) {
+					if (hasSpecialDMD(_hProcess)) {
 						// from STERN, we get: [ 0, 0.0666666666666667, 0.135294117647059, 0.203921568627451, 0.272549019607843, 0.341176470588235, 0.409803921568627, 0.47843137254902 ]
-//						pixel = (byte)(lum * 15 * 2);
-//					} else {
+						pixel = (byte)(lum * 15 * 2);
+					} else {
 						// from others, we get: [ 0, 0.366666666666667, 0.509803921568627, 0.605882352941176 ]
 						pixel = (byte)(lum * 15 * 1.6);
-//					}
+					}
+
 					if (pixel > 0 && pixel < 15) {
 						pixel++;
 					}
-
 
 					if (!lums.Contains(lum)) {
 						lums.Add(lum);
@@ -156,6 +157,7 @@ namespace LibDmd.Input.TPAGrabber
 		private static IntPtr _dmdPatchAddr = IntPtr.Zero;
 		private static IntPtr _gameStateAddr = IntPtr.Zero;
 		private static IntPtr _dmdSternAddr = IntPtr.Zero;
+		private static IntPtr _tableNameAddr = IntPtr.Zero;
 		private static IntPtr _codeCave = IntPtr.Zero;
 
 		// Not fully commented.. basically we're creating a codecave to let the game retrieve for us the DMD location in memory.
@@ -233,10 +235,21 @@ namespace LibDmd.Input.TPAGrabber
 			}
 		}
 
+		private static bool hasSpecialDMD(IntPtr procHandle)
+		{
+			var tableBuffer = new byte[20];
+			ReadProcessMemory(procHandle, _tableNameAddr, tableBuffer, tableBuffer.Length, IntPtr.Zero);
+			var rawTableName = Encoding.Default.GetString(tableBuffer);
+			var tableName = rawTableName.Substring(1, rawTableName.IndexOf("_") - 1);
+			var specialDMDTables = new string[] { "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
+			return specialDMDTables.Any(tableName.Contains) ? true : false;
+		}
+
 		// byte patterns to find DMD structs in the target process
-		private static readonly byte[] DMDCreationSignature = new byte[] { 0x0F, 0xB6, 0x16, 0x8B, 0x75, 0xF0, 0xD3, 0xEA, 0x83, 0xE2, 0x01, 0x03, 0xFA };
+		private static readonly byte[] DMDCreationSignature = new byte[] { 0x8B, 0x5D, 0x10, 0x8D, 0x40, 0x08, 0x83, 0xE2, 0x01, 0x83, 0xE7, 0x01, 0x03, 0xFA };
 		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
 		private static readonly byte[] SternDMDSignature = new byte[] { 0x75, 0x0A, 0xBA, 0x3E, 0x01, 0x00, 0x00, 0xB9, 0x3E, 0x00, 0x00, 0x00, 0x8B, 0x86, 0xD8, 0x29, 0x06, 0x00 };
+		private static readonly byte[] TableNameSignature = new byte[] { 0x85, 0xC0, 0x74, 0x08, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x02, 0x33, 0xC0, 0x51, 0xBA, 0xFF, 0xFF, 0xFF, 0xFF, 0xB9 };
 
 		private static bool FindOffsets(Process gameProc)
 		{
@@ -244,7 +257,7 @@ namespace LibDmd.Input.TPAGrabber
 			var gameBase = BaseAddress(gameProc);
 
 			// Find DMD creation location in memory by looking for the signature pattern
-			_dmdPatchAddr = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 0);
+			_dmdPatchAddr = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, DMDCreationSignature, 14);
 			if (_dmdPatchAddr == IntPtr.Zero) {
 				return false;
 			}
@@ -255,11 +268,17 @@ namespace LibDmd.Input.TPAGrabber
 				return false;
 			}
 
+			// Retrieve table name pointer + offset
+			var tableNamePointer = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, TableNameSignature, 21);
+			var tableBuf = new byte[4];
+			ReadProcessMemory(gameProc.Handle, tableNamePointer, tableBuf, tableBuf.Length, IntPtr.Zero);
+			_tableNameAddr = B4ToPointer(tableBuf);
+
 			// Retrieve game state pointer + offset
 			var gameStatePointer = FindPattern(gameProc, gameBase, gameProc.MainModule.ModuleMemorySize, GameStateSignature, 34);
-			var pointerBuf = new byte[4];
-			ReadProcessMemory(gameProc.Handle, gameStatePointer, pointerBuf, pointerBuf.Length, IntPtr.Zero);
-			_gameStateAddr = B4ToPointer(pointerBuf);
+			var stateBuf = new byte[4];
+			ReadProcessMemory(gameProc.Handle, gameStatePointer, stateBuf, stateBuf.Length, IntPtr.Zero);
+			_gameStateAddr = B4ToPointer(stateBuf);
 
 			// success
 			return true;
