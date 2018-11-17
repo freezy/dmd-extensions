@@ -37,6 +37,8 @@ namespace LibDmd.Converter.Colorize
 			for (var i = 0; i < numAnimations; i++) {
 				Animations.Add(new VniAnimation(reader, Version));
 			}
+			reader.Close();
+			fs.Close();
 		}
 
 		public override string ToString()
