@@ -1040,10 +1040,17 @@ namespace LibDmd
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
 				return frame;
 			}
+
+			// block-copy for same width but smaller height
+			if (width == dest.DmdWidth && height < dest.DmdHeight && Resize != ResizeMode.Stretch && !FlipHorizontally && !FlipVertically) {
+				var transformedFrame = new byte[dest.DmdWidth * dest.DmdHeight];
+				Buffer.BlockCopy(frame, 0, transformedFrame, ((dest.DmdHeight - height) / 2) * dest.DmdWidth, frame.Length);
+				return transformedFrame;
+			}
+
 			var bmp = ImageUtil.ConvertFromGray2(width, height, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return transformedFrame;
+			return ImageUtil.ConvertToGray2(transformedBmp);
 		}
 
 		private byte[] TransformGray4(int width, int height, byte[] frame, IFixedSizeDestination dest)
