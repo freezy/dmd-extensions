@@ -171,6 +171,7 @@ namespace DmdExt.Common
 				IgnoreAspectRatio = ignoreAr,
 				DotSize = options.VirtualDmdDotSize
 			};
+			var segDmd = new SegmentDmd();
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:
@@ -179,6 +180,9 @@ namespace DmdExt.Common
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
 					dmd.Show();
+				});
+				segDmd.Dispatcher.Invoke(() => {
+					segDmd.Show();
 				});
 
 				// Start the Dispatcher Processing

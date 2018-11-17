@@ -124,6 +124,21 @@
       <HintPath>..\packages\SharpAvi.2.1.0\lib\net45\SharpAvi.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SkiaSharp, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.1.60.3\lib\net45\SkiaSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Extended.Svg, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Svg.1.60.0\lib\portable-net45+win8+wp8+wpa81\SkiaSharp.Extended.Svg.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.Desktop, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.1.60.3\lib\net45\SkiaSharp.Views.Desktop.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.Gtk, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.1.60.3\lib\net45\SkiaSharp.Views.Gtk.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.WPF, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.1.60.3\lib\net45\SkiaSharp.Views.WPF.dll</HintPath>
+    </Reference>
     <Reference Include="SocketIoClientDotNet, Version=0.9.13.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SocketIoClientDotNet.0.9.13\lib\net45\SocketIoClientDotNet.dll</HintPath>
       <Private>True</Private>
@@ -144,6 +159,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -163,6 +179,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ColoredFrame.cs" />
+    <Compile Include="Common\SegmentDmd.xaml.cs">
+      <DependentUpon>SegmentDmd.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DmdDevice\AlphaNumeric.cs" />
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
@@ -227,6 +246,10 @@
     <Compile Include="Converter\Colorize\Coloring.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
+    <Compile Include="Output\Virtual\Seg20AlphaControl.xaml.cs">
+      <DependentUpon>Seg20AlphaControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\SegGenerator.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\ISource.cs" />
@@ -301,6 +324,10 @@
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Common\SegmentDmd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Common\VirtualDmd.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -308,6 +335,10 @@
     <Page Include="Input\ScreenGrabber\GrabberWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Output\Virtual\Seg20AlphaControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Output\Virtual\VirtualDmdControl.xaml">
       <SubType>Designer</SubType>
@@ -336,7 +367,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\SkiaSharp.1.60.3\build\net45\SkiaSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.1.60.3\build\net45\SkiaSharp.targets'))" />
   </Target>
+  <Import Project="..\packages\SkiaSharp.1.60.3\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.60.3\build\net45\SkiaSharp.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
