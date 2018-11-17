@@ -23,30 +23,24 @@ namespace LibDmd.Output.Virtual
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		protected virtual void OnPropertyChanged(string propertyName)
-			=> this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-
-		protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-			=> this.PropertyChanged?.Invoke(this, e);
+		protected virtual void OnPropertyChanged(string propertyName) => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+		protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
 
 		#region ImageSource
-		private ImageSource _ImageSource;
+		private ImageSource _imageSource;
 		public ImageSource ImageSource
 		{
-			get => _ImageSource;
-			set
-			{
-				if (_ImageSource != value) {
-					_ImageSource = value;
+			get => _imageSource;
+			set {
+				if (_imageSource != value) {
+					_imageSource = value;
 					OnPropertyChanged(nameof(ImageSource));
 				}
 			}
 		}
 		#endregion
 
-		public string Name { get; private set; }
-
-		private readonly ISegGenerator ImageService;
+		private readonly SegGenerator ImageService;
 		private readonly WriteableBitmap WriteableBitmap;
 
 		public Seg20AlphaControl()
@@ -54,12 +48,11 @@ namespace LibDmd.Output.Virtual
 			DataContext = this;
 			InitializeComponent();
 
-			var imageService = new SegGenerator();
+			var segGenerator = new SegGenerator();
 
-			this.Name = "SkiaSharp Wpf Example";
-			this.ImageService = imageService;
-			this.ImageSource = this.WriteableBitmap = imageService.CreateImage(900, 600);
-			CompositionTarget.Rendering += (o, e) => this.ImageService.UpdateImage(this.WriteableBitmap);
+			ImageService = segGenerator;
+			ImageSource = WriteableBitmap = segGenerator.CreateImage(900, 600);
+			CompositionTarget.Rendering += (o, e) => ImageService.UpdateImage(WriteableBitmap);
 		}
 	}
 }

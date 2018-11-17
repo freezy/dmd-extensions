@@ -320,6 +320,7 @@
     <EmbeddedResource Include="Output\Network\www\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Output\Virtual\alphanum.svg" />
     <Content Include="Output\Virtual\Dmd.fx" />
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
