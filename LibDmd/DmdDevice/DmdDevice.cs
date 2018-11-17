@@ -564,11 +564,10 @@ namespace LibDmd.DmdDevice
 			}
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
-				case NumericalLayout.None:
-					break;
 				case NumericalLayout.__2x16Alpha:
 					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x16Alpha(segData));
 					break;
+				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
 					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x20Alpha(segData));
 					break;
