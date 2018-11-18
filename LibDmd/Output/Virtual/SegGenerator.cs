@@ -21,7 +21,7 @@ namespace LibDmd.Output.Virtual
 		private int _call = 0;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
-		private readonly Dictionary<int, SKSvg> _segments = new Dictionary<int, SKSvg>();
+		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
 
 		public SegGenerator()
 		{
@@ -47,7 +47,7 @@ namespace LibDmd.Output.Virtual
 
 			Logger.Info("Loading segment SVGs...");
 			for (var i = 0; i < segFilenames.Length; i++) {
-				var svg = new SKSvg();
+				var svg = new SkiaSharp.Extended.Svg.SKSvg();
 				svg.Load(_assembly.GetManifestResourceStream(segFilenames[i]));
 				_segments.Add(i, svg);
 			}
@@ -58,7 +58,12 @@ namespace LibDmd.Output.Virtual
 			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 		}
 
-		public void UpdateImage(WriteableBitmap writeableBitmap)
+		public void DrawFrame(AlphaNumericFrame frame)
+		{
+			Logger.Info("drawing frame!");
+		}
+
+		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
 			int width = (int)writeableBitmap.Width,
 				height = (int)writeableBitmap.Height;
