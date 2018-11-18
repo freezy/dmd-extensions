@@ -41,8 +41,10 @@ namespace LibDmd.DmdDevice
 		private readonly VpmGray2Source _vpmGray2Source = new VpmGray2Source();
 		private readonly VpmGray4Source _vpmGray4Source = new VpmGray4Source();
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
+		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private VirtualDmd _dmd;
+		private VirtualAlphaNumericDisplay _alphaNumericDisplay;
 
 		// Ziigs vo VPM
 		private string _gameName;
@@ -120,6 +122,7 @@ namespace LibDmd.DmdDevice
 					_dmd.Dispatcher.Invoke(() => {
 						SetupGraphs();
 						SetupVirtualDmd();
+						SetupVirtualAlphaNumericDisplay();
 					});
 				}
 			} else {
@@ -191,6 +194,7 @@ namespace LibDmd.DmdDevice
 
 				// create the virtual DMD window and create the render grahps
 				_dmd = new VirtualDmd();
+				_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
 
 				// Create our context, and install it:
@@ -199,6 +203,8 @@ namespace LibDmd.DmdDevice
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => _dmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
+				_alphaNumericDisplay.Closed += (s, e) => _alphaNumericDisplay.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+				_alphaNumericDisplay.Dispatcher.Invoke(SetupVirtualDmd);
 
 				// we're done with the setup - let the calling thread proceed
 				ev.Set();
@@ -258,6 +264,10 @@ namespace LibDmd.DmdDevice
 			if (_config.VirtualDmd.Enabled) {
 				renderers.Add(_dmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
+			}
+			if (_config.VirtualAlphaNumericDisplay.Enabled) {
+				renderers.Add(_alphaNumericDisplay.AlphaNumericDisplay);
+				Logger.Info("Added virtual alphanumeric renderer.");
 			}
 			if (_config.Video.Enabled) {
 
@@ -450,6 +460,14 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
+		/// Sets the virtual DMD's parameters, initializes it and shows it.
+		/// </summary>
+		private void SetupVirtualAlphaNumericDisplay()
+		{
+			_alphaNumericDisplay.AlphaNumericDisplay.Init();
+			_alphaNumericDisplay.Show();
+		}
+		/// <summary>
 		/// Sets the position of the DMD as defined in the .ini file.
 		/// </summary>
 		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
@@ -562,6 +580,8 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+			_vpmAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
+
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:

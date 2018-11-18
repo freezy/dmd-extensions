@@ -178,9 +178,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
-    <Compile Include="Common\SegmentDmd.xaml.cs">
-      <DependentUpon>SegmentDmd.xaml</DependentUpon>
+    <Compile Include="Common\VirtualAlphaNumericDisplay.xaml.cs">
+      <DependentUpon>VirtualAlphaNumericDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="DmdDevice\AlphaNumeric.cs" />
     <Compile Include="Common\ColorUtil.cs" />
@@ -218,6 +219,7 @@
     <Compile Include="Input\IColoredGray4Source.cs" />
     <Compile Include="Input\IColoredGray2Source.cs" />
     <Compile Include="Input\IGray2Source.cs" />
+    <Compile Include="Input\IAlphaNumericSource.cs" />
     <Compile Include="Input\IRgb24Source.cs" />
     <Compile Include="Input\IGray4Source.cs" />
     <Compile Include="Input\MemoryGrabber.cs" />
@@ -225,12 +227,14 @@
     <Compile Include="Input\PinballFX\PinballFX3MemoryGrabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX3Grabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX2Grabber.cs" />
+    <Compile Include="Input\PinMame\VpmAlphaNumericSource.cs" />
     <Compile Include="Input\PinMame\VpmRgb24Source.cs" />
     <Compile Include="Input\PinMame\VpmGray4Source.cs" />
     <Compile Include="Input\PinMame\VpmGray2Source.cs" />
     <Compile Include="Input\FileSystem\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\GifOutput.cs" />
+    <Compile Include="Output\IAlphaNumericDestination.cs" />
     <Compile Include="Output\PinUp\PinUpOutput.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
@@ -288,6 +292,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Costura64\ftd2xx.dll" />
+    <EmbeddedResource Include="Costura32\libEGL.dll" />
+    <EmbeddedResource Include="Costura32\libGLESv2.dll" />
+    <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
     <Content Include="FodyWeavers.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -320,7 +327,6 @@
     <EmbeddedResource Include="Output\Network\www\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Output\Virtual\alphanum.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\00-top.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\01-top-right.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\02-bottom-right.svg" />
@@ -342,7 +348,7 @@
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Common\SegmentDmd.xaml">
+    <Page Include="Common\VirtualAlphaNumericDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

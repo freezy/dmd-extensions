@@ -14,6 +14,7 @@ namespace LibDmd.DmdDevice
 		public static readonly string EnvConfig = "DMDDEVICE_CONFIG";
 		public readonly GlobalConfig Global;
 		public readonly VirtualDmdConfig VirtualDmd;
+		public readonly VirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay;
 		public readonly PinDmd1Config PinDmd1;
 		public readonly PinDmd2Config PinDmd2;
 		public readonly PinDmd3Config PinDmd3;
@@ -169,6 +170,17 @@ namespace LibDmd.DmdDevice
 		public double DotSize => GetDouble("dotsize", 1.0);
 
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration
+	{
+		public override string Name { get; } = "virtualalphanumeric";
+
+		public bool Enabled => GetBoolean("enabled", true);
+
+		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

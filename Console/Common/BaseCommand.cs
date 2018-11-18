@@ -171,7 +171,7 @@ namespace DmdExt.Common
 				IgnoreAspectRatio = ignoreAr,
 				DotSize = options.VirtualDmdDotSize
 			};
-			var segDmd = new SegmentDmd();
+			var segDmd = new VirtualAlphaNumericDisplay();
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:

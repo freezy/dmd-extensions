@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers>
-	<Costura>
-		<Unmanaged32Assemblies>
-    </Unmanaged32Assemblies>
-    <Unmanaged64Assemblies>
-      ProPinballBridge
-      ftd2xx
-    </Unmanaged64Assemblies>
-	</Costura>
+    <Costura>
+        <Unmanaged32Assemblies>
+            libSkiaSharp
+        </Unmanaged32Assemblies>
+        <Unmanaged64Assemblies>
+            ProPinballBridge
+            ftd2xx
+        </Unmanaged64Assemblies>
+    </Costura>
 </Weavers>

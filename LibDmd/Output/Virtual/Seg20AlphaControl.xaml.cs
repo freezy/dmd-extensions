@@ -20,10 +20,11 @@ namespace LibDmd.Output.Virtual
 	/// <summary>
 	/// Interaction logic for Seg20AlphaControl.xaml
 	/// </summary>
-	public partial class Seg20AlphaControl : UserControl, INotifyPropertyChanged
+	public partial class Seg20AlphaControl : UserControl, IAlphaNumericDestination, INotifyPropertyChanged
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		public bool IsAvailable => true;
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		protected virtual void OnPropertyChanged(string propertyName) => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
@@ -53,16 +54,33 @@ namespace LibDmd.Output.Virtual
 
 			SizeChanged += LocationChanged_Event;
 
-			var segGenerator = new SegGenerator();
-
-			_segGenerator = segGenerator;
+			_segGenerator = new SegGenerator();
 			ImageSource = _writeableBitmap = _segGenerator.CreateImage(1280, 116);
-			CompositionTarget.Rendering += (o, e) => _segGenerator.UpdateImage(_writeableBitmap);
+			CompositionTarget.Rendering += (o, e) => _segGenerator.DrawImage(_writeableBitmap);
+		}
+
+		public void Init()
+		{
+		}
+
+		public void RenderAlphaNumeric(AlphaNumericFrame frame)
+		{
+			_segGenerator.DrawFrame(frame);
 		}
 
 		private void LocationChanged_Event(object sender, SizeChangedEventArgs e)
 		{
 			ImageSource = _writeableBitmap = _segGenerator.CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
+		}
+
+		public void Dispose()
+		{
+		}
+
+
+		public void ClearDisplay()
+		{
+			
 		}
 	}
 }

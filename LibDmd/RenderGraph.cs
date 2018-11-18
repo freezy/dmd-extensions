@@ -314,11 +314,13 @@ namespace LibDmd
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
 					var destBitmap = dest as IBitmapDestination;
+					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 					var sourceColoredGray2 = Source as IColoredGray2Source;
 					var sourceColoredGray4 = Source as IColoredGray4Source;
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
+					var sourceAlphaNumeric = Source as IAlphaNumericSource;
 
 					// first, check if we do without conversion
 					// gray2 -> gray2
@@ -349,6 +351,11 @@ namespace LibDmd
 					// bitmap -> bitmap
 					if (sourceBitmap != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Bitmap);
+						continue;
+					}
+					// alphanum -> alphanum
+					if (sourceAlphaNumeric != null && destAlphaNumeric != null) {
+						Connect(Source, dest, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
 						continue;
 					}
 
@@ -488,6 +495,7 @@ namespace LibDmd
 			var destBitmap = dest as IBitmapDestination;
 			var destColoredGray2 = dest as IColoredGray2Destination;
 			var destColoredGray4 = dest as IColoredGray4Destination;
+			var destAlphaNumeric = dest as IAlphaNumericDestination;
 			Logger.Info("Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to);
 
 			switch (from) { 
@@ -832,6 +840,22 @@ namespace LibDmd
 									.Select(frame => TransformColoredGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destColoredGray4.RenderColoredGray4);
 							break;
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+				// source is alphanumeric:
+				case FrameFormat.AlphaNumeric:
+					var sourceAlphaNumeric = source as IAlphaNumericSource;
+					switch (to) {
+
+						// colored alphanumeric -> alphanumeric
+						case FrameFormat.AlphaNumeric:
+							AssertCompatibility(source, sourceAlphaNumeric, dest, destAlphaNumeric, from, to);
+							Subscribe(sourceAlphaNumeric.GetAlphaNumericFrames(), destAlphaNumeric.RenderAlphaNumeric);
+							break;
+						
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
 					}
@@ -1199,7 +1223,12 @@ namespace LibDmd
 		/// <summary>
 		/// A 4-bit grayscale frame bundled with a 16-color palette
 		/// </summary>
-		ColoredGray4
+		ColoredGray4,
+
+		/// <summary>
+		/// An alphanumeric frame
+		/// </summary>
+		AlphaNumeric,
 	}
 
 	/// <summary>
