@@ -6,8 +6,8 @@
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
         mc:Ignorable="d"
         Title="Skia"
-        Width="900"
-        Height="600"
+        Width="1280"
+        Height="156"
         >
     <Grid>
         <Grid.ColumnDefinitions>

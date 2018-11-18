@@ -31,6 +31,9 @@ namespace LibDmd.Output.Virtual
 			int width = (int)writeableBitmap.Width,
 				height = (int)writeableBitmap.Height;
 
+			var numChars = 20;
+			float paddingX = 10;
+
 			writeableBitmap.Lock();
 
 			using (var surface = SKSurface.Create(
@@ -42,20 +45,29 @@ namespace LibDmd.Output.Virtual
 				rowBytes: width * 4)) {
 				var canvas = surface.Canvas;
 
-				const int x = 30;
-				var paint = new SKPaint() { Color = new SKColor(255, 255, 255), TextSize = 100 };
+				var paint = new SKPaint() { Color = new SKColor(255, 255, 255), TextSize = 10 };
 				var svg = new SKSvg();
-
 				svg.Load(_assembly.GetManifestResourceStream("LibDmd.Output.Virtual.alphanum.svg"));
 
+				var svgSize = svg.Picture.CullRect;
+				float svgWidth = (width - (paddingX * (numChars - 1))) / (float)numChars;
+				float scale = svgWidth / svgSize.Width;
+				var matrix = SKMatrix.MakeScale(scale, scale);
+
 				canvas.Clear(new SKColor(130, 130, 130));
-				canvas.DrawPicture(svg.Picture);
-				canvas.DrawText("SkiaSharp on Wpf!", x, 200, paint);
-				if (this._call == 0)
+
+
+				for (var i = 0; i < numChars; i++) {
+					canvas.DrawPicture(svg.Picture, ref matrix);
+					matrix.TransX += width / (float)numChars;
+				}
+
+				if (this._call == 0) {
 					this._stopwatch.Start();
+				}
 				double fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}", x, 300, paint);
-				canvas.DrawText($"Frames: {this._call++}", x, 400, paint);
+				canvas.DrawText($"FPS: {fps:0}", 0, 110, paint);
+				canvas.DrawText($"Frames: {this._call++}", 50, 110, paint);
 			}
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
