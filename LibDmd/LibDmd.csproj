@@ -321,6 +321,23 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Output\Virtual\alphanum.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\06-middle-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\08-diag-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\09-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\10-diag-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\11-middle-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\12-diag-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\13-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\14-diag-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\15-dot.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum\full.svg" />
     <Content Include="Output\Virtual\Dmd.fx" />
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
@@ -353,6 +370,7 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
