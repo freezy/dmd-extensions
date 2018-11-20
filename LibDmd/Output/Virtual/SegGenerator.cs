@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
@@ -21,12 +22,16 @@ namespace LibDmd.Output.Virtual
 		private int _call = 0;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
-		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
+		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments =
+			new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
+
+		private AlphaNumericFrame _frame;
 
 		public SegGenerator()
 		{
 			var prefix = "LibDmd.Output.Virtual.alphanum.";
-			var segFilenames = new[] {
+			var segFilenames = new[]
+			{
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
 				$"{prefix}02-bottom-right.svg",
@@ -46,7 +51,8 @@ namespace LibDmd.Output.Virtual
 			};
 
 			Logger.Info("Loading segment SVGs...");
-			for (var i = 0; i < segFilenames.Length; i++) {
+			for (var i = 0; i < segFilenames.Length; i++)
+			{
 				var svg = new SkiaSharp.Extended.Svg.SKSvg();
 				svg.Load(_assembly.GetManifestResourceStream(segFilenames[i]));
 				_segments.Add(i, svg);
@@ -55,45 +61,67 @@ namespace LibDmd.Output.Virtual
 
 		public WriteableBitmap CreateImage(int width, int height)
 		{
-			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32,
+				BitmapPalettes.Halftone256Transparent);
 		}
 
-		public void DrawFrame(AlphaNumericFrame frame)
+		public void UpdateFrame(AlphaNumericFrame frame)
 		{
-			Logger.Info("drawing frame!");
+			_frame = frame;
+		}
+
+		private void DrawSegment(int position, SKCanvas canvas, SKMatrix matrix)
+		{
+			var seg = _frame.SegmentData[position];
+			for (var j = 0; j < 16; j++)
+			{
+				if (((seg >> j) & 0x1) != 0)
+				{
+					var svg = _segments[j];
+					canvas.DrawPicture(svg.Picture, ref matrix);
+				}
+			}
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
-			int width = (int)writeableBitmap.Width,
-				height = (int)writeableBitmap.Height;
+			if (_frame == null) {
+				return;
+			}
+
+			int width = (int) writeableBitmap.Width,
+				height = (int) writeableBitmap.Height;
 
 			var numChars = 20;
 			float paddingX = 10;
 
 			writeableBitmap.Lock();
 
-			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul, writeableBitmap.BackBuffer, width * 4)) {
-
+			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul,
+				writeableBitmap.BackBuffer, width * 4))
+			{
 				var canvas = surface.Canvas;
 
-				var paint = new SKPaint() { Color = new SKColor(255, 255, 255), TextSize = 10 };
-				var svg = _segments[0];
-				var svgSize = svg.Picture.CullRect;
-				float svgWidth = (width - (paddingX * (numChars - 1))) / (float)numChars;
+				var paint = new SKPaint() {Color = new SKColor(255, 255, 255), TextSize = 10};
+
+				var svgSize = _segments[0].Picture.CullRect;
+				float svgWidth = (width - (paddingX * (numChars - 1))) / (float) numChars;
 				float scale = svgWidth / svgSize.Width;
 				var matrix = SKMatrix.MakeScale(scale, scale);
 
 				canvas.Clear(new SKColor(130, 130, 130));
 
-				for (var i = 0; i < numChars; i++) {
-					canvas.DrawPicture(svg.Picture, ref matrix);
-					matrix.TransX += width / (float)numChars;
+				for (var i = 0; i < numChars; i++)
+				{
+					DrawSegment(i, canvas, matrix);
+					matrix.TransX += width / (float) numChars;
 				}
 
-				if (this._call == 0) {
+				if (this._call == 0)
+				{
 					this._stopwatch.Start();
 				}
+
 				double fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
 				canvas.DrawText($"FPS: {fps:0}", 0, 110, paint);
 				canvas.DrawText($"Frames: {this._call++}", 50, 110, paint);
