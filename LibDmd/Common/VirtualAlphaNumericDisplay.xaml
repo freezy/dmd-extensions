@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Skia"
         Width="1280"
-        Height="310"
+        Height="290"
         >
     <Grid>
         <Grid.ColumnDefinitions>
