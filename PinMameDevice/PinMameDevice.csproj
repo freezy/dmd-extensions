@@ -114,6 +114,7 @@
     <Content Include="DmdDevice.log.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="app.config" />
     <None Include="DmdDevice.ini" />
     <None Include="packages.config" />
     <None Include="README.md" />

@@ -1,16 +1,17 @@
-﻿using System.Reflection;
+﻿using System.Resources;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PinDmd")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("LibDmd")]
+[assembly: AssemblyDescription("A .NET libary for providing dmdext's features.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PinDmd")]
-[assembly: AssemblyCopyright("Copyright © 2016")]
+[assembly: AssemblyProduct("LibDmd")]
+[assembly: AssemblyCopyright("Copyright © 2018 freezy <freezy@vpdb.io>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,4 +36,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion(LibDmd.Version.AssemblyVersion)]
 [assembly: AssemblyFileVersion(LibDmd.Version.AssemblyFileVersion)]
 [assembly: AssemblyInformationalVersionAttribute(LibDmd.Version.AssemblyInformationalVersionAttribute)]
+[assembly: NeutralResourcesLanguage("en")]
 
