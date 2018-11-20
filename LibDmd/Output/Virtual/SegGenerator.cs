@@ -18,7 +18,7 @@ namespace LibDmd.Output.Virtual
 	{
 
 		private readonly SKColor _foregroundColor = SKColors.OrangeRed;
-		private readonly SKColor _grayColor = new SKColor(255, 255, 255, 0x1d);
+		private readonly SKColor _segmentBackgroundColor = new SKColor(255, 255, 255, 0x1d);
 		private readonly SKColor _backgroundColor = SKColors.Black;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -37,13 +37,14 @@ namespace LibDmd.Output.Virtual
 		private float _svgWidth = 0;
 		private float _svgHeight = 0;
 
+		private const int SkewAngle = -20;
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
 		private const int Padding = 20;
 
 		public SegGenerator()
 		{
-			var prefix = "LibDmd.Output.Virtual.alphanum.";
+			const string prefix = "LibDmd.Output.Virtual.alphanum.";
 			var segFilenames = new[]
 			{
 				$"{prefix}00-top.svg",
@@ -80,23 +81,40 @@ namespace LibDmd.Output.Virtual
 			var scale = _svgWidth / svgSize.Width;
 			_svgHeight = svgSize.Height * scale;
 
+			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
+
 			var matrix = SKMatrix.MakeScale(scale, scale);
-			var info = new SKImageInfo((int)_svgWidth, (int)_svgHeight);
+			var info = new SKImageInfo((int)skewedWidth, (int)_svgHeight);
+
+			Logger.Info("Width = {0}, Skewed = {1}", _svgWidth, skewedWidth);
 
 			using (var svgPaint = new SKPaint()) {
 				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
 				foreach (var i in _segments.Keys) {
 					var surface = SKSurface.Create(info);
+					//surface.Canvas.Translate(info.Width / 2, info.Height / 2);
+					Skew(surface.Canvas, SkewAngle, 0);
 					surface.Canvas.DrawPicture(_segments[i].Picture, ref matrix, svgPaint);
 					_segmentsRasterized[i] = surface;
 				}
 
-				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_grayColor, SKBlendMode.SrcIn);
+				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentBackgroundColor, SKBlendMode.SrcIn);
 				var surfaceFull = SKSurface.Create(info);
 				surfaceFull.Canvas.DrawPicture(_fullSvg.Picture, ref matrix, svgPaint);
 				_fullSvgRasterized = surfaceFull;
 			}
 			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+		}
+
+		void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
+		{
+			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
+		}
+
+		float SkewedWidth(float width, float height)
+		{
+			var skew = (float) Math.Tan(Math.PI * SkewAngle / 180);
+			return width - skew * height;
 		}
 
 		public void UpdateFrame(AlphaNumericFrame frame)
