@@ -215,7 +215,7 @@ namespace LibDmd.DmdDevice
 
 		public static byte[] Render2x20Alpha(ushort[] seg_data)
 		{
-			Logger.Info(string.Join(", ", seg_data.ToList().Select(seg => seg.ToString("X"))));
+			//Logger.Info(string.Join(", ", seg_data.ToList().Select(seg => seg.ToString("X"))));
 			Clear();
 			byte i, j;
 			for (i = 0; i < 16; i++) {
