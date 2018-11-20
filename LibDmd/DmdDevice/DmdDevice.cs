@@ -122,7 +122,6 @@ namespace LibDmd.DmdDevice
 					_dmd.Dispatcher.Invoke(() => {
 						SetupGraphs();
 						SetupVirtualDmd();
-						SetupVirtualAlphaNumericDisplay();
 					});
 				}
 			} else {
@@ -379,6 +378,16 @@ namespace LibDmd.DmdDevice
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically
 			});
+			
+			// alphanumeric graph
+			_graphs.Add(new RenderGraph {
+				Name = "Alphanumeric VPM Graph",
+				Source = _vpmAlphaNumericSource,
+				Destinations = renderers,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically = _config.Global.FlipVertically
+			});
 
 			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
@@ -457,16 +466,11 @@ namespace LibDmd.DmdDevice
 
 			_dmd.Dmd.Init();
 			_dmd.Show();
-		}
 
-		/// <summary>
-		/// Sets the virtual DMD's parameters, initializes it and shows it.
-		/// </summary>
-		private void SetupVirtualAlphaNumericDisplay()
-		{
 			_alphaNumericDisplay.AlphaNumericDisplay.Init();
 			_alphaNumericDisplay.Show();
 		}
+
 		/// <summary>
 		/// Sets the position of the DMD as defined in the .ini file.
 		/// </summary>
@@ -494,6 +498,9 @@ namespace LibDmd.DmdDevice
 			try {
 				_dmd?.Dispatcher.Invoke(() => {
 					_dmd.Hide();
+				});
+				_alphaNumericDisplay?.Dispatcher.Invoke(() => {
+					_alphaNumericDisplay.Hide();
 				});
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
