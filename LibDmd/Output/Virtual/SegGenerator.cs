@@ -51,8 +51,7 @@ namespace LibDmd.Output.Virtual
 			};
 
 			Logger.Info("Loading segment SVGs...");
-			for (var i = 0; i < segFilenames.Length; i++)
-			{
+			for (var i = 0; i < segFilenames.Length; i++) {
 				var svg = new SkiaSharp.Extended.Svg.SKSvg();
 				svg.Load(_assembly.GetManifestResourceStream(segFilenames[i]));
 				_segments.Add(i, svg);
@@ -73,10 +72,8 @@ namespace LibDmd.Output.Virtual
 		private void DrawSegment(int position, SKCanvas canvas, SKMatrix matrix)
 		{
 			var seg = _frame.SegmentData[position];
-			for (var j = 0; j < 16; j++)
-			{
-				if (((seg >> j) & 0x1) != 0)
-				{
+			for (var j = 0; j < 16; j++) {
+				if (((seg >> j) & 0x1) != 0) {
 					var svg = _segments[j];
 					canvas.DrawPicture(svg.Picture, ref matrix);
 				}
@@ -89,8 +86,8 @@ namespace LibDmd.Output.Virtual
 				return;
 			}
 
-			int width = (int) writeableBitmap.Width,
-				height = (int) writeableBitmap.Height;
+			int width = (int)writeableBitmap.Width,
+				height = (int)writeableBitmap.Height;
 
 			var numChars = 20;
 			float paddingX = 10;
@@ -98,27 +95,24 @@ namespace LibDmd.Output.Virtual
 			writeableBitmap.Lock();
 
 			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul,
-				writeableBitmap.BackBuffer, width * 4))
-			{
+				writeableBitmap.BackBuffer, width * 4)) {
 				var canvas = surface.Canvas;
 
-				var paint = new SKPaint() {Color = new SKColor(255, 255, 255), TextSize = 10};
+				var paint = new SKPaint() { Color = new SKColor(255, 255, 255), TextSize = 10 };
 
 				var svgSize = _segments[0].Picture.CullRect;
-				float svgWidth = (width - (paddingX * (numChars - 1))) / (float) numChars;
+				float svgWidth = (width - (paddingX * (numChars - 1))) / (float)numChars;
 				float scale = svgWidth / svgSize.Width;
 				var matrix = SKMatrix.MakeScale(scale, scale);
 
 				canvas.Clear(new SKColor(130, 130, 130));
 
-				for (var i = 0; i < numChars; i++)
-				{
+				for (var i = 0; i < numChars; i++) {
 					DrawSegment(i, canvas, matrix);
-					matrix.TransX += width / (float) numChars;
+					matrix.TransX += width / (float)numChars;
 				}
 
-				if (this._call == 0)
-				{
+				if (this._call == 0) {
 					this._stopwatch.Start();
 				}
 
