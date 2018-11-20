@@ -18,6 +18,7 @@ namespace LibDmd.Output.Virtual
 	{
 
 		private readonly SKColor _foregroundColor = SKColors.OrangeRed;
+		private readonly SKColor _grayColor = new SKColor(255, 255, 255, 0x1d);
 		private readonly SKColor _backgroundColor = SKColors.Black;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -27,9 +28,10 @@ namespace LibDmd.Output.Virtual
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
 		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
-		private readonly Dictionary<int, SKSurface> _segmentsBmp = new Dictionary<int, SKSurface>();
+		private readonly Dictionary<int, SKSurface> _segmentsRasterized = new Dictionary<int, SKSurface>();
 
-		private SkiaSharp.Extended.Svg.SKSvg _fullSvg = new SkiaSharp.Extended.Svg.SKSvg();
+		private readonly SkiaSharp.Extended.Svg.SKSvg _fullSvg = new SkiaSharp.Extended.Svg.SKSvg();
+		private SKSurface _fullSvgRasterized;
 		private AlphaNumericFrame _frame;
 
 		private float _svgWidth = 0;
@@ -86,8 +88,13 @@ namespace LibDmd.Output.Virtual
 				foreach (var i in _segments.Keys) {
 					var surface = SKSurface.Create(info);
 					surface.Canvas.DrawPicture(_segments[i].Picture, ref matrix, svgPaint);
-					_segmentsBmp[i] = surface;
+					_segmentsRasterized[i] = surface;
 				}
+
+				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_grayColor, SKBlendMode.SrcIn);
+				var surfaceFull = SKSurface.Create(info);
+				surfaceFull.Canvas.DrawPicture(_fullSvg.Picture, ref matrix, svgPaint);
+				_fullSvgRasterized = surfaceFull;
 			}
 			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 		}
@@ -99,17 +106,32 @@ namespace LibDmd.Output.Virtual
 
 		private void DrawSegment(int num, SKCanvas canvas, SKPoint position)
 		{
+
 			var seg = _frame.SegmentData[num];
 			for (var j = 0; j < 16; j++) {
 				if (((seg >> j) & 0x1) != 0) {
-					canvas.DrawSurface(_segmentsBmp[j], position);
+					canvas.DrawSurface(_segmentsRasterized[j], position);
 				}
+			}
+		}
+
+		public void DrawBackground(SKCanvas canvas)
+		{
+			float transX = Padding;
+			float transY = Padding;
+			for (var j = 0; j < NumLines; j++) {
+				for (var i = 0; i < NumSegments; i++) {
+					canvas.DrawSurface(_fullSvgRasterized, new SKPoint(transX, transY));
+					transX += _svgWidth;
+				}
+				transX = Padding;
+				transY += _svgHeight + 10;
 			}
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
-			if (_frame == null || _segmentsBmp.Count == 0) {
+			if (_frame == null || _segmentsRasterized.Count == 0) {
 				return;
 			}
 
@@ -128,6 +150,7 @@ namespace LibDmd.Output.Virtual
 				float transY = Padding;
 
 				canvas.Clear(_backgroundColor);
+				DrawBackground(canvas);
 
 				for (var j = 0; j < NumLines; j++) {
 					for (var i = 0; i < NumSegments; i++) {
