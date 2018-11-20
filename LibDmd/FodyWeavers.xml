@@ -2,7 +2,6 @@
 <Weavers>
     <Costura>
         <Unmanaged32Assemblies>
-            libSkiaSharp
         </Unmanaged32Assemblies>
         <Unmanaged64Assemblies>
             ProPinballBridge

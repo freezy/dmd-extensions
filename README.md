@@ -42,7 +42,7 @@ available for PIN2DMD displays (both side-channel and VNI).
 1. [Get the latest release](https://github.com/freezy/dmd-extensions/releases),
    copy the content of the zip file to your hard drive, preferable in your `PATH`,
    and unblock the `.exe` file (right-click, properties, unblock).
-2. Download and install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
+2. Download and install the [Visual C++ Redistributables for Visual Studio 2017](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
 3. If you haven't already, download and install the [.NET Framework 4.5.2](https://www.microsoft.com/en-us/download/details.aspx?id=42643).
 
 If you want to use DMD Extensions with VisualPinMAME:

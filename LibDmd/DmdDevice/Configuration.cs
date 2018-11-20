@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using IniParser;
 using IniParser.Model;
+using LibDmd.Common;
 using LibDmd.Input;
 using NLog;
 
@@ -67,6 +68,7 @@ namespace LibDmd.DmdDevice
 
 			Global = new GlobalConfig(_data, this);
 			VirtualDmd = new VirtualDmdConfig(_data, this);
+			VirtualAlphaNumericDisplay = new VirtualAlphaNumericDisplayConfig(_data, this);
 			PinDmd1 = new PinDmd1Config(_data, this);
 			PinDmd2 = new PinDmd2Config(_data, this);
 			PinDmd3 = new PinDmd3Config(_data, this);
