@@ -90,7 +90,8 @@ namespace LibDmd.Output.Virtual
 				height = (int)writeableBitmap.Height;
 
 			var numChars = 20;
-			float paddingX = 10;
+			var lines = 2;
+			var padding = 20;
 
 			writeableBitmap.Lock();
 
@@ -98,27 +99,34 @@ namespace LibDmd.Output.Virtual
 				writeableBitmap.BackBuffer, width * 4)) {
 				var canvas = surface.Canvas;
 
-				var paint = new SKPaint() { Color = new SKColor(255, 255, 255), TextSize = 10 };
+				var paint = new SKPaint { Color = new SKColor(255, 255, 255), TextSize = 10 };
 
 				var svgSize = _segments[0].Picture.CullRect;
-				float svgWidth = (width - (paddingX * (numChars - 1))) / (float)numChars;
+				float svgWidth = (width - (2f * padding)) / numChars;
 				float scale = svgWidth / svgSize.Width;
+				float svgHeight = svgSize.Height * scale;
 				var matrix = SKMatrix.MakeScale(scale, scale);
+				matrix.TransX = padding;
+				matrix.TransY = padding;
 
 				canvas.Clear(new SKColor(130, 130, 130));
 
-				for (var i = 0; i < numChars; i++) {
-					DrawSegment(i, canvas, matrix);
-					matrix.TransX += width / (float)numChars;
+				for (var j = 0; j < lines; j++) {
+					for (var i = 0; i < numChars; i++) {
+						DrawSegment(i + 20 * j, canvas, matrix);
+						matrix.TransX += svgWidth;
+					}
+					matrix.TransX = padding;
+					matrix.TransY += svgHeight + 10;
 				}
 
-				if (this._call == 0) {
-					this._stopwatch.Start();
+				if (_call == 0) {
+					_stopwatch.Start();
 				}
 
 				double fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}", 0, 110, paint);
-				canvas.DrawText($"Frames: {this._call++}", 50, 110, paint);
+				canvas.DrawText($"FPS: {fps:0}", 0, svgHeight * 2 + padding + 10, paint);
+				canvas.DrawText($"Frames: {this._call++}", 50, svgHeight * 2 + padding + 10, paint);
 			}
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
