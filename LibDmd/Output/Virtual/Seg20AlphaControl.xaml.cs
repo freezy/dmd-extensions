@@ -65,7 +65,7 @@ namespace LibDmd.Output.Virtual
 
 		public void RenderAlphaNumeric(AlphaNumericFrame frame)
 		{
-			_segGenerator.DrawFrame(frame);
+			_segGenerator.UpdateFrame(frame);
 		}
 
 		private void LocationChanged_Event(object sender, SizeChangedEventArgs e)
