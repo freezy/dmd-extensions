@@ -16,6 +16,10 @@ namespace LibDmd.Output.Virtual
 {
 	class SegGenerator
 	{
+
+		private readonly SKColor _foregroundColor = SKColors.OrangeRed;
+		private readonly SKColor _backgroundColor = SKColors.Black;
+
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -25,7 +29,11 @@ namespace LibDmd.Output.Virtual
 		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
 		private readonly Dictionary<int, SKSurface> _segmentsBmp = new Dictionary<int, SKSurface>();
 
+		private SkiaSharp.Extended.Svg.SKSvg _fullSvg = new SkiaSharp.Extended.Svg.SKSvg();
 		private AlphaNumericFrame _frame;
+
+		private float _svgWidth = 0;
+		private float _svgHeight = 0;
 
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
@@ -60,31 +68,27 @@ namespace LibDmd.Output.Virtual
 				svg.Load(_assembly.GetManifestResourceStream(segFilenames[i]));
 				_segments.Add(i, svg);
 			}
+			_fullSvg.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
 		}
 
 		public WriteableBitmap CreateImage(int width, int height)
 		{
 			var svgSize = _segments[0].Picture.CullRect;
-			var svgWidth = (width - (2f * Padding)) / NumSegments;
-			var scale = svgWidth / svgSize.Width;
-			var svgHeight = svgSize.Height * scale;
+			_svgWidth = (width - (2f * Padding)) / NumSegments;
+			var scale = _svgWidth / svgSize.Width;
+			_svgHeight = svgSize.Height * scale;
+
 			var matrix = SKMatrix.MakeScale(scale, scale);
-			var info = new SKImageInfo((int)svgWidth, (int)svgHeight);
+			var info = new SKImageInfo((int)_svgWidth, (int)_svgHeight);
 
 			using (var svgPaint = new SKPaint()) {
-				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(SKColors.OrangeRed, SKBlendMode.SrcIn);
+				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
 				foreach (var i in _segments.Keys) {
-
 					var surface = SKSurface.Create(info);
 					surface.Canvas.DrawPicture(_segments[i].Picture, ref matrix, svgPaint);
 					_segmentsBmp[i] = surface;
-
-					//var canvas = new SKCanvas(new SKBitmap((int)svgWidth, (int)svgWidth));
-					//canvas.DrawPicture(_segments[i].Picture, ref matrix);
-					//_segmentsBmp[i] = canvas;
 				}
 			}
-
 			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 		}
 
@@ -98,8 +102,6 @@ namespace LibDmd.Output.Virtual
 			var seg = _frame.SegmentData[num];
 			for (var j = 0; j < 16; j++) {
 				if (((seg >> j) & 0x1) != 0) {
-					var svg = _segments[j];
-					//canvas.DrawPicture(svg.Picture, ref matrix, paint);
 					canvas.DrawSurface(_segmentsBmp[j], position);
 				}
 			}
@@ -122,30 +124,25 @@ namespace LibDmd.Output.Virtual
 				var canvas = surface.Canvas;
 				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
 
-				var svgSize = _segments[0].Picture.CullRect;
-				float svgWidth = (width - (2f * Padding)) / NumSegments;
-				float scale = svgWidth / svgSize.Width;
-				float svgHeight = svgSize.Height * scale;
-				var matrix = SKMatrix.MakeScale(scale, scale);
-				matrix.TransX = Padding;
-				matrix.TransY = Padding;
+				float transX = Padding;
+				float transY = Padding;
 
-				canvas.Clear(SKColors.Gray);
+				canvas.Clear(_backgroundColor);
 
 				for (var j = 0; j < NumLines; j++) {
 					for (var i = 0; i < NumSegments; i++) {
-						DrawSegment(i + 20 * j, canvas, new SKPoint(matrix.TransX, matrix.TransY));
-						matrix.TransX += svgWidth;
+						DrawSegment(i + 20 * j, canvas, new SKPoint(transX, transY));
+						transX += _svgWidth;
 					}
-					matrix.TransX = Padding;
-					matrix.TransY += svgHeight + 10;
+					transX = Padding;
+					transY += _svgHeight + 10;
 				}
 
 				if (_call == 0) {
 					_stopwatch.Start();
 				}
 
-				double fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
+				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
 				canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
 				canvas.DrawText($"Frames: {this._call++}", 50, 10, paint);
 			}
