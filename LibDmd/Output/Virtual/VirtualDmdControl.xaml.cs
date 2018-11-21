@@ -10,7 +10,7 @@ namespace LibDmd.Output.Virtual
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination
+	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	// these others are for debugging purpose. basically you can make the virtual dmd 
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
@@ -28,7 +28,7 @@ namespace LibDmd.Output.Virtual
 			set { _dotSize = value; UpdateEffectParams(); }
 		}
 
-		public IDmdWindow Host { set; get; }
+		public VirtualWindow Host { set; get; }
 		public bool IgnoreAspectRatio {
 			get { return Dmd.Stretch == Stretch.UniformToFill; }
 			set { Dmd.Stretch = value ? Stretch.Fill : Stretch.UniformToFill; }
@@ -155,10 +155,5 @@ namespace LibDmd.Output.Virtual
 		{
 			// nothing to dispose
 		}
-	}
-
-	public interface IDmdWindow
-	{
-		void SetDimensions(int width, int height);
 	}
 }
