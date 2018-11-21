@@ -65,7 +65,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual, AlphaNumeric
 		}
 	}
 }

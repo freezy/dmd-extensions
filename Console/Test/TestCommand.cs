@@ -3,6 +3,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.DmdDevice;
+using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 
@@ -36,13 +38,29 @@ namespace DmdExt.Test
 			bmp.EndInit();
 
 			// chain them up
-			_graph = new RenderGraph {
-				Source = new ImageSource(bmp),
-				Destinations = renderers,
-				Resize = _options.Resize,
-				FlipHorizontally = _options.FlipHorizontally,
-				FlipVertically = _options.FlipVertically
-			};
+			if (_options.Destination == BaseOptions.DestinationType.AlphaNumeric) {
+				var alphaNumericFrame = new AlphaNumericFrame(NumericalLayout.__2x20Alpha,
+					new ushort[] {
+						0, 10767, 2167, 8719, 0, 2109, 8713, 6259, 56, 2157, 0, 4957, 0, 8719, 62, 8719, 121, 2157, 0,
+						0, 0, 0, 5120, 8704, 16640, 0, 0, 0, 0, 2112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+					});
+				_graph = new RenderGraph {
+					Source = new VpmAlphaNumericSource(alphaNumericFrame),
+					Destinations = renderers,
+					Resize = _options.Resize,
+					FlipHorizontally = _options.FlipHorizontally,
+					FlipVertically = _options.FlipVertically
+				};
+			} else {
+				_graph = new RenderGraph {
+					Source = new ImageSource(bmp),
+					Destinations = renderers,
+					Resize = _options.Resize,
+					FlipHorizontally = _options.FlipHorizontally,
+					FlipVertically = _options.FlipVertically
+				};
+			}
 
 			return _graph;
 		}
