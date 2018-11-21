@@ -47,6 +47,134 @@ namespace LibDmd.Output.Virtual
 
 		public SegGenerator()
 		{
+			LoadSvgs();
+		}
+
+		public WriteableBitmap CreateImage(int width, int height)
+		{
+			SetupDimensions(width, height);
+			RasterizeSegments();
+			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+		}
+
+		public void UpdateFrame(AlphaNumericFrame frame)
+		{
+			_frame = frame;
+		}
+
+		private void DrawSegment(int num, SKCanvas canvas, SKPoint position)
+		{
+			var seg = _frame.SegmentData[num];
+			for (var j = 0; j < 16; j++) {
+				if (((seg >> j) & 0x1) != 0) {
+					canvas.DrawSurface(_segmentsRasterized[j], position);
+				}
+			}
+		}
+
+		public void DrawImage(WriteableBitmap writeableBitmap)
+		{
+			if (_frame == null || _segmentsRasterized.Count == 0) {
+				return;
+			}
+			if (_call == 0) {
+				_stopwatch.Start();
+			}
+
+			var width = (int) writeableBitmap.Width;
+			var height = (int)writeableBitmap.Height;
+
+			writeableBitmap.Lock();
+
+			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul,
+				writeableBitmap.BackBuffer, width * 4)) {
+
+				var canvas = surface.Canvas;
+				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
+
+				canvas.Clear(_backgroundColor);
+				DrawBackgroundSegments(canvas);
+				DrawSegments(canvas);
+
+
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
+				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
+				canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
+				canvas.DrawText($"Frames: {this._call++}", 50, 10, paint);
+			}
+
+			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+			writeableBitmap.Unlock();
+		}
+
+		private void DrawBackgroundSegments(SKCanvas canvas)
+		{
+			float transX = 0;
+			float transY = 0;
+			for (var j = 0; j < NumLines; j++) {
+				for (var i = 0; i < NumSegments; i++) {
+					canvas.DrawSurface(_fullSvgRasterized, new SKPoint(transX, transY));
+					transX += _svgWidth;
+				}
+				transX = 0;
+				transY += _svgHeight + 10;
+			}
+		}
+
+		private void DrawSegments(SKCanvas canvas)
+		{
+			float posX = 0;
+			float posY = 0;
+			for (var j = 0; j < NumLines; j++) {
+				for (var i = 0; i < NumSegments; i++) {
+					DrawSegment(i + 20 * j, canvas, new SKPoint(posX, posY));
+					posX += _svgWidth;
+				}
+				posX = 0;
+				posY += _svgHeight + 10;
+			}
+		}
+
+		private void SetupDimensions(int width, int height)
+		{
+			var svgSize = _segments[0].Picture.CullRect;
+			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
+			_svgWidth = (width - (2f * Padding)) / (NumSegments - 1 + skewedFactor);
+			_svgScale = _svgWidth / svgSize.Width;
+			_svgHeight = svgSize.Height * _svgScale;
+			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
+			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
+			_svgInfo = new SKImageInfo((int)skewedWidth + 2 * Padding, (int)_svgHeight + 2 * Padding);
+		}
+
+		private void RasterizeSegments()
+		{
+			using (var svgPaint = new SKPaint()) {
+				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
+				//svgPaint.ImageFilter = SKImageFilter.CreateBlur(5, 5);
+				foreach (var i in _segments.Keys) {
+					if (_segmentsRasterized.ContainsKey(i)) {
+						_segmentsRasterized[i].Dispose();
+					}
+					_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, svgPaint);
+				}
+				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentBackgroundColor, SKBlendMode.SrcIn);
+				_fullSvgRasterized?.Dispose();
+				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, svgPaint);
+			}
+		}
+
+		private SKSurface RasterizeSegment(SKPicture segment, SKPaint paint)
+		{
+			var surface = SKSurface.Create(_svgInfo);
+			surface.Canvas.Translate(_svgInfo.Width - _svgWidth - Padding, Padding);
+			Skew(surface.Canvas, SkewAngle, 0);
+			surface.Canvas.DrawPicture(segment, ref _svgMatrix, paint);
+			return surface;
+		}
+
+		private void LoadSvgs()
+		{
 			// load svgs from packages resources
 			const string prefix = "LibDmd.Output.Virtual.alphanum.";
 			var segmentFileNames = new[]
@@ -75,123 +203,6 @@ namespace LibDmd.Output.Virtual
 				_segments.Add(i, svg);
 			}
 			_fullSvg.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
-		}
-
-		public WriteableBitmap CreateImage(int width, int height)
-		{
-			SetupDimensions(width, height);
-			Logger.Info("Width = {0}, Height = {1}, SkewedWidth = {2}", _svgWidth, _svgHeight, _svgInfo.Width);
-			using (var svgPaint = new SKPaint()) {
-				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
-				foreach (var i in _segments.Keys) {
-					if (_segmentsRasterized.ContainsKey(i)) {
-						_segmentsRasterized[i].Dispose();
-					}
-					
-					_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, svgPaint);
-				}
-
-				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentBackgroundColor, SKBlendMode.SrcIn);
-				_fullSvgRasterized?.Dispose();
-				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, svgPaint);
-			}
-			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
-		}
-
-		public void UpdateFrame(AlphaNumericFrame frame)
-		{
-			_frame = frame;
-		}
-
-		private void DrawSegment(int num, SKCanvas canvas, SKPoint position)
-		{
-
-			var seg = _frame.SegmentData[num];
-			for (var j = 0; j < 16; j++) {
-				if (((seg >> j) & 0x1) != 0) {
-					canvas.DrawSurface(_segmentsRasterized[j], position);
-				}
-			}
-		}
-
-		public void DrawBackground(SKCanvas canvas)
-		{
-			float transX = Padding;
-			float transY = Padding;
-			for (var j = 0; j < NumLines; j++) {
-				for (var i = 0; i < NumSegments; i++) {
-					canvas.DrawSurface(_fullSvgRasterized, new SKPoint(transX, transY));
-					transX += _svgWidth;
-				}
-				transX = Padding;
-				transY += _svgHeight + 10;
-			}
-		}
-
-		public void DrawImage(WriteableBitmap writeableBitmap)
-		{
-			if (_frame == null || _segmentsRasterized.Count == 0) {
-				return;
-			}
-
-			int width = (int)writeableBitmap.Width,
-				height = (int)writeableBitmap.Height;
-
-			writeableBitmap.Lock();
-
-			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul,
-				writeableBitmap.BackBuffer, width * 4)) {
-
-				var canvas = surface.Canvas;
-				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
-
-				float transX = Padding;
-				float transY = Padding;
-
-				canvas.Clear(_backgroundColor);
-				DrawBackground(canvas);
-
-				for (var j = 0; j < NumLines; j++) {
-					for (var i = 0; i < NumSegments; i++) {
-						DrawSegment(i + 20 * j, canvas, new SKPoint(transX, transY));
-						transX += _svgWidth;
-					}
-					transX = Padding;
-					transY += _svgHeight + 10;
-				}
-
-				if (_call == 0) {
-					_stopwatch.Start();
-				}
-
-				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
-				canvas.DrawText($"Frames: {this._call++}", 50, 10, paint);
-			}
-
-			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
-			writeableBitmap.Unlock();
-		}
-
-		private void SetupDimensions(int width, int height)
-		{
-			var svgSize = _segments[0].Picture.CullRect;
-			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
-			_svgWidth = (width - (2f * Padding)) / (NumSegments - 1 + skewedFactor);
-			_svgScale = _svgWidth / svgSize.Width;
-			_svgHeight = svgSize.Height * _svgScale;
-			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
-			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
-			_svgInfo = new SKImageInfo((int)skewedWidth, (int)_svgHeight);
-		}
-
-		private SKSurface RasterizeSegment(SKPicture segment, SKPaint paint)
-		{
-			var surface = SKSurface.Create(_svgInfo);
-			surface.Canvas.Translate(_svgInfo.Width - _svgWidth, 0);
-			Skew(surface.Canvas, SkewAngle, 0);
-			surface.Canvas.DrawPicture(segment, ref _svgMatrix, paint);
-			return surface;
 		}
 
 		private static void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
