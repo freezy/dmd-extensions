@@ -34,8 +34,11 @@ namespace LibDmd.Output.Virtual
 		private SKSurface _fullSvgRasterized;
 		private AlphaNumericFrame _frame;
 
-		private float _svgWidth = 0;
-		private float _svgHeight = 0;
+		private float _svgWidth;
+		private float _svgHeight;
+		private float _svgScale;
+		private SKMatrix _svgMatrix;
+		private SKImageInfo _svgInfo;
 
 		private const int SkewAngle = -15;
 		private const int NumSegments = 20;
@@ -44,8 +47,9 @@ namespace LibDmd.Output.Virtual
 
 		public SegGenerator()
 		{
+			// load svgs from packages resources
 			const string prefix = "LibDmd.Output.Virtual.alphanum.";
-			var segFilenames = new[]
+			var segmentFileNames = new[]
 			{
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -64,11 +68,10 @@ namespace LibDmd.Output.Virtual
 				$"{prefix}14-diag-bottom-left.svg",
 				$"{prefix}15-dot.svg",
 			};
-
 			Logger.Info("Loading segment SVGs...");
-			for (var i = 0; i < segFilenames.Length; i++) {
+			for (var i = 0; i < segmentFileNames.Length; i++) {
 				var svg = new SkiaSharp.Extended.Svg.SKSvg();
-				svg.Load(_assembly.GetManifestResourceStream(segFilenames[i]));
+				svg.Load(_assembly.GetManifestResourceStream(segmentFileNames[i]));
 				_segments.Add(i, svg);
 			}
 			_fullSvg.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
@@ -76,45 +79,23 @@ namespace LibDmd.Output.Virtual
 
 		public WriteableBitmap CreateImage(int width, int height)
 		{
-			var svgSize = _segments[0].Picture.CullRect;
-			_svgWidth = (width - (2f * Padding)) / NumSegments;
-			var scale = _svgWidth / svgSize.Width;
-			_svgHeight = svgSize.Height * scale;
-
-			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
-
-			var matrix = SKMatrix.MakeScale(scale, scale);
-			var info = new SKImageInfo((int)skewedWidth, (int)_svgHeight);
-
-			Logger.Info("Width = {0}, Height = {1}, SkewedWidth = {2}", _svgWidth, _svgHeight, skewedWidth);
-
+			SetupDimensions(width, height);
+			Logger.Info("Width = {0}, Height = {1}, SkewedWidth = {2}", _svgWidth, _svgHeight, _svgInfo.Width);
 			using (var svgPaint = new SKPaint()) {
 				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
 				foreach (var i in _segments.Keys) {
-					var surface = SKSurface.Create(info);
-					surface.Canvas.Translate(skewedWidth - _svgWidth, 0);
-					Skew(surface.Canvas, SkewAngle, 0);
-					surface.Canvas.DrawPicture(_segments[i].Picture, ref matrix, svgPaint);
-					_segmentsRasterized[i] = surface;
+					if (_segmentsRasterized.ContainsKey(i)) {
+						_segmentsRasterized[i].Dispose();
+					}
+					
+					_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, svgPaint);
 				}
 
 				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentBackgroundColor, SKBlendMode.SrcIn);
-				var surfaceFull = SKSurface.Create(info);
-				surfaceFull.Canvas.DrawPicture(_fullSvg.Picture, ref matrix, svgPaint);
-				_fullSvgRasterized = surfaceFull;
+				_fullSvgRasterized?.Dispose();
+				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, svgPaint);
 			}
 			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
-		}
-
-		void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
-		{
-			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
-		}
-
-		float SkewedWidth(float width, float height)
-		{
-			var skew = (float) Math.Tan(Math.PI * SkewAngle / 180);
-			return width + Math.Abs(skew * height);
 		}
 
 		public void UpdateFrame(AlphaNumericFrame frame)
@@ -190,6 +171,38 @@ namespace LibDmd.Output.Virtual
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
+		}
+
+		private void SetupDimensions(int width, int height)
+		{
+			var svgSize = _segments[0].Picture.CullRect;
+			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
+			_svgWidth = (width - (2f * Padding)) / (NumSegments - 1 + skewedFactor);
+			_svgScale = _svgWidth / svgSize.Width;
+			_svgHeight = svgSize.Height * _svgScale;
+			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
+			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
+			_svgInfo = new SKImageInfo((int)skewedWidth, (int)_svgHeight);
+		}
+
+		private SKSurface RasterizeSegment(SKPicture segment, SKPaint paint)
+		{
+			var surface = SKSurface.Create(_svgInfo);
+			surface.Canvas.Translate(_svgInfo.Width - _svgWidth, 0);
+			Skew(surface.Canvas, SkewAngle, 0);
+			surface.Canvas.DrawPicture(segment, ref _svgMatrix, paint);
+			return surface;
+		}
+
+		private static void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
+		{
+			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
+		}
+
+		private static float SkewedWidth(float width, float height)
+		{
+			var skew = (float)Math.Tan(Math.PI * SkewAngle / 180);
+			return width + Math.Abs(skew * height);
 		}
 	}
 }
