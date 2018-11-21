@@ -84,8 +84,12 @@ namespace DmdExt.Common
 
 				case Virtual:
 					renderers.Add(ShowVirtualDmd(options));
-					Logger.Info("Added VirtualDMD renderer.");
-					
+					Logger.Info("Added virtual DMD renderer.");
+					break;
+
+				case AlphaNumeric:
+					renderers.Add(ShowAlphaNumericDisplay(options));
+					Logger.Info("Added virtual Alphanumeric renderer.");
 					break;
 
 				default:
@@ -133,7 +137,8 @@ namespace DmdExt.Common
 				}
 				if (!options.NoVirtualDmd) {
 					renderers.Add(ShowVirtualDmd(options));
-					Logger.Info("Added VirtualDMD renderer.");
+					Logger.Info("Added virtual DMD renderer.");
+
 				} else {
 					Logger.Debug("VirtualDMD disabled.");
 				}
@@ -171,7 +176,6 @@ namespace DmdExt.Common
 				IgnoreAspectRatio = ignoreAr,
 				DotSize = options.VirtualDmdDotSize
 			};
-			var segDmd = new VirtualAlphaNumericDisplay();
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:
@@ -180,9 +184,6 @@ namespace DmdExt.Common
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
 					dmd.Show();
-				});
-				segDmd.Dispatcher.Invoke(() => {
-					segDmd.Show();
 				});
 
 				// Start the Dispatcher Processing
@@ -197,7 +198,23 @@ namespace DmdExt.Common
 			// run the thread
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
-			return dmd.Dmd;
+			return dmd.VirtualControl;
+		}
+
+		private static IDestination ShowAlphaNumericDisplay(BaseOptions options)
+		{
+			var alphaNumericDisplay = new VirtualAlphaNumericDisplay();
+			var thread = new Thread(() => {
+				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
+				alphaNumericDisplay.Dispatcher.Invoke(() => {
+					alphaNumericDisplay.Show();
+				});
+				Run();
+			});
+			alphaNumericDisplay.Closed += (s, e) => Dispatcher.FromThread(thread).BeginInvokeShutdown(DispatcherPriority.Background);
+			thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
+			return alphaNumericDisplay.AlphaNumericDisplay;
 		}
 
 		public void Execute(Action onCompleted, Action<Exception> onError)
