@@ -37,7 +37,7 @@ namespace LibDmd.Output.Virtual
 		private float _svgWidth = 0;
 		private float _svgHeight = 0;
 
-		private const int SkewAngle = -20;
+		private const int SkewAngle = -15;
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
 		private const int Padding = 20;
@@ -86,13 +86,13 @@ namespace LibDmd.Output.Virtual
 			var matrix = SKMatrix.MakeScale(scale, scale);
 			var info = new SKImageInfo((int)skewedWidth, (int)_svgHeight);
 
-			Logger.Info("Width = {0}, Skewed = {1}", _svgWidth, skewedWidth);
+			Logger.Info("Width = {0}, Height = {1}, SkewedWidth = {2}", _svgWidth, _svgHeight, skewedWidth);
 
 			using (var svgPaint = new SKPaint()) {
 				svgPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
 				foreach (var i in _segments.Keys) {
 					var surface = SKSurface.Create(info);
-					//surface.Canvas.Translate(info.Width / 2, info.Height / 2);
+					surface.Canvas.Translate(skewedWidth - _svgWidth, 0);
 					Skew(surface.Canvas, SkewAngle, 0);
 					surface.Canvas.DrawPicture(_segments[i].Picture, ref matrix, svgPaint);
 					_segmentsRasterized[i] = surface;
@@ -114,7 +114,7 @@ namespace LibDmd.Output.Virtual
 		float SkewedWidth(float width, float height)
 		{
 			var skew = (float) Math.Tan(Math.PI * SkewAngle / 180);
-			return width - skew * height;
+			return width + Math.Abs(skew * height);
 		}
 
 		public void UpdateFrame(AlphaNumericFrame frame)
