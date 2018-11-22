@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -17,9 +18,9 @@ namespace LibDmd.Output.Virtual
 	class SegGenerator
 	{
 
-		private readonly SKColor _glowColorOuter = new SKColor(0x8e, 0x51, 0x1d, 0xff);
-		private readonly SKColor _glowColorInner = new SKColor(0xdd, 0x6a, 0x03, 0xff);
-		private readonly SKColor _foregroundColor = new SKColor(0xfb, 0xd1, 0x9b, 0x80);
+		private readonly SKColor _glowColorOuter = new SKColor(0x8e, 0x51, 0x1d, 0x80);
+		private readonly SKColor _glowColorInner = new SKColor(0xdd, 0x6a, 0x03, 0x80);
+		private readonly SKColor _foregroundColor = new SKColor(0xfb, 0xd1, 0x9b, 0xff);
 		private readonly SKColor _segmentBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x1d);
 		private readonly SKColor _backgroundColor = SKColors.Black;
 
@@ -42,10 +43,10 @@ namespace LibDmd.Output.Virtual
 		private SKMatrix _svgMatrix;
 		private SKImageInfo _svgInfo;
 
-		private const int SkewAngle = -15;
+		private const int SkewAngle = -10;
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
-		private const int Padding = 20;
+		private const int Padding = 30;
 
 		public SegGenerator()
 		{
@@ -151,15 +152,16 @@ namespace LibDmd.Output.Virtual
 
 		private void RasterizeSegments()
 		{
+			Logger.Info("Rasterizing alphanumeric segments...");
 			using (var glowOuterPaint = new SKPaint()) {
 				using (var glowInnerPaint = new SKPaint()) {
 					using (var foregroundPaint = new SKPaint()) {
 
 						glowOuterPaint.ColorFilter = SKColorFilter.CreateBlendMode(_glowColorOuter, SKBlendMode.SrcIn);
-						glowOuterPaint.ImageFilter = SKImageFilter.CreateBlur(10, 10);
-
+						glowOuterPaint.ImageFilter = SKImageFilter.CreateBlur(15, 15, SKImageFilter.CreateDilate(8, 5));
+						
 						glowInnerPaint.ColorFilter = SKColorFilter.CreateBlendMode(_glowColorInner, SKBlendMode.SrcIn);
-						glowInnerPaint.ImageFilter = SKImageFilter.CreateBlur(4, 4);
+						glowInnerPaint.ImageFilter = SKImageFilter.CreateBlur(6, 6, SKImageFilter.CreateDilate(6, 6));
 
 						foregroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(_foregroundColor, SKBlendMode.SrcIn);
 						//foregroundPaint.ImageFilter = SKImageFilter.CreateBlur(1, 1);
@@ -169,8 +171,8 @@ namespace LibDmd.Output.Virtual
 								_segmentsRasterized[i].Dispose();
 							}
 
-							_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, glowOuterPaint, glowInnerPaint/*, foregroundPaint*/);
-							//_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, glowOuterOuter, glowInnerPaint, foregroundPaint);
+							_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, glowOuterPaint, glowInnerPaint, foregroundPaint);
+							//_segmentsRasterized[i] = RasterizeSegment(_segments[i].Picture, foregroundPaint);
 						}
 					}
 				}
@@ -180,6 +182,7 @@ namespace LibDmd.Output.Virtual
 				backgroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentBackgroundColor, SKBlendMode.SrcIn);
 				backgroundPaint.ImageFilter = SKImageFilter.CreateBlur(3, 3);
 				_fullSvgRasterized?.Dispose();
+
 				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, backgroundPaint);
 			}
 		}
@@ -198,7 +201,7 @@ namespace LibDmd.Output.Virtual
 		private void LoadSvgs()
 		{
 			// load svgs from packages resources
-			const string prefix = "LibDmd.Output.Virtual.alphanum.";
+			const string prefix = "LibDmd.Output.Virtual.alphanum_thin_inner.";
 			//const string prefix = "LibDmd.Output.Virtual.alphanum.";
 			var segmentFileNames = new[]
 			{
