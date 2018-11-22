@@ -19,9 +19,9 @@ namespace LibDmd.Output.Virtual
 	{
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
-		private readonly SKColor _segmentGlowColorOuter = SKColors.Red; // new SKColor(0x8e, 0x51, 0x1d, 0x80);
-		private readonly SKColor _segmentGlowColorInner = SKColors.Green; // new SKColor(0xdd, 0x6a, 0x03, 0x80);
-		private readonly SKColor _segmentForegroundColor = SKColors.White; // new SKColor(0xfb, 0xd1, 0x9b, 0xff);
+		private readonly SKColor _segmentOuterGlowColor = new SKColor(0xb6, 0x58, 0x29, 0x40); // b65829
+		private readonly SKColor _segmentInnerGlowColor = new SKColor(0xdd, 0x6a, 0x03, 0xa0);
+		private readonly SKColor _segmentForegroundColor = new SKColor(0xfb, 0xe6, 0xcb, 0xff); // fbe6cb
 		private readonly SKColor _segmentUnlitBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x1d);
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -52,6 +52,13 @@ namespace LibDmd.Output.Virtual
 		private const int Padding = 30;
 		private const int SegmentPaddingFactor = 200;
 
+		private readonly SKPoint _unlitBlurFactor = new SKPoint(7, 7);
+		private readonly SKPoint _outerDilateFactor = new SKPoint(90, 40);
+		private readonly SKPoint _outerBlurFactor = new SKPoint(40, 40);
+		private readonly SKPoint _innerDilateFactor = new SKPoint(15, 10);
+		private readonly SKPoint _innerBlurFactor = new SKPoint(15, 13);
+		private readonly SKPoint _foregroundBlurFactor = new SKPoint(2, 2);
+
 		public SegGenerator()
 		{
 			LoadSvgs();
@@ -67,26 +74,6 @@ namespace LibDmd.Output.Virtual
 		public void UpdateFrame(AlphaNumericFrame frame)
 		{
 			_frame = frame;
-		}
-
-		private void DrawSegment(int num, SKCanvas canvas, SKPoint position)
-		{
-			var seg = _frame.SegmentData[num];
-			for (var j = 0; j < 16; j++) {
-				if (((seg >> j) & 0x1) != 0) {
-					canvas.DrawSurface(_segmentsForegroundRasterized[j], position);
-				}
-			}
-		}
-
-		private void DrawSegmentBackgroundEffect(int num, SKCanvas canvas, SKPoint position)
-		{
-			var seg = _frame.SegmentData[num];
-			for (var j = 0; j < 16; j++) {
-				if (((seg >> j) & 0x1) != 0) {
-					canvas.DrawSurface(_segmentsOuterGlowRasterized[j], position);
-				}
-			}
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
@@ -110,10 +97,10 @@ namespace LibDmd.Output.Virtual
 				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
 
 				canvas.Clear(_backgroundColor);
-				DrawBackgroundSegments(canvas);
-				DrawSegmentsBackgroundEffect(canvas);
-				DrawSegments(canvas);
-
+				DrawSegments(canvas, (i, c, p) => c.DrawSurface(_fullSvgRasterized, p));
+				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsOuterGlowRasterized, i, c, p));
+				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsInnerGlowRasterized, i, c, p));
+				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsForegroundRasterized, i, c, p));
 
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
@@ -125,27 +112,13 @@ namespace LibDmd.Output.Virtual
 			writeableBitmap.Unlock();
 		}
 
-		private void DrawBackgroundSegments(SKCanvas canvas)
-		{
-			float transX = 0;
-			float transY = 0;
-			for (var j = 0; j < NumLines; j++) {
-				for (var i = 0; i < NumSegments; i++) {
-					canvas.DrawSurface(_fullSvgRasterized, new SKPoint(transX, transY));
-					transX += _svgWidth;
-				}
-				transX = 0;
-				transY += _svgHeight + 10;
-			}
-		}
-
-		private void DrawSegmentsBackgroundEffect(SKCanvas canvas)
+		private void DrawSegments(SKCanvas canvas, Action<int, SKCanvas, SKPoint> draw)
 		{
 			float posX = 0;
 			float posY = 0;
 			for (var j = 0; j < NumLines; j++) {
 				for (var i = 0; i < NumSegments; i++) {
-					DrawSegmentBackgroundEffect(i + 20 * j, canvas, new SKPoint(posX, posY));
+					draw(i + 20 * j, canvas, new SKPoint(posX, posY));
 					posX += _svgWidth;
 				}
 				posX = 0;
@@ -153,17 +126,13 @@ namespace LibDmd.Output.Virtual
 			}
 		}
 
-		private void DrawSegments(SKCanvas canvas)
+		private void DrawSegment(Dictionary<int, SKSurface> source, int num, SKCanvas canvas, SKPoint position)
 		{
-			float posX = 0;
-			float posY = 0;
-			for (var j = 0; j < NumLines; j++) {
-				for (var i = 0; i < NumSegments; i++) {
-					DrawSegment(i + 20 * j, canvas, new SKPoint(posX, posY));
-					posX += _svgWidth;
+			var seg = _frame.SegmentData[num];
+			for (var j = 0; j < 16; j++) {
+				if (((seg >> j) & 0x1) != 0) {
+					canvas.DrawSurface(source[j], position);
 				}
-				posX = 0;
-				posY += _svgHeight + 10;
 			}
 		}
 
@@ -179,52 +148,47 @@ namespace LibDmd.Output.Virtual
 			_svgInfo = new SKImageInfo((int)(skewedWidth + 2 * SegmentPaddingFactor * _svgScale), (int)(_svgHeight + 2 * SegmentPaddingFactor * _svgScale));
 		}
 
-		private readonly SKPoint _outerDilateFactor = new SKPoint(90, 40);
-		private readonly SKPoint _outerBlurFactor = new SKPoint(40, 40);
-		private readonly SKPoint _innerDilateFactor = new SKPoint(15, 10);
-		private readonly SKPoint _innerBlurFactor = new SKPoint(12, 10);
-
 		private void RasterizeSegments()
 		{
 			Logger.Info("Rasterizing alphanumeric segments with scale = {0}, segment size = {1}x{2}, outer padding = {3}, segment canvas padding = {4}", _svgScale, _svgWidth, _svgHeight, Padding, SegmentPaddingFactor * _svgScale);
-			using (var glowOuterPaint = new SKPaint()) {
-				using (var glowInnerPaint = new SKPaint()) {
-					using (var foregroundPaint = new SKPaint()) {
+			using (var outerGlowPaint = new SKPaint()) {
+				using (var innerGlowPaint = new SKPaint()) {
+					using (var segmentPaint = new SKPaint()) {
 
-						glowOuterPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentGlowColorOuter, SKBlendMode.SrcIn);
-						//glowOuterPaint.ImageFilter = SKImageFilter.CreateBlur(15, 15, SKImageFilter.CreateDilate(8, 5));
-						glowOuterPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_outerBlurFactor.X), scaleFactor(_outerBlurFactor.Y), 
+						outerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentOuterGlowColor, SKBlendMode.SrcIn);
+						outerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_outerBlurFactor.X), scaleFactor(_outerBlurFactor.Y), 
 							SKImageFilter.CreateDilate(scaleFactor(_outerDilateFactor.X), scaleFactor(_outerDilateFactor.Y)));
 						
-						glowInnerPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentGlowColorInner, SKBlendMode.SrcIn);
-						//glowInnerPaint.ImageFilter = SKImageFilter.CreateBlur(6, 6, SKImageFilter.CreateDilate(6, 6));
-						glowInnerPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_innerBlurFactor.X), scaleFactor(_innerBlurFactor.Y), 
+						innerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentInnerGlowColor, SKBlendMode.SrcIn);
+						innerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_innerBlurFactor.X), scaleFactor(_innerBlurFactor.Y), 
 							SKImageFilter.CreateDilate(scaleFactor(_innerDilateFactor.X), scaleFactor(_innerDilateFactor.Y)));
 
-						foregroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentForegroundColor, SKBlendMode.SrcIn);
-						//foregroundPaint.ImageFilter = SKImageFilter.CreateBlur(1, 1);
+						segmentPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentForegroundColor, SKBlendMode.SrcIn);
+						segmentPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_foregroundBlurFactor.X), scaleFactor(_foregroundBlurFactor.Y));
 
 						foreach (var i in _segments.Keys) {
-							if (_segmentsForegroundRasterized.ContainsKey(i)) {
-								_segmentsForegroundRasterized[i].Dispose();
-							}
 							if (_segmentsOuterGlowRasterized.ContainsKey(i)) {
 								_segmentsOuterGlowRasterized[i].Dispose();
 							}
-							_segmentsOuterGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, glowOuterPaint, glowInnerPaint);
-							_segmentsForegroundRasterized[i] = RasterizeSegment(_segments[i].Picture, foregroundPaint);
-							//_segmentsForegroundRasterized[i] = RasterizeSegment(_segments[i].Picture, glowOuterPaint, glowInnerPaint, foregroundPaint);
+							if (_segmentsInnerGlowRasterized.ContainsKey(i)) {
+								_segmentsInnerGlowRasterized[i].Dispose();
+							}
+							if (_segmentsForegroundRasterized.ContainsKey(i)) {
+								_segmentsForegroundRasterized[i].Dispose();
+							}
+							_segmentsOuterGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, outerGlowPaint);
+							_segmentsInnerGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, innerGlowPaint);
+							_segmentsForegroundRasterized[i] = RasterizeSegment(_segments[i].Picture, segmentPaint);
 						}
 					}
 				}
 			}
-			
 
-			using (var backgroundPaint = new SKPaint()) {
-				backgroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentUnlitBackgroundColor, SKBlendMode.SrcIn);
-				//backgroundPaint.ImageFilter = SKImageFilter.CreateBlur(3, 3);
+			using (var segmentUnlitPaint = new SKPaint()) {
+				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentUnlitBackgroundColor, SKBlendMode.SrcIn);
+				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_unlitBlurFactor.X), scaleFactor(_unlitBlurFactor.Y));
 				_fullSvgRasterized?.Dispose();
-				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, backgroundPaint);
+				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, segmentUnlitPaint);
 			}
 		}
 
