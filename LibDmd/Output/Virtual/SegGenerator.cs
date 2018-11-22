@@ -15,8 +15,15 @@ using SkiaSharp;
 
 namespace LibDmd.Output.Virtual
 {
+
 	class SegGenerator
 	{
+		private const int SkewAngle = -12;
+		private const int NumSegments = 20;
+		private const int NumLines = 2;
+		private const int Padding = 30;
+		private const float SwitchTimeMilliseconds = 200;
+		private const int SegmentPaddingFactor = 200;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
 		private readonly SKColor _segmentOuterGlowColor = new SKColor(0xb6, 0x58, 0x29, 0x40); // b65829
@@ -32,6 +39,8 @@ namespace LibDmd.Output.Virtual
 
 		private readonly SkiaSharp.Extended.Svg.SKSvg _fullSvg = new SkiaSharp.Extended.Svg.SKSvg();
 		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
+		private readonly Dictionary<int, double> _switchPercentage = new Dictionary<int, double>(NumSegments * NumLines);
+		private readonly Dictionary<int, SwitchDirection> _switchDirection = new Dictionary<int, SwitchDirection>(NumSegments * NumLines);
 
 		private readonly Dictionary<int, SKSurface> _segmentsOuterGlowRasterized = new Dictionary<int, SKSurface>();
 		private readonly Dictionary<int, SKSurface> _segmentsInnerGlowRasterized = new Dictionary<int, SKSurface>();
@@ -46,11 +55,7 @@ namespace LibDmd.Output.Virtual
 		private SKMatrix _svgMatrix;
 		private SKImageInfo _svgInfo;
 
-		private const int SkewAngle = -12;
-		private const int NumSegments = 20;
-		private const int NumLines = 2;
-		private const int Padding = 30;
-		private const int SegmentPaddingFactor = 200;
+		private long _elapsedMilliseconds = 0;
 
 		private readonly SKPoint _unlitBlurFactor = new SKPoint(7, 7);
 		private readonly SKPoint _outerDilateFactor = new SKPoint(90, 40);
@@ -62,6 +67,10 @@ namespace LibDmd.Output.Virtual
 		public SegGenerator()
 		{
 			LoadSvgs();
+			for (var i = 0; i < NumSegments * NumLines; i++) {
+				_switchPercentage[i] = 0;
+				_switchDirection[i] = SwitchDirection.Idle;
+			}
 		}
 
 		public WriteableBitmap CreateImage(int width, int height)
@@ -73,6 +82,15 @@ namespace LibDmd.Output.Virtual
 
 		public void UpdateFrame(AlphaNumericFrame frame)
 		{
+			for (var i = 0; i < NumSegments * NumLines; i++) {
+				var onBefore = _frame != null && _frame.SegmentData[i] != 0;
+				var onAfter = frame.SegmentData[i] != 0;
+				if (onBefore == onAfter) {
+					_switchDirection[i] = SwitchDirection.Idle;
+				} else {
+					_switchDirection[i] = onBefore ? SwitchDirection.Off : SwitchDirection.On;
+				}
+			}
 			_frame = frame;
 		}
 
@@ -81,8 +99,13 @@ namespace LibDmd.Output.Virtual
 			if (_frame == null || _segmentsForegroundRasterized.Count == 0) {
 				return;
 			}
+
+			UpdateSwitchStatus(_stopwatch.ElapsedMilliseconds - _elapsedMilliseconds);
+
 			if (_call == 0) {
 				_stopwatch.Start();
+			} else {
+				_elapsedMilliseconds = _stopwatch.ElapsedMilliseconds;
 			}
 
 			var width = (int) writeableBitmap.Width;
@@ -90,8 +113,7 @@ namespace LibDmd.Output.Virtual
 
 			writeableBitmap.Lock();
 
-			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul,
-				writeableBitmap.BackBuffer, width * 4)) {
+			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul, writeableBitmap.BackBuffer, width * 4)) {
 
 				var canvas = surface.Canvas;
 				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
@@ -105,11 +127,31 @@ namespace LibDmd.Output.Virtual
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
 				canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
-				canvas.DrawText($"Frames: {this._call++}", 50, 10, paint);
+				canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
 			}
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
+		}
+
+		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
+		{
+			var elapsedPercentage = elapsedMillisecondsSinceLastFrame / SwitchTimeMilliseconds;
+			for (var i = 0; i < NumSegments; i++) {
+				switch (_switchDirection[i]) {
+					case SwitchDirection.Idle:
+						continue;
+					case SwitchDirection.On:
+						_switchPercentage[i] = Math.Min(1, _switchPercentage[i] + elapsedPercentage);
+						break;
+					case SwitchDirection.Off:
+						_switchPercentage[i] = Math.Max(0, _switchPercentage[i] - elapsedPercentage);
+						break;
+				}
+				if (_switchPercentage[i] >= 1 || _switchPercentage[i] <= 0) {
+					_switchDirection[i] = SwitchDirection.Idle;
+				}
+			}
 		}
 
 		private void DrawSegments(SKCanvas canvas, Action<int, SKCanvas, SKPoint> draw)
@@ -129,9 +171,12 @@ namespace LibDmd.Output.Virtual
 		private void DrawSegment(Dictionary<int, SKSurface> source, int num, SKCanvas canvas, SKPoint position)
 		{
 			var seg = _frame.SegmentData[num];
-			for (var j = 0; j < 16; j++) {
-				if (((seg >> j) & 0x1) != 0) {
-					canvas.DrawSurface(source[j], position);
+			using (var surfacePaint = new SKPaint()) {
+				surfacePaint.Color = surfacePaint.Color.WithAlpha((byte)(0xFF * _switchPercentage[num]));
+				for (var j = 0; j < 16; j++) {
+					if (((seg >> j) & 0x1) != 0) {
+						canvas.DrawSurface(source[j], position, surfacePaint);
+					}
 				}
 			}
 		}
@@ -254,5 +299,10 @@ namespace LibDmd.Output.Virtual
 			var skew = (float)Math.Tan(Math.PI * SkewAngle / 180);
 			return width + Math.Abs(skew * height);
 		}
+	}
+
+	internal enum SwitchDirection
+	{
+		On, Off, Idle
 	}
 }
