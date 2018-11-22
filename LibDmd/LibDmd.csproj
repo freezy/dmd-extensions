@@ -344,6 +344,23 @@
     <EmbeddedResource Include="Output\Virtual\alphanum\14-diag-bottom-left.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\15-dot.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\full.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\06-middle-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\08-diag-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\09-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\10-diag-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\11-middle-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\12-diag-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\13-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\14-diag-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\15-dot.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\full.svg" />
     <Content Include="Output\Virtual\Dmd.fx" />
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>

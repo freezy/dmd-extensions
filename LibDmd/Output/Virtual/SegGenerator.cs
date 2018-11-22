@@ -199,6 +199,7 @@ namespace LibDmd.Output.Virtual
 		{
 			// load svgs from packages resources
 			const string prefix = "LibDmd.Output.Virtual.alphanum.";
+			//const string prefix = "LibDmd.Output.Virtual.alphanum.";
 			var segmentFileNames = new[]
 			{
 				$"{prefix}00-top.svg",
