@@ -22,7 +22,7 @@ namespace LibDmd.Output.Virtual
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
 		private const int Padding = 30;
-		private const float SwitchTimeMilliseconds = 200;
+		private const int SwitchTimeMilliseconds = 150;
 		private const int SegmentPaddingFactor = 200;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
@@ -68,7 +68,7 @@ namespace LibDmd.Output.Virtual
 		{
 			LoadSvgs();
 			for (var i = 0; i < NumSegments * NumLines; i++) {
-				_switchPercentage[i] = 0;
+				_switchPercentage[i] = 0.0;
 				_switchDirection[i] = SwitchDirection.Idle;
 			}
 		}
@@ -85,10 +85,8 @@ namespace LibDmd.Output.Virtual
 			for (var i = 0; i < NumSegments * NumLines; i++) {
 				var onBefore = _frame != null && _frame.SegmentData[i] != 0;
 				var onAfter = frame.SegmentData[i] != 0;
-				if (onBefore == onAfter) {
-					_switchDirection[i] = SwitchDirection.Idle;
-				} else {
-					_switchDirection[i] = onBefore ? SwitchDirection.Off : SwitchDirection.On;
+				if (onBefore != onAfter) {
+					_switchDirection[i] = onAfter ? SwitchDirection.On : SwitchDirection.Off;
 				}
 			}
 			_frame = frame;
@@ -136,20 +134,23 @@ namespace LibDmd.Output.Virtual
 
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
 		{
-			var elapsedPercentage = elapsedMillisecondsSinceLastFrame / SwitchTimeMilliseconds;
-			for (var i = 0; i < NumSegments; i++) {
+			var elapsedPercentage = (double)elapsedMillisecondsSinceLastFrame / SwitchTimeMilliseconds;
+			for (var i = 0; i < NumSegments * NumLines; i++) {
 				switch (_switchDirection[i]) {
 					case SwitchDirection.Idle:
 						continue;
 					case SwitchDirection.On:
 						_switchPercentage[i] = Math.Min(1, _switchPercentage[i] + elapsedPercentage);
+						if (_switchPercentage[i] >= 1) {
+							_switchDirection[i] = SwitchDirection.Idle;
+						}
 						break;
 					case SwitchDirection.Off:
 						_switchPercentage[i] = Math.Max(0, _switchPercentage[i] - elapsedPercentage);
+						if (_switchPercentage[i] <= 0) {
+							_switchDirection[i] = SwitchDirection.Idle;
+						}
 						break;
-				}
-				if (_switchPercentage[i] >= 1 || _switchPercentage[i] <= 0) {
-					_switchDirection[i] = SwitchDirection.Idle;
 				}
 			}
 		}
