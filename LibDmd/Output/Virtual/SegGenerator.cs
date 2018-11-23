@@ -21,19 +21,20 @@ namespace LibDmd.Output.Virtual
 		private const int SkewAngle = -12;
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
-		private const int Padding = 30;
+		private const float OuterPaddingPercentage = 0.03f;
+		private const float SegmentPaddingPercentage = 0.2f;
 		private const int SwitchTimeMilliseconds = 150;
-		private const int SegmentPaddingFactor = 200;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
 		private readonly SKColor _segmentOuterGlowColor = new SKColor(0xb6, 0x58, 0x29, 0x40); // b65829
 		private readonly SKColor _segmentInnerGlowColor = new SKColor(0xdd, 0x6a, 0x03, 0xa0);
 		private readonly SKColor _segmentForegroundColor = new SKColor(0xfb, 0xe6, 0xcb, 0xff); // fbe6cb
 		private readonly SKColor _segmentUnlitBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x1d);
-
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		private int _outerPadding;
+		private int _segmentPadding;
 		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
@@ -50,6 +51,7 @@ namespace LibDmd.Output.Virtual
 		private AlphaNumericFrame _frame;
 
 		private float _svgWidth;
+		private float _svgSkewedWidth;
 		private float _svgHeight;
 		private float _svgScale;
 		private SKMatrix _svgMatrix;
@@ -112,24 +114,126 @@ namespace LibDmd.Output.Virtual
 			writeableBitmap.Lock();
 
 			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul, writeableBitmap.BackBuffer, width * 4)) {
+				using (var paint = new SKPaint { Color = SKColors.White, TextSize = 10 }) {
+					var canvas = surface.Canvas;
 
-				var canvas = surface.Canvas;
-				var paint = new SKPaint { Color = SKColors.White, TextSize = 10 };
+					canvas.Clear(_backgroundColor);
+					DrawSegments(canvas, (i, c, p) => c.DrawSurface(_fullSvgRasterized, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsOuterGlowRasterized, i, c, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsInnerGlowRasterized, i, c, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsForegroundRasterized, i, c, p));
 
-				canvas.Clear(_backgroundColor);
-				DrawSegments(canvas, (i, c, p) => c.DrawSurface(_fullSvgRasterized, p));
-				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsOuterGlowRasterized, i, c, p));
-				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsInnerGlowRasterized, i, c, p));
-				DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsForegroundRasterized, i, c, p));
-
-				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
-				canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
+					var fps = _call / (_stopwatch.Elapsed.TotalSeconds <= 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
+					canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
+					canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
+				}
 			}
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
+		}
+
+		private void DrawSegments(SKCanvas canvas, Action<int, SKCanvas, SKPoint> draw)
+		{
+			float posX = _outerPadding;
+			float posY = _outerPadding;
+			for (var j = 0; j < NumLines; j++) {
+				for (var i = 0; i < NumSegments; i++) {
+					draw(i + 20 * j, canvas, new SKPoint(posX - _segmentPadding, posY - _segmentPadding));
+					posX += _svgWidth;
+				}
+				posX = _outerPadding;
+				posY += _svgHeight + 10;
+			}
+		}
+
+		private void DrawSegment(Dictionary<int, SKSurface> source, int num, SKCanvas canvas, SKPoint position)
+		{
+			var seg = _frame.SegmentData[num];
+			using (var surfacePaint = new SKPaint()) {
+				for (var j = 0; j < 16; j++) {
+					if (((seg >> j) & 0x1) != 0 && source[j] != null) {
+						canvas.DrawSurface(source[j], position, surfacePaint);
+					}
+				}
+			}
+		}
+
+		private void SetupDimensions(int width, int height)
+		{
+			var svgSize = _segments[0].Picture.CullRect;
+			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
+			_outerPadding = (int)Math.Round(OuterPaddingPercentage * width);
+			_svgWidth = (width - 2 * _outerPadding) / (NumSegments - 1 + skewedFactor);
+			_svgScale = _svgWidth / svgSize.Width;
+			_svgHeight = svgSize.Height * _svgScale;
+			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
+			_svgSkewedWidth = SkewedWidth(_svgWidth, _svgHeight);
+			_segmentPadding = (int)Math.Round(Math.Sqrt(_svgWidth * _svgWidth + _svgHeight * _svgHeight) * SegmentPaddingPercentage);
+			_svgInfo = new SKImageInfo((int)(_svgSkewedWidth + 2 * _segmentPadding), (int)(_svgHeight + 2 * _segmentPadding));
+		}
+
+		private void RasterizeSegments()
+		{
+			Logger.Info("Rasterizing alphanumeric segments with scale = {0}, segment size = {1}x{2}, outer padding = {3}, segment canvas padding = {4}", _svgScale, _svgWidth, _svgHeight, _outerPadding, _segmentPadding);
+			using (var outerGlowPaint = new SKPaint()) {
+				using (var innerGlowPaint = new SKPaint()) {
+					using (var segmentPaint = new SKPaint()) {
+
+						outerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentOuterGlowColor, SKBlendMode.SrcIn);
+						outerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_outerBlurFactor.X), ScaleFactor(_outerBlurFactor.Y), 
+							SKImageFilter.CreateDilate(ScaleFactor(_outerDilateFactor.X), ScaleFactor(_outerDilateFactor.Y)));
+						
+						innerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentInnerGlowColor, SKBlendMode.SrcIn);
+						innerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_innerBlurFactor.X), ScaleFactor(_innerBlurFactor.Y), 
+							SKImageFilter.CreateDilate(ScaleFactor(_innerDilateFactor.X), ScaleFactor(_innerDilateFactor.Y)));
+
+						segmentPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentForegroundColor, SKBlendMode.SrcIn);
+						segmentPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_foregroundBlurFactor.X), ScaleFactor(_foregroundBlurFactor.Y));
+
+						foreach (var i in _segments.Keys) {
+							if (_segmentsOuterGlowRasterized.ContainsKey(i)) {
+								_segmentsOuterGlowRasterized[i]?.Dispose();
+							}
+							if (_segmentsInnerGlowRasterized.ContainsKey(i)) {
+								_segmentsInnerGlowRasterized[i]?.Dispose();
+							}
+							if (_segmentsForegroundRasterized.ContainsKey(i)) {
+								_segmentsForegroundRasterized[i]?.Dispose();
+							}
+							_segmentsOuterGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, outerGlowPaint);
+							_segmentsInnerGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, innerGlowPaint);
+							_segmentsForegroundRasterized[i] = RasterizeSegment(_segments[i].Picture, segmentPaint);
+						}
+					}
+				}
+			}
+
+			using (var segmentUnlitPaint = new SKPaint()) {
+				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentUnlitBackgroundColor, SKBlendMode.SrcIn);
+				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_unlitBlurFactor.X), ScaleFactor(_unlitBlurFactor.Y));
+				_fullSvgRasterized?.Dispose();
+				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, segmentUnlitPaint);
+			}
+		}
+
+		private int ScaleFactor(double factor)
+		{
+			return (int) Math.Round(factor * _svgScale);
+		}
+
+		private SKSurface RasterizeSegment(SKPicture segment, params SKPaint[] paints)
+		{
+			if (_svgWidth <= 0 || _svgHeight <= 0) {
+				return null;
+			}
+			var surface = SKSurface.Create(_svgInfo);
+			surface.Canvas.Translate(_svgSkewedWidth - _svgWidth + _segmentPadding, _segmentPadding);
+			Skew(surface.Canvas, SkewAngle, 0);
+			foreach (var paint in paints) {
+				surface.Canvas.DrawPicture(segment, ref _svgMatrix, paint);
+			}
+			return surface;
 		}
 
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
@@ -153,105 +257,6 @@ namespace LibDmd.Output.Virtual
 						break;
 				}
 			}
-		}
-
-		private void DrawSegments(SKCanvas canvas, Action<int, SKCanvas, SKPoint> draw)
-		{
-			float posX = 0;
-			float posY = 0;
-			for (var j = 0; j < NumLines; j++) {
-				for (var i = 0; i < NumSegments; i++) {
-					draw(i + 20 * j, canvas, new SKPoint(posX, posY));
-					posX += _svgWidth;
-				}
-				posX = 0;
-				posY += _svgHeight + 10;
-			}
-		}
-
-		private void DrawSegment(Dictionary<int, SKSurface> source, int num, SKCanvas canvas, SKPoint position)
-		{
-			var seg = _frame.SegmentData[num];
-			using (var surfacePaint = new SKPaint()) {
-				surfacePaint.Color = surfacePaint.Color.WithAlpha((byte)(0xFF * _switchPercentage[num]));
-				for (var j = 0; j < 16; j++) {
-					if (((seg >> j) & 0x1) != 0) {
-						canvas.DrawSurface(source[j], position, surfacePaint);
-					}
-				}
-			}
-		}
-
-		private void SetupDimensions(int width, int height)
-		{
-			var svgSize = _segments[0].Picture.CullRect;
-			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
-			_svgWidth = (width - (2f * Padding)) / (NumSegments - 1 + skewedFactor);
-			_svgScale = _svgWidth / svgSize.Width;
-			_svgHeight = svgSize.Height * _svgScale;
-			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
-			var skewedWidth = SkewedWidth(_svgWidth, _svgHeight);
-			_svgInfo = new SKImageInfo((int)(skewedWidth + 2 * SegmentPaddingFactor * _svgScale), (int)(_svgHeight + 2 * SegmentPaddingFactor * _svgScale));
-		}
-
-		private void RasterizeSegments()
-		{
-			Logger.Info("Rasterizing alphanumeric segments with scale = {0}, segment size = {1}x{2}, outer padding = {3}, segment canvas padding = {4}", _svgScale, _svgWidth, _svgHeight, Padding, SegmentPaddingFactor * _svgScale);
-			using (var outerGlowPaint = new SKPaint()) {
-				using (var innerGlowPaint = new SKPaint()) {
-					using (var segmentPaint = new SKPaint()) {
-
-						outerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentOuterGlowColor, SKBlendMode.SrcIn);
-						outerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_outerBlurFactor.X), scaleFactor(_outerBlurFactor.Y), 
-							SKImageFilter.CreateDilate(scaleFactor(_outerDilateFactor.X), scaleFactor(_outerDilateFactor.Y)));
-						
-						innerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentInnerGlowColor, SKBlendMode.SrcIn);
-						innerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_innerBlurFactor.X), scaleFactor(_innerBlurFactor.Y), 
-							SKImageFilter.CreateDilate(scaleFactor(_innerDilateFactor.X), scaleFactor(_innerDilateFactor.Y)));
-
-						segmentPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentForegroundColor, SKBlendMode.SrcIn);
-						segmentPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_foregroundBlurFactor.X), scaleFactor(_foregroundBlurFactor.Y));
-
-						foreach (var i in _segments.Keys) {
-							if (_segmentsOuterGlowRasterized.ContainsKey(i)) {
-								_segmentsOuterGlowRasterized[i].Dispose();
-							}
-							if (_segmentsInnerGlowRasterized.ContainsKey(i)) {
-								_segmentsInnerGlowRasterized[i].Dispose();
-							}
-							if (_segmentsForegroundRasterized.ContainsKey(i)) {
-								_segmentsForegroundRasterized[i].Dispose();
-							}
-							_segmentsOuterGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, outerGlowPaint);
-							_segmentsInnerGlowRasterized[i] = RasterizeSegment(_segments[i].Picture, innerGlowPaint);
-							_segmentsForegroundRasterized[i] = RasterizeSegment(_segments[i].Picture, segmentPaint);
-						}
-					}
-				}
-			}
-
-			using (var segmentUnlitPaint = new SKPaint()) {
-				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentUnlitBackgroundColor, SKBlendMode.SrcIn);
-				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(scaleFactor(_unlitBlurFactor.X), scaleFactor(_unlitBlurFactor.Y));
-				_fullSvgRasterized?.Dispose();
-				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, segmentUnlitPaint);
-			}
-		}
-
-		private int scaleFactor(double factor)
-		{
-			return (int) Math.Round(factor * _svgScale);
-		}
-
-		private SKSurface RasterizeSegment(SKPicture segment, params SKPaint[] paints)
-		{
-			var surface = SKSurface.Create(_svgInfo);
-			surface.Canvas.Translate(_svgInfo.Width - _svgWidth - Padding - SegmentPaddingFactor * _svgScale, Padding);
-			Skew(surface.Canvas, SkewAngle, 0);
-			foreach (var paint in paints) {
-				surface.Canvas.DrawPicture(segment, ref _svgMatrix, paint);
-			}
-			return surface;
 		}
 
 		private void LoadSvgs()
