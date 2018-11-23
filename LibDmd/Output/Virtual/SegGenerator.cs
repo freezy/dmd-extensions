@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
+using System.Windows.Media.Converters;
 using System.Windows.Media.Imaging;
 using NLog;
 using SkiaSharp;
@@ -22,7 +23,7 @@ namespace LibDmd.Output.Virtual
 		private const int NumSegments = 20;
 		private const int NumLines = 2;
 		private const float OuterPaddingPercentage = 0.03f;
-		private const float SegmentPaddingPercentage = 0.2f;
+		private const float SegmentPaddingPercentage = 0.3f;
 		private const int SwitchTimeMilliseconds = 150;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
@@ -92,6 +93,8 @@ namespace LibDmd.Output.Virtual
 				}
 			}
 			_frame = frame;
+
+			//Logger.Info("new frame: [ {0} ], [ {1} ]", string.Join(",", frame.SegmentData), string.Join(",", frame.SegmentDataExtended == null ? new ushort[]{} : frame.SegmentData));
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
@@ -123,7 +126,8 @@ namespace LibDmd.Output.Virtual
 					DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsInnerGlowRasterized, i, c, p));
 					DrawSegments(canvas, (i, c, p) => DrawSegment(_segmentsForegroundRasterized, i, c, p));
 
-					var fps = _call / (_stopwatch.Elapsed.TotalSeconds <= 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
+					// ReSharper disable once CompareOfFloatsByEqualityOperator
+					var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
 					canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
 					canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
 				}
