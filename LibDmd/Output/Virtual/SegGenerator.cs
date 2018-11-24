@@ -30,7 +30,7 @@ namespace LibDmd.Output.Virtual
 		private readonly SKColor _segmentOuterGlowColor = new SKColor(0xb6, 0x58, 0x29, 0x40); // b65829
 		private readonly SKColor _segmentInnerGlowColor = new SKColor(0xdd, 0x6a, 0x03, 0xa0);
 		private readonly SKColor _segmentForegroundColor = new SKColor(0xfb, 0xe6, 0xcb, 0xff); // fbe6cb
-		private readonly SKColor _segmentUnlitBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x1d);
+		private readonly SKColor _segmentUnlitBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x20);
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -116,7 +116,13 @@ namespace LibDmd.Output.Virtual
 
 			writeableBitmap.Lock();
 
-			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul, writeableBitmap.BackBuffer, width * 4)) {
+			var surfaceInfo = new SKImageInfo {
+				Width = width,
+				Height = height,
+				ColorType = SKColorType.Bgra8888,
+				AlphaType = SKAlphaType.Premul,
+			};
+			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
 				using (var paint = new SKPaint { Color = SKColors.White, TextSize = 10 }) {
 					var canvas = surface.Canvas;
 
@@ -132,7 +138,6 @@ namespace LibDmd.Output.Virtual
 					canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
 				}
 			}
-
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
 		}
@@ -303,9 +308,6 @@ namespace LibDmd.Output.Virtual
 
 		private static float SkewedWidth(float width, float height)
 		{
-			if (SkewAngle == 0) {
-				return width;
-			}
 			var skew = (float)Math.Tan(Math.PI * SkewAngle / 180);
 			return width + Math.Abs(skew * height);
 		}
