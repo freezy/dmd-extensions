@@ -7,12 +7,12 @@
         xmlns:common="clr-namespace:LibDmd.Common"
         mc:Ignorable="d"
         Title="Virtual DMD"
-        Height="256" Width="1024"
+        Height="256"
+        Width="1024"
         WindowStyle="None"
         Background="Black"
         AllowsTransparency="True"
-        ResizeMode="CanResizeWithGrip"
-        >
+        ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">
             <Setter Property="OverridesDefaultStyle" Value="True" />

@@ -99,6 +99,7 @@ namespace LibDmd.Common
 
 		private void Window_MouseDown(object sender, MouseButtonEventArgs e)
 		{
+			Logger.Info("Mouse down in VirtualWindow.");
 			if (e.ChangedButton == MouseButton.Left) {
 				DragMove();
 			}
@@ -154,7 +155,7 @@ namespace LibDmd.Common
 							pos.cy = (int)(pos.cx / _aspectRatio); // adjusting height to width change
 
 						} else {
-							pos.cx = (int)(pos.cy * _aspectRatio); // adjusting width to heigth change
+							pos.cx = (int)(pos.cy * _aspectRatio); // adjusting width to height change
 						}
 						Marshal.StructureToPtr(pos, lParam, true);
 						handled = true;

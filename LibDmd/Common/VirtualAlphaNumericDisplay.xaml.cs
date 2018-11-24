@@ -15,11 +15,13 @@ namespace LibDmd.Common
 	/// <summary>
 	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
 	/// </summary>
-	public partial class VirtualAlphaNumericDisplay : Window
+	public partial class VirtualAlphaNumericDisplay : VirtualWindow
 	{
 		public VirtualAlphaNumericDisplay()
 		{
 			InitializeComponent();
 		}
+
+		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
 	}
 }
