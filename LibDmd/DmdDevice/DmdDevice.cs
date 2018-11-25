@@ -193,7 +193,7 @@ namespace LibDmd.DmdDevice
 
 				// create the virtual DMD window and create the render grahps
 				_dmd = new VirtualDmd();
-				_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
+				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
 
 				// Create our context, and install it:
@@ -202,8 +202,8 @@ namespace LibDmd.DmdDevice
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => _dmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
-				_alphaNumericDisplay.Closed += (s, e) => _alphaNumericDisplay.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				_alphaNumericDisplay.Dispatcher.Invoke(SetupVirtualDmd);
+				//---_alphaNumericDisplay.Closed += (s, e) => _alphaNumericDisplay.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+				//---_alphaNumericDisplay.Dispatcher.Invoke(SetupVirtualDmd);
 
 				// we're done with the setup - let the calling thread proceed
 				ev.Set();

@@ -19,9 +19,9 @@ using NLog;
 namespace LibDmd.Output.Virtual
 {
 	/// <summary>
-	/// Interaction logic for Seg20AlphaControl.xaml
+	/// Interaction logic for AlphanumericControl.xaml
 	/// </summary>
-	public partial class Seg20AlphaControl : UserControl, IAlphaNumericDestination, INotifyPropertyChanged, IVirtualControl
+	public partial class AlphanumericControl : UserControl, INotifyPropertyChanged, IVirtualControl
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -51,10 +51,9 @@ namespace LibDmd.Output.Virtual
 		}
 		#endregion
 
-		private readonly SegGenerator _segGenerator;
 		private WriteableBitmap _writeableBitmap;
 
-		public Seg20AlphaControl()
+		public AlphanumericControl()
 		{
 			DataContext = this;
 			InitializeComponent();
@@ -63,54 +62,37 @@ namespace LibDmd.Output.Virtual
 			//MouseDown += MouseDown_Event;
 			//MouseUp += MouseUp_Event;
 
-			_segGenerator = new SegGenerator();
-			//ImageSource = _writeableBitmap = _segGenerator.CreateImage((int)Width, (int)Height);
-			CompositionTarget.Rendering += (o, e) => _segGenerator.DrawImage(_writeableBitmap);
+			//CreateImage(Width, Height);
+			CompositionTarget.Rendering += (o, e) => DrawImage(_writeableBitmap);
 		}
 
-		public void Init()
+		public void ClearDisplay()
 		{
+			throw new NotImplementedException();
 		}
 
-		public void RenderAlphaNumeric(AlphaNumericFrame frame)
+		public void RenderSegments(ushort[] data)
 		{
-			Logger.Info("layout: {0}", frame.SegmentLayout);
-			_segGenerator.UpdateFrame(frame);
+			UpdateData(data);
 		}
 
-		private void MouseDown_Event(object sender, MouseButtonEventArgs e)
-		{
-			Logger.Info("mouse down!");
-			_pauseRasterizing = true;
-			_dirty = true;
-		}
-
-		private void MouseUp_Event(object sender, MouseButtonEventArgs e)
-		{
-			Logger.Info("mouse up!");
-			if (_dirty) {
-				//ImageSource = _writeableBitmap = _segGenerator.CreateImage((int)Width, (int)Height);
-				_dirty = false;
-			}
-			_pauseRasterizing = false;
-		}
 
 		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
 		{
 			if (!_pauseRasterizing) {
-				ImageSource = _writeableBitmap = _segGenerator.CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
+				CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
 			}
 			
 		}
 
-		public void Dispose()
+		private void SetBitmap(WriteableBitmap bitmap)
 		{
+			AlphanumericDisplay.Source = _writeableBitmap = bitmap;
 		}
 
-
-		public void ClearDisplay()
+		public void Dispose()
 		{
-			
+			throw new NotImplementedException();
 		}
 	}
 }

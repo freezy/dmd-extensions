@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,43 +15,48 @@ using System.Windows.Media.Converters;
 using System.Windows.Media.Imaging;
 using NLog;
 using SkiaSharp;
+using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
 namespace LibDmd.Output.Virtual
 {
-
-	class SegGenerator
+	public partial class AlphanumericControl
 	{
+		public int NumChars { get; set; }
+		public int NumLines { get; set; }
+		public ISubject<Dictionary<int, SKSvg>> SegmentsLoaded { get; set; }
+
+		public int Width { get; private set; }
+		public int Height { get; private set; }
+
 		private const int SkewAngle = -12;
-		private const int NumSegments = 20;
-		private const int NumLines = 2;
+
+		private const float LinePaddingPercentage = 0.2f;
 		private const float OuterPaddingPercentage = 0.03f;
 		private const float SegmentPaddingPercentage = 0.3f;
 		private const int SwitchTimeMilliseconds = 150;
 
+		private Dictionary<int, SKSvg> _segments { get; set; }
 		private readonly SKColor _backgroundColor = SKColors.Black;
 		private readonly SKColor _segmentOuterGlowColor = new SKColor(0xb6, 0x58, 0x29, 0x40); // b65829
 		private readonly SKColor _segmentInnerGlowColor = new SKColor(0xdd, 0x6a, 0x03, 0xa0);
 		private readonly SKColor _segmentForegroundColor = new SKColor(0xfb, 0xe6, 0xcb, 0xff); // fbe6cb
 		private readonly SKColor _segmentUnlitBackgroundColor = new SKColor(0xff, 0xff, 0xff, 0x20);
-		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		private int _linePadding;
 		private int _outerPadding;
 		private int _segmentPadding;
 		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
-		private readonly SkiaSharp.Extended.Svg.SKSvg _fullSvg = new SkiaSharp.Extended.Svg.SKSvg();
-		private readonly Dictionary<int, SkiaSharp.Extended.Svg.SKSvg> _segments = new Dictionary<int, SkiaSharp.Extended.Svg.SKSvg>();
-		private readonly Dictionary<int, double> _switchPercentage = new Dictionary<int, double>(NumSegments * NumLines);
-		private readonly Dictionary<int, SwitchDirection> _switchDirection = new Dictionary<int, SwitchDirection>(NumSegments * NumLines);
+		private Dictionary<int, double> _switchPercentage;
+		private Dictionary<int, SwitchDirection> _switchDirection;
 
 		private readonly Dictionary<int, SKSurface> _segmentsOuterGlowRasterized = new Dictionary<int, SKSurface>();
 		private readonly Dictionary<int, SKSurface> _segmentsInnerGlowRasterized = new Dictionary<int, SKSurface>();
 		private readonly Dictionary<int, SKSurface> _segmentsForegroundRasterized = new Dictionary<int, SKSurface>();
 		private SKSurface _fullSvgRasterized;
-
-		private AlphaNumericFrame _frame;
+		
+		private ushort[] _data;
 
 		private float _svgWidth;
 		private float _svgSkewedWidth;
@@ -67,39 +74,60 @@ namespace LibDmd.Output.Virtual
 		private readonly SKPoint _innerBlurFactor = new SKPoint(15, 13);
 		private readonly SKPoint _foregroundBlurFactor = new SKPoint(2, 2);
 
-		public SegGenerator()
+
+		public void Init()
 		{
-			LoadSvgs();
-			for (var i = 0; i < NumSegments * NumLines; i++) {
-				_switchPercentage[i] = 0.0;
-				_switchDirection[i] = SwitchDirection.Idle;
+			//for (var i = 0; i < NumChars * NumLines; i++) {
+			//	_switchPercentage[i] = 0.0;
+			//	_switchDirection[i] = SwitchDirection.Idle;
+			//}
+			//Host.IgnoreAspectRatio = false;
+			//Host.SetDimensions(_alphanumericRenderer.Width, _alphanumericRenderer.Height);
+		}
+
+		public void CreateImage(int width, int height)
+		{
+			Logger.Debug("Creating image...");
+			if (_segments == null) {
+				Logger.Debug("Segments unavailable, waiting...");
+				SegmentsLoaded.Take(1).Subscribe(segments => {
+					Logger.Debug("Got segments, setting up shit");
+					_segments = segments;
+					SetupDimensions(width, height);
+					RasterizeSegments();
+					SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+				});
+
+			} else {
+				Logger.Debug("Segments available, let's go!");
+				SetupDimensions(width, height);
+				RasterizeSegments();
+				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			}
 		}
 
-		public WriteableBitmap CreateImage(int width, int height)
+		public void UpdateData(ushort[] data)
 		{
-			SetupDimensions(width, height);
-			RasterizeSegments();
-			return new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
-		}
+			if (_switchDirection == null) {
+				_switchDirection = new Dictionary<int, SwitchDirection>();
+			}
 
-		public void UpdateFrame(AlphaNumericFrame frame)
-		{
-			for (var i = 0; i < NumSegments * NumLines; i++) {
-				var onBefore = _frame != null && _frame.SegmentData[i] != 0;
-				var onAfter = frame.SegmentData[i] != 0;
+			for (var i = 0; i < NumChars * NumLines; i++) {
+				var onBefore = _data != null && _data[i] != 0;
+				var onAfter = data[i] != 0;
 				if (onBefore != onAfter) {
 					_switchDirection[i] = onAfter ? SwitchDirection.On : SwitchDirection.Off;
 				}
 			}
-			_frame = frame;
+			_data = data;
 
-			//Logger.Info("new frame: [ {0} ], [ {1} ]", string.Join(",", frame.SegmentData), string.Join(",", frame.SegmentDataExtended == null ? new ushort[]{} : frame.SegmentData));
+			Logger.Debug("new data: [ {0} ]", string.Join(",", data));
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
-			if (_frame == null || _segmentsForegroundRasterized.Count == 0) {
+			if (_data == null || writeableBitmap == null || _segmentsForegroundRasterized.Count == 0) {
+				//Logger.Debug("Skipping: _data = {0}, writeableBitmap = {1}, count = {2}", _data, writeableBitmap, _segmentsForegroundRasterized.Count);
 				return;
 			}
 
@@ -112,7 +140,7 @@ namespace LibDmd.Output.Virtual
 			}
 
 			var width = (int) writeableBitmap.Width;
-			var height = (int)writeableBitmap.Height;
+			var height = (int) writeableBitmap.Height;
 
 			writeableBitmap.Lock();
 
@@ -147,7 +175,7 @@ namespace LibDmd.Output.Virtual
 			float posX = _outerPadding;
 			float posY = _outerPadding;
 			for (var j = 0; j < NumLines; j++) {
-				for (var i = 0; i < NumSegments; i++) {
+				for (var i = 0; i < NumChars; i++) {
 					draw(i + 20 * j, canvas, new SKPoint(posX - _segmentPadding, posY - _segmentPadding));
 					posX += _svgWidth;
 				}
@@ -158,7 +186,7 @@ namespace LibDmd.Output.Virtual
 
 		private void DrawSegment(Dictionary<int, SKSurface> source, int num, SKCanvas canvas, SKPoint position)
 		{
-			var seg = _frame.SegmentData[num];
+			var seg = _data[num];
 			using (var surfacePaint = new SKPaint()) {
 				for (var j = 0; j < 16; j++) {
 					if (((seg >> j) & 0x1) != 0 && source[j] != null) {
@@ -170,16 +198,19 @@ namespace LibDmd.Output.Virtual
 
 		private void SetupDimensions(int width, int height)
 		{
-			var svgSize = _segments[0].Picture.CullRect;
+			var svgSize = _segments[AlphaNumericResources.Full].Picture.CullRect;
 			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height) / svgSize.Width;
 			_outerPadding = (int)Math.Round(OuterPaddingPercentage * width);
-			_svgWidth = (width - 2 * _outerPadding) / (NumSegments - 1 + skewedFactor);
+			_svgWidth = (width - 2 * _outerPadding) / (NumChars - 1 + skewedFactor);
 			_svgScale = _svgWidth / svgSize.Width;
 			_svgHeight = svgSize.Height * _svgScale;
+			_linePadding = (int)Math.Round(_svgHeight * LinePaddingPercentage);
 			_svgMatrix = SKMatrix.MakeScale(_svgScale, _svgScale);
 			_svgSkewedWidth = SkewedWidth(_svgWidth, _svgHeight);
 			_segmentPadding = (int)Math.Round(Math.Sqrt(_svgWidth * _svgWidth + _svgHeight * _svgHeight) * SegmentPaddingPercentage);
 			_svgInfo = new SKImageInfo((int)(_svgSkewedWidth + 2 * _segmentPadding), (int)(_svgHeight + 2 * _segmentPadding));
+			Width = width;
+			Height = (int)Math.Round(_outerPadding * 2 + NumLines * _svgHeight + (NumLines - 1) * _linePadding);
 		}
 
 		private void RasterizeSegments()
@@ -200,7 +231,7 @@ namespace LibDmd.Output.Virtual
 						segmentPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentForegroundColor, SKBlendMode.SrcIn);
 						segmentPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_foregroundBlurFactor.X), ScaleFactor(_foregroundBlurFactor.Y));
 
-						foreach (var i in _segments.Keys) {
+						foreach (var i in _segments.Keys.Where(i => i != AlphaNumericResources.Full)) {
 							if (_segmentsOuterGlowRasterized.ContainsKey(i)) {
 								_segmentsOuterGlowRasterized[i]?.Dispose();
 							}
@@ -222,8 +253,10 @@ namespace LibDmd.Output.Virtual
 				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(_segmentUnlitBackgroundColor, SKBlendMode.SrcIn);
 				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(ScaleFactor(_unlitBlurFactor.X), ScaleFactor(_unlitBlurFactor.Y));
 				_fullSvgRasterized?.Dispose();
-				_fullSvgRasterized = RasterizeSegment(_fullSvg.Picture, segmentUnlitPaint);
+				_fullSvgRasterized = RasterizeSegment(_segments[AlphaNumericResources.Full].Picture, segmentUnlitPaint);
 			}
+
+			Logger.Info("Rasterization done.");
 		}
 
 		private int ScaleFactor(double factor)
@@ -247,8 +280,19 @@ namespace LibDmd.Output.Virtual
 
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
 		{
+			if (_switchPercentage == null) {
+				_switchPercentage = new Dictionary<int, double>();
+			}
 			var elapsedPercentage = (double)elapsedMillisecondsSinceLastFrame / SwitchTimeMilliseconds;
-			for (var i = 0; i < NumSegments * NumLines; i++) {
+			for (var i = 0; i < NumChars * NumLines; i++) {
+				if (!_switchDirection.ContainsKey(i)) {
+					_switchDirection[i] = SwitchDirection.Idle;
+					continue;
+				}
+				if (!_switchPercentage.ContainsKey(i)) {
+					_switchPercentage[i] = 0.0;
+					continue;
+				}
 				switch (_switchDirection[i]) {
 					case SwitchDirection.Idle:
 						continue;
@@ -266,39 +310,6 @@ namespace LibDmd.Output.Virtual
 						break;
 				}
 			}
-		}
-
-		private void LoadSvgs()
-		{
-			// load svgs from packages resources
-			const string prefix = "LibDmd.Output.Virtual.alphanum_thin_inner.";
-			//const string prefix = "LibDmd.Output.Virtual.alphanum.";
-			var segmentFileNames = new[]
-			{
-				$"{prefix}00-top.svg",
-				$"{prefix}01-top-right.svg",
-				$"{prefix}02-bottom-right.svg",
-				$"{prefix}03-bottom.svg",
-				$"{prefix}04-bottom-left.svg",
-				$"{prefix}05-top-left.svg",
-				$"{prefix}06-middle-left.svg",
-				$"{prefix}07-comma.svg",
-				$"{prefix}08-diag-top-left.svg",
-				$"{prefix}09-center-top.svg",
-				$"{prefix}10-diag-top-right.svg",
-				$"{prefix}11-middle-right.svg",
-				$"{prefix}12-diag-bottom-right.svg",
-				$"{prefix}13-center-bottom.svg",
-				$"{prefix}14-diag-bottom-left.svg",
-				$"{prefix}15-dot.svg",
-			};
-			Logger.Info("Loading segment SVGs...");
-			for (var i = 0; i < segmentFileNames.Length; i++) {
-				var svg = new SkiaSharp.Extended.Svg.SKSvg();
-				svg.Load(_assembly.GetManifestResourceStream(segmentFileNames[i]));
-				_segments.Add(i, svg);
-			}
-			_fullSvg.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
 		}
 
 		private static void Skew(SKCanvas canvas, double xDegrees, double yDegrees)

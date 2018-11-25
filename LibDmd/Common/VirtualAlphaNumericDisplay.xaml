@@ -34,6 +34,6 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <virtualDmd:Seg20AlphaControl x:Name="AlphaNumericDisplay" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <virtualDmd:AlphanumericControl x:Name="AlphaNumericDisplay" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </common:VirtualWindow>
