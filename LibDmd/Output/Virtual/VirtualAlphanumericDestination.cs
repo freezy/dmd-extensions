@@ -51,6 +51,16 @@ namespace LibDmd.Output.Virtual
 			//Logger.Info("New frame type {0}", frame.SegmentLayout);
 
 			switch (frame.SegmentLayout) {
+
+				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 6).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 6, 6).ToArray());
+					/*SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 12, 6).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 18, 6).ToArray());
+					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 24, 2).ToArray());
+					SendToDisplay(6, new ArraySegment<ushort>(frame.SegmentData, 26, 2).ToArray());*/
+					break;
+
 				case NumericalLayout.__2x20Alpha:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 20).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
@@ -75,9 +85,18 @@ namespace LibDmd.Output.Virtual
 			// todo teardown current if open
 			var resources = AlphaNumericResources.GetInstance();
 			switch (layout) {
+				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					ShowDisplay(0, 6, 1, resources.NumericLoaded);
+					ShowDisplay(1, 6, 1, resources.NumericLoaded);
+					/*ShowDisplay(2, 6, 1, resources.NumericLoaded);
+					ShowDisplay(3, 6, 1, resources.NumericLoaded);
+					ShowDisplay(4, 2, 1, resources.NumericLoaded);
+					ShowDisplay(5, 2, 1, resources.NumericLoaded);*/
+					break;
+
 				case NumericalLayout.__2x20Alpha:
-					ShowDisplay(0, 20, 1, resources.AlphaNumericThinLoaded);
-					ShowDisplay(1, 20, 1, resources.AlphaNumericThinLoaded);
+					ShowDisplay(0, 20, 1, resources.AlphaNumericLoaded);
+					ShowDisplay(1, 20, 1, resources.AlphaNumericLoaded);
 					break;
 			}
 		}

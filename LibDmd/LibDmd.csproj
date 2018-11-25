@@ -295,6 +295,15 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Output\Virtual\numeric\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\06-middle.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\full.svg" />
     <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
     <Content Include="FodyWeavers.xml">
@@ -329,6 +338,23 @@
     <EmbeddedResource Include="Output\Network\www\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\06-middle-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\08-diag-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\09-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\10-diag-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\11-middle-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\12-diag-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\13-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\14-diag-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\15-dot.svg" />
+    <EmbeddedResource Include="Output\Virtual\alphanum-bold\full.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\00-top.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\01-top-right.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\02-bottom-right.svg" />
@@ -346,23 +372,6 @@
     <EmbeddedResource Include="Output\Virtual\alphanum\14-diag-bottom-left.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\15-dot.svg" />
     <EmbeddedResource Include="Output\Virtual\alphanum\full.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\00-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\01-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\02-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\03-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\04-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\05-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\06-middle-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\07-comma.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\08-diag-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\09-center-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\10-diag-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\11-middle-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\12-diag-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\13-center-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\14-diag-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\15-dot.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-thin-inner\full.svg" />
     <Content Include="Output\Virtual\Dmd.fx" />
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
