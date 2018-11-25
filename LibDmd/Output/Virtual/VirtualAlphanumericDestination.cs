@@ -48,7 +48,7 @@ namespace LibDmd.Output.Virtual
 				ShowDisplays(frame.SegmentLayout);
 				_currentLayout = frame.SegmentLayout;
 			}
-			Logger.Info("New frame type {0}", frame.SegmentLayout);
+			//Logger.Info("New frame type {0}", frame.SegmentLayout);
 
 			switch (frame.SegmentLayout) {
 				case NumericalLayout.__2x20Alpha:
@@ -89,7 +89,15 @@ namespace LibDmd.Output.Virtual
 
 		public void Dispose()
 		{
-			Logger.Info("Disposing...");
+			try {
+				foreach (var display in _displays.Values) {
+					display.Dispatcher.Invoke(() => {
+						display.Hide();
+					});
+				}
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
+			}
 		}
 
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, ISubject<Dictionary<int, SKSvg>> segmentsLoaded)

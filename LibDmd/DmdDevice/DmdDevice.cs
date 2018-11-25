@@ -20,6 +20,7 @@ using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.PinUp;
+using LibDmd.Output.Virtual;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
@@ -44,7 +45,6 @@ namespace LibDmd.DmdDevice
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private VirtualDmd _dmd;
-		private VirtualAlphaNumericDisplay _alphaNumericDisplay;
 
 		// Ziigs vo VPM
 		private string _gameName;
@@ -265,7 +265,8 @@ namespace LibDmd.DmdDevice
 				Logger.Info("Added VirtualDMD renderer.");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
-				renderers.Add(_alphaNumericDisplay.AlphaNumericDisplay);
+				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher);
+				renderers.Add(alphaNumeric);
 				Logger.Info("Added virtual alphanumeric renderer.");
 			}
 			if (_config.Video.Enabled) {
@@ -466,9 +467,6 @@ namespace LibDmd.DmdDevice
 
 			_dmd.Dmd.Init();
 			_dmd.Show();
-
-			_alphaNumericDisplay.AlphaNumericDisplay.Init();
-			_alphaNumericDisplay.Show();
 		}
 
 		/// <summary>
@@ -498,9 +496,6 @@ namespace LibDmd.DmdDevice
 			try {
 				_dmd?.Dispatcher.Invoke(() => {
 					_dmd.Hide();
-				});
-				_alphaNumericDisplay?.Dispatcher.Invoke(() => {
-					_alphaNumericDisplay.Hide();
 				});
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");

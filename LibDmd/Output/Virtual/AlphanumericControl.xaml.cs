@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +22,7 @@ namespace LibDmd.Output.Virtual
 	/// <summary>
 	/// Interaction logic for AlphanumericControl.xaml
 	/// </summary>
-	public partial class AlphanumericControl : UserControl, INotifyPropertyChanged, IVirtualControl
+	public partial class AlphanumericControl : UserControl, IVirtualControl
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -37,20 +38,6 @@ namespace LibDmd.Output.Virtual
 		private bool _pauseRasterizing = false;
 		private bool _dirty = true;
 
-		#region ImageSource
-		private ImageSource _imageSource;
-		public ImageSource ImageSource
-		{
-			get => _imageSource;
-			set {
-				if (_imageSource != value) {
-					_imageSource = value;
-					OnPropertyChanged(nameof(ImageSource));
-				}
-			}
-		}
-		#endregion
-
 		private WriteableBitmap _writeableBitmap;
 
 		public AlphanumericControl()
@@ -58,11 +45,12 @@ namespace LibDmd.Output.Virtual
 			DataContext = this;
 			InitializeComponent();
 
-			SizeChanged += SizeChanged_Event;
-			//MouseDown += MouseDown_Event;
-			//MouseUp += MouseUp_Event;
+			//Observable.FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(h => SizeChanged += h, h => SizeChanged -= h)
+			//	.Throttle(TimeSpan.FromSeconds(1))
+			//	.Subscribe(e => CreateImage((int)e.EventArgs.NewSize.Width, (int)e.EventArgs.NewSize.Height));
 
-			//CreateImage(Width, Height);
+			SizeChanged += SizeChanged_Event;
+
 			CompositionTarget.Rendering += (o, e) => DrawImage(_writeableBitmap);
 		}
 
@@ -79,7 +67,7 @@ namespace LibDmd.Output.Virtual
 
 		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
 		{
-			if (!_pauseRasterizing) {
+			if (!Host.Resizing) {
 				CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
 			}
 			
