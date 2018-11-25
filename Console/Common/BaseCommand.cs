@@ -14,6 +14,7 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
+using LibDmd.Output.Virtual;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;
@@ -88,7 +89,8 @@ namespace DmdExt.Common
 					break;
 
 				case AlphaNumeric:
-					renderers.Add(ShowAlphaNumericDisplay(options));
+					renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher));
+					//renderers.Add(ShowAlphaNumericDisplay(options));
 					Logger.Info("Added virtual Alphanumeric renderer.");
 					break;
 
@@ -201,21 +203,7 @@ namespace DmdExt.Common
 			return dmd.VirtualControl;
 		}
 
-		private static IDestination ShowAlphaNumericDisplay(BaseOptions options)
-		{
-			var alphaNumericDisplay = new VirtualAlphaNumericDisplay();
-			var thread = new Thread(() => {
-				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
-				alphaNumericDisplay.Dispatcher.Invoke(() => {
-					alphaNumericDisplay.Show();
-				});
-				Run();
-			});
-			alphaNumericDisplay.Closed += (s, e) => Dispatcher.FromThread(thread).BeginInvokeShutdown(DispatcherPriority.Background);
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-			return alphaNumericDisplay.AlphaNumericDisplay;
-		}
+		
 
 		public void Execute(Action onCompleted, Action<Exception> onError)
 		{

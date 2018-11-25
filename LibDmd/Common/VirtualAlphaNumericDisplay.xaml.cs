@@ -1,4 +1,6 @@
 ﻿using System;
+using System.CodeDom;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -9,6 +11,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using LibDmd.Output.Virtual;
 using NLog;
+using SkiaSharp.Extended.Svg;
 
 namespace LibDmd.Common
 {
@@ -17,9 +20,13 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualAlphaNumericDisplay : VirtualWindow
 	{
-		public VirtualAlphaNumericDisplay()
+		public VirtualAlphaNumericDisplay(int numChars, int numLines, ISubject<Dictionary<int, SKSvg>> segmentsLoaded)
 		{
 			InitializeComponent();
+
+			AlphaNumericDisplay.NumChars = numChars;
+			AlphaNumericDisplay.NumLines = numLines;
+			AlphaNumericDisplay.SegmentsLoaded = segmentsLoaded;
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
