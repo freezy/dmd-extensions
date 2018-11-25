@@ -39,6 +39,7 @@ namespace LibDmd.Common
 			}
 		}
 
+		public bool Resizing => _adjustingHeight.HasValue && _adjustingHeight.Value;
 		public Brush GripColor { get; set; } = Brushes.White;
 
 		private bool _ignoreAr;
@@ -99,7 +100,6 @@ namespace LibDmd.Common
 
 		private void Window_MouseDown(object sender, MouseButtonEventArgs e)
 		{
-			Logger.Info("Mouse down in VirtualWindow.");
 			if (e.ChangedButton == MouseButton.Left) {
 				DragMove();
 			}

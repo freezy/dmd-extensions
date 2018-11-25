@@ -25,9 +25,6 @@ namespace LibDmd.Output.Virtual
 		public int NumLines { get; set; }
 		public ISubject<Dictionary<int, SKSvg>> SegmentsLoaded { get; set; }
 
-		public int Width { get; private set; }
-		public int Height { get; private set; }
-
 		private const int SkewAngle = -12;
 
 		private const float LinePaddingPercentage = 0.2f;
@@ -45,6 +42,8 @@ namespace LibDmd.Output.Virtual
 		private int _linePadding;
 		private int _outerPadding;
 		private int _segmentPadding;
+		private int _canvasWidth;
+		private int _canvasHeight;
 		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
@@ -209,8 +208,9 @@ namespace LibDmd.Output.Virtual
 			_svgSkewedWidth = SkewedWidth(_svgWidth, _svgHeight);
 			_segmentPadding = (int)Math.Round(Math.Sqrt(_svgWidth * _svgWidth + _svgHeight * _svgHeight) * SegmentPaddingPercentage);
 			_svgInfo = new SKImageInfo((int)(_svgSkewedWidth + 2 * _segmentPadding), (int)(_svgHeight + 2 * _segmentPadding));
-			Width = width;
-			Height = (int)Math.Round(_outerPadding * 2 + NumLines * _svgHeight + (NumLines - 1) * _linePadding);
+			_canvasWidth = width;
+			_canvasHeight = (int)Math.Round(_outerPadding * 2 + NumLines * _svgHeight + (NumLines - 1) * _linePadding);
+			Host.SetDimensions(_canvasWidth, _canvasHeight);
 		}
 
 		private void RasterizeSegments()

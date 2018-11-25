@@ -23,6 +23,7 @@ namespace LibDmd.Common
 		public VirtualAlphaNumericDisplay(int numChars, int numLines, ISubject<Dictionary<int, SKSvg>> segmentsLoaded)
 		{
 			InitializeComponent();
+			Initialize();
 
 			AlphaNumericDisplay.NumChars = numChars;
 			AlphaNumericDisplay.NumLines = numLines;
