@@ -112,7 +112,6 @@ namespace LibDmd.Common
 			}
 		}
 
-
 		private void Window_SourceInitialized(object sender, EventArgs ea)
 		{
 			var hwndSource = (HwndSource)PresentationSource.FromVisual((Window)sender);
@@ -168,6 +167,7 @@ namespace LibDmd.Common
 			}
 			return IntPtr.Zero;
 		}
+
 
 		[StructLayout(LayoutKind.Sequential)]
 		internal struct WindowPos

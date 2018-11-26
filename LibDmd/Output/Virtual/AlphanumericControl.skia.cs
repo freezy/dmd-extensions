@@ -30,10 +30,10 @@ namespace LibDmd.Output.Virtual
 		private readonly SKColor _backgroundColor = SKColors.Black;
 		private readonly RasterizeStyle _segmentStyle = new RasterizeStyle {
 			SkewAngle = -12,
-			Background = new RasterizeLevelStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7) },
-			OuterGlow = new RasterizeLevelStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(40, 40), Dilate = new SKPoint(90, 40) },
-			InnerGlow = new RasterizeLevelStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10) },
-			Foreground = new RasterizeLevelStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2) },
+			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7) },
+			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(40, 40), Dilate = new SKPoint(90, 40) },
+			InnerGlow = new RasterizeLayerStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10) },
+			Foreground = new RasterizeLayerStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2) },
 		};
 		private RasterizeDimensions _dim;
 		private readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
@@ -66,6 +66,7 @@ namespace LibDmd.Output.Virtual
 				_res.Loaded[SegmentType].Take(1).Subscribe(segments => {
 					Logger.Debug("Got segments, setting up shit");
 					_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
+					Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
 					_res.Rasterize(SegmentType, _dim, _segmentStyle);
 					SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 				});
@@ -73,6 +74,7 @@ namespace LibDmd.Output.Virtual
 			} else {
 				Logger.Debug("Segments available, let's go!");
 				_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
+				Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
 				_res.Rasterize(SegmentType, _dim, _segmentStyle);
 				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			}
@@ -128,9 +130,9 @@ namespace LibDmd.Output.Virtual
 
 					canvas.Clear(_backgroundColor);
 					DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLevel.OuterGlow, i, c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLevel.InnerGlow, i, c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLevel.Foreground, i, c, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.OuterGlow, i, c, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.InnerGlow, i, c, p));
+					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.Foreground, i, c, p));
 
 					// ReSharper disable once CompareOfFloatsByEqualityOperator
 					var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
@@ -156,15 +158,18 @@ namespace LibDmd.Output.Virtual
 			}
 		}
 
-		private void DrawSegment(RasterizeLevel level, int segmentPosition, SKCanvas canvas, SKPoint canvasPosition)
+		private void DrawSegment(RasterizeLayer layer, int segmentPosition, SKCanvas canvas, SKPoint canvasPosition)
 		{
 			var seg = _data[segmentPosition];
 			using (var surfacePaint = new SKPaint()) {
 				// todo change 16 depending on segment type
 				for (var j = 0; j < 16; j++) {
-					var rasterizedSurface = _res.GetRasterized(level, j);
-					if (((seg >> j) & 0x1) != 0 && rasterizedSurface != null) {
-						canvas.DrawSurface(rasterizedSurface, canvasPosition, surfacePaint);
+					var rasterizedSegment = _res.GetRasterized(layer, j);
+					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
+						//if (rasterizedSegment.Canvas.DeviceClipBounds.Width != _dim.SvgInfo.Width) {
+						//	rasterizedSegment.Canvas.Scale(_dim.SvgInfo.Width / (float)rasterizedSegment.Canvas.DeviceClipBounds.Width);
+						//}
+						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}
 				}
 			}
@@ -172,7 +177,7 @@ namespace LibDmd.Output.Virtual
 
 		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
 		{
-			var segment = _res.GetRasterized(RasterizeLevel.Background, AlphaNumericResources.Full);
+			var segment = _res.GetRasterized(RasterizeLayer.Background, AlphaNumericResources.Full);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}

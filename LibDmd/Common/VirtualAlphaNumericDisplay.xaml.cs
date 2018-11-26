@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -20,6 +21,8 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualAlphaNumericDisplay : VirtualWindow
 	{
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		public VirtualAlphaNumericDisplay(int numChars, int numLines, SegmentType segmentType)
 		{
 			InitializeComponent();
