@@ -63,7 +63,7 @@ namespace LibDmd.Output.Virtual
 
 				case NumericalLayout.__2x20Alpha:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 20).ToArray());
-					//SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
 					break;
 			}
 		}
@@ -96,7 +96,7 @@ namespace LibDmd.Output.Virtual
 
 				case NumericalLayout.__2x20Alpha:
 					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
-					//ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
+					ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
 					break;
 			}
 		}
