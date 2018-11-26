@@ -63,7 +63,7 @@ namespace LibDmd.Output.Virtual
 
 				case NumericalLayout.__2x20Alpha:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 20).ToArray());
-					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
+					//SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
 					break;
 			}
 		}
@@ -83,20 +83,20 @@ namespace LibDmd.Output.Virtual
 		private void ShowDisplays(NumericalLayout layout)
 		{
 			// todo teardown current if open
-			var resources = AlphaNumericResources.GetInstance();
+			var res = AlphaNumericResources.GetInstance();
 			switch (layout) {
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					ShowDisplay(0, 6, 1, resources.NumericLoaded);
-					ShowDisplay(1, 6, 1, resources.NumericLoaded);
-					/*ShowDisplay(2, 6, 1, resources.NumericLoaded);
-					ShowDisplay(3, 6, 1, resources.NumericLoaded);
-					ShowDisplay(4, 2, 1, resources.NumericLoaded);
-					ShowDisplay(5, 2, 1, resources.NumericLoaded);*/
+					ShowDisplay(0, 6, 1, SegmentType.Numeric);
+					ShowDisplay(1, 6, 1, SegmentType.Numeric);
+					/*ShowDisplay(2, 6, 1, SegmentType.Numeric);
+					ShowDisplay(3, 6, 1, SegmentType.Numeric);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric);*/
 					break;
 
 				case NumericalLayout.__2x20Alpha:
-					ShowDisplay(0, 20, 1, resources.AlphaNumericLoaded);
-					ShowDisplay(1, 20, 1, resources.AlphaNumericLoaded);
+					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
+					//ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
 					break;
 			}
 		}
@@ -119,10 +119,10 @@ namespace LibDmd.Output.Virtual
 			}
 		}
 
-		private void ShowDisplay(int displayNumber, int numChars, int numLines, ISubject<Dictionary<int, SKSvg>> segmentsLoaded)
+		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
 			_dispatcher.Invoke(delegate {
-				var display = new VirtualAlphaNumericDisplay(numChars, numLines, segmentsLoaded);
+				var display = new VirtualAlphaNumericDisplay(numChars, numLines, type);
 				_displays[displayNumber] = display;
 				var thread = new Thread(() => {
 					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
