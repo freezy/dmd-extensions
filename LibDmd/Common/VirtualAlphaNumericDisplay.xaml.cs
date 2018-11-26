@@ -20,14 +20,14 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualAlphaNumericDisplay : VirtualWindow
 	{
-		public VirtualAlphaNumericDisplay(int numChars, int numLines, ISubject<Dictionary<int, SKSvg>> segmentsLoaded)
+		public VirtualAlphaNumericDisplay(int numChars, int numLines, SegmentType segmentType)
 		{
 			InitializeComponent();
 			Initialize();
 
 			AlphaNumericDisplay.NumChars = numChars;
 			AlphaNumericDisplay.NumLines = numLines;
-			AlphaNumericDisplay.SegmentsLoaded = segmentsLoaded;
+			AlphaNumericDisplay.SegmentType = segmentType;
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
