@@ -41,12 +41,11 @@ namespace LibDmd.Common
 			}
 		}
 
-		//public bool Resizing => _adjustingHeight.HasValue && _adjustingHeight.Value;
-		public bool Resizing => _resizing;
+		public bool LockHeight { get; set; }
+		public bool Resizing { get; private set; }
 		public Brush GripColor { get; set; } = Brushes.White;
 
 		private bool _ignoreAr;
-		private bool _resizing;
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
@@ -73,7 +72,11 @@ namespace LibDmd.Common
 			}
 			Dispatcher.Invoke(() => {
 				_aspectRatio = (double)width / height;
-				Height = Width / _aspectRatio;
+				if (LockHeight) {
+					Width = Height * _aspectRatio;
+				} else {
+					Height = Width / _aspectRatio;
+				}
 			});
 		}
 
@@ -170,12 +173,12 @@ namespace LibDmd.Common
 					break;
 
 				case WM.Sizing:
-					_resizing = true;
+					Resizing = true;
 					break;
 
 				case WM.ExitSizeMove:
 					_adjustingHeight = null; // reset adjustment dimension and detect again next time window is resized
-					_resizing = false;
+					Resizing = false;
 					WindowResized.OnNext(new DmdPosition(Left, Top, Width, Height));
 					break;
 

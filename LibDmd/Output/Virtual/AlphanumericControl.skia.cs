@@ -21,11 +21,6 @@ namespace LibDmd.Output.Virtual
 {
 	public partial class AlphanumericControl
 	{
-		public int DisplayNumber { get; set; }
-		public int NumChars { get; set; }
-		public int NumLines { get; set; }
-		public SegmentType SegmentType { get; set; }
-
 		private const int SwitchTimeMilliseconds = 150;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
@@ -48,6 +43,7 @@ namespace LibDmd.Output.Virtual
 		private ushort[] _data;
 
 		private long _elapsedMilliseconds = 0;
+		private bool _aspectRatioSet;
 
 		public void Init()
 		{
@@ -68,19 +64,24 @@ namespace LibDmd.Output.Virtual
 				Logger.Debug("Segments unavailable, waiting...");
 				_res.Loaded[SegmentType].Take(1).Subscribe(segments => {
 					Logger.Debug("Got segments, setting up shit");
-					_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
-					Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
-					_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
-					SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+					CreateImageWhenSvgsLoaded(width, height);
 				});
-
 			} else {
 				Logger.Debug("Segments available, let's go!");
-				_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
-				Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
-				_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
-				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+				CreateImageWhenSvgsLoaded(width, height);
 			}
+		}
+
+		private void CreateImageWhenSvgsLoaded(int width, int height)
+		{
+			_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
+			if (!_aspectRatioSet) {
+				Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
+				_aspectRatioSet = true;
+			} else {
+				_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
+			}
+			SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 		}
 
 		public void UpdateData(ushort[] data)

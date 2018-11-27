@@ -28,6 +28,11 @@ namespace LibDmd.Output.Virtual
 
 		public bool IsAvailable => true;
 
+		public int DisplayNumber { get; set; }
+		public int NumChars { get; set; }
+		public int NumLines { get; set; }
+		public SegmentType SegmentType { get; set; }
+
 		public bool IgnoreAspectRatio { get; set; }
 		public VirtualWindow Host { get; set; }
 

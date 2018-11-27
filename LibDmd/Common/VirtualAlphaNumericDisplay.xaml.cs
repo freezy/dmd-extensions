@@ -28,6 +28,7 @@ namespace LibDmd.Common
 			InitializeComponent();
 			Initialize();
 
+			LockHeight = true;
 			AlphaNumericDisplay.DisplayNumber = displayNumber;
 			AlphaNumericDisplay.NumChars = numChars;
 			AlphaNumericDisplay.NumLines = numLines;
