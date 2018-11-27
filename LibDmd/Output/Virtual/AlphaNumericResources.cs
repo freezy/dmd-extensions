@@ -169,7 +169,7 @@ namespace LibDmd.Output.Virtual
 
 						outerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.OuterGlow.Color, SKBlendMode.SrcIn);
 						outerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.OuterGlow.Blur.X, scaledStyle.OuterGlow.Blur.Y,
-							SKImageFilter.CreateDilate((int)scaledStyle.OuterGlow.Dilate.X, (int)scaledStyle.OuterGlow.Dilate.X));
+							SKImageFilter.CreateDilate((int)scaledStyle.OuterGlow.Dilate.X, (int)scaledStyle.OuterGlow.Dilate.Y));
 
 						innerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.InnerGlow.Color, SKBlendMode.SrcIn);
 						innerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.InnerGlow.Blur.X, scaledStyle.InnerGlow.Blur.Y,
