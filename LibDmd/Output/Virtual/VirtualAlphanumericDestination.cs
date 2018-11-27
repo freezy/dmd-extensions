@@ -18,7 +18,8 @@ namespace LibDmd.Output.Virtual
 		public string Name => "Virtual Alphanumeric Renderer";
 		public bool IsAvailable => true;
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
 		private static VirtualAlphanumericDestination _instance;
 
 		private readonly Dispatcher _dispatcher;
@@ -120,10 +121,13 @@ namespace LibDmd.Output.Virtual
 		{
 			try {
 				foreach (var display in _displays.Values) {
-					display.Dispatcher.Invoke(() => {
-						display.Hide();
-					});
+					display.Dispatcher.Invoke(() => display.Close());
 				}
+				_res.Clear();
+				_displays.Clear();
+				_droppedData.Clear();
+				_instance = null;
+
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}

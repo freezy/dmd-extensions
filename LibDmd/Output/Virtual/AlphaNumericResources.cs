@@ -216,6 +216,12 @@ namespace LibDmd.Output.Virtual
 			_rasterizedDim = dim;
 			Logger.Info("Rasterization done.");
 		}
+
+		public void Clear()
+		{
+			_rasterCache.Clear();
+			_rasterizedDim = null;
+		}
 	}
 
 	public enum SegmentType
