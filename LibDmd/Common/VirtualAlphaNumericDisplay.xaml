@@ -12,7 +12,8 @@
         WindowStyle="None"
         Background="Black"
         AllowsTransparency="True"
-        ResizeMode="CanResizeWithGrip">
+        ResizeMode="CanResizeWithGrip"
+        PreviewMouseDown="ResizeGrip_MouseDown">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -24,7 +25,8 @@
                         <Border Background="{TemplateBinding Background}"
                                 SnapsToDevicePixels="True"
                                 Width="10"
-                                Height="10">
+                                Height="10"
+                                PreviewMouseDown="ResizeGrip_MouseDown">
                             <Path Data="M7.677,7.5300003 L9.677,7.5300003 9.677,9.5300002 7.677,9.5300002 z M3.786,7.5300003 L5.7859998,7.5300003 5.7859998,9.5300002 3.786,9.5300002 z M0,7.5300003 L2,7.5300003 2,9.5300002 0,9.5300002 z M3.786,3.8280003 L5.7859998,3.8280003 5.7859998,5.8280003 3.786,5.8280003 z M7.677,3.7660003 L9.677,3.7660003 9.677,5.7659999 7.677,5.7659999 z M7.677,0 L9.677,0 9.677,2 7.677,2 z" 
                                   Fill="{TemplateBinding Foreground}" Height="9.53" Stretch="Fill" VerticalAlignment="Top" Width="9.677"/>
                         </Border>

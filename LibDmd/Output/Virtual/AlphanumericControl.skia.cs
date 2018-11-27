@@ -50,6 +50,8 @@ namespace LibDmd.Output.Virtual
 
 		public void Init()
 		{
+			Host.WindowResized.Subscribe(pos => CreateImage((int)pos.Width, (int)pos.Height));
+
 			//for (var i = 0; i < NumChars * NumLines; i++) {
 			//	_switchPercentage[i] = 0.0;
 			//	_switchDirection[i] = SwitchDirection.Idle;

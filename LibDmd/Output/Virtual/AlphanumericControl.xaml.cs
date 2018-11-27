@@ -44,11 +44,6 @@ namespace LibDmd.Output.Virtual
 		{
 			DataContext = this;
 			InitializeComponent();
-
-			//Observable.FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(h => SizeChanged += h, h => SizeChanged -= h)
-			//	.Throttle(TimeSpan.FromSeconds(1))
-			//	.Subscribe(e => CreateImage((int)e.EventArgs.NewSize.Width, (int)e.EventArgs.NewSize.Height));
-
 			SizeChanged += SizeChanged_Event;
 
 			CompositionTarget.Rendering += (o, e) => DrawImage(_writeableBitmap);
@@ -70,7 +65,6 @@ namespace LibDmd.Output.Virtual
 			if (!Host.Resizing) {
 				CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
 			}
-			
 		}
 
 		private void SetBitmap(WriteableBitmap bitmap)
