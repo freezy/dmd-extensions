@@ -19,6 +19,10 @@ namespace LibDmd.Output.Virtual
 			{ SegmentType.Alphanumeric, new Subject<Dictionary<int, SKSvg>>()},
 			{ SegmentType.Numeric, new Subject<Dictionary<int, SKSvg>>() }
 		};
+		public readonly Dictionary<SegmentType, int> SegmentSize = new Dictionary<SegmentType, int> {
+			{ SegmentType.Alphanumeric, 16 },
+			{ SegmentType.Numeric, 8 },
+		};
 		public bool SvgsLoaded { get; }
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
