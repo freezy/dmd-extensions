@@ -35,8 +35,7 @@ namespace LibDmd.Output.Virtual
 		};
 
 		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
-
-		private RasterizeDimensions _rasterizedDim;
+		private readonly Dictionary<SegmentType, RasterizeDimensions> _rasterizedDim = new Dictionary<SegmentType, RasterizeDimensions>();
 
 		public static AlphaNumericResources GetInstance()
 		{
@@ -147,8 +146,8 @@ namespace LibDmd.Output.Virtual
 
 		public void Rasterize(int display, SegmentType type, RasterizeDimensions dim, RasterizeStyle style)
 		{
-			if (_rasterizedDim != null && _rasterizedDim.Equals(dim)) {
-				Logger.Info("Already rasterized, aborting.");
+			if (_rasterizedDim.ContainsKey(type) && _rasterizedDim[type].Equals(dim)) {
+				Logger.Info("Already rasterized {0}, aborting.", type);
 				return;
 			}
 
@@ -213,14 +212,14 @@ namespace LibDmd.Output.Virtual
 				}
 			}
 
-			_rasterizedDim = dim;
+			_rasterizedDim[type] = dim;
 			Logger.Info("Rasterization done.");
 		}
 
 		public void Clear()
 		{
 			_rasterCache.Clear();
-			_rasterizedDim = null;
+			_rasterizedDim.Clear();
 		}
 	}
 
@@ -291,7 +290,7 @@ namespace LibDmd.Output.Virtual
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return SvgWidth.Equals(other.SvgWidth);
+			return SvgHeight.Equals(other.SvgHeight);
 		}
 	}
 
