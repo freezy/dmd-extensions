@@ -247,7 +247,7 @@ namespace LibDmd.Output.Virtual
 		public SKMatrix SvgMatrix;
 
 		public float LinePaddingPercentage { get; set; } = 0.2f;
-		public float OuterPaddingPercentage { get; set; } = 0.03f;
+		public float OuterPaddingPercentage { get; set; } = 0.2f;
 		public float SegmentPaddingPercentage { get; set; } = 0.3f;
 
 		private readonly float _svgSkewedWidth;
@@ -257,17 +257,17 @@ namespace LibDmd.Output.Virtual
 			NumChars = numChars;
 			NumLines = numLines;
 
-			var skewedFactor = SkewedWidth(svgSize.Width, svgSize.Height, style.SkewAngle) / svgSize.Width;
-			OuterPadding = (int)Math.Round(OuterPaddingPercentage * width);
-			SvgWidth = (width - 2 * OuterPadding) / (NumChars - 1 + skewedFactor);
-			SvgScale = SvgWidth / svgSize.Width;
-			SvgHeight = svgSize.Height * SvgScale;
+			OuterPadding = (int)Math.Round(OuterPaddingPercentage * height);
+			SvgHeight = height - 2 * OuterPadding;
+			SvgScale = SvgHeight / svgSize.Height;
+			SvgWidth = svgSize.Width * SvgScale;
 			LinePadding = (int)Math.Round(SvgHeight * LinePaddingPercentage);
 			SvgMatrix = SKMatrix.MakeScale(SvgScale, SvgScale);
 			_svgSkewedWidth = SkewedWidth(SvgWidth, SvgHeight, style.SkewAngle);
 			SegmentPadding = (int)Math.Round(Math.Sqrt(SvgWidth * SvgWidth + SvgHeight * SvgHeight) * SegmentPaddingPercentage);
 			SvgInfo = new SKImageInfo((int)(_svgSkewedWidth + 2 * SegmentPadding), (int)(SvgHeight + 2 * SegmentPadding));
-			CanvasWidth = width;
+			var skewedWidth = SkewedWidth(SvgWidth, SvgHeight, style.SkewAngle);
+			CanvasWidth = (int)Math.Round(2 * OuterPadding + (NumChars - 1) * SvgWidth + skewedWidth);
 			CanvasHeight = (int)Math.Round(OuterPadding * 2 + NumLines * SvgHeight + (NumLines - 1) * LinePadding);
 		}
 
