@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -27,6 +28,7 @@ namespace LibDmd.Common
 		public abstract IVirtualControl VirtualControl { get; }
 
 		public BehaviorSubject<DmdPosition> PositionChanged;
+		public readonly ISubject<DmdPosition> WindowResized = new Subject<DmdPosition>();
 
 		public bool IgnoreAspectRatio
 		{
@@ -39,10 +41,12 @@ namespace LibDmd.Common
 			}
 		}
 
-		public bool Resizing => _adjustingHeight.HasValue && _adjustingHeight.Value;
+		//public bool Resizing => _adjustingHeight.HasValue && _adjustingHeight.Value;
+		public bool Resizing => _resizing;
 		public Brush GripColor { get; set; } = Brushes.White;
 
 		private bool _ignoreAr;
+		private bool _resizing;
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
@@ -126,6 +130,10 @@ namespace LibDmd.Common
 				return IntPtr.Zero;
 			}
 
+			//if (!new[] {132, 32, 512 }.Contains(msg)) {
+			//	Logger.Info("hwndSource event: {0}", msg);
+			//}
+			
 			switch ((WM)msg) {
 				case WM.WindowPosChanging: {
 						var pos = (WindowPos)Marshal.PtrToStructure(lParam, typeof(WindowPos));
@@ -161,9 +169,16 @@ namespace LibDmd.Common
 					}
 					break;
 
+				case WM.Sizing:
+					_resizing = true;
+					break;
+
 				case WM.ExitSizeMove:
 					_adjustingHeight = null; // reset adjustment dimension and detect again next time window is resized
+					_resizing = false;
+					WindowResized.OnNext(new DmdPosition(Left, Top, Width, Height));
 					break;
+
 			}
 			return IntPtr.Zero;
 		}
@@ -196,6 +211,7 @@ namespace LibDmd.Common
 		internal enum WM
 		{
 			WindowPosChanging = 0x0046,
+			Sizing = 0x0214,
 			ExitSizeMove = 0x0232,
 		}
 
@@ -211,6 +227,11 @@ namespace LibDmd.Common
 		private const int HWND_NOTOPMOST = -2;
 		private const int SWP_NOMOVE = 0x0002;
 		private const int SWP_NOSIZE = 0x0001;
+	}
+
+	public enum ResizeEvent
+	{
+		Started, Ended
 	}
 
 	public class DmdPosition

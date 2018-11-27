@@ -34,5 +34,10 @@ namespace LibDmd.Common
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
+
+		private void ResizeGrip_MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			Logger.Info("mouse down");
+		}
 	}
 }
