@@ -27,16 +27,9 @@ namespace LibDmd.Output.Virtual
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public bool IsAvailable => true;
-		public event PropertyChangedEventHandler PropertyChanged;
 
 		public bool IgnoreAspectRatio { get; set; }
 		public VirtualWindow Host { get; set; }
-
-		protected virtual void OnPropertyChanged(string propertyName) => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-		protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
-
-		private bool _pauseRasterizing = false;
-		private bool _dirty = true;
 
 		private WriteableBitmap _writeableBitmap;
 
@@ -58,7 +51,6 @@ namespace LibDmd.Output.Virtual
 		{
 			UpdateData(data);
 		}
-
 
 		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
 		{
