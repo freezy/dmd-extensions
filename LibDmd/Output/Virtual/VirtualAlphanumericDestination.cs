@@ -122,7 +122,7 @@ namespace LibDmd.Output.Virtual
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
 			_dispatcher.Invoke(delegate {
-				var display = new VirtualAlphaNumericDisplay(numChars, numLines, type);
+				var display = new VirtualAlphaNumericDisplay(displayNumber, numChars, numLines, type);
 				_displays[displayNumber] = display;
 				var thread = new Thread(() => {
 					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));

@@ -16,7 +16,9 @@ namespace LibDmd.Output.Virtual
 {
 	class AlphaNumericResources
 	{
-		public static int Full = 99;
+		public static int FullSegment = 99;
+		public static int InitialCache = 99;
+
 		public Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> Loaded = new Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> {
 			{ SegmentType.Alphanumeric, new Subject<Dictionary<int, SKSvg>>()},
 			{ SegmentType.Numeric, new Subject<Dictionary<int, SKSvg>>() }
@@ -32,38 +34,33 @@ namespace LibDmd.Output.Virtual
 			{ SegmentType.Numeric, new Dictionary<int, SKSvg>() }
 		};
 
-		private readonly Dictionary<RasterizeLayer, Dictionary<int, SKSurface>> _rasterized = new Dictionary<RasterizeLayer, Dictionary<int, SKSurface>> {
-			{ RasterizeLayer.OuterGlow, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.InnerGlow, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.Foreground, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.Background, new Dictionary<int, SKSurface>() }
-		};
-		private readonly Dictionary<RasterizeLayer, Dictionary<int, SKSurface>> _rasterizedPrev = new Dictionary<RasterizeLayer, Dictionary<int, SKSurface>> {
-			{ RasterizeLayer.OuterGlow, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.InnerGlow, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.Foreground, new Dictionary<int, SKSurface>() },
-			{ RasterizeLayer.Background, new Dictionary<int, SKSurface>() }
-		};
+		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
+
+		private RasterizeDimensions _rasterizingDim;
+		private RasterizeDimensions _rasterizedDim;
+		private bool _cacheInitialized;
 
 		public static AlphaNumericResources GetInstance()
 		{
 			return _instance ?? (_instance = new AlphaNumericResources());
 		}
 
-		public SKSurface GetRasterized(RasterizeLayer layer, int segment)
+		public SKSurface GetRasterized(int display, RasterizeLayer layer, SegmentType type, int segment)
 		{
-			if (_rasterized[layer].ContainsKey(segment)) {
-				return _rasterized[layer][segment];
+			var displayKey = new RasterCacheKey(display, layer, type, segment);
+			if (_rasterCache.ContainsKey(displayKey)) {
+				return _rasterCache[displayKey];
 			}
-			if (_rasterizedPrev[layer].ContainsKey(segment)) {
-				return _rasterizedPrev[layer][segment];
+			var initialKey = new RasterCacheKey(InitialCache, layer, type, segment);
+			if (_rasterCache.ContainsKey(initialKey)) {
+				return _rasterCache[initialKey];
 			}
 			return null;
 		}
 
 		public SKRect GetSvgSize(SegmentType type)
 		{
-			return _svgs[type][Full].Picture.CullRect;
+			return _svgs[type][FullSegment].Picture.CullRect;
 		}
 
 		private AlphaNumericResources()
@@ -125,7 +122,7 @@ namespace LibDmd.Output.Virtual
 			}
 			var full = new SKSvg();
 			full.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
-			_svgs[type].Add(Full, full);
+			_svgs[type].Add(FullSegment, full);
 			Loaded[type].OnNext(_svgs[type]);
 			Loaded[type] = new BehaviorSubject<Dictionary<int, SKSvg>>(_svgs[type]);
 		}
@@ -150,12 +147,7 @@ namespace LibDmd.Output.Virtual
 			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
 		}
 
-
-		private Thread _rasterizeThread;
-		private RasterizeDimensions _rasterizingDim;
-		private RasterizeDimensions _rasterizedDim;
-
-		public void Rasterize(SegmentType type, RasterizeDimensions dim, RasterizeStyle style)
+		public void Rasterize(int display, SegmentType type, RasterizeDimensions dim, RasterizeStyle style)
 		{
 			if (_rasterizedDim != null && _rasterizedDim.Equals(dim)) {
 				Logger.Info("Already rasterized, aborting.");
@@ -167,20 +159,6 @@ namespace LibDmd.Output.Virtual
 			}
 			_rasterizingDim = dim;
 
-			// block the very first time
-//			if (_rasterized[RasterizeLayer.Foreground].Keys.Count == 0) {
-				Logger.Info("Rasterizing synchronously...");
-				RasterizeSync(type, dim, style);
-				_rasterizingDim = null;
-//			} else {
-//				Logger.Info("Rasterizing asynchronously...");
-//				_rasterizeThread = new Thread(() => RasterizeSync(type, dim, style));
-//				_rasterizeThread.Start();
-//			}
-		}
-
-		private void RasterizeSync(SegmentType type, RasterizeDimensions dim, RasterizeStyle style)
-		{
 			var scaledStyle = style.Scale(dim);
 			var source = _svgs[type];
 
@@ -200,39 +178,26 @@ namespace LibDmd.Output.Virtual
 						foregroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.Foreground.Color, SKBlendMode.SrcIn);
 						foregroundPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.Foreground.Blur.X, scaledStyle.Foreground.Blur.Y);
 
-						foreach (var i in source.Keys.Where(i => i != Full)) {
+						var layers = new List<Tuple<RasterizeLayer, SKPaint>> {
+							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.OuterGlow, outerGlowPaint),
+							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.InnerGlow, innerGlowPaint),
+							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.Foreground, foregroundPaint),
+						};
 
-							// foreground
-							if (_rasterizedPrev[RasterizeLayer.Foreground].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.Foreground][i]?.Dispose();
-							}
-							if (_rasterized[RasterizeLayer.Foreground].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.Foreground][i] = _rasterized[RasterizeLayer.Foreground][i];
-							}
-							_rasterized[RasterizeLayer.Foreground][i] = RasterizeSegment(source[i].Picture, dim, style, foregroundPaint);
-
-							// inner glow
-							if (_rasterizedPrev[RasterizeLayer.InnerGlow].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.InnerGlow][i]?.Dispose();
-							}
-							if (_rasterized[RasterizeLayer.InnerGlow].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.InnerGlow][i] = _rasterized[RasterizeLayer.InnerGlow][i];
-							}
-							_rasterized[RasterizeLayer.InnerGlow][i] = RasterizeSegment(source[i].Picture, dim, style, innerGlowPaint);
-
-							// outer glow
-							if (_rasterizedPrev[RasterizeLayer.OuterGlow].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.OuterGlow][i]?.Dispose();
-							}
-							if (_rasterized[RasterizeLayer.OuterGlow].ContainsKey(i)) {
-								_rasterizedPrev[RasterizeLayer.OuterGlow][i] = _rasterized[RasterizeLayer.OuterGlow][i];
-							}
-							_rasterized[RasterizeLayer.OuterGlow][i] = RasterizeSegment(source[i].Picture, dim, style, outerGlowPaint);
-
-							if (!_rasterizingDim.Equals(dim)) {
-								Logger.Warn("Aborting rastering!");
-								return;
-							}
+						// for each layer...
+						foreach (var i in source.Keys.Where(i => i != FullSegment)) {
+							layers.ForEach(layer => {
+								var initialKey = new RasterCacheKey(InitialCache, layer.Item1, type, i);
+								var cacheKey = new RasterCacheKey(display, layer.Item1, type, i);
+								if (!_rasterCache.ContainsKey(initialKey)) {
+									_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, dim, style, layer.Item2);
+								} else {
+									if (_rasterCache.ContainsKey(cacheKey)) {
+										_rasterCache[cacheKey]?.Dispose();
+									}
+									_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, dim, style, layer.Item2);
+								}
+							});
 						}
 					}
 				}
@@ -242,17 +207,21 @@ namespace LibDmd.Output.Virtual
 			using (var segmentUnlitPaint = new SKPaint()) {
 				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.Background.Color, SKBlendMode.SrcIn);
 				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.Background.Blur.X, scaledStyle.Background.Blur.Y);
-				
-				if (_rasterizedPrev[RasterizeLayer.Background].ContainsKey(Full)) {
-					_rasterizedPrev[RasterizeLayer.Background][Full]?.Dispose();
+
+				var initialKey = new RasterCacheKey(InitialCache, RasterizeLayer.Background, type, FullSegment);
+				var cacheKey = new RasterCacheKey(display, RasterizeLayer.Background, type, FullSegment);
+				if (!_rasterCache.ContainsKey(initialKey)) {
+					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, dim, style, segmentUnlitPaint);
+				} else {
+					if (_rasterCache.ContainsKey(cacheKey)) {
+						_rasterCache[cacheKey]?.Dispose();
+					}
+					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, dim, style, segmentUnlitPaint);
 				}
-				if (_rasterized[RasterizeLayer.Background].ContainsKey(Full)) {
-					_rasterizedPrev[RasterizeLayer.Background][Full] = _rasterized[RasterizeLayer.Background][Full];
-				}
-				_rasterized[RasterizeLayer.Background][Full] = RasterizeSegment(source[Full].Picture, dim, style, segmentUnlitPaint);
 			}
 
 			_rasterizedDim = dim;
+			_rasterizingDim = null;
 			Logger.Info("Rasterization done.");
 		}
 	}
@@ -363,4 +332,21 @@ namespace LibDmd.Output.Virtual
 			};
 		}
 	}
+
+	struct RasterCacheKey
+	{
+		public readonly int Display;
+		public readonly RasterizeLayer Layer;
+		public readonly SegmentType Type;
+		public readonly int Segment;
+
+		public RasterCacheKey(int display, RasterizeLayer layer, SegmentType type, int segment)
+		{
+			Display = display;
+			Layer = layer;
+			Type = type;
+			Segment = segment;
+		}
+	}
+
 }

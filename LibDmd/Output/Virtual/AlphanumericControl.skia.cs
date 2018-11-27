@@ -21,6 +21,7 @@ namespace LibDmd.Output.Virtual
 {
 	public partial class AlphanumericControl
 	{
+		public int DisplayNumber { get; set; }
 		public int NumChars { get; set; }
 		public int NumLines { get; set; }
 		public SegmentType SegmentType { get; set; }
@@ -69,7 +70,7 @@ namespace LibDmd.Output.Virtual
 					Logger.Debug("Got segments, setting up shit");
 					_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
 					Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
-					_res.Rasterize(SegmentType, _dim, _segmentStyle);
+					_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
 					SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 				});
 
@@ -77,7 +78,7 @@ namespace LibDmd.Output.Virtual
 				Logger.Debug("Segments available, let's go!");
 				_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
 				Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
-				_res.Rasterize(SegmentType, _dim, _segmentStyle);
+				_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
 				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			}
 		}
@@ -166,7 +167,7 @@ namespace LibDmd.Output.Virtual
 			using (var surfacePaint = new SKPaint()) {
 				// todo change 16 depending on segment type
 				for (var j = 0; j < 16; j++) {
-					var rasterizedSegment = _res.GetRasterized(layer, j);
+					var rasterizedSegment = _res.GetRasterized(DisplayNumber, layer, SegmentType, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						//if (rasterizedSegment.Canvas.DeviceClipBounds.Width != _dim.SvgInfo.Width) {
 						//	rasterizedSegment.Canvas.Scale(_dim.SvgInfo.Width / (float)rasterizedSegment.Canvas.DeviceClipBounds.Width);
@@ -179,7 +180,7 @@ namespace LibDmd.Output.Virtual
 
 		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
 		{
-			var segment = _res.GetRasterized(RasterizeLayer.Background, AlphaNumericResources.Full);
+			var segment = _res.GetRasterized(DisplayNumber, RasterizeLayer.Background, SegmentType, AlphaNumericResources.FullSegment);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}

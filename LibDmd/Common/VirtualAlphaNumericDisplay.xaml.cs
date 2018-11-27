@@ -23,21 +23,17 @@ namespace LibDmd.Common
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VirtualAlphaNumericDisplay(int numChars, int numLines, SegmentType segmentType)
+		public VirtualAlphaNumericDisplay(int displayNumber, int numChars, int numLines, SegmentType segmentType)
 		{
 			InitializeComponent();
 			Initialize();
 
+			AlphaNumericDisplay.DisplayNumber = displayNumber;
 			AlphaNumericDisplay.NumChars = numChars;
 			AlphaNumericDisplay.NumLines = numLines;
 			AlphaNumericDisplay.SegmentType = segmentType;
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
-
-		private void ResizeGrip_MouseDown(object sender, MouseButtonEventArgs e)
-		{
-			Logger.Info("mouse down");
-		}
 	}
 }
