@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using NLog;
 using SkiaSharp;
-using WebSocketSharp;
 using Logger = NLog.Logger;
 using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
@@ -36,9 +32,7 @@ namespace LibDmd.Output.Virtual
 
 		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
 
-		private RasterizeDimensions _rasterizingDim;
 		private RasterizeDimensions _rasterizedDim;
-		private bool _cacheInitialized;
 
 		public static AlphaNumericResources GetInstance()
 		{
@@ -153,16 +147,11 @@ namespace LibDmd.Output.Virtual
 				Logger.Info("Already rasterized, aborting.");
 				return;
 			}
-			if (_rasterizingDim != null && _rasterizingDim.Equals(dim)) {
-				Logger.Info("Rasterization in progress, aborting.");
-				return;
-			}
-			_rasterizingDim = dim;
 
 			var scaledStyle = style.Scale(dim);
 			var source = _svgs[type];
 
-			Logger.Info("Rasterizing alphanumeric segments with scale = {0}, segment size = {1}x{2}", dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
+			Logger.Info("Rasterizing {0} segments for display {1} with scale = {2}, segment size = {3}x{4}", type, display, dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
 			using (var outerGlowPaint = new SKPaint()) {
 				using (var innerGlowPaint = new SKPaint()) {
 					using (var foregroundPaint = new SKPaint()) {
@@ -221,7 +210,6 @@ namespace LibDmd.Output.Virtual
 			}
 
 			_rasterizedDim = dim;
-			_rasterizingDim = null;
 			Logger.Info("Rasterization done.");
 		}
 	}
