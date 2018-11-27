@@ -80,6 +80,12 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 28, 2).ToArray());
 					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
 					break;
+
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num: // todo find game to test
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 16).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 32, 7).ToArray());
+					break;
 			}
 		}
 
@@ -126,6 +132,12 @@ namespace LibDmd.Output.Virtual
 					ShowDisplay(3, 7, 1, SegmentType.Numeric);
 					ShowDisplay(4, 2, 1, SegmentType.Numeric);
 					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					break;
+
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
+					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
+					ShowDisplay(1, 16, 1, SegmentType.Numeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric);
 					break;
 			}
 		}
