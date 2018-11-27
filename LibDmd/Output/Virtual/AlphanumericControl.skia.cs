@@ -129,7 +129,7 @@ namespace LibDmd.Output.Virtual
 				AlphaType = SKAlphaType.Premul,
 			};
 			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
-				using (var paint = new SKPaint { Color = SKColors.White, TextSize = 10 }) {
+				using (var paint = new SKPaint { Color = SKColors.Gray, TextSize = 10 }) {
 					var canvas = surface.Canvas;
 
 					canvas.Clear(_backgroundColor);
@@ -167,7 +167,7 @@ namespace LibDmd.Output.Virtual
 			var seg = _data[segmentPosition];
 			using (var surfacePaint = new SKPaint()) {
 				// todo change 16 depending on segment type
-				for (var j = 0; j < 16; j++) {
+				for (var j = 0; j < _res.SegmentSize[SegmentType]; j++) {
 					var rasterizedSegment = _res.GetRasterized(DisplayNumber, layer, SegmentType, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						//if (rasterizedSegment.Canvas.DeviceClipBounds.Width != _dim.SvgInfo.Width) {
