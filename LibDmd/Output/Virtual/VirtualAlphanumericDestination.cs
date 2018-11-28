@@ -63,6 +63,13 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
 					break;
 
+				case NumericalLayout.__2x7Alpha_2x7Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
+					break;
+
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
@@ -146,11 +153,14 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(7, new ArraySegment<ushort>(frame.SegmentData, 26, 2).ToArray());
 					break;
 
+				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 4).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 18, 16).ToArray());
+					break;
 
-
-
-
-				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num: // todo find game to test
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 16).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
 					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 32, 7).ToArray());
@@ -184,6 +194,13 @@ namespace LibDmd.Output.Virtual
 				case NumericalLayout.__2x20Alpha: // badgirls - Bad Girls
 					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
+					break;
+
+				case NumericalLayout.__2x7Alpha_2x7Num: // untested
+					ShowDisplay(0, 7, 1, SegmentType.Alphanumeric);
+					ShowDisplay(1, 7, 1, SegmentType.Alphanumeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric8);
 					break;
 
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num: // hs_l3 - High Speed (L-3)
@@ -266,6 +283,12 @@ namespace LibDmd.Output.Virtual
 					ShowDisplay(7, 2, 1, SegmentType.Numeric8);
 					break;
 
+				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha: // untested
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 4, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 16, 1, SegmentType.Alphanumeric);
+					break;
 
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:  // untested
 					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
