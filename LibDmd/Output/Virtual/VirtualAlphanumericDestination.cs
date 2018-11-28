@@ -101,8 +101,14 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
 					break;
 
-
-
+				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
+					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 28, 2).ToArray());
+					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
+					break;
 
 
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
@@ -153,54 +159,61 @@ namespace LibDmd.Output.Virtual
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num: // hs_l3 - High Speed (L-3)
 					ShowDisplay(0, 7, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 7, 1, SegmentType.Alphanumeric);
-					ShowDisplay(2, 7, 1, SegmentType.Numeric);
-					ShowDisplay(3, 7, 1, SegmentType.Numeric);
-					ShowDisplay(4, 2, 1, SegmentType.Numeric);
-					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric8);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric8);
 					break;
 
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num: //  sstb - Supersonic (7-digit conversion)
-					ShowDisplay(0, 7, 1, SegmentType.Numeric);
-					ShowDisplay(1, 7, 1, SegmentType.Numeric);
-					ShowDisplay(2, 7, 1, SegmentType.Numeric);
-					ShowDisplay(3, 7, 1, SegmentType.Numeric);
-					ShowDisplay(4, 2, 1, SegmentType.Numeric);
-					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric8);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric8);
 					break;
 
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num: // untested
-					ShowDisplay(0, 7, 1, SegmentType.Numeric);
-					ShowDisplay(1, 7, 1, SegmentType.Numeric);
-					ShowDisplay(2, 7, 1, SegmentType.Numeric);
-					ShowDisplay(3, 7, 1, SegmentType.Numeric);
-					ShowDisplay(4, 10, 1, SegmentType.Numeric);
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(4, 10, 1, SegmentType.Numeric8);
 					break;
 
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7: // bk_l4 - Black Knight (L-4)
-					ShowDisplay(0, 7, 1, SegmentType.Numeric);
-					ShowDisplay(1, 7, 1, SegmentType.Numeric);
-					ShowDisplay(2, 7, 1, SegmentType.Numeric);
-					ShowDisplay(3, 7, 1, SegmentType.Numeric);
-					ShowDisplay(4, 2, 1, SegmentType.Numeric);
-					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric8);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric8);
+					break;
+
+				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num: // sshtl_l3 - Space Shuttle (L-3)
+					ShowDisplay(0, 7, 1, SegmentType.Numeric10);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric10);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric10);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric10);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric8);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric8);
 					break;
 
 
-
-
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					ShowDisplay(0, 6, 1, SegmentType.Numeric);
-					ShowDisplay(1, 6, 1, SegmentType.Numeric);
-					ShowDisplay(2, 6, 1, SegmentType.Numeric);
-					ShowDisplay(3, 6, 1, SegmentType.Numeric);
-					ShowDisplay(4, 2, 1, SegmentType.Numeric);
-					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					ShowDisplay(0, 6, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 6, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 6, 1, SegmentType.Numeric8);
+					ShowDisplay(3, 6, 1, SegmentType.Numeric8);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric8);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric8);
 					break;
 			
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
 					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
-					ShowDisplay(1, 16, 1, SegmentType.Numeric);
-					ShowDisplay(2, 7, 1, SegmentType.Numeric);
+					ShowDisplay(1, 16, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
 					break;
 			}
 		}
