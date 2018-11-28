@@ -53,23 +53,14 @@ namespace LibDmd.Output.Virtual
 
 			switch (frame.SegmentLayout) {
 
-				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 6).ToArray());
-					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 6, 6).ToArray());
-					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 12, 6).ToArray());
-					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 18, 6).ToArray());
-					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 24, 2).ToArray());
-					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 26, 2).ToArray());
+				case NumericalLayout.__2x16Alpha:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 16).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
 					break;
 
 				case NumericalLayout.__2x20Alpha:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 20).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
-					break;
-
-				case NumericalLayout.__2x16Alpha:
-					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 16).ToArray());
-					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
 					break;
 
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
@@ -81,6 +72,24 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
 					break;
 
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
+					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 28, 2).ToArray());
+					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
+					break;
+
+				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 6).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 6, 6).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 12, 6).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 18, 6).ToArray());
+					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 24, 2).ToArray());
+					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 26, 2).ToArray());
+					break;
+			
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num: // todo find game to test
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 16).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
@@ -106,23 +115,15 @@ namespace LibDmd.Output.Virtual
 			Logger.Info("New type of {0}", layout);
 			// todo teardown current if open
 			switch (layout) {
-				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					ShowDisplay(0, 6, 1, SegmentType.Numeric);
-					ShowDisplay(1, 6, 1, SegmentType.Numeric);
-					ShowDisplay(2, 6, 1, SegmentType.Numeric);
-					ShowDisplay(3, 6, 1, SegmentType.Numeric);
-					ShowDisplay(4, 2, 1, SegmentType.Numeric);
-					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+
+				case NumericalLayout.__2x16Alpha:
+					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
+					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
 					break;
 
 				case NumericalLayout.__2x20Alpha:
 					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
-					break;
-
-				case NumericalLayout.__2x16Alpha:
-					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
-					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
 					break;
 
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
@@ -134,6 +135,24 @@ namespace LibDmd.Output.Virtual
 					ShowDisplay(5, 2, 1, SegmentType.Numeric);
 					break;
 
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
+					ShowDisplay(0, 7, 1, SegmentType.Numeric);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					break;
+
+				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					ShowDisplay(0, 6, 1, SegmentType.Numeric);
+					ShowDisplay(1, 6, 1, SegmentType.Numeric);
+					ShowDisplay(2, 6, 1, SegmentType.Numeric);
+					ShowDisplay(3, 6, 1, SegmentType.Numeric);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					break;
+			
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
 					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 16, 1, SegmentType.Numeric);
