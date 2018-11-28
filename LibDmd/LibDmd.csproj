@@ -295,8 +295,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Output\Virtual\numeric\08-diag-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\09-diag-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\08-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\numeric\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\numeric\full-10.svg" />
     <EmbeddedResource Include="Output\Virtual\numeric\00-top.svg" />
     <EmbeddedResource Include="Output\Virtual\numeric\01-top-right.svg" />
