@@ -17,11 +17,13 @@ namespace LibDmd.Output.Virtual
 
 		public Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> Loaded = new Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> {
 			{ SegmentType.Alphanumeric, new Subject<Dictionary<int, SKSvg>>()},
-			{ SegmentType.Numeric, new Subject<Dictionary<int, SKSvg>>() }
+			{ SegmentType.Numeric8, new Subject<Dictionary<int, SKSvg>>() },
+			{ SegmentType.Numeric10, new Subject<Dictionary<int, SKSvg>>() }
 		};
 		public readonly Dictionary<SegmentType, int> SegmentSize = new Dictionary<SegmentType, int> {
 			{ SegmentType.Alphanumeric, 16 },
-			{ SegmentType.Numeric, 8 },
+			{ SegmentType.Numeric8, 8 },
+			{ SegmentType.Numeric10, 10 },
 		};
 		public bool SvgsLoaded { get; }
 
@@ -31,7 +33,8 @@ namespace LibDmd.Output.Virtual
 
 		private readonly Dictionary<SegmentType, Dictionary<int, SKSvg>> _svgs = new Dictionary<SegmentType, Dictionary<int, SKSvg>> {
 			{ SegmentType.Alphanumeric, new Dictionary<int, SKSvg>() },
-			{ SegmentType.Numeric, new Dictionary<int, SKSvg>() }
+			{ SegmentType.Numeric8, new Dictionary<int, SKSvg>() },
+			{ SegmentType.Numeric10, new Dictionary<int, SKSvg>() }
 		};
 
 		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
@@ -63,7 +66,8 @@ namespace LibDmd.Output.Virtual
 		private AlphaNumericResources()
 		{
 			LoadAlphaNumeric();
-			LoadNumeric();
+			LoadNumeric8();
+			LoadNumeric10();
 			SvgsLoaded = true;
 			Logger.Info("All SVGs loaded.");
 		}
@@ -90,10 +94,10 @@ namespace LibDmd.Output.Virtual
 				$"{prefix}15-dot.svg",
 			};
 			Logger.Info("Loading alphanumeric SVGs...");
-			Load(segmentFileNames, prefix, SegmentType.Alphanumeric);
+			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Alphanumeric);
 		}
 
-		private void LoadNumeric()
+		private void LoadNumeric8()
 		{
 			const string prefix = "LibDmd.Output.Virtual.numeric.";
 			var segmentFileNames = new[] {
@@ -106,11 +110,30 @@ namespace LibDmd.Output.Virtual
 				$"{prefix}06-middle.svg",
 				$"{prefix}07-comma.svg",
 			};
-			Logger.Info("Loading numeric SVGs...");
-			Load(segmentFileNames, prefix, SegmentType.Numeric);
+			Logger.Info("Loading numeric (8) SVGs...");
+			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Numeric8);
 		}
 
-		private void Load(string[] fileNames, string prefix, SegmentType type)
+		private void LoadNumeric10()
+		{
+			const string prefix = "LibDmd.Output.Virtual.numeric.";
+			var segmentFileNames = new[] {
+				$"{prefix}00-top.svg",
+				$"{prefix}01-top-right.svg",
+				$"{prefix}02-bottom-right.svg",
+				$"{prefix}03-bottom.svg",
+				$"{prefix}04-bottom-left.svg",
+				$"{prefix}05-top-left.svg",
+				$"{prefix}06-middle.svg",
+				$"{prefix}07-comma.svg",
+				$"{prefix}08-diag-top.svg",
+				$"{prefix}09-diag-bottom.svg",
+			};
+			Logger.Info("Loading numeric (10) SVGs...");
+			Load(segmentFileNames, $"{prefix}full-10.svg", SegmentType.Numeric10);
+		}
+
+		private void Load(string[] fileNames, string pathToFull, SegmentType type)
 		{
 			for (var i = 0; i < fileNames.Length; i++) {
 				var svg = new SKSvg();
@@ -118,7 +141,7 @@ namespace LibDmd.Output.Virtual
 				_svgs[type].Add(i, svg);
 			}
 			var full = new SKSvg();
-			full.Load(_assembly.GetManifestResourceStream($"{prefix}full.svg"));
+			full.Load(_assembly.GetManifestResourceStream(pathToFull));
 			_svgs[type].Add(FullSegment, full);
 			Loaded[type].OnNext(_svgs[type]);
 			Loaded[type] = new BehaviorSubject<Dictionary<int, SKSvg>>(_svgs[type]);
@@ -225,7 +248,7 @@ namespace LibDmd.Output.Virtual
 
 	public enum SegmentType
 	{
-		Alphanumeric, Numeric
+		Alphanumeric, Numeric8, Numeric10
 	}
 
 	enum RasterizeLayer
