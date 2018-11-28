@@ -126,8 +126,8 @@ namespace LibDmd.Output.Virtual
 				$"{prefix}05-top-left.svg",
 				$"{prefix}06-middle.svg",
 				$"{prefix}07-comma.svg",
-				$"{prefix}08-diag-top.svg",
-				$"{prefix}09-diag-bottom.svg",
+				$"{prefix}08-center-top.svg",
+				$"{prefix}09-center-bottom.svg",
 			};
 			Logger.Info("Loading numeric (10) SVGs...");
 			Load(segmentFileNames, $"{prefix}full-10.svg", SegmentType.Numeric10);
