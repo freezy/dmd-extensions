@@ -81,6 +81,30 @@ namespace LibDmd.Output.Virtual
 					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
 					break;
 
+				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
+					var data10x1 = new ushort[10];
+					new ArraySegment<ushort>(frame.SegmentData, 28, 4).ToArray().CopyTo(data10x1, 0);
+					new ArraySegment<ushort>(frame.SegmentDataExtended, 0, 6).ToArray().CopyTo(data10x1, 4);
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
+					SendToDisplay(5, data10x1);
+					break;
+
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
+					SendToDisplay(4, new ArraySegment<ushort>(frame.SegmentData, 28, 2).ToArray());
+					SendToDisplay(5, new ArraySegment<ushort>(frame.SegmentData, 30, 2).ToArray());
+					break;
+
+
+
+
+
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 6).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 6, 6).ToArray());
@@ -116,17 +140,17 @@ namespace LibDmd.Output.Virtual
 			// todo teardown current if open
 			switch (layout) {
 
-				case NumericalLayout.__2x16Alpha:
+				case NumericalLayout.__2x16Alpha: // jokrz_l6 - Jokerz (L-6)
 					ShowDisplay(0, 16, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
 					break;
 
-				case NumericalLayout.__2x20Alpha:
+				case NumericalLayout.__2x20Alpha: // badgirls - Bad Girls
 					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
 					break;
 
-				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
+				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num: // hs_l3 - High Speed (L-3)
 					ShowDisplay(0, 7, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 7, 1, SegmentType.Alphanumeric);
 					ShowDisplay(2, 7, 1, SegmentType.Numeric);
@@ -135,7 +159,7 @@ namespace LibDmd.Output.Virtual
 					ShowDisplay(5, 2, 1, SegmentType.Numeric);
 					break;
 
-				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num: //  sstb - Supersonic (7-digit conversion)
 					ShowDisplay(0, 7, 1, SegmentType.Numeric);
 					ShowDisplay(1, 7, 1, SegmentType.Numeric);
 					ShowDisplay(2, 7, 1, SegmentType.Numeric);
@@ -143,6 +167,26 @@ namespace LibDmd.Output.Virtual
 					ShowDisplay(4, 2, 1, SegmentType.Numeric);
 					ShowDisplay(5, 2, 1, SegmentType.Numeric);
 					break;
+
+				case NumericalLayout.__2x7Num_2x7Num_10x1Num: // untested
+					ShowDisplay(0, 7, 1, SegmentType.Numeric);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric);
+					ShowDisplay(4, 10, 1, SegmentType.Numeric);
+					break;
+
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7: // bk_l4 - Black Knight (L-4)
+					ShowDisplay(0, 7, 1, SegmentType.Numeric);
+					ShowDisplay(1, 7, 1, SegmentType.Numeric);
+					ShowDisplay(2, 7, 1, SegmentType.Numeric);
+					ShowDisplay(3, 7, 1, SegmentType.Numeric);
+					ShowDisplay(4, 2, 1, SegmentType.Numeric);
+					ShowDisplay(5, 2, 1, SegmentType.Numeric);
+					break;
+
+
+
 
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
 					ShowDisplay(0, 6, 1, SegmentType.Numeric);
