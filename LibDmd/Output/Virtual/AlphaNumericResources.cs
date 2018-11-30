@@ -256,7 +256,7 @@ namespace LibDmd.Output.Virtual
 		OuterGlow, InnerGlow, Foreground, Background
 	}
 
-	class RasterizeDimensions : IEquatable<RasterizeDimensions>
+	public class RasterizeDimensions : IEquatable<RasterizeDimensions>
 	{
 		public int NumChars { get; set; }
 		public int NumLines { get; set; }
@@ -317,7 +317,7 @@ namespace LibDmd.Output.Virtual
 		}
 	}
 
-	class RasterizeStyle
+	public class RasterizeStyle
 	{
 		public float SkewAngle { get; set; }
 		public RasterizeLayerStyle Foreground { get; set; }
@@ -337,7 +337,7 @@ namespace LibDmd.Output.Virtual
 		}
 	}
 
-	class RasterizeLayerStyle
+	public class RasterizeLayerStyle
 	{
 		public SKColor Color { get; set; }
 		public SKPoint Blur { get; set; }

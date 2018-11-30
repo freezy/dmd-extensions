@@ -20,17 +20,17 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Button x:Name="ColorButton" Grid.Column="0" Grid.Row="0" Content="" VerticalAlignment="Top" Width="60" Background="#FFCF2424" Margin="0,0,0,8"/>
+        <Button x:Name="ColorButton" Grid.Column="0" Grid.Row="0" Content="" VerticalAlignment="Top" Width="60" Background="#FFCF2424" Margin="0,0,0,8" Click="ColorButton_Click"/>
         <TextBox x:Name="ColorValue" Grid.Column="0" Grid.Row="1" Text="ffff0000" VerticalAlignment="Top" Width="60" FontFamily="Consolas,Courier New"/>
         <CheckBox x:Name="DilateEnabled" Grid.Column="1" Grid.Row="0" Content="" VerticalAlignment="Top" Margin="8,0,0,0"/>
-        <Slider x:Name="DilateXSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Top" Width="100"/>
+        <Slider x:Name="DilateXSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Top" Width="150" Maximum="150"/>
         <TextBox x:Name="DilateXValue" Grid.Column="3" Grid.Row="0" VerticalAlignment="Top" Width="30"/>
-        <Slider x:Name="DilateYSlider" Grid.Column="2" Grid.Row="1" VerticalAlignment="Top" Width="100"/>
+        <Slider x:Name="DilateYSlider" Grid.Column="2" Grid.Row="1" VerticalAlignment="Top" Width="150" Maximum="150"/>
         <TextBox x:Name="DilateYValue" Grid.Column="3" Grid.Row="1" VerticalAlignment="Top" Width="30" />
         <CheckBox x:Name="BlurEnabled" Grid.Column="4" Grid.Row="0" Content="" VerticalAlignment="Top" Margin="8,0,0,0"/>
-        <Slider x:Name="BlurXSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Top" Width="100"/>
+        <Slider x:Name="BlurXSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Top" Width="150" Maximum="150"/>
         <TextBox x:Name="BlurXValue" Grid.Column="6" Grid.Row="0" VerticalAlignment="Top" Width="30"/>
-        <Slider x:Name="BlurYSlider" Grid.Column="5" Grid.Row="1" VerticalAlignment="Top" Width="100"/>
+        <Slider x:Name="BlurYSlider" Grid.Column="5" Grid.Row="1" VerticalAlignment="Top" Width="150" Maximum="150"/>
         <TextBox x:Name="BlurYValue" Grid.Column="6" Grid.Row="1" VerticalAlignment="Top" Width="30"/>
     </Grid>
 </UserControl>

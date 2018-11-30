@@ -21,7 +21,7 @@
         <local:VirtualAlphaNumericLayerSetting Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="UnlitStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60" IsDefault="True"/>
-        <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60" Margin="0,0,68,0" IsCancel="True"/>
+        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True"/>
+        <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60"  Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
     </Grid>
 </Window>
