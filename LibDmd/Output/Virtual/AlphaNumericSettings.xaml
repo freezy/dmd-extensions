@@ -8,7 +8,7 @@
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
         Height="303.667" 
-        Width="633.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight">
+        Width="633.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>

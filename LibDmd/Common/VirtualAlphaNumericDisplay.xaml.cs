@@ -39,7 +39,7 @@ namespace LibDmd.Common
 
 		private void OpenDisplaySettings(object sender, RoutedEventArgs e)
 		{
-			new VirtualAlphaNumericSettings(AlphaNumericDisplay, Top, Left + Width).Show();
+			new VirtualAlphaNumericSettings(AlphaNumericDisplay, AlphaNumericDisplay.DisplayNumber, Top, Left + Width).Show();
 		}
 	}
 }

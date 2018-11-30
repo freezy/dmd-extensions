@@ -166,13 +166,9 @@ namespace LibDmd.Output.Virtual
 		{
 			var seg = _data[segmentPosition];
 			using (var surfacePaint = new SKPaint()) {
-				// todo change 16 depending on segment type
 				for (var j = 0; j < _res.SegmentSize[SegmentType]; j++) {
 					var rasterizedSegment = _res.GetRasterized(DisplayNumber, layer, SegmentType, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
-						//if (rasterizedSegment.Canvas.DeviceClipBounds.Width != _dim.SvgInfo.Width) {
-						//	rasterizedSegment.Canvas.Scale(_dim.SvgInfo.Width / (float)rasterizedSegment.Canvas.DeviceClipBounds.Width);
-						//}
 						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}
 				}
