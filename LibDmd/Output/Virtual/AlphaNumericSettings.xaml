@@ -7,18 +7,21 @@
         x:Class="LibDmd.Common.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="265.546" 
-        Width="531.711">
-    <Grid>
+        Height="303.667" 
+        Width="531.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="57"/>
-            <RowDefinition Height="57"/>
-            <RowDefinition Height="57"/>
-            <RowDefinition Height="57"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <local:VirtualAlphaNumericLayerSetting Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Height="63" Width="452"/>
-        <local:VirtualAlphaNumericLayerSetting Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
-        <local:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
-        <local:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="UnlitStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="UnlitStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60" IsDefault="True"/>
+        <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" VerticalAlignment="Top" Width="60" Margin="0,0,68,0" IsCancel="True"/>
     </Grid>
 </Window>

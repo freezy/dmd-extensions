@@ -4,19 +4,33 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LibDmd.Common"
-             mc:Ignorable="d" Width="452.173" Height="63.12">
+             mc:Ignorable="d" Width="Auto" Height="Auto">
     <Grid>
-        <Button x:Name="Color" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="59" Background="#FFCF2424"/>
-        <TextBox HorizontalAlignment="Left" Height="17" Margin="10,34,0,0" TextWrapping="Wrap" Text="ffff0000" VerticalAlignment="Top" Width="59" FontFamily="Consolas"/>
-        <CheckBox x:Name="DilateEnabled" Content="" HorizontalAlignment="Left" Margin="77,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.562,0.183" Height="20" Width="22"/>
-        <Slider x:Name="DilateXSlider" HorizontalAlignment="Left" Margin="104,8,0,0" VerticalAlignment="Top" Width="115" Height="20" Foreground="{x:Null}"/>
-        <TextBox x:Name="DilateXValue" HorizontalAlignment="Left" Height="19" Margin="224,9,0,0" TextWrapping="Wrap" Text="50" VerticalAlignment="Top" Width="30" RenderTransformOrigin="0.522,0.77"/>
-        <Slider x:Name="DilateYSlider" HorizontalAlignment="Left" Margin="104,32,0,0" VerticalAlignment="Top" Width="115" Height="20" Foreground="{x:Null}"/>
-        <TextBox x:Name="DilateYValue" HorizontalAlignment="Left" Height="19" Margin="224,33,0,0" TextWrapping="Wrap" Text="50" VerticalAlignment="Top" Width="30" RenderTransformOrigin="0.522,0.77"/>
-        <CheckBox x:Name="BlurEnabled" Content="" HorizontalAlignment="Left" Margin="264,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.562,0.183" Height="20" Width="22"/>
-        <Slider x:Name="BlurXSlider" HorizontalAlignment="Left" Margin="291,8,0,0" VerticalAlignment="Top" Width="115" Height="20" Foreground="{x:Null}"/>
-        <TextBox x:Name="BlurXValue" HorizontalAlignment="Left" Height="19" Margin="411,9,0,0" TextWrapping="Wrap" Text="50" VerticalAlignment="Top" Width="30"/>
-        <Slider x:Name="BlurYSlider" HorizontalAlignment="Left" Margin="291,31,0,0" VerticalAlignment="Top" Width="115" Height="20" Foreground="{x:Null}"/>
-        <TextBox x:Name="BlurYValue" HorizontalAlignment="Left" Height="19" Margin="411,32,0,0" TextWrapping="Wrap" Text="50" VerticalAlignment="Top" Width="30"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button x:Name="ColorButton" Grid.Column="0" Grid.Row="0" Content="" VerticalAlignment="Top" Width="60" Background="#FFCF2424" Margin="0,0,0,8"/>
+        <TextBox x:Name="ColorValue" Grid.Column="0" Grid.Row="1" Text="ffff0000" VerticalAlignment="Top" Width="60" FontFamily="Consolas,Courier New"/>
+        <CheckBox x:Name="DilateEnabled" Grid.Column="1" Grid.Row="0" Content="" VerticalAlignment="Top" Margin="8,0,0,0"/>
+        <Slider x:Name="DilateXSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Top" Width="100"/>
+        <TextBox x:Name="DilateXValue" Grid.Column="3" Grid.Row="0" VerticalAlignment="Top" Width="30"/>
+        <Slider x:Name="DilateYSlider" Grid.Column="2" Grid.Row="1" VerticalAlignment="Top" Width="100"/>
+        <TextBox x:Name="DilateYValue" Grid.Column="3" Grid.Row="1" VerticalAlignment="Top" Width="30" />
+        <CheckBox x:Name="BlurEnabled" Grid.Column="4" Grid.Row="0" Content="" VerticalAlignment="Top" Margin="8,0,0,0"/>
+        <Slider x:Name="BlurXSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Top" Width="100"/>
+        <TextBox x:Name="BlurXValue" Grid.Column="6" Grid.Row="0" VerticalAlignment="Top" Width="30"/>
+        <Slider x:Name="BlurYSlider" Grid.Column="5" Grid.Row="1" VerticalAlignment="Top" Width="100"/>
+        <TextBox x:Name="BlurYValue" Grid.Column="6" Grid.Row="1" VerticalAlignment="Top" Width="30"/>
     </Grid>
 </UserControl>

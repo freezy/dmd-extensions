@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using LibDmd.Output.Virtual;
 
 namespace LibDmd.Common
 {
@@ -20,8 +21,12 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualAlphaNumericSettings : Window
 	{
-		public VirtualAlphaNumericSettings(double top, double left)
+
+		private readonly AlphanumericControl _control;
+
+		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
+			_control = control;
 			Top = top;
 			Left = left;
 			InitializeComponent();
