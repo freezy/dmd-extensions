@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibDmd.Output.Virtual;
+using SkiaSharp;
 
 namespace LibDmd.Common
 {
@@ -23,6 +24,7 @@ namespace LibDmd.Common
 	{
 
 		private readonly AlphanumericControl _control;
+		private WriteableBitmap _writeableBitmap;
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
@@ -31,11 +33,36 @@ namespace LibDmd.Common
 			InitializeComponent();
 
 			_control = control;
+			_writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+			Preview.Source = _writeableBitmap;
+
+			CompositionTarget.Rendering += (o, e) => DrawPreview(_writeableBitmap);
 
 			ForegroundStyle.RasterizeStyle = _control.RasterizeStyle.Foreground;
 			InnerGlowStyle.RasterizeStyle = _control.RasterizeStyle.InnerGlow;
 			OuterGlowStyle.RasterizeStyle = _control.RasterizeStyle.OuterGlow;
 			UnlitStyle.RasterizeStyle = _control.RasterizeStyle.Background;
+		}
+
+		private void DrawPreview(WriteableBitmap writeableBitmap)
+		{
+			var width = (int)writeableBitmap.Width;
+			var height = (int)writeableBitmap.Height;
+
+			writeableBitmap.Lock();
+
+			var surfaceInfo = new SKImageInfo {
+				Width = width,
+				Height = height,
+				ColorType = SKColorType.Bgra8888,
+				AlphaType = SKAlphaType.Premul,
+			};
+			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.Black);
+			}
+			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+			writeableBitmap.Unlock();
 		}
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)

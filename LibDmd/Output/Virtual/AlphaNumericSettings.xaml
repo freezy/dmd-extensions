@@ -21,7 +21,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Image x:Name="Preview" Width="100" Height="150" Grid.RowSpan="4" VerticalAlignment="Top" Margin="0,0,8,0"/>
+        <Image x:Name="Preview" Width="100" Height="150" Grid.RowSpan="4" VerticalAlignment="Top" Margin="0,0,16,0"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
