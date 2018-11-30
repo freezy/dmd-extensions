@@ -26,10 +26,22 @@ namespace LibDmd.Common
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
-			_control = control;
 			Top = top;
 			Left = left;
 			InitializeComponent();
+
+			_control = control;
+
+			ForegroundStyle.RasterizeStyle = _control.RasterizeStyle.Foreground;
+			InnerGlowStyle.RasterizeStyle = _control.RasterizeStyle.InnerGlow;
+			OuterGlowStyle.RasterizeStyle = _control.RasterizeStyle.OuterGlow;
+			UnlitStyle.RasterizeStyle = _control.RasterizeStyle.Background;
+
+		}
+
+		private void Cancel_Click(object sender, RoutedEventArgs e)
+		{
+			Close();
 		}
 	}
 }

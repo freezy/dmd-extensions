@@ -24,7 +24,7 @@ namespace LibDmd.Output.Virtual
 		private const int SwitchTimeMilliseconds = 150;
 
 		private readonly SKColor _backgroundColor = SKColors.Black;
-		private readonly RasterizeStyle _segmentStyle = new RasterizeStyle {
+		public RasterizeStyle RasterizeStyle { get; set; } = new RasterizeStyle {
 			SkewAngle = -12,
 			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7) },
 			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40) },
@@ -74,12 +74,12 @@ namespace LibDmd.Output.Virtual
 
 		private void CreateImageWhenSvgsLoaded(int width, int height)
 		{
-			_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, _segmentStyle);
+			_dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), width, height, NumChars, NumLines, RasterizeStyle);
 			if (!_aspectRatioSet) {
 				Host.SetDimensions(_dim.CanvasWidth, _dim.CanvasHeight);
 				_aspectRatioSet = true;
 			} else {
-				_res.Rasterize(DisplayNumber, SegmentType, _dim, _segmentStyle);
+				_res.Rasterize(DisplayNumber, SegmentType, _dim, RasterizeStyle);
 			}
 			SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 		}
