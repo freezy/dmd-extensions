@@ -32,7 +32,23 @@
             </Setter>
         </Style>
     </Window.Resources>
+
     <Grid>
-        <virtualDmd:AlphanumericControl x:Name="AlphaNumericDisplay" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <virtualDmd:AlphanumericControl 
+            x:Name="AlphaNumericDisplay" 
+            x:FieldModifier="public"
+            Canvas.ZIndex="1"
+            HorizontalAlignment="Stretch" 
+            VerticalAlignment="Stretch"
+           />
+        <Button 
+            Click="OpenDisplaySettings"
+            Canvas.ZIndex="10"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Width="50" 
+            Height="50">
+        </Button>
     </Grid>
+
 </common:VirtualWindow>
