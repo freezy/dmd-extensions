@@ -1,0 +1,24 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:local="clr-namespace:LibDmd.Common"
+        xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual" 
+        x:Class="LibDmd.Common.VirtualAlphaNumericSettings"
+        mc:Ignorable="d" 
+        WindowStyle="ToolWindow" 
+        Height="265.546" 
+        Width="531.711">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="57"/>
+            <RowDefinition Height="57"/>
+            <RowDefinition Height="57"/>
+            <RowDefinition Height="57"/>
+        </Grid.RowDefinitions>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Height="63" Width="452"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
+        <local:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="UnlitStyle" HorizontalAlignment="Right"  VerticalAlignment="Top" Height="63" Width="452"/>
+    </Grid>
+</Window>

@@ -80,6 +80,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ColorPickerWPF, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ColorPickerWPF.1.0.7\lib\net452\ColorPickerWPF.dll</HintPath>
+    </Reference>
     <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
@@ -176,10 +179,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsBase" />
+    <Reference Include="WriteableBitmapEx.Wpf, Version=1.5.0.0, Culture=neutral, PublicKeyToken=50375ca6144f1c69, processorArchitecture=MSIL">
+      <HintPath>..\packages\WriteableBitmapEx.1.5.0.0\lib\net40\WriteableBitmapEx.Wpf.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
+    <Compile Include="Output\Virtual\AlphaNumericLayerSetting.xaml.cs">
+      <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\AlphaNumericSettings.xaml.cs">
+      <DependentUpon>AlphaNumericSettings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Common\VirtualAlphaNumericDisplay.xaml.cs">
       <DependentUpon>VirtualAlphaNumericDisplay.xaml</DependentUpon>
     </Compile>
@@ -379,6 +391,14 @@
     <Resource Include="Output\Virtual\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Output\Virtual\AlphaNumericLayerSetting.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Output\Virtual\AlphaNumericSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Common\VirtualAlphaNumericDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
