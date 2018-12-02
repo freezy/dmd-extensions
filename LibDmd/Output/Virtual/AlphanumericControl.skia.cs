@@ -26,10 +26,10 @@ namespace LibDmd.Output.Virtual
 		private readonly SKColor _backgroundColor = SKColors.Black;
 		public RasterizeStyle RasterizeStyle { get; set; } = new RasterizeStyle {
 			SkewAngle = -12,
-			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7) },
-			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40) },
-			InnerGlow = new RasterizeLayerStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10) },
-			Foreground = new RasterizeLayerStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2) },
+			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
+			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			InnerGlow = new RasterizeLayerStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			Foreground = new RasterizeLayerStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
 		};
 		private RasterizeDimensions _dim;
 		private readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
@@ -133,10 +133,19 @@ namespace LibDmd.Output.Virtual
 					var canvas = surface.Canvas;
 
 					canvas.Clear(_backgroundColor);
-					DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.OuterGlow, i, c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.InnerGlow, i, c, p));
-					DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.Foreground, i, c, p));
+					if (RasterizeStyle.Background.IsEnabled) {
+						DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
+					}
+					if (RasterizeStyle.OuterGlow.IsEnabled) {
+						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.OuterGlow, i, c, p));
+					}
+					if (RasterizeStyle.InnerGlow.IsEnabled) {
+						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.InnerGlow, i, c, p));
+					}
+					if (RasterizeStyle.Foreground.IsEnabled)
+					{
+						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.Foreground, i, c, p));
+					}
 
 					// ReSharper disable once CompareOfFloatsByEqualityOperator
 					var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);

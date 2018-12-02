@@ -12,8 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using ColorPickerWPF;
-using ColorPickerWPF.Code;
 using LibDmd.Output.Virtual;
 
 namespace LibDmd.Common
@@ -31,6 +29,12 @@ namespace LibDmd.Common
 				_rasterizeStyle = value;
 				UpdateValues();
 			}
+		}
+
+		public string Label
+		{
+			get => LayerEnabled.Content.ToString();
+			set => LayerEnabled.Content = value;
 		}
 
 		private RasterizeLayerStyle _rasterizeStyle;
@@ -53,14 +57,75 @@ namespace LibDmd.Common
 			BlurXSlider.Value = _rasterizeStyle.Blur.X;
 			BlurYSlider.Value = _rasterizeStyle.Blur.Y;
 
+			LayerEnabled.IsChecked = _rasterizeStyle.IsEnabled;
+			DilateEnabled.IsChecked = _rasterizeStyle.IsDilateEnabled;
+			BlurEnabled.IsChecked = _rasterizeStyle.IsBlurEnabled;
+
 			_color = Color.FromArgb(_rasterizeStyle.Color.Alpha, _rasterizeStyle.Color.Red, _rasterizeStyle.Color.Green, _rasterizeStyle.Color.Blue);
-			ColorButton.Background = new SolidColorBrush(_color);
-			ColorValue.Text = _color.ToHexString();
+			ColorButton.SelectedColor = _color;
+
+			ToggleBlur(null, null);
+			ToggleDilate(null, null);
+			Toggle(null, null);
 		}
 
-		private void ColorButton_Click(object sender, RoutedEventArgs e)
+		private void Toggle(object sender, RoutedEventArgs e)
 		{
-			ColorPickerWindow.ShowDialog(out _color, ColorPickerDialogOptions.SimpleView);
+			if (LayerEnabled.IsChecked != null && (bool) LayerEnabled.IsChecked) {
+				ColorButton.IsEnabled = true;
+				DilateEnabled.IsEnabled = true;
+				DilateXSlider.IsEnabled = true;
+				DilateXValue.IsEnabled = true;
+				DilateYSlider.IsEnabled = true;
+				DilateYValue.IsEnabled = true;
+				BlurEnabled.IsEnabled = true;
+				BlurXSlider.IsEnabled = true;
+				BlurXValue.IsEnabled = true;
+				BlurYSlider.IsEnabled = true;
+				BlurYValue.IsEnabled = true;
+			} else {
+				ColorButton.IsEnabled = false;
+				DilateEnabled.IsEnabled = false;
+				DilateXSlider.IsEnabled = false;
+				DilateXValue.IsEnabled = false;
+				DilateYSlider.IsEnabled = false;
+				DilateYValue.IsEnabled = false;
+				BlurEnabled.IsEnabled = false;
+				BlurXSlider.IsEnabled = false;
+				BlurXValue.IsEnabled = false;
+				BlurYSlider.IsEnabled = false;
+				BlurYValue.IsEnabled = false;
+			}
+		}
+
+		private void ToggleDilate(object sender, RoutedEventArgs e)
+		{
+			if (DilateEnabled.IsChecked != null && (bool)DilateEnabled.IsChecked) {
+				DilateXSlider.IsEnabled = true;
+				DilateXValue.IsEnabled = true;
+				DilateYSlider.IsEnabled = true;
+				DilateYValue.IsEnabled = true;
+			} else {
+				DilateXSlider.IsEnabled = false;
+				DilateXValue.IsEnabled = false;
+				DilateYSlider.IsEnabled = false;
+				DilateYValue.IsEnabled = false;
+			}
+		}
+
+		private void ToggleBlur(object sender, RoutedEventArgs e)
+		{
+			if (BlurEnabled.IsChecked != null && (bool)BlurEnabled.IsChecked) {
+				BlurXSlider.IsEnabled = true;
+				BlurXValue.IsEnabled = true;
+				BlurYSlider.IsEnabled = true;
+				BlurYValue.IsEnabled = true;
+			} else {
+				BlurXSlider.IsEnabled = false;
+				BlurXValue.IsEnabled = false;
+				BlurYSlider.IsEnabled = false;
+				BlurYValue.IsEnabled = false;
+			}
 		}
 	}
 }
