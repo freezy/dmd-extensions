@@ -43,6 +43,19 @@ namespace LibDmd.Common
 		public VirtualAlphaNumericLayerSetting()
 		{
 			InitializeComponent();
+			DilateXSlider.ValueChanged += (sender, e) => DilateXValue.Text = DoubleToString(DilateXSlider.Value);
+			DilateXValue.TextChanged += (sender, e) => DilateXSlider.Value = StringToDouble(DilateXValue.Text, DilateXSlider.Value);
+			DilateYSlider.ValueChanged += (sender, e) => DilateYValue.Text = DoubleToString(DilateYSlider.Value);
+			DilateYValue.TextChanged += (sender, e) => DilateYSlider.Value = StringToDouble(DilateYValue.Text, DilateYSlider.Value);
+			BlurXSlider.ValueChanged += (sender, e) => BlurXValue.Text = DoubleToString(BlurXSlider.Value);
+			BlurXValue.TextChanged += (sender, e) => BlurXSlider.Value = StringToDouble(BlurXValue.Text, BlurXSlider.Value);
+			BlurYSlider.ValueChanged += (sender, e) => BlurYValue.Text = DoubleToString(BlurYSlider.Value);
+			BlurYValue.TextChanged += (sender, e) => BlurYSlider.Value = StringToDouble(BlurYValue.Text, BlurYSlider.Value);
+		}
+
+		private void Test(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			throw new NotImplementedException();
 		}
 
 		private void UpdateValues()
@@ -125,6 +138,20 @@ namespace LibDmd.Common
 				BlurXValue.IsEnabled = false;
 				BlurYSlider.IsEnabled = false;
 				BlurYValue.IsEnabled = false;
+			}
+		}
+
+		private static string DoubleToString(double d)
+		{
+			return ((int)Math.Round(d)).ToString();
+		}
+
+		private static double StringToDouble(string str, double fallback)
+		{
+			try {
+				return double.Parse(str);
+			} catch (Exception) {
+				return fallback;
 			}
 		}
 	}
