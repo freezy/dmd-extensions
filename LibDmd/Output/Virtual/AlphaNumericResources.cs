@@ -180,18 +180,11 @@ namespace LibDmd.Output.Virtual
 			Logger.Info("Rasterizing {0} segments for display {1} with scale = {2}, segment size = {3}x{4}", type, display, dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
 			using (var outerGlowPaint = new SKPaint()) {
 				using (var innerGlowPaint = new SKPaint()) {
-					using (var foregroundPaint = new SKPaint()) {
-
-						outerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.OuterGlow.Color, SKBlendMode.SrcIn);
-						outerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.OuterGlow.Blur.X, scaledStyle.OuterGlow.Blur.Y,
-							SKImageFilter.CreateDilate((int)scaledStyle.OuterGlow.Dilate.X, (int)scaledStyle.OuterGlow.Dilate.Y));
-
-						innerGlowPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.InnerGlow.Color, SKBlendMode.SrcIn);
-						innerGlowPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.InnerGlow.Blur.X, scaledStyle.InnerGlow.Blur.Y,
-							SKImageFilter.CreateDilate((int)scaledStyle.InnerGlow.Dilate.X, (int)scaledStyle.InnerGlow.Dilate.Y));
-
-						foregroundPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.Foreground.Color, SKBlendMode.SrcIn);
-						foregroundPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.Foreground.Blur.X, scaledStyle.Foreground.Blur.Y);
+					using (var foregroundPaint = new SKPaint())
+					{
+						ApplyFilters(outerGlowPaint, scaledStyle.OuterGlow);
+						ApplyFilters(innerGlowPaint, scaledStyle.InnerGlow);
+						ApplyFilters(foregroundPaint, scaledStyle.Foreground);
 
 						var layers = new List<Tuple<RasterizeLayer, SKPaint>> {
 							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.OuterGlow, outerGlowPaint),
@@ -243,6 +236,20 @@ namespace LibDmd.Output.Virtual
 		{
 			_rasterCache.Clear();
 			_rasterizedDim.Clear();
+		}
+
+		private void ApplyFilters(SKPaint paint, RasterizeLayerStyle layerStyle)
+		{
+			paint.ColorFilter = SKColorFilter.CreateBlendMode(layerStyle.Color, SKBlendMode.SrcIn);
+			if (layerStyle.IsBlurEnabled && layerStyle.IsDilateEnabled) {
+				paint.ImageFilter = SKImageFilter.CreateBlur(layerStyle.Blur.X, layerStyle.Blur.Y,
+					SKImageFilter.CreateDilate((int)layerStyle.Dilate.X, (int)layerStyle.Dilate.Y));
+			} else if (layerStyle.IsBlurEnabled) {
+				paint.ImageFilter = SKImageFilter.CreateBlur(layerStyle.Blur.X, layerStyle.Blur.Y);
+			} else if (layerStyle.IsDilateEnabled) {
+				paint.ImageFilter = SKImageFilter.CreateDilate((int)layerStyle.Dilate.X, (int)layerStyle.Dilate.Y);
+			}
+
 		}
 	}
 
@@ -339,6 +346,9 @@ namespace LibDmd.Output.Virtual
 
 	public class RasterizeLayerStyle
 	{
+		public bool IsEnabled { get; set; }
+		public bool IsBlurEnabled { get; set; }
+		public bool IsDilateEnabled { get; set; }
 		public SKColor Color { get; set; }
 		public SKPoint Blur { get; set; }
 		public SKPoint Dilate { get; set; }
@@ -346,6 +356,9 @@ namespace LibDmd.Output.Virtual
 		public RasterizeLayerStyle Scale(RasterizeDimensions dim)
 		{
 			return new RasterizeLayerStyle {
+				IsEnabled = IsEnabled,
+				IsBlurEnabled = IsBlurEnabled,
+				IsDilateEnabled = IsDilateEnabled,
 				Color = Color,
 				Blur = new SKPoint(dim.SvgScale * Blur.X, dim.SvgScale * Blur.Y),
 				Dilate = new SKPoint((float) Math.Round(dim.SvgScale * Dilate.X), (float) Math.Round(dim.SvgScale * Dilate.Y))

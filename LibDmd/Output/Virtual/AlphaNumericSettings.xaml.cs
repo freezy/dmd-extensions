@@ -43,6 +43,11 @@ namespace LibDmd.Common
 
 			CompositionTarget.Rendering += (o, e) => DrawPreview(_writeableBitmap);
 
+			ForegroundStyle.Label = "Foreground Layer";
+			InnerGlowStyle.Label = "Inner Glow Layer";
+			OuterGlowStyle.Label = "Outer Glow Layer";
+			UnlitStyle.Label = "Unlit Layer";
+
 			ForegroundStyle.RasterizeStyle = _control.RasterizeStyle.Foreground;
 			InnerGlowStyle.RasterizeStyle = _control.RasterizeStyle.InnerGlow;
 			OuterGlowStyle.RasterizeStyle = _control.RasterizeStyle.OuterGlow;
