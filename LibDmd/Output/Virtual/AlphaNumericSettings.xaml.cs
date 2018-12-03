@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibDmd.Output.Virtual;
+using NLog;
 using SkiaSharp;
 
 namespace LibDmd.Common
@@ -24,8 +26,9 @@ namespace LibDmd.Common
 	{
 
 		private static readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly AlphanumericControl _control;
+		private readonly RasterizeStyle _style;
 		private WriteableBitmap _writeableBitmap;
 		private int _previewDisplayNumber;
 		private SegmentType _segmentType = SegmentType.Alphanumeric;
@@ -37,24 +40,43 @@ namespace LibDmd.Common
 			InitializeComponent();
 
 			_previewDisplayNumber = displayNumber + 100;
-			_control = control;
+			_style = control.RasterizeStyle;
 			_writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = _writeableBitmap;
 
 			CompositionTarget.Rendering += (o, e) => DrawPreview(_writeableBitmap);
 
+			// name each layer
 			ForegroundStyle.Label = "Foreground Layer";
 			InnerGlowStyle.Label = "Inner Glow Layer";
 			OuterGlowStyle.Label = "Outer Glow Layer";
 			UnlitStyle.Label = "Unlit Layer";
 
-			ForegroundStyle.RasterizeStyle = _control.RasterizeStyle.Foreground;
-			InnerGlowStyle.RasterizeStyle = _control.RasterizeStyle.InnerGlow;
-			OuterGlowStyle.RasterizeStyle = _control.RasterizeStyle.OuterGlow;
-			UnlitStyle.RasterizeStyle = _control.RasterizeStyle.Background;
+			// save our editable copy of the control's style
+			ForegroundStyle.RasterizeStyle = _style.Foreground.Copy();
+			InnerGlowStyle.RasterizeStyle = _style.InnerGlow.Copy();
+			OuterGlowStyle.RasterizeStyle = _style.OuterGlow.Copy();
+			UnlitStyle.RasterizeStyle = _style.Background.Copy();
 
-			var dim = new RasterizeDimensions(_res.GetSvgSize(_segmentType), (int)_writeableBitmap.Width, (int)_writeableBitmap.Height, 1, 1, _control.RasterizeStyle);
-			_res.Rasterize(_previewDisplayNumber, _segmentType, dim, _control.RasterizeStyle);
+			// calculate dimensions for preview
+			var dim = new RasterizeDimensions(_res.GetSvgSize(_segmentType), (int)_writeableBitmap.Width, (int)_writeableBitmap.Height, 1, 1, _style);
+
+			// rasterize preview a first time
+			_res.Rasterize(_previewDisplayNumber, _segmentType, dim, _style);
+
+			// subscribe to control changes that trigger rasterization
+			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
+				_style.Foreground = layerStyle;
+				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.Foreground, layerStyle.Scale(dim), _style.SkewAngle);
+			});
+			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
+				_style.InnerGlow = layerStyle;
+				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.InnerGlow, layerStyle.Scale(dim), _style.SkewAngle);
+			});
+			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
+				_style.OuterGlow = layerStyle;
+				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.OuterGlow, layerStyle.Scale(dim), _style.SkewAngle);
+			});
 		}
 
 		private void DrawPreview(WriteableBitmap writeableBitmap)
