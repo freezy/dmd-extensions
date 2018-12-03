@@ -147,15 +147,14 @@ namespace LibDmd.Output.Virtual
 			Loaded[type] = new BehaviorSubject<Dictionary<int, SKSvg>>(_svgs[type]);
 		}
 
-		private SKSurface RasterizeSegment(SKPicture segment, RasterizeDimensions dim, RasterizeStyle style, params SKPaint[] paints)
+		private SKSurface RasterizeSegment(SKPicture segment, RasterizeDimensions dim, float skewAngle, params SKPaint[] paints)
 		{
 			if (dim.SvgWidth <= 0 || dim.SvgWidth <= 0) {
-				Logger.Warn("Skipping rasterizing of segment {0}", style);
 				return null;
 			}
 			var surface = SKSurface.Create(dim.SvgInfo);
 			surface.Canvas.Translate(dim.TranslateX, dim.TranslateY);
-			Skew(surface.Canvas, style.SkewAngle, 0);
+			Skew(surface.Canvas, skewAngle, 0);
 			foreach (var paint in paints) {
 				surface.Canvas.DrawPicture(segment, ref dim.SvgMatrix, paint);
 			}
@@ -177,39 +176,16 @@ namespace LibDmd.Output.Virtual
 			var scaledStyle = style.Scale(dim);
 			var source = _svgs[type];
 
-			Logger.Info("Rasterizing {0} segments for display {1} with scale = {2}, segment size = {3}x{4}", type, display, dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
-			using (var outerGlowPaint = new SKPaint()) {
-				using (var innerGlowPaint = new SKPaint()) {
-					using (var foregroundPaint = new SKPaint())
-					{
-						ApplyFilters(outerGlowPaint, scaledStyle.OuterGlow);
-						ApplyFilters(innerGlowPaint, scaledStyle.InnerGlow);
-						ApplyFilters(foregroundPaint, scaledStyle.Foreground);
+			var layers = new List<Tuple<RasterizeLayer, RasterizeLayerStyle>> {
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.OuterGlow, scaledStyle.OuterGlow),
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.InnerGlow, scaledStyle.InnerGlow),
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.Foreground, scaledStyle.Foreground),
+			};
 
-						var layers = new List<Tuple<RasterizeLayer, SKPaint>> {
-							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.OuterGlow, outerGlowPaint),
-							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.InnerGlow, innerGlowPaint),
-							new Tuple<RasterizeLayer, SKPaint>(RasterizeLayer.Foreground, foregroundPaint),
-						};
-
-						// for each layer...
-						foreach (var i in source.Keys.Where(i => i != FullSegment)) {
-							layers.ForEach(layer => {
-								var initialKey = new RasterCacheKey(InitialCache, layer.Item1, type, i);
-								var cacheKey = new RasterCacheKey(display, layer.Item1, type, i);
-								if (!_rasterCache.ContainsKey(initialKey)) {
-									_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, dim, style, layer.Item2);
-								} else {
-									if (_rasterCache.ContainsKey(cacheKey)) {
-										_rasterCache[cacheKey]?.Dispose();
-									}
-									_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, dim, style, layer.Item2);
-								}
-							});
-						}
-					}
-				}
-			}
+			layers.ForEach(layer => {
+				//Logger.Info("Rasterizing {0} segments for display {1} with scale = {2}, segment size = {3}x{4}", type, display, dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
+				Rasterize(display, type, dim, layer.Item1, layer.Item2, style.SkewAngle);
+			});
 
 			// unlit tubes
 			using (var segmentUnlitPaint = new SKPaint()) {
@@ -219,17 +195,38 @@ namespace LibDmd.Output.Virtual
 				var initialKey = new RasterCacheKey(InitialCache, RasterizeLayer.Background, type, FullSegment);
 				var cacheKey = new RasterCacheKey(display, RasterizeLayer.Background, type, FullSegment);
 				if (!_rasterCache.ContainsKey(initialKey)) {
-					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, dim, style, segmentUnlitPaint);
+					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, dim, style.SkewAngle, segmentUnlitPaint);
 				} else {
 					if (_rasterCache.ContainsKey(cacheKey)) {
 						_rasterCache[cacheKey]?.Dispose();
 					}
-					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, dim, style, segmentUnlitPaint);
+					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, dim, style.SkewAngle, segmentUnlitPaint);
 				}
 			}
 
 			_rasterizedDim[type] = dim;
 			Logger.Info("Rasterization done.");
+		}
+
+		public void Rasterize(int display, SegmentType type, RasterizeDimensions dim, RasterizeLayer layer, RasterizeLayerStyle layerStyle, float skewAngle)
+		{
+			var source = _svgs[type];
+			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", type, layer, display, dim.SvgWidth, dim.SvgHeight);
+			using (var paint = new SKPaint()) {
+				ApplyFilters(paint, layerStyle);
+				foreach (var i in source.Keys.Where(i => i != FullSegment)) {
+					var initialKey = new RasterCacheKey(InitialCache, layer, type, i);
+					var cacheKey = new RasterCacheKey(display, layer, type, i);
+					if (!_rasterCache.ContainsKey(initialKey)) {
+						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, dim, skewAngle, paint);
+					} else {
+						if (_rasterCache.ContainsKey(cacheKey)) {
+							_rasterCache[cacheKey]?.Dispose();
+						}
+						_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, dim, skewAngle, paint);
+					}
+				}
+			}
 		}
 
 		public void Clear()
@@ -363,6 +360,62 @@ namespace LibDmd.Output.Virtual
 				Blur = new SKPoint(dim.SvgScale * Blur.X, dim.SvgScale * Blur.Y),
 				Dilate = new SKPoint((float) Math.Round(dim.SvgScale * Dilate.X), (float) Math.Round(dim.SvgScale * Dilate.Y))
 			};
+		}
+
+		public RasterizeLayerStyle Copy()
+		{
+			return new RasterizeLayerStyle {
+				IsEnabled = IsEnabled,
+				IsBlurEnabled = IsBlurEnabled,
+				IsDilateEnabled = IsDilateEnabled,
+				Color = new SKColor(Color.Red, Color.Green, Color.Blue, Color.Alpha),
+				Blur = new SKPoint(Blur.X, Blur.Y),
+				Dilate = new SKPoint(Dilate.X, Dilate.Y)
+			};
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is RasterizeLayerStyle item)) {
+				return false;
+			}
+
+			return IsEnabled == item.IsEnabled
+			       && IsBlurEnabled == item.IsBlurEnabled
+			       && IsDilateEnabled == item.IsDilateEnabled
+			       && Color.Equals(item.Color)
+			       && Blur.Equals(item.Blur)
+			       && Dilate.Equals(item.Dilate);
+		}
+
+		protected bool Equals(RasterizeLayerStyle other)
+		{
+			return IsEnabled == other.IsEnabled 
+			       && IsBlurEnabled == other.IsBlurEnabled 
+			       && IsDilateEnabled == other.IsDilateEnabled 
+			       && Color.Equals(other.Color) 
+			       && Blur.Equals(other.Blur) 
+			       && Dilate.Equals(other.Dilate);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = IsEnabled.GetHashCode();
+				hashCode = (hashCode * 397) ^ IsBlurEnabled.GetHashCode();
+				hashCode = (hashCode * 397) ^ IsDilateEnabled.GetHashCode();
+				hashCode = (hashCode * 397) ^ Color.GetHashCode();
+				hashCode = (hashCode * 397) ^ Blur.GetHashCode();
+				hashCode = (hashCode * 397) ^ Dilate.GetHashCode();
+				return hashCode;
+			}
+		}
+
+		public override string ToString()
+		{
+			return
+				$"LayerStyle[enabled:{IsEnabled},color:{Color.ToString()},blur:{IsBlurEnabled}/{Blur.X}x{Blur.Y},dilate:{IsDilateEnabled}/{Dilate.X}x{Dilate.Y}";
 		}
 	}
 

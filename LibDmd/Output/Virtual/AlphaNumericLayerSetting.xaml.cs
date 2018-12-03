@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibDmd.Output.Virtual;
+using SkiaSharp;
 
 namespace LibDmd.Common
 {
@@ -21,6 +23,7 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualAlphaNumericLayerSetting : UserControl
 	{
+		public ISubject<RasterizeLayerStyle> OnLayerChanged { get; } = new Subject<RasterizeLayerStyle>();
 
 		public RasterizeLayerStyle RasterizeStyle
 		{
@@ -51,11 +54,15 @@ namespace LibDmd.Common
 			BlurXValue.TextChanged += (sender, e) => BlurXSlider.Value = StringToDouble(BlurXValue.Text, BlurXSlider.Value);
 			BlurYSlider.ValueChanged += (sender, e) => BlurYValue.Text = DoubleToString(BlurYSlider.Value);
 			BlurYValue.TextChanged += (sender, e) => BlurYSlider.Value = StringToDouble(BlurYValue.Text, BlurYSlider.Value);
-		}
-
-		private void Test(object sender, RoutedPropertyChangedEventArgs<double> e)
-		{
-			throw new NotImplementedException();
+			ColorButton.SelectedColorChanged += (sender, e) => Changed();
+			DilateEnabled.Checked += (sender, e) => Changed();
+			DilateEnabled.Unchecked += (sender, e) => Changed();
+			BlurEnabled.Checked += (sender, e) => Changed();
+			BlurEnabled.Unchecked += (sender, e) => Changed();
+			DilateXSlider.ValueChanged += (sender, e) => Changed();
+			DilateYSlider.ValueChanged += (sender, e) => Changed();
+			BlurXSlider.ValueChanged += (sender, e) => Changed();
+			BlurYSlider.ValueChanged += (sender, e) => Changed();
 		}
 
 		private void UpdateValues()
@@ -80,6 +87,22 @@ namespace LibDmd.Common
 			ToggleBlur(null, null);
 			ToggleDilate(null, null);
 			Toggle(null, null);
+		}
+
+		private void Changed()
+		{
+			if (LayerEnabled.IsChecked == null || BlurEnabled.IsChecked == null || DilateEnabled.IsChecked == null ||
+			    ColorButton.SelectedColor == null) {
+				return;
+			}
+			OnLayerChanged.OnNext(new RasterizeLayerStyle {
+				IsEnabled = (bool)LayerEnabled.IsChecked,
+				IsBlurEnabled = (bool)BlurEnabled.IsChecked,
+				IsDilateEnabled = (bool)DilateEnabled.IsChecked,
+				Color = new SKColor(ColorButton.SelectedColor.Value.R, ColorButton.SelectedColor.Value.G, ColorButton.SelectedColor.Value.B, ColorButton.SelectedColor.Value.A),
+				Blur = new SKPoint((float)BlurXSlider.Value, (float)BlurYSlider.Value),
+				Dilate = new SKPoint((float)DilateXSlider.Value, (float)DilateYSlider.Value)
+			});
 		}
 
 		private void Toggle(object sender, RoutedEventArgs e)
