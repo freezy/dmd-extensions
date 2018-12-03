@@ -46,6 +46,8 @@ namespace LibDmd.Common
 		public VirtualAlphaNumericLayerSetting()
 		{
 			InitializeComponent();
+			LayerEnabled.Checked += (sender, e) => RasterizeStyle.IsEnabled = true;
+			LayerEnabled.Unchecked += (sender, e) => RasterizeStyle.IsEnabled = false;
 			DilateXSlider.ValueChanged += (sender, e) => DilateXValue.Text = DoubleToString(DilateXSlider.Value);
 			DilateXValue.TextChanged += (sender, e) => DilateXSlider.Value = StringToDouble(DilateXValue.Text, DilateXSlider.Value);
 			DilateYSlider.ValueChanged += (sender, e) => DilateYValue.Text = DoubleToString(DilateYSlider.Value);

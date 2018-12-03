@@ -97,9 +97,15 @@ namespace LibDmd.Common
 				var pos = new SKPoint(-15, 0);
 				canvas.Clear(SKColors.Black);
 				DrawFullSegment(canvas, pos);
-				DrawSegment(RasterizeLayer.OuterGlow, canvas, pos);
-				DrawSegment(RasterizeLayer.InnerGlow, canvas, pos);
-				DrawSegment(RasterizeLayer.Foreground, canvas, pos);
+				if (OuterGlowStyle.RasterizeStyle.IsEnabled) {
+					DrawSegment(RasterizeLayer.OuterGlow, canvas, pos);
+				}
+				if (InnerGlowStyle.RasterizeStyle.IsEnabled) {
+					DrawSegment(RasterizeLayer.InnerGlow, canvas, pos);
+				}
+				if (ForegroundStyle.RasterizeStyle.IsEnabled) {
+					DrawSegment(RasterizeLayer.Foreground, canvas, pos);
+				}
 			}
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
