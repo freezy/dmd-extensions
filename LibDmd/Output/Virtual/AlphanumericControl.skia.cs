@@ -15,7 +15,6 @@ using System.Windows.Media.Converters;
 using System.Windows.Media.Imaging;
 using NLog;
 using SkiaSharp;
-using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
 namespace LibDmd.Output.Virtual
 {
