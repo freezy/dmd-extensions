@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
+using System.Windows.Forms;
 using NLog;
 using SkiaSharp;
 using Logger = NLog.Logger;
@@ -166,64 +167,62 @@ namespace LibDmd.Output.Virtual
 			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
 		}
 
-		public void Rasterize(int display, SegmentType type, RasterizeDimensions dim, RasterizeStyle style)
+		public void Rasterize(DisplaySetting setting, bool force = false)
 		{
-			if (_rasterizedDim.ContainsKey(type) && _rasterizedDim[type].Equals(dim)) {
-				Logger.Info("Already rasterized {0}, aborting.", type);
+			if (!force && _rasterizedDim.ContainsKey(setting.SegmentType) && _rasterizedDim[setting.SegmentType].Equals(setting.Dim)) {
+				Logger.Info("Already rasterized {0}, aborting.", setting.SegmentType);
 				return;
 			}
 
-			var scaledStyle = style.Scale(dim);
-			var source = _svgs[type];
+			var source = _svgs[setting.SegmentType];
 
 			var layers = new List<Tuple<RasterizeLayer, RasterizeLayerStyle>> {
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.OuterGlow, scaledStyle.OuterGlow),
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.InnerGlow, scaledStyle.InnerGlow),
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.Foreground, scaledStyle.Foreground),
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.OuterGlow, setting.Style.OuterGlow),
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.InnerGlow, setting.Style.InnerGlow),
+				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.Foreground, setting.Style.Foreground),
 			};
 
 			layers.ForEach(layer => {
-				//Logger.Info("Rasterizing {0} segments for display {1} with scale = {2}, segment size = {3}x{4}", type, display, dim.SvgScale, dim.SvgWidth, dim.SvgHeight);
-				Rasterize(display, type, dim, layer.Item1, layer.Item2, style.SkewAngle);
+				Rasterize(setting, layer.Item1, layer.Item2, setting.Style.SkewAngle);
 			});
 
 			// unlit tubes
 			using (var segmentUnlitPaint = new SKPaint()) {
-				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(style.Background.Color, SKBlendMode.SrcIn);
-				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(scaledStyle.Background.Blur.X, scaledStyle.Background.Blur.Y);
+				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(setting.Style.Background.Color, SKBlendMode.SrcIn);
+				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(setting.Style.Background.Blur.X, setting.Style.Background.Blur.Y);
 
-				var initialKey = new RasterCacheKey(InitialCache, RasterizeLayer.Background, type, FullSegment);
-				var cacheKey = new RasterCacheKey(display, RasterizeLayer.Background, type, FullSegment);
+				var initialKey = new RasterCacheKey(InitialCache, RasterizeLayer.Background, setting.SegmentType, FullSegment);
+				var cacheKey = new RasterCacheKey(setting.Display, RasterizeLayer.Background, setting.SegmentType, FullSegment);
 				if (!_rasterCache.ContainsKey(initialKey)) {
-					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, dim, style.SkewAngle, segmentUnlitPaint);
+					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, setting.Dim, setting.Style.SkewAngle, segmentUnlitPaint);
 				} else {
 					if (_rasterCache.ContainsKey(cacheKey)) {
 						_rasterCache[cacheKey]?.Dispose();
 					}
-					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, dim, style.SkewAngle, segmentUnlitPaint);
+					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, setting.Dim, setting.Style.SkewAngle, segmentUnlitPaint);
 				}
 			}
 
-			_rasterizedDim[type] = dim;
+			_rasterizedDim[setting.SegmentType] = setting.Dim;
 			Logger.Info("Rasterization done.");
 		}
 
-		public void Rasterize(int display, SegmentType type, RasterizeDimensions dim, RasterizeLayer layer, RasterizeLayerStyle layerStyle, float skewAngle)
+		public void Rasterize(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyle layerStyle, float skewAngle)
 		{
-			var source = _svgs[type];
-			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", type, layer, display, dim.SvgWidth, dim.SvgHeight);
+			var source = _svgs[setting.SegmentType];
+			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
 			using (var paint = new SKPaint()) {
 				ApplyFilters(paint, layerStyle);
 				foreach (var i in source.Keys.Where(i => i != FullSegment)) {
-					var initialKey = new RasterCacheKey(InitialCache, layer, type, i);
-					var cacheKey = new RasterCacheKey(display, layer, type, i);
+					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, i);
+					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, i);
 					if (!_rasterCache.ContainsKey(initialKey)) {
-						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, dim, skewAngle, paint);
+						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
 					} else {
 						if (_rasterCache.ContainsKey(cacheKey)) {
 							_rasterCache[cacheKey]?.Dispose();
 						}
-						_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, dim, skewAngle, paint);
+						_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
 					}
 				}
 			}
@@ -288,21 +287,21 @@ namespace LibDmd.Output.Virtual
 
 		private readonly float _svgSkewedWidth;
 
-		public RasterizeDimensions(SKRect svgSize, int width, int height, int numChars, int numLines, RasterizeStyle style)
+		public RasterizeDimensions(SKRect svgSize, int canvasWidth, int canvasHeight, int numChars, int numLines, float skewAngle)
 		{
 			NumChars = numChars;
 			NumLines = numLines;
 
-			OuterPadding = (int)Math.Round(OuterPaddingPercentage * height);
-			SvgHeight = height - 2 * OuterPadding;
+			OuterPadding = (int)Math.Round(OuterPaddingPercentage * canvasHeight);
+			SvgHeight = canvasHeight - 2 * OuterPadding;
 			SvgScale = SvgHeight / svgSize.Height;
 			SvgWidth = svgSize.Width * SvgScale;
 			LinePadding = (int)Math.Round(SvgHeight * LinePaddingPercentage);
 			SvgMatrix = SKMatrix.MakeScale(SvgScale, SvgScale);
-			_svgSkewedWidth = SkewedWidth(SvgWidth, SvgHeight, style.SkewAngle);
+			_svgSkewedWidth = SkewedWidth(SvgWidth, SvgHeight, skewAngle);
 			SegmentPadding = (int)Math.Round(Math.Sqrt(SvgWidth * SvgWidth + SvgHeight * SvgHeight) * SegmentPaddingPercentage);
 			SvgInfo = new SKImageInfo((int)(_svgSkewedWidth + 2 * SegmentPadding), (int)(SvgHeight + 2 * SegmentPadding));
-			var skewedWidth = SkewedWidth(SvgWidth, SvgHeight, style.SkewAngle);
+			var skewedWidth = SkewedWidth(SvgWidth, SvgHeight, skewAngle);
 			CanvasWidth = (int)Math.Round(2 * OuterPadding + (NumChars - 1) * SvgWidth + skewedWidth);
 			CanvasHeight = (int)Math.Round(OuterPadding * 2 + NumLines * SvgHeight + (NumLines - 1) * LinePadding);
 		}
@@ -318,6 +317,22 @@ namespace LibDmd.Output.Virtual
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return SvgHeight.Equals(other.SvgHeight);
+		}
+	}
+
+	public class DisplaySetting
+	{
+		public int Display { get; set; }
+		public SegmentType SegmentType { get; set; }
+		public RasterizeDimensions Dim { get; set; }
+		public RasterizeStyle Style { get; set; }
+		public int NumLines { get; set; }
+		public int NumChars { get; set; }
+
+		public void OnSvgsLoaded(SKRect svgSize, int width, int height)
+		{
+			Dim = new RasterizeDimensions(svgSize, width, height, NumChars, NumLines, Style.SkewAngle);
+			Style = Style.Scale(Dim);
 		}
 	}
 
@@ -337,6 +352,17 @@ namespace LibDmd.Output.Virtual
 				InnerGlow = InnerGlow.Scale(dim),
 				OuterGlow = OuterGlow.Scale(dim),
 				Background = Background.Scale(dim),
+			};
+		}
+
+		public RasterizeStyle Copy()
+		{
+			return new RasterizeStyle {
+				SkewAngle = SkewAngle,
+				Foreground = Foreground.Copy(),
+				InnerGlow = InnerGlow.Copy(),
+				OuterGlow = OuterGlow.Copy(),
+				Background = Background.Copy()
 			};
 		}
 	}

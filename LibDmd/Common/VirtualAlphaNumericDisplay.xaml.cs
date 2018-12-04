@@ -23,23 +23,37 @@ namespace LibDmd.Common
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		private VirtualAlphaNumericSettings _settingWindow;
+		private bool _settingsOpen = false;
+
 		public VirtualAlphaNumericDisplay(int displayNumber, int numChars, int numLines, SegmentType segmentType)
 		{
 			InitializeComponent();
 			Initialize();
 
 			LockHeight = true;
-			AlphaNumericDisplay.DisplayNumber = displayNumber;
-			AlphaNumericDisplay.NumChars = numChars;
-			AlphaNumericDisplay.NumLines = numLines;
-			AlphaNumericDisplay.SegmentType = segmentType;
+			AlphaNumericDisplay.DisplaySetting = new DisplaySetting {
+				Display = displayNumber,
+				SegmentType = segmentType,
+				NumChars = numChars,
+				NumLines = numLines
+			};
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
 
-		private void OpenDisplaySettings(object sender, RoutedEventArgs e)
+		private void ToggleDisplaySettings(object sender, RoutedEventArgs e)
 		{
-			new VirtualAlphaNumericSettings(AlphaNumericDisplay, AlphaNumericDisplay.DisplayNumber, Top, Left + Width).Show();
+			if (_settingWindow == null) {
+				_settingWindow = new VirtualAlphaNumericSettings(AlphaNumericDisplay, Top, Left + Width);
+				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
+			}
+
+			if (!_settingsOpen) {
+				_settingWindow.Show();
+			} else {
+				_settingWindow.Hide();
+			}
 		}
 	}
 }
