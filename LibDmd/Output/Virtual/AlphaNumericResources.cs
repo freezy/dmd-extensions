@@ -176,15 +176,9 @@ namespace LibDmd.Output.Virtual
 
 			var source = _svgs[setting.SegmentType];
 
-			var layers = new List<Tuple<RasterizeLayer, RasterizeLayerStyle>> {
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.OuterGlow, setting.Style.OuterGlow),
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.InnerGlow, setting.Style.InnerGlow),
-				new Tuple<RasterizeLayer, RasterizeLayerStyle>(RasterizeLayer.Foreground, setting.Style.Foreground),
-			};
-
-			layers.ForEach(layer => {
-				Rasterize(setting, layer.Item1, layer.Item2, setting.Style.SkewAngle);
-			});
+			Rasterize(setting, RasterizeLayer.OuterGlow, setting.Style.OuterGlow, setting.Style.SkewAngle);
+			Rasterize(setting, RasterizeLayer.InnerGlow, setting.Style.InnerGlow, setting.Style.SkewAngle);
+			Rasterize(setting, RasterizeLayer.Foreground, setting.Style.Foreground, setting.Style.SkewAngle);
 
 			// unlit tubes
 			using (var segmentUnlitPaint = new SKPaint()) {
@@ -325,13 +319,19 @@ namespace LibDmd.Output.Virtual
 		public int Display { get; set; }
 		public SegmentType SegmentType { get; set; }
 		public RasterizeDimensions Dim { get; set; }
-		public RasterizeStyle Style { get; set; }
+		public RasterizeStyle Style { get; set; } = new RasterizeStyle {
+			SkewAngle = -12,
+			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
+			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			InnerGlow = new RasterizeLayerStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			Foreground = new RasterizeLayerStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
+		};
 		public int NumLines { get; set; }
 		public int NumChars { get; set; }
 
-		public void OnSvgsLoaded(SKRect svgSize, int width, int height)
+		public void OnSvgsLoaded(SKRect svgSize, int canvasWidth, int canvasHeight)
 		{
-			Dim = new RasterizeDimensions(svgSize, width, height, NumChars, NumLines, Style.SkewAngle);
+			Dim = new RasterizeDimensions(svgSize, canvasWidth, canvasHeight, NumChars, NumLines, Style.SkewAngle);
 			Style = Style.Scale(Dim);
 		}
 	}
