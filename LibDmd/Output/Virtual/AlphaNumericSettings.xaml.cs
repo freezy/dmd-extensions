@@ -28,19 +28,24 @@ namespace LibDmd.Common
 		private static readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly RasterizeStyle _style;
+		private readonly DisplaySetting DisplaySetting;
 		private WriteableBitmap _writeableBitmap;
-		private int _previewDisplayNumber;
-		private SegmentType _segmentType = SegmentType.Alphanumeric;
 
-		public VirtualAlphaNumericSettings(AlphanumericControl control, int displayNumber, double top, double left)
+		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
 			Top = top;
 			Left = left;
 			InitializeComponent();
+			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 
-			_previewDisplayNumber = displayNumber + 100;
-			_style = control.RasterizeStyle;
+			DisplaySetting = new DisplaySetting {
+				Display = control.DisplaySetting.Display + 100,
+				Style = control.DisplaySetting.Style.Copy(),
+				NumLines = 1,
+				NumChars = 1
+			};
+			DisplaySetting.OnSvgsLoaded(_res.GetSvgSize(DisplaySetting.SegmentType), (int)Preview.Width, (int)Preview.Height);
+
 			_writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = _writeableBitmap;
 
@@ -53,29 +58,26 @@ namespace LibDmd.Common
 			UnlitStyle.Label = "Unlit Layer";
 
 			// save our editable copy of the control's style
-			ForegroundStyle.RasterizeStyle = _style.Foreground.Copy();
-			InnerGlowStyle.RasterizeStyle = _style.InnerGlow.Copy();
-			OuterGlowStyle.RasterizeStyle = _style.OuterGlow.Copy();
-			UnlitStyle.RasterizeStyle = _style.Background.Copy();
-
-			// calculate dimensions for preview
-			var dim = new RasterizeDimensions(_res.GetSvgSize(_segmentType), (int)_writeableBitmap.Width, (int)_writeableBitmap.Height, 1, 1, _style);
-
+			ForegroundStyle.RasterizeStyle = DisplaySetting.Style.Foreground;
+			InnerGlowStyle.RasterizeStyle = DisplaySetting.Style.InnerGlow;
+			OuterGlowStyle.RasterizeStyle = DisplaySetting.Style.OuterGlow;
+			UnlitStyle.RasterizeStyle = DisplaySetting.Style.Background;
+		
 			// rasterize preview a first time
-			_res.Rasterize(_previewDisplayNumber, _segmentType, dim, _style);
+			_res.Rasterize(DisplaySetting, true);
 
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				_style.Foreground = layerStyle;
-				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.Foreground, layerStyle.Scale(dim), _style.SkewAngle);
+				DisplaySetting.Style.Foreground = layerStyle;
+				_res.Rasterize(DisplaySetting, RasterizeLayer.Foreground, layerStyle, DisplaySetting.Style.SkewAngle);
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				_style.InnerGlow = layerStyle;
-				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.InnerGlow, layerStyle.Scale(dim), _style.SkewAngle);
+				DisplaySetting.Style.InnerGlow = layerStyle;
+				_res.Rasterize(DisplaySetting, RasterizeLayer.InnerGlow, layerStyle, DisplaySetting.Style.SkewAngle);
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				_style.OuterGlow = layerStyle;
-				_res.Rasterize(_previewDisplayNumber, _segmentType, dim, RasterizeLayer.OuterGlow, layerStyle.Scale(dim), _style.SkewAngle);
+				DisplaySetting.Style.OuterGlow = layerStyle;
+				_res.Rasterize(DisplaySetting, RasterizeLayer.OuterGlow, layerStyle, DisplaySetting.Style.SkewAngle);
 			});
 		}
 
@@ -115,8 +117,8 @@ namespace LibDmd.Common
 		{
 			const int seg = 16640;
 			using (var surfacePaint = new SKPaint()) {
-				for (var j = 0; j < _res.SegmentSize[_segmentType]; j++) {
-					var rasterizedSegment = _res.GetRasterized(_previewDisplayNumber, layer, _segmentType, j);
+				for (var j = 0; j < _res.SegmentSize[DisplaySetting.SegmentType]; j++) {
+					var rasterizedSegment = _res.GetRasterized(DisplaySetting.Display, layer, DisplaySetting.SegmentType, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}
@@ -126,7 +128,7 @@ namespace LibDmd.Common
 
 		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
 		{
-			var segment = _res.GetRasterized(_previewDisplayNumber, RasterizeLayer.Background, _segmentType, AlphaNumericResources.FullSegment);
+			var segment = _res.GetRasterized(DisplaySetting.Display, RasterizeLayer.Background, DisplaySetting.SegmentType, AlphaNumericResources.FullSegment);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}
@@ -134,7 +136,7 @@ namespace LibDmd.Common
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
 		{
-			Close();
+			Hide();
 		}
 	}
 }

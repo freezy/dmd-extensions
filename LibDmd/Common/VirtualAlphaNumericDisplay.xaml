@@ -42,7 +42,7 @@
             VerticalAlignment="Stretch"
            />
         <Button 
-            Click="OpenDisplaySettings"
+            Click="ToggleDisplaySettings"
             Canvas.ZIndex="10"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
