@@ -279,6 +279,10 @@
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumericResources.cs" />
+    <Compile Include="Output\Virtual\DisplaySetting.cs" />
+    <Compile Include="Output\Virtual\RasterizeDimensions.cs" />
+    <Compile Include="Output\Virtual\RasterizeLayerStyle.cs" />
+    <Compile Include="Output\Virtual\RasterizeStyle.cs" />
     <Compile Include="Output\Virtual\VirtualAlphanumericDestination.cs" />
     <Compile Include="Output\Virtual\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>

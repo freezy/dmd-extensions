@@ -44,7 +44,7 @@ namespace LibDmd.Common
 				NumLines = 1,
 				NumChars = 1
 			};
-			DisplaySetting.OnSvgsLoaded(_res.GetSvgSize(DisplaySetting.SegmentType), (int)Preview.Width, (int)Preview.Height);
+			DisplaySetting.SetDimensions((int)Preview.Width, (int)Preview.Height);
 
 			_writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = _writeableBitmap;
