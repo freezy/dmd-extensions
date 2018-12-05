@@ -56,6 +56,8 @@ namespace LibDmd.Common
 			BlurXValue.TextChanged += (sender, e) => BlurXSlider.Value = StringToDouble(BlurXValue.Text, BlurXSlider.Value);
 			BlurYSlider.ValueChanged += (sender, e) => BlurYValue.Text = DoubleToString(BlurYSlider.Value);
 			BlurYValue.TextChanged += (sender, e) => BlurYSlider.Value = StringToDouble(BlurYValue.Text, BlurYSlider.Value);
+			LayerEnabled.Checked += (sender, e) => Changed();
+			LayerEnabled.Unchecked += (sender, e) => Changed();
 			ColorButton.SelectedColorChanged += (sender, e) => Changed();
 			DilateEnabled.Checked += (sender, e) => Changed();
 			DilateEnabled.Unchecked += (sender, e) => Changed();
@@ -92,8 +94,7 @@ namespace LibDmd.Common
 			if (!_rasterizeStyle.IsBlurEnabled) {
 				ToggleBlur(null, null);
 			}
-			if (!_rasterizeStyle.IsEnabled)
-			{
+			if (!_rasterizeStyle.IsEnabled) {
 				Toggle(null, null);
 			}
 		}

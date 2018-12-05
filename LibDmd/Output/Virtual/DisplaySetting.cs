@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using System;
+using SkiaSharp;
 
 namespace LibDmd.Output.Virtual
 {
@@ -85,6 +86,37 @@ namespace LibDmd.Output.Virtual
 		{
 			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), canvasWidth, canvasHeight, NumChars, NumLines, _style.SkewAngle);
 			_scaledStyle = _style.Scale(Dim.SvgScale);
+		}
+
+		public void ApplyLayerStyle(RasterizeLayer layer, RasterizeLayerStyle layerStyle)
+		{
+			switch (layer)
+			{
+				case RasterizeLayer.OuterGlow:
+					_style.OuterGlow = layerStyle;
+					break;
+				case RasterizeLayer.InnerGlow:
+					_style.InnerGlow = layerStyle;
+					break;
+				case RasterizeLayer.Foreground:
+					_style.Foreground = layerStyle;
+					break;
+				case RasterizeLayer.Background:
+					_style.Background = layerStyle;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(layer), layer, null);
+			}
+			_scaledStyle = _style.Scale(Dim.SvgScale);
+		}
+
+		/// <summary>
+		/// Returns a copy of the non-scaled style.
+		/// </summary>
+		/// <returns></returns>
+		public RasterizeStyle CopyStyle()
+		{
+			return _style.Copy();
 		}
 	}
 }
