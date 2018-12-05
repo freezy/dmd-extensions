@@ -22,8 +22,8 @@ namespace LibDmd.Output.Virtual
 	{
 		private const int SwitchTimeMilliseconds = 150;
 
-		private readonly SKColor _backgroundColor = SKColors.Black;
-		private readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
+		private static readonly SKColor BackgroundColor = SKColors.Black;
+		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
 		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
@@ -44,13 +44,13 @@ namespace LibDmd.Output.Virtual
 		public void CreateImage(int width, int height)
 		{
 			Logger.Debug("Creating image...");
-			_res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(_ => {
+			Res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
 					Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
 					_aspectRatioSet = true;
 				} else {
-					_res.Rasterize(DisplaySetting);
+					Res.Rasterize(DisplaySetting);
 				}
 				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			});
@@ -104,7 +104,7 @@ namespace LibDmd.Output.Virtual
 				using (var paint = new SKPaint { Color = SKColors.Gray, TextSize = 10 }) {
 					var canvas = surface.Canvas;
 
-					canvas.Clear(_backgroundColor);
+					canvas.Clear(BackgroundColor);
 					if (DisplaySetting.Style.Background.IsEnabled) {
 						DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
 					}
@@ -147,8 +147,8 @@ namespace LibDmd.Output.Virtual
 		{
 			var seg = _data[segmentPosition];
 			using (var surfacePaint = new SKPaint()) {
-				for (var j = 0; j < _res.SegmentSize[DisplaySetting.SegmentType]; j++) {
-					var rasterizedSegment = _res.GetRasterized(DisplaySetting.Display, layer, DisplaySetting.SegmentType, j);
+				for (var j = 0; j < Res.SegmentSize[DisplaySetting.SegmentType]; j++) {
+					var rasterizedSegment = Res.GetRasterized(DisplaySetting.Display, layer, DisplaySetting.SegmentType, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}
@@ -158,7 +158,7 @@ namespace LibDmd.Output.Virtual
 
 		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
 		{
-			var segment = _res.GetRasterized(DisplaySetting.Display, RasterizeLayer.Background, DisplaySetting.SegmentType, AlphaNumericResources.FullSegment);
+			var segment = Res.GetRasterized(DisplaySetting.Display, RasterizeLayer.Background, DisplaySetting.SegmentType, AlphaNumericResources.FullSegment);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}

@@ -19,7 +19,7 @@ namespace LibDmd.Output.Virtual
 		public bool IsAvailable => true;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private static readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
+		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 		private static VirtualAlphanumericDestination _instance;
 
 		private readonly Dispatcher _dispatcher;
@@ -309,7 +309,7 @@ namespace LibDmd.Output.Virtual
 				foreach (var display in _displays.Values) {
 					display.Dispatcher.Invoke(() => display.Close());
 				}
-				_res.Clear();
+				Res.Clear();
 				_displays.Clear();
 				_droppedData.Clear();
 				_instance = null;
