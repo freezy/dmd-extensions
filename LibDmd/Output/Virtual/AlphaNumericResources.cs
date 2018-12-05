@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Windows.Forms;
@@ -11,47 +12,93 @@ using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
 namespace LibDmd.Output.Virtual
 {
+	/// <summary>
+	/// A singleton class handling rasterization of the segment assets.
+	///
+	/// Rasterization means that we're pre-computing images for each layer with
+	/// with the desired effects for a given dimension, so we only need to
+	/// stick them on each other instead of recompute them every time.
+	///
+	/// When the size of the display changes (i.e. the user resizes it), we
+	/// repeat the rasterization.
+	/// </summary>
 	class AlphaNumericResources
 	{
+		/// <summary>
+		/// The index of the "unlit" segment
+		/// </summary>
 		public static int FullSegment = 99;
+
+		/// <summary>
+		/// The cache ID of the first cache, which isn't display-specific, so
+		/// we don't rasterize the same for all displays.
+		/// </summary>
 		public static int InitialCache = 99;
 
-		public Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> Loaded = new Dictionary<SegmentType, ISubject<Dictionary<int, SKSvg>>> {
-			{ SegmentType.Alphanumeric, new Subject<Dictionary<int, SKSvg>>()},
-			{ SegmentType.Numeric8, new Subject<Dictionary<int, SKSvg>>() },
-			{ SegmentType.Numeric10, new Subject<Dictionary<int, SKSvg>>() }
+		/// <summary>
+		/// An observable that returns a value as soon as a given segment type is
+		/// loaded, meaning the embedded SVG was loaded into Skia.
+		/// </summary>
+		public Dictionary<SegmentType, ISubject<Unit>> Loaded = new Dictionary<SegmentType, ISubject<Unit>> {
+			{ SegmentType.Alphanumeric, new Subject<Unit>()},
+			{ SegmentType.Numeric8, new Subject<Unit>() },
+			{ SegmentType.Numeric10, new Subject<Unit>() }
 		};
+
+		/// <summary>
+		/// Defines how many segments each segment type contains (exclusively the
+		/// full, "unlit" segment).
+		/// </summary>
 		public readonly Dictionary<SegmentType, int> SegmentSize = new Dictionary<SegmentType, int> {
 			{ SegmentType.Alphanumeric, 16 },
 			{ SegmentType.Numeric8, 8 },
 			{ SegmentType.Numeric10, 10 },
 		};
-		public bool SvgsLoaded { get; }
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		private static AlphaNumericResources _instance;
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 
+		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
+		private readonly Dictionary<SegmentType, RasterizeDimensions> _rasterizedDim = new Dictionary<SegmentType, RasterizeDimensions>();
 		private readonly Dictionary<SegmentType, Dictionary<int, SKSvg>> _svgs = new Dictionary<SegmentType, Dictionary<int, SKSvg>> {
 			{ SegmentType.Alphanumeric, new Dictionary<int, SKSvg>() },
 			{ SegmentType.Numeric8, new Dictionary<int, SKSvg>() },
 			{ SegmentType.Numeric10, new Dictionary<int, SKSvg>() }
 		};
 
-		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
-		private readonly Dictionary<SegmentType, RasterizeDimensions> _rasterizedDim = new Dictionary<SegmentType, RasterizeDimensions>();
-
+		/// <summary>
+		/// Returns the singleton instance.
+		/// </summary>
 		public static AlphaNumericResources GetInstance()
 		{
 			return _instance ?? (_instance = new AlphaNumericResources());
 		}
 
+		/// <summary>
+		/// Returns a surface of a segment that was previously generated.
+		/// </summary>
+		///
+		/// <remarks>
+		/// Note that in order to avoid multiple rasterization for each display
+		/// on startup, we initially use only one cache. Then, when displays
+		/// get individually resized, each display has its own cache.
+		/// </remarks>
+		/// <param name="display">Display number</param>
+		/// <param name="layer">Which layer</param>
+		/// <param name="type">Which segment type</param>
+		/// <param name="segment">Which segment</param>
+		/// <returns>Rasterized surface of null if rasterization is unavailable</returns>
 		public SKSurface GetRasterized(int display, RasterizeLayer layer, SegmentType type, int segment)
 		{
+			// do we have an individual cache for that display already?
 			var displayKey = new RasterCacheKey(display, layer, type, segment);
 			if (_rasterCache.ContainsKey(displayKey)) {
 				return _rasterCache[displayKey];
 			}
+
+			// fallback on initial cache
 			var initialKey = new RasterCacheKey(InitialCache, layer, type, segment);
 			if (_rasterCache.ContainsKey(initialKey)) {
 				return _rasterCache[initialKey];
@@ -59,6 +106,11 @@ namespace LibDmd.Output.Virtual
 			return null;
 		}
 
+		/// <summary>
+		/// Returns the size of the SVG of a given segment type.
+		/// </summary>
+		/// <param name="type">Segment type</param>
+		/// <returns>Size of the SVG</returns>
 		public SKRect GetSvgSize(SegmentType type)
 		{
 			return _svgs[type][FullSegment].Picture.CullRect;
@@ -69,7 +121,6 @@ namespace LibDmd.Output.Virtual
 			LoadAlphaNumeric();
 			LoadNumeric8();
 			LoadNumeric10();
-			SvgsLoaded = true;
 			Logger.Info("All SVGs loaded.");
 		}
 
@@ -144,8 +195,8 @@ namespace LibDmd.Output.Virtual
 			var full = new SKSvg();
 			full.Load(_assembly.GetManifestResourceStream(pathToFull));
 			_svgs[type].Add(FullSegment, full);
-			Loaded[type].OnNext(_svgs[type]);
-			Loaded[type] = new BehaviorSubject<Dictionary<int, SKSvg>>(_svgs[type]);
+			Loaded[type].OnNext(Unit.Default);
+			Loaded[type] = new BehaviorSubject<Unit>(Unit.Default);
 		}
 
 		private SKSurface RasterizeSegment(SKPicture segment, RasterizeDimensions dim, float skewAngle, params SKPaint[] paints)
