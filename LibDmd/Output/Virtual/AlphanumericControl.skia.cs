@@ -58,7 +58,7 @@ namespace LibDmd.Output.Virtual
 
 		private void CreateImageWhenSvgsLoaded(int width, int height)
 		{
-			DisplaySetting.OnSvgsLoaded(_res.GetSvgSize(DisplaySetting.SegmentType), width, height);
+			DisplaySetting.SetDimensions(width, height);
 			if (!_aspectRatioSet) {
 				Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
 				_aspectRatioSet = true;
