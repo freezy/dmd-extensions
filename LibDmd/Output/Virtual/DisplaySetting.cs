@@ -28,20 +28,14 @@ namespace LibDmd.Output.Virtual
 		/// </summary>
 		public RasterizeDimensions Dim { get; private set; }
 
-		/// <summary>
-		/// Style of the segment.
-		/// </summary>
-		///
-		/// <summary>
-		/// Set this with "normalized values", and retrieving will return scaled
-		/// values usable for rendering.
-		/// </summary>
-		public RasterizeStyle Style {
-			get => _scaledStyle;
-			set { _style = value;
-				_scaledStyle = value.Scale(Dim.SvgScale);
-			}
-		}
+		public RasterizeStyleDefinition StyleDefinition { get; set; } = new RasterizeStyleDefinition {
+			SkewAngle = -12,
+			Background = new RasterizeLayerStyleDefinition { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
+			OuterGlow = new RasterizeLayerStyleDefinition { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			InnerGlow = new RasterizeLayerStyleDefinition { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
+			Foreground = new RasterizeLayerStyleDefinition { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
+		};
+		public RasterizeStyle Style { get; set; }
 
 		/// <summary>
 		/// Number of characters in the display
@@ -54,26 +48,18 @@ namespace LibDmd.Output.Virtual
 		public int NumLines { get; set; }
 
 		private readonly AlphaNumericResources _res = AlphaNumericResources.GetInstance();
-		private RasterizeStyle _style = new RasterizeStyle {
-			SkewAngle = -12,
-			Background = new RasterizeLayerStyle { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
-			OuterGlow = new RasterizeLayerStyle { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
-			InnerGlow = new RasterizeLayerStyle { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
-			Foreground = new RasterizeLayerStyle { Color = new SKColor(0xfb, 0xe6, 0xcb, 0xff), Blur = new SKPoint(2, 2), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
-		};
-		private RasterizeStyle _scaledStyle;
 
 		public DisplaySetting()
 		{
 		}
 
-		public DisplaySetting(int display, SegmentType segmentType, RasterizeStyle style, int numChars, int numLines, int canvasWidth, int canvasHeight)
+		public DisplaySetting(int display, SegmentType segmentType, RasterizeStyleDefinition styleDef, int numChars, int numLines, int canvasWidth, int canvasHeight)
 		{
 			Display = display;
 			SegmentType = segmentType;
 			NumChars = numChars;
 			NumLines = numLines;
-			_style = style;
+			StyleDefinition = styleDef;
 			SetDimensions(canvasWidth, canvasHeight);
 		}
 
@@ -84,39 +70,36 @@ namespace LibDmd.Output.Virtual
 		/// <param name="canvasHeight">Height of the canvas in pixels</param>
 		public void SetDimensions(int canvasWidth, int canvasHeight)
 		{
-			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), canvasWidth, canvasHeight, NumChars, NumLines, _style.SkewAngle);
-			_scaledStyle = _style.Scale(Dim.SvgScale);
+			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
+			Style = StyleDefinition.Scale(Dim.SvgScale);
 		}
 
-		public void ApplyLayerStyle(RasterizeLayer layer, RasterizeLayerStyle layerStyle)
+		public void ApplyStyle(RasterizeStyleDefinition styleDef)
+		{
+			StyleDefinition = styleDef;
+			Style = StyleDefinition.Scale(Dim.SvgScale);
+		}
+
+		public void ApplyLayerStyle(RasterizeLayer layer, RasterizeLayerStyleDefinition layerStyleDef)
 		{
 			switch (layer)
 			{
 				case RasterizeLayer.OuterGlow:
-					_style.OuterGlow = layerStyle;
+					StyleDefinition.OuterGlow = layerStyleDef;
 					break;
 				case RasterizeLayer.InnerGlow:
-					_style.InnerGlow = layerStyle;
+					StyleDefinition.InnerGlow = layerStyleDef;
 					break;
 				case RasterizeLayer.Foreground:
-					_style.Foreground = layerStyle;
+					StyleDefinition.Foreground = layerStyleDef;
 					break;
 				case RasterizeLayer.Background:
-					_style.Background = layerStyle;
+					StyleDefinition.Background = layerStyleDef;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layer), layer, null);
 			}
-			_scaledStyle = _style.Scale(Dim.SvgScale);
-		}
-
-		/// <summary>
-		/// Returns a copy of the non-scaled style.
-		/// </summary>
-		/// <returns></returns>
-		public RasterizeStyle CopyStyle()
-		{
-			return _style.Copy();
+			Style = StyleDefinition.Scale(Dim.SvgScale);
 		}
 	}
 }

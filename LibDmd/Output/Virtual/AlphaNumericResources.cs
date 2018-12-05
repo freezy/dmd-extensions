@@ -21,7 +21,7 @@ namespace LibDmd.Output.Virtual
 	/// When the size of the display changes (i.e. the user resizes it), we
 	/// repeat the rasterization.
 	/// </summary>
-	class AlphaNumericResources
+	internal class AlphaNumericResources
 	{
 		/// <summary>
 		/// The index of the "unlit" segment
@@ -140,10 +140,10 @@ namespace LibDmd.Output.Virtual
 			var source = _svgs[setting.SegmentType];
 			var segments = source.Keys.Where(i => i != FullSegment).ToList();
 
-			RasterizeLayer(setting, Virtual.RasterizeLayer.OuterGlow, setting.Style.OuterGlow, segments, setting.Style.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.InnerGlow, setting.Style.InnerGlow, segments, setting.Style.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.Foreground, setting.Style.Foreground, segments, setting.Style.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.Background, setting.Style.Background, new []{ FullSegment }, setting.Style.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.OuterGlow, setting.StyleDefinition.OuterGlow, setting.Style.OuterGlow, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.InnerGlow, setting.StyleDefinition.InnerGlow, setting.Style.InnerGlow, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.Foreground, setting.StyleDefinition.Foreground, setting.Style.Foreground, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.Background, setting.StyleDefinition.Background, setting.Style.Background, new []{ FullSegment }, setting.StyleDefinition.SkewAngle);
 			
 			_rasterizedDim[setting.SegmentType] = setting.Dim;
 			Logger.Info("Rasterization done.");
@@ -154,15 +154,16 @@ namespace LibDmd.Output.Virtual
 		/// </summary>
 		/// <param name="setting">Display setting</param>
 		/// <param name="layer">Which layer is it we're rendering</param>
-		/// <param name="layerStyle">How to render the layer</param>
+		/// <param name="layerStyleDef">Style definition</param>
+		/// <param name="layerStyle">Style to render</param>
 		/// <param name="segments">Which segments to render</param>
 		/// <param name="skewAngle">How much to skew</param>
-		public void RasterizeLayer(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyle layerStyle, IEnumerable<int> segments, float skewAngle)
+		public void RasterizeLayer(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyleDefinition layerStyleDef, RasterizeLayerStyle layerStyle, IEnumerable<int> segments, float skewAngle)
 		{
 			var source = _svgs[setting.SegmentType];
 			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
 			using (var paint = new SKPaint()) {
-				ApplyFilters(paint, layerStyle);
+				ApplyFilters(paint, layerStyleDef, layerStyle);
 				foreach (var i in segments) {
 					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, i);
 					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, i);
@@ -289,15 +290,15 @@ namespace LibDmd.Output.Virtual
 			Loaded[type] = new BehaviorSubject<Unit>(Unit.Default);
 		}
 
-		private void ApplyFilters(SKPaint paint, RasterizeLayerStyle layerStyle)
+		private void ApplyFilters(SKPaint paint, RasterizeLayerStyleDefinition layerStyleDef, RasterizeLayerStyle layerStyle)
 		{
-			paint.ColorFilter = SKColorFilter.CreateBlendMode(layerStyle.Color, SKBlendMode.SrcIn);
-			if (layerStyle.IsBlurEnabled && layerStyle.IsDilateEnabled) {
+			paint.ColorFilter = SKColorFilter.CreateBlendMode(layerStyleDef.Color, SKBlendMode.SrcIn);
+			if (layerStyleDef.IsBlurEnabled && layerStyleDef.IsDilateEnabled) {
 				paint.ImageFilter = SKImageFilter.CreateBlur(layerStyle.Blur.X, layerStyle.Blur.Y,
 					SKImageFilter.CreateDilate((int)layerStyle.Dilate.X, (int)layerStyle.Dilate.Y));
-			} else if (layerStyle.IsBlurEnabled) {
+			} else if (layerStyleDef.IsBlurEnabled) {
 				paint.ImageFilter = SKImageFilter.CreateBlur(layerStyle.Blur.X, layerStyle.Blur.Y);
-			} else if (layerStyle.IsDilateEnabled) {
+			} else if (layerStyleDef.IsDilateEnabled) {
 				paint.ImageFilter = SKImageFilter.CreateDilate((int)layerStyle.Dilate.X, (int)layerStyle.Dilate.Y);
 			}
 
@@ -314,7 +315,7 @@ namespace LibDmd.Output.Virtual
 		OuterGlow, InnerGlow, Foreground, Background
 	}
 
-	struct RasterCacheKey
+	internal struct RasterCacheKey
 	{
 		public readonly int Display;
 		public readonly RasterizeLayer Layer;

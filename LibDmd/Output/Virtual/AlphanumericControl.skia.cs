@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Media;
-using System.Windows.Media.Converters;
 using System.Windows.Media.Imaging;
-using NLog;
 using SkiaSharp;
 
 namespace LibDmd.Output.Virtual
 {
 	public partial class AlphanumericControl
 	{
+		private const int Dpi = 96;
 		private const int SwitchTimeMilliseconds = 150;
 
 		private static readonly SKColor BackgroundColor = SKColors.Black;
@@ -52,7 +44,7 @@ namespace LibDmd.Output.Virtual
 				} else {
 					Res.Rasterize(DisplaySetting);
 				}
-				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+				SetBitmap(new WriteableBitmap(width, height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			});
 		}
 
@@ -105,16 +97,16 @@ namespace LibDmd.Output.Virtual
 					var canvas = surface.Canvas;
 
 					canvas.Clear(BackgroundColor);
-					if (DisplaySetting.Style.Background.IsEnabled) {
+					if (DisplaySetting.StyleDefinition.Background.IsEnabled) {
 						DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
 					}
-					if (DisplaySetting.Style.OuterGlow.IsEnabled) {
+					if (DisplaySetting.StyleDefinition.OuterGlow.IsEnabled) {
 						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.OuterGlow, i, c, p));
 					}
-					if (DisplaySetting.Style.InnerGlow.IsEnabled) {
+					if (DisplaySetting.StyleDefinition.InnerGlow.IsEnabled) {
 						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.InnerGlow, i, c, p));
 					}
-					if (DisplaySetting.Style.Foreground.IsEnabled)
+					if (DisplaySetting.StyleDefinition.Foreground.IsEnabled)
 					{
 						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.Foreground, i, c, p));
 					}
