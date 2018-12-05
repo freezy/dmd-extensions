@@ -62,6 +62,20 @@ namespace LibDmd.Output.Virtual
 		};
 		private RasterizeStyle _scaledStyle;
 
+		public DisplaySetting()
+		{
+		}
+
+		public DisplaySetting(int display, SegmentType segmentType, RasterizeStyle style, int numChars, int numLines, int canvasWidth, int canvasHeight)
+		{
+			Display = display;
+			SegmentType = segmentType;
+			NumChars = numChars;
+			NumLines = numLines;
+			_style = style;
+			SetDimensions(canvasWidth, canvasHeight);
+		}
+
 		/// <summary>
 		/// Recalculates the segment dimensions based on a canvas size
 		/// </summary>

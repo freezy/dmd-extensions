@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Windows.Forms;
 using NLog;
 using SkiaSharp;
 using Logger = NLog.Logger;
@@ -116,12 +115,103 @@ namespace LibDmd.Output.Virtual
 			return _svgs[type][FullSegment].Picture.CullRect;
 		}
 
+		/// <summary>
+		/// Renders each layer on a surface and caches it.
+		/// </summary>
+		///
+		/// <remarks>
+		/// We assume that if there is already a surface with the same dimension,
+		/// it's the same and we skip rendering.
+		///
+		/// However, during customization, different settings are applied to the
+		/// same dimensions, so we there is an additional flag to force
+		/// rasterization.
+		/// </remarks>
+		/// 
+		/// <param name="setting">Display setting</param>
+		/// <param name="force">True to force, otherwise it'll skip if dimension already rasterized</param>
+		public void Rasterize(DisplaySetting setting, bool force = false)
+		{
+			if (!force && _rasterizedDim.ContainsKey(setting.SegmentType) && _rasterizedDim[setting.SegmentType].Equals(setting.Dim)) {
+				Logger.Info("Already rasterized {0}, aborting.", setting.SegmentType);
+				return;
+			}
+
+			var source = _svgs[setting.SegmentType];
+			var segments = source.Keys.Where(i => i != FullSegment).ToList();
+
+			RasterizeLayer(setting, Virtual.RasterizeLayer.OuterGlow, setting.Style.OuterGlow, segments, setting.Style.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.InnerGlow, setting.Style.InnerGlow, segments, setting.Style.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.Foreground, setting.Style.Foreground, segments, setting.Style.SkewAngle);
+			RasterizeLayer(setting, Virtual.RasterizeLayer.Background, setting.Style.Background, new []{ FullSegment }, setting.Style.SkewAngle);
+			
+			_rasterizedDim[setting.SegmentType] = setting.Dim;
+			Logger.Info("Rasterization done.");
+		}
+
+		/// <summary>
+		/// Renders a given layer on a surface and caches it.
+		/// </summary>
+		/// <param name="setting">Display setting</param>
+		/// <param name="layer">Which layer is it we're rendering</param>
+		/// <param name="layerStyle">How to render the layer</param>
+		/// <param name="segments">Which segments to render</param>
+		/// <param name="skewAngle">How much to skew</param>
+		public void RasterizeLayer(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyle layerStyle, IEnumerable<int> segments, float skewAngle)
+		{
+			var source = _svgs[setting.SegmentType];
+			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
+			using (var paint = new SKPaint()) {
+				ApplyFilters(paint, layerStyle);
+				foreach (var i in segments) {
+					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, i);
+					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, i);
+					if (!_rasterCache.ContainsKey(initialKey)) {
+						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
+					} else {
+						if (_rasterCache.ContainsKey(cacheKey)) {
+							_rasterCache[cacheKey]?.Dispose();
+						}
+						_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Cleans up the caches.
+		/// </summary>
+		public void Clear()
+		{
+			_rasterCache.Clear();
+			_rasterizedDim.Clear();
+		}
+
 		private AlphaNumericResources()
 		{
 			LoadAlphaNumeric();
 			LoadNumeric8();
 			LoadNumeric10();
 			Logger.Info("All SVGs loaded.");
+		}
+
+		private SKSurface RasterizeSegment(SKPicture segment, RasterizeDimensions dim, float skewAngle, params SKPaint[] paints)
+		{
+			if (dim.SvgWidth <= 0 || dim.SvgWidth <= 0) {
+				return null;
+			}
+			var surface = SKSurface.Create(dim.SvgInfo);
+			surface.Canvas.Translate(dim.Translate.X, dim.Translate.Y);
+			Skew(surface.Canvas, skewAngle, 0);
+			foreach (var paint in paints) {
+				surface.Canvas.DrawPicture(segment, ref dim.SvgMatrix, paint);
+			}
+			return surface;
+		}
+
+		private static void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
+		{
+			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
 		}
 
 		private void LoadAlphaNumeric()
@@ -197,86 +287,6 @@ namespace LibDmd.Output.Virtual
 			_svgs[type].Add(FullSegment, full);
 			Loaded[type].OnNext(Unit.Default);
 			Loaded[type] = new BehaviorSubject<Unit>(Unit.Default);
-		}
-
-		private SKSurface RasterizeSegment(SKPicture segment, RasterizeDimensions dim, float skewAngle, params SKPaint[] paints)
-		{
-			if (dim.SvgWidth <= 0 || dim.SvgWidth <= 0) {
-				return null;
-			}
-			var surface = SKSurface.Create(dim.SvgInfo);
-			surface.Canvas.Translate(dim.Translate.X, dim.Translate.Y);
-			Skew(surface.Canvas, skewAngle, 0);
-			foreach (var paint in paints) {
-				surface.Canvas.DrawPicture(segment, ref dim.SvgMatrix, paint);
-			}
-			return surface;
-		}
-
-		private static void Skew(SKCanvas canvas, double xDegrees, double yDegrees)
-		{
-			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
-		}
-
-		public void Rasterize(DisplaySetting setting, bool force = false)
-		{
-			if (!force && _rasterizedDim.ContainsKey(setting.SegmentType) && _rasterizedDim[setting.SegmentType].Equals(setting.Dim)) {
-				Logger.Info("Already rasterized {0}, aborting.", setting.SegmentType);
-				return;
-			}
-
-			var source = _svgs[setting.SegmentType];
-
-			Rasterize(setting, RasterizeLayer.OuterGlow, setting.Style.OuterGlow, setting.Style.SkewAngle);
-			Rasterize(setting, RasterizeLayer.InnerGlow, setting.Style.InnerGlow, setting.Style.SkewAngle);
-			Rasterize(setting, RasterizeLayer.Foreground, setting.Style.Foreground, setting.Style.SkewAngle);
-
-			// unlit tubes
-			using (var segmentUnlitPaint = new SKPaint()) {
-				segmentUnlitPaint.ColorFilter = SKColorFilter.CreateBlendMode(setting.Style.Background.Color, SKBlendMode.SrcIn);
-				segmentUnlitPaint.ImageFilter = SKImageFilter.CreateBlur(setting.Style.Background.Blur.X, setting.Style.Background.Blur.Y);
-
-				var initialKey = new RasterCacheKey(InitialCache, RasterizeLayer.Background, setting.SegmentType, FullSegment);
-				var cacheKey = new RasterCacheKey(setting.Display, RasterizeLayer.Background, setting.SegmentType, FullSegment);
-				if (!_rasterCache.ContainsKey(initialKey)) {
-					_rasterCache[initialKey] = RasterizeSegment(source[FullSegment].Picture, setting.Dim, setting.Style.SkewAngle, segmentUnlitPaint);
-				} else {
-					if (_rasterCache.ContainsKey(cacheKey)) {
-						_rasterCache[cacheKey]?.Dispose();
-					}
-					_rasterCache[cacheKey] = RasterizeSegment(source[FullSegment].Picture, setting.Dim, setting.Style.SkewAngle, segmentUnlitPaint);
-				}
-			}
-
-			_rasterizedDim[setting.SegmentType] = setting.Dim;
-			Logger.Info("Rasterization done.");
-		}
-
-		public void Rasterize(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyle layerStyle, float skewAngle)
-		{
-			var source = _svgs[setting.SegmentType];
-			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
-			using (var paint = new SKPaint()) {
-				ApplyFilters(paint, layerStyle);
-				foreach (var i in source.Keys.Where(i => i != FullSegment)) {
-					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, i);
-					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, i);
-					if (!_rasterCache.ContainsKey(initialKey)) {
-						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
-					} else {
-						if (_rasterCache.ContainsKey(cacheKey)) {
-							_rasterCache[cacheKey]?.Dispose();
-						}
-						_rasterCache[cacheKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
-					}
-				}
-			}
-		}
-
-		public void Clear()
-		{
-			_rasterCache.Clear();
-			_rasterizedDim.Clear();
 		}
 
 		private void ApplyFilters(SKPaint paint, RasterizeLayerStyle layerStyle)
