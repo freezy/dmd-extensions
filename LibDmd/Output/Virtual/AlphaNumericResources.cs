@@ -309,7 +309,7 @@ namespace LibDmd.Output.Virtual
 		Alphanumeric, Numeric8, Numeric10
 	}
 
-	enum RasterizeLayer
+	public enum RasterizeLayer
 	{
 		OuterGlow, InnerGlow, Foreground, Background
 	}

@@ -30,11 +30,14 @@ namespace LibDmd.Common
 
 		private readonly DisplaySetting DisplaySetting;
 		private WriteableBitmap _writeableBitmap;
+		private AlphanumericControl _control;
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
 			Top = top;
 			Left = left;
+			_control = control;
+
 			InitializeComponent();
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 
@@ -71,19 +74,19 @@ namespace LibDmd.Common
 
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				DisplaySetting.Style.Foreground = layerStyle;
+				DisplaySetting.ApplyLayerStyle(RasterizeLayer.Foreground, layerStyle);
 				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.Foreground, layerStyle, segments, DisplaySetting.Style.SkewAngle);
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				DisplaySetting.Style.InnerGlow = layerStyle;
+				DisplaySetting.ApplyLayerStyle(RasterizeLayer.InnerGlow, layerStyle);
 				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.InnerGlow, layerStyle, segments, DisplaySetting.Style.SkewAngle);
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				DisplaySetting.Style.OuterGlow = layerStyle;
+				DisplaySetting.ApplyLayerStyle(RasterizeLayer.OuterGlow, layerStyle);
 				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.OuterGlow, layerStyle, segments, DisplaySetting.Style.SkewAngle);
 			});
 			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				DisplaySetting.Style.Background = layerStyle;
+				DisplaySetting.ApplyLayerStyle(RasterizeLayer.Background, layerStyle);
 				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.Background, layerStyle, new [] { AlphaNumericResources.FullSegment }, DisplaySetting.Style.SkewAngle);
 			});
 		}
@@ -146,6 +149,11 @@ namespace LibDmd.Common
 		private void Cancel_Click(object sender, RoutedEventArgs e)
 		{
 			Hide();
+		}
+
+		private void ApplyButton_Click(object sender, RoutedEventArgs e)
+		{
+			_control.UpdateStyle(DisplaySetting.CopyStyle());
 		}
 	}
 }

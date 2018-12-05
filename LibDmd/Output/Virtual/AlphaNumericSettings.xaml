@@ -7,7 +7,7 @@
         x:Class="LibDmd.Common.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="303.667" 
+        Height="503.667" 
         Width="633.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
@@ -26,7 +26,7 @@
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <local:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="3" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="4" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True"/>
+        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="4" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
         <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" Grid.Column="1" VerticalAlignment="Top" Width="60"  Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
     </Grid>
 </Window>

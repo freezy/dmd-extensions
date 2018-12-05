@@ -45,21 +45,25 @@ namespace LibDmd.Output.Virtual
 			CompositionTarget.Rendering += (o, e) => DrawImage(_writeableBitmap);
 		}
 
-		public void ClearDisplay()
-		{
-			throw new NotImplementedException();
-		}
-
 		public void RenderSegments(ushort[] data)
 		{
 			UpdateData(data);
 		}
 
-		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
+		public void UpdateStyle(RasterizeStyle style)
 		{
-			if (!Host.Resizing) {
-				CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
-			}
+			DisplaySetting.Style = style;
+			_res.Rasterize(DisplaySetting, true);
+		}
+
+		public void ClearDisplay()
+		{
+			_data = new ushort[_res.SegmentSize[DisplaySetting.SegmentType]];
+		}
+
+		public void Dispose()
+		{
+			_res.Clear();
 		}
 
 		private void SetBitmap(WriteableBitmap bitmap)
@@ -67,9 +71,11 @@ namespace LibDmd.Output.Virtual
 			AlphanumericDisplay.Source = _writeableBitmap = bitmap;
 		}
 
-		public void Dispose()
+		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
 		{
-			throw new NotImplementedException();
+			if (!Host.Resizing) {
+				CreateImage((int)e.NewSize.Width, (int)e.NewSize.Height);
+			}
 		}
 	}
 }
