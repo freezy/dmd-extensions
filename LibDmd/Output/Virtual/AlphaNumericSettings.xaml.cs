@@ -44,7 +44,7 @@ namespace LibDmd.Common
 			DisplaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 
 				control.DisplaySetting.SegmentType, 
-				control.DisplaySetting.Style.Copy(), 
+				control.DisplaySetting.CopyStyle(), 
 				1, 
 				1, 
 				(int)Preview.Width, 
