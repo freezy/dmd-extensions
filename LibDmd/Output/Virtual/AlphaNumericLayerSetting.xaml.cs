@@ -1,35 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LibDmd.Output.Virtual;
 using SkiaSharp;
 
-namespace LibDmd.Common
+namespace LibDmd.Output.Virtual
 {
 	/// <summary>
 	/// Interaction logic for AlphaNumericLayerSetting.xaml
 	/// </summary>
 	public partial class VirtualAlphaNumericLayerSetting : UserControl
 	{
-		public ISubject<RasterizeLayerStyle> OnLayerChanged { get; } = new Subject<RasterizeLayerStyle>();
+		public ISubject<RasterizeLayerStyleDefinition> OnLayerChanged { get; } = new Subject<RasterizeLayerStyleDefinition>();
 
-		public RasterizeLayerStyle RasterizeStyle
+		public RasterizeLayerStyleDefinition RasterizeStyleDefinition
 		{
-			get => _rasterizeStyle;
+			get => _rasterizeLayerStyleDefinition;
 			set {
-				_rasterizeStyle = value;
+				_rasterizeLayerStyleDefinition = value;
 				UpdateValues();
 			}
 		}
@@ -40,14 +29,14 @@ namespace LibDmd.Common
 			set => LayerEnabled.Content = value;
 		}
 
-		private RasterizeLayerStyle _rasterizeStyle;
+		private RasterizeLayerStyleDefinition _rasterizeLayerStyleDefinition;
 		private Color _color;
 
 		public VirtualAlphaNumericLayerSetting()
 		{
 			InitializeComponent();
-			LayerEnabled.Checked += (sender, e) => RasterizeStyle.IsEnabled = true;
-			LayerEnabled.Unchecked += (sender, e) => RasterizeStyle.IsEnabled = false;
+			LayerEnabled.Checked += (sender, e) => _rasterizeLayerStyleDefinition.IsEnabled = true;
+			LayerEnabled.Unchecked += (sender, e) => _rasterizeLayerStyleDefinition.IsEnabled = false;
 			DilateXSlider.ValueChanged += (sender, e) => DilateXValue.Text = DoubleToString(DilateXSlider.Value);
 			DilateXValue.TextChanged += (sender, e) => DilateXSlider.Value = StringToDouble(DilateXValue.Text, DilateXSlider.Value);
 			DilateYSlider.ValueChanged += (sender, e) => DilateYValue.Text = DoubleToString(DilateYSlider.Value);
@@ -71,30 +60,30 @@ namespace LibDmd.Common
 
 		private void UpdateValues()
 		{
-			DilateXValue.Text = _rasterizeStyle.Dilate.X.ToString();
-			DilateYValue.Text = _rasterizeStyle.Dilate.Y.ToString();
-			DilateXSlider.Value = _rasterizeStyle.Dilate.X;
-			DilateYSlider.Value = _rasterizeStyle.Dilate.Y;
+			DilateXValue.Text = _rasterizeLayerStyleDefinition.Dilate.X.ToString();
+			DilateYValue.Text = _rasterizeLayerStyleDefinition.Dilate.Y.ToString();
+			DilateXSlider.Value = _rasterizeLayerStyleDefinition.Dilate.X;
+			DilateYSlider.Value = _rasterizeLayerStyleDefinition.Dilate.Y;
 
-			BlurXValue.Text = _rasterizeStyle.Blur.X.ToString();
-			BlurYValue.Text = _rasterizeStyle.Blur.Y.ToString();
-			BlurXSlider.Value = _rasterizeStyle.Blur.X;
-			BlurYSlider.Value = _rasterizeStyle.Blur.Y;
+			BlurXValue.Text = _rasterizeLayerStyleDefinition.Blur.X.ToString();
+			BlurYValue.Text = _rasterizeLayerStyleDefinition.Blur.Y.ToString();
+			BlurXSlider.Value = _rasterizeLayerStyleDefinition.Blur.X;
+			BlurYSlider.Value = _rasterizeLayerStyleDefinition.Blur.Y;
 
-			LayerEnabled.IsChecked = _rasterizeStyle.IsEnabled;
-			DilateEnabled.IsChecked = _rasterizeStyle.IsDilateEnabled;
-			BlurEnabled.IsChecked = _rasterizeStyle.IsBlurEnabled;
+			LayerEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsEnabled;
+			DilateEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsDilateEnabled;
+			BlurEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsBlurEnabled;
 
-			_color = Color.FromArgb(_rasterizeStyle.Color.Alpha, _rasterizeStyle.Color.Red, _rasterizeStyle.Color.Green, _rasterizeStyle.Color.Blue);
+			_color = Color.FromArgb(_rasterizeLayerStyleDefinition.Color.Alpha, _rasterizeLayerStyleDefinition.Color.Red, _rasterizeLayerStyleDefinition.Color.Green, _rasterizeLayerStyleDefinition.Color.Blue);
 			ColorButton.SelectedColor = _color;
 
-			if (!_rasterizeStyle.IsDilateEnabled) {
+			if (!_rasterizeLayerStyleDefinition.IsDilateEnabled) {
 				ToggleDilate(null, null);
 			}
-			if (!_rasterizeStyle.IsBlurEnabled) {
+			if (!_rasterizeLayerStyleDefinition.IsBlurEnabled) {
 				ToggleBlur(null, null);
 			}
-			if (!_rasterizeStyle.IsEnabled) {
+			if (!_rasterizeLayerStyleDefinition.IsEnabled) {
 				Toggle(null, null);
 			}
 		}
@@ -105,7 +94,7 @@ namespace LibDmd.Common
 			    ColorButton.SelectedColor == null) {
 				return;
 			}
-			OnLayerChanged.OnNext(new RasterizeLayerStyle {
+			OnLayerChanged.OnNext(new RasterizeLayerStyleDefinition {
 				IsEnabled = (bool)LayerEnabled.IsChecked,
 				IsBlurEnabled = (bool)BlurEnabled.IsChecked,
 				IsDilateEnabled = (bool)DilateEnabled.IsChecked,

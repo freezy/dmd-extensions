@@ -50,20 +50,20 @@ namespace LibDmd.Output.Virtual
 			UpdateData(data);
 		}
 
-		public void UpdateStyle(RasterizeStyle style)
+		public void UpdateStyle(RasterizeStyleDefinition styleDef)
 		{
-			DisplaySetting.Style = style;
-			_res.Rasterize(DisplaySetting, true);
+			DisplaySetting.ApplyStyle(styleDef);
+			Res.Rasterize(DisplaySetting, true);
 		}
 
 		public void ClearDisplay()
 		{
-			_data = new ushort[_res.SegmentSize[DisplaySetting.SegmentType]];
+			_data = new ushort[Res.SegmentSize[DisplaySetting.SegmentType]];
 		}
 
 		public void Dispose()
 		{
-			_res.Clear();
+			Res.Clear();
 		}
 
 		private void SetBitmap(WriteableBitmap bitmap)

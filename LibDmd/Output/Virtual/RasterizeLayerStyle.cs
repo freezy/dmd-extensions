@@ -3,17 +3,8 @@ using SkiaSharp;
 
 namespace LibDmd.Output.Virtual
 {
-	/// <summary>
-	/// Describes an individual layer of a given style.
-	/// </summary>
-	///
-	/// <summary>
-	/// The logic is:
-	///    - first, the segments gets drawn in the defined color
-	///    - then it gets dilated
-	///    - lastly it gets blurred.
-	/// </summary>
-	public class RasterizeLayerStyle
+
+	public class RasterizeLayerStyleDefinition
 	{
 		/// <summary>
 		/// Defines if this layer is active
@@ -54,12 +45,8 @@ namespace LibDmd.Output.Virtual
 		public RasterizeLayerStyle Scale(float scaleFactor)
 		{
 			return new RasterizeLayerStyle {
-				IsEnabled = IsEnabled,
-				IsBlurEnabled = IsBlurEnabled,
-				IsDilateEnabled = IsDilateEnabled,
-				Color = Color,
 				Blur = new SKPoint(scaleFactor * Blur.X, scaleFactor * Blur.Y),
-				Dilate = new SKPoint((float) Math.Round(scaleFactor * Dilate.X), (float) Math.Round(scaleFactor * Dilate.Y))
+				Dilate = new SKPoint((float)Math.Round(scaleFactor * Dilate.X), (float)Math.Round(scaleFactor * Dilate.Y))
 			};
 		}
 
@@ -67,9 +54,9 @@ namespace LibDmd.Output.Virtual
 		/// Returns an identical copy of this layer style.
 		/// </summary>
 		/// <returns></returns>
-		public RasterizeLayerStyle Copy()
+		public RasterizeLayerStyleDefinition Copy()
 		{
-			return new RasterizeLayerStyle {
+			return new RasterizeLayerStyleDefinition {
 				IsEnabled = IsEnabled,
 				IsBlurEnabled = IsBlurEnabled,
 				IsDilateEnabled = IsDilateEnabled,
@@ -81,32 +68,31 @@ namespace LibDmd.Output.Virtual
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is RasterizeLayerStyle item)) {
+			if (!(obj is RasterizeLayerStyleDefinition item)) {
 				return false;
 			}
 
 			return IsEnabled == item.IsEnabled
-			       && IsBlurEnabled == item.IsBlurEnabled
-			       && IsDilateEnabled == item.IsDilateEnabled
-			       && Color.Equals(item.Color)
-			       && Blur.Equals(item.Blur)
-			       && Dilate.Equals(item.Dilate);
+				   && IsBlurEnabled == item.IsBlurEnabled
+				   && IsDilateEnabled == item.IsDilateEnabled
+				   && Color.Equals(item.Color)
+				   && Blur.Equals(item.Blur)
+				   && Dilate.Equals(item.Dilate);
 		}
 
-		protected bool Equals(RasterizeLayerStyle other)
+		protected bool Equals(RasterizeLayerStyleDefinition other)
 		{
-			return IsEnabled == other.IsEnabled 
-			       && IsBlurEnabled == other.IsBlurEnabled 
-			       && IsDilateEnabled == other.IsDilateEnabled 
-			       && Color.Equals(other.Color) 
-			       && Blur.Equals(other.Blur) 
-			       && Dilate.Equals(other.Dilate);
+			return IsEnabled == other.IsEnabled
+				   && IsBlurEnabled == other.IsBlurEnabled
+				   && IsDilateEnabled == other.IsDilateEnabled
+				   && Color.Equals(other.Color)
+				   && Blur.Equals(other.Blur)
+				   && Dilate.Equals(other.Dilate);
 		}
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
+			unchecked {
 				var hashCode = IsEnabled.GetHashCode();
 				hashCode = (hashCode * 397) ^ IsBlurEnabled.GetHashCode();
 				hashCode = (hashCode * 397) ^ IsDilateEnabled.GetHashCode();
@@ -119,7 +105,35 @@ namespace LibDmd.Output.Virtual
 
 		public override string ToString()
 		{
-			return $"LayerStyle[enabled:{IsEnabled},color:{Color.ToString()},blur:{IsBlurEnabled}/{Blur.X}x{Blur.Y},dilate:{IsDilateEnabled}/{Dilate.X}x{Dilate.Y}";
+			return $"RasterizeLayerStyleDefinition[enabled:{IsEnabled},color:{Color.ToString()},blur:{IsBlurEnabled}/{Blur.X}x{Blur.Y},dilate:{IsDilateEnabled}/{Dilate.X}x{Dilate.Y}";
+		}
+	}
+
+	/// <summary>
+	/// Describes an individual layer of a given style.
+	/// </summary>
+	///
+	/// <summary>
+	/// The logic is:
+	///    - first, the segments gets drawn in the defined color
+	///    - then it gets dilated
+	///    - lastly it gets blurred.
+	/// </summary>
+	public class RasterizeLayerStyle
+	{
+		/// <summary>
+		/// Defines how much blurring is applied to this layer
+		/// </summary>
+		public SKPoint Blur { get; set; }
+
+		/// <summary>
+		/// Defines how much dilation is applied to this layer
+		/// </summary>
+		public SKPoint Dilate { get; set; }
+
+		public override string ToString()
+		{
+			return $"RasterizeLayerStyle[blur:{Blur.X}x{Blur.Y},dilate:{Dilate.X}x{Dilate.Y}";
 		}
 	}
 }

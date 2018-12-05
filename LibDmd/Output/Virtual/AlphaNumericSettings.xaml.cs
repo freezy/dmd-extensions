@@ -1,32 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LibDmd.Output.Virtual;
 using NLog;
 using SkiaSharp;
 
-namespace LibDmd.Common
+namespace LibDmd.Output.Virtual
 {
 	/// <summary>
 	/// Interaction logic for AlphaNumericSettings.xaml
 	/// </summary>
 	public partial class VirtualAlphaNumericSettings : Window
 	{
-
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static int Dpi = 96;
 
 		private readonly DisplaySetting _displaySetting;
 		private readonly AlphanumericControl _control;
@@ -43,13 +32,13 @@ namespace LibDmd.Common
 			_displaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 
 				control.DisplaySetting.SegmentType, 
-				control.DisplaySetting.CopyStyle(), 
+				control.DisplaySetting.StyleDefinition.Copy(), 
 				1, 
 				1, 
 				(int)Preview.Width, 
 				(int)Preview.Height
 			);
-			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = writeableBitmap;
 
 			CompositionTarget.Rendering += (o, e) => DrawPreview(writeableBitmap);
@@ -61,10 +50,10 @@ namespace LibDmd.Common
 			BackgroundStyle.Label = "Unlit Layer";
 
 			// save our editable copy of the control's style
-			ForegroundStyle.RasterizeStyle = _displaySetting.Style.Foreground;
-			InnerGlowStyle.RasterizeStyle = _displaySetting.Style.InnerGlow;
-			OuterGlowStyle.RasterizeStyle = _displaySetting.Style.OuterGlow;
-			BackgroundStyle.RasterizeStyle = _displaySetting.Style.Background;
+			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
+			InnerGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.InnerGlow;
+			OuterGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.OuterGlow;
+			BackgroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Background;
 		
 			// rasterize preview a first time
 			Res.Rasterize(_displaySetting, true);
@@ -72,21 +61,21 @@ namespace LibDmd.Common
 			var segments = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
 			// subscribe to control changes that trigger rasterization
-			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
-				_displaySetting.ApplyLayerStyle(RasterizeLayer.Foreground, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Foreground, layerStyle, segments, _displaySetting.Style.SkewAngle);
+			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyleDef => {
+				_displaySetting.ApplyLayerStyle(RasterizeLayer.Foreground, layerStyleDef);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Foreground, layerStyleDef, _displaySetting.Style.Foreground, segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.InnerGlow, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.InnerGlow, layerStyle, segments, _displaySetting.Style.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.InnerGlow, layerStyle, _displaySetting.Style.InnerGlow, segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.OuterGlow, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.OuterGlow, layerStyle, segments, _displaySetting.Style.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.OuterGlow, layerStyle, _displaySetting.Style.OuterGlow, segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.Background, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, new [] { AlphaNumericResources.FullSegment }, _displaySetting.Style.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, _displaySetting.Style.Background, new [] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
 			});
 		}
 
@@ -107,16 +96,16 @@ namespace LibDmd.Common
 				var canvas = surface.Canvas;
 				var pos = new SKPoint(-15, 0);
 				canvas.Clear(SKColors.Black);
-				if (BackgroundStyle.RasterizeStyle.IsEnabled) {
+				if (BackgroundStyle.RasterizeStyleDefinition.IsEnabled) {
 					DrawFullSegment(canvas, pos);
 				}
-				if (OuterGlowStyle.RasterizeStyle.IsEnabled) {
+				if (OuterGlowStyle.RasterizeStyleDefinition.IsEnabled) {
 					DrawSegment(RasterizeLayer.OuterGlow, canvas, pos);
 				}
-				if (InnerGlowStyle.RasterizeStyle.IsEnabled) {
+				if (InnerGlowStyle.RasterizeStyleDefinition.IsEnabled) {
 					DrawSegment(RasterizeLayer.InnerGlow, canvas, pos);
 				}
-				if (ForegroundStyle.RasterizeStyle.IsEnabled) {
+				if (ForegroundStyle.RasterizeStyleDefinition.IsEnabled) {
 					DrawSegment(RasterizeLayer.Foreground, canvas, pos);
 				}
 			}
@@ -152,7 +141,7 @@ namespace LibDmd.Common
 
 		private void ApplyButton_Click(object sender, RoutedEventArgs e)
 		{
-			_control.UpdateStyle(_displaySetting.CopyStyle());
+			_control.UpdateStyle(_displaySetting.StyleDefinition.Copy());
 		}
 	}
 }
