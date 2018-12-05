@@ -38,14 +38,15 @@ namespace LibDmd.Common
 			InitializeComponent();
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 
-			DisplaySetting = new DisplaySetting {
-				Display = control.DisplaySetting.Display + 100,
-				Style = control.DisplaySetting.Style.Copy(),
-				NumLines = 1,
-				NumChars = 1
-			};
-			DisplaySetting.SetDimensions((int)Preview.Width, (int)Preview.Height);
-
+			DisplaySetting = new DisplaySetting(
+				control.DisplaySetting.Display + 100, 
+				control.DisplaySetting.SegmentType, 
+				control.DisplaySetting.Style.Copy(), 
+				1, 
+				1, 
+				(int)Preview.Width, 
+				(int)Preview.Height
+			);
 			_writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = _writeableBitmap;
 
@@ -55,29 +56,35 @@ namespace LibDmd.Common
 			ForegroundStyle.Label = "Foreground Layer";
 			InnerGlowStyle.Label = "Inner Glow Layer";
 			OuterGlowStyle.Label = "Outer Glow Layer";
-			UnlitStyle.Label = "Unlit Layer";
+			BackgroundStyle.Label = "Unlit Layer";
 
 			// save our editable copy of the control's style
 			ForegroundStyle.RasterizeStyle = DisplaySetting.Style.Foreground;
 			InnerGlowStyle.RasterizeStyle = DisplaySetting.Style.InnerGlow;
 			OuterGlowStyle.RasterizeStyle = DisplaySetting.Style.OuterGlow;
-			UnlitStyle.RasterizeStyle = DisplaySetting.Style.Background;
+			BackgroundStyle.RasterizeStyle = DisplaySetting.Style.Background;
 		
 			// rasterize preview a first time
 			_res.Rasterize(DisplaySetting, true);
 
+			var segments = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				DisplaySetting.Style.Foreground = layerStyle;
-				_res.Rasterize(DisplaySetting, RasterizeLayer.Foreground, layerStyle, DisplaySetting.Style.SkewAngle);
+				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.Foreground, layerStyle, segments, DisplaySetting.Style.SkewAngle);
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				DisplaySetting.Style.InnerGlow = layerStyle;
-				_res.Rasterize(DisplaySetting, RasterizeLayer.InnerGlow, layerStyle, DisplaySetting.Style.SkewAngle);
+				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.InnerGlow, layerStyle, segments, DisplaySetting.Style.SkewAngle);
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				DisplaySetting.Style.OuterGlow = layerStyle;
-				_res.Rasterize(DisplaySetting, RasterizeLayer.OuterGlow, layerStyle, DisplaySetting.Style.SkewAngle);
+				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.OuterGlow, layerStyle, segments, DisplaySetting.Style.SkewAngle);
+			});
+			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
+				DisplaySetting.Style.Background = layerStyle;
+				_res.RasterizeLayer(DisplaySetting, RasterizeLayer.Background, layerStyle, new [] { AlphaNumericResources.FullSegment }, DisplaySetting.Style.SkewAngle);
 			});
 		}
 
