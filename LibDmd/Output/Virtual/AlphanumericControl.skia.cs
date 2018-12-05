@@ -44,28 +44,16 @@ namespace LibDmd.Output.Virtual
 		public void CreateImage(int width, int height)
 		{
 			Logger.Debug("Creating image...");
-			if (!_res.SvgsLoaded) {
-				Logger.Debug("Segments unavailable, waiting...");
-				_res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(segments => {
-					Logger.Debug("Got segments, setting up shit");
-					CreateImageWhenSvgsLoaded(width, height);
-				});
-			} else {
-				Logger.Debug("Segments available, let's go!");
-				CreateImageWhenSvgsLoaded(width, height);
-			}
-		}
-
-		private void CreateImageWhenSvgsLoaded(int width, int height)
-		{
-			DisplaySetting.SetDimensions(width, height);
-			if (!_aspectRatioSet) {
-				Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
-				_aspectRatioSet = true;
-			} else {
-				_res.Rasterize(DisplaySetting);
-			}
-			SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+			_res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(_ => {
+				DisplaySetting.SetDimensions(width, height);
+				if (!_aspectRatioSet) {
+					Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
+					_aspectRatioSet = true;
+				} else {
+					_res.Rasterize(DisplaySetting);
+				}
+				SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
+			});
 		}
 
 		public void UpdateData(ushort[] data)
