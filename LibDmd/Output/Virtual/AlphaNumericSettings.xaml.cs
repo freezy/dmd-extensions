@@ -105,7 +105,9 @@ namespace LibDmd.Common
 				var canvas = surface.Canvas;
 				var pos = new SKPoint(-15, 0);
 				canvas.Clear(SKColors.Black);
-				DrawFullSegment(canvas, pos);
+				if (BackgroundStyle.RasterizeStyle.IsEnabled) {
+					DrawFullSegment(canvas, pos);
+				}
 				if (OuterGlowStyle.RasterizeStyle.IsEnabled) {
 					DrawSegment(RasterizeLayer.OuterGlow, canvas, pos);
 				}
