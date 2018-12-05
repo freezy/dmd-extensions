@@ -86,9 +86,16 @@ namespace LibDmd.Common
 			_color = Color.FromArgb(_rasterizeStyle.Color.Alpha, _rasterizeStyle.Color.Red, _rasterizeStyle.Color.Green, _rasterizeStyle.Color.Blue);
 			ColorButton.SelectedColor = _color;
 
-			ToggleBlur(null, null);
-			ToggleDilate(null, null);
-			Toggle(null, null);
+			if (!_rasterizeStyle.IsDilateEnabled) {
+				ToggleDilate(null, null);
+			}
+			if (!_rasterizeStyle.IsBlurEnabled) {
+				ToggleBlur(null, null);
+			}
+			if (!_rasterizeStyle.IsEnabled)
+			{
+				Toggle(null, null);
+			}
 		}
 
 		private void Changed()
