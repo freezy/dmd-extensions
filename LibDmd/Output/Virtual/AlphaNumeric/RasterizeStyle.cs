@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Output.Virtual.AlphaNumeric
+﻿using SkiaSharp;
+
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 
 	public class RasterizeStyleDefinition
@@ -7,6 +9,11 @@
 		/// Angle in ° how much the segments is skewed
 		/// </summary>
 		public float SkewAngle { get; set; }
+
+		/// <summary>
+		/// The background color of the display
+		/// </summary>
+		public SKColor BackgroundColor { get; set; }
 
 		/// <summary>
 		/// The top layer
@@ -52,6 +59,7 @@
 		{
 			return new RasterizeStyleDefinition {
 				SkewAngle = SkewAngle,
+				BackgroundColor = BackgroundColor,
 				Foreground = Foreground.Copy(),
 				InnerGlow = InnerGlow.Copy(),
 				OuterGlow = OuterGlow.Copy(),

@@ -204,6 +204,7 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericPainter.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericSettings.xaml.cs">
       <DependentUpon>AlphaNumericSettings.xaml</DependentUpon>
     </Compile>

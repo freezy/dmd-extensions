@@ -30,6 +30,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public RasterizeStyleDefinition StyleDefinition { get; set; } = new RasterizeStyleDefinition {
 			SkewAngle = -12,
+			BackgroundColor = SKColors.Black,
 			Background = new RasterizeLayerStyleDefinition { Color = new SKColor(0xff, 0xff, 0xff, 0x20), Blur = new SKPoint(7, 7), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = false },
 			OuterGlow = new RasterizeLayerStyleDefinition { Color = new SKColor(0xb6, 0x58, 0x29, 0x40), Blur = new SKPoint(50, 50), Dilate = new SKPoint(90, 40), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
 			InnerGlow = new RasterizeLayerStyleDefinition { Color = new SKColor(0xdd, 0x6a, 0x03, 0xa0), Blur = new SKPoint(15, 13), Dilate = new SKPoint(15, 10), IsEnabled = true, IsBlurEnabled = true, IsDilateEnabled = true },
