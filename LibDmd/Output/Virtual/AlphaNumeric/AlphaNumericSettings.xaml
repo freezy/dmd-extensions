@@ -8,11 +8,10 @@
         x:Class="LibDmd.Output.Virtual.AlphaNumeric.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="503.667" 
-        Width="633.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
+        Height="701.611" 
+        Width="495.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -21,13 +20,16 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Image x:Name="Preview" Width="100" Height="150" Grid.RowSpan="4" VerticalAlignment="Top" Margin="0,0,16,0"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="3" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="4" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
-        <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" Grid.Column="1" VerticalAlignment="Top" Width="60"  Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
+        <Image x:Name="Preview" Height="108" Width="453" Grid.Row="0" />
+        <TextBox x:Name="PreviewText" Grid.Row="1" Margin="0,8" />
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="4" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
+        <Button Content="Cancel" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
     </Grid>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
@@ -18,9 +19,10 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private static int Dpi = 96;
 
 		private readonly DisplaySetting _displaySetting;
-		private readonly AlphaNumeric.AlphanumericControl _control;
+		private readonly AlphanumericControl _control;
+		private ushort[] _data = { };
 
-		public VirtualAlphaNumericSettings(AlphaNumeric.AlphanumericControl control, double top, double left)
+		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
 			Top = top;
 			Left = left;
@@ -28,16 +30,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 			InitializeComponent();
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
+			PreviewText.TextChanged += PreviewTextChanged;
+			PreviewText.Text = "  DMDEXT  ";
 
 			_displaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 
 				control.DisplaySetting.SegmentType, 
 				control.DisplaySetting.StyleDefinition.Copy(), 
-				1, 
+				10, 
 				1, 
 				(int)Preview.Width, 
 				(int)Preview.Height
 			);
+			Logger.Info("Creating preview image at {0}x{1}", (int)Preview.Width, (int)Preview.Height);
 			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = writeableBitmap;
 
@@ -79,6 +84,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			});
 		}
 
+		private void PreviewTextChanged(object sender, TextChangedEventArgs e)
+		{
+			_data = AlphaNumericPainter.GenerateAlphaNumeric(PreviewText.Text);
+		}
+
 		private void DrawPreview(WriteableBitmap writeableBitmap)
 		{
 			var width = (int)writeableBitmap.Width;
@@ -93,21 +103,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				AlphaType = SKAlphaType.Premul,
 			};
 			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
-				var canvas = surface.Canvas;
-				var pos = new SKPoint(-15, 0);
-				canvas.Clear(SKColors.Black);
-				if (BackgroundStyle.RasterizeStyleDefinition.IsEnabled) {
-					DrawFullSegment(canvas, pos);
-				}
-				if (OuterGlowStyle.RasterizeStyleDefinition.IsEnabled) {
-					DrawSegment(RasterizeLayer.OuterGlow, canvas, pos);
-				}
-				if (InnerGlowStyle.RasterizeStyleDefinition.IsEnabled) {
-					DrawSegment(RasterizeLayer.InnerGlow, canvas, pos);
-				}
-				if (ForegroundStyle.RasterizeStyleDefinition.IsEnabled) {
-					DrawSegment(RasterizeLayer.Foreground, canvas, pos);
-				}
+				AlphaNumericPainter.DrawDisplay(surface, _displaySetting, _data);
 			}
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
@@ -115,7 +111,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void DrawSegment(RasterizeLayer layer, SKCanvas canvas, SKPoint canvasPosition)
 		{
-			const int seg = 16640;
+			var seg = AlphaNumericPainter.GenerateAlphaNumeric("M")[0];
 			using (var surfacePaint = new SKPaint()) {
 				for (var j = 0; j < Res.SegmentSize[_displaySetting.SegmentType]; j++) {
 					var rasterizedSegment = Res.GetRasterized(_displaySetting.Display, layer, _displaySetting.SegmentType, j);

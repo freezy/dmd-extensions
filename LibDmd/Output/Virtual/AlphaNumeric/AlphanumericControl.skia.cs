@@ -94,69 +94,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				AlphaType = SKAlphaType.Premul,
 			};
 			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
-				using (var paint = new SKPaint { Color = SKColors.Gray, TextSize = 10 }) {
-					var canvas = surface.Canvas;
-
-					canvas.Clear(BackgroundColor);
-					if (DisplaySetting.StyleDefinition.Background.IsEnabled) {
-						DrawSegments(canvas, (i, c, p) => DrawFullSegment(c, p));
-					}
-					if (DisplaySetting.StyleDefinition.OuterGlow.IsEnabled) {
-						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.OuterGlow, i, c, p));
-					}
-					if (DisplaySetting.StyleDefinition.InnerGlow.IsEnabled) {
-						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.InnerGlow, i, c, p));
-					}
-					if (DisplaySetting.StyleDefinition.Foreground.IsEnabled)
-					{
-						DrawSegments(canvas, (i, c, p) => DrawSegment(RasterizeLayer.Foreground, i, c, p));
-					}
-
-					// ReSharper disable once CompareOfFloatsByEqualityOperator
-					var fps = _call / (_stopwatch.Elapsed.TotalSeconds != 0 ? _stopwatch.Elapsed.TotalSeconds : 1);
-					canvas.DrawText($"FPS: {fps:0}", 0, 10, paint);
-					canvas.DrawText($"Frames: {_call++}", 50, 10, paint);
-				}
+				AlphaNumericPainter.DrawDisplay(surface, DisplaySetting, _data);
 			}
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
 		}
 
-		private void DrawSegments(SKCanvas canvas, Action<int, SKCanvas, SKPoint> draw)
-		{
-			float posX = DisplaySetting.Dim.OuterPadding;
-			float posY = DisplaySetting.Dim.OuterPadding;
-			for (var j = 0; j < DisplaySetting.NumLines; j++) {
-				for (var i = 0; i < DisplaySetting.NumChars; i++) {
-					draw(i + DisplaySetting.NumChars * j, canvas, new SKPoint(posX - DisplaySetting.Dim.SegmentPadding, posY - DisplaySetting.Dim.SegmentPadding));
-					posX += DisplaySetting.Dim.SvgWidth;
-				}
-				posX = DisplaySetting.Dim.OuterPadding;
-				posY += DisplaySetting.Dim.SvgHeight + DisplaySetting.Dim.LinePadding;
-			}
-		}
-
-		private void DrawSegment(RasterizeLayer layer, int segmentPosition, SKCanvas canvas, SKPoint canvasPosition)
-		{
-			var seg = _data[segmentPosition];
-			using (var surfacePaint = new SKPaint()) {
-				for (var j = 0; j < Res.SegmentSize[DisplaySetting.SegmentType]; j++) {
-					var rasterizedSegment = Res.GetRasterized(DisplaySetting.Display, layer, DisplaySetting.SegmentType, j);
-					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
-						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
-					}
-				}
-			}
-		}
-
-		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
-		{
-			var segment = Res.GetRasterized(DisplaySetting.Display, RasterizeLayer.Background, DisplaySetting.SegmentType, AlphaNumericResources.FullSegment);
-			if (segment != null) {
-				canvas.DrawSurface(segment, position);
-			}
-		}
-
+		
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
 		{
 			if (_switchPercentage == null) {
