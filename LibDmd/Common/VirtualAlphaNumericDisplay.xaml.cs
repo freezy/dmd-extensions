@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using LibDmd.Output.Virtual;
+using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
 using SkiaSharp.Extended.Svg;
 

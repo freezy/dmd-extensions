@@ -15,6 +15,7 @@ using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.Virtual;
+using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;

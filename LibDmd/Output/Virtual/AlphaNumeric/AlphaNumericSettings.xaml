@@ -3,8 +3,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:local="clr-namespace:LibDmd.Common"
-        xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual" 
-        x:Class="LibDmd.Output.Virtual.VirtualAlphaNumericSettings"
+        xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual"
+        xmlns:alphaNumeric="clr-namespace:LibDmd.Output.Virtual.AlphaNumeric"
+        x:Class="LibDmd.Output.Virtual.AlphaNumeric.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
         Height="503.667" 
@@ -22,10 +23,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image x:Name="Preview" Width="100" Height="150" Grid.RowSpan="4" VerticalAlignment="Top" Margin="0,0,16,0"/>
-        <Virtual:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Virtual:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Virtual:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Virtual:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="3" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="0" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="1" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="2" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Column="1" Grid.Row="3" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <Button x:Name="ApplyButton" Content="Apply" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="4" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
         <Button Content="Cancel" HorizontalAlignment="Right" Grid.Row="4" Grid.Column="1" VerticalAlignment="Top" Width="60"  Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
     </Grid>

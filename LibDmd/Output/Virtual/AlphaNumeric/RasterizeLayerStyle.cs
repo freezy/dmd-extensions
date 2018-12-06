@@ -1,7 +1,7 @@
 ﻿using System;
 using SkiaSharp;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 
 	public class RasterizeLayerStyleDefinition

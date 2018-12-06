@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.Dmd
 {
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml

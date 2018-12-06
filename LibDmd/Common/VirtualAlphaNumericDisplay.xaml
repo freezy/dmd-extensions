@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
         xmlns:common="clr-namespace:LibDmd.Common"
+        xmlns:alphaNumeric="clr-namespace:LibDmd.Output.Virtual.AlphaNumeric"
         mc:Ignorable="d"
         Title="Virtual Alphanumeric Display"
         Height="120"
@@ -34,7 +35,7 @@
     </Window.Resources>
 
     <Grid>
-        <virtualDmd:AlphanumericControl 
+        <alphaNumeric:AlphanumericControl 
             x:Name="AlphaNumericDisplay" 
             x:FieldModifier="public"
             Canvas.ZIndex="1"

@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using SkiaSharp;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	/// <summary>
 	/// Interaction logic for AlphaNumericLayerSetting.xaml
