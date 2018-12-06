@@ -5,9 +5,10 @@ using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using SkiaSharp;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	public partial class AlphanumericControl
 	{
@@ -30,12 +31,12 @@ namespace LibDmd.Output.Virtual
 
 		public void Init()
 		{
-			Host.WindowResized.Subscribe(pos => CreateImage((int)pos.Width, (int)pos.Height));
+			ObservableExtensions.Subscribe<DmdPosition>(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
 		}
 
 		public void CreateImage(int width, int height)
 		{
-			Logger.Debug("Creating image...");
+			AlphanumericControl.Logger.Debug("Creating image...");
 			Res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
@@ -63,7 +64,7 @@ namespace LibDmd.Output.Virtual
 			}
 			_data = data;
 
-			Logger.Debug("new data: [ {0} ]", string.Join(",", data));
+			AlphanumericControl.Logger.Debug("new data: [ {0} ]", string.Join(",", data));
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)

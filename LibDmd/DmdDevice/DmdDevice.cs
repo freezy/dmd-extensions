@@ -21,6 +21,7 @@ using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.PinUp;
 using LibDmd.Output.Virtual;
+using LibDmd.Output.Virtual.AlphaNumeric;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;

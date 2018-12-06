@@ -201,10 +201,10 @@
   <ItemGroup>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
-    <Compile Include="Output\Virtual\AlphaNumericLayerSetting.xaml.cs">
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Output\Virtual\AlphaNumericSettings.xaml.cs">
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericSettings.xaml.cs">
       <DependentUpon>AlphaNumericSettings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\VirtualAlphaNumericDisplay.xaml.cs">
@@ -278,16 +278,16 @@
     <Compile Include="Converter\Colorize\Coloring.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
-    <Compile Include="Output\Virtual\AlphaNumericResources.cs" />
-    <Compile Include="Output\Virtual\DisplaySetting.cs" />
-    <Compile Include="Output\Virtual\RasterizeDimensions.cs" />
-    <Compile Include="Output\Virtual\RasterizeLayerStyle.cs" />
-    <Compile Include="Output\Virtual\RasterizeStyle.cs" />
-    <Compile Include="Output\Virtual\VirtualAlphanumericDestination.cs" />
-    <Compile Include="Output\Virtual\AlphanumericControl.xaml.cs">
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\DisplaySetting.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\RasterizeDimensions.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\RasterizeLayerStyle.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\RasterizeStyle.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\VirtualAlphanumericDestination.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Output\Virtual\AlphanumericControl.skia.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.skia.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\ISource.cs" />
@@ -305,10 +305,10 @@
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
-    <Compile Include="Output\Virtual\DmdEffect.cs" />
+    <Compile Include="Output\Virtual\Dmd\DmdEffect.cs" />
     <Compile Include="Output\IDestination.cs" />
     <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
-    <Compile Include="Output\Virtual\VirtualDmdControl.xaml.cs">
+    <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
@@ -321,23 +321,23 @@
     <Compile Include="Version.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Output\Virtual\Dmd.ps" />
+    <Resource Include="Output\Virtual\Dmd\Dmd.ps" />
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Output\Virtual\numeric\08-center-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\09-center-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\full-10.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\00-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\01-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\02-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\03-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\04-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\05-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\06-middle.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\07-comma.svg" />
-    <EmbeddedResource Include="Output\Virtual\numeric\full.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\08-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\09-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\full-10.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\06-middle.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric\full.svg" />
     <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
     <Content Include="FodyWeavers.xml">
@@ -372,49 +372,49 @@
     <EmbeddedResource Include="Output\Network\www\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\00-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\01-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\02-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\03-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\04-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\05-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\06-middle-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\07-comma.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\08-diag-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\09-center-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\10-diag-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\11-middle-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\12-diag-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\13-center-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\14-diag-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\15-dot.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum-bold\full.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\00-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\01-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\02-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\03-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\04-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\05-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\06-middle-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\07-comma.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\08-diag-top-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\09-center-top.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\10-diag-top-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\11-middle-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\12-diag-bottom-right.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\13-center-bottom.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\14-diag-bottom-left.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\15-dot.svg" />
-    <EmbeddedResource Include="Output\Virtual\alphanum\full.svg" />
-    <Content Include="Output\Virtual\Dmd.fx" />
-    <Resource Include="Output\Virtual\red-128x32.png" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\06-middle-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\08-diag-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\09-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\10-diag-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\11-middle-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\12-diag-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\13-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\14-diag-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\15-dot.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum-bold\full.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\00-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\01-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\02-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\03-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\04-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\05-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\06-middle-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\07-comma.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\08-diag-top-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\09-center-top.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\10-diag-top-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\11-middle-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\12-diag-bottom-right.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\13-center-bottom.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\14-diag-bottom-left.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\15-dot.svg" />
+    <EmbeddedResource Include="Output\Virtual\AlphaNumeric\alphanum\full.svg" />
+    <Content Include="Output\Virtual\Dmd\Dmd.fx" />
+    <Resource Include="Output\Virtual\Dmd\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Output\Virtual\AlphaNumericLayerSetting.xaml">
+    <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Output\Virtual\AlphaNumericSettings.xaml">
+    <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -430,11 +430,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Output\Virtual\AlphanumericControl.xaml">
+    <Page Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Output\Virtual\VirtualDmdControl.xaml">
+    <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

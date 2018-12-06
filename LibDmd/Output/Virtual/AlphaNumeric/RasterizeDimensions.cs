@@ -1,7 +1,7 @@
 ﻿using System;
 using SkiaSharp;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	/// <summary>
 	/// A class holding dimensions of the segments depending on the display size.

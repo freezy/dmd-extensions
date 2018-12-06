@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.Dmd
 {
 	/// <summary>
 	/// An effect that transforms upscaled pixel into dots.
@@ -14,7 +14,7 @@ namespace LibDmd.Output.Virtual
 		static DmdEffect()
 		{
 			// Associate _pixelShader with our compiled pixel shader
-			_pixelShader.UriSource = Global.MakePackUri("Output/Virtual/Dmd.ps");
+			_pixelShader.UriSource = Global.MakePackUri("Output/Virtual/Dmd/Dmd.ps");
 		}
 		private static readonly PixelShader _pixelShader = new PixelShader();
 

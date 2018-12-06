@@ -9,7 +9,7 @@ using SkiaSharp;
 using Logger = NLog.Logger;
 using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	/// <summary>
 	/// A singleton class handling rasterization of the segment assets.
@@ -140,10 +140,10 @@ namespace LibDmd.Output.Virtual
 			var source = _svgs[setting.SegmentType];
 			var segments = source.Keys.Where(i => i != FullSegment).ToList();
 
-			RasterizeLayer(setting, Virtual.RasterizeLayer.OuterGlow, setting.StyleDefinition.OuterGlow, setting.Style.OuterGlow, segments, setting.StyleDefinition.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.InnerGlow, setting.StyleDefinition.InnerGlow, setting.Style.InnerGlow, segments, setting.StyleDefinition.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.Foreground, setting.StyleDefinition.Foreground, setting.Style.Foreground, segments, setting.StyleDefinition.SkewAngle);
-			RasterizeLayer(setting, Virtual.RasterizeLayer.Background, setting.StyleDefinition.Background, setting.Style.Background, new []{ FullSegment }, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.OuterGlow, setting.StyleDefinition.OuterGlow, setting.Style.OuterGlow, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.InnerGlow, setting.StyleDefinition.InnerGlow, setting.Style.InnerGlow, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.Foreground, setting.StyleDefinition.Foreground, setting.Style.Foreground, segments, setting.StyleDefinition.SkewAngle);
+			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.Background, setting.StyleDefinition.Background, setting.Style.Background, new []{ FullSegment }, setting.StyleDefinition.SkewAngle);
 			
 			_rasterizedDim[setting.SegmentType] = setting.Dim;
 			Logger.Info("Rasterization done.");
@@ -217,7 +217,7 @@ namespace LibDmd.Output.Virtual
 
 		private void LoadAlphaNumeric()
 		{
-			const string prefix = "LibDmd.Output.Virtual.alphanum.";
+			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.alphanum.";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -242,7 +242,7 @@ namespace LibDmd.Output.Virtual
 
 		private void LoadNumeric8()
 		{
-			const string prefix = "LibDmd.Output.Virtual.numeric.";
+			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric.";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -259,7 +259,7 @@ namespace LibDmd.Output.Virtual
 
 		private void LoadNumeric10()
 		{
-			const string prefix = "LibDmd.Output.Virtual.numeric.";
+			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric.";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",

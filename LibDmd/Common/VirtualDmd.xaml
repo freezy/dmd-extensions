@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
         xmlns:common="clr-namespace:LibDmd.Common"
+        xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
         mc:Ignorable="d"
         Title="Virtual DMD"
         Height="256"
@@ -34,6 +35,6 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <virtualDmd:VirtualDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <dmd:VirtualDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </common:VirtualWindow>

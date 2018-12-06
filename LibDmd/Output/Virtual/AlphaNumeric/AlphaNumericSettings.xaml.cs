@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 using NLog;
 using SkiaSharp;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	/// <summary>
 	/// Interaction logic for AlphaNumericSettings.xaml
@@ -18,9 +18,9 @@ namespace LibDmd.Output.Virtual
 		private static int Dpi = 96;
 
 		private readonly DisplaySetting _displaySetting;
-		private readonly AlphanumericControl _control;
+		private readonly AlphaNumeric.AlphanumericControl _control;
 
-		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
+		public VirtualAlphaNumericSettings(AlphaNumeric.AlphanumericControl control, double top, double left)
 		{
 			Top = top;
 			Left = left;

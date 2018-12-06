@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using NLog;
-using SkiaSharp.Extended.Svg;
 
-namespace LibDmd.Output.Virtual
+namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	public class VirtualAlphanumericDestination : IAlphaNumericDestination
 	{
