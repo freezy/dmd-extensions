@@ -60,32 +60,26 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void UpdateValues()
 		{
+			LayerEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsEnabled;
+
+			DilateEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsDilateEnabled;
 			DilateXValue.Text = _rasterizeLayerStyleDefinition.Dilate.X.ToString();
 			DilateYValue.Text = _rasterizeLayerStyleDefinition.Dilate.Y.ToString();
 			DilateXSlider.Value = _rasterizeLayerStyleDefinition.Dilate.X;
 			DilateYSlider.Value = _rasterizeLayerStyleDefinition.Dilate.Y;
 
+			BlurEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsBlurEnabled;
 			BlurXValue.Text = _rasterizeLayerStyleDefinition.Blur.X.ToString();
 			BlurYValue.Text = _rasterizeLayerStyleDefinition.Blur.Y.ToString();
 			BlurXSlider.Value = _rasterizeLayerStyleDefinition.Blur.X;
 			BlurYSlider.Value = _rasterizeLayerStyleDefinition.Blur.Y;
 
-			LayerEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsEnabled;
-			DilateEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsDilateEnabled;
-			BlurEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsBlurEnabled;
-
 			_color = Color.FromArgb(_rasterizeLayerStyleDefinition.Color.Alpha, _rasterizeLayerStyleDefinition.Color.Red, _rasterizeLayerStyleDefinition.Color.Green, _rasterizeLayerStyleDefinition.Color.Blue);
 			ColorButton.SelectedColor = _color;
 
-			if (!_rasterizeLayerStyleDefinition.IsDilateEnabled) {
-				ToggleDilate(null, null);
-			}
-			if (!_rasterizeLayerStyleDefinition.IsBlurEnabled) {
-				ToggleBlur(null, null);
-			}
-			if (!_rasterizeLayerStyleDefinition.IsEnabled) {
-				Toggle(null, null);
-			}
+			ToggleDilateEnabled(_rasterizeLayerStyleDefinition.IsDilateEnabled);
+			ToggleBlurEnabled(_rasterizeLayerStyleDefinition.IsBlurEnabled);
+			ToggleLayerEnabled(_rasterizeLayerStyleDefinition.IsEnabled);
 		}
 
 		private void Changed()
@@ -104,63 +98,50 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			});
 		}
 
-		private void Toggle(object sender, RoutedEventArgs e)
+		private void UpdateLayerEnabled(object sender, RoutedEventArgs e)
 		{
-			if (LayerEnabled.IsChecked != null && (bool) LayerEnabled.IsChecked) {
-				ColorButton.IsEnabled = true;
-				DilateEnabled.IsEnabled = true;
-				DilateXSlider.IsEnabled = true;
-				DilateXValue.IsEnabled = true;
-				DilateYSlider.IsEnabled = true;
-				DilateYValue.IsEnabled = true;
-				BlurEnabled.IsEnabled = true;
-				BlurXSlider.IsEnabled = true;
-				BlurXValue.IsEnabled = true;
-				BlurYSlider.IsEnabled = true;
-				BlurYValue.IsEnabled = true;
-			} else {
-				ColorButton.IsEnabled = false;
-				DilateEnabled.IsEnabled = false;
-				DilateXSlider.IsEnabled = false;
-				DilateXValue.IsEnabled = false;
-				DilateYSlider.IsEnabled = false;
-				DilateYValue.IsEnabled = false;
-				BlurEnabled.IsEnabled = false;
-				BlurXSlider.IsEnabled = false;
-				BlurXValue.IsEnabled = false;
-				BlurYSlider.IsEnabled = false;
-				BlurYValue.IsEnabled = false;
-			}
+			ToggleLayerEnabled(LayerEnabled.IsChecked != null && (bool) LayerEnabled.IsChecked);
 		}
 
-		private void ToggleDilate(object sender, RoutedEventArgs e)
+		private void ToggleLayerEnabled(bool enabled)
 		{
-			if (DilateEnabled.IsChecked != null && (bool)DilateEnabled.IsChecked) {
-				DilateXSlider.IsEnabled = true;
-				DilateXValue.IsEnabled = true;
-				DilateYSlider.IsEnabled = true;
-				DilateYValue.IsEnabled = true;
-			} else {
-				DilateXSlider.IsEnabled = false;
-				DilateXValue.IsEnabled = false;
-				DilateYSlider.IsEnabled = false;
-				DilateYValue.IsEnabled = false;
-			}
+			ColorButton.IsEnabled = enabled;
+			DilateEnabled.IsEnabled = enabled;
+			DilateXSlider.IsEnabled = enabled;
+			DilateXValue.IsEnabled = enabled;
+			DilateYSlider.IsEnabled = enabled;
+			DilateYValue.IsEnabled = enabled;
+			BlurEnabled.IsEnabled = enabled;
+			BlurXSlider.IsEnabled = enabled;
+			BlurXValue.IsEnabled = enabled;
+			BlurYSlider.IsEnabled = enabled;
+			BlurYValue.IsEnabled = enabled;
 		}
 
-		private void ToggleBlur(object sender, RoutedEventArgs e)
+		private void UpdateDilateEnabled(object sender, RoutedEventArgs e)
 		{
-			if (BlurEnabled.IsChecked != null && (bool)BlurEnabled.IsChecked) {
-				BlurXSlider.IsEnabled = true;
-				BlurXValue.IsEnabled = true;
-				BlurYSlider.IsEnabled = true;
-				BlurYValue.IsEnabled = true;
-			} else {
-				BlurXSlider.IsEnabled = false;
-				BlurXValue.IsEnabled = false;
-				BlurYSlider.IsEnabled = false;
-				BlurYValue.IsEnabled = false;
-			}
+			ToggleDilateEnabled(DilateEnabled.IsChecked != null && (bool) DilateEnabled.IsChecked);
+		}
+
+		private void ToggleDilateEnabled(bool enabled)
+		{
+			DilateXSlider.IsEnabled = enabled;
+			DilateXValue.IsEnabled = enabled;
+			DilateYSlider.IsEnabled = enabled;
+			DilateYValue.IsEnabled = enabled;
+		}
+
+		private void UpdateBlurEnabled(object sender, RoutedEventArgs e)
+		{
+			ToggleBlurEnabled(BlurEnabled.IsChecked != null && (bool) BlurEnabled.IsChecked);
+		}
+
+		private void ToggleBlurEnabled(bool enabled)
+		{
+			BlurXSlider.IsEnabled = enabled;
+			BlurXValue.IsEnabled = enabled;
+			BlurYSlider.IsEnabled = enabled;
+			BlurYValue.IsEnabled = enabled;
 		}
 
 		private static string DoubleToString(double d)

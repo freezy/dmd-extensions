@@ -31,5 +31,6 @@
         <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <Button x:Name="ApplyButton" Content="Apply" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
         <Button Content="Cancel" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
+        <Button Content="Reset" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
     </Grid>
 </Window>
