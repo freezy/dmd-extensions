@@ -54,14 +54,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			OuterGlowStyle.Label = "Outer Glow Layer";
 			BackgroundStyle.Label = "Unlit Layer";
 
-			// save our editable copy of the control's style
-			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
-			InnerGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.InnerGlow;
-			OuterGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.OuterGlow;
-			BackgroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Background;
-		
-			// rasterize preview a first time
-			Res.Rasterize(_displaySetting, true);
+			ApplySetting();
 
 			var segments = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
@@ -109,25 +102,16 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			writeableBitmap.Unlock();
 		}
 
-		private void DrawSegment(RasterizeLayer layer, SKCanvas canvas, SKPoint canvasPosition)
+		private void ApplySetting()
 		{
-			var seg = AlphaNumericPainter.GenerateAlphaNumeric("M")[0];
-			using (var surfacePaint = new SKPaint()) {
-				for (var j = 0; j < Res.SegmentSize[_displaySetting.SegmentType]; j++) {
-					var rasterizedSegment = Res.GetRasterized(_displaySetting.Display, layer, _displaySetting.SegmentType, j);
-					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
-						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
-					}
-				}
-			}
-		}
+			// apply style to controls
+			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
+			InnerGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.InnerGlow;
+			OuterGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.OuterGlow;
+			BackgroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Background;
 
-		private void DrawFullSegment(SKCanvas canvas, SKPoint position)
-		{
-			var segment = Res.GetRasterized(_displaySetting.Display, RasterizeLayer.Background, _displaySetting.SegmentType, AlphaNumericResources.FullSegment);
-			if (segment != null) {
-				canvas.DrawSurface(segment, position);
-			}
+			// rasterize preview a first time
+			Res.Rasterize(_displaySetting, true);
 		}
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -138,6 +122,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void ApplyButton_Click(object sender, RoutedEventArgs e)
 		{
 			_control.UpdateStyle(_displaySetting.StyleDefinition.Copy());
+		}
+
+		private void Reset_Click(object sender, RoutedEventArgs e)
+		{
+			_displaySetting.ApplyStyle(_control.DisplaySetting.StyleDefinition);
+			ApplySetting();
 		}
 	}
 }
