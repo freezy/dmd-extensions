@@ -94,6 +94,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				Background = Background.Copy()
 			};
 		}
+
+		public override string ToString()
+		{
+			return $"SkewAngle:{SkewAngle},BackgroundColor:{BackgroundColor.ToString()},Foreground:{Foreground},InnerGlow:{InnerGlow},OuterGlow:{OuterGlow},Background:{Background}";
+		}
 	}
 
 	public class RasterizeStyle

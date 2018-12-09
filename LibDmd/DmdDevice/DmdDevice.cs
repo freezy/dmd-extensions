@@ -266,7 +266,7 @@ namespace LibDmd.DmdDevice
 				Logger.Info("Added VirtualDMD renderer.");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
-				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher);
+				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style);
 				renderers.Add(alphaNumeric);
 				Logger.Info("Added virtual alphanumeric renderer.");
 			}

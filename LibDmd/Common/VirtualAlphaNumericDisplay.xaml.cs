@@ -27,7 +27,7 @@ namespace LibDmd.Common
 		private VirtualAlphaNumericSettings _settingWindow;
 		private bool _settingsOpen = false;
 
-		public VirtualAlphaNumericDisplay(int displayNumber, int numChars, int numLines, SegmentType segmentType)
+		public VirtualAlphaNumericDisplay(int displayNumber, int numChars, int numLines, SegmentType segmentType, RasterizeStyleDefinition styleDef)
 		{
 			InitializeComponent();
 			Initialize();
@@ -36,6 +36,7 @@ namespace LibDmd.Common
 			AlphaNumericDisplay.DisplaySetting = new DisplaySetting {
 				Display = displayNumber,
 				SegmentType = segmentType,
+				StyleDefinition = styleDef,
 				NumChars = numChars,
 				NumLines = numLines
 			};

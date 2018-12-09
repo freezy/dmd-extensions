@@ -90,8 +90,7 @@ namespace DmdExt.Common
 					break;
 
 				case AlphaNumeric:
-					renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher));
-					//renderers.Add(ShowAlphaNumericDisplay(options));
+					renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, new RasterizeStyleDefinition()));
 					Logger.Info("Added virtual Alphanumeric renderer.");
 					break;
 
