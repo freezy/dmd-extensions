@@ -37,7 +37,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public void CreateImage(int width, int height)
 		{
 			AlphanumericControl.Logger.Debug("Creating image...");
-			Res.Loaded[DisplaySetting.SegmentType].Take(1).Subscribe(_ => {
+			Res.Loaded[DisplaySetting.SegmentType][DisplaySetting.SegmentWeight].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
 					Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
