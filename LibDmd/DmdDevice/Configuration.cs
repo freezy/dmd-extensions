@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,7 +7,9 @@ using IniParser;
 using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
+using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
+using SkiaSharp;
 
 namespace LibDmd.DmdDevice
 {
@@ -23,7 +26,7 @@ namespace LibDmd.DmdDevice
 		public readonly VideoConfig Video;
 		public readonly GifConfig Gif;
 		public string GameName {
-			get { return _gameName; }
+			get => _gameName;
 			set {
 				_gameName = value;
 				var gameSection = _data.Sections.FirstOrDefault(s => s.SectionName == _gameName);
@@ -178,12 +181,66 @@ namespace LibDmd.DmdDevice
 
 	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration
 	{
-		public override string Name { get; } = "virtualalphanumeric";
+		public override string Name { get; } = "alphanumeric";
 
 		public bool Enabled => GetBoolean("enabled", true);
 
+		public RasterizeStyleDefinition Style {
+			get {
+				var style = GetString("style", "default");
+				return Styles.ContainsKey(style) ? Styles[style] : new RasterizeStyleDefinition();
+			}
+		}
+
+		public Dictionary<string, RasterizeStyleDefinition> Styles { get; } = new Dictionary<string, RasterizeStyleDefinition>();
+
 		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+			var keyValues = data[Name].GetEnumerator();
+			while (keyValues.MoveNext()) {
+				var names = keyValues.Current.KeyName.Split(new []{'.'}, 3);
+				if (names.Length > 1 && names[0] == "style") {
+					var styleName = names[1];
+					var styleProperty = names[2];
+					if (!Styles.ContainsKey(styleName)) {
+						Styles.Add(styleName, new RasterizeStyleDefinition());
+					}
+					switch (styleProperty) {
+						case "skewangle":
+							Styles[styleName].SkewAngle = (float) GetDouble(keyValues.Current.Value, 0);
+							break;
+						case "backgroundcolor":
+							Styles[styleName].BackgroundColor = SKColor.Parse(keyValues.Current.Value);
+							break;
+						case "foreground.enabled":
+							Styles[styleName].Foreground.IsEnabled = GetBoolean(keyValues.Current.Value, false);
+							break;
+						case "foreground.color":
+							Styles[styleName].Foreground.Color = SKColor.Parse(keyValues.Current.Value);
+							break;
+						case "foreground.blur.enabled":
+							Styles[styleName].Foreground.IsBlurEnabled = GetBoolean(keyValues.Current.Value, false);
+							break;
+						case "foreground.blur.x":
+							Styles[styleName].Foreground.Blur = new SKPoint(GetInt(keyValues.Current.Value, 0), Styles[styleName].Foreground.Blur.Y);
+							break;
+						case "foreground.blur.y":
+							Styles[styleName].Foreground.Blur = new SKPoint(Styles[styleName].Foreground.Blur.X, GetInt(keyValues.Current.Value, 0));
+							break;
+						case "foreground.dilate.enabled":
+							Styles[styleName].Foreground.IsDilateEnabled = GetBoolean(keyValues.Current.Value, false);
+							break;
+						case "foreground.dilate.x":
+							Styles[styleName].Foreground.Dilate = new SKPoint(GetInt(keyValues.Current.Value, 0), Styles[styleName].Foreground.Dilate.Y);
+							break;
+						case "foreground.dilate.y":
+							Styles[styleName].Foreground.Dilate = new SKPoint(Styles[styleName].Foreground.Dilate.X, GetInt(keyValues.Current.Value, 0));
+							break;
+					}
+				}
+			}
+			Logger.Info("Parsed styles: {0}", string.Join("\n", Styles.Keys.Select(k => $"{k}: {Styles[k]}")));
+			
 		}
 	}
 

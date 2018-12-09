@@ -20,19 +20,21 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private static VirtualAlphanumericDestination _instance;
 
 		private readonly Dispatcher _dispatcher;
+		private readonly RasterizeStyleDefinition _styleDef;
 
 		private readonly Dictionary<int, VirtualAlphaNumericDisplay> _displays = new Dictionary<int, VirtualAlphaNumericDisplay>();
 		private readonly Dictionary<int, ushort[]> _droppedData = new Dictionary<int, ushort[]>();
 		private NumericalLayout _currentLayout = NumericalLayout.None;
 
-		private VirtualAlphanumericDestination(Dispatcher dispatcher)
+		private VirtualAlphanumericDestination(Dispatcher dispatcher, RasterizeStyleDefinition styleDef)
 		{
 			_dispatcher = dispatcher;
+			_styleDef = styleDef;
 		}
 
-		public static VirtualAlphanumericDestination GetInstance(Dispatcher dispatcher)
+		public static VirtualAlphanumericDestination GetInstance(Dispatcher dispatcher, RasterizeStyleDefinition styleDef)
 		{
-			return _instance ?? (_instance = new VirtualAlphanumericDestination(dispatcher));
+			return _instance ?? (_instance = new VirtualAlphanumericDestination(dispatcher, styleDef));
 		}
 
 		public void Init()
@@ -319,7 +321,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
 			_dispatcher.Invoke(delegate {
-				var display = new VirtualAlphaNumericDisplay(displayNumber, numChars, numLines, type);
+				var display = new VirtualAlphaNumericDisplay(displayNumber, numChars, numLines, type, _styleDef);
 				_displays[displayNumber] = display;
 				var thread = new Thread(() => {
 					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
