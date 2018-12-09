@@ -10,7 +10,7 @@
         Title="Virtual Alphanumeric Display"
         Height="120"
         WindowStyle="None"
-        Background="Black"
+        Background="Transparent"
         AllowsTransparency="True"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
