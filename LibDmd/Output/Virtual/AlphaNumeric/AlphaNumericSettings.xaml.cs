@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
 using SkiaSharp;
+using SkiaSharp.Views.WPF;
 
 namespace LibDmd.Output.Virtual.AlphaNumeric
 {
@@ -50,11 +51,16 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString();
 			SkewAngleSlider.Value = - _displaySetting.StyleDefinition.SkewAngle;
+			BackgroundColor.SelectedColor = _displaySetting.StyleDefinition.BackgroundColor.ToColor();
 
 			SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
 			SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
 			SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
 			SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
+			BackgroundColor.SelectedColorChanged += (sender, e) =>
+				_displaySetting.StyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
+					BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
+					BackgroundColor.SelectedColor.Value.A);
 
 			Logger.Info("Creating preview image at {0}x{1}", (int)Preview.Width, (int)Preview.Height);
 			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
