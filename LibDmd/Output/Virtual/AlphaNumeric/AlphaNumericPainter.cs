@@ -31,7 +31,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private static void DrawFullSegment(DisplaySetting ds, SKCanvas canvas, SKPoint position)
 		{
-			var segment = Res.GetRasterized(ds.Display, RasterizeLayer.Background, ds.SegmentType, AlphaNumericResources.FullSegment);
+			var segment = Res.GetRasterized(ds.Display, RasterizeLayer.Background, ds.SegmentType, ds.SegmentWeight, AlphaNumericResources.FullSegment);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}
@@ -55,7 +55,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			using (var surfacePaint = new SKPaint()) {
 				for (var j = 0; j < Res.SegmentSize[displaySetting.SegmentType]; j++) {
-					var rasterizedSegment = Res.GetRasterized(displaySetting.Display, layer, displaySetting.SegmentType, j);
+					var rasterizedSegment = Res.GetRasterized(displaySetting.Display, layer, displaySetting.SegmentType, displaySetting.SegmentWeight, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}

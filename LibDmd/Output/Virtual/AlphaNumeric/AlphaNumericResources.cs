@@ -38,10 +38,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// An observable that returns a value as soon as a given segment type is
 		/// loaded, meaning the embedded SVG was loaded into Skia.
 		/// </summary>
-		public Dictionary<SegmentType, ISubject<Unit>> Loaded = new Dictionary<SegmentType, ISubject<Unit>> {
-			{ SegmentType.Alphanumeric, new Subject<Unit>()},
-			{ SegmentType.Numeric8, new Subject<Unit>() },
-			{ SegmentType.Numeric10, new Subject<Unit>() }
+		public Dictionary<SegmentType, Dictionary<SegmentWeight, ISubject<Unit>>> Loaded = new Dictionary<SegmentType, Dictionary<SegmentWeight, ISubject<Unit>>> {
+			{ SegmentType.Alphanumeric, new Dictionary<SegmentWeight, ISubject<Unit>> {
+ 				{ SegmentWeight.Thin, new Subject<Unit>() },
+ 				{ SegmentWeight.Bold, new Subject<Unit>() }
+			}},
+			{ SegmentType.Numeric8, new Dictionary<SegmentWeight, ISubject<Unit>> {
+ 				{ SegmentWeight.Thin, new Subject<Unit>() },
+ 				{ SegmentWeight.Bold, new Subject<Unit>() }
+			}},
+			{ SegmentType.Numeric10, new Dictionary<SegmentWeight, ISubject<Unit>> {
+ 				{ SegmentWeight.Thin, new Subject<Unit>() },
+ 				{ SegmentWeight.Bold, new Subject<Unit>() }
+			}}
 		};
 
 		/// <summary>
@@ -61,10 +70,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private readonly Dictionary<RasterCacheKey, SKSurface> _rasterCache = new Dictionary<RasterCacheKey, SKSurface>();
 		private readonly Dictionary<SegmentType, RasterizeDimensions> _rasterizedDim = new Dictionary<SegmentType, RasterizeDimensions>();
-		private readonly Dictionary<SegmentType, Dictionary<int, SKSvg>> _svgs = new Dictionary<SegmentType, Dictionary<int, SKSvg>> {
-			{ SegmentType.Alphanumeric, new Dictionary<int, SKSvg>() },
-			{ SegmentType.Numeric8, new Dictionary<int, SKSvg>() },
-			{ SegmentType.Numeric10, new Dictionary<int, SKSvg>() }
+		private readonly Dictionary<SegmentType, Dictionary<SegmentWeight, Dictionary<int, SKSvg>>> _svgs = new Dictionary<SegmentType, Dictionary<SegmentWeight, Dictionary<int, SKSvg>>> {
+			{ SegmentType.Alphanumeric, new Dictionary<SegmentWeight, Dictionary<int, SKSvg>> {
+				{ SegmentWeight.Thin, new Dictionary<int, SKSvg>() },
+				{ SegmentWeight.Bold, new Dictionary<int, SKSvg>() },
+			} },
+			{ SegmentType.Numeric8, new Dictionary<SegmentWeight, Dictionary<int, SKSvg>> {
+				{ SegmentWeight.Thin, new Dictionary<int, SKSvg>() },
+				{ SegmentWeight.Bold, new Dictionary<int, SKSvg>() },
+			} },
+			{ SegmentType.Numeric10, new Dictionary<SegmentWeight, Dictionary<int, SKSvg>> {
+				{ SegmentWeight.Thin, new Dictionary<int, SKSvg>() },
+				{ SegmentWeight.Bold, new Dictionary<int, SKSvg>() },
+			} }
 		};
 
 		/// <summary>
@@ -78,7 +96,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <summary>
 		/// Returns a surface of a segment that was previously generated.
 		/// </summary>
-		///
+		/// 
 		/// <remarks>
 		/// Note that in order to avoid multiple rasterization for each display
 		/// on startup, we initially use only one cache. Then, when displays
@@ -87,18 +105,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="display">Display number</param>
 		/// <param name="layer">Which layer</param>
 		/// <param name="type">Which segment type</param>
+		/// <param name="weight">Weight</param>
 		/// <param name="segment">Which segment</param>
 		/// <returns>Rasterized surface of null if rasterization is unavailable</returns>
-		public SKSurface GetRasterized(int display, RasterizeLayer layer, SegmentType type, int segment)
+		public SKSurface GetRasterized(int display, RasterizeLayer layer, SegmentType type, SegmentWeight weight, int segment)
 		{
 			// do we have an individual cache for that display already?
-			var displayKey = new RasterCacheKey(display, layer, type, segment);
+			var displayKey = new RasterCacheKey(display, layer, type, weight, segment);
 			if (_rasterCache.ContainsKey(displayKey)) {
 				return _rasterCache[displayKey];
 			}
 
 			// fallback on initial cache
-			var initialKey = new RasterCacheKey(InitialCache, layer, type, segment);
+			var initialKey = new RasterCacheKey(InitialCache, layer, type, weight, segment);
 			if (_rasterCache.ContainsKey(initialKey)) {
 				return _rasterCache[initialKey];
 			}
@@ -109,10 +128,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// Returns the size of the SVG of a given segment type.
 		/// </summary>
 		/// <param name="type">Segment type</param>
+		/// <param name="weight">Segment weight</param>
 		/// <returns>Size of the SVG</returns>
-		public SKRect GetSvgSize(SegmentType type)
+		public SKRect GetSvgSize(SegmentType type, SegmentWeight weight)
 		{
-			return _svgs[type][FullSegment].Picture.CullRect;
+			return _svgs[type][weight][FullSegment].Picture.CullRect;
 		}
 
 		/// <summary>
@@ -137,7 +157,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				return;
 			}
 
-			var source = _svgs[setting.SegmentType];
+			var source = _svgs[setting.SegmentType][setting.SegmentWeight];
 			var segments = source.Keys.Where(i => i != FullSegment).ToList();
 
 			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.OuterGlow, setting.StyleDefinition.OuterGlow, setting.Style.OuterGlow, segments, setting.StyleDefinition.SkewAngle);
@@ -160,13 +180,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="skewAngle">How much to skew</param>
 		public void RasterizeLayer(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyleDefinition layerStyleDef, RasterizeLayerStyle layerStyle, IEnumerable<int> segments, float skewAngle)
 		{
-			var source = _svgs[setting.SegmentType];
+			var source = _svgs[setting.SegmentType][setting.SegmentWeight];
 			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
 			using (var paint = new SKPaint()) {
 				ApplyFilters(paint, layerStyleDef, layerStyle);
 				foreach (var i in segments) {
-					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, i);
-					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, i);
+					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, setting.SegmentWeight, i);
+					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, setting.SegmentWeight, i);
 					if (!_rasterCache.ContainsKey(initialKey)) {
 						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
 					} else {
@@ -190,9 +210,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private AlphaNumericResources()
 		{
-			LoadAlphaNumeric();
-			LoadNumeric8();
-			LoadNumeric10();
+			LoadAlphaNumeric(SegmentWeight.Thin);
+			LoadAlphaNumeric(SegmentWeight.Bold);
+			LoadNumeric8(SegmentWeight.Thin);
+			LoadNumeric8(SegmentWeight.Bold);
+			LoadNumeric10(SegmentWeight.Thin);
+			LoadNumeric10(SegmentWeight.Bold);
 			Logger.Info("All SVGs loaded.");
 		}
 
@@ -215,9 +238,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180), (float)Math.Tan(Math.PI * yDegrees / 180));
 		}
 
-		private void LoadAlphaNumeric()
+		private void LoadAlphaNumeric(SegmentWeight weight)
 		{
-			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.alphanum.";
+			var prefix ="LibDmd.Output.Virtual.AlphaNumeric.alphanum_" + weight.ToString().ToLower() + ".";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -237,12 +260,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				$"{prefix}15-dot.svg",
 			};
 			Logger.Info("Loading alphanumeric SVGs...");
-			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Alphanumeric);
+			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Alphanumeric, weight);
 		}
 
-		private void LoadNumeric8()
+		private void LoadNumeric8(SegmentWeight weight)
 		{
-			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric.";
+			var prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric_" + weight.ToString().ToLower() + ".";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -254,12 +277,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				$"{prefix}07-comma.svg",
 			};
 			Logger.Info("Loading numeric (8) SVGs...");
-			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Numeric8);
+			Load(segmentFileNames, $"{prefix}full.svg", SegmentType.Numeric8, weight);
 		}
 
-		private void LoadNumeric10()
+		private void LoadNumeric10(SegmentWeight weight)
 		{
-			const string prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric.";
+			var prefix = "LibDmd.Output.Virtual.AlphaNumeric.numeric_" + weight.ToString().ToLower() + ".";
 			var segmentFileNames = new[] {
 				$"{prefix}00-top.svg",
 				$"{prefix}01-top-right.svg",
@@ -273,21 +296,21 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				$"{prefix}09-center-bottom.svg",
 			};
 			Logger.Info("Loading numeric (10) SVGs...");
-			Load(segmentFileNames, $"{prefix}full-10.svg", SegmentType.Numeric10);
+			Load(segmentFileNames, $"{prefix}full-10.svg", SegmentType.Numeric10, weight);
 		}
 
-		private void Load(string[] fileNames, string pathToFull, SegmentType type)
+		private void Load(string[] fileNames, string pathToFull, SegmentType type, SegmentWeight weight)
 		{
 			for (var i = 0; i < fileNames.Length; i++) {
 				var svg = new SKSvg();
 				svg.Load(_assembly.GetManifestResourceStream(fileNames[i]));
-				_svgs[type].Add(i, svg);
+				_svgs[type][weight].Add(i, svg);
 			}
 			var full = new SKSvg();
 			full.Load(_assembly.GetManifestResourceStream(pathToFull));
-			_svgs[type].Add(FullSegment, full);
-			Loaded[type].OnNext(Unit.Default);
-			Loaded[type] = new BehaviorSubject<Unit>(Unit.Default);
+			_svgs[type][weight].Add(FullSegment, full);
+			Loaded[type][weight].OnNext(Unit.Default);
+			Loaded[type][weight] = new BehaviorSubject<Unit>(Unit.Default);
 		}
 
 		private void ApplyFilters(SKPaint paint, RasterizeLayerStyleDefinition layerStyleDef, RasterizeLayerStyle layerStyle)
@@ -305,6 +328,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		}
 	}
 
+	public enum SegmentWeight
+	{
+		Thin, Bold
+	}
+
 	public enum SegmentType
 	{
 		Alphanumeric, Numeric8, Numeric10
@@ -320,13 +348,15 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public readonly int Display;
 		public readonly RasterizeLayer Layer;
 		public readonly SegmentType Type;
+		public readonly SegmentWeight Weight;
 		public readonly int Segment;
 
-		public RasterCacheKey(int display, RasterizeLayer layer, SegmentType type, int segment)
+		public RasterCacheKey(int display, RasterizeLayer layer, SegmentType type, SegmentWeight weight, int segment)
 		{
 			Display = display;
 			Layer = layer;
 			Type = type;
+			Weight = weight;
 			Segment = segment;
 		}
 	}

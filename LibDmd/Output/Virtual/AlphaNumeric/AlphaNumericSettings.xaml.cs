@@ -42,6 +42,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			_displaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 
 				control.DisplaySetting.SegmentType, 
+				control.DisplaySetting.SegmentWeight, 
 				control.DisplaySetting.StyleDefinition.Copy(), 
 				10, 
 				1, 

@@ -24,6 +24,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public SegmentType SegmentType { get; set; }
 
 		/// <summary>
+		/// Segment weight
+		/// </summary>
+		public SegmentWeight SegmentWeight { get; set; } = SegmentWeight.Bold;
+
+		/// <summary>
 		/// Dimensions of the rasterized segments
 		/// </summary>
 		public RasterizeDimensions Dim { get; private set; }
@@ -47,10 +52,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 		}
 
-		public DisplaySetting(int display, SegmentType segmentType, RasterizeStyleDefinition styleDef, int numChars, int numLines, int canvasWidth, int canvasHeight)
+		public DisplaySetting(int display, SegmentType segmentType, SegmentWeight segmentWeight, RasterizeStyleDefinition styleDef, int numChars, int numLines, int canvasWidth, int canvasHeight)
 		{
 			Display = display;
 			SegmentType = segmentType;
+			SegmentWeight = segmentWeight;
 			NumChars = numChars;
 			NumLines = numLines;
 			StyleDefinition = styleDef;
@@ -64,7 +70,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="canvasHeight">Height of the canvas in pixels</param>
 		public void SetDimensions(int canvasWidth, int canvasHeight)
 		{
-			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
+			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType, SegmentWeight), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
 			Style = StyleDefinition.Scale(Dim.SvgScale);
 		}
 
