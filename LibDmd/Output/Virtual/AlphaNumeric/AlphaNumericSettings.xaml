@@ -5,6 +5,7 @@
         xmlns:local="clr-namespace:LibDmd.Common"
         xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual"
         xmlns:alphaNumeric="clr-namespace:LibDmd.Output.Virtual.AlphaNumeric"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         x:Class="LibDmd.Output.Virtual.AlphaNumeric.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
@@ -22,15 +23,24 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image x:Name="Preview" Height="108" Width="453" Grid.Row="0" />
         <TextBox x:Name="PreviewText" Grid.Row="1" Margin="0,8" />
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="2" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="4" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
-        <Button Content="Cancel" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
-        <Button Content="Reset" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
+
+        <Label Grid.Row="2" Content="Background Color" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <xctk:ColorPicker x:Name="BackgroundColor" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" Width="60" Margin="100,0,261,0" DisplayColorAndName="False"/>
+        <Label Grid.Row="2" Content="Skew Angle" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,190,0"/>
+        <Slider x:Name="SkewAngleSlider" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center" Width="150" Maximum="48" Margin="0,0,38,0"/>
+        <TextBox x:Name="SkewAngleValue" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
+
+
+<alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="4" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="6" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
+        <Button Content="Cancel" Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
+        <Button Content="Reset" Grid.Row="7" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
     </Grid>
 </Window>
