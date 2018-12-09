@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using SkiaSharp;
+using SkiaSharp.Views.WPF;
 
 namespace LibDmd.Output.Virtual.AlphaNumeric
 {
@@ -74,7 +75,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			BlurXSlider.Value = _rasterizeLayerStyleDefinition.Blur.X;
 			BlurYSlider.Value = _rasterizeLayerStyleDefinition.Blur.Y;
 
-			_color = Color.FromArgb(_rasterizeLayerStyleDefinition.Color.Alpha, _rasterizeLayerStyleDefinition.Color.Red, _rasterizeLayerStyleDefinition.Color.Green, _rasterizeLayerStyleDefinition.Color.Blue);
+			_color = _rasterizeLayerStyleDefinition.Color.ToColor();
 			ColorButton.SelectedColor = _color;
 
 			ToggleDilateEnabled(_rasterizeLayerStyleDefinition.IsDilateEnabled);
