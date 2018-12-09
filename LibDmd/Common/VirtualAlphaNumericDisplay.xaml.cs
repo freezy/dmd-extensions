@@ -39,6 +39,11 @@ namespace LibDmd.Common
 				NumChars = numChars,
 				NumLines = numLines
 			};
+
+			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+			SettingsButton.MouseEnter += (sender, e) => SettingsPath.Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xff, 0xff, 0xff));
+			SettingsButton.MouseLeave += (sender, e) => SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+			SettingsButton.MouseLeftButtonDown += ToggleDisplaySettings;
 		}
 
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
