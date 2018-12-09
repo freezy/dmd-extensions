@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -18,9 +19,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static int Dpi = 96;
 
+		public ISubject<RasterizeStyleDefinition> OnStyleChanged { get; } = new Subject<RasterizeStyleDefinition>();
+
 		private readonly DisplaySetting _displaySetting;
 		private readonly AlphanumericControl _control;
 		private ushort[] _data = { };
+		private readonly int[] _segments = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
 		{
@@ -42,6 +47,15 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				(int)Preview.Width, 
 				(int)Preview.Height
 			);
+
+			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString();
+			SkewAngleSlider.Value = - _displaySetting.StyleDefinition.SkewAngle;
+
+			SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
+			SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
+			SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
+			SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
+
 			Logger.Info("Creating preview image at {0}x{1}", (int)Preview.Width, (int)Preview.Height);
 			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
 			Preview.Source = writeableBitmap;
@@ -56,25 +70,32 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 			ApplySetting();
 
-			var segments = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyleDef => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.Foreground, layerStyleDef);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Foreground, layerStyleDef, _displaySetting.Style.Foreground, segments, _displaySetting.StyleDefinition.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Foreground, layerStyleDef, _displaySetting.Style.Foreground, _segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.InnerGlow, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.InnerGlow, layerStyle, _displaySetting.Style.InnerGlow, segments, _displaySetting.StyleDefinition.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.InnerGlow, layerStyle, _displaySetting.Style.InnerGlow, _segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.OuterGlow, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.OuterGlow, layerStyle, _displaySetting.Style.OuterGlow, segments, _displaySetting.StyleDefinition.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.OuterGlow, layerStyle, _displaySetting.Style.OuterGlow, _segments, _displaySetting.StyleDefinition.SkewAngle);
 			});
 			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.Background, layerStyle);
 				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, _displaySetting.Style.Background, new [] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
 			});
+		}
+
+		private void RasterizeAll()
+		{
+			Res.RasterizeLayer(_displaySetting, RasterizeLayer.Foreground, _displaySetting.StyleDefinition.Foreground, _displaySetting.Style.Foreground, _segments, _displaySetting.StyleDefinition.SkewAngle);
+			Res.RasterizeLayer(_displaySetting, RasterizeLayer.InnerGlow, _displaySetting.StyleDefinition.InnerGlow, _displaySetting.Style.InnerGlow, _segments, _displaySetting.StyleDefinition.SkewAngle);
+			Res.RasterizeLayer(_displaySetting, RasterizeLayer.OuterGlow, _displaySetting.StyleDefinition.OuterGlow, _displaySetting.Style.OuterGlow, _segments, _displaySetting.StyleDefinition.SkewAngle);
+			Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, _displaySetting.StyleDefinition.Background, _displaySetting.Style.Background, new[] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
 		}
 
 		private void PreviewTextChanged(object sender, TextChangedEventArgs e)
@@ -128,6 +149,20 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			_displaySetting.ApplyStyle(_control.DisplaySetting.StyleDefinition);
 			ApplySetting();
+		}
+
+		private static string DoubleToString(double d)
+		{
+			return ((int)Math.Round(d)).ToString();
+		}
+
+		private static double StringToDouble(string str, double fallback)
+		{
+			try {
+				return double.Parse(str);
+			} catch (Exception) {
+				return fallback;
+			}
 		}
 	}
 }
