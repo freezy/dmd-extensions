@@ -1291,4 +1291,14 @@ namespace LibDmd
 		{
 		}
 	}
+
+	/// <summary>
+	/// Thrown when DmdDevice.ini was explicitly specified but not found.
+	/// </summary>
+	public class IniNotFoundException : Exception
+	{
+		public IniNotFoundException(string path) : base("Could not find DmdDevice.ini at " + path)
+		{
+		}
+	}
 }

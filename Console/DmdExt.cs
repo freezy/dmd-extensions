@@ -82,31 +82,32 @@ namespace DmdExt
 				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
-			Logger.Info("Launching console tool.");
-			var cmdLineOptions = (BaseOptions) invokedVerbInstance;
-			var config = cmdLineOptions.DmdDeviceIni == null 
-				? (IConfiguration)cmdLineOptions
-				: new Configuration(cmdLineOptions.DmdDeviceIni);
-
-			//BaseOptions baseOptions;
-			switch (invokedVerb) {
-				case "mirror":
-					_command = new MirrorCommand(config, (MirrorOptions)cmdLineOptions);
-					break;
-
-				case "play":
-					_command = new PlayCommand(config, (PlayOptions)cmdLineOptions);
-					break;
-
-				case "test":
-					_command = new TestCommand(config);
-					break;
-
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
 			try {
+
+				Logger.Info("Launching console tool.");
+				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
+				var config = cmdLineOptions.DmdDeviceIni == null
+					? (IConfiguration)cmdLineOptions
+					: new Configuration(cmdLineOptions.DmdDeviceIni);
+
+				//BaseOptions baseOptions;
+				switch (invokedVerb) {
+					case "mirror":
+						_command = new MirrorCommand(config, (MirrorOptions)cmdLineOptions);
+						break;
+
+					case "play":
+						_command = new PlayCommand(config, (PlayOptions)cmdLineOptions);
+						break;
+
+					case "test":
+						_command = new TestCommand(config);
+						break;
+
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
 				var renderer = _command.GetRenderGraph();
 
 				if (config.Bitmap.Enabled) {
@@ -184,6 +185,9 @@ namespace DmdExt
 				Logger.Error(e.Message);
 
 			} catch (IncompatibleSourceException e) {
+				Logger.Error(e.Message);
+
+			} catch (IniNotFoundException e) {
 				Logger.Error(e.Message);
 
 			} catch (CropRectangleOutOfRangeException e) {

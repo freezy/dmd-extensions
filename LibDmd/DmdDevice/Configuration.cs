@@ -51,6 +51,9 @@ namespace LibDmd.DmdDevice
 		public Configuration(string iniPath = null)
 		{
 			if (iniPath != null) {
+				if (!File.Exists(iniPath)) {
+					throw new IniNotFoundException(iniPath);
+				}
 				_iniPath = iniPath;
 
 			} else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
@@ -123,7 +126,7 @@ namespace LibDmd.DmdDevice
 #else
 		public bool Colorize => GetBoolean("colorize", true);
 		public bool QuitWhenDone => false;
-		public int QuitAfter => 0;
+		public int QuitAfter => -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
 #endif
