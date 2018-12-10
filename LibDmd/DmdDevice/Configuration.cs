@@ -221,34 +221,34 @@ namespace LibDmd.DmdDevice
 					}
 					switch (styleProperty) {
 						case "skewangle":
-							Styles[styleName].SkewAngle = (float) GetDouble(keyValues.Current.Value, 0);
+							Styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
 							break;
 						case "backgroundcolor":
 							Styles[styleName].BackgroundColor = SKColor.Parse(keyValues.Current.Value);
 							break;
 						case "foreground.enabled":
-							Styles[styleName].Foreground.IsEnabled = GetBoolean(keyValues.Current.Value, false);
+							Styles[styleName].Foreground.IsEnabled = GetBoolean(keyValues.Current.KeyName, false);
 							break;
 						case "foreground.color":
 							Styles[styleName].Foreground.Color = SKColor.Parse(keyValues.Current.Value);
 							break;
 						case "foreground.blur.enabled":
-							Styles[styleName].Foreground.IsBlurEnabled = GetBoolean(keyValues.Current.Value, false);
+							Styles[styleName].Foreground.IsBlurEnabled = GetBoolean(keyValues.Current.KeyName, false);
 							break;
 						case "foreground.blur.x":
-							Styles[styleName].Foreground.Blur = new SKPoint(GetInt(keyValues.Current.Value, 0), Styles[styleName].Foreground.Blur.Y);
+							Styles[styleName].Foreground.Blur = new SKPoint(GetInt(keyValues.Current.KeyName, 0), Styles[styleName].Foreground.Blur.Y);
 							break;
 						case "foreground.blur.y":
-							Styles[styleName].Foreground.Blur = new SKPoint(Styles[styleName].Foreground.Blur.X, GetInt(keyValues.Current.Value, 0));
+							Styles[styleName].Foreground.Blur = new SKPoint(Styles[styleName].Foreground.Blur.X, GetInt(keyValues.Current.KeyName, 0));
 							break;
 						case "foreground.dilate.enabled":
-							Styles[styleName].Foreground.IsDilateEnabled = GetBoolean(keyValues.Current.Value, false);
+							Styles[styleName].Foreground.IsDilateEnabled = GetBoolean(keyValues.Current.KeyName, false);
 							break;
 						case "foreground.dilate.x":
-							Styles[styleName].Foreground.Dilate = new SKPoint(GetInt(keyValues.Current.Value, 0), Styles[styleName].Foreground.Dilate.Y);
+							Styles[styleName].Foreground.Dilate = new SKPoint(GetInt(keyValues.Current.KeyName, 0), Styles[styleName].Foreground.Dilate.Y);
 							break;
 						case "foreground.dilate.y":
-							Styles[styleName].Foreground.Dilate = new SKPoint(Styles[styleName].Foreground.Dilate.X, GetInt(keyValues.Current.Value, 0));
+							Styles[styleName].Foreground.Dilate = new SKPoint(Styles[styleName].Foreground.Dilate.X, GetInt(keyValues.Current.KeyName, 0));
 							break;
 					}
 				}
