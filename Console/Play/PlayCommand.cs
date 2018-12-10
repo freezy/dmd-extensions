@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
@@ -13,10 +14,12 @@ namespace DmdExt.Play
 {
 	class PlayCommand : BaseCommand
 	{
+		private readonly IConfiguration _config;
 		private readonly PlayOptions _options;
 
-		public PlayCommand(PlayOptions options)
+		public PlayCommand(IConfiguration config, PlayOptions options)
 		{
+			_config = config;
 			_options = options;
 		}
 
@@ -45,16 +48,16 @@ namespace DmdExt.Play
 			}
 
 			// define renderers
-			var renderers = GetRenderers(_options);
+			var renderers = GetRenderers(_config);
 			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up
 				return new RenderGraph {
 					Source = frameSource,
 					Destinations = renderers,
-					Resize = _options.Resize,
-					FlipHorizontally = _options.FlipHorizontally,
-					FlipVertically = _options.FlipVertically
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
 				};
 			}
 

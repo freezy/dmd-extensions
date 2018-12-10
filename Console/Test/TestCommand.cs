@@ -12,18 +12,18 @@ namespace DmdExt.Test
 {
 	class TestCommand : BaseCommand
 	{
-		private readonly TestOptions _options;
+		private readonly IConfiguration _config;
 		private RenderGraph _graph;
 
-		public TestCommand(TestOptions options)
+		public TestCommand(IConfiguration config)
 		{
-			_options = options;
+			_config = config;
 		}
 
 		protected override IRenderer CreateRenderGraph()
 		{
 			// define renderers
-			var renderers = GetRenderers(_options);
+			var renderers = GetRenderers(_config);
 			renderers.ForEach(renderer => {
 				(renderer as IRgb24Destination)?.SetPalette(new[] {
 					Color.FromRgb(0x0, 0x0, 0xff),
@@ -38,7 +38,7 @@ namespace DmdExt.Test
 			bmp.EndInit();
 
 			// chain them up
-			if (_options.Destination == BaseOptions.DestinationType.AlphaNumeric) {
+			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				var alphaNumericFrame = new AlphaNumericFrame(NumericalLayout.__2x20Alpha,
 					new ushort[] {
 						0, 10767, 2167, 8719, 0, 2109, 8713, 6259, 56, 2157, 0, 4957, 0, 8719, 62, 8719, 121, 2157, 0,
@@ -48,17 +48,17 @@ namespace DmdExt.Test
 				_graph = new RenderGraph {
 					Source = new VpmAlphaNumericSource(alphaNumericFrame),
 					Destinations = renderers,
-					Resize = _options.Resize,
-					FlipHorizontally = _options.FlipHorizontally,
-					FlipVertically = _options.FlipVertically
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
 				};
 			} else {
 				_graph = new RenderGraph {
 					Source = new ImageSource(bmp),
 					Destinations = renderers,
-					Resize = _options.Resize,
-					FlipHorizontally = _options.FlipHorizontally,
-					FlipVertically = _options.FlipVertically
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
 				};
 			}
 

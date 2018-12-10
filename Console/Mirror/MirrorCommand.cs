@@ -2,6 +2,7 @@
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
@@ -13,10 +14,12 @@ namespace DmdExt.Mirror
 	class MirrorCommand : BaseCommand
 	{
 		private readonly MirrorOptions _options;
+		private readonly IConfiguration _config;
 		private RenderGraph _graph;
 
-		public MirrorCommand(MirrorOptions options)
+		public MirrorCommand(IConfiguration config, MirrorOptions options)
 		{
+			_config = config;
 			_options = options;
 		}
 
@@ -24,14 +27,14 @@ namespace DmdExt.Mirror
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
-				Destinations = GetRenderers(_options),
-				Resize = _options.Resize,
-				FlipHorizontally = _options.FlipHorizontally,
-				FlipVertically = _options.FlipVertically,
+				Destinations = GetRenderers(_config),
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically = _config.Global.FlipVertically,
 				IdleAfter = _options.IdleAfter,
 				IdlePlay = _options.IdlePlay
 			};
-			_graph.SetColor(ColorUtil.ParseColor(_options.RenderColor));
+			_graph.SetColor(_config.Global.DmdColor);
 
 			// setup source and additional processors
 			switch (_options.Source) {

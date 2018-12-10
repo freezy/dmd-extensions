@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
-using DmdExt.Play;
 using LibDmd;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Output;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
-using LibDmd.Output.Virtual;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
@@ -22,12 +18,12 @@ using static DmdExt.Common.BaseOptions.DestinationType;
 
 namespace DmdExt.Common
 {
-	abstract class BaseCommand : IDisposable
+	internal abstract class BaseCommand : IDisposable
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private IRenderer _graph;
-		private BaseOptions _options;
+		private IConfiguration _config;
 
 		protected abstract IRenderer CreateRenderGraph();
 
@@ -36,147 +32,82 @@ namespace DmdExt.Common
 			return _graph ?? (_graph = CreateRenderGraph());
 		}
 
-		protected List<IDestination> GetRenderers(BaseOptions options)
+		protected List<IDestination> GetRenderers(IConfiguration config)
 		{
 			var renderers = new List<IDestination>();
-			switch (options.Destination) {
-				case Auto:
-					renderers = GetAvailableRenderers(options);
-					break;
-
-				case PinDMDv1:
-					var pinDmd1 = PinDmd1.GetInstance();
-					if (pinDmd1.IsAvailable) {
-						renderers.Add(pinDmd1);
-						Logger.Info("Added PinDMDv1 renderer.");
-					} else {
-						throw new DeviceNotAvailableException(PinDMDv1.ToString());
-					}
-					break;
-
-				case PinDMDv2:
-					var pinDmd2 = PinDmd2.GetInstance();
-					if (pinDmd2.IsAvailable) {
-						renderers.Add(pinDmd2);
-						Logger.Info("Added PinDMDv2 renderer.");
-					} else {
-						throw new DeviceNotAvailableException(PinDMDv2.ToString());
-					}
-					break;
-
-				case PinDMDv3:
-					var pinDmd3 = PinDmd3.GetInstance(options.Port);
-					if (pinDmd3.IsAvailable) {
-						renderers.Add(pinDmd3);
-						Logger.Info("Added PinDMDv3 renderer.");
-					} else {
-						throw new DeviceNotAvailableException(PinDMDv3.ToString());
-					}
-					break;
-					
-				case PIN2DMD:
-					var pin2Dmd = Pin2Dmd.GetInstance(options.OutputDelay);
-					if (pin2Dmd.IsAvailable) {
-						renderers.Add(pin2Dmd);
-						Logger.Info("Added PIN2DMD renderer.");
-					} else {
-						throw new DeviceNotAvailableException(PIN2DMD.ToString());
-					}
-					break;
-
-				case Virtual:
-					renderers.Add(ShowVirtualDmd(options));
-					Logger.Info("Added virtual DMD renderer.");
-					break;
-
-				case AlphaNumeric:
-					renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, new RasterizeStyleDefinition()));
-					Logger.Info("Added virtual Alphanumeric renderer.");
-					break;
-
-				default:
-					throw new ArgumentOutOfRangeException();
+			if (config.PinDmd1.Enabled) {
+				var pinDmd1 = PinDmd1.GetInstance();
+				if (pinDmd1.IsAvailable) {
+					renderers.Add(pinDmd1);
+					Logger.Info("Added PinDMDv1 renderer.");
+				} else {
+					Logger.Warn("Device {0} is not available.", PinDMDv1);
+				}
 			}
+
+			if (config.PinDmd2.Enabled) {
+				var pinDmd2 = PinDmd2.GetInstance();
+				if (pinDmd2.IsAvailable) {
+					renderers.Add(pinDmd2);
+					Logger.Info("Added PinDMDv2 renderer.");
+				} else {
+					Logger.Warn("Device {0} is not available.", PinDMDv2);
+				}
+			}
+
+			if (config.PinDmd3.Enabled) {
+				var pinDmd3 = PinDmd3.GetInstance(config.PinDmd3.Port);
+				if (pinDmd3.IsAvailable) {
+					renderers.Add(pinDmd3);
+					Logger.Info("Added PinDMDv3 renderer.");
+				} else {
+					Logger.Warn("Device {0} is not available.", PinDMDv3);
+				}
+			}
+
+			if (config.Pin2Dmd.Enabled) {
+				var pin2Dmd = Pin2Dmd.GetInstance(config.Pin2Dmd.Delay);
+				if (pin2Dmd.IsAvailable) {
+					renderers.Add(pin2Dmd);
+					Logger.Info("Added PIN2DMD renderer.");
+				} else {
+					Logger.Warn("Device {0} is not available.", PIN2DMD);
+				}
+			}
+
+			if (config.VirtualDmd.Enabled) {
+				renderers.Add(ShowVirtualDmd(config.VirtualDmd));
+				Logger.Info("Added virtual DMD renderer.");
+			}
+
+			if (config.VirtualAlphaNumericDisplay.Enabled) {
+				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style));
+				Logger.Info("Added virtual Alphanumeric renderer.");
+			}
+
 			if (renderers.Count == 0) {
 				throw new NoRenderersAvailableException();
 			}
 
-			if (!ColorUtil.IsColor(options.RenderColor)) {
-				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
-			}
 			foreach (var renderer in renderers) {
 				var rgb24 = renderer as IRgb24Destination;
-				rgb24?.SetColor(ColorUtil.ParseColor(options.RenderColor));
+				rgb24?.SetColor(config.Global.DmdColor);
 			}
-			_options = options;
+			_config = config;
 			return renderers;
 		}
 
-		protected List<IDestination> GetAvailableRenderers(BaseOptions options)
+		private static IDestination ShowVirtualDmd(IVirtualDmdConfig config)
 		{
-			var renderers = new List<IDestination>();
-			try {
-				var pinDmd1 = PinDmd1.GetInstance();
-				var pinDmd2 = PinDmd2.GetInstance();
-				var pinDmd3 = PinDmd3.GetInstance(options.Port);
-				var pin2Dmd = Pin2Dmd.GetInstance(options.OutputDelay);
-
-				if (pinDmd1.IsAvailable) {
-					renderers.Add(pinDmd1);
-					Logger.Info("Added PinDMDv1 renderer.");
-				}
-				if (pinDmd2.IsAvailable) {
-					renderers.Add(pinDmd2);
-					Logger.Info("Added PinDMDv2 renderer.");
-				}
-				if (pinDmd3.IsAvailable) {
-					renderers.Add(pinDmd3);
-					Logger.Info("Added PinDMDv3 renderer.");
-				}
-				if (pin2Dmd.IsAvailable) {
-					renderers.Add(pin2Dmd);
-					Logger.Info("Added PIN2DMD renderer.");
-				}
-				if (!options.NoVirtualDmd) {
-					renderers.Add(ShowVirtualDmd(options));
-					Logger.Info("Added virtual DMD renderer.");
-
-				} else {
-					Logger.Debug("VirtualDMD disabled.");
-				}
-
-			} catch (DllNotFoundException e) {
-				Logger.Error(e, "Error loading DLL.");
-				return renderers;
-			}
-			return renderers;
-		}
-
-		private static IDestination ShowVirtualDmd(BaseOptions options)
-		{
-			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
-				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
-			}
-			if (options.VirtualDmdDotSize <= 0 || options.VirtualDmdDotSize > 2) {
-				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
-			}
-			int height; bool ignoreAr;
-			if (options.VirtualDmdPosition.Length == 4) {
-				height = options.VirtualDmdPosition[3];
-				ignoreAr = true;
-			} else {
-				height = (int)((double)options.VirtualDmdPosition[2] / 4);
-				ignoreAr = false;
-			}
 			var dmd = new VirtualDmd {
-				AlwaysOnTop = options.VirtualDmdOnTop,
-				GripColor = options.VirtualDmdHideGrip ? Brushes.Transparent : Brushes.White,
-				Left = options.VirtualDmdPosition[0],
-				Top = options.VirtualDmdPosition[1],
-				Width = options.VirtualDmdPosition[2],
-				Height = height,
-				IgnoreAspectRatio = ignoreAr,
-				DotSize = options.VirtualDmdDotSize
+				AlwaysOnTop = config.StayOnTop,
+				GripColor = config.HideGrip ? Brushes.Transparent : Brushes.White,
+				Left = config.Left,
+				Top = config.Top,
+				Width = config.Width,
+				Height = config.Height,
+				IgnoreAspectRatio = config.IgnoreAr,
+				DotSize = config.DotSize
 			};
 			var thread = new Thread(() => {
 				
@@ -212,7 +143,7 @@ namespace DmdExt.Common
 
 		public void Dispose()
 		{
-			if (_options == null || !_options.NoClear) {
+			if (_config == null || !_config.Global.NoClear) {
 				_graph?.ClearDisplay();
 			}
 			_graph?.Dispose();

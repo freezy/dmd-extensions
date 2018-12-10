@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Media;
 using IniParser;
 using IniParser.Model;
 using LibDmd.Common;
@@ -24,6 +25,7 @@ namespace LibDmd.DmdDevice
 		IPin2DmdConfig Pin2Dmd { get; }
 		IVideoConfig Video { get; }
 		IGifConfig Gif { get; }
+		IBitmapConfig Bitmap { get; }
 		IVpdbConfig VpdbStream { get; }
 		IBrowserConfig BrowserStream { get; }
 		IPinUpConfig PinUp { get; }
@@ -35,6 +37,10 @@ namespace LibDmd.DmdDevice
 		bool FlipHorizontally { get; }
 		bool FlipVertically { get; }
 		bool Colorize { get; }
+		bool QuitWhenDone { get; }
+		int QuitAfter { get; }
+		bool NoClear { get; }
+		Color DmdColor { get; }
 	}
 
 	public interface IPinDmd1Config
@@ -92,6 +98,12 @@ namespace LibDmd.DmdDevice
 		string Path { get; }
 	}
 
+	public interface IBitmapConfig
+	{
+		bool Enabled { get; }
+		string Path { get; }
+	}
+
 	public interface IBrowserConfig
 	{
 		bool Enabled { get; }
@@ -107,5 +119,6 @@ namespace LibDmd.DmdDevice
 	public interface IPinUpConfig
 	{
 		bool Enabled { get; }
+		string GameName { get; }
 	}
 }
