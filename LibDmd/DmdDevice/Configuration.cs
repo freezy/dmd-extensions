@@ -212,7 +212,7 @@ namespace LibDmd.DmdDevice
 		{
 			var keyValues = data[Name].GetEnumerator();
 			while (keyValues.MoveNext()) {
-				var names = keyValues.Current.KeyName.Split(new []{'.'}, 3);
+				var names = keyValues.Current.KeyName.Split(new []{'.'}, 4);
 				if (names.Length > 1 && names[0] == "style") {
 					var styleName = names[1];
 					var styleProperty = names[2];
@@ -226,35 +226,54 @@ namespace LibDmd.DmdDevice
 						case "backgroundcolor":
 							Styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, Styles[styleName].BackgroundColor);
 							break;
-						case "foreground.enabled":
-							Styles[styleName].Foreground.IsEnabled = GetBoolean(keyValues.Current.KeyName, false);
+						case "foreground":
+							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].Foreground);
 							break;
-						case "foreground.color":
-							Styles[styleName].Foreground.Color = GetSKColor(keyValues.Current.KeyName, Styles[styleName].Foreground.Color);
+						case "innerglow":
+							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].InnerGlow);
 							break;
-						case "foreground.blur.enabled":
-							Styles[styleName].Foreground.IsBlurEnabled = GetBoolean(keyValues.Current.KeyName, false);
+						case "outerglow":
+							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].OuterGlow);
 							break;
-						case "foreground.blur.x":
-							Styles[styleName].Foreground.Blur = new SKPoint(GetInt(keyValues.Current.KeyName, 0), Styles[styleName].Foreground.Blur.Y);
-							break;
-						case "foreground.blur.y":
-							Styles[styleName].Foreground.Blur = new SKPoint(Styles[styleName].Foreground.Blur.X, GetInt(keyValues.Current.KeyName, 0));
-							break;
-						case "foreground.dilate.enabled":
-							Styles[styleName].Foreground.IsDilateEnabled = GetBoolean(keyValues.Current.KeyName, false);
-							break;
-						case "foreground.dilate.x":
-							Styles[styleName].Foreground.Dilate = new SKPoint(GetInt(keyValues.Current.KeyName, 0), Styles[styleName].Foreground.Dilate.Y);
-							break;
-						case "foreground.dilate.y":
-							Styles[styleName].Foreground.Dilate = new SKPoint(Styles[styleName].Foreground.Dilate.X, GetInt(keyValues.Current.KeyName, 0));
+						case "background":
+							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].Background);
 							break;
 					}
 				}
 			}
 			Logger.Info("Parsed styles: {0}", string.Join("\n", Styles.Keys.Select(k => $"{k}: {Styles[k]}")));
 			
+		}
+
+		private void ParseLayerStyle(string property, KeyData keyData, RasterizeLayerStyleDefinition style)
+		{
+			switch (property)
+			{
+				case "enabled":
+					style.IsEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "color":
+					style.Color = GetSKColor(keyData.KeyName, style.Color);
+					break;
+				case "blur.enabled":
+					style.IsBlurEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "blur.x":
+					style.Blur = new SKPoint(GetInt(keyData.KeyName, 0), style.Blur.Y);
+					break;
+				case "blur.y":
+					style.Blur = new SKPoint(style.Blur.X, GetInt(keyData.KeyName, 0));
+					break;
+				case "dilate.enabled":
+					style.IsDilateEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "dilate.x":
+					style.Dilate = new SKPoint(GetInt(keyData.KeyName, 0), style.Dilate.Y);
+					break;
+				case "dilate.y":
+					style.Dilate = new SKPoint(style.Dilate.X, GetInt(keyData.KeyName, 0));
+					break;
+			}
 		}
 	}
 
