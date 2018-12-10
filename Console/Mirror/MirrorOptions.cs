@@ -33,7 +33,7 @@ namespace DmdExt.Mirror
 		[Option("grid-spacing", HelpText = "[screen] How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. Default: 0.")]
 		public double GridSpacing { get; set; } = 0d;
 
-		[Option("propinball-args", HelpText = "[propinball] Arguments send from the Pro Pinball master process. Usually something like: \"ndmd w0_0_0_0_w m392\". Will be set autmatically when called through Pro Pinball.")]
+		[Option("propinball-args", HelpText = "[propinball] Arguments send from the Pro Pinball master process. Usually something like: \"ndmd w0_0_0_0_w m392\". Will be set automatically when called through Pro Pinball.")]
 		public string ProPinballArgs { get; set; } = "ndmd w0_0_0_0_w m392";
 
 		[Option("fx3-legacy", HelpText = "[pinballfx3] If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2. Default: false.")]
