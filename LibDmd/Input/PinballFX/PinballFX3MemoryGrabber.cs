@@ -75,12 +75,16 @@ namespace LibDmd.Input.PinballFX
 					var pixelByte = RawDMD[rawPixelIndex];
 
 					// drop garbage frames
-					if (pixelByte > 3) {
+					if (pixelByte > 6) {
 						return null;
 					}
 
-					// Pinball FX doesn't seem to have more than pixels between 0-2, so make the shade 3 lighter.
-					if (pixelByte == 2) {
+					// for williams it goes from 3 to 6
+					if (pixelByte > 2) {
+						pixelByte -= 3;
+
+					} else if (pixelByte == 2) {
+						// otherwise, Pinball FX doesn't seem to have more than pixels between 0-2, so make the shade 3 lighter.
 						pixelByte++;
 					}
 
