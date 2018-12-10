@@ -224,13 +224,13 @@ namespace LibDmd.DmdDevice
 							Styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
 							break;
 						case "backgroundcolor":
-							Styles[styleName].BackgroundColor = SKColor.Parse(keyValues.Current.Value);
+							Styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, Styles[styleName].BackgroundColor);
 							break;
 						case "foreground.enabled":
 							Styles[styleName].Foreground.IsEnabled = GetBoolean(keyValues.Current.KeyName, false);
 							break;
 						case "foreground.color":
-							Styles[styleName].Foreground.Color = SKColor.Parse(keyValues.Current.Value);
+							Styles[styleName].Foreground.Color = GetSKColor(keyValues.Current.KeyName, Styles[styleName].Foreground.Color);
 							break;
 						case "foreground.blur.enabled":
 							Styles[styleName].Foreground.IsBlurEnabled = GetBoolean(keyValues.Current.KeyName, false);
@@ -407,6 +407,19 @@ namespace LibDmd.DmdDevice
 				return fallback;
 			}
 			return _data[Name][key];
+		}
+
+		protected SKColor GetSKColor(string key, SKColor fallback)
+		{
+			try {
+				if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+					return fallback;
+				}
+				return SKColor.Parse(_data[Name][key]);
+			} catch (ArgumentException) {
+				Logger.Error("Cannot parse color {0} for {1}, using fallback {2}", _data[Name][key], key, fallback.ToString());
+				return fallback;
+			}
 		}
 
 		protected T GetEnum<T>(string key, T fallback)
