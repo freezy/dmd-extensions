@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -21,24 +20,29 @@ using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.PinUp;
 using Microsoft.Win32;
+#if !DEBUG
 using Mindscape.Raygun4Net;
+using NLog.Targets;
+#endif
 using NLog;
 using NLog.Config;
-using NLog.Targets;
+
 
 namespace DmdExt
 {
-	class DmdExt
+	internal class DmdExt
 	{
 		public static Application WinApp { get; } = new Application();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+#if !DEBUG
 		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static BaseCommand _command;
-		private static EventHandler _handler;
 		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
+#endif
+		private static BaseCommand _command;
+		private static EventHandler _handler;
 		private static string[] _commandLineArgs;
 
 		[STAThread]
@@ -57,7 +61,7 @@ namespace DmdExt
 				LogManager.ReconfigExistingLoggers();
 #endif
 			} 
-#if !DEBUG			
+#if !DEBUG
 			else {
 				SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 			}

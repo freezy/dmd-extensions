@@ -1,71 +1,64 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using CommandLine;
-using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using LibDmd.Processor;
 
 namespace DmdExt.Common
 {
 	internal abstract class BaseOptions : IConfiguration
 	{
 		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric ]. Default: \"auto\", which outputs to all available devices.")]
-		public DestinationType Destination { get; set; } = DestinationType.Auto;
+		internal DestinationType Destination { get; } = DestinationType.Auto;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
-		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
+		internal ResizeMode Resize { get; set; } = ResizeMode.Stretch;
 
 		[Option("no-virtual", HelpText = "Explicitly disables the virtual DMD when destination is \"auto\". Default: false.")]
-		public bool NoVirtualDmd { get; set; } = false;
+		internal bool NoVirtualDmd { get; set; } = false;
 
 		[Option("virtual-stay-on-top", HelpText = "Makes the virtual DMD stay on top of other application windows. Default: false.")]
-		public bool VirtualDmdOnTop { get; set; } = false;
+		internal bool VirtualDmdOnTop { get; set; } = false;
 
 		[Option("virtual-hide-grip", HelpText = "Hides the resize grip of the virtual DMD. Default: false.")]
-		public bool VirtualDmdHideGrip { get; set; } = false;
+		internal bool VirtualDmdHideGrip { get; set; } = false;
 
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Four values: <Left> <Top> <Width> [<Height>]. Height is optional and can be used for custom aspect ratio. Default: \"0 0 1024\".")]
-		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
+		internal int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
 		[Option("virtual-dotsize", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
-		public double VirtualDmdDotSize { get; set; } = 1;
+		internal double VirtualDmdDotSize { get; set; } = 1;
 
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
-		public string RenderColor { get; set; } = "ff3000";
+		internal string RenderColor { get; set; } = "ff3000";
 
 		[Option("flip-x", HelpText = "Flips the image horizontally (left/right). Default: false.")]
-		public bool FlipHorizontally { get; set; } = false;
+		internal bool FlipHorizontally { get; set; } = false;
 
 		[Option("flip-y", HelpText = "Flips the image vertically (top/down). Default: false.")]
-		public bool FlipVertically { get; set; } = false;
+		internal bool FlipVertically { get; set; } = false;
 
 		[Option('p', "port", HelpText = "Force COM port for PinDMDv3 devices. Example: \"COM3\".")]
-		public string Port { get; set; } = null;
+		internal string Port { get; set; } = null;
 
 		[Option("output-delay", HelpText = "How long to wait in milliseconds for data to be sent to the device. Default: 25.")]
-		public int OutputDelay { get; set; } = 25;
+		internal int OutputDelay { get; set; } = 25;
 
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
-		public bool QuitWhenDone { get; set; } = false;
+		internal bool QuitWhenDone { get; set; } = false;
 
 		[Option("quit-after", HelpText = "Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. Default: -1")]
-		public int QuitAfter { get; set; } = -1;
+		internal int QuitAfter { get; set; } = -1;
 
 		[Option("no-clear", HelpText = "Don't clear screen when quitting. Default: false.")]
-		public bool NoClear { get; set; } = false;
+		internal bool NoClear { get; set; } = false;
 
 		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
-		public string SaveToFile { get; set; }
+		internal string SaveToFile { get; set; }
 
 		[Option("pinup", HelpText = "If set, enable output to PinUP. The value is the name of the game.")]
-		public string PinUpName { get; set; } = null;
+		internal string PinUpName { get; set; } = null;
 
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
@@ -93,11 +86,11 @@ namespace DmdExt.Common
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
-			Video = new VideoOptions(this);
-			Gif = new GifOptions(this);
+			Video = new VideoOptions();
+			Gif = new GifOptions();
 			Bitmap = new BitmapOptions(this);
-			VpdbStream = new VpdbOptions(this);
-			BrowserStream = new BrowserOptions(this);
+			VpdbStream = new VpdbOptions();
+			BrowserStream = new BrowserOptions();
 			PinUp = new PinUpOptions(this);
 		}
 
@@ -168,7 +161,7 @@ namespace DmdExt.Common
 		public double Width { get; }
 		public double Height { get; }
 		public double DotSize => _options.VirtualDmdDotSize;
-		public Color Color { get; }
+
 		public bool HasGameOverride(string key)
 		{
 			return false;
@@ -246,26 +239,12 @@ namespace DmdExt.Common
 
 	internal class VideoOptions : IVideoConfig
 	{
-		private readonly BaseOptions _options;
-
-		public VideoOptions(BaseOptions options)
-		{
-			_options = options;
-		}
-
 		public bool Enabled => false;
 		public string Path => null;
 	}
 
 	internal class GifOptions : IGifConfig
 	{
-		private readonly BaseOptions _options;
-
-		public GifOptions(BaseOptions options)
-		{
-			_options = options;
-		}
-
 		public bool Enabled => false;
 		public string Path => null;
 	}
@@ -285,26 +264,12 @@ namespace DmdExt.Common
 
 	internal class VpdbOptions : IVpdbConfig
 	{
-		private readonly BaseOptions _options;
-
-		public VpdbOptions(BaseOptions options)
-		{
-			_options = options;
-		}
-
 		public bool Enabled => false;
 		public string EndPoint => null;
 	}
 
 	internal class BrowserOptions : IBrowserConfig
 	{
-		private readonly BaseOptions _options;
-
-		public BrowserOptions(BaseOptions options)
-		{
-			_options = options;
-		}
-
 		public bool Enabled => false;
 		public int Port => 0;
 	}
