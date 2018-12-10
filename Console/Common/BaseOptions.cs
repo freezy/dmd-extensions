@@ -12,7 +12,7 @@ namespace DmdExt.Common
 {
 	abstract class BaseOptions
 	{
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual ]. Default: \"auto\", which outputs to all available devices.")]
+		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric ]. Default: \"auto\", which outputs to all available devices.")]
 		public DestinationType Destination { get; set; } = DestinationType.Auto;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
@@ -62,6 +62,9 @@ namespace DmdExt.Common
 
 		[Option("pinup", HelpText = "If set, enable output to PinUP. The value is the name of the game.")]
 		public string PinUp { get; set; } = null;
+
+		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
+		public string DmdDeviceIni { get; set; } = null;
 
 		public enum DestinationType
 		{

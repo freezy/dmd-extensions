@@ -13,18 +13,18 @@ using SkiaSharp;
 
 namespace LibDmd.DmdDevice
 {
-	public class Configuration
+	public class Configuration : IConfiguration
 	{
 		public static readonly string EnvConfig = "DMDDEVICE_CONFIG";
-		public readonly GlobalConfig Global;
-		public readonly VirtualDmdConfig VirtualDmd;
-		public readonly VirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay;
-		public readonly PinDmd1Config PinDmd1;
-		public readonly PinDmd2Config PinDmd2;
-		public readonly PinDmd3Config PinDmd3;
-		public readonly Pin2DmdConfig Pin2Dmd;
-		public readonly VideoConfig Video;
-		public readonly GifConfig Gif;
+		public IGlobalConfig Global { get; }
+		public IVirtualDmdConfig VirtualDmd { get; }
+		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
+		public IPinDmd1Config PinDmd1 { get; }
+		public IPinDmd2Config PinDmd2 { get; }
+		public IPinDmd3Config PinDmd3 { get; }
+		public IPin2DmdConfig Pin2Dmd { get; }
+		public IVideoConfig Video { get; }
+		public IGifConfig Gif { get; }
 		public string GameName {
 			get => _gameName;
 			set {
@@ -34,9 +34,9 @@ namespace LibDmd.DmdDevice
 			}
 		}
 		public GameConfig GameConfig { get; private set; }
-		public readonly VpdbConfig VpdbStream;
-		public readonly BrowserConfig BrowserStream;
-		public readonly PinUpConfig PinUp;
+		public IVpdbConfig VpdbStream { get; }
+		public IBrowserConfig BrowserStream { get; }
+		public IPinUpConfig PinUp { get; }
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
@@ -45,9 +45,12 @@ namespace LibDmd.DmdDevice
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Configuration()
+		public Configuration(string iniPath = null)
 		{
-			if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
+			if (iniPath != null) {
+				_iniPath = iniPath;
+
+			} else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
 				_iniPath = Environment.GetEnvironmentVariable(EnvConfig);
 
 			} else {
@@ -104,7 +107,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class GlobalConfig : AbstractConfiguration
+	public class GlobalConfig : AbstractConfiguration, IGlobalConfig
 	{
 		public override string Name { get; } = "global";
 		public ResizeMode Resize => GetEnum("resize", ResizeMode.Fit);
@@ -121,7 +124,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class PinDmd1Config : AbstractConfiguration
+	public class PinDmd1Config : AbstractConfiguration, IPinDmd1Config
 	{
 		public override string Name { get; } = "pindmd1";
 		public bool Enabled => GetBoolean("enabled", true);
@@ -130,7 +133,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class PinDmd2Config : AbstractConfiguration
+	public class PinDmd2Config : AbstractConfiguration, IPinDmd2Config
 	{
 		public override string Name { get; } = "pindmd2";
 		public bool Enabled => GetBoolean("enabled", true);
@@ -139,7 +142,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class PinDmd3Config : AbstractConfiguration
+	public class PinDmd3Config : AbstractConfiguration, IPinDmd3Config
 	{
 		public override string Name { get; } = "pindmd3";
 		public bool Enabled => GetBoolean("enabled", true);
@@ -149,7 +152,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class Pin2DmdConfig : AbstractConfiguration
+	public class Pin2DmdConfig : AbstractConfiguration, IPin2DmdConfig
 	{
 		public override string Name { get; } = "pin2dmd";
 		public bool Enabled => GetBoolean("enabled", true);
@@ -159,7 +162,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VirtualDmdConfig : AbstractConfiguration
+	public class VirtualDmdConfig : AbstractConfiguration, IVirtualDmdConfig
 	{
 		public override string Name { get; } = "virtualdmd";
 
@@ -179,7 +182,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration
+	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration, IVirtualAlphaNumericDisplayConfig
 	{
 		public override string Name { get; } = "alphanumeric";
 
@@ -244,7 +247,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VideoConfig : AbstractConfiguration
+	public class VideoConfig : AbstractConfiguration, IVideoConfig
 	{
 		public override string Name { get; } = "video";
 		public bool Enabled => GetBoolean("enabled", false);
@@ -254,7 +257,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class GifConfig : VideoConfig
+	public class GifConfig : VideoConfig, IGifConfig
 	{
 		public override string Name { get; } = "gif";
 		public GifConfig(IniData data, Configuration parent) : base(data, parent)
@@ -262,7 +265,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class BrowserConfig : AbstractConfiguration
+	public class BrowserConfig : AbstractConfiguration, IBrowserConfig
 	{
 		public override string Name { get; } = "browserstream";
 		public bool Enabled => GetBoolean("enabled", false);
@@ -272,7 +275,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VpdbConfig : AbstractConfiguration
+	public class VpdbConfig : AbstractConfiguration, IVpdbConfig
 	{
 		public override string Name { get; } = "vpdbstream";
 		public bool Enabled => GetBoolean("enabled", false);
@@ -282,7 +285,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class PinUpConfig : AbstractConfiguration
+	public class PinUpConfig : AbstractConfiguration, IPinUpConfig
 	{
 		public override string Name { get; } = "pinup";
 		public bool Enabled => GetBoolean("enabled", false);
