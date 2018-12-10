@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Media;
 using IniParser;
 using IniParser.Model;
 using LibDmd.Common;
@@ -25,6 +26,8 @@ namespace LibDmd.DmdDevice
 		public IPin2DmdConfig Pin2Dmd { get; }
 		public IVideoConfig Video { get; }
 		public IGifConfig Gif { get; }
+		public IBitmapConfig Bitmap { get; }
+
 		public string GameName {
 			get => _gameName;
 			set {
@@ -81,6 +84,7 @@ namespace LibDmd.DmdDevice
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Video = new VideoConfig(_data, this);
 			Gif = new GifConfig(_data, this);
+			Bitmap = new BitmapConfig(_data, this);
 			VpdbStream = new VpdbConfig(_data, this);
 			BrowserStream = new BrowserConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
@@ -118,6 +122,10 @@ namespace LibDmd.DmdDevice
 		public bool Colorize { get; } = false;
 #else
 		public bool Colorize => GetBoolean("colorize", true);
+		public bool QuitWhenDone => false;
+		public int QuitAfter => 0;
+		public bool NoClear => false;
+		public Color DmdColor => RenderGraph.DefaultColor;
 #endif
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -265,6 +273,16 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
+	public class BitmapConfig : AbstractConfiguration, IBitmapConfig
+	{
+		public override string Name { get; } = "bitmap";
+		public bool Enabled => GetBoolean("enabled", false);
+		public string Path => GetString("path", ".");
+		public BitmapConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
 	public class BrowserConfig : AbstractConfiguration, IBrowserConfig
 	{
 		public override string Name { get; } = "browserstream";
@@ -289,6 +307,7 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "pinup";
 		public bool Enabled => GetBoolean("enabled", false);
+		public string GameName => null;
 		public PinUpConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

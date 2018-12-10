@@ -13,6 +13,7 @@ using DmdExt.Mirror;
 using DmdExt.Play;
 using DmdExt.Test;
 using LibDmd;
+using LibDmd.DmdDevice;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
@@ -82,21 +83,23 @@ namespace DmdExt
 			}
 
 			Logger.Info("Launching console tool.");
-			BaseOptions baseOptions;
+			var cmdLineOptions = (BaseOptions) invokedVerbInstance;
+			var config = cmdLineOptions.DmdDeviceIni == null 
+				? (IConfiguration)cmdLineOptions
+				: new Configuration(cmdLineOptions.DmdDeviceIni);
+
+			//BaseOptions baseOptions;
 			switch (invokedVerb) {
 				case "mirror":
-					baseOptions = (BaseOptions)invokedVerbInstance;
-					_command = new MirrorCommand((MirrorOptions)baseOptions);
+					_command = new MirrorCommand(config, (MirrorOptions)cmdLineOptions);
 					break;
 
 				case "play":
-					baseOptions = (PlayOptions)invokedVerbInstance;
-					_command = new PlayCommand((PlayOptions)baseOptions);
+					_command = new PlayCommand(config, (PlayOptions)cmdLineOptions);
 					break;
 
 				case "test":
-					baseOptions = (BaseOptions)invokedVerbInstance;
-					_command = new TestCommand((TestOptions)baseOptions);
+					_command = new TestCommand(config);
 					break;
 
 				default:
@@ -106,16 +109,16 @@ namespace DmdExt
 			try {
 				var renderer = _command.GetRenderGraph();
 
-				if (baseOptions.SaveToFile != null) {
-					(renderer as RenderGraph)?.Destinations.Add(new BitmapOutput(baseOptions.SaveToFile));
+				if (config.Bitmap.Enabled) {
+					(renderer as RenderGraph)?.Destinations.Add(new BitmapOutput(config.Bitmap.Path));
 				}
 
-				if (baseOptions.PinUp != null) {
-					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(baseOptions.PinUp));
+				if (config.PinUp.Enabled) {
+					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(config.PinUp.GameName));
 				}
 
 				_command.Execute(() => {
-					if (baseOptions != null && baseOptions.QuitWhenDone) {
+					if (config != null && config.Global.QuitWhenDone) {
 						Logger.Info("Exiting.");
 						_command?.Dispose();
 						Environment.Exit(0);
@@ -126,11 +129,11 @@ namespace DmdExt
 					Environment.Exit(0);
 				});
 
-				if (baseOptions.QuitAfter > -1) {
-					Logger.Info("Quitting in {0}ms...", baseOptions.QuitAfter);
+				if (config.Global.QuitAfter > -1) {
+					Logger.Info("Quitting in {0}ms...", config.Global.QuitAfter);
 					Observable
 						.Return(Unit.Default)
-						.Delay(TimeSpan.FromMilliseconds(baseOptions.QuitAfter))
+						.Delay(TimeSpan.FromMilliseconds(config.Global.QuitAfter))
 						.Subscribe(_ => WinApp.Dispatcher.Invoke(() => WinApp.Shutdown()));
 
 				} else {

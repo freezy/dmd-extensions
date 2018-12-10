@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using CommandLine;
 using LibDmd;
+using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
+using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Processor;
 
 namespace DmdExt.Common
 {
-	abstract class BaseOptions
+	internal abstract class BaseOptions : IConfiguration
 	{
 		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric ]. Default: \"auto\", which outputs to all available devices.")]
 		public DestinationType Destination { get; set; } = DestinationType.Auto;
@@ -61,14 +65,260 @@ namespace DmdExt.Common
 		public string SaveToFile { get; set; }
 
 		[Option("pinup", HelpText = "If set, enable output to PinUP. The value is the name of the game.")]
-		public string PinUp { get; set; } = null;
+		public string PinUpName { get; set; } = null;
 
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
+
+		public IGlobalConfig Global { get; }
+		public IVirtualDmdConfig VirtualDmd { get; }
+		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
+		public IPinDmd1Config PinDmd1 { get; }
+		public IPinDmd2Config PinDmd2 { get; }
+		public IPinDmd3Config PinDmd3 { get; }
+		public IPin2DmdConfig Pin2Dmd { get; }
+		public IVideoConfig Video { get; }
+		public IGifConfig Gif { get; }
+		public IBitmapConfig Bitmap { get; }
+		public IVpdbConfig VpdbStream { get; }
+		public IBrowserConfig BrowserStream { get; }
+		public IPinUpConfig PinUp { get; }
+
+		protected BaseOptions()
+		{
+			Global = new GlobalConfig(this);
+			VirtualDmd = new VirtualDmdOptions(this);
+			VirtualAlphaNumericDisplay = new VirtualAlphaNumericDisplayOptions(this);
+			PinDmd1 = new PinDmd1Options(this);
+			PinDmd2 = new PinDmd2Options(this);
+			PinDmd3 = new PinDmd3Options(this);
+			Pin2Dmd = new Pin2DmdOptions(this);
+			Video = new VideoOptions(this);
+			Gif = new GifOptions(this);
+			Bitmap = new BitmapOptions(this);
+			VpdbStream = new VpdbOptions(this);
+			BrowserStream = new BrowserOptions(this);
+			PinUp = new PinUpOptions(this);
+		}
 
 		public enum DestinationType
 		{
 			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual, AlphaNumeric
 		}
+	}
+
+	internal class GlobalConfig : IGlobalConfig
+	{
+		private readonly BaseOptions _options;
+
+		public GlobalConfig(BaseOptions options)
+		{
+			_options = options;
+			if (!ColorUtil.IsColor(options.RenderColor)) {
+				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
+			}
+			DmdColor = ColorUtil.ParseColor(options.RenderColor);
+		}
+
+		public ResizeMode Resize => _options.Resize;
+		public bool FlipHorizontally => _options.FlipHorizontally;
+		public bool FlipVertically => _options.FlipVertically;
+		public bool Colorize => false;
+		public bool QuitWhenDone => _options.QuitWhenDone;
+		public int QuitAfter => _options.QuitAfter;
+		public bool NoClear => _options.NoClear;
+		public Color DmdColor { get; }
+	}
+
+	internal class VirtualDmdOptions : IVirtualDmdConfig
+	{
+		private readonly BaseOptions _options;
+
+		public VirtualDmdOptions(BaseOptions options)
+		{
+			_options = options;
+			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
+				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
+			}
+			if (options.VirtualDmdDotSize <= 0 || options.VirtualDmdDotSize > 2) {
+				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
+			}
+
+			if (options.VirtualDmdPosition.Length == 4) {
+				Height = options.VirtualDmdPosition[3];
+				IgnoreAr = true;
+			} else {
+				Height = (int)((double)options.VirtualDmdPosition[2] / 4);
+				IgnoreAr = false;
+			}
+
+			Left = options.VirtualDmdPosition[0];
+			Top = options.VirtualDmdPosition[1];
+			Width = options.VirtualDmdPosition[2];
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
+							|| _options.Destination == BaseOptions.DestinationType.Virtual;
+		public bool StayOnTop => _options.VirtualDmdOnTop;
+		public bool IgnoreAr { get; }
+		public bool UseRegistryPosition => false;
+		public bool HideGrip => _options.VirtualDmdHideGrip;
+		public double Left { get; }
+		public double Top { get; }
+		public double Width { get; }
+		public double Height { get; }
+		public double DotSize => _options.VirtualDmdDotSize;
+		public Color Color { get; }
+		public bool HasGameOverride(string key)
+		{
+			return false;
+		}
+	}
+
+	internal class VirtualAlphaNumericDisplayOptions : IVirtualAlphaNumericDisplayConfig
+	{
+		private readonly BaseOptions _options;
+
+		public VirtualAlphaNumericDisplayOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
+		public RasterizeStyleDefinition Style { get; } = new RasterizeStyleDefinition();
+	}
+
+	internal class PinDmd1Options : IPinDmd1Config
+	{
+		private readonly BaseOptions _options;
+
+		public PinDmd1Options(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.PinDMDv1;
+	}
+
+	internal class PinDmd2Options : IPinDmd2Config
+	{
+		private readonly BaseOptions _options;
+
+		public PinDmd2Options(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.PinDMDv2;
+	}
+
+	internal class PinDmd3Options : IPinDmd3Config
+	{
+		private readonly BaseOptions _options;
+
+		public PinDmd3Options(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.PinDMDv3;
+		public string Port => _options.Port;
+	}
+
+	internal class Pin2DmdOptions : IPin2DmdConfig
+	{
+		private readonly BaseOptions _options;
+
+		public Pin2DmdOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.PinDMDv3;
+
+		public int Delay => _options.OutputDelay;
+	}
+
+	internal class VideoOptions : IVideoConfig
+	{
+		private readonly BaseOptions _options;
+
+		public VideoOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => false;
+		public string Path => null;
+	}
+
+	internal class GifOptions : IGifConfig
+	{
+		private readonly BaseOptions _options;
+
+		public GifOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => false;
+		public string Path => null;
+	}
+
+	internal class BitmapOptions : IBitmapConfig
+	{
+		private readonly BaseOptions _options;
+
+		public BitmapOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.SaveToFile != null;
+		public string Path => _options.SaveToFile;
+	}
+
+	internal class VpdbOptions : IVpdbConfig
+	{
+		private readonly BaseOptions _options;
+
+		public VpdbOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => false;
+		public string EndPoint => null;
+	}
+
+	internal class BrowserOptions : IBrowserConfig
+	{
+		private readonly BaseOptions _options;
+
+		public BrowserOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => false;
+		public int Port => 0;
+	}
+
+	internal class PinUpOptions : IPinUpConfig
+	{
+		private readonly BaseOptions _options;
+
+		public PinUpOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.PinUpName != null;
+		public string GameName => _options.PinUpName;
 	}
 }
