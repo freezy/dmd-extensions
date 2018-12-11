@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.DmdDevice;
 using NLog;
 using SkiaSharp;
 using SkiaSharp.Views.WPF;
@@ -24,20 +25,25 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private readonly DisplaySetting _displaySetting;
 		private readonly AlphanumericControl _control;
+		private readonly Configuration _config;
 		private ushort[] _data = { };
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
 
-		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left)
+		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left, Configuration config)
 		{
 			Top = top;
 			Left = left;
 			_control = control;
+			_config = config;
 
 			InitializeComponent();
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 			PreviewText.TextChanged += PreviewTextChanged;
 			PreviewText.Text = "  DMDEXT  ";
+			if (config == null) {
+				SaveGroup.Visibility = Visibility.Collapsed;
+			}
 
 			_displaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 

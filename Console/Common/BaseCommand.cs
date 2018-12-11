@@ -81,7 +81,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualAlphaNumericDisplay.Enabled) {
-				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style));
+				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style, config as Configuration));
 				Logger.Info("Added virtual Alphanumeric renderer.");
 			}
 

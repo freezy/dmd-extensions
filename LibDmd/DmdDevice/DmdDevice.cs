@@ -252,7 +252,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
-				var pin2Dmd = LibDmd.Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
+				var pin2Dmd = Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					if (_coloring != null) {
@@ -266,7 +266,7 @@ namespace LibDmd.DmdDevice
 				Logger.Info("Added VirtualDMD renderer.");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
-				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style);
+				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
 				renderers.Add(alphaNumeric);
 				Logger.Info("Added virtual alphanumeric renderer.");
 			}
