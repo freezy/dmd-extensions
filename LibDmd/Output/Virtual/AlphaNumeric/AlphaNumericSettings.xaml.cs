@@ -32,7 +32,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private ushort[] _data = { };
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
-		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.Styles.Keys.ToList();
+		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left, Configuration config)

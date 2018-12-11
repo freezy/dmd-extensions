@@ -196,18 +196,16 @@ namespace LibDmd.DmdDevice
 	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration, IVirtualAlphaNumericDisplayConfig
 	{
 		public override string Name { get; } = "alphanumeric";
-
 		public bool Enabled => GetBoolean("enabled", true);
+		private readonly Dictionary<string, RasterizeStyleDefinition> _styles = new Dictionary<string, RasterizeStyleDefinition>();
 
 		public RasterizeStyleDefinition Style {
 			get {
 				var style = GetString("style", "default");
-				return Styles.ContainsKey(style) ? Styles[style] : new RasterizeStyleDefinition();
+				return _styles.ContainsKey(style) ? _styles[style] : new RasterizeStyleDefinition();
 			}
 		}
-
-		public Dictionary<string, RasterizeStyleDefinition> Styles { get; } = new Dictionary<string, RasterizeStyleDefinition>();
-
+	
 		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 			var keyValues = data[Name].GetEnumerator();
@@ -216,33 +214,107 @@ namespace LibDmd.DmdDevice
 				if (names.Length > 1 && names[0] == "style") {
 					var styleName = names[1];
 					var styleProperty = names[2];
-					if (!Styles.ContainsKey(styleName)) {
-						Styles.Add(styleName, new RasterizeStyleDefinition());
+					if (!_styles.ContainsKey(styleName)) {
+						_styles.Add(styleName, new RasterizeStyleDefinition());
 					}
 					switch (styleProperty) {
 						case "skewangle":
-							Styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
+							_styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
 							break;
 						case "backgroundcolor":
-							Styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, Styles[styleName].BackgroundColor);
+							_styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, _styles[styleName].BackgroundColor);
 							break;
 						case "foreground":
-							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].Foreground);
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].Foreground);
 							break;
 						case "innerglow":
-							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].InnerGlow);
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].InnerGlow);
 							break;
 						case "outerglow":
-							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].OuterGlow);
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].OuterGlow);
 							break;
 						case "background":
-							ParseLayerStyle(names[3], keyValues.Current, Styles[styleName].Background);
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].Background);
 							break;
 					}
 				}
 			}
-			Logger.Info("Parsed styles: {0}", string.Join("\n", Styles.Keys.Select(k => $"{k}: {Styles[k]}")));
-			
+			//Logger.Info("Parsed styles: {0}", string.Join("\n", _styles.Keys.Select(k => $"{k}: {_styles[k]}")));
+		}
+
+		public List<string> GetStyleNames()
+		{
+			return _styles.Keys.ToList();
+		}
+
+		public void SetStyle(string name, RasterizeStyleDefinition style)
+		{
+			if (_styles.ContainsKey(name)) {
+				_styles.Remove(name);
+			}
+			_styles.Add(name, style);
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+			Set(prefix + "skewangle", style.SkewAngle);
+			Set(prefix + "backgroundcolor", style.BackgroundColor);
+			SetLayerStyle(name, "foreground", style.Foreground);
+			SetLayerStyle(name, "innerglow", style.InnerGlow);
+			SetLayerStyle(name, "outerglow", style.OuterGlow);
+			SetLayerStyle(name, "background", style.Background);
+			Save();
+		}
+
+		public void RemoveStyle(string name)
+		{
+			if (_styles.ContainsKey(name)) {
+				_styles.Remove(name);
+			}
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+			Remove(prefix + "skewangle");
+			Remove(prefix + "backgroundcolor");
+			RemoveLayerStyle(name, "foreground");
+			RemoveLayerStyle(name, "innerglow");
+			RemoveLayerStyle(name, "outerglow");
+			RemoveLayerStyle(name, "background");
+			Save();
+		}
+
+		private void SetLayerStyle(string styleName, string layerName, RasterizeLayerStyleDefinition layerStyle)
+		{
+			var prefix = "style." + styleName + "." + layerName;
+			Set(prefix + "enabled", layerStyle.IsEnabled);
+			Set(prefix + "color", layerStyle.Color);
+			Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
+			if (layerStyle.IsBlurEnabled) {
+				Set(prefix + "blur.x", layerStyle.Blur.X);
+				Set(prefix + "blur.y", layerStyle.Blur.Y);
+			} else {
+				Remove(prefix + "blur.x");
+				Remove(prefix + "blur.y");
+			}
+
+			Set(prefix + "dilate.enabled", layerStyle.IsDilateEnabled);
+			if (layerStyle.IsDilateEnabled) {
+				Set(prefix + "dilate.x", layerStyle.Dilate.X);
+				Set(prefix + "dilate.y", layerStyle.Dilate.Y);
+			} else {
+				Remove(prefix + "blur.x");
+				Remove(prefix + "blur.y");
+			}
+		}
+
+		private void RemoveLayerStyle(string styleName, string layerName)
+		{
+			var prefix = "style." + styleName + "." + layerName;
+			Remove(prefix + "enabled");
+			Remove(prefix + "color");
+			Remove(prefix + "blur.enabled");
+			Remove(prefix + "blur.x");
+			Remove(prefix + "blur.y");
+			Remove(prefix + "dilate.enabled");
+			Remove(prefix + "blur.x");
+			Remove(prefix + "blur.y");
 		}
 
 		private void ParseLayerStyle(string property, KeyData keyData, RasterizeLayerStyleDefinition style)
@@ -512,6 +584,20 @@ namespace LibDmd.DmdDevice
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value.ToString();
+			if (DoWrite) {
+				_parent.Save();
+			}
+		}
+
+		protected void Remove(string key)
+		{
+			if (_data[Name] == null) {
+				return;
+			}
+			if (!_data[Name].ContainsKey(key)) {
+				return;
+			}
+			_data[Name].RemoveKey(key);
 			if (DoWrite) {
 				_parent.Save();
 			}
