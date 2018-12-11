@@ -10,7 +10,11 @@
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
         Height="806.944" 
-        Width="495.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
+        Width="495.711" 
+        ResizeMode="NoResize" 
+        ShowInTaskbar="False" 
+        SizeToContent="WidthAndHeight" 
+        Title="Customize Segment Style">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -42,9 +46,9 @@
         <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="6" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <GroupBox x:Name="SaveGroup"  Grid.Row="7" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
             <Grid>
-                <ComboBox Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
+                <ComboBox ItemsSource="{Binding StyleNames}" SelectedValue="{Binding NewStyleName, Mode=TwoWay}"  IsSynchronizedWithCurrentItem="True" x:Name="StyleName" Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
                 <Button Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load"/>
-                <Button Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,68,0" Content="Save"/>
+                <Button Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,68,0" Content="Save" Click="SaveToIni"/>
                 <Button Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,0,0" Content="Delete" />
             </Grid>
         </GroupBox>
