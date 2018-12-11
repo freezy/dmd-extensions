@@ -9,13 +9,14 @@
         x:Class="LibDmd.Output.Virtual.AlphaNumeric.VirtualAlphaNumericSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="701.611" 
+        Height="806.944" 
         Width="495.711" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight" Title="Customize Segment Style">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -39,8 +40,17 @@
         <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="4" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
         <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="6" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
-        <Button Content="Cancel" Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
-        <Button Content="Reset" Grid.Row="7" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
+        <GroupBox  Grid.Row="7" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
+            <Grid>
+                <ComboBox Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
+                <Button Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load"/>
+                <Button Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,68,0" Content="Save"/>
+                <Button Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,0,0" Content="Delete" />
+            </Grid>
+        </GroupBox>
+
+        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
+        <Button Content="Cancel" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
+        <Button Content="Reset" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
     </Grid>
 </Window>
