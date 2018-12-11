@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -26,9 +28,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private readonly DisplaySetting _displaySetting;
 		private readonly AlphanumericControl _control;
 		private readonly Configuration _config;
+		private readonly VirtualAlphaNumericDisplayConfig _alphaNumericConfig;
 		private ushort[] _data = { };
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
+		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.Styles.Keys.ToList();
+		public string NewStyleName { get; set; }
 
 		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left, Configuration config)
 		{
@@ -36,8 +41,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Left = left;
 			_control = control;
 			_config = config;
+			_alphaNumericConfig = _config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
 
+			DataContext = this;
 			InitializeComponent();
+
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 			PreviewText.TextChanged += PreviewTextChanged;
 			PreviewText.Text = "  DMDEXT  ";
@@ -148,6 +156,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Res.Rasterize(_displaySetting, true);
 		}
 
+		private void SaveToIni(object sender, RoutedEventArgs e)
+		{
+			Logger.Info("Saving to DmdDevice.ini...");
+		}
+
 		private void Cancel_Click(object sender, RoutedEventArgs e)
 		{
 			Hide();
@@ -155,6 +168,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void ApplyButton_Click(object sender, RoutedEventArgs e)
 		{
+			Logger.Info("Selected = {0}", NewStyleName);
 			_control.UpdateStyle(_displaySetting.StyleDefinition.Copy());
 		}
 
@@ -177,5 +191,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				return fallback;
 			}
 		}
+
 	}
 }
