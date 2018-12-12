@@ -208,6 +208,9 @@ namespace LibDmd.DmdDevice
 	
 		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+			if (data[Name] == null) {
+				return;
+			}
 			var keyValues = data[Name].GetEnumerator();
 			while (keyValues.MoveNext()) {
 				var names = keyValues.Current.KeyName.Split(new []{'.'}, 4);
@@ -255,7 +258,7 @@ namespace LibDmd.DmdDevice
 			_styles.Add(name, style);
 			var prefix = "style." + name + ".";
 			DoWrite = false;
-			Set(prefix + "skewangle", style.SkewAngle);
+			Set(prefix + "skewangle", -style.SkewAngle);
 			Set(prefix + "backgroundcolor", style.BackgroundColor);
 			SetLayerStyle(name, "foreground", style.Foreground);
 			SetLayerStyle(name, "innerglow", style.InnerGlow);
@@ -282,7 +285,7 @@ namespace LibDmd.DmdDevice
 
 		private void SetLayerStyle(string styleName, string layerName, RasterizeLayerStyleDefinition layerStyle)
 		{
-			var prefix = "style." + styleName + "." + layerName;
+			var prefix = "style." + styleName + "." + layerName + ".";
 			Set(prefix + "enabled", layerStyle.IsEnabled);
 			Set(prefix + "color", layerStyle.Color);
 			Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
@@ -306,7 +309,7 @@ namespace LibDmd.DmdDevice
 
 		private void RemoveLayerStyle(string styleName, string layerName)
 		{
-			var prefix = "style." + styleName + "." + layerName;
+			var prefix = "style." + styleName + "." + layerName + ".";
 			Remove(prefix + "enabled");
 			Remove(prefix + "color");
 			Remove(prefix + "blur.enabled");
