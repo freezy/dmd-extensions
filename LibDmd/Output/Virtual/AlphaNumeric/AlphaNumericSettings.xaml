@@ -15,6 +15,9 @@
         ShowInTaskbar="False" 
         SizeToContent="WidthAndHeight" 
         Title="Customize Segment Style">
+    <Window.Resources>
+        <alphaNumeric:ComparisonConverter x:Key="ComparisonConverter" />
+    </Window.Resources>
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -31,7 +34,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image x:Name="Preview" Height="108" Width="453" Grid.Row="0" />
-        <TextBox x:Name="PreviewText" Grid.Row="1" Margin="0,8" />
+
+        <TextBox x:Name="PreviewText" Grid.Row="1" Margin="0,8" Width="264" HorizontalAlignment="Left" />
+        <Label Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,120,0" Content="Weight:" VerticalAlignment="Center" />
+        <RadioButton x:Name="ThinWeight" IsChecked="{Binding Path=SegmentWeight, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static alphaNumeric:SegmentWeight.Thin}}"  Grid.Row="1" HorizontalAlignment="Right" GroupName="weight" Margin="0,0,60,0" Content="Thin" VerticalAlignment="Center" />
+        <RadioButton x:Name="BoldWeight" IsChecked="{Binding Path=SegmentWeight, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static alphaNumeric:SegmentWeight.Bold}}" Grid.Row="1" HorizontalAlignment="Right" GroupName="weight" Content="Bold" VerticalAlignment="Center"/>
 
         <Label Grid.Row="2" Content="Background Color" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <xctk:ColorPicker x:Name="BackgroundColor" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" Width="60" Margin="100,0,261,0" DisplayColorAndName="False"/>
@@ -47,7 +54,7 @@
         <GroupBox x:Name="SaveGroup"  Grid.Row="7" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
             <Grid>
                 <ComboBox ItemsSource="{Binding StyleNames}" SelectedValue="{Binding NewStyleName, Mode=TwoWay}"  IsSynchronizedWithCurrentItem="True" x:Name="StyleNameComboBox" Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
-                <Button x:Name="LoadStyleButton" Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load"/>
+                <Button x:Name="LoadStyleButton" Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load" Click="LoadFromIniClicked"/>
                 <Button x:Name="SaveStyleButton" Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,68,0" Content="Save" Click="SaveToIniClicked"/>
                 <Button x:Name="DeleteStyleButton" Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,0,0" Content="Delete" Click="DeleteFromIniClicked" />
             </Grid>
@@ -55,6 +62,6 @@
 
         <Button x:Name="ApplyButton" Content="Apply" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyButton_Click"/>
         <Button Content="Cancel" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Cancel_Click"/>
-        <Button Content="Reset" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="Reset_Click"/>
+        <Button Content="Reset" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="ResetClicked"/>
     </Grid>
 </Window>

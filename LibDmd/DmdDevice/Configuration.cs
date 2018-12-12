@@ -224,6 +224,9 @@ namespace LibDmd.DmdDevice
 						case "skewangle":
 							_styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
 							break;
+						case "weight":
+							_styles[styleName].SegmentWeight = GetEnum(keyValues.Current.KeyName, SegmentWeight.Thin);
+							break;
 						case "backgroundcolor":
 							_styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, _styles[styleName].BackgroundColor);
 							break;
@@ -250,6 +253,11 @@ namespace LibDmd.DmdDevice
 			return _styles.Keys.ToList();
 		}
 
+		public RasterizeStyleDefinition GetStyle(string name)
+		{
+			return _styles[name];
+		}
+
 		public void SetStyle(string name, RasterizeStyleDefinition style)
 		{
 			if (_styles.ContainsKey(name)) {
@@ -259,7 +267,9 @@ namespace LibDmd.DmdDevice
 			var prefix = "style." + name + ".";
 			DoWrite = false;
 			Set(prefix + "skewangle", -style.SkewAngle);
+			Set(prefix + "weight", style.SegmentWeight);
 			Set(prefix + "backgroundcolor", style.BackgroundColor);
+			if (style.Foreground.IsEnabled) { }
 			SetLayerStyle(name, "foreground", style.Foreground);
 			SetLayerStyle(name, "innerglow", style.InnerGlow);
 			SetLayerStyle(name, "outerglow", style.OuterGlow);
@@ -287,23 +297,35 @@ namespace LibDmd.DmdDevice
 		{
 			var prefix = "style." + styleName + "." + layerName + ".";
 			Set(prefix + "enabled", layerStyle.IsEnabled);
-			Set(prefix + "color", layerStyle.Color);
-			Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
-			if (layerStyle.IsBlurEnabled) {
-				Set(prefix + "blur.x", layerStyle.Blur.X);
-				Set(prefix + "blur.y", layerStyle.Blur.Y);
-			} else {
-				Remove(prefix + "blur.x");
-				Remove(prefix + "blur.y");
-			}
+			if (layerStyle.IsEnabled) {
 
-			Set(prefix + "dilate.enabled", layerStyle.IsDilateEnabled);
-			if (layerStyle.IsDilateEnabled) {
-				Set(prefix + "dilate.x", layerStyle.Dilate.X);
-				Set(prefix + "dilate.y", layerStyle.Dilate.Y);
+				Set(prefix + "color", layerStyle.Color);
+				Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
+				if (layerStyle.IsBlurEnabled) {
+					Set(prefix + "blur.x", layerStyle.Blur.X);
+					Set(prefix + "blur.y", layerStyle.Blur.Y);
+				} else {
+					Remove(prefix + "blur.x");
+					Remove(prefix + "blur.y");
+				}
+
+				Set(prefix + "dilate.enabled", layerStyle.IsDilateEnabled);
+				if (layerStyle.IsDilateEnabled) {
+					Set(prefix + "dilate.x", layerStyle.Dilate.X);
+					Set(prefix + "dilate.y", layerStyle.Dilate.Y);
+				} else {
+					Remove(prefix + "dilate.x");
+					Remove(prefix + "dilate.y");
+				}
 			} else {
+
+				Remove(prefix + "color");
+				Remove(prefix + "blur.enabled");
 				Remove(prefix + "blur.x");
 				Remove(prefix + "blur.y");
+				Remove(prefix + "dilate.enabled");
+				Remove(prefix + "dilate.x");
+				Remove(prefix + "dilate.y");
 			}
 		}
 
@@ -316,8 +338,8 @@ namespace LibDmd.DmdDevice
 			Remove(prefix + "blur.x");
 			Remove(prefix + "blur.y");
 			Remove(prefix + "dilate.enabled");
-			Remove(prefix + "blur.x");
-			Remove(prefix + "blur.y");
+			Remove(prefix + "dilate.x");
+			Remove(prefix + "dilate.y");
 		}
 
 		private void ParseLayerStyle(string property, KeyData keyData, RasterizeLayerStyleDefinition style)

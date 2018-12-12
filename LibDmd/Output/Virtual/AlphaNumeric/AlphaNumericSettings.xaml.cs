@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.DmdDevice;
@@ -32,6 +33,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private ushort[] _data = { };
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
+		public SegmentWeight SegmentWeight {
+			get => _displaySetting.StyleDefinition.SegmentWeight;
+			set => _displaySetting.StyleDefinition.SegmentWeight = value;
+		}
+
 		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
@@ -42,9 +48,18 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			_control = control;
 			_config = config;
 			_alphaNumericConfig = _config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
+			_displaySetting = new DisplaySetting(
+				control.DisplaySetting.Display + 100,
+				control.DisplaySetting.SegmentType,
+				control.DisplaySetting.StyleDefinition.Copy(),
+				10,
+				1
+			);
 
 			DataContext = this;
 			InitializeComponent();
+
+			_displaySetting.SetDimensions((int)Preview.Width, (int)Preview.Height);
 
 			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 			PreviewText.TextChanged += PreviewTextChanged;
@@ -53,34 +68,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				SaveGroup.Visibility = Visibility.Collapsed;
 			}
 
-			StyleNameComboBox.SelectionChanged += (sender, e) => {
-				if (e.AddedItems.Count > 0) StyleSelectionChanged(e.AddedItems[0].ToString());
-			};
-			StyleNameComboBox.KeyUp += (sender, e) => StyleSelectionChanged(StyleNameComboBox.Text);
-
-			_displaySetting = new DisplaySetting(
-				control.DisplaySetting.Display + 100, 
-				control.DisplaySetting.SegmentType, 
-				control.DisplaySetting.SegmentWeight, 
-				control.DisplaySetting.StyleDefinition.Copy(), 
-				10, 
-				1, 
-				(int)Preview.Width, 
-				(int)Preview.Height
-			);
-
-			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString();
-			SkewAngleSlider.Value = - _displaySetting.StyleDefinition.SkewAngle;
-			BackgroundColor.SelectedColor = _displaySetting.StyleDefinition.BackgroundColor.ToColor();
-
-			SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
-			SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
-			SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
-			SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
-			BackgroundColor.SelectedColorChanged += (sender, e) =>
-				_displaySetting.StyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
-					BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
-					BackgroundColor.SelectedColor.Value.A);
+			UpdateControls();
+			SetupTriggers();
 
 			Logger.Info("Creating preview image at {0}x{1}", (int)Preview.Width, (int)Preview.Height);
 			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
@@ -93,9 +82,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			InnerGlowStyle.Label = "Inner Glow Layer";
 			OuterGlowStyle.Label = "Outer Glow Layer";
 			BackgroundStyle.Label = "Unlit Layer";
-
-			ApplyClicked();
-
 
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyleDef => {
@@ -114,6 +100,42 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.Background, layerStyle);
 				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, _displaySetting.Style.Background, new [] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
 			});
+
+			Res.Rasterize(_displaySetting, true);
+		}
+
+		private void SetupTriggers()
+		{
+			StyleNameComboBox.SelectionChanged += (sender, e) => {
+				if (e.AddedItems.Count > 0) StyleSelectionChanged(e.AddedItems[0].ToString());
+			};
+			StyleNameComboBox.KeyUp += (sender, e) => StyleSelectionChanged(StyleNameComboBox.Text);
+
+			SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
+			SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
+			SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
+			SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
+			ThinWeight.Checked += (sender, e) => RasterizeAll();
+			BoldWeight.Checked += (sender, e) => RasterizeAll();
+			BackgroundColor.SelectedColorChanged += (sender, e) =>
+				_displaySetting.StyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
+					BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
+					BackgroundColor.SelectedColor.Value.A);
+
+		}
+
+		private void UpdateControls()
+		{
+			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString();
+			SkewAngleSlider.Value = -_displaySetting.StyleDefinition.SkewAngle;
+			BackgroundColor.SelectedColor = _displaySetting.StyleDefinition.BackgroundColor.ToColor();
+			ThinWeight.IsChecked = _displaySetting.StyleDefinition.SegmentWeight == SegmentWeight.Thin;
+			BoldWeight.IsChecked = _displaySetting.StyleDefinition.SegmentWeight == SegmentWeight.Bold;
+
+			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
+			InnerGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.InnerGlow;
+			OuterGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.OuterGlow;
+			BackgroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Background;
 		}
 
 		private void RasterizeAll()
@@ -149,18 +171,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			writeableBitmap.Unlock();
 		}
 
-		private void ApplyClicked()
-		{
-			// apply style to controls
-			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
-			InnerGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.InnerGlow;
-			OuterGlowStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.OuterGlow;
-			BackgroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Background;
-
-			// rasterize preview a first time
-			Res.Rasterize(_displaySetting, true);
-		}
-
 		private void StyleSelectionChanged(string name)
 		{
 			Logger.Info("Selection changed to {0}", name);
@@ -183,6 +193,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			StyleNameComboBox.SelectedItem = styleName;
 		}
 
+		private void LoadFromIniClicked(object sender, RoutedEventArgs e)
+		{
+			_displaySetting.StyleDefinition = _alphaNumericConfig.GetStyle(NewStyleName);
+			RasterizeAll();
+			UpdateControls();
+		}
+
 		private void DeleteFromIniClicked(object sender, RoutedEventArgs e)
 		{
 			_alphaNumericConfig.RemoveStyle(NewStyleName);
@@ -202,10 +219,10 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			_control.UpdateStyle(_displaySetting.StyleDefinition.Copy());
 		}
 
-		private void Reset_Click(object sender, RoutedEventArgs e)
+		private void ResetClicked(object sender, RoutedEventArgs e)
 		{
 			_displaySetting.ApplyStyle(_control.DisplaySetting.StyleDefinition);
-			ApplyClicked();
+			Res.Rasterize(_displaySetting, true);
 		}
 
 		private static string DoubleToString(double d)
@@ -221,7 +238,18 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				return fallback;
 			}
 		}
+	}
 
-		
+	public class ComparisonConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			return value?.Equals(parameter);
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			return value?.Equals(true) == true ? parameter : Binding.DoNothing;
+		}
 	}
 }

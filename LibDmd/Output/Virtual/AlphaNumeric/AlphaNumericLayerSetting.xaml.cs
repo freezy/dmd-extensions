@@ -59,7 +59,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			BlurYSlider.ValueChanged += (sender, e) => Changed();
 		}
 
-		private void UpdateControls()
+		public void UpdateControls()
 		{
 			LayerEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsEnabled;
 

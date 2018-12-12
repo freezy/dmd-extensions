@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SkiaSharp;
 
 namespace LibDmd.Output.Virtual.AlphaNumeric
 {
-	class AlphaNumericPainter
+	internal class AlphaNumericPainter
 	{
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
@@ -31,7 +28,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private static void DrawFullSegment(DisplaySetting ds, SKCanvas canvas, SKPoint position)
 		{
-			var segment = Res.GetRasterized(ds.Display, RasterizeLayer.Background, ds.SegmentType, ds.SegmentWeight, AlphaNumericResources.FullSegment);
+			var segment = Res.GetRasterized(ds.Display, RasterizeLayer.Background, ds.SegmentType, ds.StyleDefinition.SegmentWeight, AlphaNumericResources.FullSegment);
 			if (segment != null) {
 				canvas.DrawSurface(segment, position);
 			}
@@ -55,7 +52,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			using (var surfacePaint = new SKPaint()) {
 				for (var j = 0; j < Res.SegmentSize[displaySetting.SegmentType]; j++) {
-					var rasterizedSegment = Res.GetRasterized(displaySetting.Display, layer, displaySetting.SegmentType, displaySetting.SegmentWeight, j);
+					var rasterizedSegment = Res.GetRasterized(displaySetting.Display, layer, displaySetting.SegmentType, displaySetting.StyleDefinition.SegmentWeight, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
 						canvas.DrawSurface(rasterizedSegment, canvasPosition, surfacePaint);
 					}
