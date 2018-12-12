@@ -158,7 +158,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void SaveToIni(object sender, RoutedEventArgs e)
 		{
-			Logger.Info("Saving to DmdDevice.ini...");
+			Logger.Info("Saving style {0} to DmdDevice.ini...", StyleName.Text);
+			_alphaNumericConfig.SetStyle(StyleName.Text, _displaySetting.StyleDefinition);
 		}
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
