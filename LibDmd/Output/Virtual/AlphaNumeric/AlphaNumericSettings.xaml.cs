@@ -53,6 +53,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				SaveGroup.Visibility = Visibility.Collapsed;
 			}
 
+			StyleNameComboBox.SelectionChanged += (sender, e) => {
+				if (e.AddedItems.Count > 0) StyleSelectionChanged(e.AddedItems[0].ToString());
+			};
+			StyleNameComboBox.KeyUp += (sender, e) => StyleSelectionChanged(StyleNameComboBox.Text);
+
 			_displaySetting = new DisplaySetting(
 				control.DisplaySetting.Display + 100, 
 				control.DisplaySetting.SegmentType, 
@@ -89,7 +94,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			OuterGlowStyle.Label = "Outer Glow Layer";
 			BackgroundStyle.Label = "Unlit Layer";
 
-			ApplySetting();
+			ApplyClicked();
 
 
 			// subscribe to control changes that trigger rasterization
@@ -144,7 +149,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			writeableBitmap.Unlock();
 		}
 
-		private void ApplySetting()
+		private void ApplyClicked()
 		{
 			// apply style to controls
 			ForegroundStyle.RasterizeStyleDefinition = _displaySetting.StyleDefinition.Foreground;
@@ -156,10 +161,34 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Res.Rasterize(_displaySetting, true);
 		}
 
-		private void SaveToIni(object sender, RoutedEventArgs e)
+		private void StyleSelectionChanged(string name)
 		{
-			Logger.Info("Saving style {0} to DmdDevice.ini...", StyleName.Text);
-			_alphaNumericConfig.SetStyle(StyleName.Text, _displaySetting.StyleDefinition);
+			Logger.Info("Selection changed to {0}", name);
+			if (StyleNames.Contains(name)) {
+				LoadStyleButton.IsEnabled = true;
+				DeleteStyleButton.IsEnabled = true;
+			} else {
+				LoadStyleButton.IsEnabled = false;
+				DeleteStyleButton.IsEnabled = false;
+			}
+		}
+
+		private void SaveToIniClicked(object sender, RoutedEventArgs e)
+		{
+			Logger.Info("Saving style {0} to DmdDevice.ini...", StyleNameComboBox.Text);
+			var styleName = NewStyleName ?? StyleNameComboBox.Text;
+			_alphaNumericConfig.SetStyle(styleName, _displaySetting.StyleDefinition);
+			StyleSelectionChanged(styleName);
+			StyleNameComboBox.ItemsSource = StyleNames;
+			StyleNameComboBox.SelectedItem = styleName;
+		}
+
+		private void DeleteFromIniClicked(object sender, RoutedEventArgs e)
+		{
+			_alphaNumericConfig.RemoveStyle(NewStyleName);
+			StyleNameComboBox.ItemsSource = StyleNames;
+			StyleNameComboBox.Text = "";
+			StyleSelectionChanged("");
 		}
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -176,7 +205,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void Reset_Click(object sender, RoutedEventArgs e)
 		{
 			_displaySetting.ApplyStyle(_control.DisplaySetting.StyleDefinition);
-			ApplySetting();
+			ApplyClicked();
 		}
 
 		private static string DoubleToString(double d)
@@ -193,5 +222,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 		}
 
+		
 	}
 }
