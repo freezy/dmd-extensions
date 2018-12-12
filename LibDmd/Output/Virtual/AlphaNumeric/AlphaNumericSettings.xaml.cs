@@ -24,11 +24,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static int Dpi = 96;
 
-		public ISubject<RasterizeStyleDefinition> OnStyleChanged { get; } = new Subject<RasterizeStyleDefinition>();
+		public ISubject<RasterizeStyleDefinition> OnStyleApplied { get; } = new Subject<RasterizeStyleDefinition>();
 
 		private readonly DisplaySetting _displaySetting;
-		private readonly AlphanumericControl _control;
 		private readonly Configuration _config;
+		private readonly RasterizeStyleDefinition _originalStyle;
 		private readonly VirtualAlphaNumericDisplayConfig _alphaNumericConfig;
 		private ushort[] _data = { };
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
@@ -41,17 +41,17 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
-		public VirtualAlphaNumericSettings(AlphanumericControl control, double top, double left, Configuration config)
+		public VirtualAlphaNumericSettings(RasterizeStyleDefinition styleDefinition, double top, double left, Configuration config)
 		{
 			Top = top;
 			Left = left;
-			_control = control;
 			_config = config;
+			_originalStyle = styleDefinition.Copy();
 			_alphaNumericConfig = _config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
 			_displaySetting = new DisplaySetting(
-				control.DisplaySetting.Display + 100,
-				control.DisplaySetting.SegmentType,
-				control.DisplaySetting.StyleDefinition.Copy(),
+				100,
+				SegmentType.Alphanumeric,
+				styleDefinition.Copy(),
 				10,
 				1
 			);
@@ -61,7 +61,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 			_displaySetting.SetDimensions((int)Preview.Width, (int)Preview.Height);
 
-			Title = "[" + control.DisplaySetting.Display + "] " + Title;
 			PreviewText.TextChanged += PreviewTextChanged;
 			PreviewText.Text = "  DMDEXT  ";
 			if (config == null) {
@@ -208,21 +207,20 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			StyleSelectionChanged("");
 		}
 
-		private void Cancel_Click(object sender, RoutedEventArgs e)
+		private void ApplyClicked(object sender, RoutedEventArgs e)
 		{
-			Hide();
-		}
-
-		private void ApplyButton_Click(object sender, RoutedEventArgs e)
-		{
-			Logger.Info("Selected = {0}", NewStyleName);
-			_control.UpdateStyle(_displaySetting.StyleDefinition.Copy());
+			OnStyleApplied.OnNext(_displaySetting.StyleDefinition.Copy());
 		}
 
 		private void ResetClicked(object sender, RoutedEventArgs e)
 		{
-			_displaySetting.ApplyStyle(_control.DisplaySetting.StyleDefinition);
+			_displaySetting.ApplyStyle(_originalStyle.Copy());
 			Res.Rasterize(_displaySetting, true);
+		}
+
+		private void CancelClicked(object sender, RoutedEventArgs e)
+		{
+			Hide();
 		}
 
 		private static string DoubleToString(double d)

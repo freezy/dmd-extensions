@@ -27,6 +27,10 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private readonly Dictionary<int, ushort[]> _droppedData = new Dictionary<int, ushort[]>();
 		private NumericalLayout _currentLayout = NumericalLayout.None;
 
+		private bool _settingsOpen;
+		private VirtualAlphaNumericSettings _settingWindow;
+		private IDisposable _settingSubscription;
+
 		private VirtualAlphanumericDestination(Dispatcher dispatcher, RasterizeStyleDefinition styleDef, Configuration config)
 		{
 			_dispatcher = dispatcher;
@@ -307,6 +311,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public void Dispose()
 		{
 			try {
+				_settingSubscription?.Dispose();
 				foreach (var display in _displays.Values) {
 					display.Dispatcher.Invoke(() => display.Close());
 				}
@@ -322,8 +327,15 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
+			var displaySettings = new DisplaySetting{
+				Display = displayNumber,
+				NumChars = numChars,
+				NumLines = numLines,
+				SegmentType = type,
+				StyleDefinition = _styleDef
+			};
 			_dispatcher.Invoke(delegate {
-				var display = new VirtualAlphaNumericDisplay(displayNumber, numChars, numLines, type, _styleDef, _config);
+				var display = new VirtualAlphaNumericDisplay(displaySettings, _config, ToggleSettings);
 				_displays[displayNumber] = display;
 				var thread = new Thread(() => {
 					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
@@ -343,6 +355,28 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				thread.SetApartmentState(ApartmentState.STA);
 				thread.Start();
 			});
+		}
+
+		private void ToggleSettings(int displayNumber)
+		{
+			if (_settingWindow == null) {
+				var window = _displays[displayNumber];
+				_settingWindow = new VirtualAlphaNumericSettings(_styleDef, window.Top, window.Left + window.Width, _config);
+				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
+				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {
+					Logger.Info("Applying new style to displays.");
+					foreach (var d in _displays.Keys) {
+						var display = _displays[d];
+						display.AlphaNumericDisplay.UpdateStyle(style);
+					}
+				});
+			}
+
+			if (!_settingsOpen) {
+				_settingWindow.Show();
+			} else {
+				_settingWindow.Hide();
+			}
 		}
 	}
 

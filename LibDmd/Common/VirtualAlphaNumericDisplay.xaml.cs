@@ -1,37 +1,29 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using NLog;
 
 namespace LibDmd.Common
 {
-	/// <summary>
-	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
-	/// </summary>
-	public partial class VirtualAlphaNumericDisplay : VirtualWindow
+	public partial class VirtualAlphaNumericDisplay
 	{
-		//private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
 
-		private VirtualAlphaNumericSettings _settingWindow;
-		private bool _settingsOpen;
 		private readonly Configuration _config;
+		private readonly Action<int> _toggleSettings;
 
-		public VirtualAlphaNumericDisplay(int displayNumber, int numChars, int numLines, SegmentType segmentType, RasterizeStyleDefinition styleDef, Configuration config)
+		public VirtualAlphaNumericDisplay(DisplaySetting displaySetting, Configuration config, Action<int> toggleSettings)
 		{
 			InitializeComponent();
 			Initialize();
 
 			_config = config;
+			_toggleSettings = toggleSettings;
 
 			LockHeight = true;
-			AlphaNumericDisplay.DisplaySetting = new DisplaySetting {
-				Display = displayNumber,
-				SegmentType = segmentType,
-				StyleDefinition = styleDef,
-				NumChars = numChars,
-				NumLines = numLines
-			};
+			AlphaNumericDisplay.DisplaySetting = displaySetting;
 
 			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
 			SettingsButton.MouseEnter += (sender, e) => {
@@ -45,20 +37,9 @@ namespace LibDmd.Common
 			SettingsButton.MouseLeftButtonDown += ToggleDisplaySettings;
 		}
 
-		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
-
 		private void ToggleDisplaySettings(object sender, RoutedEventArgs e)
 		{
-			if (_settingWindow == null) {
-				_settingWindow = new VirtualAlphaNumericSettings(AlphaNumericDisplay, Top, Left + Width, _config);
-				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
-			}
-
-			if (!_settingsOpen) {
-				_settingWindow.Show();
-			} else {
-				_settingWindow.Hide();
-			}
+			_toggleSettings(AlphaNumericDisplay.DisplaySetting.Display);
 		}
 	}
 }
