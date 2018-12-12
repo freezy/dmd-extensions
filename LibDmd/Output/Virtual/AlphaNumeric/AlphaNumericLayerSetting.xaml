@@ -21,7 +21,7 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <CheckBox x:Name="LayerEnabled" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5" Checked="UpdateLayerEnabled" Unchecked="UpdateLayerEnabled" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <CheckBox x:Name="LayerEnabled" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5" Checked="UpdateLayerEnabled" Unchecked="UpdateLayerEnabled" VerticalAlignment="Top" Margin="0,0,0,8" HorizontalAlignment="Left"/>
         <Label Grid.Column="0" Grid.Row="1" Content="Color" VerticalAlignment="Top" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0">
             <Label.RenderTransform>
                 <TransformGroup>

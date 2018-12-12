@@ -34,8 +34,14 @@ namespace LibDmd.Common
 			};
 
 			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
-			SettingsButton.MouseEnter += (sender, e) => SettingsPath.Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xff, 0xff, 0xff));
-			SettingsButton.MouseLeave += (sender, e) => SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+			SettingsButton.MouseEnter += (sender, e) => {
+				SettingsPath.Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xff, 0xff, 0xff));
+				SettingsPath.Stroke = new SolidColorBrush(Color.FromArgb(0x60, 0x0, 0x0, 0x0));
+			};
+			SettingsButton.MouseLeave += (sender, e) => {
+				SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+				SettingsPath.Stroke = new SolidColorBrush(Colors.Transparent);
+			};
 			SettingsButton.MouseLeftButtonDown += ToggleDisplaySettings;
 		}
 

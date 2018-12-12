@@ -10,6 +10,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public float SkewAngle { get; set; } = -12;
 
 		/// <summary>
+		/// Segment weight
+		/// </summary>
+		public SegmentWeight SegmentWeight { get; set; } = SegmentWeight.Thin;
+
+		/// <summary>
 		/// The background color of the display
 		/// </summary>
 		public SKColor BackgroundColor { get; set; } = SKColors.Black;
@@ -86,6 +91,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public RasterizeStyleDefinition Copy()
 		{
 			return new RasterizeStyleDefinition {
+				SegmentWeight = SegmentWeight,
 				SkewAngle = SkewAngle,
 				BackgroundColor = new SKColor(BackgroundColor.Red, BackgroundColor.Green, BackgroundColor.Blue, BackgroundColor.Alpha),
 				Foreground = Foreground.Copy(),

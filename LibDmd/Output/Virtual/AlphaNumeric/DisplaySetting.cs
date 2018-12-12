@@ -1,5 +1,4 @@
 ﻿using System;
-using SkiaSharp;
 
 namespace LibDmd.Output.Virtual.AlphaNumeric
 {
@@ -22,11 +21,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// Segment type, e.g. if it's a 7-, 9- or 14-segment display (plus the dot)
 		/// </summary>
 		public SegmentType SegmentType { get; set; }
-
-		/// <summary>
-		/// Segment weight
-		/// </summary>
-		public SegmentWeight SegmentWeight { get; set; } = SegmentWeight.Bold;
 
 		/// <summary>
 		/// Dimensions of the rasterized segments
@@ -52,15 +46,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 		}
 
-		public DisplaySetting(int display, SegmentType segmentType, SegmentWeight segmentWeight, RasterizeStyleDefinition styleDef, int numChars, int numLines, int canvasWidth, int canvasHeight)
+		public DisplaySetting(int display, SegmentType segmentType, RasterizeStyleDefinition styleDef, int numChars, int numLines)
 		{
 			Display = display;
 			SegmentType = segmentType;
-			SegmentWeight = segmentWeight;
 			NumChars = numChars;
 			NumLines = numLines;
 			StyleDefinition = styleDef;
-			SetDimensions(canvasWidth, canvasHeight);
 		}
 
 		/// <summary>
@@ -70,7 +62,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="canvasHeight">Height of the canvas in pixels</param>
 		public void SetDimensions(int canvasWidth, int canvasHeight)
 		{
-			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType, SegmentWeight), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
+			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType, StyleDefinition.SegmentWeight), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
 			Style = StyleDefinition.Scale(Dim.SvgScale);
 		}
 

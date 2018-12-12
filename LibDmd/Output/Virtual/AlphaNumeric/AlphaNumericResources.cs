@@ -105,7 +105,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="display">Display number</param>
 		/// <param name="layer">Which layer</param>
 		/// <param name="type">Which segment type</param>
-		/// <param name="weight">Weight</param>
+		/// <param name="weight">SegmentWeight</param>
 		/// <param name="segment">Which segment</param>
 		/// <returns>Rasterized surface of null if rasterization is unavailable</returns>
 		public SKSurface GetRasterized(int display, RasterizeLayer layer, SegmentType type, SegmentWeight weight, int segment)
@@ -157,7 +157,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				return;
 			}
 
-			var source = _svgs[setting.SegmentType][setting.SegmentWeight];
+			var source = _svgs[setting.SegmentType][setting.StyleDefinition.SegmentWeight];
 			var segments = source.Keys.Where(i => i != FullSegment).ToList();
 
 			RasterizeLayer(setting, AlphaNumeric.RasterizeLayer.OuterGlow, setting.StyleDefinition.OuterGlow, setting.Style.OuterGlow, segments, setting.StyleDefinition.SkewAngle);
@@ -180,13 +180,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="skewAngle">How much to skew</param>
 		public void RasterizeLayer(DisplaySetting setting, RasterizeLayer layer, RasterizeLayerStyleDefinition layerStyleDef, RasterizeLayerStyle layerStyle, IEnumerable<int> segments, float skewAngle)
 		{
-			var source = _svgs[setting.SegmentType][setting.SegmentWeight];
-			Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
+			var source = _svgs[setting.SegmentType][setting.StyleDefinition.SegmentWeight];
+			//Logger.Info("Rasterizing {0} segments of layer {1} on display {2} segment size = {3}x{4}", setting.SegmentType, layer, setting.Display, setting.Dim.SvgWidth, setting.Dim.SvgHeight);
 			using (var paint = new SKPaint()) {
 				ApplyFilters(paint, layerStyleDef, layerStyle);
 				foreach (var i in segments) {
-					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, setting.SegmentWeight, i);
-					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, setting.SegmentWeight, i);
+					var initialKey = new RasterCacheKey(InitialCache, layer, setting.SegmentType, setting.StyleDefinition.SegmentWeight, i);
+					var cacheKey = new RasterCacheKey(setting.Display, layer, setting.SegmentType, setting.StyleDefinition.SegmentWeight, i);
 					if (!_rasterCache.ContainsKey(initialKey)) {
 						_rasterCache[initialKey] = RasterizeSegment(source[i].Picture, setting.Dim, skewAngle, paint);
 					} else {
