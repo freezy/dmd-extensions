@@ -15,10 +15,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private const int Dpi = 96;
 		private const int SwitchTimeMilliseconds = 150;
 
-		private static readonly SKColor BackgroundColor = SKColors.Black;
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
-		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
 		private Dictionary<int, double> _switchPercentage;
@@ -31,12 +29,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Init()
 		{
-			ObservableExtensions.Subscribe<DmdPosition>(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
+			ObservableExtensions.Subscribe<VirtualDisplayPosition>(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
 		}
 
 		public void CreateImage(int width, int height)
 		{
-			AlphanumericControl.Logger.Debug("Creating image...");
+			Logger.Debug("Creating image...");
 			Res.Loaded[DisplaySetting.SegmentType][DisplaySetting.StyleDefinition.SegmentWeight].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
@@ -64,7 +62,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 			_data = data;
 
-			AlphanumericControl.Logger.Debug("new data: [ {0} ]", string.Join(",", data));
+			Logger.Debug("new data: [ {0} ]", string.Join(",", data));
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
@@ -75,12 +73,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 
 			UpdateSwitchStatus(_stopwatch.ElapsedMilliseconds - _elapsedMilliseconds);
-
-			if (_call == 0) {
-				_stopwatch.Start();
-			} else {
-				_elapsedMilliseconds = _stopwatch.ElapsedMilliseconds;
-			}
 
 			var width = (int) writeableBitmap.Width;
 			var height = (int) writeableBitmap.Height;

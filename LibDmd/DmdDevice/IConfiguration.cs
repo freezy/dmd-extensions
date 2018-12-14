@@ -83,6 +83,8 @@ namespace LibDmd.DmdDevice
 	public interface IVirtualAlphaNumericDisplayConfig
 	{
 		bool Enabled { get; }
+		bool StayOnTop { get; }
+		bool HideGrip { get; }
 		RasterizeStyleDefinition Style { get; }
 	}
 

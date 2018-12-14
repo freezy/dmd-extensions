@@ -18,7 +18,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	/// <summary>
 	/// Interaction logic for AlphaNumericSettings.xaml
 	/// </summary>
-	public partial class VirtualAlphaNumericSettings : Window
+	public partial class VirtualAlphaNumericSettings
 	{
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -215,7 +215,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void ResetClicked(object sender, RoutedEventArgs e)
 		{
 			_displaySetting.ApplyStyle(_originalStyle.Copy());
-			Res.Rasterize(_displaySetting, true);
+			RasterizeAll();
+			UpdateControls();
 		}
 
 		private void CancelClicked(object sender, RoutedEventArgs e)

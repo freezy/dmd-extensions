@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -327,16 +328,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
-			var displaySettings = new DisplaySetting{
-				Display = displayNumber,
-				NumChars = numChars,
-				NumLines = numLines,
-				SegmentType = type,
-				StyleDefinition = _styleDef
-			};
 			_dispatcher.Invoke(delegate {
-				var display = new VirtualAlphaNumericDisplay(displaySettings, _config, ToggleSettings);
-				_displays[displayNumber] = display;
+				var display = CreateDisplay(displayNumber, numChars, numLines, type);
 				var thread = new Thread(() => {
 					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
 					display.Dispatcher.Invoke(() => {
@@ -355,6 +348,30 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				thread.SetApartmentState(ApartmentState.STA);
 				thread.Start();
 			});
+		}
+
+		private VirtualAlphaNumericDisplay CreateDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
+		{
+			var displaySettings = new DisplaySetting {
+				Display = displayNumber,
+				NumChars = numChars,
+				NumLines = numLines,
+				SegmentType = type,
+				StyleDefinition = _styleDef
+			};
+			var display = new VirtualAlphaNumericDisplay(displaySettings, _config, ToggleSettings);
+
+			if (_config.HasGameName) {
+				display.PositionChanged.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(position => {
+					Logger.Info("Position changed: {0}", position);
+					(_config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig).SetPosition(displayNumber, position);
+				});
+			}
+			
+
+			_displays[displayNumber] = display;
+
+			return display;
 		}
 
 		private void ToggleSettings(int displayNumber)

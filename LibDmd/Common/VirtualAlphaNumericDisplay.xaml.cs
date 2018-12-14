@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.AlphaNumeric;
@@ -11,18 +10,28 @@ namespace LibDmd.Common
 	{
 		public override IVirtualControl VirtualControl => AlphaNumericDisplay;
 
-		private readonly Configuration _config;
 		private readonly Action<int> _toggleSettings;
 
 		public VirtualAlphaNumericDisplay(DisplaySetting displaySetting, Configuration config, Action<int> toggleSettings)
 		{
+			LockHeight = true;
+			var alphanumConfig = (config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig);
+			var pos = alphanumConfig?.GetPosition(displaySetting.Display);
+			if (pos != null) {
+				Left = pos.Left;
+				Top = pos.Top;
+				Height = pos.Height;
+			} else {
+				Height = 120;
+			}
+			AlwaysOnTop = config.VirtualAlphaNumericDisplay.StayOnTop;
+			GripColor = config.VirtualAlphaNumericDisplay.HideGrip ? Brushes.Transparent : Brushes.White;
+
 			InitializeComponent();
 			Initialize();
 
-			_config = config;
 			_toggleSettings = toggleSettings;
 
-			LockHeight = true;
 			AlphaNumericDisplay.DisplaySetting = displaySetting;
 
 			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);

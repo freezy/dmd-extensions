@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Windows.Media;
 using IniParser;
@@ -33,9 +34,10 @@ namespace LibDmd.DmdDevice
 			set {
 				_gameName = value;
 				var gameSection = _data.Sections.FirstOrDefault(s => s.SectionName == _gameName);
-				GameConfig = gameSection != null ? new GameConfig(gameSection.SectionName, _data, this) : null;
+				GameConfig = gameSection != null ? new GameConfig(_gameName, _data, this) : null;
 			}
 		}
+		public bool HasGameName => _gameName != null;
 		public GameConfig GameConfig { get; private set; }
 		public IVpdbConfig VpdbStream { get; }
 		public IBrowserConfig BrowserStream { get; }
@@ -197,6 +199,9 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "alphanumeric";
 		public bool Enabled => GetBoolean("enabled", true);
+		public bool StayOnTop => GetBoolean("stayontop", false);
+		public bool HideGrip => GetBoolean("hidegrip", false);
+
 		private readonly Dictionary<string, RasterizeStyleDefinition> _styles = new Dictionary<string, RasterizeStyleDefinition>();
 
 		public RasterizeStyleDefinition Style {
@@ -256,6 +261,24 @@ namespace LibDmd.DmdDevice
 		public RasterizeStyleDefinition GetStyle(string name)
 		{
 			return _styles[name];
+		}
+
+		public VirtualDisplayPosition GetPosition(int displayNumber)
+		{
+			var prefix = "pos." + displayNumber + ".";
+			if (!HasValue(prefix + "height")) {
+				return null;
+			}
+			return new VirtualDisplayPosition(GetDouble(prefix + "left", 0), GetDouble(prefix + "top", 0), 0, GetDouble(prefix + "height", 0));
+		}
+
+		public void SetPosition(int display, VirtualDisplayPosition position)
+		{
+			var prefix = "pos." + display + ".";
+			Set(prefix + "left", position.Left, true);
+			Set(prefix + "top", position.Top, true);
+			Set(prefix + "height", position.Height, true);
+			Save();
 		}
 
 		public void SetStyle(string name, RasterizeStyleDefinition style)
@@ -461,7 +484,7 @@ namespace LibDmd.DmdDevice
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
-			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetBoolean(GameOverridePrefix + key, fallback);
 			}
 
@@ -479,7 +502,7 @@ namespace LibDmd.DmdDevice
 
 		protected int GetInt(string key, int fallback)
 		{
-			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetInt(GameOverridePrefix + key, fallback);
 			}
 
@@ -497,7 +520,7 @@ namespace LibDmd.DmdDevice
 
 		protected double GetDouble(string key, double fallback)
 		{
-			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetDouble(GameOverridePrefix + key, fallback);
 			}
 
@@ -515,7 +538,7 @@ namespace LibDmd.DmdDevice
 
 		protected string GetString(string key, string fallback)
 		{
-			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetString(GameOverridePrefix + key, fallback);
 			}
 
@@ -540,7 +563,7 @@ namespace LibDmd.DmdDevice
 
 		protected T GetEnum<T>(string key, T fallback)
 		{
-			if (Name != _parent.GameName && _parent.GameConfig != null && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key)) {
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetEnum(GameOverridePrefix + key, fallback);
 			}
 
@@ -581,14 +604,18 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		protected void Set(string key, double value)
+		protected void Set(string key, double value, bool onlyForGame = false)
 		{
-			if (_data[Name] == null) {
-				_data.Sections.Add(new SectionData(Name));
-			}
-			_data[Name][key] = value.ToString();
-			if (DoWrite) {
-				_parent.Save();
+			if (onlyForGame && CreateGameConfig()) {
+				_parent.GameConfig.Set(GameOverridePrefix + key, value);
+			} else {
+				if (_data[Name] == null) {
+					_data.Sections.Add(new SectionData(Name));
+				}
+				_data[Name][key] = value.ToString();
+				if (DoWrite) {
+					_parent.Save();
+				}
 			}
 		}
 
@@ -626,6 +653,36 @@ namespace LibDmd.DmdDevice
 			if (DoWrite) {
 				_parent.Save();
 			}
+		}
+
+		private bool HasGameSpecificValue(string key)
+		{
+			return Name != _parent.GameName
+			       && _parent.GameConfig != null
+			       && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key);
+		}
+
+		protected bool HasValue(string key)
+		{
+			if (HasGameSpecificValue(key)) {
+				return true;
+			}
+			return _data[Name] != null && _data[Name].ContainsKey(key);
+		}
+
+		private bool CreateGameConfig()
+		{
+			if (_parent.GameName == null) {
+				return false;
+			}
+
+			if (_parent.GameConfig != null) {
+				return true;
+			}
+
+			_data.Sections.Add(new SectionData(_parent.GameName));
+			_parent.GameName = _parent.GameName; // trigger GameConfig instantiation
+			return true;
 		}
 	}
 }
