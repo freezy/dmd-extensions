@@ -18,7 +18,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public DisplaySetting DisplaySetting { get; set; }
 		public bool IgnoreAspectRatio { get; set; }
-		public VirtualWindow Host { get; set; }
+		public VirtualDisplay Host { get; set; }
 
 		private WriteableBitmap _writeableBitmap;
 

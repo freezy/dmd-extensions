@@ -15,7 +15,7 @@ namespace LibDmd.Common
 	/// <summary>
 	/// A borderless virtual DMD that resizes with the same aspect ratio (if not disabled)
 	/// </summary>
-	public partial class VirtualDmd : VirtualWindow
+	public partial class VirtualDmd : VirtualDisplay
 	{
 		public override IVirtualControl VirtualControl => Dmd;
 

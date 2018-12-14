@@ -18,7 +18,7 @@ namespace LibDmd.Common
 	/// The parent class for windows ("virtual displays") that resize only to
 	/// a given aspect ratio.
 	/// </summary>
-	public abstract class VirtualWindow : Window
+	public abstract class VirtualDisplay : Window
 	{
 		/// <summary>
 		/// If true, the DMD stays on top of all other application windows.
@@ -27,8 +27,8 @@ namespace LibDmd.Common
 
 		public abstract IVirtualControl VirtualControl { get; }
 
-		public BehaviorSubject<DmdPosition> PositionChanged;
-		public readonly ISubject<DmdPosition> WindowResized = new Subject<DmdPosition>();
+		public BehaviorSubject<VirtualDisplayPosition> PositionChanged;
+		public readonly ISubject<VirtualDisplayPosition> WindowResized = new Subject<VirtualDisplayPosition>();
 
 		public bool IgnoreAspectRatio
 		{
@@ -61,7 +61,7 @@ namespace LibDmd.Common
 			SizeChanged += LocationChanged_Event;
 			ShowActivated = false;
 			VirtualControl.Host = this;
-			PositionChanged = new BehaviorSubject<DmdPosition>(new DmdPosition(Left, Top, Width, Height));
+			PositionChanged = new BehaviorSubject<VirtualDisplayPosition>(new VirtualDisplayPosition(Left, Top, Width, Height));
 			ForceOnTop();
 		}
 
@@ -95,7 +95,7 @@ namespace LibDmd.Common
 
 		private void LocationChanged_Event(object sender, EventArgs e)
 		{
-			PositionChanged.OnNext(new DmdPosition(Left, Top, Width, Height));
+			PositionChanged.OnNext(new VirtualDisplayPosition(Left, Top, Width, Height));
 		}
 
 		public static Point GetMousePosition() // mouse position relative to screen
@@ -179,7 +179,7 @@ namespace LibDmd.Common
 				case WM.ExitSizeMove:
 					_adjustingHeight = null; // reset adjustment dimension and detect again next time window is resized
 					Resizing = false;
-					WindowResized.OnNext(new DmdPosition(Left, Top, Width, Height));
+					WindowResized.OnNext(new VirtualDisplayPosition(Left, Top, Width, Height));
 					break;
 
 			}
@@ -232,19 +232,18 @@ namespace LibDmd.Common
 		private const int SWP_NOSIZE = 0x0001;
 	}
 
-	public enum ResizeEvent
-	{
-		Started, Ended
-	}
-
-	public class DmdPosition
+	public class VirtualDisplayPosition
 	{
 		public double Left { get; set; }
 		public double Top { get; set; }
 		public double Width { get; set; }
 		public double Height { get; set; }
 
-		public DmdPosition(double left, double top, double width, double height)
+		public VirtualDisplayPosition()
+		{
+		}
+
+		public VirtualDisplayPosition(double left, double top, double width, double height)
 		{
 			Left = left;
 			Top = top;
@@ -261,6 +260,6 @@ namespace LibDmd.Common
 	public interface IVirtualControl : IDestination
 	{
 		bool IgnoreAspectRatio { get; set; }
-		VirtualWindow Host { get; set; }
+		VirtualDisplay Host { get; set; }
 	}
 }

@@ -212,7 +212,7 @@
     <Compile Include="Common\VirtualAlphaNumericDisplay.xaml.cs">
       <DependentUpon>VirtualAlphaNumericDisplay.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Common\VirtualWindow.cs" />
+    <Compile Include="Common\VirtualDisplay.cs" />
     <Compile Include="DmdDevice\AlphaNumeric.cs" />
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />

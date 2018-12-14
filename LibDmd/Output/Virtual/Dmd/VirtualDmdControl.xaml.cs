@@ -28,7 +28,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			set { _dotSize = value; UpdateEffectParams(); }
 		}
 
-		public VirtualWindow Host { set; get; }
+		public VirtualDisplay Host { set; get; }
 		public bool IgnoreAspectRatio {
 			get { return Dmd.Stretch == Stretch.UniformToFill; }
 			set { Dmd.Stretch = value ? Stretch.Fill : Stretch.UniformToFill; }

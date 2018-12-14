@@ -177,6 +177,8 @@ namespace DmdExt.Common
 			_options = options;
 		}
 
+		public bool StayOnTop => _options.VirtualDmdOnTop;
+		public bool HideGrip => _options.VirtualDmdHideGrip;
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
 		public RasterizeStyleDefinition Style { get; } = new RasterizeStyleDefinition();

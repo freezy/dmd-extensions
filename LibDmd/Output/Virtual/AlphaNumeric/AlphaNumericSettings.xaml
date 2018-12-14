@@ -61,7 +61,7 @@
         </GroupBox>
 
         <Button x:Name="ApplyButton" Content="Apply" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyClicked"/>
-        <Button Content="Cancel" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="CancelClicked"/>
+        <Button Content="Close" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="CancelClicked"/>
         <Button Content="Reset" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="ResetClicked"/>
     </Grid>
 </Window>

@@ -203,8 +203,6 @@ namespace LibDmd.DmdDevice
 				// When the window closes, shut down the dispatcher
 				_dmd.Closed += (s, e) => _dmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
-				//---_alphaNumericDisplay.Closed += (s, e) => _alphaNumericDisplay.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				//---_alphaNumericDisplay.Dispatcher.Invoke(SetupVirtualDmd);
 
 				// we're done with the setup - let the calling thread proceed
 				ev.Set();
