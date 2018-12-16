@@ -15,17 +15,22 @@ namespace LibDmd.Common
 		public VirtualAlphaNumericDisplay(DisplaySetting displaySetting, Configuration config, Action<int> toggleSettings)
 		{
 			LockHeight = true;
-			var alphanumConfig = (config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig);
-			var pos = alphanumConfig?.GetPosition(displaySetting.Display);
-			if (pos != null) {
-				Left = pos.Left;
-				Top = pos.Top;
-				Height = pos.Height;
+			if (config != null) {
+				var alphanumConfig = (config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig);
+				var pos = alphanumConfig?.GetPosition(displaySetting.Display);
+				if (pos != null) {
+					Left = pos.Left;
+					Top = pos.Top;
+					Height = pos.Height;
+				} else {
+					Height = 120;
+				}
+				AlwaysOnTop = config.VirtualAlphaNumericDisplay.StayOnTop;
+				GripColor = config.VirtualAlphaNumericDisplay.HideGrip ? Brushes.Transparent : Brushes.White;
+
 			} else {
 				Height = 120;
 			}
-			AlwaysOnTop = config.VirtualAlphaNumericDisplay.StayOnTop;
-			GripColor = config.VirtualAlphaNumericDisplay.HideGrip ? Brushes.Transparent : Brushes.White;
 
 			InitializeComponent();
 			Initialize();

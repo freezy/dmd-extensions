@@ -361,7 +361,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			};
 			var display = new VirtualAlphaNumericDisplay(displaySettings, _config, ToggleSettings);
 
-			if (_config.HasGameName) {
+			if (_config != null && _config.HasGameName) {
 				display.PositionChanged.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(position => {
 					Logger.Info("Position changed: {0}", position);
 					(_config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig).SetPosition(displayNumber, position);
