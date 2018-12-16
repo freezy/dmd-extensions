@@ -15,7 +15,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	/// <summary>
 	/// Interaction logic for AlphanumericControl.xaml
 	/// </summary>
-	public partial class AlphanumericControl : UserControl, IVirtualControl
+	public partial class AlphanumericControl : IVirtualControl
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -26,7 +26,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public VirtualDisplay Host { get; set; }
 
 		private const int Dpi = 96;
-		private const int SwitchTimeMilliseconds = 150;
+		private const int SwitchTimeMilliseconds = 1500;
 
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 

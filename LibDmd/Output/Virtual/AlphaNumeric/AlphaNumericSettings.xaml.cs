@@ -47,7 +47,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Left = left;
 			_config = config;
 			_originalStyle = styleDefinition.Copy();
-			_alphaNumericConfig = _config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
+			_alphaNumericConfig = _config?.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
 			_displaySetting = new DisplaySetting(
 				100,
 				SegmentType.Alphanumeric,
