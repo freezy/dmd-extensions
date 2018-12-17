@@ -64,6 +64,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
 					break;
 
+				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
 					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 20).ToArray());
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 20, 20).ToArray());
@@ -188,7 +189,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void ShowDisplays(NumericalLayout layout)
 		{
-			Logger.Info("New type of {0}", layout);
+			//Logger.Info("New type of {0}", layout);
 			// todo teardown current if open
 			switch (layout) {
 
@@ -197,7 +198,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
 					break;
 
-				case NumericalLayout.__2x20Alpha: // badgirls - Bad Girls
+				case NumericalLayout.None: // badgirls - Bad Girls
+				case NumericalLayout.__2x20Alpha:
 					ShowDisplay(0, 20, 1, SegmentType.Alphanumeric);
 					ShowDisplay(1, 20, 1, SegmentType.Alphanumeric);
 					break;
