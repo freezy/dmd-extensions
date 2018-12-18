@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Windows.Media;
 using IniParser;
@@ -28,6 +31,8 @@ namespace LibDmd.DmdDevice
 		public IVideoConfig Video { get; }
 		public IGifConfig Gif { get; }
 		public IBitmapConfig Bitmap { get; }
+
+		public ISubject<Unit> OnSave = new Subject<Unit>();
 
 		public string GameName {
 			get => _gameName;
@@ -93,17 +98,21 @@ namespace LibDmd.DmdDevice
 			VpdbStream = new VpdbConfig(_data, this);
 			BrowserStream = new BrowserConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
+
+			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
+				Logger.Info("Saving config to {0}", _iniPath);
+				try {
+					_parser.WriteFile(_iniPath, _data);
+
+				} catch (Exception e) {
+					Logger.Error("Error writing to file: {0}", e.Message);
+				}
+			});
 		}
 
 		public void Save()
 		{
-			Logger.Info("Saving config to {0}", _iniPath);
-			try {
-				_parser.WriteFile(_iniPath, _data);
-
-			} catch (UnauthorizedAccessException e) {
-				Logger.Error("Error writing to file: {0}", e.Message);
-			}
+			OnSave.Next();
 		}
 	}
 
