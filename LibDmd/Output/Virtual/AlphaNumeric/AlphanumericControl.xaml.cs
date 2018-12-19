@@ -26,7 +26,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public VirtualDisplay Host { get; set; }
 
 		private const int Dpi = 96;
-		private const int SwitchTimeMilliseconds = 1500;
+		private const int SwitchTimeMilliseconds = 150;
 
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
@@ -54,7 +54,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Init()
 		{
-			ObservableExtensions.Subscribe<VirtualDisplayPosition>(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
+			ObservableExtensions.Subscribe(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
+			_stopwatch.Start();
 		}
 
 		public void CreateImage(int width, int height)
@@ -97,7 +98,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				return;
 			}
 
-			UpdateSwitchStatus(_stopwatch.ElapsedMilliseconds - _elapsedMilliseconds);
 
 			var width = (int)writeableBitmap.Width;
 			var height = (int)writeableBitmap.Height;
@@ -111,7 +111,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				AlphaType = SKAlphaType.Premul,
 			};
 			using (var surface = SKSurface.Create(surfaceInfo, writeableBitmap.BackBuffer, width * 4)) {
-				AlphaNumericPainter.DrawDisplay(surface, DisplaySetting, _data);
+				UpdateSwitchStatus(_stopwatch.ElapsedMilliseconds - _elapsedMilliseconds);
+				AlphaNumericPainter.DrawDisplay(surface, DisplaySetting, _data, _switchPercentage);
 			}
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
 			writeableBitmap.Unlock();
@@ -135,6 +136,10 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Dispose()
 		{
+			_switchDirection = null;
+			_switchPercentage = null;
+			_stopwatch.Stop();
+			_stopwatch.Reset();
 			Res.Clear();
 		}
 
