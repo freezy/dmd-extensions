@@ -8,7 +8,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	{
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
-		public static void DrawDisplay(SKSurface surface, DisplaySetting ds, ushort[] data)
+		public static void DrawDisplay(SKSurface surface, DisplaySetting ds, ushort[] data, Dictionary<int, double> switchPercentage = null)
 		{
 			var canvas = surface.Canvas;
 			canvas.Clear(ds.StyleDefinition.BackgroundColor);
@@ -16,14 +16,22 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				DrawSegments(ds, canvas, (i, c, p) => DrawFullSegment(ds, c, p));
 			}
 			if (ds.StyleDefinition.OuterGlow.IsEnabled) {
-				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.OuterGlow, data.Length > i ? data[i] : (ushort)0, c, p));
+				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.OuterGlow, data.Length > i ? data[i] : (ushort)0, c, p, GetPercentage(switchPercentage, i)));
 			}
 			if (ds.StyleDefinition.InnerGlow.IsEnabled) {
-				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.InnerGlow, data.Length > i ? data[i] : (ushort)0, c, p));
+				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.InnerGlow, data.Length > i ? data[i] : (ushort)0, c, p, GetPercentage(switchPercentage, i)));
 			}
 			if (ds.StyleDefinition.Foreground.IsEnabled) {
-				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.Foreground, data.Length > i ? data[i] : (ushort)0, c, p));
+				DrawSegments(ds, canvas, (i, c, p) => DrawSegment(ds, RasterizeLayer.Foreground, data.Length > i ? data[i] : (ushort)0, c, p, GetPercentage(switchPercentage, i)));
 			}
+		}
+
+		private static double GetPercentage(Dictionary<int, double> switchPercentage, int pos)
+		{
+			if (switchPercentage == null) {
+				return 1;
+			}
+			return switchPercentage.ContainsKey(pos) ? switchPercentage[pos] : 1;
 		}
 
 		private static void DrawFullSegment(DisplaySetting ds, SKCanvas canvas, SKPoint position)
@@ -48,9 +56,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 		}
 
-		public static void DrawSegment(DisplaySetting displaySetting, RasterizeLayer layer, ushort seg, SKCanvas canvas, SKPoint canvasPosition)
+		public static void DrawSegment(DisplaySetting displaySetting, RasterizeLayer layer, ushort seg, SKCanvas canvas, SKPoint canvasPosition, double percentage)
 		{
 			using (var surfacePaint = new SKPaint()) {
+				if (percentage < 1) {
+					surfacePaint.Color = new SKColor(0, 0, 0, (byte)Math.Round(percentage * 255));
+				}
 				for (var j = 0; j < Res.SegmentSize[displaySetting.SegmentType]; j++) {
 					var rasterizedSegment = Res.GetRasterized(displaySetting.Display, layer, displaySetting.SegmentType, displaySetting.StyleDefinition.SegmentWeight, j);
 					if (((seg >> j) & 0x1) != 0 && rasterizedSegment != null) {
