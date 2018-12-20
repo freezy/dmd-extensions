@@ -133,8 +133,7 @@ namespace LibDmd.Input.PinballFX
 			ReadProcessMemory(hProcess, _pBaseAddress, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xF0, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x50, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress), colorBytes, colorBytes.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, colorBytes, pAddress.Length, IntPtr.Zero);
 			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
 			var colorCode = BitConverter.ToInt32(colorBytes, 0);
 
