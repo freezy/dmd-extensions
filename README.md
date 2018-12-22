@@ -63,14 +63,6 @@ setup, however note that games that you've already configured won't be affected.
 - For `dmddevice.dll` you probably want the 32-bit version unless you've set up
   VPM with `Setup64.exe` and you know what you're doing.
 
-## Build Instructions
-
-1. Download and install [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
-2. The unmanaged exports library needs MS Build tools, which come with .NET 3.5. [Install Instructions](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows-10)
-4. *Optional:* If you want `DmdDevice.dll` copied to your VPM folder after build, point the `VPM_HOME` environment variable to your VPM installation folder.
-5. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
-3. Open the `.sln` file in Visual Studio and build the solution.
-
 ### Test
 
 1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
@@ -163,58 +155,54 @@ can set this up as you would for a PIN2DMD:
 4. Run VPM setup, open the ROM's game options and enable *Use external DMD (dll)*
    as well as *Colorize DMD*.
 
-#### Configuration
+## Build Instructions
+
+1. Download and install [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+2. The unmanaged exports library needs MS Build tools, which come with .NET 3.5. [Install Instructions](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows-10)
+4. *Optional:* If you want `DmdDevice.dll` copied to your VPM folder after build, point the `VPM_HOME` environment variable to your VPM installation folder.
+5. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
+3. Open the `.sln` file in Visual Studio and build the solution.
+
+
+## Configuration
 
 Since `DmdDevice.dll` is called by VPM, we can't pass any configuration 
 parameters to it. Instead, we use `DmdDevice.ini` which must be located
 in the same folder as `VPinMAME.dll` or at the path where the `DMDDEVICE_CONFIG`
 environment variable is pointing to.
 
-The options are described by block below.
+### Output Configuration
 
-- `[global]` - Global options that are applied to all display types
-  - `resize`- How to downscale SEGA 192x64 pixel games to smaller displays. Can 
-    have three values:
-    - `stretch` - Just fill the available space and ignore the aspect ratio
-    - `fill` - Fill it up so the whole DMD is filled while keeping aspect ratio
-      intact. Pixels will be cropped off.
-    - `fit` - Scale it so the whole image fits on the DMD while keeping aspect
-       ratio intact. There will be white space (uh, more like black space).
-  - `fliphorizontally` - Flips the image horizontally (left/right)
-  - `flipvertically` - Flips the image vertically (top/down)
-  - `colorize` - enable or disable frame-by-frame colorization (inactive in 
-    VPX bundle)
-- `[virtualdmd]` - A virtual DMD that renders on the computer screen somewhat
-   nicely
-  - `enabled` - If false, don't show it
-  - `stayontop` - Virtual dmd stays on top of most other windows 
-  - `hidegrip` - Hide the resize grip
-  - `ignorear` - If true, allow free resizing of the virtual DMD.
-  - `useregistry` - If true, read the virtual DMD position from VPM's registry.
-  - `left` - X-axis of the window position
-  - `top` - Y-axis of the window position
-  - `width` - Width of the DMD in monitor pixels
-  - `height` - Height of the dmd in monitor pixels
-  - `dotsize` - Scale dot size. Use `0.8` for previous default setting
-- `[pindmd1]` Options for the 2-bit pinDMD display
-  - `enabled` - If false, doesn't bother looking for a pinDMD1
-- `[pindmd2]` Options for the 4-bit pinDMD2 display
-  - `enabled` - If false, doesn't bother looking for a pinDMD2
-- `[pindmd3]` Options for the RGB24 pinDMDv3 display
-  - `enabled` - If false, doesn't bother looking for a pinDMD3
-  - `port` - COM port, e.g. `COM3`
-- `[pin2dmd]` Options for the RGB24 PIN2DMD display
-  - `enabled` - If false, doesn't bother looking for a PIN2DMD
-  - `delay` - Delay in milliseconds to wait after loading a palette.
-- `[video]` - Allows creating an .avi video from the DMD frames.
-  - `enabled` - If enabled, write to an .avi file.   
-  - `path` - Path to folder or .avi file. If a folder is given, it will create
-    a file named after the current game.
-- `[browserstream]` - Streams the DMD in real time to your browser in your LAN
-  - `enabled` - If true, start a small web server
-  - `port` - Port of the web server
-- `[pinup]` - Enables output to PinUP.
-  - `enabled` - If true, send frames to PinUP.
+Since v1.8 you can also tell `dmdext.exe` to read the output configuration from
+`DmdDevice.ini` instead of passing them as command line arguments. The options
+are described below.
+
+The output are described by block below.
+
+| Command Line                   | DmdDevice.ini                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|--------------------------------|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-r`, `--resize`               | [global]<br>resize                             | How to downscale SEGA 192x64 pixel games to smaller displays. Can have three values:<ul>  <li>`stretch` - Just fill the available space and ignore the aspect ratio</li>  <li>`fill` - Fill it up so the whole DMD is filled while keeping aspect ratio intact. Pixels will be cropped off.</li>  <li>`fit` - Scale it so the whole image fits on the DMD while keeping aspect ratio intact. There will be white space (uh, more like black space).</li> |
+| `--flip-x`                     | [global]<br>fliphorizontally                   | Flips the image horizontally (left/right)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `--flip-y`                     | [global]<br>flipvertically                     | Flips the image vertically (top/down)                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| *n/a*                          | [global]<br>colorize                           | Enable or disable frame-by-frame colorization (inactive in VPX bundle)                                                                                                                                                                                                                                                                                                                                                                                   |
+| `-d virtual`<br>`--no-virtual` | [virtualdmd]<br>enabled                        | Shows a virtual DMD that renders on the computer screen somewhat nicely                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--virtual-stay-on-top`        | [virtualdmd]<br>stayontop                      | Virtual DMD stays on top of most other windows                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `--virtual-hide-grip`          | [virtualdmd]<br>hidegrip                       | Hide the resize grip                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| *n/a*                          | [virtualdmd]<br>ignorear                       | If true, allow free resizing of the virtual DMD, otherwise the aspect ratio is locked to the DMD's.                                                                                                                                                                                                                                                                                                                                                      |
+| *n/a*                          | [virtualdmd]<br>useregistry                    | If true, read the virtual DMD position from VPM's registry.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `--virtual-position`           | [virtualdmd]<br>left<br>top<br>width<br>height | Position of the virtual DMD. Command line takes in all four in the shown order, where the last (height) is optional.                                                                                                                                                                                                                                                                                                                                     |
+| `--virtual-dotsize`            | [virtualdmd]<br>dotsize                        | Scale dot size. Use `0.8` for previous default setting.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `-d pindmdv1`                  | [pindmd1]<br>enabled                           | Enables the 2-bit pinDMD display.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `-d pindmdv2`                  | [pindmd2]<br>enabled                           | Enables the 4-bit pinDMD2 display.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `-d pindmdv3`                  | [pindmd3]<br>enabled                           | Enables the RGB24 pinDMDv3 display.                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--port`                       | [pindmd3]<br>port                              | COM port, e.g. `COM3`.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `-d pin2dmd`                   | [pin2dmd]<br>enabled                           | Enables the RGB24 PIN2DMD display.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| *n/a*                          | [pin2dmd]<br>delay                             | Delay in milliseconds to wait after loading a palette.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| *n/a*                          | [video]<br>enabled                             | Enables creating an .avi video from the DMD frames.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| *n/a*                          | [video]<br>path                                | Path to folder or .avi file. If a folder is given, it will create a file named after the current game.                                                                                                                                                                                                                                                                                                                                                   |
+| *n/a*                          | [browserstream]<br>enabled                     | Enables streaming the DMD in real time to your browser in your LAN.                                                                                                                                                                                                                                                                                                                                                                                      |
+| *n/a*                          | [browserstream]<br>port                        | Port of the web server to listen on                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--pinup`                      | [pinup]<br>enable                              | Enables output to PinUP.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 You can also override all options per game by using the game's name as section 
 name and pre-fixing options with the name of the section (apart from `[global]`
@@ -240,256 +228,56 @@ setting. That means you can use VPM to position the DMD and dmdext will take
 the same setting for each game. This behavior can be enabled using the 
 `useregistry` option.
 
-Finally, be aware that `DmdDevice.ini` is exclusively read by `DmdDevice.dll`.
-Options for `dmdext.exe` are passed as command line options as documented below.
-    
+### Command Line Configuration
 
-## Documentation
+Input options only apply to dmdext.exe, because the DLL is called externally
+from VPM where no configuration is necessary (apart from enabling it in VPM).
 
-All options are documented in the tool.
+The following parameters are valid for all of dmdext's commands:
 
-```
-C:\>dmdext
+| Parameter              | Description                                                                                        | Default Value |
+|------------------------|----------------------------------------------------------------------------------------------------|---------------|
+| `--use-ini`            | Use output configuration from `DmdDevice.ini`                                                      | *none*        |
+| `-c, --color`          | Sets the color of a grayscale source that is rendered on an RGB destination.                       | ff3000        |
+| `-q, --quit-when-done` | Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.          | false         |
+| `--quit-after`         | Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. | -1            |
+| `--no-clear`           | Don't clear screen when quitting.                                                                  | false         |
+| `-o, --output-to-file` | If set, writes all frames as PNG bitmaps to the provided folder.                                   |               |
 
-DMD Extensions v1.7.2
-USAGE: dmdext <command> [<options>]
 
-  mirror    Mirrors pixel data from the screen or memory to all available
-            devices.
-
-  play      Plays any media on all available devices (currently only images).
-
-  test      Displays a test image on all available devices.
-```
-
-### Mirror
+Note that all options of dmdext.exe are also available via command line:
 
 ```
-C:\>dmdext mirror --help
-
-DMD Extensions v1.7.2
-USAGE: dmdext mirror --source=<source> [--destination=<destination>]
-
-  -s, --source             Required. The source you want to retrieve DMD data
-                           from. One of: [ pinballfx2, pinballfx3,
-                           pinballarcade, propinball, screen ].
-
-  -f, --fps                How many frames per second should be mirrored.
-                           Default: 25
-
-  --idle-after             Wait for number of milliseconds until clearing the
-                           screen. Disable with 0. Default: 0.
-
-  --idle-play              Play this file while idleing instead of blank
-                           screen. Supported formats: JPG, PNG, GIF. Animated
-                           GIFs are supported.
-
-  --position               [screen] Position and size of screen grabber source.
-                           Four values: <Left> <Top> <Width> <Height>. Default:
-                           "0 0 128 32".
-
-  --resize-to              [screen] Resize captured screen to this size. Two
-                           values: <Width> <Height>. Default: "128 32".
-
-  --grid-spacing           [screen] How much of the white space around the dot
-                           should be cut off (grid size is defined by
-                           --resize-to). 1 means same size as the dot, 0.5 half
-                           size, etc. 0 for disable. Default: 0.
-
-  --propinball-args        [propinball] Arguments send from the Pro Pinball
-                           master process. Usually something like: "ndmd
-                           w0_0_0_0_w m392". Will be set autmatically when
-                           called through Pro Pinball.
-
-  --fx3-legacy             [pinballfx3] If set, don't use the memory grabber
-                           but the legacy screen grabber, like Pinball FX2.
-                           Default: false.
-
-  -d, --destination        The destination where the DMD data is sent to. One
-                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
-                           virtual ]. Default: "auto", which outputs to all
-                           available devices.
-
-  -r, --resize             How the source image is resized. One of: [ stretch,
-                           fill, fit ]. Default: "stretch".
-
-  --no-virtual             Explicitly disables the virtual DMD when destination
-                           is "auto". Default: false.
-
-  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
-                           application windows. Default: false.
-
-  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
-                           false.
-
-  --virtual-position       Position and size of virtual DMD. Four values:
-                           <Left> <Top> <Width> [<Height>]. Height is optional
-                           and can be used for custom aspect ratio. Default: "0
-                           0 1024".
-
-  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
-
-  -c, --color              Sets the color of a grayscale source that is
-                           rendered on an RGB destination. Default: ff3000
-
-  --flip-x                 Flips the image horizontally (left/right). Default:
-                           false.
-
-  --flip-y                 Flips the image vertically (top/down). Default:
-                           false.
-
-  -p, --port               Force COM port for PinDMDv3 devices. Example:
-                           "COM3".
-
-  --output-delay           How long to wait in milliseconds for data to be sent
-                           to the device. Default: 25.
-
-  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
-                           FX2 doesn't receive any frames anymore. Default:
-                           false
-
-  --quit-after             Exit after n milliseconds. If set to -1, waits
-                           indefinitely or until source finishes when -q used.
-                           Default: -1
-
-  --no-clear               Don't clear screen when quitting. Default: false.
-
-  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
-                           provided folder.
-
-  --pinup                  If set, enable output to PinUP. The value is the
-                           name of the game.
+dmdext --help
+dmdext mirror --help
+dmdext play --help
+dmdext test --help
 ```
 
-### Media
+#### Mirror
 
-```
-C:\>dmdext play --help
+The `mirror` command has the following additional parameters:
 
-DMD Extensions v1.7.2
-USAGE: dmdext play --file=<image path> [--destination=<destination>]
+| Parameter           | Description                                                                                                                                                                     | Default value |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballarcade, propinball, screen ].                                                 | *n/a*         |
+| `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25            |
+| `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0             |
+| `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*        |
+| `--position`        | *screen* - Position and size of screen grabber source. Four values: `<Left> <Top> <Width> <Height>`.                                                                            | 0 0 128 32    |
+| `--resize-to`       | *screen* - Resize captured screen to this size. Two values: <Width> <Height>.                                                                                                   | 128 32        |
+| `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0             |
+| `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |               |
+| `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false         |
 
-  -f, --file               Required. Path to the file to play. Currently
-                           supported file types: PNG, JPG, BIN (raw).
+#### Play
 
-  -d, --destination        The destination where the DMD data is sent to. One
-                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
-                           virtual ]. Default: "auto", which outputs to all
-                           available devices.
+The `play` command has the following additional parameters:
 
-  -r, --resize             How the source image is resized. One of: [ stretch,
-                           fill, fit ]. Default: "stretch".
+| Parameter           | Description                                                                    | Default value |
+|---------------------|--------------------------------------------------------------------------------|---------------|
+| `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*        |
 
-  --no-virtual             Explicitly disables the virtual DMD when destination
-                           is "auto". Default: false.
-
-  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
-                           application windows. Default: false.
-
-  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
-                           false.
-
-  --virtual-position       Position and size of virtual DMD. Four values:
-                           <Left> <Top> <Width> [<Height>]. Height is optional
-                           and can be used for custom aspect ratio. Default: "0
-                           0 1024".
-
-  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
-
-  -c, --color              Sets the color of a grayscale source that is
-                           rendered on an RGB destination. Default: ff3000
-
-  --flip-x                 Flips the image horizontally (left/right). Default:
-                           false.
-
-  --flip-y                 Flips the image vertically (top/down). Default:
-                           false.
-
-  -p, --port               Force COM port for PinDMDv3 devices. Example:
-                           "COM3".
-
-  --output-delay           How long to wait in milliseconds for data to be sent
-                           to the device. Default: 25.
-
-  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
-                           FX2 doesn't receive any frames anymore. Default:
-                           false
-
-  --quit-after             Exit after n milliseconds. If set to -1, waits
-                           indefinitely or until source finishes when -q used.
-                           Default: -1
-
-  --no-clear               Don't clear screen when quitting. Default: false.
-
-  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
-                           provided folder.
-
-  --pinup                  If set, enable output to PinUP. The value is the
-                           name of the game.
-```
-### Test
-
-```
-C:\>dmdext test --help
-
-DMD Extensions v1.7.2
-USAGE: dmdext test [--destination=<destination>]
-
-  -d, --destination        The destination where the DMD data is sent to. One
-                           of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd,
-                           virtual ]. Default: "auto", which outputs to all
-                           available devices.
-
-  -r, --resize             How the source image is resized. One of: [ stretch,
-                           fill, fit ]. Default: "stretch".
-
-  --no-virtual             Explicitly disables the virtual DMD when destination
-                           is "auto". Default: false.
-
-  --virtual-stay-on-top    Makes the virtual DMD stay on top of other
-                           application windows. Default: false.
-
-  --virtual-hide-grip      Hides the resize grip of the virtual DMD. Default:
-                           false.
-
-  --virtual-position       Position and size of virtual DMD. Four values:
-                           <Left> <Top> <Width> [<Height>]. Height is optional
-                           and can be used for custom aspect ratio. Default: "0
-                           0 1024".
-
-  --virtual-dotsize        Scale the dot size of the virtual DMD. Default: 1
-
-  -c, --color              Sets the color of a grayscale source that is
-                           rendered on an RGB destination. Default: ff3000
-
-  --flip-x                 Flips the image horizontally (left/right). Default:
-                           false.
-
-  --flip-y                 Flips the image vertically (top/down). Default:
-                           false.
-
-  -p, --port               Force COM port for PinDMDv3 devices. Example:
-                           "COM3".
-
-  --output-delay           How long to wait in milliseconds for data to be sent
-                           to the device. Default: 25.
-
-  -q, --quit-when-done     Exit the program when finished, e.g. when Pinball
-                           FX2 doesn't receive any frames anymore. Default:
-                           false
-
-  --quit-after             Exit after n milliseconds. If set to -1, waits
-                           indefinitely or until source finishes when -q used.
-                           Default: -1
-
-  --no-clear               Don't clear screen when quitting. Default: false.
-
-  -o, --output-to-file     If set, writes all frames as PNG bitmaps to the
-                           provided folder.
-
-  --pinup                  If set, enable output to PinUP. The value is the
-                           name of the game.
-```
 
 ## Compatibility
 
