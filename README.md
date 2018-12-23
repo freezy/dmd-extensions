@@ -235,14 +235,14 @@ from VPM where no configuration is necessary (apart from enabling it in VPM).
 
 The following parameters are valid for all of dmdext's commands:
 
-| Parameter              | Description                                                                                        | Default Value |
-|------------------------|----------------------------------------------------------------------------------------------------|---------------|
-| `--use-ini`            | Use output configuration from `DmdDevice.ini`                                                      | *none*        |
-| `-c, --color`          | Sets the color of a grayscale source that is rendered on an RGB destination.                       | ff3000        |
-| `-q, --quit-when-done` | Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.          | false         |
-| `--quit-after`         | Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. | -1            |
-| `--no-clear`           | Don't clear screen when quitting.                                                                  | false         |
-| `-o, --output-to-file` | If set, writes all frames as PNG bitmaps to the provided folder.                                   |               |
+| Parameter              | Description                                                                                        | Default |
+|------------------------|----------------------------------------------------------------------------------------------------|---------|
+| `--use-ini`            | Use output configuration from `DmdDevice.ini`                                                      | *none*  |
+| `-c, --color`          | Sets the color of a grayscale source that is rendered on an RGB destination.                       | ff3000  |
+| `-q, --quit-when-done` | Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.          | false   |
+| `--quit-after`         | Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. | -1      |
+| `--no-clear`           | Don't clear screen when quitting.                                                                  | false   |
+| `-o, --output-to-file` | If set, writes all frames as PNG bitmaps to the provided folder.                                   |         |
 
 
 Note that all options of dmdext.exe are also available via command line:
@@ -258,25 +258,25 @@ dmdext test --help
 
 The `mirror` command has the following additional parameters:
 
-| Parameter           | Description                                                                                                                                                                     | Default value |
-|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
-| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballarcade, propinball, screen ].                                                 | *n/a*         |
-| `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25            |
-| `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0             |
-| `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*        |
-| `--position`        | *screen* - Position and size of screen grabber source. Four values: `<Left> <Top> <Width> <Height>`.                                                                            | 0 0 128 32    |
-| `--resize-to`       | *screen* - Resize captured screen to this size. Two values: <Width> <Height>.                                                                                                   | 128 32        |
-| `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0             |
-| `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |               |
-| `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false         |
+| Parameter           | Description                                                                                                                                                                     | Default    |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ `pinballfx2`, `pinballfx3`, `pinballarcade`, `propinball`, `screen` ].                                       | *n/a*      |
+| `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25         |
+| `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0          |
+| `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*     |
+| `--position`        | *screen* - Position and size of screen grabber source. Four values: `<Left> <Top> <Width> <Height>`.                                                                            | 0 0 128 32 |
+| `--resize-to`       | *screen* - Resize captured screen to this size. Two values: <Width> <Height>.                                                                                                   | 128 32     |
+| `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0          |
+| `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |            |
+| `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false      |
 
 #### Play
 
 The `play` command has the following additional parameters:
 
-| Parameter           | Description                                                                    | Default value |
-|---------------------|--------------------------------------------------------------------------------|---------------|
-| `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*        |
+| Parameter           | Description                                                                    | Default |
+|---------------------|--------------------------------------------------------------------------------|---------|
+| `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*  |
 
 
 ## Compatibility
