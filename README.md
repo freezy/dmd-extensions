@@ -18,6 +18,8 @@ Currently supported displays:
 - **PIN2DMD**, full RGB support
 - **Virtual DMD** on a computer monitor, renders nice dots and is useful for 
   debugging.
+- **Alphanumeric Virtual**, a high-resolution virtual segmented display for 
+  pre-DMD area games.
 - You can also stream the DMD to a browser in your LAN, because, why not!
 
 ## Features
@@ -36,6 +38,14 @@ line options below, so have a close look at those as well.
 
 Since v1.7, DMD Extensions also support dynamic DMD coloring previously only
 available for PIN2DMD displays (both side-channel and VNI).
+
+Since v1.8, DMD Exensions supports high-resolution rendering of segmented 
+alpha-numeric displays:
+
+![alphanumeric](https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png)
+
+Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/pull/152).
+
 
 ## Install Instructions
 
@@ -277,7 +287,6 @@ The `play` command has the following additional parameters:
 | Parameter           | Description                                                                    | Default |
 |---------------------|--------------------------------------------------------------------------------|---------|
 | `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*  |
-
 
 ## Compatibility
 
