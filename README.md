@@ -42,7 +42,7 @@ available for PIN2DMD displays (both side-channel and VNI).
 Since v1.8, DMD Exensions supports high-resolution rendering of segmented 
 alpha-numeric displays:
 
-![alphanumeric](https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png)
+<image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
 
 Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/pull/152).
 
