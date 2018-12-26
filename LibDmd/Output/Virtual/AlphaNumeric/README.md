@@ -6,7 +6,7 @@ games.
 Every section of the display gets a separate window that can be placed 
 arbitrarily on the monitor, matching the backglasses layout:
 
-![image](https://user-images.githubusercontent.com/70426/49953889-73570b00-feff-11e8-97ee-109f1de6c4e8.png)
+<image src="https://user-images.githubusercontent.com/70426/49953889-73570b00-feff-11e8-97ee-109f1de6c4e8.png" width="350"/>
 
 ## Setup
 
