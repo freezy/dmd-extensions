@@ -6,6 +6,7 @@
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
         xmlns:common="clr-namespace:LibDmd.Common"
         xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
+        xmlns:skiaDmd="clr-namespace:LibDmd.Output.Virtual.SkiaDmd"
         mc:Ignorable="d"
         Title="Virtual DMD"
         Height="256"
@@ -35,6 +36,6 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <dmd:VirtualDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <skiaDmd:SkiaDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </common:VirtualDisplay>
