@@ -36,10 +36,10 @@ The command line tool can also display image files on the DMD device and render
 frames to bitmap files. Many features like this are described in the command 
 line options below, so have a close look at those as well.
 
-Since v1.7, DMD Extensions also support dynamic DMD coloring previously only
+Since v1.7, DMD Extensions support dynamic DMD coloring previously only
 available for PIN2DMD displays (both side-channel and VNI).
 
-Since v1.8, DMD Exensions supports high-resolution rendering of segmented 
+Since v1.8, DMD Exensions support high-resolution rendering of segmented 
 alpha-numeric displays:
 
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>

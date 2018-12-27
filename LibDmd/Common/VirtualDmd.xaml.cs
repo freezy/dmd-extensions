@@ -24,7 +24,7 @@ namespace LibDmd.Common
 			set
 			{
 				if (Dmd != null) {
-					Dmd.DotSize = value;
+					//Dmd.DotSize = value;
 				}
 			}
 		}
