@@ -44,7 +44,7 @@ alpha-numeric displays:
 
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
 
-Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/pull/152).
+Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/AlphaNumeric).
 
 
 ## Install Instructions
