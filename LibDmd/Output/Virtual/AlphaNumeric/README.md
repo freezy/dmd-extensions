@@ -12,7 +12,7 @@ arbitrarily on the monitor, matching the backglasses layout:
 
 ## Setup
 
-In order to enable alphanumeric rendering, set the flag to true in DmdDevice.ini:
+In order to enable alphanumeric rendering, set the flag to true in `DmdDevice.ini`:
 
 ```ini
 [alphanumeric]
@@ -91,7 +91,7 @@ which does two things:
 Note that changes that aren't saved but applied to the currently running game 
 won't be applied the next time the game starts.
 
-Assigning a game to a style in ``DmdDevice.ini` looks like that:
+Assigning a game to a style in `DmdDevice.ini` looks like that:
 
 ```ini
 [centaur]
@@ -100,7 +100,7 @@ alphanumeric style = MyNewStyle
 
 ## Display Position
 
-When you resize and move the displays around, their position are automatically
+When you resize or move the displays around, their position are automatically
 saved to `DmdDevice.ini` so the next time the game starts they are correctly
 positioned. A configuration looks like that:
 
