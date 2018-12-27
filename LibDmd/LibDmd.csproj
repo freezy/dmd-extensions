@@ -281,6 +281,7 @@
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
+    <None Include="Output\Virtual\AlphaNumeric\README.md" />
     <Compile Include="Output\Virtual\AlphaNumeric\DisplaySetting.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeDimensions.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeLayerStyle.cs" />
