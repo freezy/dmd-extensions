@@ -295,7 +295,7 @@ namespace LibDmd.DmdDevice
 
 		public void ApplyStyle(string name)
 		{
-			Set("style", name);
+			Set("style", name, true);
 		}
 
 		public void SetStyle(string name, RasterizeStyleDefinition style)
@@ -637,14 +637,18 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		protected void Set(string key, string value)
+		protected void Set(string key, string value, bool onlyForGame = false)
 		{
-			if (_data[Name] == null) {
-				_data.Sections.Add(new SectionData(Name));
-			}
-			_data[Name][key] = value;
-			if (DoWrite) {
-				_parent.Save();
+			if (onlyForGame && CreateGameConfig()) {
+				_parent.GameConfig.Set(GameOverridePrefix + key, value);
+			} else {
+				if (_data[Name] == null) {
+					_data.Sections.Add(new SectionData(Name));
+				}
+				_data[Name][key] = value;
+				if (DoWrite) {
+					_parent.Save();
+				}
 			}
 		}
 
