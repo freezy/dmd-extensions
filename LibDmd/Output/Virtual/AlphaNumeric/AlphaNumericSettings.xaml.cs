@@ -210,7 +210,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void ApplyClicked(object sender, RoutedEventArgs e)
 		{
 			OnStyleApplied.OnNext(_displaySetting.StyleDefinition.Copy());
-			_alphaNumericConfig.ApplyStyle(NewStyleName);
+			if (NewStyleName != null) {
+				_alphaNumericConfig.ApplyStyle(NewStyleName);
+			}
 		}
 
 		private void ResetClicked(object sender, RoutedEventArgs e)
