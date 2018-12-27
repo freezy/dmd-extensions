@@ -13,6 +13,7 @@ using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using MonoLibUsb;
 using NLog;
 using SkiaSharp;
 
@@ -112,7 +113,8 @@ namespace LibDmd.DmdDevice
 
 		public void Save()
 		{
-			OnSave.Next();
+			Logger.Info("Scheduling configuration save to {0}", _iniPath);
+			OnSave.OnNext(Unit.Default);
 		}
 	}
 
@@ -283,11 +285,17 @@ namespace LibDmd.DmdDevice
 
 		public void SetPosition(int display, VirtualDisplayPosition position)
 		{
+			DoWrite = false;
 			var prefix = "pos." + display + ".";
 			Set(prefix + "left", position.Left, true);
 			Set(prefix + "top", position.Top, true);
 			Set(prefix + "height", position.Height, true);
 			Save();
+		}
+
+		public void ApplyStyle(string name)
+		{
+			Set("style", name);
 		}
 
 		public void SetStyle(string name, RasterizeStyleDefinition style)
@@ -298,10 +306,10 @@ namespace LibDmd.DmdDevice
 			_styles.Add(name, style);
 			var prefix = "style." + name + ".";
 			DoWrite = false;
+			
 			Set(prefix + "skewangle", -style.SkewAngle);
 			Set(prefix + "weight", style.SegmentWeight);
 			Set(prefix + "backgroundcolor", style.BackgroundColor);
-			if (style.Foreground.IsEnabled) { }
 			SetLayerStyle(name, "foreground", style.Foreground);
 			SetLayerStyle(name, "innerglow", style.InnerGlow);
 			SetLayerStyle(name, "outerglow", style.OuterGlow);
@@ -316,6 +324,7 @@ namespace LibDmd.DmdDevice
 			}
 			var prefix = "style." + name + ".";
 			DoWrite = false;
+			Remove("style");
 			Remove(prefix + "skewangle");
 			Remove(prefix + "backgroundcolor");
 			RemoveLayerStyle(name, "foreground");
