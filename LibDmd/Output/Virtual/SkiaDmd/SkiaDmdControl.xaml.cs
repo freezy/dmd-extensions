@@ -40,6 +40,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 
+		private byte[] _frame;
 
 		private int _call = 0;
 		private Stopwatch _stopwatch = new Stopwatch();
@@ -72,11 +73,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			/*try {
-				Dispatcher.Invoke(() => DmdImage.Source = bmp);
+			try {
+				Dispatcher.Invoke(() => _frame = ImageUtil.ConvertToRgb24(bmp));
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
-			}*/
+			}
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -114,7 +115,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 		}
 
-
 		private void SetBitmap(WriteableBitmap bitmap)
 		{
 			DmdImage.Source = _writeableBitmap = bitmap;
@@ -128,7 +128,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
-			if (writeableBitmap == null) {
+			if (_frame == null || writeableBitmap == null) {
 				return;
 			}
 
@@ -139,14 +139,28 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra8888, SKAlphaType.Premul, writeableBitmap.BackBuffer, width * 4)) {
 				var canvas = surface.Canvas;
-				var x = 30;
-				var paint = new SKPaint() { Color = new SKColor(0, 0, 0), TextSize = 16 };
-				canvas.Clear(new SKColor(130, 130, 130));
+				canvas.Clear(new SKColor(0, 0, 0));
+
+				var dotSize = new SKPoint(width / (float)DmdWidth, height / (float)DmdHeight);
+
+				for (var y = 0; y < DmdHeight; y++) {
+					for (var x = 0; x < DmdWidth * 3; x += 3) {
+						var dmdPos = new SKPoint(x / 3f * dotSize.X, y * dotSize.Y);
+						var framePos = y * DmdWidth * 3 + x;
+						var color = new SKColor(_frame[framePos], _frame[framePos + 1], _frame[framePos + 2]);
+						var dotPaint = new SKPaint {Color = color, IsAntialias = true};
+						var radius = Math.Min(dotSize.X, dotSize.Y) / 2;
+						canvas.DrawCircle(dmdPos.X + dotSize.X / 2, dmdPos.Y + dotSize.Y / 2, radius, dotPaint);
+					}
+				}
+
+				// render fps
+				var paint = new SKPaint() { Color = new SKColor(0xff, 0, 0), TextSize = 20 };
 				if (_call == 0) {
 					_stopwatch.Start();
 				}
 				var fps = _call / ((_stopwatch.Elapsed.TotalSeconds > 0) ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", x, 50, paint);
+				canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", 30, 50, paint);
 			}
 
 			writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
