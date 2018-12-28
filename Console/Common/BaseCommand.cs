@@ -12,6 +12,7 @@ using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.SkiaDmd;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;
@@ -99,7 +100,8 @@ namespace DmdExt.Common
 
 		private static IDestination ShowVirtualDmd(IVirtualDmdConfig config)
 		{
-			var dmd = new VirtualDmd {
+			var dmd = new SkiaDmdControl();
+			/*var dmd = new VirtualDmd {
 				AlwaysOnTop = config.StayOnTop,
 				GripColor = config.HideGrip ? Brushes.Transparent : Brushes.White,
 				Left = config.Left,
@@ -108,14 +110,14 @@ namespace DmdExt.Common
 				Height = config.Height,
 				IgnoreAspectRatio = config.IgnoreAr,
 				DotSize = config.DotSize
-			};
+			};*/
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
 
 				dmd.Dispatcher.Invoke(() => {
-					dmd.Dmd.Init();
+					//dmd.Dmd.Init();
 					dmd.Show();
 				});
 
@@ -131,7 +133,7 @@ namespace DmdExt.Common
 			// run the thread
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
-			return dmd.VirtualControl;
+			return dmd;
 		}
 
 		

@@ -17,15 +17,15 @@ namespace LibDmd.Common
 	/// </summary>
 	public partial class VirtualDmd : VirtualDisplay
 	{
-		public override IVirtualControl VirtualControl => Dmd;
+		public override IVirtualControl VirtualControl => null;
 
 		public double DotSize
 		{
 			set
 			{
-				if (Dmd != null) {
+				//if (Dmd != null) {
 					//Dmd.DotSize = value;
-				}
+				//}
 			}
 		}
 
