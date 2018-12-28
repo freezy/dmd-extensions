@@ -42,9 +42,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private byte[] _frame;
 
-		private int _call = 0;
+		private int _call;
 		private Stopwatch _stopwatch = new Stopwatch();
 		private WriteableBitmap _writeableBitmap;
+
+		private SKSurface _dot;
 
 		public SkiaDmdControl()
 		{
@@ -119,21 +121,36 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			DmdImage.Source = _writeableBitmap = bitmap;
 			Logger.Info("Bitmap set!");
+			PreRender();
 		}
+
+		private void PreRender()
+		{
+			var width = (int)_writeableBitmap.Width;
+			var height = (int)_writeableBitmap.Height;
+
+			var dotSize = new SKPoint(width / (float)DmdWidth, height / (float)DmdHeight);
+			var dotPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+			var dotRadius = Math.Min(dotSize.X, dotSize.Y) / 2;
+			_dot = SKSurface.Create(new SKImageInfo((int)dotSize.X, (int)dotSize.Y));
+			_dot.Canvas.DrawCircle(dotSize.X / 2, dotSize.Y / 2, dotRadius, dotPaint);
+		}
+
 
 		public void CreateImage(int width, int height)
 		{
 			SetBitmap(new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 		}
 
+	
 		public void DrawImage(WriteableBitmap writeableBitmap)
 		{
 			if (_frame == null || writeableBitmap == null) {
 				return;
 			}
 
-			int width = (int)writeableBitmap.Width,
-				height = (int)writeableBitmap.Height;
+			var width = (int) writeableBitmap.Width;
+			var	height = (int)writeableBitmap.Height;
 
 			writeableBitmap.Lock();
 
@@ -145,12 +162,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 				for (var y = 0; y < DmdHeight; y++) {
 					for (var x = 0; x < DmdWidth * 3; x += 3) {
-						var dmdPos = new SKPoint(x / 3f * dotSize.X, y * dotSize.Y);
+						
 						var framePos = y * DmdWidth * 3 + x;
 						var color = new SKColor(_frame[framePos], _frame[framePos + 1], _frame[framePos + 2]);
-						var dotPaint = new SKPaint {Color = color, IsAntialias = true};
-						var radius = Math.Min(dotSize.X, dotSize.Y) / 2;
-						canvas.DrawCircle(dmdPos.X + dotSize.X / 2, dmdPos.Y + dotSize.Y / 2, radius, dotPaint);
+						var dotPaint = new SKPaint { ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.SrcIn) };
+						var dotPos = new SKPoint(x / 3f * dotSize.X, y * dotSize.Y);
+						canvas.DrawSurface(_dot, dotPos, dotPaint);
+						//canvas.DrawCircle(dmdPos.X + dotSize.X / 2, dmdPos.Y + dotSize.Y / 2, radius, dotPaint);
 					}
 				}
 
