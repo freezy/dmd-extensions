@@ -105,7 +105,7 @@ namespace LibDmd.Common
 			return new Point(w32Mouse.X, w32Mouse.Y);
 		}
 
-		private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+		protected void Window_MouseDown(object sender, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton == MouseButton.Left) {
 				DragMove();

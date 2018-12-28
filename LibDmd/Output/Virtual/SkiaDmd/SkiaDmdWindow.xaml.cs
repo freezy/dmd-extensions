@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -21,11 +22,11 @@ using SkiaSharp.Views.Desktop;
 namespace LibDmd.Output.Virtual.SkiaDmd
 {
 	/// <summary>
-	/// Interaction logic for SkiaDmdControl.xaml
+	/// Interaction logic for SkiaDmdWindow.xaml
 	/// </summary>
-	public partial class SkiaDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class SkiaDmdControl : VirtualDisplay, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	{
-		public bool IgnoreAspectRatio { get; set; }
+		public override IVirtualControl VirtualControl => this;
 		public VirtualDisplay Host { get; set; }
 		public bool IsAvailable => true;
 
@@ -43,18 +44,17 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private SKSize _canvasSize;
 		private SKSurface _dot;
-		private SKCanvas _canvas;
 
 		private byte[] _frame;
 
 		private int _call;
-		private Stopwatch _stopwatch = new Stopwatch();
-		private WriteableBitmap _writeableBitmap;
+		private readonly Stopwatch _stopwatch = new Stopwatch();
 
 		public SkiaDmdControl()
 		{
 			InitializeComponent();
-			CompositionTarget.Rendering += (o, e) => DmdSurface.InvalidateVisual();
+			Initialize();
+			CompositionTarget.Rendering += (o, e) => glhost.Child?.Invalidate();
 		}
 
 		public void Init()
@@ -71,7 +71,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Logger.Info("Resizing Skia DMD to {0}x{1}", width, height);
 			DmdWidth = width;
 			DmdHeight = height;
-			Host.SetDimensions(width, height);
+			//Host.SetDimensions(width, height);
 		}
 
 		public void RenderBitmap(BitmapSource bmp)
@@ -118,24 +118,60 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 		}
 
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		private void OnGLControlHost(object sender, EventArgs e)
 		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
+			var glControl = new SKGLControl();
+			glControl.PaintSurface += OnPaintGL;
+			glControl.MouseDown += OnGLControlMouseDown;
+			glControl.MouseUp += OnGLControlMouseUp;
+			glControl.MouseMove += OnGLControlMouseMove;
 
+
+			var host = (WindowsFormsHost)sender;
+
+			host.Child = glControl;
+
+			Logger.Info("GL control host initialized.");
+		}
+
+		private void OnGLControlMouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			if (e.Button == System.Windows.Forms.MouseButtons.Left) {
+				OnMouseLeftButtonDown(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left));
+			}
+		}
+
+		private void OnGLControlMouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			if (e.Button == System.Windows.Forms.MouseButtons.Left) {
+				OnMouseLeftButtonUp(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left));
+			}
+		}
+
+		private void OnGLControlMouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			OnMouseMove(new MouseEventArgs(Mouse.PrimaryDevice, 0));
+		}
+
+		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
+		{
+			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
+		}
+
+		private void OnPaintSurface(SKCanvas canvas, int width, int height)
+		{
 			// get the screen density for scaling
-			var scale = (float)PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.M11;
-			var canvasSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);
+			//var scale = (float)PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.M11;
+			var canvasSize = new SKSize(width, height);
 
 			if (_canvasSize != canvasSize) {
 				PreRender(canvasSize);
 				_canvasSize = canvasSize;
 			}
 			// handle the device screen density
-			canvas.Scale(scale);
-			_canvas = canvas;
+			//canvas.Scale(scale);
 
-			DrawImage(canvas);
+			DrawDmd(canvas);
 		}
 
 		private void PreRender(SKSize canvasSize)
@@ -148,33 +184,47 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			_dot.Canvas.DrawCircle(dotSize.Width / 2, dotSize.Height / 2, dotRadius, dotPaint);
 		}
 
-		public void DrawImage(SKCanvas canvas)
+		public void DrawDmd(SKCanvas canvas)
 		{
-			if (_frame == null || _canvas == null) {
+			if (_frame == null) {
 				Logger.Info("Frame is null, aborting.");
 				return;
 			}
-			canvas.Clear(new SKColor(0, 0, 0));
-			var dotSize = new SKPoint(_canvasSize.Width / DmdWidth, _canvasSize.Height / DmdHeight);
+			//Logger.Info("Drawing at {0}x{1}", _canvasSize.Width, _canvasSize.Height);
+
+			//canvas.SetMatrix(SKMatrix.MakeIdentity());
+
+			// render dmd
+			canvas.Clear(SKColors.Black);
+			var dotSize = new SKSize(_canvasSize.Width / DmdWidth, _canvasSize.Height / DmdHeight);
 			for (var y = 0; y < DmdHeight; y++) {
 				for (var x = 0; x < DmdWidth * 3; x += 3) {
-					
 					var framePos = y * DmdWidth * 3 + x;
 					var color = new SKColor(_frame[framePos], _frame[framePos + 1], _frame[framePos + 2]);
-					var dotPaint = new SKPaint { ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.SrcIn) };
-					var dotPos = new SKPoint(x / 3f * dotSize.X, y * dotSize.Y);
-					canvas.DrawSurface(_dot, dotPos, dotPaint);
-					//canvas.DrawCircle(dmdPos.X + dotSize.X / 2, dmdPos.Y + dotSize.Y / 2, radius, dotPaint);
+					using (var dotPaint = new SKPaint()) {
+						//dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.SrcIn);
+						//dotPaint.ImageFilter = filter;
+						dotPaint.IsAntialias = true;
+						dotPaint.Color = color;
+						var dotPos = new SKPoint(x / 3f * dotSize.Width, y * dotSize.Height);
+						//canvas.DrawSurface(_dot, dotPos, dotPaint);
+
+						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
+						canvas.DrawCircle(dotPos.X + dotSize.Width / 2, dotPos.Y + dotSize.Height / 2, dotRadius, dotPaint);
+					}
 				}
 			}
 
 			// render fps
-			var paint = new SKPaint() { Color = new SKColor(0xff, 0, 0), TextSize = 20 };
-			if (_call == 0) {
-				_stopwatch.Start();
+			using (var fpsPaint = new SKPaint()) {
+				fpsPaint.Color = new SKColor(0, 0xff, 0);
+				fpsPaint.TextSize = 20;
+				if (_call == 0) {
+					_stopwatch.Start();
+				}
+				var fps = _call / ((_stopwatch.Elapsed.TotalSeconds > 0) ? _stopwatch.Elapsed.TotalSeconds : 1);
+				canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", 30, 50, fpsPaint);
 			}
-			var fps = _call / ((_stopwatch.Elapsed.TotalSeconds > 0) ? _stopwatch.Elapsed.TotalSeconds : 1);
-			canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", 30, 50, paint);
 		}
 	}
 }

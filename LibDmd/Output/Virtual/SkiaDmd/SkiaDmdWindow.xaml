@@ -1,20 +1,15 @@
-﻿<common:VirtualDisplay x:Class="LibDmd.Common.VirtualDmd"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
-        xmlns:common="clr-namespace:LibDmd.Common"
-        xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
-        xmlns:skiaDmd="clr-namespace:LibDmd.Output.Virtual.SkiaDmd"
-        mc:Ignorable="d"
-        Title="Virtual DMD"
-        Height="256"
-        Width="1024"
-        WindowStyle="None"
-        Background="Black"
-        AllowsTransparency="True"
-        ResizeMode="CanResizeWithGrip">
+﻿<common:VirtualDisplay x:Class="LibDmd.Output.Virtual.SkiaDmd.SkiaDmdControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:common="clr-namespace:LibDmd.Common"
+             mc:Ignorable="d" 
+             Width="1024"
+             Height="256"
+             WindowStyle="None"
+             Background="Transparent"
+             ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -35,7 +30,7 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid>
-        <!--skiaDmd:SkiaDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <WindowsFormsHost x:Name="GLHost" Initialized="OnGLControlHost" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </common:VirtualDisplay>
