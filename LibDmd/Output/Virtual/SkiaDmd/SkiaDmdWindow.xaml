@@ -8,7 +8,7 @@
              Width="1024"
              Height="256"
              WindowStyle="None"
-             Background="Transparent"
+             Background="Black"
              ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">

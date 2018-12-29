@@ -54,7 +54,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			InitializeComponent();
 			Initialize();
-			CompositionTarget.Rendering += (o, e) => glhost.Child?.Invalidate();
+			CompositionTarget.Rendering += (o, e) => GLHost.Child?.Invalidate();
 		}
 
 		public void Init()
