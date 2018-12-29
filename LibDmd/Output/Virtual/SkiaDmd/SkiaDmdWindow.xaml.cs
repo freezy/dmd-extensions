@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibDmd.Common;
+using LibDmd.Output.Virtual.SkiaDmd.GLContext;
 using NLog;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -42,6 +43,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 
+		private SKSurface _surface;
+		private GRContext _grContext;
 		private SKSize _canvasSize;
 		private SKSurface _dot;
 
@@ -54,7 +57,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			InitializeComponent();
 			Initialize();
-			CompositionTarget.Rendering += (o, e) => GLHost.Child?.Invalidate();
+			//CompositionTarget.Rendering += (o, e) => GLHost.Child?.Invalidate();
+			CompositionTarget.Rendering += (o, e) => BitmapHost.InvalidateVisual();
+
+			var glContext = new WglContext();
+			glContext.MakeCurrent();
 		}
 
 		public void Init()
@@ -116,9 +123,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void Dispose()
 		{
+			_surface?.Dispose();
+			_grContext?.Dispose();
 		}
 
-		private void OnGLControlHost(object sender, EventArgs e)
+		/*private void OnGLControlHost(object sender, EventArgs e)
 		{
 			var glControl = new SKGLControl();
 			glControl.PaintSurface += OnPaintGL;
@@ -152,10 +161,16 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			OnMouseMove(new MouseEventArgs(Mouse.PrimaryDevice, 0));
 		}
-
+		
 		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
+		}
+		 */
+
+		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
+		{
+			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
@@ -166,12 +181,21 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			if (_canvasSize != canvasSize) {
 				PreRender(canvasSize);
+
+				Logger.Info("Setting up OpenGL context at {0}x{1}...", width, height);
+				_surface?.Dispose();
+				_grContext?.Dispose();
+				_grContext = GRContext.Create(GRBackend.OpenGL);
+				_surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height));
+
 				_canvasSize = canvasSize;
 			}
 			// handle the device screen density
 			//canvas.Scale(scale);
 
-			DrawDmd(canvas);
+			DrawDmd(_surface.Canvas);
+
+			canvas.DrawSurface(_surface, new SKPoint(0f, 0f));
 		}
 
 		private void PreRender(SKSize canvasSize)
