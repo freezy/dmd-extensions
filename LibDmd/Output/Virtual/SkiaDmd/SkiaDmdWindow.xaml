@@ -4,11 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:common="clr-namespace:LibDmd.Common"
+             xmlns:wpf="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              mc:Ignorable="d" 
              Width="1024"
              Height="256"
              WindowStyle="None"
              Background="Black"
+             AllowsTransparency="True"
              ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">
@@ -31,6 +33,7 @@
         </Style>
     </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <WindowsFormsHost x:Name="GLHost" Initialized="OnGLControlHost" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <wpf:SKElement x:Name="BitmapHost" PaintSurface="OnPaintCanvas" />
+        <!--WindowsFormsHost x:Name="GLHost" Initialized="OnGLControlHost" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
     </Grid>
 </common:VirtualDisplay>
