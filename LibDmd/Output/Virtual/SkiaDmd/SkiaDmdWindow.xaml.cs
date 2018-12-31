@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -48,6 +49,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private SKSize _canvasSize;
 		private SKSurface _dot;
 
+		private readonly WglContext _glContext = new WglContext();
+
 		private byte[] _frame;
 
 		private int _call;
@@ -57,11 +60,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			InitializeComponent();
 			Initialize();
-			//CompositionTarget.Rendering += (o, e) => GLHost.Child?.Invalidate();
 			CompositionTarget.Rendering += (o, e) => BitmapHost.InvalidateVisual();
 
-			var glContext = new WglContext();
-			glContext.MakeCurrent();
+			_glContext.MakeCurrent();
 		}
 
 		public void Init()
@@ -126,47 +127,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			_surface?.Dispose();
 			_grContext?.Dispose();
 		}
-
-		/*private void OnGLControlHost(object sender, EventArgs e)
-		{
-			var glControl = new SKGLControl();
-			glControl.PaintSurface += OnPaintGL;
-			glControl.MouseDown += OnGLControlMouseDown;
-			glControl.MouseUp += OnGLControlMouseUp;
-			glControl.MouseMove += OnGLControlMouseMove;
-
-
-			var host = (WindowsFormsHost)sender;
-
-			host.Child = glControl;
-
-			Logger.Info("GL control host initialized.");
-		}
-
-		private void OnGLControlMouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			if (e.Button == System.Windows.Forms.MouseButtons.Left) {
-				OnMouseLeftButtonDown(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left));
-			}
-		}
-
-		private void OnGLControlMouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			if (e.Button == System.Windows.Forms.MouseButtons.Left) {
-				OnMouseLeftButtonUp(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left));
-			}
-		}
-
-		private void OnGLControlMouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			OnMouseMove(new MouseEventArgs(Mouse.PrimaryDevice, 0));
-		}
-		
-		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
-		{
-			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
-		}
-		 */
 
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
 		{
@@ -249,6 +209,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				var fps = _call / ((_stopwatch.Elapsed.TotalSeconds > 0) ? _stopwatch.Elapsed.TotalSeconds : 1);
 				canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", 30, 50, fpsPaint);
 			}
+		}
+
+		private void OnWindowClosing(object sender, CancelEventArgs e)
+		{
+			_surface?.Dispose();
+			_grContext?.Dispose();
+			_glContext.Destroy();
 		}
 	}
 }

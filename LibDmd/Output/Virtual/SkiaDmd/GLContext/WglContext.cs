@@ -14,9 +14,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd.GLContext
 		private IntPtr fPbufferDC;
 		private IntPtr fPbufferGlContext;
 
+		private static WNDCLASS wc;
+
 		static WglContext()
 		{
-			var wc = new WNDCLASS
+			wc = new WNDCLASS
 			{
 				cbClsExtra = 0,
 				cbWndExtra = 0,
