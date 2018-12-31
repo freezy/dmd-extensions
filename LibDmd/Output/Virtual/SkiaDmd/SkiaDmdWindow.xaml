@@ -11,6 +11,7 @@
              WindowStyle="None"
              Background="Black"
              AllowsTransparency="True"
+             Closing="OnWindowClosing"
              ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="{x:Type ResizeGrip}">
@@ -34,6 +35,5 @@
     </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <wpf:SKElement x:Name="BitmapHost" PaintSurface="OnPaintCanvas" />
-        <!--WindowsFormsHost x:Name="GLHost" Initialized="OnGLControlHost" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
     </Grid>
 </common:VirtualDisplay>
