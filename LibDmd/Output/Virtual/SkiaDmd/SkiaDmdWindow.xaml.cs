@@ -47,7 +47,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private SKSurface _surface;
 		private GRContext _grContext;
 		private SKSize _canvasSize;
-		private SKSurface _dot;
+		private SKSurface _dotSurface;
 
 		private readonly WglContext _glContext = new WglContext();
 
@@ -63,6 +63,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			CompositionTarget.Rendering += (o, e) => BitmapHost.InvalidateVisual();
 
 			_glContext.MakeCurrent();
+			_grContext = GRContext.Create(GRBackend.OpenGL);
 		}
 
 		public void Init()
@@ -124,8 +125,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void Dispose()
 		{
-			_surface?.Dispose();
-			_grContext?.Dispose();
 		}
 
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
@@ -144,8 +143,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 				Logger.Info("Setting up OpenGL context at {0}x{1}...", width, height);
 				_surface?.Dispose();
-				_grContext?.Dispose();
-				_grContext = GRContext.Create(GRBackend.OpenGL);
 				_surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height));
 
 				_canvasSize = canvasSize;
@@ -164,8 +161,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Logger.Info("Pre-rendering dot at {0}x{1} for {2}x{3}", dotSize.Width, dotSize.Height, canvasSize.Width, canvasSize.Height);
 			var dotPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 			var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-			_dot = SKSurface.Create(new SKImageInfo((int)dotSize.Width, (int)dotSize.Height));
-			_dot.Canvas.DrawCircle(dotSize.Width / 2, dotSize.Height / 2, dotRadius, dotPaint);
+			_dotSurface = SKSurface.Create(_grContext, true, new SKImageInfo((int)dotSize.Width, (int)dotSize.Height));
+			_dotSurface.Canvas.DrawCircle(dotSize.Width / 2, dotSize.Height / 2, dotRadius, dotPaint);
 		}
 
 		public void DrawDmd(SKCanvas canvas)
@@ -191,7 +188,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 						dotPaint.IsAntialias = true;
 						dotPaint.Color = color;
 						var dotPos = new SKPoint(x / 3f * dotSize.Width, y * dotSize.Height);
-						//canvas.DrawSurface(_dot, dotPos, dotPaint);
+						//canvas.DrawSurface(_dotSurface, dotPos, dotPaint);
 
 						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
 						canvas.DrawCircle(dotPos.X + dotSize.Width / 2, dotPos.Y + dotSize.Height / 2, dotRadius, dotPaint);
@@ -213,6 +210,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void OnWindowClosing(object sender, CancelEventArgs e)
 		{
+			_dotSurface?.Dispose();
 			_surface?.Dispose();
 			_grContext?.Dispose();
 			_glContext.Destroy();
