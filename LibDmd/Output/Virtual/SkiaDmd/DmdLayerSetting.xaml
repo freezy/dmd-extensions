@@ -33,7 +33,7 @@
         <Label Grid.Column="0" Grid.Row="1" Content="Size" VerticalAlignment="Top" Margin="0,0,0,0">
             <Label.RenderTransform><TransformGroup><TranslateTransform X="-4" Y="-7"/></TransformGroup></Label.RenderTransform>
         </Label>
-        <Slider x:Name="DotSizeSlider" Grid.Column="0" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="20" Margin="0,0,8,8" Value="1" LargeChange="0.05" SmallChange="0.01" TickFrequency="0.05"/>
+        <Slider x:Name="DotSizeSlider" Grid.Column="0" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="8" Margin="0,0,8,8" Value="1" LargeChange="0.05" SmallChange="0.01" TickFrequency="0.05"/>
         <TextBox x:Name="DotSizeValue" Grid.Column="3" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
 
         <Label Grid.Column="4" Grid.Row="1" Content="Opacity" VerticalAlignment="Top" Margin="0,0,0,0">

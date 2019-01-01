@@ -208,8 +208,17 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 							dotPaint.ImageFilter = SKImageFilter.CreateBlur(blur, blur);
 						}
 						var dotPos = new SKPoint(x / 3f * size.Width, y * size.Height);
-						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-						canvas.DrawCircle(dotPos.X + size.Width / 2, dotPos.Y + size.Height / 2, dotRadius, dotPaint);
+						if (styleDef.IsRoundedEnabled) {
+							if (styleDef.Rounded < 1) {
+								var cornerRadius = Math.Min(dotSize.Width, dotSize.Height) * (float)styleDef.Rounded / 2;
+								canvas.DrawRoundRect(dotPos.X + size.Width / 2 - dotSize.Width / 2, dotPos.Y + size.Height / 2 - dotSize.Width / 2, dotSize.Width, dotSize.Height, cornerRadius, cornerRadius, dotPaint);
+							} else {
+								var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
+								canvas.DrawCircle(dotPos.X + size.Width / 2, dotPos.Y + size.Height / 2, dotRadius, dotPaint);
+							}
+						} else {
+							canvas.DrawRect(dotPos.X + size.Width / 2 - dotSize.Width / 2, dotPos.Y + size.Height / 2 - dotSize.Width / 2, dotSize.Width, dotSize.Height, dotPaint);
+						}
 					}
 				}
 			}
