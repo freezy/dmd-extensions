@@ -40,16 +40,16 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			LayerEnabled.Checked += (sender, e) => _dmdLayerStyleDefinition.IsEnabled = true;
 			LayerEnabled.Unchecked += (sender, e) => _dmdLayerStyleDefinition.IsEnabled = false;
 
-			DotSizeSlider.ValueChanged += (sender, e) => DotSizeValue.Text = DoubleToString(DotSizeSlider.Value);
+			DotSizeSlider.ValueChanged += (sender, e) => DotSizeValue.Text = DotSizeSlider.Value.ToString();
 			DotSizeValue.TextChanged += (sender, e) => DotSizeSlider.Value = StringToDouble(DotSizeValue.Text, DotSizeSlider.Value);
 
-			OpacitySlider.ValueChanged += (sender, e) => OpacityValue.Text = DoubleToString(OpacitySlider.Value);
+			OpacitySlider.ValueChanged += (sender, e) => OpacityValue.Text = OpacitySlider.Value.ToString();
 			OpacityValue.TextChanged += (sender, e) => OpacitySlider.Value = StringToDouble(OpacityValue.Text, OpacitySlider.Value);
 
-			LuminositySlider.ValueChanged += (sender, e) => LuminosityValue.Text = DoubleToString(LuminositySlider.Value);
+			LuminositySlider.ValueChanged += (sender, e) => LuminosityValue.Text = LuminositySlider.Value.ToString();
 			LuminosityValue.TextChanged += (sender, e) => LuminositySlider.Value = StringToDouble(LuminosityValue.Text, LuminositySlider.Value);
 
-			RoundedSlider.ValueChanged += (sender, e) => RoundedValue.Text = DoubleToString(RoundedSlider.Value);
+			RoundedSlider.ValueChanged += (sender, e) => RoundedValue.Text = RoundedSlider.Value.ToString();
 			RoundedValue.TextChanged += (sender, e) => RoundedSlider.Value = StringToDouble(RoundedValue.Text, RoundedSlider.Value);
 
 			BlurSlider.ValueChanged += (sender, e) => BlurValue.Text = DoubleToString(BlurSlider.Value);

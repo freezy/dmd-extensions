@@ -44,22 +44,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		};
 
 		/// <summary>
-		/// Returns a copy of this style where all parameters are scaled by a
-		/// given factor
-		/// </summary>
-		/// <param name="scaleFactor">Scale factor</param>
-		/// <returns>A copy of this object with updated parameters</returns>
-		public DmdStyle Scale(float scaleFactor)
-		{
-			return new DmdStyle {
-				Foreground = Foreground.Scale(scaleFactor),
-				InnerGlow = InnerGlow.Scale(scaleFactor),
-				OuterGlow = OuterGlow.Scale(scaleFactor),
-				Background = Background.Scale(scaleFactor),
-			};
-		}
-
-		/// <summary>
 		/// Returns an exact copy of this style
 		/// </summary>
 		/// <returns></returns>
@@ -78,29 +62,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			return $"BackgroundColor:{BackgroundColor.ToString()},Foreground:{Foreground},InnerGlow:{InnerGlow},OuterGlow:{OuterGlow},Background:{Background}";
 		}
-	}
-
-	public class DmdStyle
-	{		
-		/// <summary>
-		/// The top layer
-		/// </summary>
-		public DmdLayerStyle Foreground { get; set; }
-
-		/// <summary>
-		/// The second-to-top layer, usually used for an inner glow effect
-		/// </summary>
-		public DmdLayerStyle InnerGlow { get; set; }
-
-		/// <summary>
-		/// The third layer, usually used for an outer glow effect
-		/// </summary>
-		public DmdLayerStyle OuterGlow { get; set; }
-
-		/// <summary>
-		/// The background layer, displaying all segments in an unlit style
-		/// </summary>
-		public DmdLayerStyle Background { get; set; }
 	}
 
 	public enum DmdLayer
