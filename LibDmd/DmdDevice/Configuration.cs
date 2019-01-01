@@ -13,6 +13,7 @@ using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.SkiaDmd;
 using MonoLibUsb;
 using NLog;
 using SkiaSharp;
@@ -186,9 +187,9 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VirtualDmdConfig : AbstractConfiguration, IVirtualDmdConfig
+	public class VirtualDmdConfigLegacy : AbstractConfiguration, IVirtualDmdConfig
 	{
-		public override string Name { get; } = "virtualdmd";
+		public override string Name { get; } = "virtualdmd-legacy";
 
 		public bool Enabled => GetBoolean("enabled", true);
 		public bool StayOnTop => GetBoolean("stayontop", false);
@@ -201,8 +202,187 @@ namespace LibDmd.DmdDevice
 		public double Height => GetDouble("height", 256);
 		public double DotSize => GetDouble("dotsize", 1.0);
 
+		public VirtualDmdConfigLegacy(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class VirtualDmdConfig : VirtualDmdConfigLegacy, IVirtualDmdConfig
+	{
+		public override string Name { get; } = "virtualdmd";
+
+		private readonly Dictionary<string, DmdStyleDefinition> _styles = new Dictionary<string, DmdStyleDefinition>();
+
+		public DmdStyleDefinition Style
+		{
+			get
+			{
+				var style = GetString("style", "default");
+				return _styles.ContainsKey(style) ? _styles[style] : new DmdStyleDefinition();
+			}
+		}
+
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+			if (data[Name] == null) {
+				return;
+			}
+			var keyValues = data[Name].GetEnumerator();
+			while (keyValues.MoveNext()) {
+				var names = keyValues.Current.KeyName.Split(new[] { '.' }, 4);
+				if (names.Length > 1 && names[0] == "style") {
+					var styleName = names[1];
+					var styleProperty = names[2];
+					if (!_styles.ContainsKey(styleName)) {
+						_styles.Add(styleName, new DmdStyleDefinition());
+					}
+					switch (styleProperty) {
+						case "backgroundcolor":
+							_styles[styleName].BackgroundColor = GetSKColor(keyValues.Current.KeyName, _styles[styleName].BackgroundColor);
+							break;
+						case "foreground":
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].Foreground);
+							break;
+						case "innerglow":
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].InnerGlow);
+							break;
+						case "outerglow":
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].OuterGlow);
+							break;
+						case "background":
+							ParseLayerStyle(names[3], keyValues.Current, _styles[styleName].Background);
+							break;
+					}
+				}
+			}
+			//Logger.Info("Parsed styles: {0}", string.Join("\n", _styles.Keys.Select(k => $"{k}: {_styles[k]}")));
+		}
+
+		public List<string> GetStyleNames()
+		{
+			return _styles.Keys.ToList();
+		}
+
+		public DmdStyleDefinition GetStyle(string name)
+		{
+			return _styles[name];
+		}
+
+		public void ApplyStyle(string name)
+		{
+			Set("style", name, true);
+		}
+
+		public void SetStyle(string name, DmdStyleDefinition style)
+		{
+			if (_styles.ContainsKey(name)) {
+				_styles.Remove(name);
+			}
+			_styles.Add(name, style);
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+
+			Set(prefix + "backgroundcolor", style.BackgroundColor);
+			SetLayerStyle(name, "foreground", style.Foreground);
+			SetLayerStyle(name, "innerglow", style.InnerGlow);
+			SetLayerStyle(name, "outerglow", style.OuterGlow);
+			SetLayerStyle(name, "background", style.Background);
+			Save();
+		}
+
+		public void RemoveStyle(string name)
+		{
+			if (_styles.ContainsKey(name)) {
+				_styles.Remove(name);
+			}
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+			Remove("style");
+			Remove(prefix + "skewangle");
+			Remove(prefix + "backgroundcolor");
+			RemoveLayerStyle(name, "foreground");
+			RemoveLayerStyle(name, "innerglow");
+			RemoveLayerStyle(name, "outerglow");
+			RemoveLayerStyle(name, "background");
+			Save();
+		}
+
+		private void SetLayerStyle(string styleName, string layerName, DmdLayerStyleDefinition layerStyle)
+		{
+			var prefix = "style." + styleName + "." + layerName + ".";
+			Set(prefix + "enabled", layerStyle.IsEnabled);
+			if (layerStyle.IsEnabled) {
+
+				Set(prefix + "size", layerStyle.Size);
+				Set(prefix + "opacity", layerStyle.Opacity);
+				Set(prefix + "luminosity", layerStyle.Luminosity);
+
+				Set(prefix + "rounded.enabled", layerStyle.IsRoundedEnabled);
+				if (layerStyle.IsRoundedEnabled) {
+					Set(prefix + "rounded", layerStyle.Rounded);
+				} else {
+					Remove(prefix + "rounded");
+				}
+
+				Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
+				if (layerStyle.IsBlurEnabled) {
+					Set(prefix + "blur", layerStyle.Blur);
+				} else {
+					Remove(prefix + "blur");
+				}
+				
+			} else {
+				Remove(prefix + "size");
+				Remove(prefix + "opacity");
+				Remove(prefix + "luminosity");
+				Remove(prefix + "rounded.enabled");
+				Remove(prefix + "rounded");
+				Remove(prefix + "blur.enabled");
+				Remove(prefix + "blur");
+			}
+		}
+
+		private void RemoveLayerStyle(string styleName, string layerName)
+		{
+			var prefix = "style." + styleName + "." + layerName + ".";
+			Remove(prefix + "enabled");
+			Remove(prefix + "size");
+			Remove(prefix + "opacity");
+			Remove(prefix + "luminosity");
+			Remove(prefix + "rounded.enabled");
+			Remove(prefix + "rounded");
+			Remove(prefix + "blur.enabled");
+			Remove(prefix + "blur");
+		}
+
+		private void ParseLayerStyle(string property, KeyData keyData, DmdLayerStyleDefinition style)
+		{
+			switch (property) {
+				case "enabled":
+					style.IsEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "size":
+					style.Size = GetDouble(keyData.KeyName, 1.0);
+					break;
+				case "opacity":
+					style.Opacity = GetDouble(keyData.KeyName, 1.0);
+					break;
+				case "luminosity":
+					style.Luminosity = (float)GetDouble(keyData.KeyName, 0.0);
+					break;
+				case "rounded.enabled":
+					style.IsRoundedEnabled = GetBoolean(keyData.KeyName, true);
+					break;
+				case "rounded":
+					style.Rounded = GetDouble(keyData.KeyName, 1.0);
+					break;
+				case "blur.enabled":
+					style.IsBlurEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "blur":
+					style.Blur = GetDouble(keyData.KeyName, 0.0);
+					break;
+			}
 		}
 	}
 

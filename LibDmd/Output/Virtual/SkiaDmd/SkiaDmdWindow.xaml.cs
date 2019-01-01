@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.SkiaDmd.GLContext;
 using NLog;
 using SkiaSharp;
@@ -44,26 +45,44 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 
+		private readonly Configuration _config;
+		private readonly DmdStyleDefinition _styleDef = new DmdStyleDefinition();
+
 		private SKSurface _surface;
-		private GRContext _grContext;
+		private GLUtil _glUtil;
 		private SKSize _canvasSize;
 		private SKSurface _dotSurface;
 
-		private readonly WglContext _glContext = new WglContext();
+		private bool _settingsOpen;
+		private VirtualDmdSettings _settingWindow;
+		private IDisposable _settingSubscription;
 
 		private byte[] _frame;
 
 		private int _call;
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
-		public SkiaDmdControl()
+		public SkiaDmdControl(DmdStyleDefinition styleDef, Configuration config)
 		{
+			_styleDef = styleDef;
+			_config = config;
+
 			InitializeComponent();
 			Initialize();
 			CompositionTarget.Rendering += (o, e) => BitmapHost.InvalidateVisual();
 
-			_glContext.MakeCurrent();
-			_grContext = GRContext.Create(GRBackend.OpenGL);
+			_glUtil = GLUtil.GetInstance();
+
+			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+			SettingsButton.MouseEnter += (sender, e) => {
+				SettingsPath.Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xff, 0xff, 0xff));
+				SettingsPath.Stroke = new SolidColorBrush(Color.FromArgb(0x60, 0x0, 0x0, 0x0));
+			};
+			SettingsButton.MouseLeave += (sender, e) => {
+				SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
+				SettingsPath.Stroke = new SolidColorBrush(Colors.Transparent);
+			};
+			SettingsButton.MouseLeftButtonDown += ToggleDisplaySettings;
 		}
 
 		public void Init()
@@ -139,11 +158,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			var canvasSize = new SKSize(width, height);
 
 			if (_canvasSize != canvasSize) {
-				PreRender(canvasSize);
+				//PreRender(canvasSize);
 
 				Logger.Info("Setting up OpenGL context at {0}x{1}...", width, height);
 				_surface?.Dispose();
-				_surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height));
+				_surface = _glUtil.CreateSurface(width, height);
 
 				_canvasSize = canvasSize;
 			}
@@ -161,7 +180,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Logger.Info("Pre-rendering dot at {0}x{1} for {2}x{3}", dotSize.Width, dotSize.Height, canvasSize.Width, canvasSize.Height);
 			var dotPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 			var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-			_dotSurface = SKSurface.Create(_grContext, true, new SKImageInfo((int)dotSize.Width, (int)dotSize.Height));
+			_dotSurface = _glUtil.CreateSurface((int)dotSize.Width, (int)dotSize.Height);
 			_dotSurface.Canvas.DrawCircle(dotSize.Width / 2, dotSize.Height / 2, dotRadius, dotPaint);
 		}
 
@@ -208,12 +227,29 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 		}
 
+		private void ToggleDisplaySettings(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+		{
+			if (_settingWindow == null) {
+				_settingWindow = new VirtualDmdSettings(_styleDef, Top, Left + Width, _config);
+				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
+				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {
+					Logger.Info("Applying new style to DMD.");
+					// TODO
+				});
+			}
+
+			if (!_settingsOpen) {
+				_settingWindow.Show();
+			} else {
+				_settingWindow.Hide();
+			}
+		}
+
 		private void OnWindowClosing(object sender, CancelEventArgs e)
 		{
 			_dotSurface?.Dispose();
 			_surface?.Dispose();
-			_grContext?.Dispose();
-			_glContext.Destroy();
+			_glUtil.Destroy();
 		}
 	}
 }
