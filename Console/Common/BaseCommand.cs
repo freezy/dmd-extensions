@@ -77,7 +77,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config.VirtualDmd));
+				renderers.Add(ShowVirtualDmd(config));
 				Logger.Info("Added virtual DMD renderer.");
 			}
 
@@ -98,9 +98,9 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IDestination ShowVirtualDmd(IVirtualDmdConfig config)
+		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
-			var dmd = new SkiaDmdControl();
+			var dmd = new SkiaDmdControl(new DmdStyleDefinition(), config as Configuration);
 			/*var dmd = new VirtualDmd {
 				AlwaysOnTop = config.StayOnTop,
 				GripColor = config.HideGrip ? Brushes.Transparent : Brushes.White,

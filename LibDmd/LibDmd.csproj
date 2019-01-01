@@ -208,6 +208,7 @@
   <ItemGroup>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
+    <Compile Include="Common\GLUtil.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
@@ -297,6 +298,9 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\SkiaDmd\DmdSettings.xaml.cs">
+      <DependentUpon>DmdSettings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Output\Virtual\SkiaDmd\DmdLayerSetting.xaml.cs">
       <DependentUpon>DmdLayerSetting.xaml</DependentUpon>
     </Compile>
@@ -311,6 +315,7 @@
     <Compile Include="Output\Virtual\SkiaDmd\GLContext\WindowStyles.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\GLContext\WNDCLASS.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\DmdLayerStyle.cs" />
+    <Compile Include="Output\Virtual\SkiaDmd\DmdStyle.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\SkiaDmdWindow.xaml.cs">
       <DependentUpon>SkiaDmdWindow.xaml</DependentUpon>
     </Compile>
@@ -475,6 +480,10 @@
     <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Output\Virtual\SkiaDmd\DmdSettings.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Output\Virtual\SkiaDmd\DmdLayerSetting.xaml">
       <Generator>MSBuild:Compile</Generator>

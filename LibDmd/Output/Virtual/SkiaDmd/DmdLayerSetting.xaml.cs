@@ -16,7 +16,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 	{
 		public ISubject<DmdLayerStyleDefinition> OnLayerChanged { get; } = new Subject<DmdLayerStyleDefinition>();
 
-		public DmdLayerStyleDefinition RasterizeStyleDefinition
+		public DmdLayerStyleDefinition DmdStyleDefinition
 		{
 			get => _dmdLayerStyleDefinition;
 			set {

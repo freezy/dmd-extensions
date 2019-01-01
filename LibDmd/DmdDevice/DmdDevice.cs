@@ -194,7 +194,7 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new SkiaDmdControl();
+				_dmd = new SkiaDmdControl(new DmdStyleDefinition(), _config);
 				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
 
