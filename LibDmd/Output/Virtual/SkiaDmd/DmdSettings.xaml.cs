@@ -36,6 +36,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private readonly Configuration _config;
 		private readonly VirtualDmdConfig _dmdConfig;
 		private readonly float _scale;
+		private readonly byte[] _previewDmdData;
+		private readonly int _previewDmdWidth;
+		private readonly int _previewDmdHeight;
 
 		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
@@ -58,6 +61,15 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			if (config == null) {
 				SaveGroup.Visibility = Visibility.Collapsed;
 			}
+
+			var previewBitmap = new BitmapImage();
+			previewBitmap.BeginInit();
+			previewBitmap.UriSource = new Uri("pack://application:,,,/LibDmd;component/Output/Virtual/SkiaDmd/TestImage.png");
+			previewBitmap.EndInit();
+
+			_previewDmdData = ImageUtil.ConvertToRgb24(previewBitmap);
+			_previewDmdWidth = previewBitmap.PixelWidth;
+			_previewDmdHeight = previewBitmap.PixelHeight;
 
 			UpdateControls();
 			SetupTriggers();
@@ -166,12 +178,20 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void PaintPreview(SKCanvas canvas, int width, int height)
 		{
-			using (var paint = new SKPaint()) {
-				paint.TextSize = 64.0f;
-				paint.IsAntialias = true;
-				paint.Color = 0xFF4281A4;
-				paint.IsStroke = false;
-				canvas.DrawText("SkiaSharp", width / 2f, 64.0f, paint);
+			canvas.Clear(SKColors.Black);
+			var dotSize = new SKSize((float)width / _previewDmdWidth, (float)height / _previewDmdHeight);
+			for (var y = 0; y < _previewDmdHeight; y++) {
+				for (var x = 0; x < _previewDmdWidth * 3; x += 3) {
+					var framePos = y * _previewDmdWidth * 3 + x;
+					var color = new SKColor(_previewDmdData[framePos], _previewDmdData[framePos + 1], _previewDmdData[framePos + 2]);
+					using (var dotPaint = new SKPaint()) {
+						dotPaint.IsAntialias = true;
+						dotPaint.Color = color;
+						var dotPos = new SKPoint(x / 3f * dotSize.Width, y * dotSize.Height);
+						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
+						canvas.DrawCircle(dotPos.X + dotSize.Width / 2, dotPos.Y + dotSize.Height / 2, dotRadius, dotPaint);
+					}
+				}
 			}
 		}
 
