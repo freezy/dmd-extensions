@@ -34,7 +34,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public double Opacity { get; set; }
 
 		/// <summary>
-		/// Defines how much luminosity is added to the color. Can be negative.
+		/// Defines how much luminosity is added to the color. Can be negative, -1 = black, 1 = white
 		/// </summary>
 		public float Luminosity { get; set; }
 
@@ -47,23 +47,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		/// Defines how much blurring is applied to this layer
 		/// </summary>
 		public double Blur { get; set; }
-
-		/// <summary>
-		/// Returns a copy of this layer style with all parameters scaled by a given
-		/// factor.
-		/// </summary>
-		/// <param name="scaleFactor">Scale factor</param>
-		/// <returns></returns>
-		public DmdLayerStyle Scale(float scaleFactor)
-		{
-			return new DmdLayerStyle {
-				Size = scaleFactor * Size,
-				Opacity = Opacity,
-				Luminosity = Luminosity,
-				Rounded = Rounded,
-				Blur = scaleFactor * Blur
-			};
-		}
 
 		/// <summary>
 		/// Returns an identical copy of this layer style.
@@ -128,42 +111,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public override string ToString()
 		{
 			return $"DmdLayerStyleDefinition[enabled:{IsEnabled},size:{Size},opacity:{Opacity},lum:{Luminosity},rounded:{IsRoundedEnabled}/{Rounded},blur:{IsBlurEnabled}/{Blur}]";
-		}
-	}
-
-	/// <summary>
-	/// Describes an individual layer of a given style.
-	/// </summary>
-	public class DmdLayerStyle
-	{
-		/// <summary>
-		/// Dot size. 1 = 100%, but can be larger.
-		/// </summary>
-		public double Size { get; set; }
-
-		/// <summary>
-		/// Defines with which opacity the layer is drawn.
-		/// </summary>
-		public double Opacity { get; set; }
-
-		/// <summary>
-		/// Defines how much luminosity is added to the color. Can be negative.
-		/// </summary>
-		public float Luminosity { get; set; }
-
-		/// <summary>
-		/// How much the dots are rounded. 0 = square, 1 = circle.
-		/// </summary>
-		public double Rounded { get; set; }
-
-		/// <summary>
-		/// Defines how much blurring is applied to this layer
-		/// </summary>
-		public double Blur { get; set; }
-
-		public override string ToString()
-		{
-			return $"DmdLayerStyle[size:{Size},opacity:{Opacity},rounded:{Rounded},blur:{Blur}]";
 		}
 	}
 }

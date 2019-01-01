@@ -28,8 +28,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public ISubject<DmdStyleDefinition> OnStyleApplied { get; } = new Subject<DmdStyleDefinition>();
 
-		private DmdStyle _previewStyle;
-		private DmdStyleDefinition _previewStyleDefinition;
+		private DmdStyleDefinition _previewStyleDef;
 		private SKSize _previewSize;
 		private SKSurface _previewSurface;
 		private readonly DmdStyleDefinition _originalStyle;
@@ -101,29 +100,27 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void ApplyStyle(DmdStyleDefinition styleDefinition)
 		{
-			_previewStyleDefinition = styleDefinition.Copy();
-			_previewStyle = styleDefinition.Scale(_scale);
+			_previewStyleDef = styleDefinition.Copy();
 		}
 
 		private void ApplyLayerStyle(DmdLayer layer, DmdLayerStyleDefinition layerStyleDef)
 		{
 			switch (layer) {
 				case DmdLayer.OuterGlow:
-					_previewStyleDefinition.OuterGlow = layerStyleDef;
+					_previewStyleDef.OuterGlow = layerStyleDef;
 					break;
 				case DmdLayer.InnerGlow:
-					_previewStyleDefinition.InnerGlow = layerStyleDef;
+					_previewStyleDef.InnerGlow = layerStyleDef;
 					break;
 				case DmdLayer.Foreground:
-					_previewStyleDefinition.Foreground = layerStyleDef;
+					_previewStyleDef.Foreground = layerStyleDef;
 					break;
 				case DmdLayer.Background:
-					_previewStyleDefinition.Background = layerStyleDef;
+					_previewStyleDef.Background = layerStyleDef;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layer), layer, null);
 			}
-			_previewStyle = _previewStyleDefinition.Scale(_scale);
 		}
 
 		private void ReDraw()
@@ -139,7 +136,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			StyleNameComboBox.KeyUp += (sender, e) => StyleSelectionChanged(StyleNameComboBox.Text);
 
 			BackgroundColor.SelectedColorChanged += (sender, e) => {
-				_previewStyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
+				_previewStyleDef.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
 					BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
 					BackgroundColor.SelectedColor.Value.A);
 				ReDraw();
@@ -148,12 +145,12 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void UpdateControls()
 		{
-			BackgroundColor.SelectedColor = _previewStyleDefinition.BackgroundColor.ToColor();
+			BackgroundColor.SelectedColor = _previewStyleDef.BackgroundColor.ToColor();
 
-			ForegroundStyle.DmdStyleDefinition = _previewStyleDefinition.Foreground;
-			InnerGlowStyle.DmdStyleDefinition = _previewStyleDefinition.InnerGlow;
-			OuterGlowStyle.DmdStyleDefinition = _previewStyleDefinition.OuterGlow;
-			BackgroundStyle.DmdStyleDefinition = _previewStyleDefinition.Background;
+			ForegroundStyle.DmdStyleDefinition = _previewStyleDef.Foreground;
+			InnerGlowStyle.DmdStyleDefinition = _previewStyleDef.InnerGlow;
+			OuterGlowStyle.DmdStyleDefinition = _previewStyleDef.OuterGlow;
+			BackgroundStyle.DmdStyleDefinition = _previewStyleDef.Background;
 		}
 
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
@@ -178,18 +175,41 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void PaintPreview(SKCanvas canvas, int width, int height)
 		{
-			canvas.Clear(SKColors.Black);
-			var dotSize = new SKSize((float)width / _previewDmdWidth, (float)height / _previewDmdHeight);
+			canvas.Clear(_previewStyleDef.BackgroundColor);
+			PaintLayer(_previewStyleDef.Foreground, canvas, width, height);
+		}
+
+		private void PaintLayer(DmdLayerStyleDefinition styleDef, SKCanvas canvas, int width, int height)
+		{
+			var size = new SKSize((float)width / _previewDmdWidth, (float)height / _previewDmdHeight);
+			var dotSize = new SKSize((float)styleDef.Size * width / _previewDmdWidth, (float)styleDef.Size * height / _previewDmdHeight);
 			for (var y = 0; y < _previewDmdHeight; y++) {
 				for (var x = 0; x < _previewDmdWidth * 3; x += 3) {
 					var framePos = y * _previewDmdWidth * 3 + x;
+					
+					// don't render black dots at all
+					if (_previewDmdData[framePos] == 0 && _previewDmdData[framePos + 1] == 0 && _previewDmdData[framePos + 2] == 0) {
+						continue;
+					}
+
 					var color = new SKColor(_previewDmdData[framePos], _previewDmdData[framePos + 1], _previewDmdData[framePos + 2]);
 					using (var dotPaint = new SKPaint()) {
 						dotPaint.IsAntialias = true;
 						dotPaint.Color = color;
-						var dotPos = new SKPoint(x / 3f * dotSize.Width, y * dotSize.Height);
+						if (styleDef.Luminosity != 0) {
+							dotPaint.Color.ToHsl(out var h, out var s, out var l);
+							dotPaint.Color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity)));
+						}
+						if (styleDef.Opacity < 1) {
+							dotPaint.Color = dotPaint.Color.WithAlpha((byte)(256 * styleDef.Opacity));
+						}
+						if (styleDef.IsBlurEnabled) {
+							var blur = (float)styleDef.Blur / Math.Max(size.Width, size.Height);
+							dotPaint.ImageFilter = SKImageFilter.CreateBlur(blur, blur);
+						}
+						var dotPos = new SKPoint(x / 3f * size.Width, y * size.Height);
 						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-						canvas.DrawCircle(dotPos.X + dotSize.Width / 2, dotPos.Y + dotSize.Height / 2, dotRadius, dotPaint);
+						canvas.DrawCircle(dotPos.X + size.Width / 2, dotPos.Y + size.Height / 2, dotRadius, dotPaint);
 					}
 				}
 			}
@@ -211,7 +231,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			Logger.Info("Saving style {0} to DmdDevice.ini...", StyleNameComboBox.Text);
 			var styleName = NewStyleName ?? StyleNameComboBox.Text;
-			_dmdConfig.SetStyle(styleName, _previewStyleDefinition);
+			_dmdConfig.SetStyle(styleName, _previewStyleDef);
 			StyleSelectionChanged(styleName);
 			StyleNameComboBox.ItemsSource = StyleNames;
 			StyleNameComboBox.SelectedItem = styleName;
@@ -219,7 +239,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void LoadFromIniClicked(object sender, RoutedEventArgs e)
 		{
-			_previewStyleDefinition = _dmdConfig.GetStyle(NewStyleName);
+			_previewStyleDef = _dmdConfig.GetStyle(NewStyleName);
 			UpdateControls();
 		}
 
@@ -233,7 +253,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void ApplyClicked(object sender, RoutedEventArgs e)
 		{
-			OnStyleApplied.OnNext(_previewStyleDefinition.Copy());
+			OnStyleApplied.OnNext(_previewStyleDef.Copy());
 			if (NewStyleName != null) {
 				_dmdConfig.ApplyStyle(NewStyleName);
 			}
