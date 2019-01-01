@@ -1,0 +1,59 @@
+﻿<UserControl x:Class="LibDmd.Output.Virtual.SkiaDmd.DmdLayerSetting"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LibDmd.Common"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" Width="Auto" Height="Auto">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <CheckBox x:Name="LayerEnabled" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5" Checked="UpdateLayerEnabled" Unchecked="UpdateLayerEnabled" VerticalAlignment="Top" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+
+        <Label Grid.Column="0" Grid.Row="1" Content="Size" VerticalAlignment="Top" Margin="0,0,0,0">
+            <Label.RenderTransform><TransformGroup><TranslateTransform X="-4" Y="-7"/></TransformGroup></Label.RenderTransform>
+        </Label>
+        <Slider x:Name="DotSizeSlider" Grid.Column="0" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="20" Margin="0,0,8,8" Value="1"/>
+        <TextBox x:Name="DotSizeValue" Grid.Column="3" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+
+        <Label Grid.Column="4" Grid.Row="1" Content="Opacity" VerticalAlignment="Top" Margin="0,0,0,0">
+            <Label.RenderTransform><TransformGroup><TranslateTransform X="-4" Y="-7"/></TransformGroup></Label.RenderTransform>
+        </Label>
+        <Slider x:Name="OpacitySlider" Grid.Column="4" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1"/>
+        <TextBox x:Name="OpacityValue" Grid.Column="5" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+
+        <Label Grid.Column="6" Grid.Row="1" Content="Luminosity" VerticalAlignment="Top" Margin="0,0,0,0">
+            <Label.RenderTransform><TransformGroup><TranslateTransform X="-4" Y="-7"/></TransformGroup></Label.RenderTransform>
+        </Label>
+        <Slider x:Name="LuminositySlider" Grid.Column="6" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="255" Margin="0,0,8,8" Minimum="-255"/>
+        <TextBox x:Name="LuminosityValue" Grid.Column="7" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+
+        <CheckBox x:Name="RoundedEnabled" Grid.Column="8" Grid.Row="1" Content="Rounded" VerticalAlignment="Top" Checked="UpdateRoundedEnabled" Unchecked="UpdateRoundedEnabled" Margin="0,0,0,8"/>
+        <Slider x:Name="RoundedSlider" Grid.Column="8" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1"/>
+        <TextBox x:Name="RoundedValue" Grid.Column="9" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+        
+        <CheckBox x:Name="BlurEnabled" Grid.Column="10" Grid.Row="1" Content="Blurring" VerticalAlignment="Top" Checked="UpdateBlurEnabled" Unchecked="UpdateBlurEnabled" Margin="0,0,0,8"/>
+        <Slider x:Name="BlurSlider" Grid.Column="10" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="150" Margin="0,0,8,8"/>
+        <TextBox x:Name="BlurValue" Grid.Column="11" Grid.Row="2" VerticalAlignment="Top" Width="30"/>
+    </Grid>
+</UserControl>
