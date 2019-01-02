@@ -187,7 +187,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			// render dmd
 			var data = new DmdData(_frame, DmdWidth, DmdHeight);
-			DmdPainter.Paint(data, canvas, width, height, _styleDef);
+			DmdPainter.Paint(data, canvas, width, height, _styleDef, true);
 		}
 
 		private void ToggleDisplaySettings(object sender, MouseButtonEventArgs mouseButtonEventArgs)

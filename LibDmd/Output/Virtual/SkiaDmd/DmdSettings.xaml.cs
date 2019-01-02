@@ -173,7 +173,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private void PaintPreview(SKCanvas canvas, int width, int height)
 		{
 			var data = new DmdData(_previewDmdData, _previewDmdWidth, _previewDmdHeight);
-			DmdPainter.Paint(data, canvas, width, height, _previewStyleDef);
+			DmdPainter.Paint(data, canvas, width, height, _previewStyleDef, false);
 		}
 
 		private void StyleSelectionChanged(string name)
