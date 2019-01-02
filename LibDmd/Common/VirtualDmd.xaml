@@ -6,7 +6,6 @@
         xmlns:virtualDmd="clr-namespace:LibDmd.Output.Virtual"
         xmlns:common="clr-namespace:LibDmd.Common"
         xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
-        xmlns:skiaDmd="clr-namespace:LibDmd.Output.Virtual.SkiaDmd"
         mc:Ignorable="d"
         Title="Virtual DMD"
         Height="256"
