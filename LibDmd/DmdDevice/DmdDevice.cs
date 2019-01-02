@@ -465,7 +465,7 @@ namespace LibDmd.DmdDevice
 				SetVirtualDmdDefaultPosition();
 			}
 
-			//_dmd.Dmd.Init();
+			_dmd.Init();
 			_dmd.Show();
 		}
 

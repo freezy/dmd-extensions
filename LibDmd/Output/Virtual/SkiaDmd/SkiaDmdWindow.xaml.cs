@@ -113,7 +113,10 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void RenderRgb24(byte[] frame)
 		{
-			throw new NotImplementedException();
+			Dispatcher.Invoke(() => {
+				_frame = frame;
+				Redraw();
+			});
 		}
 
 		public void SetColor(Color color)
