@@ -55,9 +55,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			if (cachedSurface == null || cacheInfo == null || !currentCacheInfo.Equals(cacheInfo)) {
 				// create cache
 				cachedSurface?.Dispose();
+				Logger.Info("Painting new cache for layer {0} at {1}x{2}", layer, surfaceSize.Width, surfaceSize.Height);
+
 				cachedSurface = PaintCache(layer, styleDef, blockSize, dotSize, surfaceSize);
-				Cache[layer] = cachedSurface;
 				CacheInfo[layer] = currentCacheInfo;
+				Cache[layer] = cachedSurface;
 			}
 
 			for (var y = 0; y < data.Height; y++) {
@@ -81,7 +83,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private static SKSurface PaintCache(DmdLayer layer, DmdLayerStyleDefinition styleDef, SKSize blockSize, SKSize dotSize, SKSize surfaceSize)
 		{
-			Logger.Info("Painting new cache for layer {0} at {1}x{2}", layer, surfaceSize.Width, surfaceSize.Height);
 			var surface = GLUtil.GetInstance().CreateSurface((int)surfaceSize.Width, (int)surfaceSize.Height);
 			using (var dotPaint = new SKPaint()) {
 				dotPaint.IsAntialias = true;
@@ -209,13 +210,21 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			StyleDef = styleDef;
 		}
 
-		public bool Equals(CacheInfo x, CacheInfo y)
+		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(x, y)) return true;
-			if (ReferenceEquals(x, null)) return false;
-			if (ReferenceEquals(y, null)) return false;
-			if (x.GetType() != y.GetType()) return false;
-			return x.Width == y.Width && x.Height == y.Height && x.StyleDef.Equals(y.StyleDef);
+			if (!(obj is CacheInfo item)) {
+				return false;
+			}
+			return Width == item.Width
+			       && Height == item.Height
+			       && StyleDef.Equals(item.StyleDef);
+		}
+
+		protected bool Equals(CacheInfo other)
+		{
+			return Width == other.Width
+			       && Height == other.Height
+			       && StyleDef.Equals(other.StyleDef);
 		}
 
 		public int GetHashCode(CacheInfo obj)
