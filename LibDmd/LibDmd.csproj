@@ -298,6 +298,7 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\SkiaDmd\DmdPainter.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\DmdSettings.xaml.cs">
       <DependentUpon>DmdSettings.xaml</DependentUpon>
     </Compile>
