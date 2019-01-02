@@ -172,61 +172,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void PaintPreview(SKCanvas canvas, int width, int height)
 		{
-			canvas.Clear(_previewStyleDef.BackgroundColor);
-			if (_previewStyleDef.OuterGlow.IsEnabled) {
-				PaintLayer(_previewStyleDef.OuterGlow, canvas, width, height);
-			}
-			if (_previewStyleDef.InnerGlow.IsEnabled) {
-				PaintLayer(_previewStyleDef.InnerGlow, canvas, width, height);
-			}
-			if (_previewStyleDef.Foreground.IsEnabled) {
-				PaintLayer(_previewStyleDef.Foreground, canvas, width, height);
-			}
-		}
-
-		private void PaintLayer(DmdLayerStyleDefinition styleDef, SKCanvas canvas, int width, int height)
-		{
-			var size = new SKSize((float)width / _previewDmdWidth, (float)height / _previewDmdHeight);
-			var dotSize = new SKSize((float)styleDef.Size * width / _previewDmdWidth, (float)styleDef.Size * height / _previewDmdHeight);
-			for (var y = 0; y < _previewDmdHeight; y++) {
-				for (var x = 0; x < _previewDmdWidth * 3; x += 3) {
-					var framePos = y * _previewDmdWidth * 3 + x;
-					
-					// don't render black dots at all
-					if (_previewDmdData[framePos] == 0 && _previewDmdData[framePos + 1] == 0 && _previewDmdData[framePos + 2] == 0) {
-						continue;
-					}
-
-					var color = new SKColor(_previewDmdData[framePos], _previewDmdData[framePos + 1], _previewDmdData[framePos + 2]);
-					using (var dotPaint = new SKPaint()) {
-						dotPaint.IsAntialias = true;
-						dotPaint.Color = color;
-						if (styleDef.Luminosity != 0) {
-							dotPaint.Color.ToHsl(out var h, out var s, out var l);
-							dotPaint.Color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity)));
-						}
-						if (styleDef.Opacity < 1) {
-							dotPaint.Color = dotPaint.Color.WithAlpha((byte)(256 * styleDef.Opacity));
-						}
-						if (styleDef.IsBlurEnabled) {
-							var blur = (float)styleDef.Blur / Math.Max(size.Width, size.Height);
-							dotPaint.ImageFilter = SKImageFilter.CreateBlur(blur, blur);
-						}
-						var dotPos = new SKPoint(x / 3f * size.Width, y * size.Height);
-						if (styleDef.IsRoundedEnabled) {
-							if (styleDef.Rounded < 1) {
-								var cornerRadius = Math.Min(dotSize.Width, dotSize.Height) * (float)styleDef.Rounded / 2;
-								canvas.DrawRoundRect(dotPos.X + size.Width / 2 - dotSize.Width / 2, dotPos.Y + size.Height / 2 - dotSize.Width / 2, dotSize.Width, dotSize.Height, cornerRadius, cornerRadius, dotPaint);
-							} else {
-								var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-								canvas.DrawCircle(dotPos.X + size.Width / 2, dotPos.Y + size.Height / 2, dotRadius, dotPaint);
-							}
-						} else {
-							canvas.DrawRect(dotPos.X + size.Width / 2 - dotSize.Width / 2, dotPos.Y + size.Height / 2 - dotSize.Width / 2, dotSize.Width, dotSize.Height, dotPaint);
-						}
-					}
-				}
-			}
+			var data = new DmdData(_previewDmdData, _previewDmdWidth, _previewDmdHeight);
+			DmdPainter.Paint(data, canvas, width, height, _previewStyleDef);
 		}
 
 		private void StyleSelectionChanged(string name)
