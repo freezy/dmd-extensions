@@ -29,6 +29,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 	/// </summary>
 	public partial class SkiaDmdControl : VirtualDisplay, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	{
+		public new string Name => "Skia DMD";
+
 		public override IVirtualControl VirtualControl => this;
 		public VirtualDisplay Host { get; set; }
 		public bool IsAvailable => true;
