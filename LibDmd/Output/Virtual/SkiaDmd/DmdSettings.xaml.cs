@@ -34,12 +34,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private readonly DmdStyleDefinition _originalStyle;
 		private readonly Configuration _config;
 		private readonly VirtualDmdConfig _dmdConfig;
-		private readonly float _scale;
 		private readonly byte[] _previewDmdData;
 		private readonly int _previewDmdWidth;
 		private readonly int _previewDmdHeight;
 
-		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
+		public List<string> StyleNames => _dmdConfig?.GetStyleNames();
 		public string NewStyleName { get; set; }
 
 		public VirtualDmdSettings(DmdStyleDefinition styleDefinition, double top, double left, Configuration config)
@@ -54,7 +53,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			InitializeComponent();
 
 			_previewSize = new SKSize((float)Preview.Width, (float)Preview.Height);
-			_scale = (float) Preview.Width / 1024;
 			ApplyStyle(styleDefinition);
 
 			if (config == null) {

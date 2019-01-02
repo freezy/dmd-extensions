@@ -1,23 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
-using LibDmd.Output.Virtual.SkiaDmd.GLContext;
 using NLog;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -65,6 +55,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			_glUtil = GLUtil.GetInstance();
 
+			SizeChanged += SizeChanged_Event;
+
 			SettingsPath.Fill = new SolidColorBrush(Colors.Transparent);
 			SettingsButton.MouseEnter += (sender, e) => {
 				SettingsPath.Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xff, 0xff, 0xff));
@@ -83,7 +75,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			if (this is IFixedSizeDestination) {
 				SetDimensions(DmdWidth, DmdHeight);
 			}
-			//ObservableExtensions.Subscribe(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
+			ObservableExtensions.Subscribe(Host.WindowResized, pos => {
+				Width = pos.Width;
+				Height = pos.Height;
+				Redraw();
+			});
 		}
 
 		public void SetDimensions(int width, int height)
@@ -91,7 +87,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Logger.Info("Resizing Skia DMD to {0}x{1}", width, height);
 			DmdWidth = width;
 			DmdHeight = height;
-			//Host.SetDimensions(width, height);
+			Host.SetDimensions(width, height);
 		}
 
 		public void RenderBitmap(BitmapSource bmp)
@@ -142,6 +138,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void Dispose()
 		{
+			_dotSurface?.Dispose();
+			_surface?.Dispose();
+			_glUtil.Destroy();
 		}
 
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
@@ -207,16 +206,16 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 		}
 
+		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
+		{
+			//if (!Host.Resizing) {
+				Redraw();
+			//}
+		}
+
 		private void Redraw()
 		{
 			BitmapHost.InvalidateVisual();
-		}
-
-		private void OnWindowClosing(object sender, CancelEventArgs e)
-		{
-			_dotSurface?.Dispose();
-			_surface?.Dispose();
-			_glUtil.Destroy();
 		}
 	}
 }
