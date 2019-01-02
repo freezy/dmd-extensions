@@ -82,19 +82,15 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyleDef => {
 				ApplyLayerStyle(DmdLayer.Foreground, layerStyleDef);
-				ReDraw();
 			});
 			InnerGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				ApplyLayerStyle(DmdLayer.InnerGlow, layerStyle);
-				ReDraw();
 			});
 			OuterGlowStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				ApplyLayerStyle(DmdLayer.OuterGlow, layerStyle);
-				ReDraw();
 			});
 			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				ApplyLayerStyle(DmdLayer.Background, layerStyle);
-				ReDraw();
 			});
 		}
 
@@ -121,6 +117,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layer), layer, null);
 			}
+			ReDraw();
 		}
 
 		private void ReDraw()
@@ -176,7 +173,15 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private void PaintPreview(SKCanvas canvas, int width, int height)
 		{
 			canvas.Clear(_previewStyleDef.BackgroundColor);
-			PaintLayer(_previewStyleDef.Foreground, canvas, width, height);
+			if (_previewStyleDef.OuterGlow.IsEnabled) {
+				PaintLayer(_previewStyleDef.OuterGlow, canvas, width, height);
+			}
+			if (_previewStyleDef.InnerGlow.IsEnabled) {
+				PaintLayer(_previewStyleDef.InnerGlow, canvas, width, height);
+			}
+			if (_previewStyleDef.Foreground.IsEnabled) {
+				PaintLayer(_previewStyleDef.Foreground, canvas, width, height);
+			}
 		}
 
 		private void PaintLayer(DmdLayerStyleDefinition styleDef, SKCanvas canvas, int width, int height)
