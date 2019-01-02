@@ -46,7 +46,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private Color[] _gray4Palette;
 
 		private readonly Configuration _config;
-		private readonly DmdStyleDefinition _styleDef = new DmdStyleDefinition();
+		private DmdStyleDefinition _styleDef;
 
 		private SKSurface _surface;
 		private GLUtil _glUtil;
@@ -59,9 +59,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private byte[] _frame;
 
-		private int _call;
-		private readonly Stopwatch _stopwatch = new Stopwatch();
-
 		public SkiaDmdControl(DmdStyleDefinition styleDef, Configuration config)
 		{
 			_styleDef = styleDef;
@@ -69,7 +66,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			InitializeComponent();
 			Initialize();
-			CompositionTarget.Rendering += (o, e) => BitmapHost.InvalidateVisual();
+			CompositionTarget.Rendering += (o, e) => 
 
 			_glUtil = GLUtil.GetInstance();
 
@@ -105,7 +102,10 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public void RenderBitmap(BitmapSource bmp)
 		{
 			try {
-				Dispatcher.Invoke(() => _frame = ImageUtil.ConvertToRgb24(bmp));
+				Dispatcher.Invoke(() => {
+					_frame = ImageUtil.ConvertToRgb24(bmp);
+					Redraw();
+				});
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
 			}
@@ -153,78 +153,41 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
 		{
-			// get the screen density for scaling
-			//var scale = (float)PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.M11;
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
 			var canvasSize = new SKSize(width, height);
-
 			if (_canvasSize != canvasSize) {
-				//PreRender(canvasSize);
-
 				Logger.Info("Setting up OpenGL context at {0}x{1}...", width, height);
 				_surface?.Dispose();
 				_surface = _glUtil.CreateSurface(width, height);
-
 				_canvasSize = canvasSize;
 			}
-			// handle the device screen density
-			//canvas.Scale(scale);
-
-			DrawDmd(_surface.Canvas);
-
+			DrawDmd(_surface.Canvas, width, height);
 			canvas.DrawSurface(_surface, new SKPoint(0f, 0f));
+			stopwatch.Stop();
+			var paintTime = stopwatch.ElapsedMilliseconds;
+			
+			// render fps
+			if (paintTime > 0) {
+				using (var fpsPaint = new SKPaint())
+				{
+					fpsPaint.Color = new SKColor(0, 0xff, 0);
+					fpsPaint.TextSize = 20;
+					var fps = 1000d / paintTime;
+					canvas.DrawText($"FPS: {fps:0}", 30, 50, fpsPaint);
+				}
+			}
 		}
 
-		private void PreRender(SKSize canvasSize)
-		{
-			var dotSize = new SKSize(canvasSize.Width / DmdWidth, canvasSize.Height / DmdHeight);
-			Logger.Info("Pre-rendering dot at {0}x{1} for {2}x{3}", dotSize.Width, dotSize.Height, canvasSize.Width, canvasSize.Height);
-			var dotPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-			var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-			_dotSurface = _glUtil.CreateSurface((int)dotSize.Width, (int)dotSize.Height);
-			_dotSurface.Canvas.DrawCircle(dotSize.Width / 2, dotSize.Height / 2, dotRadius, dotPaint);
-		}
-
-		public void DrawDmd(SKCanvas canvas)
+		public void DrawDmd(SKCanvas canvas, int width, int height)
 		{
 			if (_frame == null) {
-				Logger.Info("Frame is null, aborting.");
 				return;
 			}
-			//Logger.Info("Drawing at {0}x{1}", _canvasSize.Width, _canvasSize.Height);
-
-			//canvas.SetMatrix(SKMatrix.MakeIdentity());
 
 			// render dmd
-			canvas.Clear(SKColors.Black);
-			var dotSize = new SKSize(_canvasSize.Width / DmdWidth, _canvasSize.Height / DmdHeight);
-			for (var y = 0; y < DmdHeight; y++) {
-				for (var x = 0; x < DmdWidth * 3; x += 3) {
-					var framePos = y * DmdWidth * 3 + x;
-					var color = new SKColor(_frame[framePos], _frame[framePos + 1], _frame[framePos + 2]);
-					using (var dotPaint = new SKPaint()) {
-						//dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.SrcIn);
-						//dotPaint.ImageFilter = filter;
-						dotPaint.IsAntialias = true;
-						dotPaint.Color = color;
-						var dotPos = new SKPoint(x / 3f * dotSize.Width, y * dotSize.Height);
-						//canvas.DrawSurface(_dotSurface, dotPos, dotPaint);
-
-						var dotRadius = Math.Min(dotSize.Width, dotSize.Height) / 2;
-						canvas.DrawCircle(dotPos.X + dotSize.Width / 2, dotPos.Y + dotSize.Height / 2, dotRadius, dotPaint);
-					}
-				}
-			}
-
-			// render fps
-			using (var fpsPaint = new SKPaint()) {
-				fpsPaint.Color = new SKColor(0, 0xff, 0);
-				fpsPaint.TextSize = 20;
-				if (_call == 0) {
-					_stopwatch.Start();
-				}
-				var fps = _call / ((_stopwatch.Elapsed.TotalSeconds > 0) ? _stopwatch.Elapsed.TotalSeconds : 1);
-				canvas.DrawText($"FPS: {fps:0}, frames: {_call++}", 30, 50, fpsPaint);
-			}
+			var data = new DmdData(_frame, DmdWidth, DmdHeight);
+			DmdPainter.Paint(data, canvas, width, height, _styleDef);
 		}
 
 		private void ToggleDisplaySettings(object sender, MouseButtonEventArgs mouseButtonEventArgs)
@@ -234,7 +197,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
 				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {
 					Logger.Info("Applying new style to DMD.");
-					// TODO
+					_styleDef = style;
+					Redraw();
 				});
 			}
 
@@ -243,6 +207,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			} else {
 				_settingWindow.Hide();
 			}
+		}
+
+		private void Redraw()
+		{
+			BitmapHost.InvalidateVisual();
 		}
 
 		private void OnWindowClosing(object sender, CancelEventArgs e)
