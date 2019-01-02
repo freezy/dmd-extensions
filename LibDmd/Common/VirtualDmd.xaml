@@ -36,6 +36,6 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <!--skiaDmd:SkiaDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
+        <dmd:VirtualDmdControl x:Name="Dmd" x:FieldModifier="public" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </common:VirtualDisplay>
