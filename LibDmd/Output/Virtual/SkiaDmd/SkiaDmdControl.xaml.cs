@@ -27,16 +27,17 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 	/// <summary>
 	/// Interaction logic for SkiaDmdWindow.xaml
 	/// </summary>
-	public partial class SkiaDmdControl : VirtualDisplay, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class SkiaDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	{
-		public new string Name => "Skia DMD";
-
-		public override IVirtualControl VirtualControl => this;
+		public bool IgnoreAspectRatio { get; set; }
 		public VirtualDisplay Host { get; set; }
 		public bool IsAvailable => true;
 
 		public int DmdWidth { get; private set; } = 128;
 		public int DmdHeight { get; private set; } = 32;
+
+		public Configuration Configuration { get; set; }
+		public DmdStyleDefinition StyleDefinition { get; set; }
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -46,9 +47,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-
-		private readonly Configuration _config;
-		private DmdStyleDefinition _styleDef;
 
 		private SKSurface _surface;
 		private GLUtil _glUtil;
@@ -61,14 +59,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private byte[] _frame;
 
-		public SkiaDmdControl(DmdStyleDefinition styleDef, Configuration config)
+		public SkiaDmdControl()
 		{
-			_styleDef = styleDef;
-			_config = config;
-
 			InitializeComponent();
-			Initialize();
-			CompositionTarget.Rendering += (o, e) => 
 
 			_glUtil = GLUtil.GetInstance();
 
@@ -192,17 +185,17 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			// render dmd
 			var data = new DmdData(_frame, DmdWidth, DmdHeight);
-			DmdPainter.Paint(data, canvas, width, height, _styleDef, true);
+			DmdPainter.Paint(data, canvas, width, height, StyleDefinition, true);
 		}
 
 		private void ToggleDisplaySettings(object sender, MouseButtonEventArgs mouseButtonEventArgs)
 		{
 			if (_settingWindow == null) {
-				_settingWindow = new VirtualDmdSettings(_styleDef, Top, Left + Width, _config);
+				_settingWindow = new VirtualDmdSettings(StyleDefinition, Host.Top, Host.Left + Host.Width, Configuration);
 				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
 				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {
 					Logger.Info("Applying new style to DMD.");
-					_styleDef = style;
+					StyleDefinition = style;
 					Redraw();
 				});
 			}

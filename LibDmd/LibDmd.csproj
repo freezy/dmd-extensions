@@ -203,6 +203,9 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\GLUtil.cs" />
+    <Compile Include="Common\VirtualSkiaDmd.xaml.cs">
+      <DependentUpon>VirtualSkiaDmd.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
@@ -311,8 +314,8 @@
     <Compile Include="Output\Virtual\SkiaDmd\GLContext\WNDCLASS.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\DmdLayerStyle.cs" />
     <Compile Include="Output\Virtual\SkiaDmd\DmdStyle.cs" />
-    <Compile Include="Output\Virtual\SkiaDmd\SkiaDmdWindow.xaml.cs">
-      <DependentUpon>SkiaDmdWindow.xaml</DependentUpon>
+    <Compile Include="Output\Virtual\SkiaDmd\SkiaDmdControl.xaml.cs">
+      <DependentUpon>SkiaDmdControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
@@ -449,6 +452,10 @@
     <Resource Include="Output\Virtual\Dmd\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Common\VirtualSkiaDmd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -485,7 +492,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Output\Virtual\SkiaDmd\SkiaDmdWindow.xaml">
+    <Page Include="Output\Virtual\SkiaDmd\SkiaDmdControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

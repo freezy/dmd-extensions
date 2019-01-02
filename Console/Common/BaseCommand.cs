@@ -100,24 +100,24 @@ namespace DmdExt.Common
 
 		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
-			var dmd = new SkiaDmdControl(new DmdStyleDefinition(), config as Configuration);
-			/*var dmd = new VirtualDmd {
-				AlwaysOnTop = config.StayOnTop,
-				GripColor = config.HideGrip ? Brushes.Transparent : Brushes.White,
-				Left = config.Left,
-				Top = config.Top,
-				Width = config.Width,
-				Height = config.Height,
-				IgnoreAspectRatio = config.IgnoreAr,
-				DotSize = config.DotSize
-			};*/
+			//var dmd = new SkiaDmdControl(new DmdStyleDefinition(), config as Configuration);
+			var dmd = new VirtualSkiaDmd(new DmdStyleDefinition(), config as Configuration) {
+				AlwaysOnTop = config.VirtualDmd.StayOnTop,
+				GripColor = config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White,
+				Left = config.VirtualDmd.Left,
+				Top = config.VirtualDmd.Top,
+				Width = config.VirtualDmd.Width,
+				Height = config.VirtualDmd.Height,
+				IgnoreAspectRatio = config.VirtualDmd.IgnoreAr,
+				//DotSize = config.DotSize
+			};
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
 
 				dmd.Dispatcher.Invoke(() => {
-					//dmd.Dmd.Init();
+					dmd.Dmd.Init();
 					dmd.Show();
 				});
 
@@ -133,7 +133,7 @@ namespace DmdExt.Common
 			// run the thread
 			thread.SetApartmentState(ApartmentState.STA);
 			thread.Start();
-			return dmd;
+			return dmd.VirtualControl;
 		}
 
 		
