@@ -46,7 +46,7 @@ namespace LibDmd.DmdDevice
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
-		private SkiaDmdControl _dmd;
+		private VirtualSkiaDmd _dmd;
 
 		// Ziigs vo VPM
 		private string _gameName;
@@ -194,8 +194,7 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new SkiaDmdControl(new DmdStyleDefinition(), _config);
-				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
+				_dmd = new VirtualSkiaDmd(new DmdStyleDefinition(), _config);
 				SetupGraphs();
 
 				// Create our context, and install it:
@@ -261,7 +260,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {
-				renderers.Add(_dmd);
+				renderers.Add(_dmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
@@ -419,9 +418,9 @@ namespace LibDmd.DmdDevice
 		private void SetupVirtualDmd()
 		{
 			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
-			/*_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
+			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
 			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
-			_dmd.DotSize = _config.VirtualDmd.DotSize;*/
+			//_dmd.DotSize = _config.VirtualDmd.DotSize;
 
 			// find the game's dmd position in VPM's registry
 			if (_config.VirtualDmd.UseRegistryPosition) {
@@ -465,7 +464,7 @@ namespace LibDmd.DmdDevice
 				SetVirtualDmdDefaultPosition();
 			}
 
-			_dmd.Init();
+			_dmd.Dmd.Init();
 			_dmd.Show();
 		}
 
