@@ -194,7 +194,7 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new VirtualSkiaDmd(new DmdStyleDefinition(), _config);
+				_dmd = new VirtualSkiaDmd(_config.VirtualDmd.Style, _config);
 				SetupGraphs();
 
 				// Create our context, and install it:

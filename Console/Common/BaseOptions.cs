@@ -4,6 +4,7 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.SkiaDmd;
 
 namespace DmdExt.Common
 {
@@ -149,6 +150,8 @@ namespace DmdExt.Common
 			Top = options.VirtualDmdPosition[1];
 			Width = options.VirtualDmdPosition[2];
 		}
+
+		public DmdStyleDefinition Style => new DmdStyleDefinition();
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
 							|| _options.Destination == BaseOptions.DestinationType.Virtual;

@@ -187,7 +187,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VirtualDmdConfigLegacy : AbstractConfiguration, IVirtualDmdConfig
+	public class VirtualDmdConfigLegacy : AbstractConfiguration, IVirtualLegacyDmdConfig
 	{
 		public override string Name { get; } = "virtualdmd-legacy";
 

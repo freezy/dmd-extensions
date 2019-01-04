@@ -9,6 +9,7 @@ using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.SkiaDmd;
 using NLog;
 using SkiaSharp;
 
@@ -66,6 +67,21 @@ namespace LibDmd.DmdDevice
 	}
 
 	public interface IVirtualDmdConfig
+	{
+		DmdStyleDefinition Style { get; }
+		bool Enabled { get; }
+		bool StayOnTop { get; }
+		bool IgnoreAr { get; }
+		bool UseRegistryPosition { get; }
+		bool HideGrip { get; }
+		double Left { get; }
+		double Top { get; }
+		double Width { get; }
+		double Height { get; }
+		bool HasGameOverride(string key);
+	}
+
+	public interface IVirtualLegacyDmdConfig
 	{
 		bool Enabled { get; }
 		bool StayOnTop { get; }
