@@ -101,15 +101,14 @@ namespace DmdExt.Common
 		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
 			//var dmd = new SkiaDmdControl(new DmdStyleDefinition(), config as Configuration);
-			var dmd = new VirtualSkiaDmd(new DmdStyleDefinition(), config as Configuration) {
+			var dmd = new VirtualSkiaDmd(config.VirtualDmd.Style, config as Configuration) {
 				AlwaysOnTop = config.VirtualDmd.StayOnTop,
 				GripColor = config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White,
 				Left = config.VirtualDmd.Left,
 				Top = config.VirtualDmd.Top,
 				Width = config.VirtualDmd.Width,
 				Height = config.VirtualDmd.Height,
-				IgnoreAspectRatio = config.VirtualDmd.IgnoreAr,
-				//DotSize = config.DotSize
+				IgnoreAspectRatio = config.VirtualDmd.IgnoreAr
 			};
 			var thread = new Thread(() => {
 				

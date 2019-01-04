@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using SkiaSharp;
 
 namespace LibDmd.DmdDevice
 {
@@ -57,6 +58,21 @@ namespace LibDmd.DmdDevice
 	}
 
 	public interface IVirtualDmdConfig
+	{
+		DmdStyleDefinition Style { get; }
+		bool Enabled { get; }
+		bool StayOnTop { get; }
+		bool IgnoreAr { get; }
+		bool UseRegistryPosition { get; }
+		bool HideGrip { get; }
+		double Left { get; }
+		double Top { get; }
+		double Width { get; }
+		double Height { get; }
+		bool HasGameOverride(string key);
+	}
+
+	public interface IVirtualLegacyDmdConfig
 	{
 		bool Enabled { get; }
 		bool StayOnTop { get; }

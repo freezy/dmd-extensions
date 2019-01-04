@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -14,7 +13,6 @@ using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.Virtual.SkiaDmd;
-using MonoLibUsb;
 using NLog;
 using SkiaSharp;
 
@@ -192,7 +190,7 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class VirtualDmdConfigLegacy : AbstractConfiguration, IVirtualDmdConfig
+	public class VirtualDmdConfigLegacy : AbstractConfiguration, IVirtualLegacyDmdConfig
 	{
 		public override string Name { get; } = "virtualdmd-legacy";
 
