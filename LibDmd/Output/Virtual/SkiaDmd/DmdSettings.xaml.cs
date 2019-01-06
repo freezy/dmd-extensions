@@ -38,7 +38,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private readonly int _previewDmdWidth;
 		private readonly int _previewDmdHeight;
 
-		public List<string> StyleNames => _dmdConfig?.GetStyleNames();
+		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
 		public VirtualDmdSettings(DmdStyleDefinition styleDefinition, double top, double left, Configuration config)
@@ -47,7 +47,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Left = left;
 			_config = config;
 			_originalStyle = styleDefinition.Copy();
-			_dmdConfig = _config?.VirtualAlphaNumericDisplay as VirtualDmdConfig;
+			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
 
 			DataContext = this;
 			InitializeComponent();
@@ -177,7 +177,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private void StyleSelectionChanged(string name)
 		{
 			Logger.Info("Selection changed to {0}", name);
-			if (StyleNames.Contains(name)) {
+			if (StyleNames != null && StyleNames.Contains(name)) {
 				LoadStyleButton.IsEnabled = true;
 				DeleteStyleButton.IsEnabled = true;
 			} else {
