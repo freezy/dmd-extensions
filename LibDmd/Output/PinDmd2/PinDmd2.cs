@@ -97,16 +97,8 @@ namespace LibDmd.Output.PinDmd2
 
 		public void RenderGray2(byte[] frame)
 		{
-			// split frame into 2-bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
-
-			// copy planes into frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
-
-			// send buffer to device
-			if (changed) {
-				RenderRaw(_frameBuffer);
-			}
+			// 2-bit frames are rendered as 4-bit
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 		public void RenderGray4(byte[] frame)
