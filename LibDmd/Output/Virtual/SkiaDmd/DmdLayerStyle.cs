@@ -26,12 +26,12 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		/// <summary>
 		/// Dot size. 1 = 100%, but can be larger.
 		/// </summary>
-		public double Size { get; set; }
+		public double Size { get; set; } = 1;
 
 		/// <summary>
 		/// Defines with which opacity the layer is drawn.
 		/// </summary>
-		public double Opacity { get; set; }
+		public double Opacity { get; set; } = 1;
 
 		/// <summary>
 		/// Defines how much luminosity is added to the color. Can be negative, -1 = black, 1 = white
@@ -41,7 +41,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		/// <summary>
 		/// How much the dots are rounded. 0 = square, 1 = circle.
 		/// </summary>
-		public double Rounded { get; set; }
+		public double Rounded { get; set; } = 1;
 
 		/// <summary>
 		/// Defines how much blurring is applied to this layer
