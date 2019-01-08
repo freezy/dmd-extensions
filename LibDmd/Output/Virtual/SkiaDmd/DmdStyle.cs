@@ -40,7 +40,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		/// The background layer, displaying all segments in an unlit style
 		/// </summary>
 		public DmdLayerStyleDefinition Background { get; set; } = new DmdLayerStyleDefinition {
-			IsEnabled = false,
+			IsEnabled = true,
+			IsUnlit = true,
+			Size = 0.5,
+			UnlitColor = SKColors.DarkOrange,
+			Opacity = 0.2,
 		};
 
 		/// <summary>
