@@ -3,7 +3,6 @@ using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using LibDmd.Output.Virtual.AlphaNumeric;
 using SkiaSharp;
 using SkiaSharp.Views.WPF;
 
@@ -62,6 +61,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			BlurEnabled.Checked += (sender, e) => Changed();
 			BlurEnabled.Unchecked += (sender, e) => Changed();
 
+			UnlitColor.SelectedColorChanged += (sender, e) => Changed();
+
 			DotSizeSlider.ValueChanged += (sender, e) => Changed();
 			OpacitySlider.ValueChanged += (sender, e) => Changed();
 			LuminositySlider.ValueChanged += (sender, e) => Changed();
@@ -89,6 +90,19 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			ToggleRoundedEnabled(_dmdLayerStyleDefinition.IsRoundedEnabled);
 			ToggleBlurEnabled(_dmdLayerStyleDefinition.IsBlurEnabled);
 			ToggleLayerEnabled(_dmdLayerStyleDefinition.IsEnabled);
+
+			if (!_dmdLayerStyleDefinition.IsUnlit) {
+				LuminositySlider.Visibility = Visibility.Visible;
+				LuminosityValue.Visibility = Visibility.Visible;
+				UnlitColor.Visibility = Visibility.Hidden;
+				ColorLuminosityLabel.Content = "Luminosity";
+			} else {
+				LuminositySlider.Visibility = Visibility.Hidden;
+				LuminosityValue.Visibility = Visibility.Hidden;
+				UnlitColor.Visibility = Visibility.Visible;
+				UnlitColor.SelectedColor = _dmdLayerStyleDefinition.UnlitColor.ToColor();
+				ColorLuminosityLabel.Content = "Color";
+			}
 		}
 
 		private void Changed()
@@ -98,6 +112,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 			OnLayerChanged.OnNext(new DmdLayerStyleDefinition {
 				IsEnabled = (bool)LayerEnabled.IsChecked,
+				IsUnlit = _dmdLayerStyleDefinition.IsUnlit,
+				UnlitColor = _dmdLayerStyleDefinition.IsUnlit && UnlitColor.SelectedColor  != null ? new SKColor(UnlitColor.SelectedColor.Value.R, UnlitColor.SelectedColor.Value.G, UnlitColor.SelectedColor.Value.B, UnlitColor.SelectedColor.Value.A) : SKColors.Transparent,
 				Size = DotSizeSlider.Value,
 				Opacity = OpacitySlider.Value,
 				Luminosity = (float)LuminositySlider.Value,
@@ -127,6 +143,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			BlurEnabled.IsEnabled = enabled;
 			BlurSlider.IsEnabled = enabled;
 			BlurValue.IsEnabled = enabled;
+			UnlitColor.IsEnabled = enabled;
 		}
 
 		private void UpdateBlurEnabled(object sender, RoutedEventArgs e)

@@ -18,6 +18,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public static void Paint(DmdData data, SKCanvas canvas, int width, int height, DmdStyleDefinition style, bool cache)
 		{
 			canvas.Clear(style.BackgroundColor);
+			if (style.Background.IsEnabled) {
+				if (cache) {
+					PaintCached(data, canvas, width, height, style.Background, DmdLayer.Background);
+				} else {
+					PaintDirectly(data, canvas, width, height, style.Background);
+				}
+			}
 			if (style.OuterGlow.IsEnabled) {
 				if (cache) {
 					PaintCached(data, canvas, width, height, style.OuterGlow, DmdLayer.OuterGlow);
@@ -40,6 +47,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 					PaintDirectly(data, canvas, width, height, style.Foreground);
 				}
 			}
+			
 		}
 
 		private static void PaintCached(DmdData data, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef, DmdLayer layer)
@@ -57,7 +65,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				cachedSurface?.Dispose();
 				Logger.Info("Painting new cache for layer {0} at {1}x{2}", layer, surfaceSize.Width, surfaceSize.Height);
 
-				cachedSurface = PaintCache(layer, styleDef, blockSize, dotSize, surfaceSize);
+				cachedSurface = PaintCache(styleDef, blockSize, dotSize, surfaceSize);
 				CacheInfo[layer] = currentCacheInfo;
 				Cache[layer] = cachedSurface;
 			}
@@ -68,7 +76,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 					var dotPos = new SKPoint(x / 3f * blockSize.Width, y * blockSize.Height);
 
 					// don't render black dots at all
-					if (data.Data[framePos] == 0 && data.Data[framePos + 1] == 0 && data.Data[framePos + 2] == 0) {
+					if (!styleDef.IsUnlit && data.Data[framePos] == 0 && data.Data[framePos + 1] == 0 && data.Data[framePos + 2] == 0) {
 						continue;
 					}
 
@@ -81,7 +89,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 		}
 
-		private static SKSurface PaintCache(DmdLayer layer, DmdLayerStyleDefinition styleDef, SKSize blockSize, SKSize dotSize, SKSize surfaceSize)
+		private static SKSurface PaintCache(DmdLayerStyleDefinition styleDef, SKSize blockSize, SKSize dotSize, SKSize surfaceSize)
 		{
 			var surface = GLUtil.GetInstance().CreateSurface((int)surfaceSize.Width, (int)surfaceSize.Height);
 			using (var dotPaint = new SKPaint()) {
@@ -115,8 +123,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				for (var x = 0; x < data.Width * 3; x += 3) {
 					var framePos = y * data.Width * 3 + x;
 
-					// don't render black dots at all
-					if (data.Data[framePos] == 0 && data.Data[framePos + 1] == 0 && data.Data[framePos + 2] == 0) {
+					// don't render black dots at all if lit
+					if (!styleDef.IsUnlit && data.Data[framePos] == 0 && data.Data[framePos + 1] == 0 && data.Data[framePos + 2] == 0) {
 						continue;
 					}
 
@@ -172,6 +180,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private static SKColor GetColor(SKColor color, DmdLayerStyleDefinition styleDef)
 		{
+			if (styleDef.IsUnlit) {
+				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity)); ;
+			}
 			if (Math.Abs(styleDef.Luminosity) > 0.01) {
 				color.ToHsl(out var h, out var s, out var l);
 				color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity)));

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using LibDmd.Output.Virtual.AlphaNumeric;
-using SkiaSharp;
+﻿using SkiaSharp;
 
 namespace LibDmd.Output.Virtual.SkiaDmd
 {
@@ -12,6 +9,16 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		/// Defines if this layer is active
 		/// </summary>
 		public bool IsEnabled { get; set; }
+
+		/// <summary>
+		/// Defines if this layer is a unlit layer that is always on
+		/// </summary>
+		public bool IsUnlit { get; set; }
+
+		/// <summary>
+		/// The color to render the unlit layer
+		/// </summary>
+		public SKColor UnlitColor { get; set; }
 
 		/// <summary>
 		/// Defines if blurring of this layer is active
@@ -56,6 +63,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			return new DmdLayerStyleDefinition {
 				IsEnabled = IsEnabled,
+				IsUnlit = IsUnlit,
+				UnlitColor = new SKColor(UnlitColor.Red, UnlitColor.Green, UnlitColor.Blue, UnlitColor.Alpha),
 				IsBlurEnabled = IsBlurEnabled,
 				IsRoundedEnabled = IsRoundedEnabled,
 				Size = Size,
@@ -68,23 +77,27 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is DmdLayerStyleDefinition item)) {
+			if (!(obj is DmdLayerStyleDefinition other)) {
 				return false;
 			}
-			return IsEnabled == item.IsEnabled
-			       && IsBlurEnabled == item.IsBlurEnabled
-			       && IsRoundedEnabled == item.IsRoundedEnabled
-			       && Size.Equals(item.Size)
-			       && Opacity.Equals(item.Opacity)
-			       && Luminosity.Equals(item.Luminosity)
-			       && Rounded.Equals(item.Rounded)
-			       && Blur.Equals(item.Blur);
+			return IsEnabled == other.IsEnabled
+				   && IsUnlit == other.IsUnlit
+				   && UnlitColor == other.UnlitColor
+			       && IsBlurEnabled == other.IsBlurEnabled
+			       && IsRoundedEnabled == other.IsRoundedEnabled
+			       && Size.Equals(other.Size)
+			       && Opacity.Equals(other.Opacity)
+			       && Luminosity.Equals(other.Luminosity)
+			       && Rounded.Equals(other.Rounded)
+			       && Blur.Equals(other.Blur);
 		}
 
 		protected bool Equals(DmdLayerStyleDefinition other)
 		{
 			return IsEnabled == other.IsEnabled
-			       && IsBlurEnabled == other.IsBlurEnabled
+			       && IsUnlit == other.IsUnlit
+			       && UnlitColor == other.UnlitColor
+				   && IsBlurEnabled == other.IsBlurEnabled
 			       && IsRoundedEnabled == other.IsRoundedEnabled
 			       && Size.Equals(other.Size)
 			       && Opacity.Equals(other.Opacity)
@@ -97,7 +110,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			unchecked {
 				var hashCode = obj.IsEnabled.GetHashCode();
-				hashCode = (hashCode * 397) ^ obj.IsBlurEnabled.GetHashCode();
+				hashCode = (hashCode * 397) ^ obj.IsUnlit.GetHashCode();
+				hashCode = (hashCode * 397) ^ obj.UnlitColor.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.IsRoundedEnabled.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Size.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Opacity.GetHashCode();
@@ -111,6 +125,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public override string ToString()
 		{
 			return $"DmdLayerStyleDefinition[enabled:{IsEnabled},size:{Size},opacity:{Opacity},lum:{Luminosity},rounded:{IsRoundedEnabled}/{Rounded},blur:{IsBlurEnabled}/{Blur}]";
+		}
+
+		public override int GetHashCode()
+		{
+			return GetHashCode(this);
 		}
 	}
 }

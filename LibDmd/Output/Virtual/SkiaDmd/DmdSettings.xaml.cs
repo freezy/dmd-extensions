@@ -76,6 +76,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			InnerGlowStyle.Label = "Inner Glow Layer";
 			OuterGlowStyle.Label = "Outer Glow Layer";
 			BackgroundStyle.Label = "Unlit Layer";
+			
 
 			// subscribe to control changes that trigger rasterization
 			ForegroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyleDef => {

@@ -313,6 +313,9 @@ namespace LibDmd.DmdDevice
 			Set(prefix + "enabled", layerStyle.IsEnabled);
 			if (layerStyle.IsEnabled) {
 
+				Set(prefix + "unlit", layerStyle.IsUnlit);
+				Set(prefix + "unlit.color", layerStyle.UnlitColor);
+
 				Set(prefix + "size", layerStyle.Size);
 				Set(prefix + "opacity", layerStyle.Opacity);
 				Set(prefix + "luminosity", layerStyle.Luminosity);
@@ -332,6 +335,8 @@ namespace LibDmd.DmdDevice
 				}
 				
 			} else {
+				Remove(prefix + "unlit");
+				Remove(prefix + "unlit.color");
 				Remove(prefix + "size");
 				Remove(prefix + "opacity");
 				Remove(prefix + "luminosity");
@@ -346,6 +351,8 @@ namespace LibDmd.DmdDevice
 		{
 			var prefix = "style." + styleName + "." + layerName + ".";
 			Remove(prefix + "enabled");
+			Remove(prefix + "unlit");
+			Remove(prefix + "unlit.color");
 			Remove(prefix + "size");
 			Remove(prefix + "opacity");
 			Remove(prefix + "luminosity");
@@ -360,6 +367,12 @@ namespace LibDmd.DmdDevice
 			switch (property) {
 				case "enabled":
 					style.IsEnabled = GetBoolean(keyData.KeyName, false);
+					break;
+				case "unlit":
+					style.IsUnlit = GetBoolean(keyData.KeyName, false);
+					break;
+				case "unlit.color":
+					style.UnlitColor = GetSKColor(keyData.KeyName, SKColors.DarkGray);
 					break;
 				case "size":
 					style.Size = GetDouble(keyData.KeyName, 1.0);

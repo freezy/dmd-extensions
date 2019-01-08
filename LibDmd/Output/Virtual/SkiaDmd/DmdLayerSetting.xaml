@@ -42,11 +42,12 @@
         <Slider x:Name="OpacitySlider" Grid.Column="4" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.1"/>
         <TextBox x:Name="OpacityValue" Grid.Column="5" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
 
-        <Label Grid.Column="6" Grid.Row="1" Content="Luminosity" VerticalAlignment="Top" Margin="0,0,0,0">
+        <Label x:Name="ColorLuminosityLabel" Grid.Column="6" Grid.Row="1" Content="Luminosity" VerticalAlignment="Top" Margin="0,0,0,0">
             <Label.RenderTransform><TransformGroup><TranslateTransform X="-4" Y="-7"/></TransformGroup></Label.RenderTransform>
         </Label>
         <Slider x:Name="LuminositySlider" Grid.Column="6" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="100" Margin="0,0,8,8" Minimum="-100"/>
         <TextBox x:Name="LuminosityValue" Grid.Column="7" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+        <xctk:ColorPicker x:Name="UnlitColor" Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,8,0" VerticalAlignment="Top" DisplayColorAndName="False"/>
 
         <CheckBox x:Name="RoundedEnabled" Grid.Column="8" Grid.Row="1" Content="Rounded" VerticalAlignment="Top" Checked="UpdateRoundedEnabled" Unchecked="UpdateRoundedEnabled" Margin="0,0,0,8"/>
         <Slider x:Name="RoundedSlider" Grid.Column="8" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1" LargeChange="0.05" SmallChange="0.01" TickFrequency="0.05"/>
