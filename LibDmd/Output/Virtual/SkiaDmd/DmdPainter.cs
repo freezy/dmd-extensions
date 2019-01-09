@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using LibDmd.Common;
@@ -47,7 +48,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 					PaintDirectly(data, canvas, width, height, style.Foreground);
 				}
 			}
-			
 		}
 
 		private static void PaintCached(DmdData data, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef, DmdLayer layer)
@@ -70,24 +70,63 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				Cache[layer] = cachedSurface;
 			}
 
+			Action<DmdData, DmdLayerStyleDefinition, Action<int, int, SKColor>> paint = null;
+			switch (data.Format) {
+				case FrameFormat.Gray2:
+					paint = PaintGray2;
+					break;
+				case FrameFormat.Gray4:
+					paint = PaintGray4;
+					break;
+				case FrameFormat.Rgb24:
+					paint = PaintRgb24;
+					break;
+			}
+			paint?.Invoke(data, styleDef, (x, y, color) => {
+				var dotPos = new SKPoint(x * blockSize.Width, y * blockSize.Height);
+				using (var dotPaint = new SKPaint()) {
+					dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(GetColor(color, styleDef), SKBlendMode.SrcIn);
+					canvas.DrawSurface(cachedSurface, dotPos.X + (blockSize.Width - surfaceSize.Width) / 2, dotPos.Y + (blockSize.Height - surfaceSize.Height) / 2, dotPaint);
+				}
+			});
+		}
+
+		private static void PaintGray2(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		{
 			for (var y = 0; y < data.Height; y++) {
-				for (var x = 0; x < data.Width * 3; x += 3) {
-					var framePos = y * data.Width * 3 + x;
-					var dotPos = new SKPoint(x / 3f * blockSize.Width, y * blockSize.Height);
-
-					// don't render black dots at all
-					if (!styleDef.IsUnlit && data.Data[framePos] == 0 && data.Data[framePos + 1] == 0 && data.Data[framePos + 2] == 0) {
-						continue;
-					}
-
-					var color = new SKColor(data.Data[framePos], data.Data[framePos + 1], data.Data[framePos + 2]);
-					using (var dotPaint = new SKPaint()) {
-						dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(GetColor(color, styleDef), SKBlendMode.SrcIn);
-						canvas.DrawSurface(cachedSurface, dotPos.X + (blockSize.Width - surfaceSize.Width) / 2, dotPos.Y + (blockSize.Height - surfaceSize.Height) / 2, dotPaint);
+				for (var x = 0; x < data.Width; x++) {
+					var framePos = y * data.Width + x;
+					if (styleDef.IsUnlit || data.Data[framePos] != 0) {
+						paint(x, y, SKColors.OrangeRed.WithAlpha((byte)(data.Data[framePos] * 85)));
 					}
 				}
 			}
 		}
+
+		private static void PaintGray4(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		{
+			for (var y = 0; y < data.Height; y++) {
+				for (var x = 0; x < data.Width; x++) {
+					var framePos = y * data.Width + x;
+					if (styleDef.IsUnlit || data.Data[framePos] != 0) {
+						paint(x, y, SKColors.OrangeRed.WithAlpha((byte)(data.Data[framePos] * 17)));
+					}
+				}
+			}
+		}
+
+		private static void PaintRgb24(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		{
+			for (var y = 0; y < data.Height; y++) {
+				for (var x = 0; x < data.Width * 3; x += 3) {
+					var framePos = y * data.Width * 3 + x;
+					if (styleDef.IsUnlit || data.Data[framePos] != 0 || data.Data[framePos + 1] != 0 || data.Data[framePos + 2] != 0) {
+						paint((int)(x / 3f), y, new SKColor(data.Data[framePos], data.Data[framePos + 1], data.Data[framePos + 2]));
+					}
+				}
+			}
+		}
+
 
 		private static SKSurface PaintCache(DmdLayerStyleDefinition styleDef, SKSize blockSize, SKSize dotSize, SKSize surfaceSize)
 		{
@@ -196,12 +235,14 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 	public class DmdData
 	{
+		public readonly FrameFormat Format;
 		public readonly byte[] Data;
 		public readonly int Width;
 		public readonly int Height;
 
-		public DmdData(byte[] data, int width, int height)
+		public DmdData(FrameFormat format, byte[] data, int width, int height)
 		{
+			Format = format;
 			Data = data;
 			Width = width;
 			Height = height;

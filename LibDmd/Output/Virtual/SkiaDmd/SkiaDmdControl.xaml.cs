@@ -17,7 +17,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 	/// <summary>
 	/// Interaction logic for SkiaDmdWindow.xaml
 	/// </summary>
-	public partial class SkiaDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class SkiaDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	{
 		public bool IgnoreAspectRatio { get; set; }
 		public VirtualDisplay Host { get; set; }
@@ -49,7 +49,10 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private IDisposable _settingSubscription;
 		private int _numFrame = 0;
 
-		private byte[] _frame;
+		private FrameFormat _frameFormat;
+		private byte[] _rgb24Frame;
+		private byte[] _gray2Frame;
+		private byte[] _gray4Frame;
 
 		public SkiaDmdControl()
 		{
@@ -92,32 +95,60 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			Host.SetDimensions(width, height);
 		}
 
-		public void RenderBitmap(BitmapSource bmp)
+		public void RenderGray2(byte[] frame)
 		{
-			try {
-				Dispatcher.Invoke(() => {
-					var frame = ImageUtil.ConvertToRgb24(bmp);
-					if (FrameUtil.CompareBuffers(_frame, 0, frame, 0, frame.Length)) {
-						return;
-					}
-					_frame = frame;
-					Redraw();
-				});
-			} catch (TaskCanceledException e) {
-				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
+			// skip if identical
+			if (FrameUtil.CompareBuffers(_gray2Frame, 0, frame, 0, frame.Length)) {
+				return;
 			}
+			Dispatcher.Invoke(() => {
+				_gray2Frame = frame;
+				_frameFormat = FrameFormat.Gray2;
+				Redraw();
+			});
+		}
+
+		public void RenderGray4(byte[] frame)
+		{
+			// skip if identical
+			if (FrameUtil.CompareBuffers(_gray4Frame, 0, frame, 0, frame.Length)) {
+				return;
+			}
+			Dispatcher.Invoke(() => {
+				_gray4Frame = frame;
+				_frameFormat = FrameFormat.Gray4;
+				Redraw();
+			});
 		}
 
 		public void RenderRgb24(byte[] frame)
 		{
 			// skip if identical
-			if (FrameUtil.CompareBuffers(_frame, 0, frame, 0, frame.Length)) {
+			if (FrameUtil.CompareBuffers(_rgb24Frame, 0, frame, 0, frame.Length)) {
 				return;
 			}
 			Dispatcher.Invoke(() => {
-				_frame = frame;
+				_rgb24Frame = frame;
+				_frameFormat = FrameFormat.Rgb24;
 				Redraw();
 			});
+		}
+
+		public void RenderBitmap(BitmapSource bmp)
+		{
+			try {
+				Dispatcher.Invoke(() => {
+					var frame = ImageUtil.ConvertToRgb24(bmp);
+					if (FrameUtil.CompareBuffers(_rgb24Frame, 0, frame, 0, frame.Length)) {
+						return;
+					}
+					_rgb24Frame = frame;
+					_frameFormat = FrameFormat.Rgb24;
+					Redraw();
+				});
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
+			}
 		}
 
 		public void SetColor(Color color)
@@ -189,12 +220,26 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void DrawDmd(SKCanvas canvas, int width, int height)
 		{
-			if (_frame == null) {
+			byte[] frame;
+			switch (_frameFormat) {
+				case FrameFormat.Gray2:
+					frame = _gray2Frame;
+					break;
+				case FrameFormat.Gray4:
+					frame = _gray4Frame;
+					break;
+				case FrameFormat.Rgb24:
+					frame = _rgb24Frame;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+			if (frame == null) {
 				return;
 			}
 
 			// render dmd
-			var data = new DmdData(_frame, DmdWidth, DmdHeight);
+			var data = new DmdData(_frameFormat, frame, DmdWidth, DmdHeight);
 			DmdPainter.Paint(data, canvas, width, height, StyleDefinition, true);
 		}
 
