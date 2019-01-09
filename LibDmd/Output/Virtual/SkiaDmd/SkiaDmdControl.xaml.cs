@@ -160,6 +160,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				_canvasSize = canvasSize;
 			}
 			DrawDmd(_surface.Canvas, width, height);
+			canvas.Clear(SKColors.Transparent);
 			canvas.DrawSurface(_surface, new SKPoint(0f, 0f));
 			stopwatch.Stop();
 			var paintTime = stopwatch.ElapsedMilliseconds;
