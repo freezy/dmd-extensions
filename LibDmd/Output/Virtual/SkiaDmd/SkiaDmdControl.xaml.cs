@@ -29,6 +29,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public Configuration Configuration { get; set; }
 		public DmdStyleDefinition StyleDefinition { get; set; }
 
+		private static readonly bool DrawFps = false;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private double _hue;
@@ -46,6 +47,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private bool _settingsOpen;
 		private VirtualDmdSettings _settingWindow;
 		private IDisposable _settingSubscription;
+		private int _numFrame = 0;
 
 		private byte[] _frame;
 
@@ -174,13 +176,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			var paintTime = stopwatch.ElapsedMilliseconds;
 			
 			// render fps
-			if (paintTime > 0) {
+			if (DrawFps && paintTime > 0) {
 				using (var fpsPaint = new SKPaint())
 				{
 					fpsPaint.Color = new SKColor(0, 0xff, 0);
 					fpsPaint.TextSize = 20;
 					var fps = 1000d / paintTime;
-					canvas.DrawText($"FPS: {fps:0}", 30, 50, fpsPaint);
+					canvas.DrawText($"FPS: {fps:000}, Frame: {++_numFrame}", 30, 50, fpsPaint);
 				}
 			}
 		}
@@ -217,9 +219,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		private void SizeChanged_Event(object sender, SizeChangedEventArgs e)
 		{
-			//if (!Host.Resizing) {
-				Redraw();
-			//}
+			Redraw();
 		}
 
 		private void Redraw()
