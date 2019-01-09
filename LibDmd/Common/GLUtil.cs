@@ -34,7 +34,7 @@ namespace LibDmd.Common
 		public void Destroy()
 		{
 			_grContext?.Dispose();
-			_glContext.Destroy();
+			_glContext?.Destroy();
 			_grContext = null;
 			_glContext = null;
 			_instance = null;
