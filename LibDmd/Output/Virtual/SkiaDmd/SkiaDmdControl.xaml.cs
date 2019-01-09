@@ -94,7 +94,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		{
 			try {
 				Dispatcher.Invoke(() => {
-					_frame = ImageUtil.ConvertToRgb24(bmp);
+					var frame = ImageUtil.ConvertToRgb24(bmp);
+					if (FrameUtil.CompareBuffers(_frame, 0, frame, 0, frame.Length)) {
+						return;
+					}
+					_frame = frame;
 					Redraw();
 				});
 			} catch (TaskCanceledException e) {
@@ -104,6 +108,10 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void RenderRgb24(byte[] frame)
 		{
+			// skip if identical
+			if (FrameUtil.CompareBuffers(_frame, 0, frame, 0, frame.Length)) {
+				return;
+			}
 			Dispatcher.Invoke(() => {
 				_frame = frame;
 				Redraw();
