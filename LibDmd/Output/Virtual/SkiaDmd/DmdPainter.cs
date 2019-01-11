@@ -16,47 +16,47 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private static readonly Dictionary<DmdLayer, SKSurface> Cache = new Dictionary<DmdLayer, SKSurface>();
 		private static readonly Dictionary<DmdLayer, CacheInfo> CacheInfo = new Dictionary<DmdLayer, CacheInfo>();
 
-		public static void Paint(DmdData data, SKCanvas canvas, int width, int height, DmdStyleDefinition style, bool cache)
+		public static void Paint(DmdFrame frame, SKCanvas canvas, int width, int height, DmdStyleDefinition style, bool cache)
 		{
 			canvas.Clear(style.BackgroundColor);
 			if (style.Background.IsEnabled) {
 				if (cache) {
-					PaintCached(data, canvas, width, height, style.Background, DmdLayer.Background);
+					PaintCached(frame, canvas, width, height, style.Background, DmdLayer.Background);
 				} else {
-					PaintDirectly(data, canvas, width, height, style.Background);
+					PaintDirectly(frame, canvas, width, height, style.Background);
 				}
 			}
 			if (style.OuterGlow.IsEnabled) {
 				if (cache) {
-					PaintCached(data, canvas, width, height, style.OuterGlow, DmdLayer.OuterGlow);
+					PaintCached(frame, canvas, width, height, style.OuterGlow, DmdLayer.OuterGlow);
 				} else {
-					PaintDirectly(data, canvas, width, height, style.OuterGlow);
+					PaintDirectly(frame, canvas, width, height, style.OuterGlow);
 				}
 			}
 			if (style.InnerGlow.IsEnabled) {
 				if (cache) {
-					PaintCached(data, canvas, width, height, style.InnerGlow, DmdLayer.InnerGlow);
+					PaintCached(frame, canvas, width, height, style.InnerGlow, DmdLayer.InnerGlow);
 				} else {
-					PaintDirectly(data, canvas, width, height, style.InnerGlow);
+					PaintDirectly(frame, canvas, width, height, style.InnerGlow);
 				}
 
 			}
 			if (style.Foreground.IsEnabled) {
 				if (cache) {
-					PaintCached(data, canvas, width, height, style.Foreground, DmdLayer.Foreground);
+					PaintCached(frame, canvas, width, height, style.Foreground, DmdLayer.Foreground);
 				} else {
-					PaintDirectly(data, canvas, width, height, style.Foreground);
+					PaintDirectly(frame, canvas, width, height, style.Foreground);
 				}
 			}
 		}
 
-		private static void PaintCached(DmdData data, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef, DmdLayer layer)
+		private static void PaintCached(DmdFrame frame, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef, DmdLayer layer)
 		{
 			var cacheInfo = CacheInfo.ContainsKey(layer) ? CacheInfo[layer] : null;
 			var cachedSurface = Cache.ContainsKey(layer) ? Cache[layer] : null;
 			var currentCacheInfo = new CacheInfo(width, height, styleDef);
 
-			var blockSize = GetBlockSize(data, width, height);
+			var blockSize = GetBlockSize(frame, width, height);
 			var dotSize = GetDotSize(styleDef, blockSize);
 			var surfaceSize = GetCacheSurfaceSize(styleDef, blockSize);
 			
@@ -70,8 +70,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				Cache[layer] = cachedSurface;
 			}
 
-			var painter = GetPainter(data.Format);
-			painter?.Invoke(data, styleDef, (x, y, color) => {
+			var painter = GetPainter(frame.Format);
+			painter?.Invoke(frame, styleDef, (x, y, color) => {
 				var dotPos = new SKPoint(x * blockSize.Width, y * blockSize.Height);
 				using (var dotPaint = new SKPaint()) {
 					dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(GetColor(color, styleDef), SKBlendMode.SrcIn);
@@ -106,13 +106,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			return surface;
 		}
 
-		private static void PaintDirectly(DmdData data, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef)
+		private static void PaintDirectly(DmdFrame frame, SKCanvas canvas, int width, int height, DmdLayerStyleDefinition styleDef)
 		{
-			var size = GetBlockSize(data, width, height);
-			var dotSize = new SKSize((float)styleDef.Size * width / data.Width, (float)styleDef.Size * height / data.Height);
-			var painter = GetPainter(data.Format);
+			var size = GetBlockSize(frame, width, height);
+			var dotSize = new SKSize((float)styleDef.Size * width / frame.Width, (float)styleDef.Size * height / frame.Height);
+			var painter = GetPainter(frame.Format);
 
-			painter?.Invoke(data, styleDef, (x, y, color) => {
+			painter?.Invoke(frame, styleDef, (x, y, color) => {
 				using (var dotPaint = new SKPaint()) {
 					dotPaint.IsAntialias = true;
 					dotPaint.Color = GetColor(color, styleDef);
@@ -137,7 +137,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			});
 		}
 
-		private static Action<DmdData, DmdLayerStyleDefinition, Action<int, int, SKColor>> GetPainter(FrameFormat format)
+		private static Action<DmdFrame, DmdLayerStyleDefinition, Action<int, int, SKColor>> GetPainter(FrameFormat format)
 		{
 			switch (format) {
 				case FrameFormat.Gray2:
@@ -150,45 +150,53 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			return null;
 		}
 
-		private static void PaintGray2(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		private static void PaintGray2(DmdFrame frame, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
 		{
-			for (var y = 0; y < data.Height; y++) {
-				for (var x = 0; x < data.Width; x++) {
-					var framePos = y * data.Width + x;
-					if (styleDef.IsUnlit || data.Data[framePos] != 0) {
-						paint(x, y, SKColors.OrangeRed.WithAlpha((byte)(data.Data[framePos] * 85)));
+			for (var y = 0; y < frame.Height; y++) {
+				for (var x = 0; x < frame.Width; x++) {
+					var framePos = y * frame.Width + x;
+					if (styleDef.IsUnlit || frame.Data[framePos] != 0) {
+						if (frame.Palette != null && frame.Palette.Length < frame.Data[framePos]) {
+							paint(x, y, GetTransparentColor(frame.Palette[frame.Data[framePos]]));
+						} else {
+							paint(x, y, frame.Color.WithAlpha((byte)(frame.Data[framePos] * 85)));
+						}
 					}
 				}
 			}
 		}
 
-		private static void PaintGray4(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		private static void PaintGray4(DmdFrame frame, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
 		{
-			for (var y = 0; y < data.Height; y++) {
-				for (var x = 0; x < data.Width; x++) {
-					var framePos = y * data.Width + x;
-					if (styleDef.IsUnlit || data.Data[framePos] != 0) {
-						paint(x, y, SKColors.OrangeRed.WithAlpha((byte)(data.Data[framePos] * 17)));
+			for (var y = 0; y < frame.Height; y++) {
+				for (var x = 0; x < frame.Width; x++) {
+					var framePos = y * frame.Width + x;
+					if (styleDef.IsUnlit || frame.Data[framePos] != 0) {
+						if (frame.Palette != null && frame.Palette.Length < frame.Data[framePos]) {
+							paint(x, y, GetTransparentColor(frame.Palette[frame.Data[framePos]]));
+						} else {
+							paint(x, y, frame.Color.WithAlpha((byte)(frame.Data[framePos] * 17)));
+						}
 					}
 				}
 			}
 		}
 
-		private static void PaintRgb24(DmdData data, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
+		private static void PaintRgb24(DmdFrame frame, DmdLayerStyleDefinition styleDef, Action<int, int, SKColor> paint)
 		{
-			for (var y = 0; y < data.Height; y++) {
-				for (var x = 0; x < data.Width * 3; x += 3) {
-					var framePos = y * data.Width * 3 + x;
-					if (styleDef.IsUnlit || data.Data[framePos] != 0 || data.Data[framePos + 1] != 0 || data.Data[framePos + 2] != 0) {
-						paint((int)(x / 3f), y, new SKColor(data.Data[framePos], data.Data[framePos + 1], data.Data[framePos + 2]));
+			for (var y = 0; y < frame.Height; y++) {
+				for (var x = 0; x < frame.Width * 3; x += 3) {
+					var framePos = y * frame.Width * 3 + x;
+					if (styleDef.IsUnlit || frame.Data[framePos] != 0 || frame.Data[framePos + 1] != 0 || frame.Data[framePos + 2] != 0) {
+						paint((int)(x / 3f), y, GetTransparentColor(new SKColor(frame.Data[framePos], frame.Data[framePos + 1], frame.Data[framePos + 2])));
 					}
 				}
 			}
 		}
 
-		private static SKSize GetBlockSize(DmdData data, int width, int height)
+		private static SKSize GetBlockSize(DmdFrame frame, int width, int height)
 		{
-			return new SKSize((float)width / data.Width, (float)height / data.Height);
+			return new SKSize((float)width / frame.Width, (float)height / frame.Height);
 		}
 
 		private static SKSize GetDotSize(DmdLayerStyleDefinition styleDef, SKSize blockSize)
@@ -216,29 +224,49 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity)); ;
 			}
 			if (Math.Abs(styleDef.Luminosity) > 0.01) {
-				color.ToHsl(out var h, out var s, out var l);
-				color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
+				color.ToHsv(out var h, out var s, out var l);
+				color = SKColor.FromHsv(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
 			}
 			if (styleDef.Opacity < 1) {
 				color = color.WithAlpha((byte)(color.Alpha * styleDef.Opacity));
 			}
 			return color;
 		}
+
+		private static SKColor GetTransparentColor(SKColor color)
+		{
+			color.ToHsv(out var h, out var s, out var v);
+			return SKColor.FromHsv(h, s, 100, (byte)(2.55 * v));
+		}
 	}
 
-	public class DmdData
+	public class DmdFrame
 	{
 		public readonly FrameFormat Format;
 		public readonly byte[] Data;
 		public readonly int Width;
 		public readonly int Height;
+		public readonly SKColor Color;
+		public readonly SKColor[] Palette;
 
-		public DmdData(FrameFormat format, byte[] data, int width, int height)
+		public DmdFrame(FrameFormat format, byte[] data, int width, int height)
 		{
 			Format = format;
 			Data = data;
 			Width = width;
 			Height = height;
+			Color = new SKColor(RenderGraph.DefaultColor.R, RenderGraph.DefaultColor.G, RenderGraph.DefaultColor.B, RenderGraph.DefaultColor.A); ;
+			Palette = null;
+		}
+
+		public DmdFrame(FrameFormat format, byte[] data, int width, int height, SKColor color, SKColor[] palette)
+		{
+			Format = format;
+			Data = data;
+			Width = width;
+			Height = height;
+			Color = color;
+			Palette = palette;
 		}
 	}
 
@@ -272,14 +300,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			       && StyleDef.Equals(other.StyleDef);
 		}
 
-		public int GetHashCode(CacheInfo obj)
+		public override int GetHashCode()
 		{
-			unchecked {
-				var hashCode = obj.Width;
-				hashCode = (hashCode * 397) ^ obj.Height;
-				hashCode = (hashCode * 397) ^ (obj.StyleDef != null ? obj.StyleDef.GetHashCode() : 0);
-				return hashCode;
-			}
+			var hashCode = 441766974;
+			hashCode = hashCode * -1521134295 + Width.GetHashCode();
+			hashCode = hashCode * -1521134295 + Height.GetHashCode();
+			hashCode = hashCode * -1521134295 + EqualityComparer<DmdLayerStyleDefinition>.Default.GetHashCode(StyleDef);
+			return hashCode;
 		}
 	}
 }
