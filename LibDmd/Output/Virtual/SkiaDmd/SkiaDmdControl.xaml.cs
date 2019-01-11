@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -32,17 +33,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private static readonly bool DrawFps = false;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private double _hue;
-		private double _sat;
-		private double _lum;
-
-		private Color[] _gray2Palette;
-		private Color[] _gray4Palette;
+		private SKColor _dotColor = new SKColor(RenderGraph.DefaultColor.R, RenderGraph.DefaultColor.G, RenderGraph.DefaultColor.B, RenderGraph.DefaultColor.A);
+		private SKColor[] _gray2Palette;
+		private SKColor[] _gray4Palette;
 
 		private SKSurface _surface;
-		private GLUtil _glUtil;
+		private readonly GLUtil _glUtil;
 		private SKSize _canvasSize;
-		private SKSurface _dotSurface;
 
 		private bool _settingsOpen;
 		private VirtualDmdSettings _settingWindow;
@@ -153,13 +150,13 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void SetColor(Color color)
 		{
-			ColorUtil.RgbToHsl(color.R, color.G, color.B, out _hue, out _sat, out _lum);
+			_dotColor = new SKColor(color.R, color.G, color.B, color.A);
 		}
 
 		public void SetPalette(Color[] colors, int index = -1)
 		{
-			_gray2Palette = ColorUtil.GetPalette(colors, 4);
-			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+			_gray2Palette = ColorUtil.GetPalette(colors, 4).Select(color => new SKColor(color.R, color.G, color.B, color.A)).ToArray();
+			_gray4Palette = ColorUtil.GetPalette(colors, 16).Select(color => new SKColor(color.R, color.G, color.B, color.A)).ToArray();
 		}
 
 		public void ClearDisplay()
@@ -179,7 +176,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public void Dispose()
 		{
-			_dotSurface?.Dispose();
 			_surface?.Dispose();
 			_glUtil.Destroy();
 		}
@@ -221,12 +217,15 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public void DrawDmd(SKCanvas canvas, int width, int height)
 		{
 			byte[] frame;
+			SKColor[] palette = null;
 			switch (_frameFormat) {
 				case FrameFormat.Gray2:
 					frame = _gray2Frame;
+					palette = _gray2Palette;
 					break;
 				case FrameFormat.Gray4:
 					frame = _gray4Frame;
+					palette = _gray4Palette;
 					break;
 				case FrameFormat.Rgb24:
 					frame = _rgb24Frame;
@@ -239,7 +238,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 
 			// render dmd
-			var data = new DmdData(_frameFormat, frame, DmdWidth, DmdHeight);
+			var data = new DmdFrame(_frameFormat, frame, DmdWidth, DmdHeight, _dotColor, palette);
 			DmdPainter.Paint(data, canvas, width, height, StyleDefinition, true);
 		}
 
