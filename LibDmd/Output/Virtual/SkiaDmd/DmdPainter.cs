@@ -217,7 +217,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			}
 			if (Math.Abs(styleDef.Luminosity) > 0.01) {
 				color.ToHsl(out var h, out var s, out var l);
-				color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity)));
+				color = SKColor.FromHsl(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
 			}
 			if (styleDef.Opacity < 1) {
 				color = color.WithAlpha((byte)(color.Alpha * styleDef.Opacity));
