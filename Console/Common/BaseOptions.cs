@@ -234,7 +234,7 @@ namespace DmdExt.Common
 		}
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
-		                       _options.Destination == BaseOptions.DestinationType.PinDMDv3;
+		                       _options.Destination == BaseOptions.DestinationType.PIN2DMD;
 
 		public int Delay => _options.OutputDelay;
 	}
