@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using DmdExt.Common;
 using DmdExt.Mirror;
@@ -50,8 +52,18 @@ namespace DmdExt
 		{
 			_commandLineArgs = args;
 
-			// setup logger
-			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            //https://stackoverflow.com/questions/13354211/how-to-set-default-culture-info-for-entire-c-sharp-application
+            //Fix for persisting changes to config files so that decimals in non-US cultures do not get the decimal values replaced with comma's,
+            //and always remain periods.
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+            //If upgrading DMDExt to .NET 4.6 or beyond, this might be required according to this: https://stackoverflow.com/questions/36312697/setting-default-currentculture-and-currentuiculture-differences-between-net-4
+            //AppContext.SetSwitch("Switch.System.Globalization.NoAsyncCurrentCulture", true);
+
+            // setup logger
+            var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
