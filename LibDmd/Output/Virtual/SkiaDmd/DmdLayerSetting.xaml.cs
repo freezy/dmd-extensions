@@ -48,6 +48,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			LuminositySlider.ValueChanged += (sender, e) => LuminosityValue.Text = LuminositySlider.Value.ToString();
 			LuminosityValue.TextChanged += (sender, e) => LuminositySlider.Value = StringToDouble(LuminosityValue.Text, LuminositySlider.Value);
 
+			HueSlider.ValueChanged += (sender, e) => HueValue.Text = HueSlider.Value.ToString();
+			HueValue.TextChanged += (sender, e) => HueSlider.Value = StringToDouble(HueValue.Text, HueSlider.Value);
+
 			RoundedSlider.ValueChanged += (sender, e) => RoundedValue.Text = RoundedSlider.Value.ToString();
 			RoundedValue.TextChanged += (sender, e) => RoundedSlider.Value = StringToDouble(RoundedValue.Text, RoundedSlider.Value);
 
@@ -66,6 +69,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			DotSizeSlider.ValueChanged += (sender, e) => Changed();
 			OpacitySlider.ValueChanged += (sender, e) => Changed();
 			LuminositySlider.ValueChanged += (sender, e) => Changed();
+			HueSlider.ValueChanged += (sender, e) => Changed();
 			RoundedSlider.ValueChanged += (sender, e) => Changed();
 			BlurSlider.ValueChanged += (sender, e) => Changed();
 		}
@@ -80,6 +84,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			OpacitySlider.Value= _dmdLayerStyleDefinition.Opacity;
 			LuminosityValue.Text = _dmdLayerStyleDefinition.Luminosity.ToString();
 			LuminositySlider.Value= _dmdLayerStyleDefinition.Luminosity;
+			HueValue.Text = _dmdLayerStyleDefinition.Hue.ToString();
+			HueSlider.Value= _dmdLayerStyleDefinition.Hue;
 			RoundedEnabled.IsChecked = _dmdLayerStyleDefinition.IsRoundedEnabled;
 			RoundedValue.Text = _dmdLayerStyleDefinition.Rounded.ToString();
 			RoundedSlider.Value= _dmdLayerStyleDefinition.Rounded;
@@ -93,12 +99,18 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			if (!_dmdLayerStyleDefinition.IsUnlit) {
 				LuminositySlider.Visibility = Visibility.Visible;
-				LuminosityValue.Visibility = Visibility.Visible;
+				LuminositySlider.Visibility = Visibility.Visible;
+				HueValue.Visibility = Visibility.Visible;
+				HueSlider.Visibility = Visibility.Visible;
+				HueLabel.Visibility = Visibility.Visible;
 				UnlitColor.Visibility = Visibility.Hidden;
 				ColorLuminosityLabel.Content = "Luminosity";
 			} else {
 				LuminositySlider.Visibility = Visibility.Hidden;
 				LuminosityValue.Visibility = Visibility.Hidden;
+				HueValue.Visibility = Visibility.Hidden;
+				HueSlider.Visibility = Visibility.Hidden;
+				HueLabel.Visibility = Visibility.Hidden;
 				UnlitColor.Visibility = Visibility.Visible;
 				UnlitColor.SelectedColor = _dmdLayerStyleDefinition.UnlitColor.ToColor();
 				ColorLuminosityLabel.Content = "Color";
@@ -117,6 +129,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				Size = DotSizeSlider.Value,
 				Opacity = OpacitySlider.Value,
 				Luminosity = (float)LuminositySlider.Value,
+				Hue = (float)HueSlider.Value,
 				IsRoundedEnabled = (bool)RoundedEnabled.IsChecked,
 				Rounded = RoundedSlider.Value,
 				IsBlurEnabled = (bool)BlurEnabled.IsChecked,
@@ -137,6 +150,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			OpacityValue.IsEnabled = enabled;
 			LuminositySlider.IsEnabled = enabled;
 			LuminosityValue.IsEnabled = enabled;
+			HueSlider.IsEnabled = enabled;
+			HueValue.IsEnabled = enabled;
 			RoundedEnabled.IsEnabled = enabled;
 			RoundedSlider.IsEnabled = enabled;
 			RoundedValue.IsEnabled = enabled;

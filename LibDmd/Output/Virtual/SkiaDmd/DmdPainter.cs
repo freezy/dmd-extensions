@@ -207,7 +207,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private static SKSize GetCacheSurfaceSize(DmdLayerStyleDefinition styleDef, SKSize blockSize)
 		{
 			var blur = GetBlur(styleDef, blockSize);
-			return new SKSize(blockSize.Width + 10 * blur, blockSize.Height + 10 * blur);
+			return new SKSize(blockSize.Width * (float)styleDef.Size + 10 * blur + 5, blockSize.Height * (float)styleDef.Size + 10 * blur + 5);
 		}
 
 		private static float GetBlur(DmdLayerStyleDefinition styleDef, SKSize blockSize)
@@ -223,9 +223,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			if (styleDef.IsUnlit) {
 				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity)); ;
 			}
-			if (Math.Abs(styleDef.Luminosity) > 0.01) {
+			if (Math.Abs(styleDef.Luminosity) > 0.01 || Math.Abs(styleDef.Hue) != 0.0) {
 				color.ToHsv(out var h, out var s, out var l);
-				color = SKColor.FromHsv(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
+				color = SKColor.FromHsv((h + styleDef.Hue % 360), s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
 			}
 			if (styleDef.Opacity < 1) {
 				color = color.WithAlpha((byte)(color.Alpha * styleDef.Opacity));

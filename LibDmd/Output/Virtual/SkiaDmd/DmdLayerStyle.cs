@@ -46,6 +46,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public float Luminosity { get; set; }
 
 		/// <summary>
+		/// Defines how to change the hue of the original color.
+		/// </summary>
+		public float Hue { get; set; }
+
+		/// <summary>
 		/// How much the dots are rounded. 0 = square, 1 = circle.
 		/// </summary>
 		public double Rounded { get; set; } = 1;
@@ -70,6 +75,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				Size = Size,
 				Opacity = Opacity,
 				Luminosity = Luminosity,
+				Hue = Hue,
 				Rounded = Rounded,
 				Blur = Blur
 			};
@@ -88,6 +94,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			       && Size.Equals(other.Size)
 			       && Opacity.Equals(other.Opacity)
 			       && Luminosity.Equals(other.Luminosity)
+			       && Hue.Equals(other.Hue)
 			       && Rounded.Equals(other.Rounded)
 			       && Blur.Equals(other.Blur);
 		}
@@ -102,6 +109,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			       && Size.Equals(other.Size)
 			       && Opacity.Equals(other.Opacity)
 			       && Luminosity.Equals(other.Luminosity)
+			       && Hue.Equals(other.Hue)
 			       && Rounded.Equals(other.Rounded)
 			       && Blur.Equals(other.Blur);
 		}
@@ -116,6 +124,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				hashCode = (hashCode * 397) ^ obj.Size.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Opacity.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Luminosity.GetHashCode();
+				hashCode = (hashCode * 397) ^ obj.Hue.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Rounded.GetHashCode();
 				hashCode = (hashCode * 397) ^ obj.Blur.GetHashCode();
 				return hashCode;
@@ -124,7 +133,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 		public override string ToString()
 		{
-			return $"DmdLayerStyleDefinition[enabled:{IsEnabled},size:{Size},opacity:{Opacity},lum:{Luminosity},rounded:{IsRoundedEnabled}/{Rounded},blur:{IsBlurEnabled}/{Blur}]";
+			return $"DmdLayerStyleDefinition[enabled:{IsEnabled},size:{Size},opacity:{Opacity},lum:{Luminosity},hue:{Hue},rounded:{IsRoundedEnabled}/{Rounded},blur:{IsBlurEnabled}/{Blur}]";
 		}
 
 		public override int GetHashCode()
