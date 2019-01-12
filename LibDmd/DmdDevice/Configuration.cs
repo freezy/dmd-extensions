@@ -319,6 +319,7 @@ namespace LibDmd.DmdDevice
 				Set(prefix + "size", layerStyle.Size);
 				Set(prefix + "opacity", layerStyle.Opacity);
 				Set(prefix + "luminosity", layerStyle.Luminosity);
+				Set(prefix + "hue", layerStyle.Hue);
 
 				Set(prefix + "rounded.enabled", layerStyle.IsRoundedEnabled);
 				if (layerStyle.IsRoundedEnabled) {
@@ -382,6 +383,9 @@ namespace LibDmd.DmdDevice
 					break;
 				case "luminosity":
 					style.Luminosity = (float)GetDouble(keyData.KeyName, 0.0);
+					break;
+				case "hue":
+					style.Hue = (float)GetDouble(keyData.KeyName, 0.0);
 					break;
 				case "rounded.enabled":
 					style.IsRoundedEnabled = GetBoolean(keyData.KeyName, true);

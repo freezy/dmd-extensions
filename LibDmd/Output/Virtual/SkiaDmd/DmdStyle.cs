@@ -43,7 +43,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			IsEnabled = true,
 			IsUnlit = true,
 			Size = 0.5,
-			UnlitColor = SKColors.DarkOrange,
+			UnlitColor = new SKColor(RenderGraph.DefaultColor.R, RenderGraph.DefaultColor.G, RenderGraph.DefaultColor.B, RenderGraph.DefaultColor.A),
 			Opacity = 0.2,
 		};
 
