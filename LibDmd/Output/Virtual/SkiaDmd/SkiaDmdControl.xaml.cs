@@ -247,6 +247,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			if (_settingWindow == null) {
 				_settingWindow = new VirtualDmdSettings(StyleDefinition, Host.Top, Host.Left + Host.Width, Configuration);
 				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
+				_settingWindow.Closed += (closedSender, closedEvent) => _settingWindow = null;
 				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {
 					Logger.Info("Applying new style to DMD.");
 					StyleDefinition = style;

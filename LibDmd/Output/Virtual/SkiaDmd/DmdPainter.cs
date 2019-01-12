@@ -221,11 +221,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private static SKColor GetColor(SKColor color, DmdLayerStyleDefinition styleDef)
 		{
 			if (styleDef.IsUnlit) {
-				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity)); ;
+				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity));
 			}
 			if (Math.Abs(styleDef.Luminosity) > 0.01 || Math.Abs(styleDef.Hue) != 0.0) {
-				color.ToHsv(out var h, out var s, out var l);
-				color = SKColor.FromHsv((h + styleDef.Hue % 360), s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
+				color.ToHsl(out var h, out var s, out var l);
+				color = SKColor.FromHsl((h + styleDef.Hue % 360), s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
 			}
 			if (styleDef.Opacity < 1) {
 				color = color.WithAlpha((byte)(color.Alpha * styleDef.Opacity));
