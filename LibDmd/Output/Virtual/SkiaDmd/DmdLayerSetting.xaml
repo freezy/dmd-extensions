@@ -66,7 +66,7 @@
         <TextBox x:Name="RoundedValue" Grid.Column="11" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
         
         <CheckBox x:Name="BlurEnabled" Grid.Column="12" Grid.Row="1" Content="Blurring" VerticalAlignment="Top" Checked="UpdateBlurEnabled" Unchecked="UpdateBlurEnabled" Margin="0,0,0,8"/>
-        <Slider x:Name="BlurSlider" Grid.Column="12" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="500" Margin="0,0,8,8"/>
+        <Slider x:Name="BlurSlider" Grid.Column="12" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="2000" Margin="0,0,8,8"/>
         <TextBox x:Name="BlurValue" Grid.Column="13" Grid.Row="2" VerticalAlignment="Top" Width="30"/>
     </Grid>
 </UserControl>

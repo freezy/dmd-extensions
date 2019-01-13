@@ -9,7 +9,7 @@
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
         Height="683.611" 
-        Width="636.378" 
+        Width="755.711" 
         ResizeMode="NoResize" 
         ShowInTaskbar="False" 
         SizeToContent="WidthAndHeight" 
@@ -28,7 +28,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <wpf:SKElement x:Name="Preview" Height="149" Width="598" Grid.Row="0" PaintSurface="OnPaintCanvas"/>
+        <wpf:SKElement x:Name="Preview" Height="180" Width="718" Grid.Row="0" PaintSurface="OnPaintCanvas"/>
 
         <Label Grid.Row="1" Content="Background Color" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <xctk:ColorPicker x:Name="BackgroundColor" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Width="60" Margin="100,0,261,0" DisplayColorAndName="False"/>
