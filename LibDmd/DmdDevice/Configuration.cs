@@ -213,6 +213,7 @@ namespace LibDmd.DmdDevice
 	public class VirtualDmdConfig : VirtualDmdConfigLegacy, IVirtualDmdConfig
 	{
 		public override string Name { get; } = "virtualdmd";
+		public bool ShowFps => GetBoolean("showfps", false);
 
 		private readonly Dictionary<string, DmdStyleDefinition> _styles = new Dictionary<string, DmdStyleDefinition>();
 

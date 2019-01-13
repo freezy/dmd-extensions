@@ -30,7 +30,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public Configuration Configuration { get; set; }
 		public DmdStyleDefinition StyleDefinition { get; set; }
 
-		private static readonly bool DrawFps = false;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private SKColor _dotColor = new SKColor(RenderGraph.DefaultColor.R, RenderGraph.DefaultColor.G, RenderGraph.DefaultColor.B, RenderGraph.DefaultColor.A);
@@ -45,6 +44,9 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private VirtualDmdSettings _settingWindow;
 		private IDisposable _settingSubscription;
 		private int _numFrame = 0;
+		private double _minFps = 0;
+		private double _maxFps = 0;
+		private double _avgFps;
 
 		private FrameFormat _frameFormat;
 		private byte[] _rgb24Frame;
@@ -203,13 +205,15 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			var paintTime = stopwatch.ElapsedMilliseconds;
 			
 			// render fps
-			if (DrawFps && paintTime > 0) {
-				using (var fpsPaint = new SKPaint())
-				{
+			if (Configuration?.VirtualDmd != null && Configuration.VirtualDmd.ShowFps && paintTime > 0) {
+				using (var fpsPaint = new SKPaint()) {
 					fpsPaint.Color = new SKColor(0, 0xff, 0);
 					fpsPaint.TextSize = 20;
 					var fps = 1000d / paintTime;
-					canvas.DrawText($"FPS: {fps:000}, Frame: {++_numFrame}", 30, 50, fpsPaint);
+					_minFps = _minFps > 0.0 ? Math.Min(fps, _minFps) : fps;
+					_maxFps = Math.Max(_maxFps, fps);
+					_avgFps = (_avgFps * _numFrame + fps) / ++_numFrame;
+					canvas.DrawText($"FPS: {fps:000} ({_minFps:000}/{_avgFps:000}/{_maxFps:000}), Frame: {_numFrame}", 5, 25, fpsPaint);
 				}
 			}
 		}
