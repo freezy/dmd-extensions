@@ -243,6 +243,11 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				return fallback;
 			}
 		}
-		
-	}
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true; //Fix if user hits red X on window error: Cannot set Visibility or call Show, ShowDialog, or WindowInteropHelper.EnsureHandle after a Window has closed: https://stackoverflow.com/questions/3568233/wpf-cannot-reuse-window-after-it-has-been-closed
+            Hide();
+        }
+    }
 }

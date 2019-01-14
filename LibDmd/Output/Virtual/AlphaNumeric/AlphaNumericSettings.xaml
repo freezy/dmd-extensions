@@ -14,7 +14,7 @@
         ResizeMode="NoResize" 
         ShowInTaskbar="False" 
         SizeToContent="WidthAndHeight" 
-        Title="Customize Segment Style">
+        Title="Customize Segment Style" Closing="Window_Closing">
     <Window.Resources>
         <alphaNumeric:ComparisonConverter x:Key="ComparisonConverter" />
     </Window.Resources>

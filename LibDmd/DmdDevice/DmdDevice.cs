@@ -73,6 +73,7 @@ namespace LibDmd.DmdDevice
 
 		public DmdDevice()
 		{
+            CultureUtil.NormalizeUICulture();
 			// setup logger
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);

@@ -202,6 +202,7 @@
   <ItemGroup>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
+    <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="Common\GLUtil.cs" />
     <Compile Include="Common\VirtualSkiaDmd.xaml.cs">
       <DependentUpon>VirtualSkiaDmd.xaml</DependentUpon>

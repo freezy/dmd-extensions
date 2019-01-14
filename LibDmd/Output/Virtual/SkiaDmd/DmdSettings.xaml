@@ -13,7 +13,7 @@
         ResizeMode="NoResize" 
         ShowInTaskbar="False" 
         SizeToContent="WidthAndHeight" 
-        Title="Customize DMD Style">
+        Title="Customize DMD Style" Closing="Window_Closing">
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
