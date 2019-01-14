@@ -26,6 +26,8 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <CheckBox x:Name="LayerEnabled" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5" Checked="UpdateLayerEnabled" Unchecked="UpdateLayerEnabled" VerticalAlignment="Top" Margin="0,0,0,8" HorizontalAlignment="Left"/>
@@ -47,14 +49,24 @@
         </Label>
         <Slider x:Name="LuminositySlider" Grid.Column="6" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="100" Margin="0,0,8,8" Minimum="-100"/>
         <TextBox x:Name="LuminosityValue" Grid.Column="7" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
-        <xctk:ColorPicker x:Name="UnlitColor" Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,8,0" VerticalAlignment="Top" DisplayColorAndName="False"/>
+        <xctk:ColorPicker x:Name="UnlitColor" Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="4" Margin="0,0,8,0" VerticalAlignment="Top" DisplayColorAndName="False" Visibility="Hidden"/>
 
-        <CheckBox x:Name="RoundedEnabled" Grid.Column="8" Grid.Row="1" Content="Rounded" VerticalAlignment="Top" Checked="UpdateRoundedEnabled" Unchecked="UpdateRoundedEnabled" Margin="0,0,0,8"/>
-        <Slider x:Name="RoundedSlider" Grid.Column="8" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1" LargeChange="0.05" SmallChange="0.01" TickFrequency="0.05"/>
-        <TextBox x:Name="RoundedValue" Grid.Column="9" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+        <Label x:Name="HueLabel" Grid.Column="8" Grid.Row="1" Content="Hue" VerticalAlignment="Top" Margin="0,0,0,0">
+            <Label.RenderTransform>
+                <TransformGroup>
+                    <TranslateTransform X="-4" Y="-7"/>
+                </TransformGroup>
+            </Label.RenderTransform>
+        </Label>
+        <Slider x:Name="HueSlider" Grid.Column="8" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="180" Margin="0,0,8,8" Minimum="-180" SmallChange="1"/>
+        <TextBox x:Name="HueValue" Grid.Column="9" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
+
+        <CheckBox x:Name="RoundedEnabled" Grid.Column="10" Grid.Row="1" Content="Rounded" VerticalAlignment="Top" Checked="UpdateRoundedEnabled" Unchecked="UpdateRoundedEnabled" Margin="0,0,0,8"/>
+        <Slider x:Name="RoundedSlider" Grid.Column="10" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="1" Margin="0,0,8,8" Value="1" LargeChange="0.05" SmallChange="0.01" TickFrequency="0.05"/>
+        <TextBox x:Name="RoundedValue" Grid.Column="11" Grid.Row="2" VerticalAlignment="Top" Width="30" Margin="0,0,8,0"/>
         
-        <CheckBox x:Name="BlurEnabled" Grid.Column="10" Grid.Row="1" Content="Blurring" VerticalAlignment="Top" Checked="UpdateBlurEnabled" Unchecked="UpdateBlurEnabled" Margin="0,0,0,8"/>
-        <Slider x:Name="BlurSlider" Grid.Column="10" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="500" Margin="0,0,8,8"/>
-        <TextBox x:Name="BlurValue" Grid.Column="11" Grid.Row="2" VerticalAlignment="Top" Width="30"/>
+        <CheckBox x:Name="BlurEnabled" Grid.Column="12" Grid.Row="1" Content="Blurring" VerticalAlignment="Top" Checked="UpdateBlurEnabled" Unchecked="UpdateBlurEnabled" Margin="0,0,0,8"/>
+        <Slider x:Name="BlurSlider" Grid.Column="12" Grid.Row="2" VerticalAlignment="Top" Width="75" Maximum="2000" Margin="0,0,8,8"/>
+        <TextBox x:Name="BlurValue" Grid.Column="13" Grid.Row="2" VerticalAlignment="Top" Width="30"/>
     </Grid>
 </UserControl>

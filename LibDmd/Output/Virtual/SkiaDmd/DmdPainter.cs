@@ -12,14 +12,17 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 {
 	public class DmdPainter
 	{
+		private static bool PaintParams = false;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly Dictionary<DmdLayer, SKSurface> Cache = new Dictionary<DmdLayer, SKSurface>();
 		private static readonly Dictionary<DmdLayer, CacheInfo> CacheInfo = new Dictionary<DmdLayer, CacheInfo>();
 
 		public static void Paint(DmdFrame frame, SKCanvas canvas, int width, int height, DmdStyleDefinition style, bool cache)
 		{
+			List<string> Params = new List<string>();
 			canvas.Clear(style.BackgroundColor);
 			if (style.Background.IsEnabled) {
+				Params.Add("bg:" + GetBlur(style.Background, GetBlockSize(frame, width, height)));
 				if (cache) {
 					PaintCached(frame, canvas, width, height, style.Background, DmdLayer.Background);
 				} else {
@@ -27,6 +30,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				}
 			}
 			if (style.OuterGlow.IsEnabled) {
+				Params.Add("og:" + GetBlur(style.OuterGlow, GetBlockSize(frame, width, height)));
 				if (cache) {
 					PaintCached(frame, canvas, width, height, style.OuterGlow, DmdLayer.OuterGlow);
 				} else {
@@ -34,6 +38,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 				}
 			}
 			if (style.InnerGlow.IsEnabled) {
+				Params.Add("ig:" + GetBlur(style.InnerGlow, GetBlockSize(frame, width, height)));
 				if (cache) {
 					PaintCached(frame, canvas, width, height, style.InnerGlow, DmdLayer.InnerGlow);
 				} else {
@@ -42,10 +47,19 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 
 			}
 			if (style.Foreground.IsEnabled) {
+				Params.Add("fg:" + GetBlur(style.Foreground, GetBlockSize(frame, width, height)));
 				if (cache) {
 					PaintCached(frame, canvas, width, height, style.Foreground, DmdLayer.Foreground);
 				} else {
 					PaintDirectly(frame, canvas, width, height, style.Foreground);
+				}
+			}
+
+			if (PaintParams) {
+				using (var fpsPaint = new SKPaint()) {
+					fpsPaint.Color = new SKColor(0, 0xff, 0);
+					fpsPaint.TextSize = 20;
+					canvas.DrawText($"blur: {string.Join(",", Params)}", 30, 80, fpsPaint);
 				}
 			}
 		}
@@ -74,7 +88,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			painter?.Invoke(frame, styleDef, (x, y, color) => {
 				var dotPos = new SKPoint(x * blockSize.Width, y * blockSize.Height);
 				using (var dotPaint = new SKPaint()) {
-					dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(GetColor(color, styleDef), SKBlendMode.SrcIn);
+					dotPaint.ColorFilter = SKColorFilter.CreateBlendMode(GetColor(color, styleDef, false), SKBlendMode.SrcIn);
 					canvas.DrawSurface(cachedSurface, dotPos.X + (blockSize.Width - surfaceSize.Width) / 2, dotPos.Y + (blockSize.Height - surfaceSize.Height) / 2, dotPaint);
 				}
 			});
@@ -85,7 +99,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			var surface = GLUtil.GetInstance().CreateSurface((int)surfaceSize.Width, (int)surfaceSize.Height);
 			using (var dotPaint = new SKPaint()) {
 				dotPaint.IsAntialias = true;
-				dotPaint.Color = SKColors.Black;
+				dotPaint.Color = SKColors.Black.WithAlpha((byte)(styleDef.Opacity * 255));
 
 				if (styleDef.IsBlurEnabled) {
 					var blur = GetBlur(styleDef, blockSize);
@@ -207,7 +221,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private static SKSize GetCacheSurfaceSize(DmdLayerStyleDefinition styleDef, SKSize blockSize)
 		{
 			var blur = GetBlur(styleDef, blockSize);
-			return new SKSize(blockSize.Width + 10 * blur, blockSize.Height + 10 * blur);
+			return new SKSize(blockSize.Width * (float)styleDef.Size + 10 * blur + 5, blockSize.Height * (float)styleDef.Size + 10 * blur + 5);
 		}
 
 		private static float GetBlur(DmdLayerStyleDefinition styleDef, SKSize blockSize)
@@ -218,16 +232,16 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 			return 0f;
 		}
 
-		private static SKColor GetColor(SKColor color, DmdLayerStyleDefinition styleDef)
+		private static SKColor GetColor(SKColor color, DmdLayerStyleDefinition styleDef, bool applyOpacity = true)
 		{
 			if (styleDef.IsUnlit) {
-				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity)); ;
+				return styleDef.UnlitColor.WithAlpha((byte)(styleDef.UnlitColor.Alpha * styleDef.Opacity));
 			}
-			if (Math.Abs(styleDef.Luminosity) > 0.01) {
-				color.ToHsv(out var h, out var s, out var l);
-				color = SKColor.FromHsv(h, s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
+			if (Math.Abs(styleDef.Luminosity) > 0.01 || Math.Abs(styleDef.Hue) != 0.0) {
+				color.ToHsl(out var h, out var s, out var l);
+				color = SKColor.FromHsl((h + styleDef.Hue % 360), s, Math.Max(0, Math.Min(100, l + styleDef.Luminosity))).WithAlpha(color.Alpha);
 			}
-			if (styleDef.Opacity < 1) {
+			if (applyOpacity && styleDef.Opacity < 1) {
 				color = color.WithAlpha((byte)(color.Alpha * styleDef.Opacity));
 			}
 			return color;

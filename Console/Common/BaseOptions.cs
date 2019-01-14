@@ -31,6 +31,9 @@ namespace DmdExt.Common
 		[Option("virtual-dotsize", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
 		public double VirtualDmdDotSize { get; set; } = 1;
 
+		[Option("virtual-show-fps", HelpText = "Shows frames per second on the virtual DMD. Default: false")]
+		public bool VirtualShowFps { get; set; } = false;
+
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 
@@ -157,6 +160,7 @@ namespace DmdExt.Common
 							|| _options.Destination == BaseOptions.DestinationType.Virtual;
 		public bool StayOnTop => _options.VirtualDmdOnTop;
 		public bool IgnoreAr { get; }
+		public bool ShowFps => _options.VirtualShowFps;
 		public bool UseRegistryPosition => false;
 		public bool HideGrip => _options.VirtualDmdHideGrip;
 		public double Left { get; }

@@ -72,6 +72,7 @@ namespace LibDmd.DmdDevice
 		bool Enabled { get; }
 		bool StayOnTop { get; }
 		bool IgnoreAr { get; }
+		bool ShowFps { get; }
 		bool UseRegistryPosition { get; }
 		bool HideGrip { get; }
 		double Left { get; }

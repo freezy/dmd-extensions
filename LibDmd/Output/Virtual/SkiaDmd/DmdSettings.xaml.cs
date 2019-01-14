@@ -3,14 +3,9 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Forms.VisualStyles;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
-using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -228,20 +223,6 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private void CancelClicked(object sender, RoutedEventArgs e)
 		{
 			Hide();
-		}
-
-		private static string DoubleToString(double d)
-		{
-			return ((int)Math.Round(d)).ToString();
-		}
-
-		private static double StringToDouble(string str, double fallback)
-		{
-			try {
-				return double.Parse(str);
-			} catch (Exception) {
-				return fallback;
-			}
 		}
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
