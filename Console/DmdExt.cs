@@ -19,6 +19,7 @@ using LibDmd.Input.ProPinball;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.PinUp;
+using LibDmd.Common;
 using Microsoft.Win32;
 #if !DEBUG
 using Mindscape.Raygun4Net;
@@ -50,6 +51,7 @@ namespace DmdExt
 		{
 			_commandLineArgs = args;
 
+			CultureUtil.NormalizeUICulture();
 			// setup logger
 			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
