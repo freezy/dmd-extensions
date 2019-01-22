@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Media;
-using IniParser;
-using IniParser.Model;
-using LibDmd.Common;
+﻿using System.Windows.Media;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using NLog;
-using SkiaSharp;
 
 namespace LibDmd.DmdDevice
 {
@@ -29,7 +19,8 @@ namespace LibDmd.DmdDevice
 		IVpdbConfig VpdbStream { get; }
 		IBrowserConfig BrowserStream { get; }
 		IPinUpConfig PinUp { get; }
-}
+		void Validate();
+	}
 
 	public interface IGlobalConfig 
 	{

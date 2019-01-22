@@ -89,6 +89,7 @@ namespace DmdExt
 			try {
 
 				Logger.Info("Launching console tool.");
+				options.Validate();
 				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
 				var config = cmdLineOptions.DmdDeviceIni == null
 					? (IConfiguration)cmdLineOptions

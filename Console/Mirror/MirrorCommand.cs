@@ -64,12 +64,7 @@ namespace DmdExt.Mirror
 				}
 
 				case SourceType.Screen:
-					if (_options.Position.Length != 4) {
-						throw new InvalidOptionException("Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
-					}
-					if (_options.ResizeTo.Length != 2) {
-						throw new InvalidOptionException("Argument --resize-to must have two values: \"<Width> <Height>\".");
-					}
+					
 					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],

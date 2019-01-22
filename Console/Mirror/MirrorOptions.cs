@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommandLine;
-using CommandLine.Text;
+﻿using CommandLine;
 using DmdExt.Common;
-using LibDmd.Input.ProPinball;
 
 namespace DmdExt.Mirror
 {
@@ -41,6 +34,20 @@ namespace DmdExt.Mirror
 
 		[ParserState]
 		public IParserState LastParserState { get; set; }
+
+		public new void Validate()
+		{
+			base.Validate();
+
+			if (Source == SourceType.Screen) {
+				if (Position.Length != 4) {
+					throw new InvalidOptionException("Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
+				}
+				if (ResizeTo.Length != 2) {
+					throw new InvalidOptionException("Argument --resize-to must have two values: \"<Width> <Height>\".");
+				}
+			}
+		}
 	}
 
 	enum SourceType

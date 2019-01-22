@@ -49,6 +49,11 @@ namespace LibDmd.DmdDevice
 		public IBrowserConfig BrowserStream { get; }
 		public IPinUpConfig PinUp { get; }
 
+		public void Validate()
+		{
+			// errors are only logged, and we fall back to defaults.
+		}
+
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
 		private readonly IniData _data;

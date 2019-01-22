@@ -98,6 +98,21 @@ namespace DmdExt.Common
 		{
 			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual, AlphaNumeric
 		}
+
+		public void Validate()
+		{
+			if (!ColorUtil.IsColor(RenderColor)) {
+				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
+			}
+
+			if (VirtualDmdPosition.Length != 3 && VirtualDmdPosition.Length != 4) {
+				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
+			}
+
+			if (VirtualDmdDotSize <= 0 || VirtualDmdDotSize > 2) {
+				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
+			}
+		}
 	}
 
 	internal class GlobalConfig : IGlobalConfig
@@ -107,10 +122,6 @@ namespace DmdExt.Common
 		public GlobalConfig(BaseOptions options)
 		{
 			_options = options;
-			if (!ColorUtil.IsColor(options.RenderColor)) {
-				throw new InvalidOptionException("Argument --color must be a valid RGB color. Example: \"ff0000\".");
-			}
-			DmdColor = ColorUtil.ParseColor(options.RenderColor);
 		}
 
 		public ResizeMode Resize => _options.Resize;
@@ -120,7 +131,7 @@ namespace DmdExt.Common
 		public bool QuitWhenDone => _options.QuitWhenDone;
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;
-		public Color DmdColor { get; }
+		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
 	}
 
 	internal class VirtualDmdOptions : IVirtualDmdConfig
@@ -130,36 +141,22 @@ namespace DmdExt.Common
 		public VirtualDmdOptions(BaseOptions options)
 		{
 			_options = options;
-			if (options.VirtualDmdPosition.Length != 3 && options.VirtualDmdPosition.Length != 4) {
-				throw new InvalidOptionException("Argument --virtual-position must have three or four values: \"<Left> <Top> <Width> [<Height>]\".");
-			}
-			if (options.VirtualDmdDotSize <= 0 || options.VirtualDmdDotSize > 2) {
-				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
-			}
-
-			if (options.VirtualDmdPosition.Length == 4) {
-				Height = options.VirtualDmdPosition[3];
-				IgnoreAr = true;
-			} else {
-				Height = (int)((double)options.VirtualDmdPosition[2] / 4);
-				IgnoreAr = false;
-			}
-
-			Left = options.VirtualDmdPosition[0];
-			Top = options.VirtualDmdPosition[1];
-			Width = options.VirtualDmdPosition[2];
 		}
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
 							|| _options.Destination == BaseOptions.DestinationType.Virtual;
 		public bool StayOnTop => _options.VirtualDmdOnTop;
-		public bool IgnoreAr { get; }
+		public bool IgnoreAr => _options.VirtualDmdPosition.Length == 4;
 		public bool UseRegistryPosition => false;
 		public bool HideGrip => _options.VirtualDmdHideGrip;
-		public double Left { get; }
-		public double Top { get; }
-		public double Width { get; }
-		public double Height { get; }
+		public double Left => _options.VirtualDmdPosition[0];
+		public double Top => _options.VirtualDmdPosition[1];
+		public double Width => _options.VirtualDmdPosition[2];
+
+		public double Height => _options.VirtualDmdPosition.Length == 4
+			? _options.VirtualDmdPosition[3]
+			: (int) ((double)_options.VirtualDmdPosition[2] / 4);
+
 		public double DotSize => _options.VirtualDmdDotSize;
 
 		public bool HasGameOverride(string key)
@@ -179,8 +176,7 @@ namespace DmdExt.Common
 
 		public bool StayOnTop => _options.VirtualDmdOnTop;
 		public bool HideGrip => _options.VirtualDmdHideGrip;
-		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
-		                       _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
 		public RasterizeStyleDefinition Style { get; } = new RasterizeStyleDefinition();
 	}
 

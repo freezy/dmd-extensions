@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DmdExt.Common;
@@ -8,7 +7,6 @@ using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
-using LibDmd.Processor;
 
 namespace DmdExt.Play
 {

@@ -27,6 +27,13 @@ namespace DmdExt.Common
 			Test = new TestOptions();
 		}
 
+		public void Validate()
+		{
+			Mirror.Validate();
+			Play.Validate();
+			Test.Validate();
+		}
+
 		[HelpVerbOption]
 		public string GetUsage(string verb)
 		{
