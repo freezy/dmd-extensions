@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using SkiaSharp;
+using LibDmd.Output.Virtual.SkiaDmd;
 
 namespace LibDmd.DmdDevice
 {
