@@ -6,8 +6,8 @@
              xmlns:common="clr-namespace:LibDmd.Common"
              xmlns:wpf="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              mc:Ignorable="d" 
-             Width="1024"
-             Height="256"
+             d:DesignWidth="1024"
+             d:DesignHeight="256"
              Background="Transparent">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <wpf:SKElement x:Name="BitmapHost" PaintSurface="OnPaintCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
