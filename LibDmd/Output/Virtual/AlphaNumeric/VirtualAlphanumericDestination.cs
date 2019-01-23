@@ -378,7 +378,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			if (_settingWindow == null) {
 				var window = _displays[displayNumber];
-				_settingWindow = new VirtualAlphaNumericSettings(_styleDef, window.Top, window.Left + window.Width, _config);
+				_settingWindow = new VirtualAlphaNumericSettings(_styleDef, _config);
 				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
 				_settingWindow.Closed += (closedSender, closedEvent) => _settingWindow = null;
 				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {

@@ -249,7 +249,7 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		private void ToggleDisplaySettings(object sender, MouseButtonEventArgs mouseButtonEventArgs)
 		{
 			if (_settingWindow == null) {
-				_settingWindow = new VirtualDmdSettings(StyleDefinition, Host.Top, Host.Left + Host.Width, Configuration);
+				_settingWindow = new VirtualDmdSettings(StyleDefinition, Configuration);
 				_settingWindow.IsVisibleChanged += (visibleSender, visibleEvent) => _settingsOpen = (bool)visibleEvent.NewValue;
 				_settingWindow.Closed += (closedSender, closedEvent) => _settingWindow = null;
 				_settingSubscription = _settingWindow.OnStyleApplied.Subscribe(style => {

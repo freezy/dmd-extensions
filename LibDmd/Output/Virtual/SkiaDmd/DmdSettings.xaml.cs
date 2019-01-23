@@ -36,10 +36,8 @@ namespace LibDmd.Output.Virtual.SkiaDmd
 		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
-		public VirtualDmdSettings(DmdStyleDefinition styleDefinition, double top, double left, Configuration config)
+		public VirtualDmdSettings(DmdStyleDefinition styleDefinition, Configuration config)
 		{
-			Top = top;
-			Left = left;
 			_config = config;
 			_originalStyle = styleDefinition.Copy();
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;

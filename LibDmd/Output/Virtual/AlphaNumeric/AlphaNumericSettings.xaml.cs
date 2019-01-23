@@ -41,10 +41,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
-		public VirtualAlphaNumericSettings(RasterizeStyleDefinition styleDefinition, double top, double left, Configuration config)
+		public VirtualAlphaNumericSettings(RasterizeStyleDefinition styleDefinition, Configuration config)
 		{
-			Top = top;
-			Left = left;
 			_config = config;
 			_originalStyle = styleDefinition.Copy();
 			_alphaNumericConfig = _config?.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig;
