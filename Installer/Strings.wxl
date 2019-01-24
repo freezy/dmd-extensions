@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+	
+	<String Id="Manufacturer">freezy</String>
+	
+	<String Id="ProductName_x86">DMD Extensions (32bit)</String>
+	<String Id="ProductName_x64">DMD Extensions (64bit)</String>
+	
+	<String Id="Language">1033</String>
+	
+	<String Id="Description">Features for DMD owners that aren't officially supported</String>
+	<String Id="Keywords">dmdext,dmd,virtual pinball,vpinball,vpm,vpinmame</String>
+	
+	<String Id="DowngradeErrorMessage">A newer version of DMD Extensions is already installed.</String>
+
+
+</WixLocalization>

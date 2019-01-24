@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<!-- Give product a unique ID per platform -->
+	<?if $(var.Platform)=x64?>
+		<?define ProductCode="{C4630A6F-9394-4567-9C71-C29A3A4743D2}"?>
+	<?else?>
+		<?define ProductCode="{E254BE4C-3E33-4B20-B4A2-F6A5661B1EEC}"?>
+	<?endif?>
+
+	<?define Manufacturer="freezy"?>
+	<?define BuildVersion=0.0.0.0?>
+
+	<!-- Fixed upgrade ID -->
+	<?define UpgradeCode="{B0F8A621-2DE2-445C-8425-8755ED25901B}"?>
+
+	<!-- Define main product -->
+	<Product 
+		Id="$(var.ProductCode)" 
+		Name="!(loc.ProductName_$(var.Platform))" 
+		Language="!(loc.Language)" 
+		Version="$(var.BuildVersion)"
+		Manufacturer="!(loc.Manufacturer)" 
+		UpgradeCode="$(var.UpgradeCode)">
+
+		<!-- Provide package details -->
+		<Package 
+			InstallerVersion="200" 
+			Compressed="yes" 
+			InstallScope="perMachine"
+			Platform="$(var.Platform)"
+			Manufacturer="!(loc.Manufacturer)"
+			Description="!(loc.Description)"
+			Keywords="!(loc.Keywords)"
+			Languages="!(loc.Language)"
+			/>
+
+		<!-- Downgrade error message and pack settings -->
+		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
+		<MediaTemplate EmbedCab="yes"/>
+
+		<!-- Use icon.ico as installer icon (shows up in add/remove programs) -->
+		<Icon Id="icon.ico" SourceFile="$(var.ProjectDir)icon.ico"/>
+		<Property Id="ARPPRODUCTICON">icon.ico</Property>
+
+		<!-- Help/Support website (shows up in add/remove programs) -->
+		<Property Id="ARPURLINFOABOUT">https://github.com/freezy/dmd-extensions</Property>
+
+		<!-- Create a basic UI for the installer -->
+		<UIRef Id="WixUI_Minimal"/>
+		<WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)Assets\gpl-2.0.rtf"/>
+		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)Assets\background.bmp"/>
+		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)Assets\banner.bmp"/>
+
+		<Feature Id="ProductFeature" Title="ConsoleApp" Level="1">
+
+			<ComponentGroupRef Id="ProductComponents" />
+
+		</Feature>
+
+	</Product>
+</Wix>
