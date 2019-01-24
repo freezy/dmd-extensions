@@ -356,6 +356,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Output\Virtual\SkiaDmd\TestImage-square.png" />
     <Resource Include="Output\Virtual\SkiaDmd\TestImage.png" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\08-center-top.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\09-center-bottom.svg" />
