@@ -4,9 +4,9 @@
 	<String Id="Manufacturer">freezy</String>
 	
 	<String Id="ProductName">DMD Extensions</String>
-	<String Id="ProductName_x86">DMD Extensions (32bit)</String>
-	<String Id="ProductName_x64">DMD Extensions (64bit)</String>
-	
+	<String Id="PlatformName_x86">(32bit)</String>
+	<String Id="PlatformName_x64">(64bit)</String>
+
 	<String Id="Language">1033</String>
 	
 	<String Id="Description">Features for DMD owners that aren't officially supported</String>
