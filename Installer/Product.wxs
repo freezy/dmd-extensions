@@ -9,7 +9,6 @@
 	<?endif?>
 
 	<?define Manufacturer="freezy"?>
-	<?define BuildVersion=0.0.0.0?>
 
 	<!-- Fixed upgrade ID -->
 	<?define UpgradeCode="{B0F8A621-2DE2-445C-8425-8755ED25901B}"?>
@@ -17,7 +16,7 @@
 	<!-- Define main product -->
 	<Product 
 		Id="$(var.ProductCode)" 
-		Name="!(loc.ProductName_$(var.Platform))" 
+		Name="!(loc.ProductName) $(var.BuildVersion) !(loc.PlatformName_$(var.Platform))" 
 		Language="!(loc.Language)" 
 		Version="$(var.BuildVersion)"
 		Manufacturer="!(loc.Manufacturer)" 
