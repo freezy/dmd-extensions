@@ -3,6 +3,7 @@
 	
 	<String Id="Manufacturer">freezy</String>
 	
+	<String Id="ProductName">DMD Extensions</String>
 	<String Id="ProductName_x86">DMD Extensions (32bit)</String>
 	<String Id="ProductName_x64">DMD Extensions (64bit)</String>
 	
