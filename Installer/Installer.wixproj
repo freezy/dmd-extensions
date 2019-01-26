@@ -8,6 +8,7 @@
 		<SchemaVersion>2.0</SchemaVersion>
 		<OutputName>Installer</OutputName>
 		<OutputType>Package</OutputType>
+		<Cultures>;</Cultures>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
 		<OutputPath>bin\$(Configuration)\</OutputPath>
@@ -66,6 +67,17 @@
 		<PropertyGroup>
 			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
 		</PropertyGroup>
+
+	</Target>
+
+	<Target Name="AfterBuild">
+
+		<GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion"/>
+		</GetAssemblyIdentity>
+
+		<Exec Command="if not exist Builds mkdir Builds"/>
+		<Exec Command="move $(TargetPath) Builds\dmdext-%(AssemblyVersion.Version)-$(Platform)-$(Configuration).msi"/>
 
 	</Target>
 
