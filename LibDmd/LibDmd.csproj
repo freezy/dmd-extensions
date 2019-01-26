@@ -199,6 +199,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\VersionAssemblyInfo.cs">
+      <Link>Properties\VersionAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
@@ -320,7 +323,6 @@
     <Compile Include="Input\ScreenGrabber\ScreenGrabber.cs" />
     <Compile Include="RenderGraph.cs" />
     <Compile Include="RenderGraphCollection.cs" />
-    <Compile Include="Version.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Output\Virtual\Dmd\Dmd.ps" />

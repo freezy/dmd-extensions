@@ -224,7 +224,10 @@ namespace DmdExt
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
+			var assembly = Assembly.GetExecutingAssembly();
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+			Raygun.ApplicationVersion = fvi.ProductVersion;
 			Raygun.Send(ex, null, new Dictionary<string, string> { {"args", string.Join(" ", _commandLineArgs) }, {"log", string.Join("\n", MemLogger.Logs) } });
 #endif
 		}
