@@ -7,6 +7,7 @@
 			<ComponentRef Id="Console"/>
 			<ComponentRef Id="ConsoleLogConfig"/>
 			<ComponentRef Id="ProPinballSlave"/>
+			<ComponentRef Id="Path"/>
 		</ComponentGroup>
 
 		<DirectoryRef Id="INSTALLFOLDER" FileSource="$(var.Console.TargetDir)">
@@ -21,6 +22,12 @@
 		<DirectoryRef Id="INSTALLFOLDER" FileSource="$(var.Console.ProjectDir)">
 			<Component Id="ProPinballSlave" Guid="{9AD7034F-F5AC-4326-86DC-B5E941C06B96}">
 				<File Id="ProPinballSlaveFile" Name="ProPinballSlave.bat" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id="TARGETDIR">
+			<Component Id="Path" Guid="{AE6A7F21-7334-4B4C-84FE-973380C7F66F}">
+				<Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]" Permanent="no" Part="last" Action="set" System="yes" />
 			</Component>
 		</DirectoryRef>
 
