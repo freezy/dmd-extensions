@@ -2,15 +2,25 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
 	<Fragment>
+
 		<ComponentGroup Id="ProductComponents">
-
 			<ComponentRef Id="Console"/>
-
+			<ComponentRef Id="ConsoleLogConfig"/>
+			<ComponentRef Id="ProPinballSlave"/>
 		</ComponentGroup>
 
 		<DirectoryRef Id="INSTALLFOLDER" FileSource="$(var.Console.TargetDir)">
 			<Component Id="Console" Guid="{CAA01C63-A6C4-47A7-A803-E0EE97319062}">
 				<File Id="DmdExt" Name="dmdext.exe" KeyPath="yes"/>
+			</Component>
+			<Component Id="ConsoleLogConfig" Guid="{7FAB5DED-3880-43AA-AD2D-CAE0AD49C902}">
+				<File Id="DmdExtLogConfig" Name="dmdext.log.config" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id="INSTALLFOLDER" FileSource="$(var.Console.ProjectDir)">
+			<Component Id="ProPinballSlave" Guid="{9AD7034F-F5AC-4326-86DC-B5E941C06B96}">
+				<File Id="ProPinballSlaveFile" Name="ProPinballSlave.bat" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 
