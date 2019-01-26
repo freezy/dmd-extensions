@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -640,7 +641,10 @@ namespace LibDmd.DmdDevice
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			Raygun.ApplicationVersion = LibDmd.Version.AssemblyInformationalVersionAttribute;
+			var assembly = Assembly.GetExecutingAssembly();
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+			Raygun.ApplicationVersion = fvi.ProductVersion;
 			Raygun.Send(ex, 
 				new List<string> { System.Diagnostics.Process.GetCurrentProcess().ProcessName }, 
 				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }

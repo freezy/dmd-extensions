@@ -25,16 +25,3 @@ using CommandLine;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("82b73d4f-b16c-4684-b96b-249f6d35c3cf")]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion(LibDmd.Version.AssemblyVersion)]
-[assembly: AssemblyFileVersion(LibDmd.Version.AssemblyFileVersion)]
-[assembly: AssemblyInformationalVersionAttribute(LibDmd.Version.AssemblyInformationalVersionAttribute)]
