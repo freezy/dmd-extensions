@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
 	<Fragment>
+
 		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLFOLDER" Name="Installer" />
-			</Directory>
+
+			<?if $(var.Platform)=x64?>
+				<!-- Program Files folder -->
+				<Directory Id="ProgramFiles64Folder">
+					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
+				</Directory>
+			<?else?>
+				<!-- Program Files (x86) folder -->
+				<Directory Id="ProgramFilesFolder">
+					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
+				</Directory>
+			<?endif?>
+
 		</Directory>
+
 	</Fragment>
 </Wix>
