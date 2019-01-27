@@ -15,5 +15,5 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.7.3.0")]
 [assembly: AssemblyFileVersion("1.7.3.0")]
-[assembly: AssemblyInformationalVersionAttribute("1.7.3.0")]
+[assembly: AssemblyInformationalVersionAttribute("1.7.3-SNAPSHOT")]
 [assembly: NeutralResourcesLanguage("en")]
