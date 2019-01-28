@@ -58,6 +58,8 @@
 		<Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
 	</Target>
 
+	
+
 	<Target Name="BeforeBuild">
 
 		<GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
@@ -72,12 +74,15 @@
 
 	<Target Name="AfterBuild">
 
-		<GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
-			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion"/>
-		</GetAssemblyIdentity>
+		<PropertyGroup>
+			<In>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\VersionAssemblyInfo.cs'))</In>
+			<Pattern>\[assembly: AssemblyInformationalVersion\("(?&lt;Version&gt;[^"]+)</Pattern>
+			<AssemblyInformationalVersion>$([System.Text.RegularExpressions.Regex]::Match($(In), $(Pattern), System.Text.RegularExpressions.RegexOptions.Multiline).Groups["Version"].Value)</AssemblyInformationalVersion>
+		</PropertyGroup>
 
 		<Exec Command="if not exist Builds mkdir Builds"/>
-		<Exec Command="move $(TargetPath) Builds\dmdext-%(AssemblyVersion.Version)-$(Platform)-$(Configuration).msi"/>
+		<Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi"/>
+		<Exec Command="echo $(AssemblyInformationalVersion)"/>
 
 	</Target>
 
