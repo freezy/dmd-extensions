@@ -91,8 +91,6 @@
 
 		<Exec Command="if not exist Builds mkdir Builds"/>
 		<Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi"/>
-		<Exec Command="echo $(AssemblyInformationalVersion)"/>
-
 	</Target>
 
 	<!--
