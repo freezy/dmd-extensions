@@ -140,7 +140,11 @@
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>if not exist "%25VPM_HOME%25" goto done
+    <PostBuildEvent>if "$(Platform)"=="x64" (
+    copy /Y "$(TargetDir)$(TargetName).dll" "$(TargetDir)$(TargetName)64.dll"
+)
+
+if not exist "%25VPM_HOME%25" goto done
 
 if "$(Platform)"=="x64" (
     echo Copying $(TargetName).dll to %25VPM_HOME%25\$(TargetName)64.dll...
