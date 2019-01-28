@@ -138,6 +138,7 @@ Global
 		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release - Coloring Disabled|x86.ActiveCfg = Release|x86
 		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release - Coloring Disabled|x86.Build.0 = Release|x86
 		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release|x64.ActiveCfg = Release|x64
+		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release|x64.Build.0 = Release|x64
 		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release|x86.ActiveCfg = Release|x86
 		{F9E767AC-BD5B-48F0-B988-1D3B53BA29FF}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
