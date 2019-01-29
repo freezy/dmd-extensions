@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+	<Fragment>
+
+		<!-- Reference lib -->
+		<Binary 
+			Id="ActionsBinary" 
+			SourceFile="$(var.Installer.Actions.TargetDir)$(var.Installer.Actions.TargetName).CA.dll"/>
+		
+		<!-- Reference custom actions -->
+		<CustomAction
+			Id="FindVpmAction"
+			BinaryKey="ActionsBinary"
+			DllEntry="GetVpmFolder" />
+
+	</Fragment>
+</Wix>

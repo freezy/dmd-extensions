@@ -9,8 +9,6 @@
 		<?define ProductCode="{E254BE4C-3E33-4B20-B4A2-F6A5661B1EEC}"?>
 	<?endif?>
 
-	<?define Manufacturer="freezy"?>
-
 	<!-- Fixed upgrade ID -->
 	<?define UpgradeCode="{B0F8A621-2DE2-445C-8425-8755ED25901B}"?>
 
@@ -32,8 +30,7 @@
 			Manufacturer="!(loc.Manufacturer)"
 			Description="!(loc.Description)"
 			Keywords="!(loc.Keywords)"
-			Languages="!(loc.Language)"
-			/>
+			Languages="!(loc.Language)" />
 
 		<!-- Downgrade error message and pack settings -->
 		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
@@ -46,14 +43,6 @@
 		<!-- Help/Support website (shows up in add/remove programs) -->
 		<Property Id="ARPURLINFOABOUT">https://github.com/freezy/dmd-extensions</Property>
 
-		<!-- Find where VPM controller is installed -->
-		<Property Id="VPMCLSID">
-			<RegistrySearch Id="VpmCLSID" Root="HKLM" Key="SOFTWARE\Classes\VPinMAME.Controller\CLSID" Type="raw" />
-		</Property>
-		<Property Id="VPINMAMEDLL">
-			<RegistrySearch Id="VPinMAMEDll" Root="HKCR" Key="WOW6432Node\CLSID\[VPMCLSID]\InprocServer32" Type="raw" />
-		</Property>
-
 		<!-- Create a basic UI for the installer -->
 		<UIRef Id="WixUI_FeatureTree"/>
 		<WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)Assets\gpl-2.0.rtf"/>
@@ -62,26 +51,35 @@
 
 		<!-- Command Line App Feature -->
 		<Feature 
-			Id="CommandLineFeature" 
-			Title="Command Line Tool"
-			Description="For Pinball Arcade, Pro Pinball, Pinball FX3 or any other game you want to mirror the DMD from."
-			Display="collapse"
-			ConfigurableDirectory="INSTALLFOLDER"
-			Level="1">
+				Id="CommandLineFeature" 
+				Title="Command Line Tool"
+				Description="For Pinball Arcade, Pro Pinball, Pinball FX3 or any other game you want to mirror the DMD from."
+				Display="collapse"
+				ConfigurableDirectory="INSTALLFOLDER"
+				Level="1">
 
 			<ComponentGroupRef Id="CommandLineComponents" />
 		</Feature>
+	
+		<!-- Retrieve VPM folder from registry -->
+		<Property Id="DIRFROMREG" Value="0" Secure="yes"/>
+		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[DIRFROMREG]" After="FindVpmAction">NOT DIRFROMREG=0</SetProperty>
+		<InstallUISequence>
+			<Custom Action="FindVpmAction" After="AppSearch" />
+		</InstallUISequence>
 
 		<!-- DmdDevice.dll Feature -->
 		<Feature
-			Id="DmdDeviceFeature"
-			Title="Universal DmdDevice.dll"
-			Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring. [VPINMAMEDLL]"
-			Display="collapse"
-			ConfigurableDirectory="VPMFOLDER"
-			Level="1">
+				Id="DmdDeviceFeature"
+				Title="Universal DmdDevice.dll"
+				Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring. [VPINMAMEDLL]"
+				Display="collapse"
+				ConfigurableDirectory="VPMFOLDER"
+				Level="0">
 
 			<ComponentGroupRef Id="DmdDeviceComponents" />
+			<Condition Level="1"><![CDATA[VPINMAMEDLL]]></Condition>
+
 		</Feature>
 
 		<!-- Check for Vista and above -->
