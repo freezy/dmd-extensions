@@ -173,6 +173,9 @@ can set this up as you would for a PIN2DMD:
 5. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
 3. Open the `.sln` file in Visual Studio and build the solution.
 
+If you want to build the installer, you'll need the [WiX Toolset](http://wixtoolset.org/releases/)
+and its [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=RobMensching.WixToolsetVisualStudio2017Extension).
+
 
 ## Configuration
 
