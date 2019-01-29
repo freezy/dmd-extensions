@@ -83,6 +83,10 @@
 
 		</Feature>
 
+		<Condition Message="!(loc.OsErrorMessage)">
+			<![CDATA[Installed OR (VersionNT >= 600)]]>
+		</Condition>
+
 	</Product>
 
 
