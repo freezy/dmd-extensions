@@ -3,7 +3,7 @@
 
 	<Fragment>
 
-		<ComponentGroup Id="ProductComponents">
+		<ComponentGroup Id="CommandLineComponents">
 			<ComponentRef Id="Console"/>
 			<ComponentRef Id="ConsoleLogConfig"/>
 			<ComponentRef Id="ProPinballSlave"/>
@@ -28,6 +28,22 @@
 		<DirectoryRef Id="TARGETDIR">
 			<Component Id="Path" Guid="{AE6A7F21-7334-4B4C-84FE-973380C7F66F}">
 				<Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]" Permanent="no" Part="last" Action="set" System="yes" />
+			</Component>
+		</DirectoryRef>
+
+	</Fragment>
+
+	<Fragment>
+
+		<ComponentGroup Id="DmdDeviceComponents">
+
+			<ComponentRef Id="DmdDevice"/>
+
+		</ComponentGroup>
+
+		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.TargetDir)">
+			<Component Id="DmdDevice" Guid="{7BE69575-CC08-444B-A2D0-FD3FF966F26A}">
+				<File Id="DmdDeviceDll" Name="DmdDevice.dll" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 

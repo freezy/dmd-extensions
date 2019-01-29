@@ -45,17 +45,45 @@
 		<!-- Help/Support website (shows up in add/remove programs) -->
 		<Property Id="ARPURLINFOABOUT">https://github.com/freezy/dmd-extensions</Property>
 
+		<!-- Find where VPM controller is installed -->
+		<Property Id="VPMCLSID">
+			<RegistrySearch Id="VpmCLSID" Root="HKLM" Key="SOFTWARE\Classes\VPinMAME.Controller\CLSID" Type="raw" />
+		</Property>
+		<Property Id="VPINMAMEDLL">
+			<RegistrySearch Id="VPinMAMEDll" Root="HKCR" Key="WOW6432Node\CLSID\[VPMCLSID]\InprocServer32" Type="raw" />
+		</Property>
+
 		<!-- Create a basic UI for the installer -->
-		<UIRef Id="WixUI_Minimal"/>
+		<UIRef Id="WixUI_FeatureTree"/>
 		<WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)Assets\gpl-2.0.rtf"/>
 		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)Assets\background.bmp"/>
 		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)Assets\banner.bmp"/>
 
-		<Feature Id="ProductFeature" Title="ConsoleApp" Level="1">
+		<Feature 
+			Id="CommandLineFeature" 
+			Title="Command Line Tool"
+			Description="For Pinball Arcade, Pro Pinball, Pinball FX3 or any other game you want to mirror the DMD from."
+			Display="collapse"
+			ConfigurableDirectory="INSTALLFOLDER"
+			Level="1">
 
-			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="CommandLineComponents" />
+
+		</Feature>
+
+		<Feature
+			Id="DmdDeviceFeature"
+			Title="Universal DmdDevice.dll"
+			Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring. [VPINMAMEDLL]"
+			Display="collapse"
+			ConfigurableDirectory="VPMFOLDER"
+			Level="1">
+
+			<ComponentGroupRef Id="DmdDeviceComponents" />
 
 		</Feature>
 
 	</Product>
+
+
 </Wix>

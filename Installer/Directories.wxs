@@ -10,10 +10,18 @@
 				<Directory Id="ProgramFiles64Folder">
 					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
 				</Directory>
+				<Directory Id="ProgramFilesFolder">
+					<Directory Id="VPFOLDER" Name="Visual Pinball">
+						<Directory Id="VPMFOLDER" Name="VPinMAME"/>
+					</Directory>
+				</Directory>
 			<?else?>
 				<!-- Program Files (x86) folder -->
 				<Directory Id="ProgramFilesFolder">
 					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
+					<Directory Id="VPFOLDER" Name="Visual Pinball">
+						<Directory Id="VPMFOLDER" Name="VPinMAME"/>
+					</Directory>
 				</Directory>
 			<?endif?>
 
