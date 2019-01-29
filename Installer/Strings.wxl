@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
 	
-	<String Id="Manufacturer">freezy</String>
+	<String Id="Manufacturer">freezy &#x3C;freezy@vpdb.io&#x3E;</String>
 	
 	<String Id="ProductName">DMD Extensions</String>
 	<String Id="PlatformName_x86">(32bit)</String>

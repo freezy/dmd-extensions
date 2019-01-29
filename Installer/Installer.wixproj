@@ -51,6 +51,14 @@
 			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
 			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
 		</ProjectReference>
+		<ProjectReference Include="..\PinMameDevice\PinMameDevice.csproj">
+			<Name>PinMameDevice</Name>
+			<Project>{3e9138da-a0a5-449e-bfd2-965e38b9182e}</Project>
+			<Private>True</Private>
+			<DoNotHarvest>True</DoNotHarvest>
+			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
+		</ProjectReference>
 	</ItemGroup>
 	<ItemGroup>
 		<WixExtension Include="WixUIExtension">
@@ -66,39 +74,25 @@
 	<Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
 		<Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
 	</Target>
-
-	
-
 	<Target Name="BeforeBuild">
-
+		<!-- Read "internal" version from assembly -->
 		<GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
-			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion"/>
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
 		</GetAssemblyIdentity>
-
+		<!-- Set internal version as build version -->
 		<PropertyGroup>
 			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
 		</PropertyGroup>
-
 	</Target>
-
 	<Target Name="AfterBuild">
-
+		<!-- Parse product version from assembly source -->
 		<PropertyGroup>
 			<In>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\VersionAssemblyInfo.cs'))</In>
 			<Pattern>\[assembly: AssemblyInformationalVersion\("(?&lt;Version&gt;[^"]+)</Pattern>
 			<AssemblyInformationalVersion>$([System.Text.RegularExpressions.Regex]::Match($(In), $(Pattern), System.Text.RegularExpressions.RegexOptions.Multiline).Groups["Version"].Value)</AssemblyInformationalVersion>
 		</PropertyGroup>
-
-		<Exec Command="if not exist Builds mkdir Builds"/>
-		<Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi"/>
+		<!-- Create build folder and move artifacts to it -->
+		<Exec Command="if not exist Builds mkdir Builds" />
+		<Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi" />
 	</Target>
-
-	<!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
 </Project>
