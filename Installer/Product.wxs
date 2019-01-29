@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
 
 	<!-- Give product a unique ID per platform -->
 	<?if $(var.Platform)=x64?>
@@ -59,6 +60,7 @@
 		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)Assets\background.bmp"/>
 		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)Assets\banner.bmp"/>
 
+		<!-- Command Line App Feature -->
 		<Feature 
 			Id="CommandLineFeature" 
 			Title="Command Line Tool"
@@ -68,9 +70,9 @@
 			Level="1">
 
 			<ComponentGroupRef Id="CommandLineComponents" />
-
 		</Feature>
 
+		<!-- DmdDevice.dll Feature -->
 		<Feature
 			Id="DmdDeviceFeature"
 			Title="Universal DmdDevice.dll"
@@ -80,14 +82,19 @@
 			Level="1">
 
 			<ComponentGroupRef Id="DmdDeviceComponents" />
-
 		</Feature>
 
+		<!-- Check for Vista and above -->
 		<Condition Message="!(loc.OsErrorMessage)">
 			<![CDATA[Installed OR (VersionNT >= 600)]]>
 		</Condition>
 
-	</Product>
+		<!-- Check for .NET -->
+		<PropertyRef Id="WIX_IS_NETFRAMEWORK_452_OR_LATER_INSTALLED"/>
+		<Condition Message="!(loc.DotNetErrorMessage)">
+			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_452_OR_LATER_INSTALLED]]>
+		</Condition>
 
+	</Product>
 
 </Wix>
