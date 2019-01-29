@@ -12,8 +12,8 @@
 	<String Id="Description">Features for DMD owners that aren't officially supported</String>
 	<String Id="Keywords">dmdext,dmd,virtual pinball,vpinball,vpm,vpinmame</String>
 	
-	<String Id="OsErrorMessage">Sorry, but DMD Extensions are only supported on Windows Vista or higher.</String>
+	<String Id="OsErrorMessage">DMD Extensions requires .NET Framework 4.5.2. Please install the .NET Framework then run this installer again.</String>
+	<String Id="DotNetErrorMessage">Sorry, but DMD Extensions are only supported on Windows Vista or higher.</String>
 	<String Id="DowngradeErrorMessage">A newer version of DMD Extensions is already installed.</String>
-
 
 </WixLocalization>
