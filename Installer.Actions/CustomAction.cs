@@ -12,20 +12,19 @@ namespace Installer.Actions
 		[CustomAction]
 		public static ActionResult GetVpmFolder(Session session)
 		{
-			session.Log("Setting DIRFROMREG!");
 			try {
-				session.Log("Directory search");
+				session.Log("Searching in registry for VPM...");
 				RegistryKey reg = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Classes\VPinMAME.Controller\CLSID");
 				if (reg != null) {
 					var clsid = reg.GetValue(null).ToString();
 
 					reg = Registry.ClassesRoot.OpenSubKey(@"WOW6432Node\CLSID\" + clsid + @"\InprocServer32");
 					if (reg != null) {
-						session["DIRFROMREG"] = Path.GetDirectoryName(reg.GetValue(null).ToString());
-						session.Log(@"directory is " + session["DIRFROMREG"]);
+						session["VPMFROMREG"] = Path.GetDirectoryName(reg.GetValue(null).ToString());
+						session.Log(@"Found VPM folder at " + session["VPMFROMREG"]);
 
 					} else {
-						session.Log(@"Could not find CLSID " + clsid);
+						session.Log(@"Could not find CLSID " + clsid + " of VPinMAME.dll.");
 					}
 					
 				} else {
