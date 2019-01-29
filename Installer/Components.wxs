@@ -14,7 +14,7 @@
 			<Component Id="Console" Guid="{CAA01C63-A6C4-47A7-A803-E0EE97319062}">
 				<File Id="DmdExt" Name="dmdext.exe" KeyPath="yes"/>
 			</Component>
-			<Component Id="ConsoleLogConfig" Guid="{7FAB5DED-3880-43AA-AD2D-CAE0AD49C902}">
+			<Component Id="ConsoleLogConfig" NeverOverwrite="yes" Guid="{7FAB5DED-3880-43AA-AD2D-CAE0AD49C902}">
 				<File Id="DmdExtLogConfig" Name="dmdext.log.config" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
@@ -36,15 +36,27 @@
 	<Fragment>
 
 		<ComponentGroup Id="DmdDeviceComponents">
-
 			<ComponentRef Id="DmdDevice"/>
+			<ComponentRef Id="DmdDeviceConfig"/>
 
 		</ComponentGroup>
 
 		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.TargetDir)">
 			<Component Id="DmdDevice" Guid="{7BE69575-CC08-444B-A2D0-FD3FF966F26A}">
-				<File Id="DmdDeviceDll" Name="DmdDevice.dll" KeyPath="yes"/>
+				<?if $(var.Platform)=x64?>
+					<File Id="DmdDeviceDll" Name="DmdDevice64.dll" KeyPath="yes"/>
+				<?else?>
+					<File Id="DmdDeviceDll" Name="DmdDevice.dll" KeyPath="yes"/>
+				<?endif?>
 			</Component>
+
+		</DirectoryRef>
+
+		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)">
+			<Component Id="DmdDeviceConfig" NeverOverwrite="yes" Permanent="yes" Guid="{03203DEE-F83A-468A-802E-7D2E4279EC42}">
+				<File Id="DmdDeviceIni" Name="DmdDevice.ini" KeyPath="yes"/>
+			</Component>
+
 		</DirectoryRef>
 
 	</Fragment>
