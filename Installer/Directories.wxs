@@ -9,16 +9,17 @@
 				<!-- Program Files folder -->
 				<Directory Id="ProgramFiles64Folder">
 					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
+					<Directory Id="VPMFOLDER" Name="!(loc.ProductName)"/>
 				</Directory>
 				
 			<?else?>
 				<!-- Program Files (x86) folder -->
 				<Directory Id="ProgramFilesFolder">
 					<Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)" />
+					<Directory Id="VPMFOLDER" Name="!(loc.ProductName)"/>
 				</Directory>
 			<?endif?>
-
-			<Directory Id="VPMFOLDER" Name="VPinMAME"/>
+			
 		</Directory>
 
 	</Fragment>

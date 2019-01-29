@@ -62,8 +62,8 @@
 		</Feature>
 	
 		<!-- Retrieve VPM folder from registry -->
-		<Property Id="DIRFROMREG" Value="0" Secure="yes"/>
-		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[DIRFROMREG]" After="FindVpmAction">NOT DIRFROMREG=0</SetProperty>
+		<Property Id="VPMFROMREG" Value="0" Secure="yes"/>
+		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[VPMFROMREG]" After="FindVpmAction">NOT VPMFROMREG=0</SetProperty>
 		<InstallUISequence>
 			<Custom Action="FindVpmAction" After="AppSearch" />
 		</InstallUISequence>
@@ -75,11 +75,10 @@
 				Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring. [VPINMAMEDLL]"
 				Display="collapse"
 				ConfigurableDirectory="VPMFOLDER"
-				Level="0">
+				Level="5">
 
 			<ComponentGroupRef Id="DmdDeviceComponents" />
-			<Condition Level="1"><![CDATA[VPINMAMEDLL]]></Condition>
-
+			<Condition Level="1"><![CDATA[NOT VPMFROMREG=0]]></Condition>
 		</Feature>
 
 		<!-- Check for Vista and above -->
