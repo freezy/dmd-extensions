@@ -3,23 +3,25 @@
 
 	<!-- Command Line Tool -->
 	<Fragment>
-
 		<ComponentGroup Id="CommandLineComponents">
-			<ComponentRef Id="Console"/>
-			<ComponentRef Id="ConsoleLogConfig"/>
-			<ComponentRef Id="ProPinballSlave"/>
+			<ComponentRef Id="DmdExtExe"/>
+			<ComponentRef Id="DmdExtLogConfig"/>
 			<ComponentRef Id="Path"/>
 		</ComponentGroup>
 
 		<DirectoryRef Id="INSTALLFOLDER" FileSource="$(var.Console.TargetDir)">
-			<Component Id="Console" Guid="{CAA01C63-A6C4-47A7-A803-E0EE97319062}">
-				<File Id="DmdExt" Name="dmdext.exe" KeyPath="yes"/>
+			<!-- dmdext.exe -->
+			<Component Id="DmdExtExe" Guid="{CAA01C63-A6C4-47A7-A803-E0EE97319062}">
+				<File Id="DmdExtExeFile" Name="dmdext.exe" KeyPath="yes"/>
 			</Component>
-			<Component Id="ConsoleLogConfig" NeverOverwrite="yes" Guid="{7FAB5DED-3880-43AA-AD2D-CAE0AD49C902}">
-				<File Id="DmdExtLogConfig" Name="dmdext.log.config" KeyPath="yes"/>
+
+			<!-- dmdext.log.config -->
+			<Component Id="DmdExtLogConfig" NeverOverwrite="yes" Guid="{7FAB5DED-3880-43AA-AD2D-CAE0AD49C902}">
+				<File Id="DmdExtLogConfigFile" Name="dmdext.log.config" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 
+		<!-- PATH -->
 		<DirectoryRef Id="TARGETDIR">
 			<Component Id="Path" Guid="{AE6A7F21-7334-4B4C-84FE-973380C7F66F}">
 				<Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]" Permanent="no" Part="last" Action="set" System="yes" />
@@ -30,18 +32,18 @@
 				<?endif?>
 			</Component>
 		</DirectoryRef>
-
 	</Fragment>
 
 	<!-- Pro Pinball Launcher -->
 	<Fragment>
 		<ComponentGroup Id="ProPinballLauncherComponents">
-			<ComponentRef Id="ProPinballSlave"/>
+			<ComponentRef Id="ProPinballSlaveBat"/>
 		</ComponentGroup>
 
+		<!-- ProPinballSlave.bat -->
 		<DirectoryRef Id="PROPINBALLFOLDER" FileSource="$(var.Console.ProjectDir)">
-			<Component Id="ProPinballSlave" Guid="{9AD7034F-F5AC-4326-86DC-B5E941C06B96}">
-				<File Id="ProPinballSlaveFile" Name="ProPinballSlave.bat" KeyPath="yes"/>
+			<Component Id="ProPinballSlaveBat" Guid="{9AD7034F-F5AC-4326-86DC-B5E941C06B96}">
+				<File Id="ProPinballSlaveBatFile" Name="ProPinballSlave.bat" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 	</Fragment>
@@ -49,26 +51,35 @@
 	<!-- DmdDevice -->
 	<Fragment>
 		<ComponentGroup Id="DmdDeviceComponents">
-			<ComponentRef Id="DmdDevice"/>
-			<ComponentRef Id="DmdDeviceConfig"/>
+			<ComponentRef Id="DmdDeviceDll"/>
+			<ComponentRef Id="DmdDeviceIni"/>
+			<ComponentRef Id="DmdDeviceLogConfig"/>
 		</ComponentGroup>
 
+		<!-- DmdDevice.dll -->
 		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.TargetDir)">
-			<Component Id="DmdDevice" Guid="{7BE69575-CC08-444B-A2D0-FD3FF966F26A}">
+			<Component Id="DmdDeviceDll" Guid="{7BE69575-CC08-444B-A2D0-FD3FF966F26A}">
 				<?if $(var.Platform)=x64?>
-					<File Id="DmdDeviceDll" Name="DmdDevice64.dll" KeyPath="yes"/>
+					<File Id="DmdDeviceDllFile" Name="DmdDevice64.dll" KeyPath="yes"/>
 				<?else?>
-					<File Id="DmdDeviceDll" Name="DmdDevice.dll" KeyPath="yes"/>
+					<File Id="DmdDeviceDllFile" Name="DmdDevice.dll" KeyPath="yes"/>
 				<?endif?>
 			</Component>
 		</DirectoryRef>
 
-		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)">
-			<Component Id="DmdDeviceConfig" NeverOverwrite="yes" Permanent="yes" Guid="{03203DEE-F83A-468A-802E-7D2E4279EC42}">
-				<File Id="DmdDeviceIni" Name="DmdDevice.ini" KeyPath="yes"/>
+		<!-- DmdDevice.log.config -->
+		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.TargetDir)">
+			<Component Id="DmdDeviceLogConfig" NeverOverwrite="yes" Guid="{0D3B8E51-E480-40EF-A089-15ED066DCC3C}">
+				<File Id="DmdDeviceLogConfigFile" Name="DmdDevice.log.config" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 
+		<!-- DmdDevice.ini -->
+		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)">
+			<Component Id="DmdDeviceIni" NeverOverwrite="yes" Permanent="yes" Guid="{03203DEE-F83A-468A-802E-7D2E4279EC42}">
+				<File Id="DmdDeviceIniFile" Name="DmdDevice.ini" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
 	</Fragment>
 
 </Wix>
