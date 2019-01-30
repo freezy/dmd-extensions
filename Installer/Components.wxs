@@ -28,6 +28,11 @@
 		<DirectoryRef Id="TARGETDIR">
 			<Component Id="Path" Guid="{AE6A7F21-7334-4B4C-84FE-973380C7F66F}">
 				<Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]" Permanent="no" Part="last" Action="set" System="yes" />
+				<?if $(var.Platform)=x64?>
+					<Condition><![CDATA[VersionNT=VersionNT64]]></Condition>
+				<?else?>
+					<Condition><![CDATA[VersionNT<>VersionNT64]]></Condition>
+				<?endif?>
 			</Component>
 		</DirectoryRef>
 
