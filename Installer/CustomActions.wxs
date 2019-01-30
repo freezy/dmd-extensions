@@ -13,5 +13,10 @@
 			BinaryKey="ActionsBinary"
 			DllEntry="GetVpmFolder" />
 
+		<CustomAction
+			Id="FindProPinballAction"
+			BinaryKey="ActionsBinary"
+			DllEntry="GetProPinballFolder" />
+
 	</Fragment>
 </Wix>
