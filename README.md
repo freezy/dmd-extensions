@@ -39,39 +39,43 @@ line options below, so have a close look at those as well.
 Since v1.7, DMD Extensions also support dynamic DMD coloring previously only
 available for PIN2DMD displays (both side-channel and VNI).
 
-Since v1.8, DMD Exensions supports high-resolution rendering of segmented 
+Since v1.8, DMD Extensions supports high-resolution rendering of segmented 
 alpha-numeric displays:
 
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
 
 Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/AlphaNumeric).
 
-
 ## Install Instructions
 
-1. [Get the latest release](https://github.com/freezy/dmd-extensions/releases),
-   copy the content of the zip file to your hard drive, preferable in your `PATH`,
-   and unblock the `.exe` file (right-click, properties, unblock).
-2. Download and install the [Visual C++ Redistributables for Visual Studio 2017](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
-3. If you haven't already, download and install the [.NET Framework 4.5.2](https://www.microsoft.com/en-us/download/details.aspx?id=42643).
+[Download the installer](https://github.com/freezy/dmd-extensions/releases) and
+run it. A few notes:
 
-If you want to use DMD Extensions with VisualPinMAME:
+- The installer will overwrite any existing `dmddevice.dll` in your VPM folder
+  if you choose to install it (existing INI files are untouched).
+- If you're on Windows x64, you probably want to install both 32 and 64-bit
+  versions. They can live happily next to each other.
+- The reason for installing both versions is that your VPM is probably 32-bit,
+  so you'll need the 32-bit `DmdDevice.dll` and if you're using `dmdext.exe`
+  with the 64-bit version of Pro Pinball, it will only work with the 64-bit 
+  version.
+- However, if you don't have Pro Pinball, just 32-bit will do fine, and if don't
+  use VPM then just 64-bit will do fine as well. And if you're on a 32-bit
+  Windows, then just take the 32-bit version.
+- The installer will add the install folder of `dmdext.exe` to the `PATH` 
+  environment variable, but only if the platform is the same:
+   - DMD Extensions (64-bit) on Windows x64 is added to `PATH`
+   - DMD Extensions (32-bit) on Windows 32-bit is added to `PATH`
+   - All other combinations aren't added to `PATH`
+- The installer will set the `DMDDEVICE_CONFIG` environment variable to the
+  location of your `DmdDevice.ini`. That means from wherever you launch 
+  `DmdDevice.dll` (or run `dmdext.exe` with `--use-ini`), the same 
+  `DmdDevice.ini` will be used.
+- During installation, when a feature is deactivated, that means the installer
+  couldn't find the host program. For VPM that means that you haven't registered
+  `VPinMAME.dll`. For Pro Pinball it means it's not installed via Steam, and
+  you'll need to select its installation folder manually.
 
-1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your 
-   VPM folder (usually at `Visual Pinball\VPinMAME`).
-2. Run the VPM setup
-3. Click on *Test*, select the game and click on *Game Options*.
-4. Enable *Use External DMD* and optionally disable *Show DMD*.
-
-You can also set this as the default by selecting *Default Options* in the VPM
-setup, however note that games that you've already configured won't be affected.
-
-### x64 vs x86
-
-- For `dmdext.exe`, take the bitness of your OS. This is important for Pro 
-  Pinball, where the bitness of the binary must be the same as dmdext's.
-- For `dmddevice.dll` you probably want the 32-bit version unless you've set up
-  VPM with `Setup64.exe` and you know what you're doing.
 
 ### Test
 
@@ -110,7 +114,6 @@ Note that while the current memory grabber code should also work for future
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
 `dmdext`, you should still be able to fall back to the legacy screen grabber
 that is used by Pinball FX2 by using the `--fx3-legacy` flag.
-
 
 ### The Pinball Arcade
 
@@ -389,6 +392,32 @@ you're using (VPM's `setup.exe` or`vpinball.exe`, also which version).
 You can post bugs at [VPF](http://www.vpforums.org/index.php?showtopic=36915) or 
 [VPU](http://vpuniverse.com/forums/forums/topic/2728-sam-build-with-modular-dmd-drivers-for-pindmd123-and-pin2dmd/),
 but preferably [here](https://github.com/freezy/dmd-extensions/issues).
+
+## Manual Installation
+
+1. [Download the .zip archive](https://github.com/freezy/dmd-extensions/releases),
+   copy its content to your hard drive, preferable in your `PATH`,
+   and unblock the `.exe` file (right-click, properties, unblock).
+2. Download and install the [Visual C++ Redistributables for Visual Studio 2017](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
+3. If you haven't already, download and install the [.NET Framework 4.5.2](https://www.microsoft.com/en-us/download/details.aspx?id=42643).
+
+If you want to use DMD Extensions with VisualPinMAME:
+
+1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your 
+   VPM folder (usually at `Visual Pinball\VPinMAME`).
+2. Run the VPM setup
+3. Click on *Test*, select the game and click on *Game Options*.
+4. Enable *Use External DMD* and optionally disable *Show DMD*.
+
+You can also set this as the default by selecting *Default Options* in the VPM
+setup, however note that games that you've already configured won't be affected.
+
+### x64 vs x86
+
+- For `dmdext.exe`, take the bitness of your OS. This is important for Pro 
+  Pinball, where the bitness of the binary must be the same as dmdext's.
+- For `dmddevice.dll` you probably want the 32-bit version unless you've set up
+  VPM with `Setup64.exe` and you know what you're doing.
 
 ## Credits
 
