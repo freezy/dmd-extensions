@@ -54,6 +54,7 @@
 			<ComponentRef Id="DmdDeviceDll"/>
 			<ComponentRef Id="DmdDeviceIni"/>
 			<ComponentRef Id="DmdDeviceLogConfig"/>
+			<ComponentRef Id="EnvConfigPath"/>
 		</ComponentGroup>
 
 		<!-- DmdDevice.dll -->
@@ -78,6 +79,13 @@
 		<DirectoryRef Id="VPMFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)">
 			<Component Id="DmdDeviceIni" NeverOverwrite="yes" Permanent="yes" Guid="{03203DEE-F83A-468A-802E-7D2E4279EC42}">
 				<File Id="DmdDeviceIniFile" Name="DmdDevice.ini" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- DMDDEVICE_CONFIG -->
+		<DirectoryRef Id="TARGETDIR">
+			<Component Id="EnvConfigPath" Guid="{F8EAE360-4372-4B85-AC7D-4D5ABF165E98}">
+				<Environment Id="DMDDEVICE_CONFIG" Name="DMDDEVICE_CONFIG" Value="[VPMFOLDER]DmdDevice.ini" Permanent="yes" Part="last" Action="set" System="yes" />
 			</Component>
 		</DirectoryRef>
 	</Fragment>
