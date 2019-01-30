@@ -49,7 +49,7 @@
 		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)Assets\background.bmp"/>
 		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)Assets\banner.bmp"/>
 
-		<!-- Command Line App Feature -->
+		<!-- Command Line App feature -->
 		<Feature 
 				Id="CommandLineFeature" 
 				Title="Command Line Tool"
@@ -60,19 +60,12 @@
 
 			<ComponentGroupRef Id="CommandLineComponents" />
 		</Feature>
-	
-		<!-- Retrieve VPM folder from registry -->
-		<Property Id="VPMFROMREG" Value="0" Secure="yes"/>
-		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[VPMFROMREG]" After="FindVpmAction">NOT VPMFROMREG=0</SetProperty>
-		<InstallUISequence>
-			<Custom Action="FindVpmAction" After="AppSearch" />
-		</InstallUISequence>
 
-		<!-- DmdDevice.dll Feature -->
+		<!-- DmdDevice.dll feature -->
 		<Feature
 				Id="DmdDeviceFeature"
 				Title="Universal DmdDevice.dll"
-				Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring. [VPINMAMEDLL]"
+				Description="Replace Visual PinMAME's standard DMD with a nicely rendered one that supports coloring."
 				Display="collapse"
 				ConfigurableDirectory="VPMFOLDER"
 				Level="5">
@@ -80,6 +73,29 @@
 			<ComponentGroupRef Id="DmdDeviceComponents" />
 			<Condition Level="1"><![CDATA[NOT VPMFROMREG=0]]></Condition>
 		</Feature>
+
+		<!-- Pro Pinball batch file feature -->
+		<Feature 
+			Id="ProPinballFeature" 
+			Title="Pro Pinball Launcher"
+			Description="This adds a batch file to the Pro Pinball installation folder so you just need to enable it in Steam."
+			Display="collapse"
+			ConfigurableDirectory="PROPINBALLFOLDER"
+			Level="5">
+
+			<ComponentGroupRef Id="ProPinballLauncherComponents" />
+			<Condition Level="1"><![CDATA[NOT PROPINBALLDIR=0]]></Condition>
+		</Feature>
+
+		<!-- Retrieve VPM and Pro Pinball folder from registry -->
+		<Property Id="VPMFROMREG" Value="0" Secure="yes"/>
+		<Property Id="PROPINBALLDIR" Value="0" Secure="yes"/>
+		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[VPMFROMREG]" After="FindVpmAction">NOT VPMFROMREG=0</SetProperty>
+		<SetProperty Id="PROPINBALLFOLDER" Sequence="ui" Value="[PROPINBALLDIR]" After="FindProPinballAction">NOT PROPINBALLDIR=0</SetProperty>
+		<InstallUISequence>
+			<Custom Action="FindVpmAction" After="AppSearch" />
+			<Custom Action="FindProPinballAction" After="AppSearch" />
+		</InstallUISequence>
 
 		<!-- Check for Vista and above -->
 		<Condition Message="!(loc.OsErrorMessage)">
