@@ -44,14 +44,17 @@ namespace DmdExt
 		private static BaseCommand _command;
 		private static EventHandler _handler;
 		private static string[] _commandLineArgs;
+		private static FileVersionInfo _fvi;
 
 		[STAThread]
 		static void Main(string[] args)
 		{
+			var assembly = Assembly.GetExecutingAssembly();
 			_commandLineArgs = args;
+			_fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
 			// setup logger
-			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
@@ -88,7 +91,7 @@ namespace DmdExt
 
 			try {
 
-				Logger.Info("Launching console tool.");
+				Logger.Info("Launching console tool v{0} {1}", _fvi.ProductVersion, _fvi.LegalTrademarks?.Length > 0 ? $"({_fvi.LegalTrademarks})" : "");
 				options.Validate();
 				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
 				var config = cmdLineOptions.DmdDeviceIni == null
@@ -224,10 +227,7 @@ namespace DmdExt
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			var assembly = Assembly.GetExecutingAssembly();
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-
-			Raygun.ApplicationVersion = fvi.ProductVersion;
+			Raygun.ApplicationVersion = _fvi.ProductVersion + (_fvi.LegalTrademarks?.Length > 0 ? $" ({_fvi.LegalTrademarks})" : "");
 			Raygun.Send(ex, null, new Dictionary<string, string> { {"args", string.Join(" ", _commandLineArgs) }, {"log", string.Join("\n", MemLogger.Logs) } });
 #endif
 		}

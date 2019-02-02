@@ -8,11 +8,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DmdDevice.dll")]
 [assembly: AssemblyProduct("Universal DmdDevice.dll for Visual PinMAME")]
 [assembly: AssemblyDescription("Universal DmdDevice.dll for Visual PinMAME for all displays, inclusively frame-by-frame coloring support.")]
-[assembly: AssemblyCopyright("Copyright © 2018 freezy@vpdb.io")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

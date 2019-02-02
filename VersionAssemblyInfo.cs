@@ -3,6 +3,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: AssemblyCompany("freezy <freezy@vpdb.io>")]
+[assembly: AssemblyCopyright("Copyright (C) 2019 <freezy@vpdb.io>")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version

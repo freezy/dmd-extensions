@@ -8,12 +8,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("LibDmd")]
 [assembly: AssemblyDescription("A .NET libary for providing dmdext's features.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LibDmd")]
-[assembly: AssemblyCopyright("Copyright © 2018 freezy <freezy@vpdb.io>")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

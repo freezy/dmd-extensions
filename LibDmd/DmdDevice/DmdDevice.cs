@@ -46,6 +46,7 @@ namespace LibDmd.DmdDevice
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
+		private readonly FileVersionInfo _fvi;
 		private VirtualDmd _dmd;
 
 		// Ziigs vo VPM
@@ -74,8 +75,10 @@ namespace LibDmd.DmdDevice
 		public DmdDevice()
 		{
 			// setup logger
+			var assembly = Assembly.GetExecutingAssembly();
+			_fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-			var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
 			if (File.Exists(logConfigPath)) {
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
@@ -634,19 +637,16 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			var ex = e.ExceptionObject as Exception;
 			if (ex != null) {
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			var assembly = Assembly.GetExecutingAssembly();
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-
-			Raygun.ApplicationVersion = fvi.ProductVersion;
+			Raygun.ApplicationVersion = _fvi.ProductVersion + (_fvi.LegalTrademarks?.Length > 0 ? $" ({_fvi.LegalTrademarks})" : "");
 			Raygun.Send(ex, 
-				new List<string> { System.Diagnostics.Process.GetCurrentProcess().ProcessName }, 
+				new List<string> { Process.GetCurrentProcess().ProcessName }, 
 				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }
 			);
 #endif
