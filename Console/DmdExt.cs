@@ -44,14 +44,27 @@ namespace DmdExt
 		private static BaseCommand _command;
 		private static EventHandler _handler;
 		private static string[] _commandLineArgs;
-		private static FileVersionInfo _fvi;
+		private static string _version;
+		private static string _sha;
+		private static string _fullVersion;
 
 		[STAThread]
 		static void Main(string[] args)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
+			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			_version = fvi.ProductVersion;
+			if (attr.Length > 0) {
+				var aca = (AssemblyConfigurationAttribute)attr[0];
+				_sha = aca.Configuration;
+				_fullVersion = $"{_version} ({_sha})";
+			} else {
+				_fullVersion = fvi.ProductVersion;
+				_sha = "";
+			}
+
 			_commandLineArgs = args;
-			_fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
 			// setup logger
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
@@ -91,7 +104,7 @@ namespace DmdExt
 
 			try {
 
-				Logger.Info("Launching console tool v{0} {1}", _fvi.ProductVersion, _fvi.LegalTrademarks?.Length > 0 ? $"({_fvi.LegalTrademarks})" : "");
+				Logger.Info("Launching console tool v{0}", _fullVersion);
 				options.Validate();
 				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
 				var config = cmdLineOptions.DmdDeviceIni == null
@@ -227,8 +240,12 @@ namespace DmdExt
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			Raygun.ApplicationVersion = _fvi.ProductVersion + (_fvi.LegalTrademarks?.Length > 0 ? $" ({_fvi.LegalTrademarks})" : "");
-			Raygun.Send(ex, null, new Dictionary<string, string> { {"args", string.Join(" ", _commandLineArgs) }, {"log", string.Join("\n", MemLogger.Logs) } });
+			Raygun.ApplicationVersion = _fullVersion;
+			Raygun.Send(ex, null, new Dictionary<string, string> {
+				{ "args", string.Join(" ", _commandLineArgs) }, 
+				{ "log", string.Join("\n", MemLogger.Logs) },
+				{ "sha", _sha }
+			});
 #endif
 		}
 

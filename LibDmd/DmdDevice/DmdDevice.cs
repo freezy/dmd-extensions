@@ -46,7 +46,9 @@ namespace LibDmd.DmdDevice
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
-		private readonly FileVersionInfo _fvi;
+		private readonly string _version;
+		private readonly string _sha;
+		private readonly string _fullVersion;
 		private VirtualDmd _dmd;
 
 		// Ziigs vo VPM
@@ -60,7 +62,7 @@ namespace LibDmd.DmdDevice
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
-		private bool _isOpen = false;
+		private bool _isOpen;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -76,7 +78,17 @@ namespace LibDmd.DmdDevice
 		{
 			// setup logger
 			var assembly = Assembly.GetExecutingAssembly();
-			_fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			_version = fvi.ProductVersion;
+			if (attr.Length > 0) {
+				var aca = (AssemblyConfigurationAttribute)attr[0];
+				_sha = aca.Configuration;
+				_fullVersion = $"{_version} ({_sha})";
+			} else {
+				_fullVersion = fvi.ProductVersion;
+				_sha = "";
+			}
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
@@ -96,7 +108,7 @@ namespace LibDmd.DmdDevice
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 
-			Logger.Info("Starting VPinMAME API through {0}.exe.", System.Diagnostics.Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
 		}
 
 		/// <summary>
@@ -644,10 +656,13 @@ namespace LibDmd.DmdDevice
 				Logger.Error(ex.ToString());
 			}
 #if !DEBUG
-			Raygun.ApplicationVersion = _fvi.ProductVersion + (_fvi.LegalTrademarks?.Length > 0 ? $" ({_fvi.LegalTrademarks})" : "");
+			Raygun.ApplicationVersion = _fullVersion;
 			Raygun.Send(ex, 
 				new List<string> { Process.GetCurrentProcess().ProcessName }, 
-				new Dictionary<string, string> { {"log", string.Join("\n", MemLogger.Logs) } }
+				new Dictionary<string, string> { 
+					{ "log", string.Join("\n", MemLogger.Logs) },
+					{ "sha", _sha }
+				} 
 			);
 #endif
 		}
