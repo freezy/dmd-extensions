@@ -336,6 +336,13 @@ Use VPM 3.1. If you can't wait there's a beta build [here](http://vpuniverse.com
 
 *Thanks to djrobx for the fix an all others at [#52](https://github.com/freezy/dmd-extensions/issues/52) for reporting.*
 
+### Weird positioning or no DMD visible at all?
+
+When you override *High DPI scaling* in the host app (e.g. `vpinballx.exe`), 
+dmdext is put into a different coordinate system, so your `DmdDevice.ini`'s 
+position settings are applied differently. This can lead to wrong positioning 
+or complete off-screen rendering.
+
 ## Reporting Bugs
 
 Make sure you include the application log. You can *usually* find it at the same 
