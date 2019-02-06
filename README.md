@@ -343,6 +343,8 @@ dmdext is put into a different coordinate system, so your `DmdDevice.ini`'s
 position settings are applied differently. This can lead to wrong positioning 
 or complete off-screen rendering.
 
+*Thanks to outhere for the tip!*
+
 ## Reporting Bugs
 
 Make sure you include the application log. You can *usually* find it at the same 
