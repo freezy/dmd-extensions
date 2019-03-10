@@ -117,16 +117,17 @@ namespace LibDmd.Output.PinDmd2
 
 		public void RenderRaw(byte[] data)
 		{
-			if (!_pinDmd2Device.IsOpen) {
-				Logger.Warn("Ignoring frame for already closed USB device.");
-				return;
-			}
-			var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
-			int bytesWritten;
-			var error = writer.Write(data, 2000, out bytesWritten);
-			if (error != ErrorCode.None) {
-				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
-				throw new RenderException(UsbDevice.LastErrorString);
+			lock (locker) {
+				if (_pinDmd2Device == null || !_pinDmd2Device.IsOpen) {
+					Logger.Warn("Ignoring frame for already closed USB device.");
+					return;
+				}
+				var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
+				int bytesWritten;
+				var error = writer.Write(data, 2000, out bytesWritten);
+				if (error != ErrorCode.None) {
+					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+				}
 			}
 		}
 
@@ -137,15 +138,21 @@ namespace LibDmd.Output.PinDmd2
 
 		public void Dispose()
 		{
-			if (_pinDmd2Device != null && _pinDmd2Device.IsOpen) {
-				var wholeUsbDevice = _pinDmd2Device as IUsbDevice;
-				if (!ReferenceEquals(wholeUsbDevice, null)) {
-					wholeUsbDevice.ReleaseInterface(0);
+			lock (locker) {
+				if (_pinDmd2Device != null && _pinDmd2Device.IsOpen) {
+					var wholeUsbDevice = _pinDmd2Device as IUsbDevice;
+					if (!ReferenceEquals(wholeUsbDevice, null)) {
+						wholeUsbDevice.ReleaseInterface(0);
+					}
+					_pinDmd2Device.Close();
 				}
-				_pinDmd2Device.Close();
+				_pinDmd2Device = null;
+				UsbDevice.Exit();
 			}
-			_pinDmd2Device = null;
-			UsbDevice.Exit();
 		}
+
+		// lock object, to protect against closing the serial port while in the
+		// middle of a raw write
+		object locker = new object();
 	}
 }
