@@ -154,10 +154,14 @@ namespace LibDmd.Output.PinDmd1
 
 		public void RenderRaw(byte[] data)
 		{
-			uint numBytesWritten = 0;
-			var status = _ftdi.Write(data, data.Length, ref numBytesWritten);
-			if (status != FTDI.FT_STATUS.FT_OK) {
-				throw new RenderException("Error writing to FTDI device: " + status);
+			lock (locker) {
+				if (_pinDmd1Device != null) {
+					uint numBytesWritten = 0;
+					var status = _ftdi.Write(data, data.Length, ref numBytesWritten);
+					if (status != FTDI.FT_STATUS.FT_OK) {
+						Logger.Error("Error writing to FTDI device: " + status);
+					}
+				}
 			}
 		}
 
@@ -168,13 +172,18 @@ namespace LibDmd.Output.PinDmd1
 
 		public void Dispose()
 		{
-			if (_pinDmd1Device != null) {
-				_ftdi.SetBitMode(0x00, 0x0);
-				_ftdi.Close();
-				_pinDmd1Device = null;
-				IsAvailable = false;
+			lock (locker) {
+				if (_pinDmd1Device != null) {
+					_ftdi.SetBitMode(0x00, 0x0);
+					_ftdi.Close();
+					_pinDmd1Device = null;
+					IsAvailable = false;
+				}
 			}
 		}
 
+		// lock object, to protect against closing the serial port while in the
+		// middle of a raw write
+		object locker = new object();
 	}
 }
