@@ -54,6 +54,10 @@ namespace LibDmd.Output.PinDmd3
 		/// </summary>
 		private SerialPort _serialPort;
 
+		// lock object, to protect against closing the serial port while in the
+		// middle of a raw write
+		private object locker = new object();
+
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
 		/// </summary>
@@ -335,9 +339,5 @@ namespace LibDmd.Output.PinDmd3
 				}
 			}
 		}
-
-		// lock object, to protect against closing the serial port while in the
-		// middle of a raw write
-		object locker = new object();
 	}
 }
