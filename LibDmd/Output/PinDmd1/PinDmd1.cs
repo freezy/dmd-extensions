@@ -25,6 +25,10 @@ namespace LibDmd.Output.PinDmd1
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static PinDmd1 _instance;
 
+		// lock object, to protect against closing the serial port while in the
+		// middle of a raw write
+		private object locker = new object();
+
 		private PinDmd1()
 		{
 			if (_ftdi == null) {
@@ -181,9 +185,5 @@ namespace LibDmd.Output.PinDmd1
 				}
 			}
 		}
-
-		// lock object, to protect against closing the serial port while in the
-		// middle of a raw write
-		object locker = new object();
 	}
 }

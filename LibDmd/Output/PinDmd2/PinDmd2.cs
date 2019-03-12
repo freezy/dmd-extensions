@@ -24,6 +24,10 @@ namespace LibDmd.Output.PinDmd2
 		private static PinDmd2 _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		// lock object, to protect against closing the serial port while in the
+		// middle of a raw write
+		private object locker = new object();
+
 		private PinDmd2()
 		{
 			// 4 bits per pixel plus 4 init bytes
@@ -150,9 +154,5 @@ namespace LibDmd.Output.PinDmd2
 				UsbDevice.Exit();
 			}
 		}
-
-		// lock object, to protect against closing the serial port while in the
-		// middle of a raw write
-		object locker = new object();
 	}
 }
