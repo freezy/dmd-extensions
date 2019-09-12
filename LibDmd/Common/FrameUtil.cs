@@ -305,14 +305,81 @@ namespace LibDmd.Common
 			return frame;
 		}
 
-		/// <summary>
-		/// Merges an array of bit planes into one single array.
-		/// </summary>
-		/// <param name="planes">Source planes</param>
-		/// <param name="frame">Destination array</param>
-		/// <param name="offset">Where to start copying at destination</param>
-		/// <returns>True if destination array changed, false otherwise.</returns>
-		public static bool Copy(byte[][] planes, byte[] frame, int offset)
+		public static void SplitIntoRgbPlanes(byte[] rgb565, int width, int numLogicalRows, byte[] dest) // originally "convertAdafruit()"
+		{
+			var pairOffset = 16;
+			var height = rgb565.Length / width;
+			var subframeSize = rgb565.Length / 2;
+
+			for (var x = 0; x < width; ++x) {
+				for (var y = 0; y < height; ++y) {
+					if (y % (pairOffset * 2) >= pairOffset) {
+						continue;
+					}
+
+					// This are the two indices of the pixel comprising a dot-pair in the input.
+					var inputIndex0 = y * width + x;
+					var inputIndex1 = (y + pairOffset) * width + x;
+
+					var color0 = rgb565[inputIndex0];
+					// Take the top 3 bits of each {r,g,b}
+					var r0 = (color0 >> 13) & 0x7;
+					var g0 = (color0 >> 8) & 0x7;
+					var b0 = (color0 >> 2) & 0x7;
+
+					var color1 = rgb565[inputIndex1];
+					// Take the top 3 bits of each {r,g,b}
+					var r1 = (color1 >> 13) & 0x7;
+					var g1 = (color1 >> 8) & 0x7;
+					var b1 = (color1 >> 2) & 0x7;
+
+					for (var subframe = 0; subframe < 3; ++subframe) {
+						var dotPair =
+							(r0 & 1) << 5
+							| (g0 & 1) << 4
+							| (b0 & 1) << 3
+							| (r1 & 1) << 2
+							| (g1 & 1) << 1
+							| (b1 & 1) << 0;
+						var indexWithinSubframe = mapAdafruitIndex(x, y, width, height, numLogicalRows);
+						var indexWithinOutput = subframe * subframeSize + indexWithinSubframe;
+						dest[indexWithinOutput] = (byte)dotPair;
+						r0 >>= 1;
+						g0 >>= 1;
+						b0 >>= 1;
+						r1 >>= 1;
+						g1 >>= 1;
+						b1 >>= 1;
+					}
+				}
+			}
+		}
+
+		private static int mapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
+		{
+			var pairOffset = 16;
+			var logicalRowLengthPerMatrix = 32 * 32 / 2 / numLogicalRows;
+			var logicalRow = y % numLogicalRows;
+			var dotPairsPerLogicalRow = width * height / numLogicalRows / 2;
+			var widthInMatrices = width / 32;
+			var matrixX = x / 32;
+			var matrixY = y / 32;
+			var totalMatrices = width * height / 1024;
+			var matrixNumber = totalMatrices - ((matrixY + 1) * widthInMatrices) + matrixX;
+			var indexWithinMatrixRow = x % logicalRowLengthPerMatrix;
+			var index = logicalRow * dotPairsPerLogicalRow
+						+ matrixNumber * logicalRowLengthPerMatrix + indexWithinMatrixRow;
+			return index;
+		}
+
+	/// <summary>
+	/// Merges an array of bit planes into one single array.
+	/// </summary>
+	/// <param name="planes">Source planes</param>
+	/// <param name="frame">Destination array</param>
+	/// <param name="offset">Where to start copying at destination</param>
+	/// <returns>True if destination array changed, false otherwise.</returns>
+	public static bool Copy(byte[][] planes, byte[] frame, int offset)
 		{
 			var identical = true;
 			foreach (var plane in planes) {

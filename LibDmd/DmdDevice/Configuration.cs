@@ -29,6 +29,7 @@ namespace LibDmd.DmdDevice
 		public IPinDmd2Config PinDmd2 { get; }
 		public IPinDmd3Config PinDmd3 { get; }
 		public IPin2DmdConfig Pin2Dmd { get; }
+		public IPixelcadeConfig Pixelcade { get; }
 		public IVideoConfig Video { get; }
 		public IGifConfig Gif { get; }
 		public IBitmapConfig Bitmap { get; }
@@ -98,6 +99,7 @@ namespace LibDmd.DmdDevice
 			PinDmd2 = new PinDmd2Config(_data, this);
 			PinDmd3 = new PinDmd3Config(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
+			Pixelcade = new PixelcadeConfig(_data, this);
 			Video = new VideoConfig(_data, this);
 			Gif = new GifConfig(_data, this);
 			Bitmap = new BitmapConfig(_data, this);
@@ -187,6 +189,16 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", true);
 		public int Delay => GetInt("delay", 25);
 		public Pin2DmdConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class PixelcadeConfig : AbstractConfiguration, IPixelcadeConfig
+	{
+		public override string Name { get; } = "pixelcade";
+		public bool Enabled => GetBoolean("enabled", true);
+		public string Port => GetString("port", null);
+		public PixelcadeConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

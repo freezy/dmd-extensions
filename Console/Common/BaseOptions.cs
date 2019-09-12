@@ -67,6 +67,7 @@ namespace DmdExt.Common
 		public IPinDmd2Config PinDmd2 { get; }
 		public IPinDmd3Config PinDmd3 { get; }
 		public IPin2DmdConfig Pin2Dmd { get; }
+		public IPixelcadeConfig Pixelcade { get; }
 		public IVideoConfig Video { get; }
 		public IGifConfig Gif { get; }
 		public IBitmapConfig Bitmap { get; }
@@ -83,6 +84,7 @@ namespace DmdExt.Common
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
+			Pixelcade = new PixelcadeOptions(this);
 			Video = new VideoOptions();
 			Gif = new GifOptions();
 			Bitmap = new BitmapOptions(this);
@@ -93,7 +95,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, Virtual, AlphaNumeric
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIXELCADE, Virtual, AlphaNumeric
 		}
 
 		public void Validate()
@@ -228,6 +230,20 @@ namespace DmdExt.Common
 		                       _options.Destination == BaseOptions.DestinationType.PIN2DMD;
 
 		public int Delay => _options.OutputDelay;
+	}
+	
+	internal class PixelcadeOptions : IPixelcadeConfig
+	{
+		private readonly BaseOptions _options;
+
+		public PixelcadeOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		                       _options.Destination == BaseOptions.DestinationType.PIXELCADE;
+		public string Port => _options.Port;
 	}
 
 	internal class VideoOptions : IVideoConfig
