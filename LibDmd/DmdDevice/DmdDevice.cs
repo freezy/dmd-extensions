@@ -21,6 +21,7 @@ using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.PinUp;
+using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using Microsoft.Win32;
@@ -273,6 +274,13 @@ namespace LibDmd.DmdDevice
 						pin2Dmd.PreloadPalettes(_coloring);
 					}
 					Logger.Info("Added PIN2DMD renderer.");
+				}
+			}
+			if (_config.Pixelcade.Enabled) {
+				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port);
+				if (pixelcade.IsAvailable) {
+					renderers.Add(pixelcade);
+					Logger.Info("Added Pixelcade renderer.");
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {

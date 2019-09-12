@@ -11,6 +11,7 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
+using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
@@ -72,6 +73,16 @@ namespace DmdExt.Common
 					Logger.Info("Added PIN2DMD renderer.");
 				} else {
 					Logger.Warn("Device {0} is not available.", PIN2DMD);
+				}
+			}
+
+			if (config.Pixelcade.Enabled) {
+				var pixelcade = Pixelcade.GetInstance(config.Pixelcade.Port);
+				if (pixelcade.IsAvailable) {
+					renderers.Add(pixelcade);
+					Logger.Info("Added Pixelcade renderer.");
+				} else {
+					Logger.Warn("Device Pixelcade is not available.");
 				}
 			}
 

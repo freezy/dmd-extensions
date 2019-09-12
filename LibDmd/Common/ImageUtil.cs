@@ -470,6 +470,33 @@ namespace LibDmd.Common
 			}
 		}
 
+		/// <summary>
+		/// Convert an RGB24 array to a RGB565 array.
+		/// </summary>
+		/// <param name="width">Width of the image</param>
+		/// <param name="height">Height of the image</param>
+		/// <param name="frameRgb24">RGB24 array, from top left to bottom right</param>
+		/// <returns></returns>
+		public static byte[] ConvertToRgb565(int width, int height, byte[] frameRgb24)
+		{
+			var frame = new byte[width * height * 2];
+			var pos = 0;
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width * 3; x += 3) {
+					var rgbPos = y * width * 3 + x;
+					var r = frameRgb24[rgbPos];
+					var g = frameRgb24[rgbPos + 1];
+					var b = frameRgb24[rgbPos + 2];
+
+					var x1 = (r & 0xF8) | (g >> 5);          // Take 5 bits of Red component and 3 bits of G component
+					var x2 = ((g & 0x1C) << 3) | (b >> 3);   // Take remaining 3 Bits of G component and 5 bits of Blue component
+
+					frame[pos++] = (byte)x1;
+					frame[pos++] = (byte)x2;
+				}
+			}
+			return frame;
+		}
 
 		/// <summary>
 		/// Converts between pixel formats.

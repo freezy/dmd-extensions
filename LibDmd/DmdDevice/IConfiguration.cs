@@ -13,6 +13,7 @@ namespace LibDmd.DmdDevice
 		IPinDmd2Config PinDmd2 { get; }
 		IPinDmd3Config PinDmd3 { get; }
 		IPin2DmdConfig Pin2Dmd { get; }
+		IPixelcadeConfig Pixelcade { get; }
 		IVideoConfig Video { get; }
 		IGifConfig Gif { get; }
 		IBitmapConfig Bitmap { get; }
@@ -54,6 +55,12 @@ namespace LibDmd.DmdDevice
 	{
 		bool Enabled { get; }
 		int Delay { get; }
+	}
+
+	public interface IPixelcadeConfig
+	{
+		bool Enabled { get; }
+		string Port { get; }
 	}
 
 	public interface IVirtualDmdConfig
