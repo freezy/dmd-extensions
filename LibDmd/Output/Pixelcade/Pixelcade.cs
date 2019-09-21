@@ -105,44 +105,49 @@ namespace LibDmd.Output.Pixelcade
 			// put the matrix into stream mode 
 			EnableRgbLedMatrix(4, 16);
 		}
-        private bool Connect(string port)
-        {
-                try {
-                    Logger.Info("Checking port {0} for Pixelcade...", port);
-                    _serialPort = new SerialPort(port);
-                    _serialPort.ReceivedBytesThreshold = 1;
-                    _serialPort.DtrEnable = true;
-                    System.Threading.Thread.Sleep(Delay);
-                    _serialPort.Open();
-                    // let's assume opening a connection results in what IncomingState.handleEstablishConnection() receives...
-                    var result = new byte[1 + 4 + 8 + 8 + 8];
-                    _serialPort.Read(result, 0, 1 + 4 + 8 + 8 + 8);
+		private bool Connect(string port)
+		{
+			try {
+				Logger.Info("Checking port {0} for Pixelcade...", port);
 
-                    if (result[0] != ResponseEstablishConnection) {
-                        throw new Exception($"Expected new connection to return 0x0, but got {result[0]}");
-                    }
+				// since pixelcade is USB, we don't need to set the baud rate, parity bit, etc
+				_serialPort = new SerialPort(port);
+				_serialPort.ReceivedBytesThreshold = 1;
+				_serialPort.DtrEnable = true;
+				System.Threading.Thread.Sleep(Delay);
+				_serialPort.Open();
 
-                    var magic = Encoding.UTF8.GetString(result.Skip(1).Take(4).ToArray());
-                    if (magic != "IOIO") {
-                        throw new Exception($"Expected magic code to equal IOIO but got {magic}");
-                    }
-                    var hardwareId = Encoding.UTF8.GetString(result.Skip(1+4).Take(8).ToArray());
-                    var bootloaderId = Encoding.UTF8.GetString(result.Skip(1+4+8).Take(8).ToArray());
-                    Firmware = Encoding.UTF8.GetString(result.Skip(1+4+8+8).Take(8).ToArray());
-                    Logger.Info("Found Pixelcade device on {0}.", port);
-                    Logger.Debug(" Hardware ID: {0}", hardwareId);
-                    Logger.Debug(" Bootloader ID: {0}", bootloaderId);
-                    Logger.Debug(" Firmware: {0}", Firmware);
-                    return true;
+				// let's assume opening a connection results in what IncomingState.handleEstablishConnection() receives...
+				var result = new byte[1 + 4 + 8 + 8 + 8];
+				_serialPort.Read(result, 0, 1 + 4 + 8 + 8 + 8);
 
-                } catch (Exception e) {
-                    Logger.Error("Error: {0}", e.Message.Trim());
-                    if (_serialPort != null && _serialPort.IsOpen) {
-                        _serialPort.Close();
-                    }
-                }
-                return false;
-        }
+				if (result[0] != ResponseEstablishConnection) {
+					throw new Exception($"Expected new connection to return 0x0, but got {result[0]}");
+				}
+
+				var magic = Encoding.UTF8.GetString(result.Skip(1).Take(4).ToArray());
+
+				if (magic != "IOIO") {
+					throw new Exception($"Expected magic code to equal IOIO but got {magic}");
+				}
+
+				var hardwareId = Encoding.UTF8.GetString(result.Skip(1+4).Take(8).ToArray());
+				var bootloaderId = Encoding.UTF8.GetString(result.Skip(1+4+8).Take(8).ToArray());
+				Firmware = Encoding.UTF8.GetString(result.Skip(1+4+8+8).Take(8).ToArray());
+				Logger.Info("Found Pixelcade device on {0}.", port);
+				Logger.Debug(" Hardware ID: {0}", hardwareId);
+				Logger.Debug(" Bootloader ID: {0}", bootloaderId);
+				Logger.Debug(" Firmware: {0}", Firmware);
+				return true;
+
+			} catch (Exception e) {
+				Logger.Error("Error: {0}", e.Message.Trim());
+				if (_serialPort != null && _serialPort.IsOpen) {
+					_serialPort.Close();
+				}
+			}
+			return false;
+		}
 	
 		public void RenderRgb24(byte[] frameRgb24)
 		{
