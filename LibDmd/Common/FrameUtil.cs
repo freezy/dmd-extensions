@@ -305,7 +305,7 @@ namespace LibDmd.Common
 			return frame;
 		}
 
-		public static void SplitIntoRgbPlanes(byte[] rgb565, int width, int numLogicalRows, byte[] dest) // originally "convertAdafruit()"
+		public static void SplitIntoRgbPlanes(char[] rgb565, int width, int numLogicalRows, byte[] dest) // originally "convertAdafruit()"
 		{
 			var pairOffset = 16;
 			var height = rgb565.Length / width;
