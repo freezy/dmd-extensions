@@ -20,6 +20,7 @@ namespace LibDmd.Output.Pixelcade
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
+		private const int ReadTimeoutMs = 500;
 		private const byte RgbLedMatrixFrameCommandByte = 0x1F;
 		private const byte RgbLedMatrixEnableCommandByte = 0x1E;
 		private const byte ResponseEstablishConnection = 0x00;
@@ -114,6 +115,7 @@ namespace LibDmd.Output.Pixelcade
 				_serialPort = new SerialPort(port);
 				_serialPort.ReceivedBytesThreshold = 1;
 				_serialPort.DtrEnable = true;
+				_serialPort.ReadTimeout = ReadTimeoutMs;
 				System.Threading.Thread.Sleep(Delay);
 				_serialPort.Open();
 
