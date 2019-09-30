@@ -240,6 +240,9 @@ namespace LibDmd.Input.TPAGrabber
 			var tableBuffer = new byte[20];
 			ReadProcessMemory(procHandle, _tableNameAddr, tableBuffer, tableBuffer.Length, IntPtr.Zero);
 			var rawTableName = Encoding.Default.GetString(tableBuffer);
+			if (rawTableName.IndexOf("_") < 0) {
+				return false;
+			}
 			var tableName = rawTableName.Substring(1, rawTableName.IndexOf("_") - 1);
 			var specialDMDTables = new string[] { "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
 			return specialDMDTables.Any(tableName.Contains) ? true : false;
