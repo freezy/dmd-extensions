@@ -191,6 +191,7 @@ var controller = {
 
 		this.websocket.onmessage = function (e) {
 
+			var i, colors, numColors, numPlanes, frame;
 			var dataView = new DataView(e.data);
 			var tag = dataView.getUint8(0);
 			var timestamp = dataView.getUint32(1, true);
@@ -199,103 +200,64 @@ var controller = {
 
 				// Dimensions
 				case 0x01:
-					debugger;
 					var width = dataView.getUint16(5, true);
 					var height = dataView.getUint16(7, true);
-					//that.setDimensions({ width: width, height: height });
+					that.setDimensions({ width: width, height: height });
 					break;
 
 				// Color
 				case 0x02: 
-					//that.setColor(dataView.getUint32(5));
+					that.setColor(dataView.getUint32(5));
 					break;
 
 				// Palette
 				case 0x03:
-					var numColors = dataView.getUint16(5, true);
-					var colors = [];
-					for (var i = 0; i < numColors; i++) {
+					numColors = dataView.getUint16(5, true);
+					colors = [];
+					for (i = 0; i < numColors; i++) {
 						colors.push(dataView.getInt32(7 + i * 4));
 					}
-					//that.setPalette(colors);
-				break;
+					that.setPalette(colors);
+					break;
 
 				// GrayFrame
 				case 0x10: 
-					var numPlanes = dataView.getUint8(5);
-					var frame = new DataView(e.data, 6);
-					//that.renderFrame(timestamp, function () {
-					//	return that.graytoRgb24(that.joinPlanes(numPlanes, frame), 4);
-					//});
-				break;
+					numPlanes = dataView.getUint8(5);
+					frame = new DataView(e.data, 6);
+					that.renderFrame(timestamp, numPlanes, frame);
+					break;
 
 				// ColoredGrayFrame
 				case 0x11: 
-				break;
+					numPlanes = dataView.getUint8(5);
+					numColors = Math.pow(2, numPlanes);
+					colors = [];
+					for (i = 0; i < numColors; i++) {
+						colors.push(dataView.getInt32(6 + i * 4));
+					}
+					frame = new DataView(e.data, 6 + numColors * 4);
+					that.renderFrame(timestamp, numPlanes, frame, colors);
+					break;
 
 				// Rgb24Frame
 				case 0x12: 
-				break;
+					that.renderRgb24(timestamp, new DataView(e.data, 5));
+					break;
 
 				// ClearDisplay
 				case 0x20: 
-				break;
+					break;
 
 				// ClearColor
 				case 0x21: 
-				break;
+					that.clearColor();
+					break;
 
 				// ClearPalette
-				case 0x22: 
-				break;
-
+				case 0x22:
+					that.clearPalette();
+					break;
 			}
-
-
-			/*jBinary.load(e.data, typeSet).then(function (binary) {
-				var data = binary.read('Data');
-				var frame = data.data;
-				switch (data.name) {
-					case 'gray2Planes':
-						that.renderFrame(frame, function () {
-							return that.graytoRgb24(that.joinPlanes(2, frame.planes), 4);
-						});
-						break;
-					case 'gray4Planes':
-						that.renderFrame(frame, function () {
-							return that.graytoRgb24(that.joinPlanes(4, frame.planes), 16);
-						});
-						break;
-					case 'coloredGray2':
-						that.renderFrame(frame, function () {
-							return that.graytoRgb24(that.joinPlanes(2, frame.planes), frame.palette.colors);
-						});
-						break;
-					case 'coloredGray4':
-						that.renderFrame(frame, function () {
-							return that.graytoRgb24(that.joinPlanes(4, frame.planes), frame.palette.colors);
-						});
-						break;
-					case 'rgb24':
-						that.renderRgb24(frame);
-						break;
-					case 'dimensions':
-						that.setDimensions(frame);
-						break;
-					case 'color':
-						that.setColor(frame.color);
-						break;
-					case 'palette':
-						that.setPalette(frame.palette.colors);
-						break;
-					case 'clearColor':
-						that.clearColor();
-						break;
-					case 'clearPalette':
-						that.clearPalette();
-						break;
-				}
-			});*/
 		};
 
 		this.websocket.onerror = function(e) {
@@ -308,11 +270,11 @@ var controller = {
 		};
 	},
 
-	renderRgb24(frame) {
-		console.log('Colored rgb24 Frame: %s', frame.timestamp);
+	renderRgb24(timestamp, frame) {
+		console.log('Colored rgb24 Frame: %s', timestamp);
 	},
 
-	renderFrame: function(timestamp, render) {
+	renderFrame: function(timestamp, numPlanes, planes, colors) {
 
 		if (!this._clientStart) {
 			this._clientStart = Date.now();
@@ -329,7 +291,7 @@ var controller = {
 		}
 
 		var that = this;
-		var frame = render();
+		var frame = this.grayToRgb24(that.joinPlanes(numPlanes, planes), colors || Math.pow(2, numPlanes));
 		setTimeout(function () {
 			that._dmdMesh.material.map.image.data = frame;
 			that._dmdMesh.material.map.needsUpdate = true;
@@ -435,7 +397,7 @@ var controller = {
 		return { width: width, height: height };
 	},
 
-	graytoRgb24: function (buffer, paletteOrNumColors) {
+	grayToRgb24: function (buffer, paletteOrNumColors) {
 		var rgbFrame = new Uint8Array(this._width * this._height * 3);
 		var pos = 0;
 		var dotColor = new THREE.Color();
@@ -467,13 +429,13 @@ var controller = {
 		return rgbFrame;
 	},
 
-	joinPlanes: function(bitlength, planes) {
+	joinPlanes: function(bitLength, planes) {
 		var frame = new ArrayBuffer(this._width * this._height);
-		var planeSize = planes.byteLength / bitlength;
+		var planeSize = planes.byteLength / bitLength;
 		for (var bytePos = 0; bytePos < this._width * this._height / 8; bytePos++) {
 			for (var bitPos = 7; bitPos >= 0; bitPos--) {
-				for (var planePos = 0; planePos < bitlength; planePos++) {
-					var bit = this.isBitSet(planes[planeSize * planePos + bytePos], bitPos) ? 1 : 0;
+				for (var planePos = 0; planePos < bitLength; planePos++) {
+					var bit = this.isBitSet(planes.getInt8(planeSize * planePos + bytePos), bitPos) ? 1 : 0;
 					frame[bytePos * 8 + bitPos] |= (bit << planePos);
 				}
 			}
