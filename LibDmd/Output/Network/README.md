@@ -4,19 +4,20 @@ DMD Extensions comes with two drivers that stream DMD frames over the network.
 
 `WebsocketServer` acts as a Websocket server to which clients can connect and 
 receive frames. `WebsocketClient` connects to an existing server. Both are 
-using the same protcol.
+using the same protocol.
 
 ## Messages
 
 Messages are sent as byte arrays. The first byte of every message defines the
-type of the message. The following four bytes are a timestamp in milliseconds.
+type of the message. The following four bytes are the timestamp in 
+milliseconds.
 
 Timestamps are important to keep the frames in sync. What the consumer should
-do is keep a time offset variable and adapt it as soon a frame gets delayed so
+do is keep a time offset variable and adapt it when a frame gets delayed so
 the next frames keep the same relative frame rate.
 
-Note that there is not fixed frame rate though, frames are only sent if changed,
-which can happen at irregular intervals.
+Note that there is no fixed frame rate, frames are only sent if changed, which
+can happen at irregular intervals.
 
 All integers are little endian.
 
@@ -32,7 +33,7 @@ adapt rendering depending on that value
 
 #### Format
 
-- tag: 1 byte, tag, always `0x01`
+- tag: 1 byte, always `0x01`
 - timestamp: 4 bytes, uint32
 - width: 2 bytes, ushort
 - height: 2 bytes, ushort
@@ -43,7 +44,7 @@ Indicates in which color the frames should be tinted.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x02`
+- tag: 1 byte, always `0x02`
 - timestamp: 4 bytes, uint32
 - color: 4 bytes, uint, e.g. `0xff00ff`
 
@@ -54,7 +55,7 @@ of colors, where every color is mapped to the pixel value of its index.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x03`
+- tag: 1 byte, always `0x03`
 - timestamp: 4 bytes, uint32
 - number of colors: 2 bytes, ushort
 - colors, 4 bytes uint each
@@ -67,9 +68,9 @@ bit.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x10`
+- tag: 1 byte, always `0x10`
 - timestamp: 4 bytes, uint32
-- number of bit planes: 1 byte
+- number of bit planes: 1 byte, uint8
 - bit planes, each width * height / 8
 
 ### `0x11` - Colored Bit Planes
@@ -80,9 +81,9 @@ colors.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x11`
+- tag: 1 byte, always `0x11`
 - timestamp: 4 bytes, uint32
-- number of bit planes: 1 byte
+- number of bit planes: 1 byte, unit8
 - colors, 4 bytes uint times 2^(number of bitplanes)
 - bit planes, each width * height / 8
 
@@ -95,9 +96,9 @@ bit planes.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x12`
+- tag: 1 byte, always `0x12`
 - timestamp: 4 bytes, uint32
-- RGB42 array, width * height * 3 bytes
+- RGB24 array, width * height * 3 bytes
 
 ### `0x20` - Clear Display
 
@@ -106,7 +107,7 @@ additional parameters.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x20`
+- tag: 1 byte, always `0x20`
 - timestamp: 4 bytes, uint32
 
 ### `0x21` - Clear Color
@@ -116,7 +117,7 @@ additional parameters.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x21`
+- tag: 1 byte, always `0x21`
 - timestamp: 4 bytes, uint32
 
 ### `0x22` - Clear Palette
@@ -126,7 +127,7 @@ additional parameters.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x22`
+- tag: 1 byte, always `0x22`
 - timestamp: 4 bytes, uint32
 
 ## Incoming Messages
@@ -139,4 +140,4 @@ actually being ready to receive frames.
 
 #### Format
 
-- tag: 1 byte, tag, always `0x00`
+- tag: 1 byte, always `0x00`
