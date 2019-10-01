@@ -207,7 +207,7 @@ var controller = {
 
 				// Color
 				case 0x02: 
-					that.setColor(dataView.getUint32(5));
+					that.setColor(dataView.getUint32(5, true));
 					break;
 
 				// Palette
@@ -215,7 +215,7 @@ var controller = {
 					numColors = dataView.getUint16(5, true);
 					colors = [];
 					for (i = 0; i < numColors; i++) {
-						colors.push(dataView.getInt32(7 + i * 4));
+						colors.push(dataView.getInt32(7 + i * 4, true));
 					}
 					that.setPalette(colors);
 					break;
@@ -233,7 +233,7 @@ var controller = {
 					numColors = Math.pow(2, numPlanes);
 					colors = [];
 					for (i = 0; i < numColors; i++) {
-						colors.push(dataView.getInt32(6 + i * 4));
+						colors.push(dataView.getInt32(6 + i * 4, true));
 					}
 					frame = new DataView(e.data, 6 + numColors * 4);
 					that.renderFrame(timestamp, numPlanes, frame, colors);

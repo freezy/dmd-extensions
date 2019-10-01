@@ -46,7 +46,7 @@ namespace LibDmd.Output.Network
 		public byte[] GetColoredGrayFrame(byte[][] planes, Color[] palette)
 		{
 			return GetHeader(MessageType.ColoredGrayFrame)
-				.Concat(BitConverter.GetBytes((byte)planes.Length))
+				.Concat(new[] { (byte)planes.Length })
 				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
 				.Concat(planes.SelectMany(p => p))
 				.ToArray();
