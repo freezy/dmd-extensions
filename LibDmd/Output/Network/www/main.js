@@ -1,50 +1,4 @@
 ﻿var url = 'ws://' + window.location.host + '/dmd';
-var typeSet = {
-	'jBinary.littleEndian': true,
-	gray2Planes: {
-		timestamp: 'uint32',
-		planes: 'blob'
-	},
-	gray4Planes: {
-		timestamp: 'uint32',
-		planes: 'blob'
-	},
-	coloredGray2: {
-		timestamp: 'uint32',
-		palette: 'palette',
-		planes: 'blob'
-	},
-	coloredGray4: {
-		timestamp: 'uint32',
-		palette: 'palette',
-		planes: 'blob'
-	},
-	rgb24: {
-		timestamp: 'uint32',
-		planes: 'blob'
-	},
-	dimensions: {
-		width: 'int32',
-		height: 'int32'
-	},
-	color: {
-		color: 'int32'
-	},
-	palette: {
-		length: 'int32',
-		colors: ['array', 'int32', 'length']
-	},
-	clearColor: 'blob',
-	clearPalette: 'blob',
-	Data: {
-		name: 'string0',
-		data: jBinary.Template({
-			getBaseType: function(context) {
-				return context.name;				
-			}
-		})
-	}
-};
 var defaultColor = 0xec843d;
 var controller = {
 
@@ -271,6 +225,7 @@ var controller = {
 	},
 
 	renderRgb24(timestamp, frame) {
+		// TODO implement
 		console.log('Colored rgb24 Frame: %s', timestamp);
 	},
 
@@ -306,7 +261,6 @@ var controller = {
 		}
 		this._width = dim.width;
 		this._height = dim.height;
-		console.debug('Dimensions: %sx%s', this._width, this._height);
 		if (dimensionsChanged) {
 			console.log('New dimensions: %sx%s', this._width, this._height);
 			this.init();
