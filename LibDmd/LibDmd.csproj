@@ -139,10 +139,6 @@
     <Reference Include="SkiaSharp.Views.WPF, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\SkiaSharp.Views.1.68.0-preview28\lib\net45\SkiaSharp.Views.WPF.dll</HintPath>
     </Reference>
-    <Reference Include="SocketIoClientDotNet, Version=0.9.13.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SocketIoClientDotNet.0.9.13\lib\net45\SocketIoClientDotNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -283,7 +279,7 @@
     <Compile Include="Converter\Colorize\Palette.cs" />
     <Compile Include="Converter\Colorize\Coloring.cs" />
     <Compile Include="Output\Network\WebsocketServer.cs" />
-    <Compile Include="Output\Network\VpdbStream.cs" />
+    <Compile Include="Output\Network\WebsocketClient.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
     <None Include="Output\Network\README.md" />
     <None Include="Output\Virtual\AlphaNumeric\README.md" />

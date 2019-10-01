@@ -17,7 +17,7 @@ namespace LibDmd.Output.Network
 {
 	public class WebsocketServer : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
-		public string Name { get; } = "Browser Stream";
+		public string Name { get; } = "Websocket Server";
 		public bool IsAvailable { get; } = true;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -64,7 +64,7 @@ namespace LibDmd.Output.Network
 					res.StatusCode = (int)HttpStatusCode.NotFound;
 				}
 			};
-			_server.AddWebSocketService("/dmd", () => {
+			_server.AddWebSocketService("/stream", () => {
 				var socket = new DmdBehavior(this);
 				_sockets.Add(socket);
 				return socket;

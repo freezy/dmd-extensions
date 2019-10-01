@@ -326,7 +326,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.VpdbStream.Enabled) {
-				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
+				renderers.Add(new WebsocketClient { EndPoint = _config.VpdbStream.EndPoint });
 			}
 			if (_config.BrowserStream.Enabled) {
 				renderers.Add(new WebsocketServer(_config.BrowserStream.Port));

@@ -1,4 +1,4 @@
-﻿var url = 'ws://' + window.location.host + '/dmd';
+﻿var url = 'ws://' + window.location.host + '/stream';
 var defaultColor = 0xec843d;
 var controller = {
 
