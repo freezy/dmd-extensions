@@ -205,6 +205,7 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
+    <Compile Include="Output\Network\Message.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
     </Compile>
@@ -281,9 +282,11 @@
     <Compile Include="Converter\Colorize\Mapping.cs" />
     <Compile Include="Converter\Colorize\Palette.cs" />
     <Compile Include="Converter\Colorize\Coloring.cs" />
-    <Compile Include="Output\Network\BrowserStream.cs" />
+    <Compile Include="Output\Network\WebsocketServer.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
+    <None Include="Output\Network\Model.fbs" />
+    <None Include="Output\Network\README.md" />
     <None Include="Output\Virtual\AlphaNumeric\README.md" />
     <Compile Include="Output\Virtual\AlphaNumeric\DisplaySetting.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeDimensions.cs" />

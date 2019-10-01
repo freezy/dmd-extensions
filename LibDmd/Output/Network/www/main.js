@@ -182,13 +182,77 @@ var controller = {
 		console.log('dim =', this._dotMatrixPass.uniforms['dimension'].value);
 
 		// setup network
-		this.websocket = new ReconnectingWebSocket(url);
+		this.websocket = new ReconnectingWebSocket(url, null, { binaryType: 'arraybuffer' });
 		this.websocket.onopen = function (e) {
-			that.send('init');
+			var init = new ArrayBuffer(1);
+			init[0] = 0x0;
+			that.send(init);
 		};
 
 		this.websocket.onmessage = function (e) {
-			jBinary.load(e.data, typeSet).then(function (binary) {
+
+			var dataView = new DataView(e.data);
+			var tag = dataView.getUint8(0);
+			var timestamp = dataView.getUint32(1, true);
+
+			switch (tag) {
+
+				// Dimensions
+				case 0x01:
+					debugger;
+					var width = dataView.getUint16(5, true);
+					var height = dataView.getUint16(7, true);
+					//that.setDimensions({ width: width, height: height });
+					break;
+
+				// Color
+				case 0x02: 
+					//that.setColor(dataView.getUint32(5));
+					break;
+
+				// Palette
+				case 0x03:
+					var numColors = dataView.getUint16(5, true);
+					var colors = [];
+					for (var i = 0; i < numColors; i++) {
+						colors.push(dataView.getInt32(7 + i * 4));
+					}
+					//that.setPalette(colors);
+				break;
+
+				// GrayFrame
+				case 0x10: 
+					var numPlanes = dataView.getUint8(5);
+					var frame = new DataView(e.data, 6);
+					//that.renderFrame(timestamp, function () {
+					//	return that.graytoRgb24(that.joinPlanes(numPlanes, frame), 4);
+					//});
+				break;
+
+				// ColoredGrayFrame
+				case 0x11: 
+				break;
+
+				// Rgb24Frame
+				case 0x12: 
+				break;
+
+				// ClearDisplay
+				case 0x20: 
+				break;
+
+				// ClearColor
+				case 0x21: 
+				break;
+
+				// ClearPalette
+				case 0x22: 
+				break;
+
+			}
+
+
+			/*jBinary.load(e.data, typeSet).then(function (binary) {
 				var data = binary.read('Data');
 				var frame = data.data;
 				switch (data.name) {
@@ -231,7 +295,7 @@ var controller = {
 						that.clearPalette();
 						break;
 				}
-			});
+			});*/
 		};
 
 		this.websocket.onerror = function(e) {
@@ -248,13 +312,13 @@ var controller = {
 		console.log('Colored rgb24 Frame: %s', frame.timestamp);
 	},
 
-	renderFrame: function(data, render) {
+	renderFrame: function(timestamp, render) {
 
 		if (!this._clientStart) {
-			this._clientStart = new Date().getTime();
-			this._serverStart = data.timestamp;
+			this._clientStart = Date.now();
+			this._serverStart = timestamp;
 		}
-		var serverDiff = data.timestamp - this._serverStart;
+		var serverDiff = timestamp - this._serverStart;
 		var clientDiff = new Date().getTime() - this._clientStart;
 		var delay = this._bufferTime + serverDiff - clientDiff;
 
@@ -280,6 +344,7 @@ var controller = {
 		}
 		this._width = dim.width;
 		this._height = dim.height;
+		console.debug('Dimensions: %sx%s', this._width, this._height);
 		if (dimensionsChanged) {
 			console.log('New dimensions: %sx%s', this._width, this._height);
 			this.init();
