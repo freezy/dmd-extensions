@@ -132,7 +132,7 @@ namespace LibDmd.Input.PinballFX
 			var colorBytes = new byte[4];
 			ReadProcessMemory(hProcess, _pBaseAddress, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xF0, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x50, pAddress, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x58, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, colorBytes, pAddress.Length, IntPtr.Zero);
 			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
 			var colorCode = BitConverter.ToInt32(colorBytes, 0);
@@ -161,9 +161,8 @@ namespace LibDmd.Input.PinballFX
 		}
 
 		// Byte pattern we use to identify the DMD memory struct in the FX3 process
-		private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x44, 0x24, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x44, 0x24, 0xFF, 0xA1 };
-
-		private static IntPtr GetPointerBaseAddress(Process gameProc)
+        private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0xA1 };
+        private static IntPtr GetPointerBaseAddress(Process gameProc)
 		{
 			// Open the process for wait and read operations
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
@@ -172,7 +171,7 @@ namespace LibDmd.Input.PinballFX
 			}
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
-			IntPtr baseOffset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 21);
+			IntPtr baseOffset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, DMDPointerSig, 19);
 			var pointerBuf = new byte[4];
 			ReadProcessMemory(gameProc.Handle, baseOffset, pointerBuf, pointerBuf.Length, IntPtr.Zero);
 			_pBaseAddress = B4ToPointer(pointerBuf);
