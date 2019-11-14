@@ -1,4 +1,5 @@
-﻿using System.Windows.Media.Imaging;
+﻿using System;
+using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
@@ -75,28 +76,36 @@ namespace LibDmd.Output.PinDmd2
 				IsAvailable = false;
 				return;
 			}
-			_pinDmd2Device.Open();
 
-			if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
-				Logger.Info("Found PinDMDv2 device.");
-				Logger.Debug("   Manufacturer: {0}", _pinDmd2Device.Info.ManufacturerString);
-				Logger.Debug("   Product:      {0}", _pinDmd2Device.Info.ProductString);
-				Logger.Debug("   Serial:       {0}", _pinDmd2Device.Info.SerialString);
-				Logger.Debug("   Language ID:  {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+			try {
+				_pinDmd2Device.Open();
 
-			} else {
-				Logger.Info("Device found but it's not a PinDMDv2 device ({0}).", _pinDmd2Device.Info.ProductString);
-				IsAvailable = false;
-				Dispose();
-				return;
+				if (_pinDmd2Device.Info.ProductString.Contains("pinDMD V2")) {
+					Logger.Info("Found PinDMDv2 device.");
+					Logger.Debug("   Manufacturer: {0}", _pinDmd2Device.Info.ManufacturerString);
+					Logger.Debug("   Product:      {0}", _pinDmd2Device.Info.ProductString);
+					Logger.Debug("   Serial:       {0}", _pinDmd2Device.Info.SerialString);
+					Logger.Debug("   Language ID:  {0}", _pinDmd2Device.Info.CurrentCultureLangID);
+
+				} else {
+					Logger.Info("Device found but it's not a PinDMDv2 device ({0}).",
+						_pinDmd2Device.Info.ProductString);
+					IsAvailable = false;
+					Dispose();
+					return;
+				}
+
+				var usbDevice = _pinDmd2Device as IUsbDevice;
+				if (!ReferenceEquals(usbDevice, null)) {
+					usbDevice.SetConfiguration(1);
+					usbDevice.ClaimInterface(0);
+				}
+
+				IsAvailable = true;
+
+			} catch (Exception e) {
+				Logger.Warn(e, "Probing PinDMDv2 failed, skipping.");
 			}
-
-			var usbDevice = _pinDmd2Device as IUsbDevice;
-			if (!ReferenceEquals(usbDevice, null)) {
-				usbDevice.SetConfiguration(1);
-				usbDevice.ClaimInterface(0);
-			}
-			IsAvailable = true;
 		}
 
 		public void RenderGray2(byte[] frame)
