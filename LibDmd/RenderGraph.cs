@@ -1154,20 +1154,20 @@ namespace LibDmd
 		/// <param name="castedSource">Casted source, will be checked against null</param>
 		/// <param name="dest">Original destination</param>
 		/// <param name="castedDest">Casted source, will be checked against null</param>
-		/// <param name="what">Message</param>
+		/// <param name="whatFrom">Name of the source</param>
 		/// <param name="whatDest">Name of destination</param>
-		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, string what, string whatDest = null)
+		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, string whatFrom, string whatDest = null)
 		{
 			if (castedSource == null && castedDest == null) {
 				if (whatDest != null) {
-					throw new IncompatibleRenderer($"Source \"${src.Name}\" is not ${what} compatible and destination \"${dest.Name}\" is not ${whatDest} compatible.");
+					throw new IncompatibleRenderer($"Source \"${src.Name}\" is not ${whatFrom} compatible and destination \"${dest.Name}\" is not ${whatDest} compatible.");
 				}
-				throw new IncompatibleRenderer($"Neither source \"${src.Name}\" nor destination \"${dest.Name}\" are ${what} compatible.");
+				throw new IncompatibleRenderer($"Neither source \"${src.Name}\" nor destination \"${dest.Name}\" are ${whatFrom} compatible.");
 			}
 			if (castedSource == null) {
-				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + what + " compatible.");
+				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + whatFrom + " compatible.");
 			}
-			AssertCompatibility(dest, castedDest, whatDest ?? what);
+			AssertCompatibility(dest, castedDest, whatFrom, whatDest);
 		}
 
 		/// <summary>
@@ -1175,12 +1175,13 @@ namespace LibDmd
 		/// </summary>
 		/// <param name="dest">Original destination</param>
 		/// <param name="castedDest">Casted source, will be checked against null</param>
-		/// <param name="what">Message</param>
+		/// <param name="whatFrom">Name of the source</param>
+		/// <param name="whatDest">Name of destination</param>
 		// ReSharper disable once UnusedParameter.Local
-		private static void AssertCompatibility(IDestination dest, object castedDest, string what)
+		private static void AssertCompatibility(IDestination dest, object castedDest, string whatFrom, string whatDest)
 		{
 			if (castedDest == null) {
-				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + what + " compatible.");
+				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + whatDest + " compatible (" + whatFrom + ").");
 			}
 		}
 

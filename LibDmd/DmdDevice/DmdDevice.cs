@@ -140,10 +140,15 @@ namespace LibDmd.DmdDevice
 					CreateVirtualDmd();
 
 				} else {
-					_dmd.Dispatcher.Invoke(() => {
-						SetupGraphs();
-						SetupVirtualDmd();
-					});
+					try {
+						_dmd.Dispatcher.Invoke(() =>
+						{
+							SetupGraphs();
+							SetupVirtualDmd();
+						});
+					} catch (TaskCanceledException e) {
+						Logger.Error(e, "Main thread seems already destroyed, aborting.");
+					}
 				}
 			} else {
 				SetupGraphs();
