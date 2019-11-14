@@ -15,7 +15,8 @@ namespace LibDmd.Output.PinUp
 		public string OutputFolder { get; set; }
 
 		public string Name { get; } = "PinUP Writer";
-		public bool IsAvailable { get; }
+		public bool IsAvailable { get; private set; }
+
 		public int Width = 128;
 		public int Height = 32;
 		public uint Fps;
@@ -73,7 +74,7 @@ namespace LibDmd.Output.PinUp
 
 			} catch (Exception e) {
 				IsAvailable = false;
-				Logger.Error("PinUpOutput: " + e.Message);
+				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
 				return;
 			}
 
@@ -116,23 +117,36 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderRgb24(byte[] frame)
 		{
-			// Copy the fram array to unmanaged memory.
+			try {
+				// Copy the fram array to unmanaged memory.
 
-			// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
-			// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-			Marshal.Copy(frame, 0, _pnt, DmdWidth * DmdHeight * 3);
-			Render_RGB24((ushort)DmdWidth, (ushort)DmdHeight, _pnt);
+				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
+				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
+				Marshal.Copy(frame, 0, _pnt, DmdWidth * DmdHeight * 3);
+				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+
+			} catch (Exception e) {
+				IsAvailable = false;
+				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
+			}
 		}
 
 		public void RenderGray4(byte[] frame)
 		{
-			// Render as orange palette (same as default with no PAL loaded)
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			try {
+				// Render as orange palette (same as default with no PAL loaded)
+				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
-			var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes, ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
+				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
+					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
 
-			Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
-			Render_RGB24((ushort)DmdWidth, (ushort)DmdHeight, _pnt);
+				Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
+				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+
+			} catch (Exception e) {
+				IsAvailable = false;
+				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
+			}
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -143,8 +157,13 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderRaw(byte[] data)
 		{
-			Marshal.Copy(data, 0, _pnt, Width * Height * 3);
-			Render_RGB24((ushort)Width, (ushort)Height, _pnt);
+			try {
+				Marshal.Copy(data, 0, _pnt, Width * Height * 3);
+				Render_RGB24((ushort) Width, (ushort) Height, _pnt);
+			} catch (Exception e) {
+				IsAvailable = false;
+				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
+			}
 		}
 
 		public void SetColor(Color color)
