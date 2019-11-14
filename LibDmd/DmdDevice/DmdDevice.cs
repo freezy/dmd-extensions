@@ -46,9 +46,9 @@ namespace LibDmd.DmdDevice
 		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
-		private readonly string _version;
-		private readonly string _sha;
-		private readonly string _fullVersion;
+		private static string _version = "";
+		private static string _sha = "";
+		private static string _fullVersion = "";
 		private VirtualDmd _dmd;
 
 		// Ziigs vo VPM
@@ -76,20 +76,10 @@ namespace LibDmd.DmdDevice
 
 		public DmdDevice()
 		{
-			// setup logger
-			var assembly = Assembly.GetExecutingAssembly();
-			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			_version = fvi.ProductVersion;
-			if (attr.Length > 0) {
-				var aca = (AssemblyConfigurationAttribute)attr[0];
-				_sha = aca.Configuration;
-				_fullVersion = $"{_version} ({_sha})";
-			} else {
-				_fullVersion = fvi.ProductVersion;
-				_sha = "";
-			}
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+			// setup logger
+			var assembly = Assembly.GetCallingAssembly();
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
 			if (File.Exists(logConfigPath)) {
@@ -108,7 +98,21 @@ namespace LibDmd.DmdDevice
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 
+			// read versions from assembly
+			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			_version = fvi.ProductVersion;
+			if (attr.Length > 0) {
+				var aca = (AssemblyConfigurationAttribute)attr[0];
+				_sha = aca.Configuration;
+				_fullVersion = $"{_version} ({_sha})";
+			} else {
+				_fullVersion = fvi.ProductVersion;
+				_sha = "";
+			}
+
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Assembly located at {0}", assembly.Location);
 		}
 
 		/// <summary>
@@ -649,7 +653,7 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			var ex = e.ExceptionObject as Exception;
 			if (ex != null) {
