@@ -245,6 +245,9 @@ namespace LibDmd.Common
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
+			if (width * height != frame.Length) {
+				throw new ArgumentException("Provided source data must be " + width + "x" + height + " = "  + width * height + " but is " + frame.Length + ".");
+			}
 			var frameLength = width * height * 3;
 
 			if (colorizedFrame == null) {
