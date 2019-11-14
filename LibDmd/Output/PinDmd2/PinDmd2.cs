@@ -104,6 +104,7 @@ namespace LibDmd.Output.PinDmd2
 				IsAvailable = true;
 
 			} catch (Exception e) {
+				IsAvailable = false;
 				Logger.Warn(e, "Probing PinDMDv2 failed, skipping.");
 			}
 		}
