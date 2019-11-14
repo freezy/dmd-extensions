@@ -14,7 +14,7 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : IGray2Destination, IGray4Destination, IColoredGray2Destination, IRawOutput, IFixedSizeDestination
+	public class PinDmd3 : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsAvailable { get; private set; }
@@ -26,6 +26,7 @@ namespace LibDmd.Output.PinDmd3
 		const byte Rgb24CommandByte = 0x02;
 		const byte Gray2CommandByte = 0x30;
 		const byte Gray4CommandByte = 0x31;
+		const byte ColoredGray4CommandByte = 0x32;
 
 		/// <summary>
 		/// Firmware string read from the device if connected
@@ -42,7 +43,9 @@ namespace LibDmd.Output.PinDmd3
 		private readonly byte[] _frameBufferRgb24;
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
+		private readonly byte[] _frameBufferColoredGray4;
 		private bool _lastFrameFailed = false;
+		private bool _supportsColoredGray4 = false;
 
 		//private readonly byte[] _lastBuffer;
 		//private long _lastTick;
@@ -105,6 +108,10 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferGray2[0] = Gray2CommandByte;
 			_frameBufferGray2[DmdWidth * DmdHeight / 4 + 13] = Gray2CommandByte;
 
+			// 16 colors, 4 bytes of pixel, 1 control byte
+			_frameBufferColoredGray4 = new byte[DmdWidth * DmdHeight / 4 + 1 + 48];
+			_frameBufferColoredGray4[0] = ColoredGray4CommandByte;
+
 			//_lastBuffer = new byte[DmdWidth * DmdHeight * 3 + 2];
 
 			ClearColor();
@@ -156,12 +163,14 @@ namespace LibDmd.Output.PinDmd3
 						Logger.Info("Found PinDMDv3 device on {0}.", port);
 						Logger.Debug("   Firmware:    {0}", Firmware);
 						Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[1]);
+						_parseFirmware();
 						return true;
 					}
 				} else {
 					Logger.Info("Trusting that PinDMDv3 sits on port {0}.", port);
 					Logger.Debug("   Firmware:    {0}", Firmware);
 					Logger.Debug("   Resolution:  {0}x{1}", (int)result[0], (int)result[1]);
+					_parseFirmware();
 					return true;
 				}
 
@@ -213,6 +222,35 @@ namespace LibDmd.Output.PinDmd3
 			// send frame buffer to device
 			if (changed) {
 				RenderRaw(_frameBufferGray4);
+			}
+		}
+
+		public void RenderColoredGray4(ColoredFrame frame)
+		{
+			// fall back if firmware doesn't support colored gray 4
+			if (!_supportsColoredGray4) {
+				var rgb24Frame = ColorUtil.ColorizeFrame(DmdWidth, DmdHeight,
+					FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes), frame.Palette);
+				RenderRgb24(rgb24Frame);
+				return;
+			}
+
+			// copy palette
+			var paletteChanged = false;
+			for (var i = 0; i < 16; i++) {
+				var color = frame.Palette[i];
+				paletteChanged = paletteChanged || (_frameBufferColoredGray4[i + 1] != color.R || _frameBufferColoredGray4[i + 2] != color.G || _frameBufferColoredGray4[i + 3] != color.B);
+				_frameBufferColoredGray4[i + 1] = color.R;
+				_frameBufferColoredGray4[i + 2] = color.G;
+				_frameBufferColoredGray4[i + 3] = color.B;
+			}
+
+			// copy frame
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray4, 49);
+
+			// send frame buffer to device
+			if (frameChanged || paletteChanged) {
+				RenderRaw(_frameBufferColoredGray4);
 			}
 		}
 
@@ -337,6 +375,24 @@ namespace LibDmd.Output.PinDmd3
 				if (_serialPort.IsOpen) {
 					_serialPort.Close();
 				}
+			}
+		}
+
+		private void _parseFirmware()
+		{
+			// parse firmware
+			var match = Regex.Match(Firmware, @"REV-vPin-(\d+)$", RegexOptions.IgnoreCase);
+			if (match.Success) {
+				var revision = Int32.Parse(match.Groups[1].Value);
+				Logger.Debug("   Revision:    {0}", revision);
+				_supportsColoredGray4 = revision >= 1013;
+
+			} else {
+				Logger.Warn("Could not parse revision from firmware.");
+			}
+
+			if (_supportsColoredGray4) {
+				Logger.Info("Colored 4-bit frames for PinDMDv3 enabled.");
 			}
 		}
 	}
