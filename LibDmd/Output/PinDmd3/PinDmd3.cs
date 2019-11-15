@@ -23,6 +23,8 @@ namespace LibDmd.Output.PinDmd3
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
+		private const int ReadTimeoutMs = 100;
+		private const int WriteTimeoutMs = 100;
 		const byte Rgb24CommandByte = 0x02;
 		const byte Gray2CommandByte = 0x30;
 		const byte Gray4CommandByte = 0x31;
@@ -144,6 +146,8 @@ namespace LibDmd.Output.PinDmd3
 			try {
 				Logger.Info("Checking port {0} for PinDMDv3...", port);
 				_serialPort = new SerialPort(port, 8176000, Parity.None, 8, StopBits.One);
+				_serialPort.ReadTimeout = ReadTimeoutMs;
+				_serialPort.WriteTimeout= WriteTimeoutMs;
 				_serialPort.Open();
 				_serialPort.Write(new byte[] { 0x42, 0x42 }, 0, 2);
 				System.Threading.Thread.Sleep(Delay); // duh...
@@ -168,7 +172,10 @@ namespace LibDmd.Output.PinDmd3
 			} catch (Exception e) {
 				Logger.Error("Error: {0}", e.Message.Trim());
 				if (_serialPort != null && _serialPort.IsOpen) {
+					_serialPort.DiscardInBuffer();
+					_serialPort.DiscardOutBuffer();
 					_serialPort.Close();
+					System.Threading.Thread.Sleep(Delay); // otherwise the next device will fail
 				}
 			}
 			return false;
