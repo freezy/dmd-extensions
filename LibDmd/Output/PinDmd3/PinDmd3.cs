@@ -109,9 +109,8 @@ namespace LibDmd.Output.PinDmd3
 			_frameBufferGray2[DmdWidth * DmdHeight / 4 + 13] = Gray2CommandByte;
 
 			// 16 colors, 4 bytes of pixel, 1 control byte
-			_frameBufferColoredGray4 = new byte[DmdWidth * DmdHeight / 2 + 2 + 48];
+			_frameBufferColoredGray4 = new byte[1 + 48 + DmdWidth * DmdHeight / 2];
 			_frameBufferColoredGray4[0] = ColoredGray4CommandByte;
-			_frameBufferColoredGray4[DmdWidth * DmdHeight / 2 + 1 + 48] = ColoredGray4CommandByte;
 
 			//_lastBuffer = new byte[DmdWidth * DmdHeight * 3 + 2];
 
