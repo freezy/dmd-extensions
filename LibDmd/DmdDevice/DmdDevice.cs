@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -41,10 +42,11 @@ namespace LibDmd.DmdDevice
 		private const int Height = 32;
 
 		private readonly Configuration _config;
-		private readonly VpmGray2Source _vpmGray2Source = new VpmGray2Source();
-		private readonly VpmGray4Source _vpmGray4Source = new VpmGray4Source();
-		private readonly VpmRgb24Source _vpmRgb24Source = new VpmRgb24Source();
-		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource = new VpmAlphaNumericSource();
+		private readonly VpmGray2Source _vpmGray2Source;
+		private readonly VpmGray4Source _vpmGray4Source;
+		private readonly VpmRgb24Source _vpmRgb24Source;
+		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
+		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private static string _version = "";
 		private static string _sha = "";
@@ -76,6 +78,12 @@ namespace LibDmd.DmdDevice
 
 		public DmdDevice()
 		{
+			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
+			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
+			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
+			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
+			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
+
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
 			// setup logger

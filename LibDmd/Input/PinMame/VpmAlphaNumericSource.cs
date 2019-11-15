@@ -20,20 +20,23 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly ISubject<AlphaNumericFrame> _framesAlphaNumeric;
+		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		public VpmAlphaNumericSource(AlphaNumericFrame initialFrame)
 		{
 			_framesAlphaNumeric = new BehaviorSubject<AlphaNumericFrame>(initialFrame);
 		}
 
-		public VpmAlphaNumericSource()
+		public VpmAlphaNumericSource(BehaviorSubject<FrameFormat> lastFrameFormat)
 		{
 			_framesAlphaNumeric =  new Subject<AlphaNumericFrame>();
+			_lastFrameFormat = lastFrameFormat;
 		}
 
 		public void NextFrame(AlphaNumericFrame frame)
 		{
 			_framesAlphaNumeric.OnNext(frame);
+			_lastFrameFormat.OnNext(FrameFormat.AlphaNumeric);
 		}
 
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames()

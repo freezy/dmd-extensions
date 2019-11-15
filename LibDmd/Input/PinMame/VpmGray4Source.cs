@@ -20,11 +20,18 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<byte[]> _framesGray4 = new Subject<byte[]>();
+		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
+
+		public VpmGray4Source(BehaviorSubject<FrameFormat> lastFrameFormat)
+		{
+			_lastFrameFormat = lastFrameFormat;
+		}
 
 		public void NextFrame(int width, int height, byte[] frame)
 		{
 			SetDimensions(width, height);
 			_framesGray4.OnNext(frame);
+			_lastFrameFormat.OnNext(FrameFormat.Gray4);
 		}
 
 		public IObservable<byte[]> GetGray4Frames()
