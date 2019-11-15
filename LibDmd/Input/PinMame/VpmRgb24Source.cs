@@ -21,10 +21,16 @@ namespace LibDmd.Input.PinMame
 
 		private readonly Subject<byte[]> _framesRgb24 = new Subject<byte[]>();
 		private byte[] _lastFrame;
+		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
+
+		public VpmRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat)
+		{
+			_lastFrameFormat = lastFrameFormat;
+		}
 
 		public void NextFrame(int width, int height, byte[] frame)
 		{
-			if (_lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
+			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
 				// identical frame, drop.
 				return;
 			}
@@ -34,6 +40,7 @@ namespace LibDmd.Input.PinMame
 			SetDimensions(width, height);
 			_framesRgb24.OnNext(frame);
 			Buffer.BlockCopy(frame, 0, _lastFrame, 0, frame.Length);
+			_lastFrameFormat.OnNext(FrameFormat.Rgb24);
 		}
 
 		public IObservable<byte[]> GetRgb24Frames()
