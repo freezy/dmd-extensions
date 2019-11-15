@@ -20,7 +20,7 @@ namespace LibDmd.Output.Pixelcade
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
 
-		private const int ReadTimeoutMs = 500;
+		private const int ReadTimeoutMs = 100;
 		private const byte RgbLedMatrixFrameCommandByte = 0x1F;
 		private const byte RgbLedMatrixEnableCommandByte = 0x1E;
 		private const byte ResponseEstablishConnection = 0x00;
@@ -146,6 +146,7 @@ namespace LibDmd.Output.Pixelcade
 				Logger.Error("Error: {0}", e.Message.Trim());
 				if (_serialPort != null && _serialPort.IsOpen) {
 					_serialPort.Close();
+					System.Threading.Thread.Sleep(Delay); // otherwise the next device will fail
 				}
 			}
 			return false;
