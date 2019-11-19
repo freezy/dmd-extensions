@@ -12,6 +12,7 @@ using DmdExt.Mirror;
 using DmdExt.Play;
 using DmdExt.Test;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.PinballFX;
@@ -64,6 +65,7 @@ namespace DmdExt
 				_sha = "";
 			}
 
+			CultureUtil.NormalizeUICulture();
 			_commandLineArgs = args;
 
 			// setup logger

@@ -95,6 +95,7 @@ namespace LibDmd.DmdDevice
 				SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
 			}
 #endif
+			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 
