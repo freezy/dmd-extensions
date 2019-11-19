@@ -204,6 +204,7 @@
     </Compile>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
+    <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
