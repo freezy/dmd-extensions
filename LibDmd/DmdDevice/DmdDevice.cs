@@ -297,7 +297,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
-				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port);
+				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port, _config.Pixelcade.ColorMatrix);
 				if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");

@@ -198,6 +198,7 @@ namespace LibDmd.DmdDevice
 		public override string Name { get; } = "pixelcade";
 		public bool Enabled => GetBoolean("enabled", true);
 		public string Port => GetString("port", null);
+		public ColorMatrix ColorMatrix => GetEnum("matrix", ColorMatrix.Rbg);
 		public PixelcadeConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

@@ -4,6 +4,7 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using NLog.LayoutRenderers;
 
 namespace DmdExt.Common
 {
@@ -59,6 +60,9 @@ namespace DmdExt.Common
 
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
+
+		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RGB.")]
+		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rgb;
 
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
@@ -244,6 +248,7 @@ namespace DmdExt.Common
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.PIXELCADE;
 		public string Port => _options.Port;
+		public ColorMatrix ColorMatrix => _options.ColorMatrix;
 	}
 
 	internal class VideoOptions : IVideoConfig
