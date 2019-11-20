@@ -36,6 +36,11 @@ namespace LibDmd.Output.Pixelcade
 		/// </summary>
 		public string Port { get; set; }
 
+		/// <summary>
+		/// Color matrix to use, default it RGB.
+		/// </summary>
+		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rgb;
+
 		private static Pixelcade _instance;
 		private readonly byte[] _frameBuffer;
 		private bool _lastFrameFailed;
@@ -64,11 +69,12 @@ namespace LibDmd.Output.Pixelcade
 		/// Returns the current instance of the Pixelcade API.
 		/// </summary>
 		/// <param name="port">Don't loop through available ports but use this COM port name.</param>
+		/// <param name="colorMatrix">RGB or RBG</param>
 		/// <returns>New or current instance</returns>
-		public static Pixelcade GetInstance(string port)
+		public static Pixelcade GetInstance(string port, ColorMatrix colorMatrix)
 		{
 			if (_instance == null) {
-				_instance = new Pixelcade { Port = port };
+				_instance = new Pixelcade { Port = port, ColorMatrix = colorMatrix };
 			} 
 			_instance.Init();
 			return _instance;
@@ -159,7 +165,7 @@ namespace LibDmd.Output.Pixelcade
 
 			// split into planes to send over the wire
 			var newFrame = new byte[DmdHeight * DmdWidth * 3 / 2];
-			FrameUtil.SplitIntoRgbPlanes(frame565, DmdWidth, 16, newFrame);
+			FrameUtil.SplitIntoRgbPlanes(frame565, DmdWidth, 16, newFrame, ColorMatrix);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);

@@ -305,7 +305,7 @@ namespace LibDmd.Common
 			return frame;
 		}
 
-		public static void SplitIntoRgbPlanes(char[] rgb565, int width, int numLogicalRows, byte[] dest) // originally "convertAdafruit()"
+		public static void SplitIntoRgbPlanes(char[] rgb565, int width, int numLogicalRows, byte[] dest, ColorMatrix colorMatrix = ColorMatrix.Rgb) // originally "convertAdafruit()"
 		{
 			var pairOffset = 16;
 			var height = rgb565.Length / width;
@@ -322,16 +322,29 @@ namespace LibDmd.Common
 					var inputIndex1 = (y + pairOffset) * width + x;
 
 					var color0 = rgb565[inputIndex0];
-					// Take the top 3 bits of each {r,g,b}
-					var r0 = (color0 >> 13) & 0x7;
-					var g0 = (color0 >> 8) & 0x7;
-					var b0 = (color0 >> 2) & 0x7;
-
 					var color1 = rgb565[inputIndex1];
-					// Take the top 3 bits of each {r,g,b}
-					var r1 = (color1 >> 13) & 0x7;
-					var g1 = (color1 >> 8) & 0x7;
-					var b1 = (color1 >> 2) & 0x7;
+
+					int r0 = 0, r1 = 0, g0 = 0, g1 = 0, b0 = 0, b1 = 0;
+					switch (colorMatrix)
+					{
+						case ColorMatrix.Rgb:
+							r0 = (color0 >> 13) & 0x7;
+							g0 = (color0 >> 8) & 0x7;
+							b0 = (color0 >> 2) & 0x7;
+							r1 = (color1 >> 13) & 0x7;
+							g1 = (color1 >> 8) & 0x7;
+							b1 = (color1 >> 2) & 0x7;
+							break;
+
+						case ColorMatrix.Rbg:
+							r0 = (color0 >> 13) & 0x7;
+							b0 = (color0 >> 8) & 0x7;
+							g0 = (color0 >> 2) & 0x7;
+							r1 = (color1 >> 13) & 0x7;
+							b1 = (color1 >> 8) & 0x7;
+							g1 = (color1 >> 2) & 0x7;
+							break;
+					}
 
 					for (var subframe = 0; subframe < 3; ++subframe) {
 						var dotPair =
@@ -564,4 +577,9 @@ namespace LibDmd.Common
 			}
 		}
 	}
+}
+
+public enum ColorMatrix
+{
+	Rgb, Rbg
 }
