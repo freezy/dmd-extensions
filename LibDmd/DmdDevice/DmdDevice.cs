@@ -339,7 +339,7 @@ namespace LibDmd.DmdDevice
 				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
 			}
 			if (_config.BrowserStream.Enabled) {
-				renderers.Add(new BrowserStream(_config.BrowserStream.Port));
+				renderers.Add(new BrowserStream(_gameName, _config.BrowserStream.Port));
 			}
 
 			if (renderers.Count == 0) {

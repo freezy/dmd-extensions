@@ -24,15 +24,16 @@ namespace LibDmd.Output.Network
 		private readonly Dictionary<string, string> _www = new Dictionary<string, string>(); 
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket>  _sockets = new List<DmdSocket>();
+        private readonly string _gameName;
 
-		private int _width;
+        private int _width;
 		private int _height;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public BrowserStream(int port)
+		public BrowserStream(string romName, int port)
 		{
 			// map embedded www resources to _www
 			const string prefix = "LibDmd.Output.Network.www.";
@@ -42,7 +43,9 @@ namespace LibDmd.Output.Network
 				.ForEach(res => _www["/" + res.Substring(prefix.Length)] = res);
 			_www["/"] = prefix + "index.html";
 
-			_server = new HttpServer(port);
+            _gameName = romName;
+
+            _server = new HttpServer(port);
 			_server.OnGet += (sender, e) => {
 
 				var req = e.Request;
@@ -83,7 +86,11 @@ namespace LibDmd.Output.Network
 		public void Init(DmdSocket socket)
 		{
 			Logger.Debug("Init socket");
-			socket.SendDimensions(_width, _height);
+            if (_gameName != null)
+            {
+                socket.SendGameName(_gameName);
+            }
+            socket.SendDimensions(_width, _height);
 			socket.SendColor(_color);
 			if (_palette != null) {
 				socket.SendPalette(_palette);
@@ -231,7 +238,17 @@ namespace LibDmd.Output.Network
 			Send(data.ToArray());
 		}
 
-		public void SendDimensions(int width, int height)
+        public void SendGameName(string gameName)
+        {
+            var data = Encoding.ASCII
+                .GetBytes("gameName")
+                .Concat(new byte[] { 0x0 })
+                .Concat(Encoding.ASCII.GetBytes(gameName));
+            Send(data.ToArray());
+            Logger.Info("Sent game name to socket.");
+        }
+
+        public void SendDimensions(int width, int height)
 		{
 			_width = width;
 			_height = height;
