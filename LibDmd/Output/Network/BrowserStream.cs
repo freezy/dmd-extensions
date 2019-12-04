@@ -33,7 +33,7 @@ namespace LibDmd.Output.Network
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public BrowserStream(string romName, int port)
+		public BrowserStream(int port, string romName = null)
 		{
 			// map embedded www resources to _www
 			const string prefix = "LibDmd.Output.Network.www.";
@@ -263,7 +263,7 @@ namespace LibDmd.Output.Network
 				.Concat(BitConverter.GetBytes(width))
 				.Concat(BitConverter.GetBytes(height));
 			Send(data.ToArray());
-			Logger.Info("Sent dimensions to socket.");
+			Logger.Info("Sent dimensions to socket {0}x{1}.", width, height);
 		}
 
 		public void SendColor(Color color)
