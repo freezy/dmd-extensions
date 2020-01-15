@@ -47,10 +47,10 @@ namespace LibDmd.Input.PinballFX
 		/// </summary>
 		public double FramesPerSecond { get; set; } = 60;
 
-		public int CropLeft { get; set; } = 12;
-		public int CropTop { get; set; } = 8;
-		public int CropRight { get; set; } = 8;
-		public int CropBottom { get; set; } = 12;
+		public int CropLeft { get; set; } = 4;
+		public int CropTop { get; set; } = 4;
+		public int CropRight { get; set; } = 4;
+		public int CropBottom { get; set; } = 4;
 
 		private IConnectableObservable<ColoredFrame> _framesColoredGray2;
 
@@ -113,11 +113,10 @@ namespace LibDmd.Input.PinballFX
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Select(bmp => gridProcessor.Process(bmp))
 					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;
-						var frame = ImageUtil.ConvertToGray2(bmp, 3, out hue);
+						var frame = ImageUtil.ConvertToGray2(bmp, 0.025, 0.3, out hue);
 						if (palette == null || Math.Abs(hue - lastHue) > 0.01) {
 							byte r, g, b;
 							ColorUtil.HslToRgb(hue, 1, 0.5, out r, out g, out b);
