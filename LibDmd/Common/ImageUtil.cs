@@ -34,19 +34,21 @@ namespace LibDmd.Common
 			return FrameDatas[key];
 		}
 
-		public static byte[] ConvertToGray2(BitmapSource bmp, double lum = 1)
+		public static byte[] ConvertToGray2(BitmapSource bmp)
 		{
-			return ConvertToGray2(bmp, lum, out _);
+			return ConvertToGray2(bmp, 0, 1, out _);
 		}
 
 		/// <summary>
-		/// Converts a bitmap to a 2-bit grayscale array.
+		/// Converts a bitmap to a 2-bit grayscale array by using the luminosity of the pixels and
+		/// histogram stretching.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
-		/// <param name="lum">Multiply luminosity</param>
+		/// <param name="minLum">Min threshold for luminosity histogram stretching</param>
+		/// <param name="maxLum">Max threshold for luminosity histogram stretching</param>
 		/// <param name="hue">Detected hue</param>
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
-		public static byte[] ConvertToGray2(BitmapSource bmp, double lum, out double hue)
+		public static byte[] ConvertToGray2(BitmapSource bmp, double minLum, double maxLum, out double hue)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
@@ -66,9 +68,12 @@ namespace LibDmd.Common
 					double luminosity;
 					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out h, out saturation, out luminosity);
 
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(Math.Min(1, luminosity * lum) * 3d);
+					var pixelBrightness = (luminosity - minLum) / (maxLum - minLum);
+					byte frameVal = (byte)Math.Min(Math.Max(Math.Round(pixelBrightness * 3d), 0), 3);
+					frame[y * bmp.PixelWidth + x] = frameVal;
 
-					if (luminosity > 0) {
+					// Don't use very low luminosity values to calculate hue because they are less accurate.
+					if (frameVal > 0) {
 						imageHue = h;
 					}
 				}
