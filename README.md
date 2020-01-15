@@ -88,8 +88,8 @@ You should see a test image on your DMD as well as on a virtual DMD.
 
 1. Enable cabinet options in Pinball FX2
 2. Resize the DMD to:
-   - Width: `1040`
-   - Height: `272`
+   - Width: `520`
+   - Height: `136`
 3. Move the DMD to somewhere hidden like off-screen or behind the playfield
    (usually at `0`/`0`).
 4. Open a command prompt ([Windows]+[R], `cmd`, [enter])
