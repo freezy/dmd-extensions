@@ -240,10 +240,11 @@ namespace LibDmd.Output.PinDmd3
 			var paletteChanged = false;
 			for (var i = 0; i < 16; i++) {
 				var color = frame.Palette[i];
-				paletteChanged = paletteChanged || (_frameBufferColoredGray4[i + 1] != color.R || _frameBufferColoredGray4[i + 2] != color.G || _frameBufferColoredGray4[i + 3] != color.B);
-				_frameBufferColoredGray4[i + 1] = color.R;
-				_frameBufferColoredGray4[i + 2] = color.G;
-				_frameBufferColoredGray4[i + 3] = color.B;
+				var j = i * 3;
+				paletteChanged = paletteChanged || (_frameBufferColoredGray4[j + 1] != color.R || _frameBufferColoredGray4[j + 2] != color.G || _frameBufferColoredGray4[j + 3] != color.B);
+				_frameBufferColoredGray4[j + 1] = color.R;
+				_frameBufferColoredGray4[j + 2] = color.G;
+				_frameBufferColoredGray4[j + 3] = color.B;
 			}
 
 			// copy frame
