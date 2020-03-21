@@ -228,7 +228,7 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new VirtualDmd(_config, _gameName);
+				_dmd = new VirtualDmd(_config.VirtualDmd as VirtualDmdConfig, _gameName);
 
 				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
