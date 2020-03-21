@@ -136,11 +136,18 @@ namespace LibDmd.Output.PinDmd2
 					Logger.Warn("Ignoring frame for already closed USB device.");
 					return;
 				}
-				var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
-				int bytesWritten;
-				var error = writer.Write(data, 2000, out bytesWritten);
-				if (error != ErrorCode.None) {
-					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+
+				try {
+					var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
+					int bytesWritten;
+					var error = writer.Write(data, 2000, out bytesWritten);
+					if (error != ErrorCode.None) {
+						Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+					}
+
+				} catch (Exception e) {
+					IsAvailable = false;
+					Logger.Error("Error sending data to PinDMDv2: {0}", e.Message);
 				}
 			}
 		}
