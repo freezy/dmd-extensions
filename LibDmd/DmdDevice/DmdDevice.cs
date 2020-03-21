@@ -451,7 +451,7 @@ namespace LibDmd.DmdDevice
 			// find the game's dmd position in VPM's registry
 			if (_config.VirtualDmd.UseRegistryPosition) {
 				try {
-					var regPath = @"Software\Freeware\Visual PinMame\" + _gameName;
+					var regPath = @"Software\Freeware\Visual PinMame\" + (_gameName.Length > 0 ? _gameName : "default");
 					var key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
 					key = key.OpenSubKey(regPath);
 
@@ -463,7 +463,19 @@ namespace LibDmd.DmdDevice
 
 					if (key != null) {
 						var values = key.GetValueNames();
-						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
+						if (!values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
+							Logger.Warn("Not all values were found at HKEY_CURRENT_USER\\{0}. Trying default.", regPath);
+							key?.Dispose();
+							regPath = @"Software\Freeware\Visual PinMame\default";
+							key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
+							key = key.OpenSubKey(regPath);
+						}
+					}
+					if (key != null)
+					{
+						var values = key.GetValueNames();
+						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height"))
+						{
 							SetVirtualDmdDefaultPosition(
 								Convert.ToInt64(key.GetValue("dmd_pos_x").ToString()),
 								Convert.ToInt64(key.GetValue("dmd_pos_y").ToString()),
