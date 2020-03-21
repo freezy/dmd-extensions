@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using SkiaSharp;
 
@@ -8,7 +9,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	{
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 
-		public static void DrawDisplay(SKSurface surface, DisplaySetting ds, ushort[] data, Dictionary<int, double> switchPercentage = null)
+		public static void DrawDisplay(SKSurface surface, DisplaySetting ds, ushort[] data, ConcurrentDictionary<int, double> switchPercentage = null)
 		{
 			var canvas = surface.Canvas;
 			canvas.Clear(ds.StyleDefinition.BackgroundColor);
@@ -26,7 +27,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 		}
 
-		private static double GetPercentage(Dictionary<int, double> switchPercentage, int pos)
+		private static double GetPercentage(ConcurrentDictionary<int, double> switchPercentage, int pos)
 		{
 			if (switchPercentage == null) {
 				return 1;

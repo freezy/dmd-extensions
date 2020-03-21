@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
@@ -32,8 +33,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private readonly Stopwatch _stopwatch = new Stopwatch();
 
-		private Dictionary<int, double> _switchPercentage;
-		private Dictionary<int, SwitchDirection> _switchDirection;
+		private ConcurrentDictionary<int, double> _switchPercentage;
+		private ConcurrentDictionary<int, SwitchDirection> _switchDirection;
 
 		private ushort[] _data;
 
@@ -76,7 +77,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public void UpdateData(ushort[] data)
 		{
 			if (_switchDirection == null) {
-				_switchDirection = new Dictionary<int, SwitchDirection>();
+				_switchDirection = new ConcurrentDictionary<int, SwitchDirection>();
 			}
 
 			for (var i = 0; i < DisplaySetting.NumChars * DisplaySetting.NumLines; i++) {
@@ -146,7 +147,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
 		{
 			if (_switchPercentage == null) {
-				_switchPercentage = new Dictionary<int, double>();
+				_switchPercentage = new ConcurrentDictionary<int, double>();
 			}
 			var elapsedPercentage = (double)elapsedMillisecondsSinceLastFrame / SwitchTimeMilliseconds;
 			for (var i = 0; i < DisplaySetting.NumChars * DisplaySetting.NumLines; i++) {
