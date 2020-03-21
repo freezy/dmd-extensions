@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -29,6 +30,10 @@ namespace LibDmd.Output.PinUp
 
 		public PinUpOutput(string romName)
 		{
+			if (romName == null) {
+				throw new InvalidEnumArgumentException("ROM name must not be null.");
+			}
+
 			IsAvailable = true;
 
 			var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
