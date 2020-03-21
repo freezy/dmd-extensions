@@ -111,7 +111,13 @@ namespace LibDmd.Output.PinUp
 
 		public void Dispose()
 		{
-			Close();
+			try {
+				Close();
+
+			} catch (Exception e) {
+				Logger.Warn(e, "Error closing PinUP output: {0}", e.Message);
+			}
+
 			// Marshal.FreeHGlobal(pnt);
 		}
 
