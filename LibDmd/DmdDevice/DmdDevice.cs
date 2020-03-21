@@ -313,10 +313,16 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.PinUp.Enabled) {
-				var pinupOutput = new PinUpOutput(_gameName);
-				if (pinupOutput.IsAvailable) {
-					renderers.Add(pinupOutput);
-					Logger.Info("Added PinUP renderer.");
+				try {
+					var pinupOutput = new PinUpOutput(_gameName);
+					if (pinupOutput.IsAvailable)
+					{
+						renderers.Add(pinupOutput);
+						Logger.Info("Added PinUP renderer.");
+					}
+
+				} catch (Exception e) {
+					Logger.Warn("Error opening PinUP output: {0}", e.Message);
 				}
 			}
 			if (_config.Gif.Enabled) {

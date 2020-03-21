@@ -138,7 +138,12 @@ namespace DmdExt
 				}
 
 				if (config.PinUp.Enabled) {
-					(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(config.PinUp.GameName));
+					try {
+						(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(config.PinUp.GameName));
+
+					} catch (Exception e) {
+						Logger.Warn("Error opening PinUP output: {0}", e.Message);
+					}
 				}
 
 				_command.Execute(() => {
