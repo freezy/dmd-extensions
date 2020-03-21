@@ -470,10 +470,6 @@ namespace LibDmd.DmdDevice
 							key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
 							key = key.OpenSubKey(regPath);
 						}
-					}
-					if (key != null)
-					{
-						var values = key.GetValueNames();
 						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height"))
 						{
 							SetVirtualDmdDefaultPosition(
