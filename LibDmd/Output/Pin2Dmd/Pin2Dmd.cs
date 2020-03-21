@@ -217,11 +217,15 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRaw(byte[] frame)
 		{
 #if (!TEST_WITHOUT_PIN2DMD)
-			var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
-			int bytesWritten;
-			var error = writer.Write(frame, 2000, out bytesWritten);
-			if (error != ErrorCode.None) {
-				Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+			try { 
+				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
+				int bytesWritten;
+				var error = writer.Write(frame, 2000, out bytesWritten);
+				if (error != ErrorCode.None) {
+					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+				}
+			} catch (Exception e) { 
+				Logger.Error(e, "Error sending data to PIN2DMD: {0}", e.Message);
 			}
 #endif
 		}

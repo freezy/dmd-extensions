@@ -147,7 +147,7 @@ namespace LibDmd.Output.PinDmd2
 
 				} catch (Exception e) {
 					IsAvailable = false;
-					Logger.Error("Error sending data to PinDMDv2: {0}", e.Message);
+					Logger.Error(e, "Error sending data to PinDMDv2: {0}", e.Message);
 				}
 			}
 		}
