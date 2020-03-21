@@ -209,6 +209,16 @@ namespace LibDmd.DmdDevice
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
+
+		public void SetPosition(VirtualDisplayPosition position, bool onlyForGame)
+		{
+			DoWrite = false;
+			Set("left", position.Left, onlyForGame);
+			Set("top", position.Top, onlyForGame);
+			Set("width", position.Width, onlyForGame);
+			Set("height", position.Height, onlyForGame);
+			Save();
+		}
 	}
 
 	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration, IVirtualAlphaNumericDisplayConfig

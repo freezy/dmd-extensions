@@ -21,7 +21,7 @@ namespace LibDmd.Common
 	{
 		public override IVirtualControl VirtualControl => Dmd;
 
-		private string _gameName;
+		private readonly VirtualDmdConfig _config;
 
 		public double DotSize
 		{
@@ -33,17 +33,18 @@ namespace LibDmd.Common
 			}
 		}
 
-		public VirtualDmd(Configuration config = null, string gameName = null) : base()
+		public VirtualDmd(VirtualDmdConfig config = null, string gameName = null) : base()
 		{
 			InitializeComponent();
 			Initialize();
-			_gameName = gameName;
 
 			if (config != null) {
+				_config = config;
+
 				ParentGrid.ContextMenu = new ContextMenu();
 
 				var saveGlobalPos = new MenuItem();
-				saveGlobalPos.Click += SavePositionGlobal;
+				saveGlobalPos.Click += SavePositionGlobally;
 				saveGlobalPos.Header = "Save position globally";
 				ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
 
@@ -57,12 +58,14 @@ namespace LibDmd.Common
 			}
 		}
 
-		private void SavePositionGlobal(object sender, RoutedEventArgs e)
+		private void SavePositionGlobally(object sender, RoutedEventArgs e)
 		{
+			_config.SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), false);
 		}
 
 		private void SavePositionGame(object sender, RoutedEventArgs e)
 		{
+			_config.SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), true);
 		}
 	}
 }
