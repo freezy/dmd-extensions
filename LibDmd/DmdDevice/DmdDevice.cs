@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -227,7 +228,8 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new VirtualDmd();
+				_dmd = new VirtualDmd(_config, _gameName);
+
 				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
 
