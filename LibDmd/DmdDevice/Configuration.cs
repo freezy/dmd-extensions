@@ -219,6 +219,13 @@ namespace LibDmd.DmdDevice
 			Set("height", position.Height, onlyForGame);
 			Save();
 		}
+
+		public void SetIgnoreAspectRatio(bool ignoreAspectRatio)
+		{
+			DoWrite = false;
+			Set("ignorear", ignoreAspectRatio, false);
+			Save();
+		}
 	}
 
 	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration, IVirtualAlphaNumericDisplayConfig
@@ -650,6 +657,11 @@ namespace LibDmd.DmdDevice
 					_parent.Save();
 				}
 			}
+		}
+
+		protected void Set(string key, bool value, bool onlyForGame = false)
+		{
+			Set(key, value ? "true" : "false", onlyForGame);
 		}
 
 		protected void Set(string key, string value, bool onlyForGame = false)
