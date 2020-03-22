@@ -202,6 +202,7 @@ namespace LibDmd.DmdDevice
 		public bool HideGrip => GetBoolean("hidegrip", false);
 		public double Left => GetDouble("left", 0);
 		public double Top => GetDouble("top", 0);
+
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
 		public double DotSize => GetDouble("dotsize", 1.0);

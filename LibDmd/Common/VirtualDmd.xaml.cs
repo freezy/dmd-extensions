@@ -22,6 +22,7 @@ namespace LibDmd.Common
 		public override IVirtualControl VirtualControl => Dmd;
 
 		private readonly VirtualDmdConfig _config;
+		private readonly MenuItem _saveGamePosItem;
 
 		public double DotSize
 		{
@@ -49,10 +50,10 @@ namespace LibDmd.Common
 				ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
 
 				if (gameName != null) {
-					var saveGamePos = new MenuItem();
-					saveGamePos.Click += SavePositionGame;
-					saveGamePos.Header = "Save position for \"" + gameName + "\"";
-					ParentGrid.ContextMenu.Items.Add(saveGamePos);
+					_saveGamePosItem = new MenuItem();
+					_saveGamePosItem.Click += SavePositionGame;
+					_saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
+					ParentGrid.ContextMenu.Items.Add(_saveGamePosItem);
 				}
 
 				ParentGrid.ContextMenu.Items.Add(new Separator());
@@ -82,5 +83,11 @@ namespace LibDmd.Common
 			_config.SetIgnoreAspectRatio(IgnoreAspectRatio);
 		}
 
+		internal void SetGameName(string gameName)
+		{
+			if (_saveGamePosItem != null) {
+				_saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
+			}
+		}
 	}
 }
