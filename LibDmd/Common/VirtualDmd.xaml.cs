@@ -54,7 +54,15 @@ namespace LibDmd.Common
 					saveGamePos.Header = "Save position for \"" + gameName + "\"";
 					ParentGrid.ContextMenu.Items.Add(saveGamePos);
 				}
+
+				ParentGrid.ContextMenu.Items.Add(new Separator());
 				
+				var toggleAspect = new MenuItem();
+				toggleAspect.Click += ToggleAspectRatio;
+				toggleAspect.Header = "Ignore Aspect Ratio";
+				toggleAspect.IsCheckable = true;
+				ParentGrid.ContextMenu.Items.Add(toggleAspect);
+
 			}
 		}
 
@@ -67,5 +75,12 @@ namespace LibDmd.Common
 		{
 			_config.SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), true);
 		}
+
+		private void ToggleAspectRatio(object sender, RoutedEventArgs e)
+		{
+			IgnoreAspectRatio = (sender as MenuItem).IsChecked;
+			_config.SetIgnoreAspectRatio(IgnoreAspectRatio);
+		}
+
 	}
 }
