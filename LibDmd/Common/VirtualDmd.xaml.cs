@@ -38,7 +38,6 @@ namespace LibDmd.Common
 		{
 			InitializeComponent();
 			Initialize();
-
 			if (config != null) {
 				_config = config;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -9,7 +8,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using LibDmd.Output;
-using LibDmd.Output.Virtual;
 using NLog;
 
 namespace LibDmd.Common
@@ -43,13 +41,18 @@ namespace LibDmd.Common
 
 		public bool LockHeight { get; set; }
 		public bool Resizing { get; private set; }
-		public Brush GripColor { get; set; } = Brushes.White;
 
 		private bool _ignoreAr;
 		private double _aspectRatio;
 		private bool? _adjustingHeight;
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		protected VirtualDisplay()
+		{
+			MouseEnter += (sender, args) => Resources["GripColor"] = Brushes.White;
+			MouseLeave += (sender, args) => Resources["GripColor"] = Brushes.Transparent;
+		}
 
 		protected void Initialize()
 		{

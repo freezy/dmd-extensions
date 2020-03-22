@@ -21,9 +21,6 @@ namespace DmdExt.Common
 		[Option("virtual-stay-on-top", HelpText = "Makes the virtual DMD stay on top of other application windows. Default: false.")]
 		public bool VirtualDmdOnTop { get; set; } = false;
 
-		[Option("virtual-hide-grip", HelpText = "Hides the resize grip of the virtual DMD. Default: false.")]
-		public bool VirtualDmdHideGrip { get; set; } = false;
-
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Four values: <Left> <Top> <Width> [<Height>]. Height is optional and can be used for custom aspect ratio. Default: \"0 0 1024\".")]
 		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
@@ -148,7 +145,6 @@ namespace DmdExt.Common
 		public bool StayOnTop => _options.VirtualDmdOnTop;
 		public bool IgnoreAr => _options.VirtualDmdPosition.Length == 4;
 		public bool UseRegistryPosition => false;
-		public bool HideGrip => _options.VirtualDmdHideGrip;
 		public double Left => _options.VirtualDmdPosition[0];
 		public double Top => _options.VirtualDmdPosition[1];
 		public double Width => _options.VirtualDmdPosition[2];
@@ -175,7 +171,6 @@ namespace DmdExt.Common
 		}
 
 		public bool StayOnTop => _options.VirtualDmdOnTop;
-		public bool HideGrip => _options.VirtualDmdHideGrip;
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
 		public RasterizeStyleDefinition Style { get; } = new RasterizeStyleDefinition();
 	}

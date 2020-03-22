@@ -101,7 +101,6 @@ namespace DmdExt.Common
 		{
 			var dmd = new VirtualDmd {
 				AlwaysOnTop = config.StayOnTop,
-				GripColor = config.HideGrip ? Brushes.Transparent : Brushes.White,
 				Left = config.Left,
 				Top = config.Top,
 				Width = config.Width,

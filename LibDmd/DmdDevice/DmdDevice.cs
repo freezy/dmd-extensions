@@ -460,7 +460,6 @@ namespace LibDmd.DmdDevice
 		{
 			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
-			_dmd.GripColor = _config.VirtualDmd.HideGrip ? Brushes.Transparent : Brushes.White;
 			_dmd.DotSize = _config.VirtualDmd.DotSize;
 			_dmd.SetGameName(_gameName);
 

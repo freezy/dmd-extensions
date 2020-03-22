@@ -62,7 +62,6 @@ namespace LibDmd.DmdDevice
 		bool StayOnTop { get; }
 		bool IgnoreAr { get; }
 		bool UseRegistryPosition { get; }
-		bool HideGrip { get; }
 		double Left { get; }
 		double Top { get; }
 		double Width { get; }
@@ -75,7 +74,6 @@ namespace LibDmd.DmdDevice
 	{
 		bool Enabled { get; }
 		bool StayOnTop { get; }
-		bool HideGrip { get; }
 		RasterizeStyleDefinition Style { get; }
 	}
 

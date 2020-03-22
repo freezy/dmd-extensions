@@ -26,7 +26,6 @@ namespace LibDmd.Common
 					Height = 120;
 				}
 				AlwaysOnTop = config.VirtualAlphaNumericDisplay.StayOnTop;
-				GripColor = config.VirtualAlphaNumericDisplay.HideGrip ? Brushes.Transparent : Brushes.White;
 
 			} else {
 				Height = 120;
