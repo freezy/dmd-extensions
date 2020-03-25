@@ -3,6 +3,7 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Output;
@@ -19,6 +20,58 @@ namespace LibDmd.Input.FileSystem
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 			_frames = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
+		}
+	}	
+	
+	public class ImageSourceGray4 : ImageSource, IGray4Source
+	{
+		public IObservable<byte[]> GetGray4Frames() => _frames;
+
+		private readonly BehaviorSubject<byte[]> _frames;
+
+		public ImageSourceGray4(BitmapSource bmp)
+		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			_frames = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
+		}
+	}
+	
+	public class ImageSourceColoredGray2 : ImageSource, IColoredGray2Source
+	{
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => _frames;
+
+		private readonly BehaviorSubject<ColoredFrame> _frames;
+
+		public ImageSourceColoredGray2(BitmapSource bmp)
+		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var frame = new ColoredFrame(
+				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, ImageUtil.ConvertToGray2(bmp)),
+				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
+			);
+			_frames = new BehaviorSubject<ColoredFrame>(frame);
+		}
+	}
+	
+	public class ImageSourceColoredGray4 : ImageSource, IColoredGray4Source
+	{
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => _frames;
+
+		private readonly BehaviorSubject<ColoredFrame> _frames;
+
+		public ImageSourceColoredGray4(BitmapSource bmp)
+		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var frame = new ColoredFrame(
+				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 4, ImageUtil.ConvertToGray4(bmp)),
+				new[] {
+					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
+					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray, 
+					Colors.Tan, Colors.Orange, Colors.Yellow, Colors.LightSkyBlue, 
+					Colors.Cyan, Colors.LightGreen, Colors.Pink, Colors.White,
+				}
+			);
+			_frames = new BehaviorSubject<ColoredFrame>(frame);
 		}
 	}
 
