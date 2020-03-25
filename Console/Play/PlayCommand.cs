@@ -29,7 +29,7 @@ namespace DmdExt.Play
 			{
 				case ".png":
 				case ".jpg":
-					source = new ImageSource(_options.FileName);
+					source = new ImageSourceBitmap(_options.FileName);
 					break;
 
 				case ".gif":

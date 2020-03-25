@@ -124,7 +124,7 @@ namespace DmdExt
 						break;
 
 					case "test":
-						_command = new TestCommand(config);
+						_command = new TestCommand(config, (TestOptions)cmdLineOptions);
 						break;
 
 					default:

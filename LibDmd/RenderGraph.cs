@@ -925,7 +925,7 @@ namespace LibDmd
 				switch (Path.GetExtension(IdlePlay.ToLower())) {
 					case ".png":
 					case ".jpg":
-						source = new ImageSource(IdlePlay);
+						source = new ImageSourceBitmap(IdlePlay);
 						break;
 
 					case ".gif":
