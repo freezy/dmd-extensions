@@ -4,20 +4,23 @@ using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.DmdDevice;
+using LibDmd.Input;
+using LibDmd.Input.FileSystem;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
-using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 
 namespace DmdExt.Test
 {
 	class TestCommand : BaseCommand
 	{
 		private readonly IConfiguration _config;
+		private readonly TestOptions _testOptions;
 		private RenderGraph _graph;
 
-		public TestCommand(IConfiguration config)
+		public TestCommand(IConfiguration config, TestOptions testOptions)
 		{
 			_config = config;
+			_testOptions = testOptions;
 		}
 
 		protected override IRenderer CreateRenderGraph()
@@ -52,9 +55,20 @@ namespace DmdExt.Test
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically
 				};
+
 			} else {
+				ISource source;
+				switch (_testOptions.FrameFormat) {
+					case FrameFormat.Gray2:
+						source = new ImageSourceGray2(bmp);
+						break;
+
+					default:
+						source = new ImageSourceBitmap(bmp);
+						break;
+				}
 				_graph = new RenderGraph {
-					Source = new ImageSource(bmp),
+					Source = source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,

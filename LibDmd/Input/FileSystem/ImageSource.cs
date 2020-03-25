@@ -9,25 +9,32 @@ using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class ImageSource : AbstractSource, IBitmapSource
+	public class ImageSourceGray2 : ImageSource, IGray2Source
 	{
-		public override string Name { get; } = "Image Source";
+		public IObservable<byte[]> GetGray2Frames() => _frames;
 
-		public IObservable<Unit> OnResume => _onResume;
-		public IObservable<Unit> OnPause => _onPause;
+		private readonly BehaviorSubject<byte[]> _frames;
 
-		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
-		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
+		public ImageSourceGray2(BitmapSource bmp)
+		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			_frames = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
+		}
+	}
+
+	public class ImageSourceBitmap : ImageSource, IBitmapSource
+	{
+		public IObservable<BitmapSource> GetBitmapFrames() => _frames;
 
 		private readonly BehaviorSubject<BitmapSource> _frames;
 
-		public ImageSource(BitmapSource bmp)
+		public ImageSourceBitmap(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
 		}
 
-		public ImageSource(string fileName)
+		public ImageSourceBitmap(string fileName)
 		{
 			if (!File.Exists(fileName)) {
 				throw new FileNotFoundException("Cannot find file \"" + fileName + "\".");
@@ -46,18 +53,24 @@ namespace LibDmd.Input.FileSystem
 				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");
 
 			} catch (NotSupportedException e) {
-				if (e.Message.Contains("No imaging component suitable")) {
+				if (e.Message.Contains("No imaging component suitable"))
+				{
 					throw new WrongFormatException($"Could not determine image format. Are you sure {fileName} is an image?");
 				}
 				throw new Exception("Error instantiating image source.", e);
 			}
 		}
+	}
 
-		public IObservable<BitmapSource> GetBitmapFrames()
-		{
-			return _frames;
-		}
+	public abstract class ImageSource : AbstractSource
+	{
+		public override string Name { get; } = "Image Source";
 
+		public IObservable<Unit> OnResume => _onResume;
+		public IObservable<Unit> OnPause => _onPause;
+
+		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
+		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 	}
 
 	public class WrongFormatException : Exception
