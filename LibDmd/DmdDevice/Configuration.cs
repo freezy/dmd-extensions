@@ -158,7 +158,7 @@ namespace LibDmd.DmdDevice
 	public class PinDmd1Config : AbstractConfiguration, IPinDmd1Config
 	{
 		public override string Name { get; } = "pindmd1";
-		public bool Enabled => GetBoolean("enabled", true);
+		public bool Enabled => GetBoolean("enabled", false);
 		public PinDmd1Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -167,7 +167,7 @@ namespace LibDmd.DmdDevice
 	public class PinDmd2Config : AbstractConfiguration, IPinDmd2Config
 	{
 		public override string Name { get; } = "pindmd2";
-		public bool Enabled => GetBoolean("enabled", true);
+		public bool Enabled => GetBoolean("enabled", false);
 		public PinDmd2Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -176,7 +176,7 @@ namespace LibDmd.DmdDevice
 	public class PinDmd3Config : AbstractConfiguration, IPinDmd3Config
 	{
 		public override string Name { get; } = "pindmd3";
-		public bool Enabled => GetBoolean("enabled", true);
+		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
 		public PinDmd3Config(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -186,7 +186,7 @@ namespace LibDmd.DmdDevice
 	public class Pin2DmdConfig : AbstractConfiguration, IPin2DmdConfig
 	{
 		public override string Name { get; } = "pin2dmd";
-		public bool Enabled => GetBoolean("enabled", true);
+		public bool Enabled => GetBoolean("enabled", false);
 		public int Delay => GetInt("delay", 25);
 		public Pin2DmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -196,7 +196,7 @@ namespace LibDmd.DmdDevice
 	public class PixelcadeConfig : AbstractConfiguration, IPixelcadeConfig
 	{
 		public override string Name { get; } = "pixelcade";
-		public bool Enabled => GetBoolean("enabled", true);
+		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
 		public ColorMatrix ColorMatrix => GetEnum("matrix", ColorMatrix.Rbg);
 		public PixelcadeConfig(IniData data, Configuration parent) : base(data, parent)
