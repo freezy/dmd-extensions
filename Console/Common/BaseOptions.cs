@@ -61,7 +61,7 @@ namespace DmdExt.Common
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
 
-		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RGB.")]
+		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RBG.")]
 		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rbg;
 
 		public IGlobalConfig Global { get; }
