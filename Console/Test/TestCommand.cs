@@ -23,7 +23,7 @@ namespace DmdExt.Test
 			_testOptions = testOptions;
 		}
 
-		protected override IRenderer CreateRenderGraph()
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
 		{
 			// define renderers
 			var renderers = GetRenderers(_config);
@@ -82,7 +82,7 @@ namespace DmdExt.Test
 				};
 			}
 
-			return _graph;
+			graphs.Add(_graph);
 		}
 	}
 }

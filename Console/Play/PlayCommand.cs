@@ -21,7 +21,7 @@ namespace DmdExt.Play
 			_options = options;
 		}
 
-		protected override IRenderer CreateRenderGraph()
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
 		{
 			// define source
 			object source;
@@ -50,13 +50,14 @@ namespace DmdExt.Play
 			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up
-				return new RenderGraph {
+				graphs.Add(new RenderGraph {
 					Source = frameSource,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically
-				};
+				});
+				return;
 			}
 
 			// not an ISource, so it must be a IRawSource.
@@ -71,7 +72,7 @@ namespace DmdExt.Play
 			if (rawOutput == null) {
 				throw new NoRawDestinationException("No device supporting raw data available.");
 			}
-			return new RawRenderer(rawSource, rawOutput);
+			graphs.Add(new RawRenderer(rawSource, rawOutput));
 		}
 	}
 

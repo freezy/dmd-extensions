@@ -23,14 +23,15 @@ namespace DmdExt.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private IRenderer _graph;
+		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private IConfiguration _config;
 
-		protected abstract IRenderer CreateRenderGraph();
+		protected abstract void CreateRenderGraphs(RenderGraphCollection graphs);
 
-		public IRenderer GetRenderGraph()
+		public RenderGraphCollection GetRenderGraphs()
 		{
-			return _graph ?? (_graph = CreateRenderGraph());
+			CreateRenderGraphs(_graphs);
+			return _graphs;
 		}
 
 		protected List<IDestination> GetRenderers(IConfiguration config)
@@ -146,15 +147,15 @@ namespace DmdExt.Common
 
 		public void Execute(Action onCompleted, Action<Exception> onError)
 		{
-			GetRenderGraph().Init().StartRendering(onCompleted, onError);
+			GetRenderGraphs().Init().StartRendering(onCompleted, onError);
 		}
 
 		public void Dispose()
 		{
 			if (_config == null || !_config.Global.NoClear) {
-				_graph?.ClearDisplay();
+				_graphs?.ClearDisplay();
 			}
-			_graph?.Dispose();
+			_graphs?.Dispose();
 		}
 	}
 

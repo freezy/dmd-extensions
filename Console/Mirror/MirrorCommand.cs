@@ -23,7 +23,7 @@ namespace DmdExt.Mirror
 			_options = options;
 		}
 
-		protected override IRenderer CreateRenderGraph()
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
@@ -88,7 +88,7 @@ namespace DmdExt.Mirror
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
-			return _graph;
+			graphs.Add(_graph);
 		}
 	}
 }
