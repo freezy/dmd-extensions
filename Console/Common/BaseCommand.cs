@@ -144,8 +144,6 @@ namespace DmdExt.Common
 			return dmd.VirtualControl;
 		}
 
-		
-
 		public void Execute(Action onCompleted, Action<Exception> onError)
 		{
 			GetRenderGraph().Init().StartRendering(onCompleted, onError);
