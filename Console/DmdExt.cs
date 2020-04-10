@@ -131,15 +131,15 @@ namespace DmdExt
 						throw new ArgumentOutOfRangeException();
 				}
 
-				var renderer = _command.GetRenderGraph();
+				var renderGraphs = _command.GetRenderGraphs();
 
 				if (config.Bitmap.Enabled) {
-					(renderer as RenderGraph)?.Destinations.Add(new BitmapOutput(config.Bitmap.Path));
+					renderGraphs.AddDestination(new BitmapOutput(config.Bitmap.Path));
 				}
 
 				if (config.PinUp.Enabled) {
 					try {
-						(renderer as RenderGraph)?.Destinations.Add(new PinUpOutput(config.PinUp.GameName));
+						renderGraphs.AddDestination(new PinUpOutput(config.PinUp.GameName));
 
 					} catch (Exception e) {
 						Logger.Warn("Error opening PinUP output: {0}", e.Message);

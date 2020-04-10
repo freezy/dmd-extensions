@@ -21,9 +21,8 @@ namespace DmdExt.Server
 			_serverOptions = serverOptions;
 		}
 
-		protected override IRenderer CreateRenderGraph()
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
 		{
-			return null;
 		}
 	}
 }

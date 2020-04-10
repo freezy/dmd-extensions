@@ -5,6 +5,7 @@ using System.Windows.Media;
 using LibDmd.Converter;
 using LibDmd.Input;
 using LibDmd.Output;
+using LibDmd.Output.FileOutput;
 
 namespace LibDmd
 {
@@ -24,6 +25,15 @@ namespace LibDmd
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly List<IConverter> _converters = new List<IConverter>();
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
+
+		/// <summary>
+		/// Special case: We have no graphs, only one IRenderer
+		/// </summary>
+		private IRenderer _renderer;
+
+		public void Add(IRenderer renderer) {
+			_renderer = renderer;
+		}
 
 		public void Add(RenderGraph renderGraph)
 		{
@@ -53,13 +63,30 @@ namespace LibDmd
 
 		public RenderGraphCollection Init()
 		{
+			if (_renderer != null) {
+				_renderer.Init();
+				return this;
+			}
 			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dim => dest.SetDimensions(dim.Width, dim.Height)));
 			_converters.ForEach(converter => converter.Init());
 			return this;
 		}
 
+		public void StartRendering(Action onCompleted, Action<Exception> onError = null)
+		{
+			if (_renderer != null) {
+				_renderer.StartRendering(onCompleted, onError);
+
+			} else {
+				_graphs.ForEach(graph => graph.StartRendering(onCompleted, onError));
+			}
+		}
+		
 		public void StartRendering()
 		{
+			if (_renderer != null) {
+				throw new InvalidOperationException("Must use a callback when using IRenderer.");
+			}
 			_graphs.ForEach(graph => graph.StartRendering());
 		}
 
@@ -89,14 +116,29 @@ namespace LibDmd
 
 		public void ClearDisplay()
 		{
-			_graphs.ForEach(graph => graph.ClearDisplay());
+			if (_renderer != null) {
+				_renderer.ClearDisplay();
+
+			} else {
+				_graphs.ForEach(graph => graph.ClearDisplay());
+			}
 		}
 
 		public void Dispose()
 		{
-			_rgb24Destinations.Clear();
-			_graphs.ForEach(graph => graph.Dispose());
-			_graphs.Clear();
+			if (_renderer != null) {
+				_renderer.Dispose();
+			
+			} else {
+				_rgb24Destinations.Clear();
+				_graphs.ForEach(graph => graph.Dispose());
+				_graphs.Clear();
+			}
+		}
+
+		public void AddDestination(IDestination dest)
+		{
+			_graphs.ForEach(graph => graph.Destinations.Add(dest));
 		}
 	}
 }

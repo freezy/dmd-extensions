@@ -137,6 +137,8 @@
     <Compile Include="Play\PlayCommand.cs" />
     <Compile Include="Play\PlayOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Server\ServerCommand.cs" />
+    <Compile Include="Server\ServerOptions.cs" />
     <Compile Include="Test\TestCommand.cs" />
     <Compile Include="Test\TestOptions.cs" />
   </ItemGroup>
