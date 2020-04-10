@@ -48,6 +48,7 @@ namespace LibDmd.DmdDevice
 		public GameConfig GameConfig { get; private set; }
 		public IVpdbConfig VpdbStream { get; }
 		public IBrowserConfig BrowserStream { get; }
+		public INetworkConfig NetworkStream { get; }
 		public IPinUpConfig PinUp { get; }
 
 		public void Validate()

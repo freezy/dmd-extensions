@@ -19,6 +19,7 @@ namespace LibDmd.DmdDevice
 		IBitmapConfig Bitmap { get; }
 		IVpdbConfig VpdbStream { get; }
 		IBrowserConfig BrowserStream { get; }
+		INetworkConfig NetworkStream { get; }
 		IPinUpConfig PinUp { get; }
 		void Validate();
 	}
@@ -107,6 +108,12 @@ namespace LibDmd.DmdDevice
 	{
 		bool Enabled { get; }
 		int Port { get; }
+	}
+
+	public interface INetworkConfig
+	{
+		bool Enabled { get; }
+		string Url { get; }
 	}
 
 	public interface IVpdbConfig

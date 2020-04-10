@@ -10,7 +10,7 @@ namespace DmdExt.Common
 {
 	internal abstract class BaseOptions : IConfiguration
 	{
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric ]. Default: \"auto\", which outputs to all available devices.")]
+		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric, network ]. Default: \"auto\", which outputs to all available devices.")]
 		public DestinationType Destination { get; set; } = DestinationType.Auto;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
@@ -64,6 +64,10 @@ namespace DmdExt.Common
 		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RBG.")]
 		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rbg;
 
+		[Option("url", HelpText = "Websocket URL for streaming via network. Default: ws://localhost/server")]
+		public string WebsocketUrl { get; set; } = null;
+
+
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -77,6 +81,7 @@ namespace DmdExt.Common
 		public IBitmapConfig Bitmap { get; }
 		public IVpdbConfig VpdbStream { get; }
 		public IBrowserConfig BrowserStream { get; }
+		public INetworkConfig NetworkStream { get; }
 		public IPinUpConfig PinUp { get; }
 
 		protected BaseOptions()
@@ -94,12 +99,13 @@ namespace DmdExt.Common
 			Bitmap = new BitmapOptions(this);
 			VpdbStream = new VpdbOptions();
 			BrowserStream = new BrowserOptions();
+			NetworkStream = new NetworkOptions(this);
 			PinUp = new PinUpOptions(this);
 		}
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIXELCADE, Virtual, AlphaNumeric
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIXELCADE, Virtual, AlphaNumeric, Network
 		}
 
 		public void Validate()
@@ -286,6 +292,19 @@ namespace DmdExt.Common
 	{
 		public bool Enabled => false;
 		public int Port => 0;
+	}
+	
+	internal class NetworkOptions : INetworkConfig
+	{
+		private readonly BaseOptions _options;
+
+		public NetworkOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Network;
+		public string Url => _options.WebsocketUrl;
 	}
 
 	internal class PinUpOptions : IPinUpConfig
