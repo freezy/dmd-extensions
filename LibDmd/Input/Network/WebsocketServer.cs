@@ -82,7 +82,7 @@ namespace LibDmd.Input.Network
 	
 		protected override void OnMessage(MessageEventArgs e)
 		{
-			
+			Logger.Debug("Message! {0}", e);
 		}
 
 		protected override void OnClose(CloseEventArgs e)
