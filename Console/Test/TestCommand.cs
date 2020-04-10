@@ -27,12 +27,6 @@ namespace DmdExt.Test
 		{
 			// define renderers
 			var renderers = GetRenderers(_config);
-			renderers.ForEach(renderer => {
-				(renderer as IRgb24Destination)?.SetPalette(new[] {
-					Color.FromRgb(0x0, 0x0, 0xff),
-					Color.FromRgb(0xff, 0x0, 0x0),
-				});
-			});
 
 			// retrieve image
 			var bmp = new BitmapImage();

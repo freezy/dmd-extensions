@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Drawing2D;
 using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -48,6 +49,8 @@ namespace LibDmd.Output.PinDmd3
 		private readonly byte[] _frameBufferColoredGray4;
 		private bool _lastFrameFailed = false;
 		private bool _supportsColoredGray4 = false;
+
+		private Color[] _currentPalette = ColorUtil.GetPalette( new [] { Colors.Black, Colors.OrangeRed }, 4);
 
 		//private readonly byte[] _lastBuffer;
 		//private long _lastTick;
@@ -201,6 +204,7 @@ namespace LibDmd.Output.PinDmd3
 
 			// send frame buffer to device
 			if (changed) {
+				WritePalette(_currentPalette);
 				RenderRaw(_frameBufferGray2);
 			}
 		}
@@ -208,7 +212,7 @@ namespace LibDmd.Output.PinDmd3
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			// update palette
-			SetPalette(frame.Palette);
+			WritePalette(frame.Palette);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 13);
@@ -318,44 +322,18 @@ namespace LibDmd.Output.PinDmd3
 
 		public void SetColor(Color color)
 		{
-			double hue, saturation, luminosity;
-			byte r, g, b;
-			ColorUtil.RgbToHsl(color.R, color.G, color.B, out hue, out saturation, out luminosity);
-
-			_frameBufferGray2[1] = color.R; // 100%: red
-			_frameBufferGray4[1] = color.R; 
-			_frameBufferGray2[2] = color.G; // 100%: green
-			_frameBufferGray4[2] = color.G;
-			_frameBufferGray2[3] = color.B; // 100%: blue
-			_frameBufferGray4[3] = color.B;
-
-			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.66, out r, out g, out b);
-			_frameBufferGray2[4] = r;  // 66%: red
-			_frameBufferGray4[4] = r;
-			_frameBufferGray2[5] = g;  // 66%: green
-			_frameBufferGray4[5] = g;
-			_frameBufferGray2[6] = b;  // 66%: blue
-			_frameBufferGray4[6] = b;
-
-			ColorUtil.HslToRgb(hue, saturation, luminosity * 0.33, out r, out g, out b);
-			_frameBufferGray2[7] = r;  // 33%: red
-			_frameBufferGray4[7] = r;
-			_frameBufferGray2[8] = g;  // 33%: green
-			_frameBufferGray4[8] = g;
-			_frameBufferGray2[9] = b;  // 33%: blue
-			_frameBufferGray4[9] = b;
-
-			_frameBufferGray2[10] = 0x0; // 0%: red
-			_frameBufferGray4[10] = 0x0;
-			_frameBufferGray2[11] = 0x0; // 0%: green
-			_frameBufferGray4[11] = 0x0;
-			_frameBufferGray2[12] = 0x0; // 0%: blue
-			_frameBufferGray4[12] = 0x0;
+			_currentPalette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
+			WritePalette(_currentPalette);
 		}
 
 		public void SetPalette(Color[] colors, int index = -1)
 		{
-			var palette = ColorUtil.GetPalette(colors, 4);
+			_currentPalette = ColorUtil.GetPalette(colors, 4);
+			WritePalette(_currentPalette);
+		}
+
+		private void WritePalette(Color[] palette)
+		{
 			var pos = 1;
 			for (var i = 0; i < 4; i++) {
 				_frameBufferGray2[pos] = palette[3 - i].R;
