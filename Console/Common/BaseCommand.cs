@@ -23,14 +23,17 @@ namespace DmdExt.Common
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
+		private RenderGraphCollection _graphs;
 		private IConfiguration _config;
 
 		protected abstract void CreateRenderGraphs(RenderGraphCollection graphs);
 
 		public RenderGraphCollection GetRenderGraphs()
 		{
-			CreateRenderGraphs(_graphs);
+			if (_graphs == null) {
+				_graphs = new RenderGraphCollection();
+				CreateRenderGraphs(_graphs);
+			}
 			return _graphs;
 		}
 

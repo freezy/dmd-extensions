@@ -10,6 +10,7 @@ using System.Windows;
 using DmdExt.Common;
 using DmdExt.Mirror;
 using DmdExt.Play;
+using DmdExt.Server;
 using DmdExt.Test;
 using LibDmd;
 using LibDmd.Common;
@@ -125,6 +126,10 @@ namespace DmdExt
 
 					case "test":
 						_command = new TestCommand(config, (TestOptions)cmdLineOptions);
+						break;
+
+					case "server":
+						_command = new ServerCommand(config, (ServerOptions)cmdLineOptions);
 						break;
 
 					default:

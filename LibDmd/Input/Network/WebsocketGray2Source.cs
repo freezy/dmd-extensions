@@ -12,8 +12,6 @@ namespace LibDmd.Input.Network
 	{
 		public override string Name => "Websocket 2-bit Source";
 
-		BehaviorSubject<Dimensions> ISource.Dimensions { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
 		IObservable<Unit> ISource.OnResume => _onResume;
 		IObservable<Unit> ISource.OnPause => _onPause;
 

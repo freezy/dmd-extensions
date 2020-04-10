@@ -1,23 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using LibDmd.Output;
 using NLog;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
+using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
 
 namespace LibDmd.Input.Network
 {
 	public class WebsocketServer
 	{
-		private readonly WebSocketServer _server;
+		internal WebsocketGray2Source Gray2Source = new WebsocketGray2Source();
+
+		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public WebsocketServer(string host, string path) {
-			_server = new WebSocketServer(host);
+		private const string _html = "<!DOCTYPE html><html><head><title>DmdExt Websocket Server</title></head><body><center style=\"margin-top=50px\"><h1>DmdExt Websocket Server</h1><p>Nothing to see here. Send frames to {ws_url} and you'll see them on your display.</p></center></body></html>";
+
+		public WebsocketServer(string ip, int port, string path) {
+			
+			Logger.Info("Starting server at http://{0}:{1}{2}...", ip, port, path);
+			_server = new HttpServer(IPAddress.Parse(ip), port);
+			var html = _html.Replace("{ws_url}", ip + path);
+			_server.OnGet += (sender, e) => {
+				var res = e.Response;
+				var data = Encoding.UTF8.GetBytes(html);
+				res.StatusCode = (int)HttpStatusCode.OK;
+				res.ContentType = "text/html";
+				res.ContentEncoding = Encoding.UTF8;
+				res.ContentLength64 = data.Length;
+				res.OutputStream.Write(data, 0, data.Length);
+			};
 			_server.AddWebSocketService(path, () => {
 				var socket = new DmdSocket(this);
 				_sockets.Add(socket);
@@ -25,10 +45,19 @@ namespace LibDmd.Input.Network
 			});
 			_server.Start();
 			if (_server.IsListening) {
-				Logger.Info("Server listening at {0}{1}...", host, path);
+				Logger.Info("Server listening, connect to ws://{0}:{1}{2}...", ip, port, path);
 			}
 		}
-		
+
+		public void SetupGraphs(RenderGraphCollection graphs, List<IDestination> renderers)
+		{
+			graphs.Add(new RenderGraph {
+				Name = "2-bit Websocket Graph",
+				Source = Gray2Source,
+				Destinations = renderers,
+			});
+		}
+
 		public void Dispose()
 		{
 			_server.Stop();

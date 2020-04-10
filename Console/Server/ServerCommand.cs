@@ -6,6 +6,7 @@ using LibDmd;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
+using LibDmd.Input.Network;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
 
@@ -23,6 +24,9 @@ namespace DmdExt.Server
 
 		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
 		{
+			var renderers = GetRenderers(_config);
+			var websocketServer = new WebsocketServer(_serverOptions.Ip, _serverOptions.Port, _serverOptions.Path);
+			websocketServer.SetupGraphs(graphs, renderers);
 		}
 	}
 }

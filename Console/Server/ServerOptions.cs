@@ -6,10 +6,16 @@ namespace DmdExt.Server
 {
 	class ServerOptions : BaseOptions
 	{
-		[Option("host", HelpText = "WebSocket host to listen to. Default: ws://localhost")]
-		public string Host { get; set; } = "ws://localhost";
+		[Option("ip", HelpText = "IP address to listen to. Put 0.0.0.0 to listen to all interfaces. Default: 127.0.0.1")]
+		public string Ip { get; set; } = "127.0.0.1";
+		
+		[Option("port", HelpText = "WebSocket host to listen to. Default: 80")]
+		public int Port { get; set; } = 80;
 
 		[Option("path", HelpText = "WebSocket path. Default: /dmd")]
-		public string Path { get; set; } = "/dmd";
+		public string Path { get; set; } = "/server";
+
+		[ParserState]
+		public IParserState LastParserState { get; set; }
 	}
 }
