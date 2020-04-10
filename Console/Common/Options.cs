@@ -5,6 +5,7 @@ using CommandLine;
 using CommandLine.Text;
 using DmdExt.Mirror;
 using DmdExt.Play;
+using DmdExt.Server;
 using DmdExt.Test;
 
 namespace DmdExt.Common
@@ -20,11 +21,15 @@ namespace DmdExt.Common
 		[VerbOption("test", HelpText = "Displays a test image on all available devices.")]
 		public TestOptions Test { get; set; }
 
+		[VerbOption("server", HelpText = "Starts a websocket server to receive frames on.")]
+		public ServerOptions Server { get; set; }
+
 		public Options()
 		{
 			Mirror = new MirrorOptions();
 			Play = new PlayOptions();
 			Test = new TestOptions();
+			Server = new ServerOptions();
 		}
 
 		public void Validate()
@@ -32,6 +37,7 @@ namespace DmdExt.Common
 			Mirror.Validate();
 			Play.Validate();
 			Test.Validate();
+			Server.Validate();
 		}
 
 		[HelpVerbOption]
@@ -44,6 +50,8 @@ namespace DmdExt.Common
 					return AutoBuild(Play, "dmdext play --file=<image path> [--destination=<destination>]", Play.LastParserState);
 				case "test":
 					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Test.LastParserState);
+				case "server":
+					return AutoBuild(Test, "dmdext server [--host=<host>] [--port=<port>]", Server.LastParserState);
 				default:
 					return AutoBuild(this, "dmdext <command> [<options>]", null, false);
 			}
