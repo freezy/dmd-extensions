@@ -24,10 +24,12 @@ namespace LibDmd.Output.Network
 		{
 			_uri = uri;
 			_gameName = romName;
+			Init();
 		}
 
 		public void Init()
 		{
+			Logger.Info("Connecting to Websocket at {0}", _uri.ToString());
 			_client = new WebSocket(_uri.ToString());
 			_client.OnMessage += OnMessage;
 			_client.OnError += OnError;
