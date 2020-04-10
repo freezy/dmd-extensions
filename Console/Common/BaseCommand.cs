@@ -7,6 +7,7 @@ using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Output;
+using LibDmd.Output.Network;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
@@ -98,6 +99,15 @@ namespace DmdExt.Common
 			if (config.VirtualAlphaNumericDisplay.Enabled) {
 				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style, config as Configuration));
 				Logger.Info("Added virtual Alphanumeric renderer.");
+			}
+
+			if (config.NetworkStream.Enabled) {
+				try {
+					renderers.Add(new NetworkStream(new Uri(config.NetworkStream.Url)));
+					Logger.Info("Added websocket client renderer.");
+				} catch (Exception e) {
+					Logger.Warn("Network stream disabled: {0}", e.Message);
+				}
 			}
 
 			if (renderers.Count == 0) {

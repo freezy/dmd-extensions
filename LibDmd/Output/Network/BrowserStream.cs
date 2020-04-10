@@ -188,32 +188,23 @@ namespace LibDmd.Output.Network
 	public class DmdSocket : WebSocketBehavior
 	{
 		private readonly BrowserStream _dest;
-		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+		private readonly WebsocketSerializer _serializer;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
-		private int _width = 128;
-		private int _height = 32;
 
 		public DmdSocket(BrowserStream dest)
 		{
 			_dest = dest;
+			_serializer = new WebsocketSerializer();
 		}
 
 		public void SendGray(byte[] frame, int bitlength)
 		{
-			if (frame.Length < _width * _height)
-			{
-				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _width, _height);
+			if (frame.Length < _serializer.Width * _serializer.Height) {
+				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _serializer.Width, _serializer.Height);
 				return;
 			}
-			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-			var data = Encoding.ASCII
-				.GetBytes("gray" + bitlength + "Planes")
-				.Concat(new byte[] {0x0})
-				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
-				.Concat(FrameUtil.Split(_width, _height, bitlength, frame).SelectMany(p => p));
-
-			Send(data.ToArray());
+			Send(_serializer.SerializeGray(frame, bitlength));
 		}
 
 		public void SendColoredGray(string name, byte[][] planes, Color[] palette)
@@ -221,85 +212,22 @@ namespace LibDmd.Output.Network
 			if (planes.Length == 0) {
 				return;
 			}
-			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-			var data = Encoding.ASCII
-				.GetBytes(name)
-				.Concat(new byte[] {0x0})
-				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
-				.Concat(BitConverter.GetBytes(palette.Length))
-				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
-				.Concat(planes.SelectMany(p => p));
-			Send(data.ToArray());
+			Send(_serializer.SerializeColoredGray(name, planes, palette));
 		}
 
-		public void SendRgb24(byte[] frame)
-		{
-			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-			var data = Encoding.ASCII
-				.GetBytes("rgb24")
-				.Concat(new byte[] {0x0})
-				.Concat(BitConverter.GetBytes((uint) (timestamp - _startedAt)))
-				.Concat(frame);
-			Send(data.ToArray());
-		}
+		public void SendRgb24(byte[] frame) => Send(_serializer.SerializeRgb24(frame));
 
-		public void SendGameName(string gameName)
-		{
-			var data = Encoding.ASCII
-				.GetBytes("gameName")
-				.Concat(new byte[] { 0x0 })
-				.Concat(Encoding.ASCII.GetBytes(gameName));
-			Send(data.ToArray());
-			Logger.Info("Sent game name to socket.");
-		}
+		public void SendGameName(string gameName) => Send(_serializer.SerializeGameName(gameName));
 
-		public void SendDimensions(int width, int height)
-		{
-			_width = width;
-			_height = height;
-			var data = Encoding.ASCII
-				.GetBytes("dimensions")
-				.Concat(new byte[] {0x0})
-				.Concat(BitConverter.GetBytes(width))
-				.Concat(BitConverter.GetBytes(height));
-			Send(data.ToArray());
-			Logger.Info("Sent dimensions to socket {0}x{1}.", width, height);
-		}
+		public void SendDimensions(int width, int height) => Send(_serializer.SerializeDimensions(width, height));
 
-		public void SendColor(Color color)
-		{
-			var data = Encoding.ASCII
-				.GetBytes("color")
-				.Concat(new byte[] { 0x0 })
-				.Concat(BitConverter.GetBytes(ColorUtil.ToInt(color)));
-			Send(data.ToArray());
-		}
+		public void SendColor(Color color) => Send(_serializer.SerializeColor(color));
 
-		public void SendPalette(Color[] colors)
-		{
-			var data = Encoding.ASCII
-				.GetBytes("palette")
-				.Concat(new byte[] { 0x0 })
-				.Concat(BitConverter.GetBytes(colors.Length))
-				.Concat(ColorUtil.ToIntArray(colors).SelectMany(BitConverter.GetBytes));
-			Send(data.ToArray());
-		}
+		public void SendPalette(Color[] colors) => Send(_serializer.SerializePalette(colors));
 
-		public void SendClearColor()
-		{
-			var data = Encoding.ASCII
-				.GetBytes("clearColor")
-				.Concat(new byte[] {0x0});
-			Send(data.ToArray());
-		}
+		public void SendClearColor() => Send(_serializer.SerializeClearColor());
 
-		public void SendClearPalette()
-		{
-			var data = Encoding.ASCII
-				.GetBytes("clearPalette")
-				.Concat(new byte[] { 0x0 });
-			Send(data.ToArray());
-		}
+		public void SendClearPalette() => Send(_serializer.SerializeClearPalette());
 
 		protected override void OnMessage(MessageEventArgs e)
 		{

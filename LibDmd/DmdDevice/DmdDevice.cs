@@ -364,6 +364,9 @@ namespace LibDmd.DmdDevice
 			if (_config.BrowserStream.Enabled) {
 				renderers.Add(new BrowserStream(_config.BrowserStream.Port, _gameName));
 			}
+			if (_config.NetworkStream.Enabled) {
+				renderers.Add(new NetworkStream(new Uri(_config.NetworkStream.Url), _gameName));
+			}
 
 			if (renderers.Count == 0) {
 				Logger.Error("No renderers found, exiting.");

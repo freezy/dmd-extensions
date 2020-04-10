@@ -208,6 +208,8 @@
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
+    <Compile Include="Output\Network\NetworkStream.cs" />
+    <Compile Include="Output\Network\WebsocketSerializer.cs" />
     <Compile Include="Output\Pixelcade\Pixelcade.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>

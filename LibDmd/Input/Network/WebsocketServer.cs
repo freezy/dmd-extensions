@@ -22,13 +22,13 @@ namespace LibDmd.Input.Network
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private const string _html = "<!DOCTYPE html><html><head><title>DmdExt Websocket Server</title></head><body><center style=\"margin-top=50px\"><h1>DmdExt Websocket Server</h1><p>Nothing to see here. Send frames to {ws_url} and you'll see them on your display.</p></center></body></html>";
+		private const string Html = "<!DOCTYPE html><html><head><title>DmdExt Websocket Server</title></head><body><center style=\"margin-top=50px\"><h1>DmdExt Websocket Server</h1><p>Nothing to see here. Send frames to {ws_url} and you'll see them on your display.</p></center></body></html>";
 
 		public WebsocketServer(string ip, int port, string path) {
 			
 			Logger.Info("Starting server at http://{0}:{1}{2}...", ip, port, path);
 			_server = new HttpServer(IPAddress.Parse(ip), port);
-			var html = _html.Replace("{ws_url}", ip + path);
+			var html = Html.Replace("{ws_url}", ip + path);
 			_server.OnGet += (sender, e) => {
 				var res = e.Response;
 				var data = Encoding.UTF8.GetBytes(html);
