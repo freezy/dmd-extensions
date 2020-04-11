@@ -17,6 +17,12 @@ namespace LibDmd.Output.Network
 		void OnClearColor();
 		void OnClearPalette();
 		void OnDimensions(int width, int height);
+		void OnGameName(string gameName);
+		void OnRgb24(uint timestamp, byte[] frame);
+		void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes);
+		void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes);
+		void OnGray4(uint timestamp, byte[] frame);
+		void OnGray2(uint timestamp, byte[] frame);
 	}
 
 	internal class WebsocketSerializer
@@ -61,10 +67,75 @@ namespace LibDmd.Output.Network
 						break;
 					}
 					case "dimensions": {
-						action.OnDimensions(reader.ReadInt32(), reader.ReadInt32());
+						Width = reader.ReadInt32();
+						Height = reader.ReadInt32();
+						action.OnDimensions(Width, Height);
 						break;
 					}
-
+					case "gameName": {
+						char c;
+						var gameName = "";
+						do {
+							c = reader.ReadChar();
+							gameName += c;
+						} while (c != 0x0) ;
+						action.OnGameName(gameName);
+						break;
+					}
+					case "rgb24": {
+						action.OnRgb24(reader.ReadUInt32(), reader.ReadBytes(data.Length - (int)reader.BaseStream.Position));
+						break;
+					}
+					case "coloredGray4": {
+						var timestamp = reader.ReadUInt32();
+						var numColors = reader.ReadInt32();
+						var palette = new Color[numColors];
+						for (var i = 0; i < numColors; i++) {
+							palette[i] = ColorUtil.FromInt(reader.ReadInt32());
+						}
+						var planes = new byte[4][];
+						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 4;
+						for (var i = 0; i < 4; i++) {
+							planes[i] = reader.ReadBytes(planeSize);
+						}
+						action.OnColoredGray4(timestamp, palette, planes);
+						break;
+					}
+					case "coloredGray2": {
+						var timestamp = reader.ReadUInt32();
+						var numColors = reader.ReadInt32();
+						var palette = new Color[numColors];
+						for (var i = 0; i < numColors; i++) {
+							palette[i] = ColorUtil.FromInt(reader.ReadInt32());
+						}
+						var planes = new byte[2][];
+						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 2;
+						for (var i = 0; i < 2; i++) {
+							planes[i] = reader.ReadBytes(planeSize);
+						}
+						action.OnColoredGray2(timestamp, palette, planes);
+						break;
+					}
+					case "gray4Planes": {
+						var timestamp = reader.ReadUInt32();
+						var planes = new byte[4][];
+						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 4;
+						for (var i = 0; i < 4; i++) {
+							planes[i] = reader.ReadBytes(planeSize);
+						}
+						action.OnGray4(timestamp, FrameUtil.Join(Width, Height, planes));
+						break;
+					}
+					case "gray2Planes": {
+						var timestamp = reader.ReadUInt32();
+						var planes = new byte[2][];
+						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 2;
+						for (var i = 0; i < 2; i++) {
+							planes[i] = reader.ReadBytes(planeSize);
+						}
+						action.OnGray2(timestamp, FrameUtil.Join(Width, Height, planes));
+						break;
+					}
 				}
 			}
 		}

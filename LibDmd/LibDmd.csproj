@@ -206,6 +206,10 @@
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
+    <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
+    <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
+    <Compile Include="Input\Network\WebsocketGray4Source .cs" />
+    <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
