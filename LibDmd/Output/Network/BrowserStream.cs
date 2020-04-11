@@ -109,12 +109,12 @@ namespace LibDmd.Output.Network
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray("coloredGray2", frame.Planes, frame.Palette));
+			_sockets.ForEach(s => s.SendColoredGray2(frame.Planes, frame.Palette));
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray("coloredGray4", frame.Planes, frame.Palette));
+			_sockets.ForEach(s => s.SendColoredGray4(frame.Planes, frame.Palette));
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -207,12 +207,20 @@ namespace LibDmd.Output.Network
 			Send(_serializer.SerializeGray(frame, bitlength));
 		}
 
-		public void SendColoredGray(string name, byte[][] planes, Color[] palette)
+		public void SendColoredGray2(byte[][] planes, Color[] palette)
 		{
 			if (planes.Length == 0) {
 				return;
 			}
-			Send(_serializer.SerializeColoredGray(name, planes, palette));
+			Send(_serializer.SerializeColoredGray2(planes, palette));
+		}
+
+		public void SendColoredGray4(byte[][] planes, Color[] palette)
+		{
+			if (planes.Length == 0) {
+				return;
+			}
+			Send(_serializer.SerializeColoredGray4(planes, palette));
 		}
 
 		public void SendRgb24(byte[] frame) => Send(_serializer.SerializeRgb24(frame));

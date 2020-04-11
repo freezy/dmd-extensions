@@ -72,14 +72,6 @@ namespace LibDmd.Output.Network
 			_client?.Send(_serializer.SerializeGray(frame, bitlength));
 		}
 
-		private void SendColoredGray(string name, byte[][] planes, Color[] palette)
-		{
-			if (planes.Length == 0) {
-				return;
-			}
-			_client?.Send(_serializer.SerializeColoredGray(name, planes, palette));
-		}
-
 		public void RenderGray2(byte[] frame)
 		{
 			SendGray(frame, 2);
@@ -92,12 +84,12 @@ namespace LibDmd.Output.Network
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			_client?.Send(_serializer.SerializeColoredGray("coloredGray2", frame.Planes, frame.Palette));
+			_client?.Send(_serializer.SerializeColoredGray2(frame.Planes, frame.Palette));
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			_client?.Send(_serializer.SerializeColoredGray("coloredGray4", frame.Planes, frame.Palette));
+			_client?.Send(_serializer.SerializeColoredGray4(frame.Planes, frame.Palette));
 		}
 
 		public void RenderRgb24(byte[] frame)

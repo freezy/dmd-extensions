@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using LibDmd.Output;
+using LibDmd.Output.Network;
 using NLog;
 using WebSocketSharp;
 using WebSocketSharp.Server;
@@ -13,7 +15,7 @@ using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
 
 namespace LibDmd.Input.Network
 {
-	public class WebsocketServer
+	public class WebsocketServer : ISocketAction
 	{
 		internal WebsocketGray2Source Gray2Source = new WebsocketGray2Source();
 
@@ -68,11 +70,37 @@ namespace LibDmd.Input.Network
 			_sockets.Remove(socket);
 			Logger.Debug("Socket {0} closed", socket.ID);
 		}
+
+		public void OnColor(Color color)
+		{
+			Logger.Info("OnColor {0}", color);
+		}
+
+		public void OnPalette(Color[] palette)
+		{
+			Logger.Info("OnPalette {0}", palette);
+		}
+
+		public void OnClearColor()
+		{
+			Logger.Info("OnClearColor");
+		}
+
+		public void OnClearPalette()
+		{
+			Logger.Info("OnClearPalette");
+		}
+
+		public void OnDimensions(int width, int height)
+		{
+			Logger.Info("OnDimensions: {0}x{1}", width, height);
+		}
 	}
 
-	public class DmdSocket : WebSocketBehavior {
-		
+	public class DmdSocket : WebSocketBehavior
+	{
 		private readonly WebsocketServer _src;
+		private readonly WebsocketSerializer _serializer = new WebsocketSerializer();
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -82,7 +110,7 @@ namespace LibDmd.Input.Network
 	
 		protected override void OnMessage(MessageEventArgs e)
 		{
-			Logger.Debug("Message! {0}", e);
+			_serializer.Unserialize(e.RawData, _src);
 		}
 
 		protected override void OnClose(CloseEventArgs e)
