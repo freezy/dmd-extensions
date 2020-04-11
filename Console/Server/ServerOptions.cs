@@ -13,7 +13,7 @@ namespace DmdExt.Server
 		public int Port { get; set; } = 80;
 
 		[Option("path", HelpText = "WebSocket path. Default: /dmd")]
-		public string Path { get; set; } = "/server";
+		public string Path { get; set; } = "/dmd";
 
 		[ParserState]
 		public IParserState LastParserState { get; set; }
