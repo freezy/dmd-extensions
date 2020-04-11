@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
@@ -8,6 +9,16 @@ using WebSocketSharp;
 
 namespace LibDmd.Output.Network
 {
+
+	internal interface ISocketAction
+	{
+		void OnColor(Color color);
+		void OnPalette(Color[] palette);
+		void OnClearColor();
+		void OnClearPalette();
+		void OnDimensions(int width, int height);
+	}
+
 	internal class WebsocketSerializer
 	{
 		public int Width = 128;
@@ -16,6 +27,47 @@ namespace LibDmd.Output.Network
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public void Unserialize(byte[] data, ISocketAction action) {
+			var start = 0;
+			using (var memoryStream = new MemoryStream(data))
+			using (var reader = new BinaryReader(memoryStream)) {
+				while (data[start++] != 0x0) ;
+
+				var name = Encoding.ASCII.GetString(reader.ReadBytes(start - 1));
+				reader.BaseStream.Seek(1, SeekOrigin.Current);
+				
+				Logger.Debug("Unserialize {0}", name);
+				switch (name) {
+					case "color": {
+						action.OnColor(ColorUtil.FromInt(reader.ReadInt32()));
+						break;
+					}
+					case "palette": {
+						var len = reader.ReadInt32();
+						var palette = new Color[len];
+						for (var i = 0; i < len; i++) {
+							palette[i] = ColorUtil.FromInt(reader.ReadInt32());
+						}
+						action.OnPalette(palette);
+						break;
+					}
+					case "clearColor": {
+						action.OnClearColor();
+						break;
+					}	
+					case "clearPalette": {
+						action.OnClearPalette();
+						break;
+					}
+					case "dimensions": {
+						action.OnDimensions(reader.ReadInt32(), reader.ReadInt32());
+						break;
+					}
+
+				}
+			}
+		}
 
 		public byte[] SerializeGray(byte[] frame, int bitlength)
 		{
@@ -29,7 +81,17 @@ namespace LibDmd.Output.Network
 			return data.ToArray();
 		}
 
-		public byte[] SerializeColoredGray(string name, byte[][] planes, Color[] palette)
+		public byte[] SerializeColoredGray2(byte[][] planes, Color[] palette)
+		{
+			return SerializeColoredGray("coloredGray2", planes, palette);
+		}
+
+		public byte[] SerializeColoredGray4(byte[][] planes, Color[] palette)
+		{
+			return SerializeColoredGray("coloredGray4", planes, palette);
+		}
+
+		private byte[] SerializeColoredGray(string name, byte[][] planes, Color[] palette)
 		{
 			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var data = Encoding.ASCII

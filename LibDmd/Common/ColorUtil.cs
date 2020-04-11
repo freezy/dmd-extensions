@@ -209,6 +209,15 @@ namespace LibDmd.Common
 			return (color.R << 16) + (color.G << 8) + color.B;
 		}
 
+		public static Color FromInt(int color) 
+		{
+			return Color.FromRgb(
+				(byte)(color >> 16), 
+				(byte)((color >> 8) & 0xff), 
+				(byte)(color & 0xff)
+			);
+		}
+
 		/// <summary>
 		/// Converts a palette to an array of single integers.
 		/// </summary>
