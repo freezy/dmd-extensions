@@ -51,7 +51,7 @@ namespace DmdExt.Common
 				case "test":
 					return AutoBuild(Test, "dmdext test [--destination=<destination>]", Test.LastParserState);
 				case "server":
-					return AutoBuild(Test, "dmdext server [--host=<host>] [--port=<port>]", Server.LastParserState);
+					return AutoBuild(Test, "dmdext server [--ip=<ip address>] [--port=<port>] [--path=<path>]", Server.LastParserState);
 				default:
 					return AutoBuild(this, "dmdext <command> [<options>]", null, false);
 			}

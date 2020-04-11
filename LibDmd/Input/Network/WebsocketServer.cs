@@ -25,6 +25,7 @@ namespace LibDmd.Input.Network
 
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
+		private RenderGraphCollection _graphs;
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -95,30 +96,15 @@ namespace LibDmd.Input.Network
 			Logger.Debug("Socket {0} closed", socket.ID);
 		}
 
-		public void OnColor(Color color)
-		{
-			Logger.Info("OnColor {0}", color);
-		}
+		public void OnColor(Color color) => _graphs.SetColor(color);
 
-		public void OnPalette(Color[] palette)
-		{
-			Logger.Info("OnPalette {0}", palette);
-		}
+		public void OnPalette(Color[] palette) => _graphs.SetPalette(palette, -1);
 
-		public void OnClearColor()
-		{
-			Logger.Info("OnClearColor");
-		}
+		public void OnClearColor() => _graphs.ClearColor();
 
-		public void OnClearPalette()
-		{
-			Logger.Info("OnClearPalette");
-		}
+		public void OnClearPalette() => _graphs.ClearPalette();
 
-		public void OnDimensions(int width, int height)
-		{
-			Logger.Info("OnDimensions: {0}x{1}", width, height);
-		}
+		public void OnDimensions(int width, int height) => Gray2Source.Dimensions.OnNext(new Dimensions(width, height));
 
 		public void OnGameName(string gameName)
 		{
@@ -132,7 +118,6 @@ namespace LibDmd.Input.Network
 
 		public void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes)
 			=> ColoredGray2Source.FramesColoredGray2.OnNext(new ColoredFrame(planes, palette));
-
 
 		public void OnGray4(uint timestamp, byte[] frame) => Gray4Source.FramesGray4.OnNext(frame);
 

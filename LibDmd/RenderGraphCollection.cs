@@ -124,6 +124,10 @@ namespace LibDmd
 			}
 		}
 
+		public void SetDimensions(Dimensions dim) {
+			_graphs.ForEach(graph => graph.Source.Dimensions.OnNext(dim));
+		}
+
 		public void Dispose()
 		{
 			if (_renderer != null) {
