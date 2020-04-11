@@ -47,6 +47,11 @@ namespace LibDmd.Input
 	{
 		public int Width { get; set; }
 		public int Height { get; set; }
+
+		public Dimensions(int width, int height) {
+			Width = width;
+			Height = height;
+		}
 	}
 
 	public enum ResizeMode

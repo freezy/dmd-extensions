@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -13,7 +12,6 @@ using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using MonoLibUsb;
 using NLog;
 using SkiaSharp;
 
@@ -106,6 +104,7 @@ namespace LibDmd.DmdDevice
 			Bitmap = new BitmapConfig(_data, this);
 			VpdbStream = new VpdbConfig(_data, this);
 			BrowserStream = new BrowserConfig(_data, this);
+			NetworkStream = new NetworkConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
 
 			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
@@ -484,6 +483,18 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public int Port => GetInt("port", 9090);
 		public BrowserConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+	
+	public class NetworkConfig : AbstractConfiguration, INetworkConfig
+	{
+		public override string Name { get; } = "networkstream";
+		public bool Enabled => GetBoolean("enabled", false);
+
+		public string Url => GetString("url", "ws://127.0.0.1/server");
+
+		public NetworkConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}
