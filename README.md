@@ -21,6 +21,7 @@ Currently supported displays:
   debugging.
 - **Alphanumeric Virtual**, a high-resolution virtual segmented display for 
   pre-DMD area games.
+- **Network**, use dmdext to send and receive data through the network.
 - You can also stream the DMD to a browser in your LAN, because, why not!
 
 ## Features
@@ -46,6 +47,8 @@ alpha-numeric displays:
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
 
 Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/AlphaNumeric).
+
+Since v1.8, DMD Extensions come with full network support. Documentation can be found [here](Console/Server)
 
 ## Install Instructions
 
