@@ -103,7 +103,7 @@ namespace DmdExt.Common
 
 			if (config.NetworkStream.Enabled) {
 				try {
-					renderers.Add(new NetworkStream(new Uri(config.NetworkStream.Url)));
+					renderers.Add(NetworkStream.GetInstance(new Uri(config.NetworkStream.Url)));
 					Logger.Info("Added websocket client renderer.");
 				} catch (Exception e) {
 					Logger.Warn("Network stream disabled: {0}", e.Message);

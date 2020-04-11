@@ -93,14 +93,6 @@ namespace LibDmd.Output.PinUp
 			SetGameName(_pnt, _gameName.Length); // external PUP dll call
 		}
 
-		public void Init()
-		{
-			// throw new InvalidFolderException("iniiintiting");
-			if (this is IFixedSizeDestination) {
-				//SetDimensions(DmdWidth, DmdHeight);
-			}
-		}
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)

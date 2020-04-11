@@ -78,11 +78,6 @@ namespace LibDmd.Output.Network
 			}
 		}
 				
-		public void Init()
-		{
-			// nothing to init
-		}
-
 		public void Init(DmdSocket socket)
 		{
 			Logger.Debug("Init socket");

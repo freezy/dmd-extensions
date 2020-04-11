@@ -95,10 +95,6 @@ namespace LibDmd.Output.Network
 			});
 		}
 
-		public void Init()
-		{
-		}
-
 		public void SetDimensions(int width, int height)
 		{
 			_width = width;

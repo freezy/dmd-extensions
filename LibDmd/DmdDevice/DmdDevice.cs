@@ -365,7 +365,7 @@ namespace LibDmd.DmdDevice
 				renderers.Add(new BrowserStream(_config.BrowserStream.Port, _gameName));
 			}
 			if (_config.NetworkStream.Enabled) {
-				renderers.Add(new NetworkStream(new Uri(_config.NetworkStream.Url), _gameName));
+				renderers.Add(NetworkStream.GetInstance(new Uri(_config.NetworkStream.Url), _gameName));
 			}
 
 			if (renderers.Count == 0) {
