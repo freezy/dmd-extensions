@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace LibDmd.Input.Network
 {
-	public class WebsocketGray2Source : AbstractSource, IGray2Source
+	public class WebsocketColoredGray4Source : AbstractSource, IColoredGray4Source
 	{
-		public override string Name => "Websocket 2-bit Source";
+		public override string Name => "Websocket Colored 4-bit Source";
 
 		IObservable<Unit> ISource.OnResume => _onResume;
 		IObservable<Unit> ISource.OnPause => _onPause;
@@ -18,11 +18,11 @@ namespace LibDmd.Input.Network
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
+		public readonly Subject<ColoredFrame> FramesColoredGray4 = new Subject<ColoredFrame>();
 
-		public IObservable<byte[]> GetGray2Frames()
+		public IObservable<ColoredFrame> GetColoredGray4Frames()
 		{
-			return FramesGray2;
+			return FramesColoredGray4;
 		}
 	}
 }

@@ -18,6 +18,10 @@ namespace LibDmd.Input.Network
 	public class WebsocketServer : ISocketAction
 	{
 		internal WebsocketGray2Source Gray2Source = new WebsocketGray2Source();
+		internal WebsocketGray4Source Gray4Source = new WebsocketGray4Source();
+		internal WebsocketColoredGray2Source ColoredGray2Source = new WebsocketColoredGray2Source();
+		internal WebsocketColoredGray4Source ColoredGray4Source = new WebsocketColoredGray4Source();
+		internal WebsocketRgb24Source Rgb24Source = new WebsocketRgb24Source();
 
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
@@ -58,6 +62,26 @@ namespace LibDmd.Input.Network
 				Source = Gray2Source,
 				Destinations = renderers,
 			});
+			graphs.Add(new RenderGraph {
+				Name = "4-bit Websocket Graph",
+				Source = Gray4Source,
+				Destinations = renderers,
+			});
+			graphs.Add(new RenderGraph {
+				Name = "Colored 2-bit Websocket Graph",
+				Source = ColoredGray2Source,
+				Destinations = renderers,
+			});
+			graphs.Add(new RenderGraph {
+				Name = "Colored 4-bit Websocket Graph",
+				Source = ColoredGray4Source,
+				Destinations = renderers,
+			});
+			graphs.Add(new RenderGraph {
+				Name = "24-bit RGB Websocket Graph",
+				Source = Rgb24Source,
+				Destinations = renderers,
+			});
 		}
 
 		public void Dispose()
@@ -95,6 +119,24 @@ namespace LibDmd.Input.Network
 		{
 			Logger.Info("OnDimensions: {0}x{1}", width, height);
 		}
+
+		public void OnGameName(string gameName)
+		{
+			Logger.Info("OnGameName: {0}", gameName);
+		}
+
+		public void OnRgb24(uint timestamp, byte[] frame) => Rgb24Source.FramesRgb24.OnNext(frame);
+
+		public void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes)
+			=> ColoredGray4Source.FramesColoredGray4.OnNext(new ColoredFrame(planes, palette));
+
+		public void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes)
+			=> ColoredGray2Source.FramesColoredGray2.OnNext(new ColoredFrame(planes, palette));
+
+
+		public void OnGray4(uint timestamp, byte[] frame) => Gray4Source.FramesGray4.OnNext(frame);
+
+		public void OnGray2(uint timestamp, byte[] frame) => Gray2Source.FramesGray2.OnNext(frame);
 	}
 
 	public class DmdSocket : WebSocketBehavior
