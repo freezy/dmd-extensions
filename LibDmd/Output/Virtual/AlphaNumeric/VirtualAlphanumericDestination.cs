@@ -44,11 +44,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			return _instance ?? (_instance = new VirtualAlphanumericDestination(dispatcher, styleDef, config));
 		}
 
-		public void Init()
-		{
-			Logger.Info("{0} initialized.", Name);
-		}
-
 		public void RenderAlphaNumeric(AlphaNumericFrame frame)
 		{
 			if (_currentLayout == NumericalLayout.None || _currentLayout != frame.SegmentLayout) {

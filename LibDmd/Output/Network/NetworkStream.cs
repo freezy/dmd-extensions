@@ -11,30 +11,36 @@ namespace LibDmd.Output.Network
 		public bool IsAvailable { get; private set; } = false;
 
 		private WebSocket _client;
-		private readonly Uri _uri;
+		private Uri _uri;
+		private string _gameName;
 		private readonly WebsocketSerializer _serializer = new WebsocketSerializer();
-		private readonly string _gameName;
 
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
 
+		private static NetworkStream _instance;
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public NetworkStream(Uri uri, string romName = null)
+		public static NetworkStream GetInstance(Uri uri, string romName = null) {
+			if (_instance == null) {
+				_instance = new NetworkStream();
+			}
+			_instance.Init(uri, romName);
+			return _instance;
+		}
+
+		public void Init(Uri uri, string romName = null)
 		{
 			_uri = uri;
 			_gameName = romName;
-			Init();
-		}
-
-		public void Init()
-		{
-			Logger.Info("Connecting to Websocket at {0}", _uri.ToString());
+			Logger.Info("Connecting to WebSocket at {0}", _uri.ToString());
 			_client = new WebSocket(_uri.ToString());
+			_client.Log.Level = WebSocketSharp.LogLevel.Fatal;
 			_client.OnMessage += OnMessage;
 			_client.OnError += OnError;
 			_client.OnOpen += OnOpen;
 			_client.Connect();
+			Logger.Info("Connected to Websocket at {0}", _uri.ToString());
 		}
 
 		private void OnOpen(object sender, EventArgs e)
@@ -69,7 +75,10 @@ namespace LibDmd.Output.Network
 				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _serializer.Width, _serializer.Height);
 				return;
 			}
-			_client?.Send(_serializer.SerializeGray(frame, bitlength));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeGray(frame, bitlength));
+			}
+
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -84,44 +93,60 @@ namespace LibDmd.Output.Network
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			_client?.Send(_serializer.SerializeColoredGray2(frame.Planes, frame.Palette));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeColoredGray2(frame.Planes, frame.Palette));
+			}
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			_client?.Send(_serializer.SerializeColoredGray4(frame.Planes, frame.Palette));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeColoredGray4(frame.Planes, frame.Palette));
+			}
 		}
 
 		public void RenderRgb24(byte[] frame)
 		{
-			_client?.Send(_serializer.SerializeRgb24(frame));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeRgb24(frame));
+			}
 		}
 
 		public void SetDimensions(int width, int height)
 		{
-			_client?.Send(_serializer.SerializeDimensions(width, height));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeDimensions(width, height));
+			}
 		}
 
 		public void SetColor(Color color)
 		{
 			_color = color;
-			_client?.Send(_serializer.SerializeColor(color));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeColor(color));
+			}
 		}
 
 		public void SetPalette(Color[] colors, int index = -1)
 		{
 			_palette = colors;
-			_client?.Send(_serializer.SerializePalette(colors));
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializePalette(colors));
+			}
 		}
 
 		public void ClearPalette()
 		{
-			_client?.Send(_serializer.SerializeClearPalette());
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeClearPalette());
+			}
 		}
 
 		public void ClearColor()
 		{
-			_client?.Send(_serializer.SerializeClearColor());
+			if (IsAvailable) {
+				_client.Send(_serializer.SerializeClearColor());
+			}
 		}
 
 		public void ClearDisplay()

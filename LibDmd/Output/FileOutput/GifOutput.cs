@@ -32,10 +32,6 @@ namespace LibDmd.Output.FileOutput
 			}
 		}
 
-		public void Init()
-		{
-		}
-
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>

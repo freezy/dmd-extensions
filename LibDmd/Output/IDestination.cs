@@ -24,12 +24,6 @@ namespace LibDmd.Output
 		bool IsAvailable { get; }
 
 		/// <summary>
-		/// Initializes the device. <see cref="IsAvailable"/> must be set
-		/// after running this.
-		/// </summary>
-		void Init();
-
-		/// <summary>
 		/// Clears the display.
 		/// </summary>
 		void ClearDisplay();
