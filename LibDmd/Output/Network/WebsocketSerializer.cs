@@ -9,7 +9,6 @@ using WebSocketSharp;
 
 namespace LibDmd.Output.Network
 {
-
 	internal interface ISocketAction
 	{
 		void OnColor(Color color);
@@ -43,7 +42,6 @@ namespace LibDmd.Output.Network
 				var name = Encoding.ASCII.GetString(reader.ReadBytes(start - 1));
 				reader.BaseStream.Seek(1, SeekOrigin.Current);
 				
-				Logger.Debug("Unserialize {0}", name);
 				switch (name) {
 					case "color": {
 						action.OnColor(ColorUtil.FromInt(reader.ReadInt32()));
