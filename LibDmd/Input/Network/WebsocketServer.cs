@@ -58,6 +58,7 @@ namespace LibDmd.Input.Network
 
 		public void SetupGraphs(RenderGraphCollection graphs, List<IDestination> renderers)
 		{
+			_graphs = graphs;
 			graphs.Add(new RenderGraph {
 				Name = "2-bit Websocket Graph",
 				Source = Gray2Source,
@@ -93,7 +94,7 @@ namespace LibDmd.Input.Network
 		internal void Closed(DmdSocket socket)
 		{
 			_sockets.Remove(socket);
-			Logger.Debug("Socket {0} closed", socket.ID);
+			Logger.Debug("WebSocket {0} closed", socket.ID);
 		}
 
 		public void OnColor(Color color) => _graphs.SetColor(color);
@@ -153,7 +154,7 @@ namespace LibDmd.Input.Network
 
 		protected override void OnOpen()
 		{
-			Logger.Info("Websocket opened.");
+			Logger.Debug("New WebSocket client {0}", ID);
 		}
 	}
 }
