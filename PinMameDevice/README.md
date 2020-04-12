@@ -90,8 +90,8 @@ DMDDEV void Console_Input_Ptr(Console_Input_t ptr);
 
 ## Building
 
-Just load the parent solution into Visual Studio and you should be fine. Tested
-on VS2015 and VS2017.
+Just load the parent solution into Visual Studio and you should be fine. Set up
+for VS2019, but you should able to compile it with other versions as well.
 
 If you want the build process automatically copy `DmdDevice.dll` into your VPM
 folder, point the `VPM_HOME` environment variable to your VPM folder.
