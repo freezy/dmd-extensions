@@ -117,6 +117,11 @@ namespace LibDmd.Converter
 				return;
 			}
 
+			// If same LCM scene, no need to stop/start.
+			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset) {
+				return;
+			}
+
 			// Faus scho eppis am laifä isch, ahautä
 			_activeAnimation?.Stop();
 			_activeAnimation = null;

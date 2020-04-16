@@ -226,7 +226,7 @@ namespace LibDmd.Converter.Colorize
 
 			ClearLCMBuffer();
 
-			Logger.Debug("[vni][{0}] Started LCM mode, duration = {1}ms ({2})...", SwitchMode, AnimationDuration, Name);
+			Logger.Debug("[vni][{0}] Started LCM mode, ({1})...", SwitchMode, Name);
 		}
 
 		private void StartReplace(Action<byte[][]> render, Action completed = null)
