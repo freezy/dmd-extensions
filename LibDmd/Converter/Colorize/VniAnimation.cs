@@ -47,6 +47,25 @@ namespace LibDmd.Converter.Colorize
 				Width = reader.ReadInt16BE();
 				Height = reader.ReadInt16BE();
 			}
+			if (fileVersion >= 5)
+			{
+				int numMasks = reader.ReadInt16BE();
+				Masks = new byte[numMasks][];
+				for (var i = 0; i < numMasks; i++)
+				{
+					int locked = reader.ReadByte();
+					int size = reader.ReadInt16BE();
+					Masks[i] = reader.ReadBytesRequired(size).Select(VniAnimationPlane.Reverse).ToArray();
+				}
+			}
+
+			if (fileVersion >= 6)
+			{
+				int LinkedAnimation = reader.ReadByte();
+				int size = reader.ReadInt16BE();
+				string AnimName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(nameLength)) : "<undefined>";
+				uint startFrame = reader.ReadUInt32BE();
+			}
 
 			Logger.Debug("VNI[{3}] Reading {0} frame{1} for animation \"{2}\"...", numFrames, numFrames == 1 ? "" : "s", Name, reader.BaseStream.Position);
 			Frames = new AnimationFrame[numFrames];

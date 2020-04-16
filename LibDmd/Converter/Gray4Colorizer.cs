@@ -98,14 +98,15 @@ namespace LibDmd.Converter
 				}
 			}
 			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 4, frame);
+			uint Plane0CRC = 0;
 
 			if (_coloring.Mappings != null) {
-				TriggerAnimation(planes);
+				TriggerAnimation(planes, out Plane0CRC );
 			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null) {
-				_activeAnimation.NextFrame(planes, AnimationFinished);
+				_activeAnimation.NextFrame(planes, Plane0CRC, AnimationFinished);
 				return;
 			}
 
@@ -126,9 +127,9 @@ namespace LibDmd.Converter
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>
 		/// <param name="planes">S Buid zum iberpriäfä</param>
-		private void TriggerAnimation(byte[][] planes)
+		private void TriggerAnimation(byte[][] planes, out uint Plane0CRC)
 		{
-			var mapping = FindMapping(planes);
+			var mapping = FindMapping(planes, out Plane0CRC);
 
 			// Faus niid gfundä hemmr fertig
 			if (mapping == null) {
@@ -194,13 +195,16 @@ namespace LibDmd.Converter
 		/// </summary>
 		/// <param name="planes">Bitplanes vom Biud</param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
-		private Mapping FindMapping(byte[][] planes)
+		private Mapping FindMapping(byte[][] planes, out uint Plane0CRC)
 		{
+			Plane0CRC = 0;
 			var maskSize = Dimensions.Value.Width * Dimensions.Value.Height / 8;
 
 			// Jedi Plane wird einisch duräghäscht
 			for (var i = 0; i < 2; i++) {
 				var checksum = FrameUtil.Checksum(planes[i]);
+				if (i == 0)
+					Plane0CRC = checksum;
 
 				var mapping = _coloring.FindMapping(checksum);
 				if (mapping != null) {

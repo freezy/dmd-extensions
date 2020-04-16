@@ -29,7 +29,7 @@ namespace LibDmd.Converter.Colorize
 
 		public byte[][] PlaneData => Planes.Select(p => p.Plane).ToArray();
 
-		protected byte[] Hash;
+		public uint Hash;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

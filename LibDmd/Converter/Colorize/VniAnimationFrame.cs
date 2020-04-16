@@ -13,7 +13,7 @@ namespace LibDmd.Converter.Colorize
 			int planeSize = reader.ReadInt16BE();
 			Delay = (uint) reader.ReadInt16BE();
 			if (fileVersion >= 4) {
-				Hash = reader.ReadBytes(4);
+				Hash = reader.ReadUInt32BE();
 			}
 			BitLength = reader.ReadByte();
 			Planes = new List<AnimationPlane>(BitLength);

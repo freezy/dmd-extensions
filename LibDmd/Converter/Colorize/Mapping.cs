@@ -50,7 +50,7 @@ namespace LibDmd.Converter.Colorize
 		/// Wenn ja, de tiämmer än Animazion uisäsuächä und loslah, sisch ischs numä ä
 		/// Palettäwächsü oder sisch ä Seich.
 		/// </summary>
-		public bool IsAnimation => Mode == SwitchMode.Replace || Mode == SwitchMode.ColorMask || Mode == SwitchMode.Follow;
+		public bool IsAnimation => Mode == SwitchMode.Replace || Mode == SwitchMode.ColorMask || Mode == SwitchMode.Follow || Mode == SwitchMode.LayeredColorMask;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

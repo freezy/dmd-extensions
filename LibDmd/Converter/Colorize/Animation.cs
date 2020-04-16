@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Media;
+using System.Collections.Generic;
+using LibDmd.Common;
 using NLog;
 
 namespace LibDmd.Converter.Colorize
@@ -56,9 +59,10 @@ namespace LibDmd.Converter.Colorize
 		protected AnimationEditMode EditMode;
 		protected int TransitionFrom;
 
+		#endregion
 		protected int Width;
 		protected int Height;
-		#endregion
+
 
 		#region Animation-related
 
@@ -96,8 +100,6 @@ namespace LibDmd.Converter.Colorize
 		private Action<byte[][]> _currentRender;
 		private int _lastTick;
 		private int _timer;
-		private IDisposable _animation;
-		private IDisposable _terminator;
 
 		/// <summary>
 		/// Index of the frame currently displaying (or enhancing).
@@ -111,10 +113,16 @@ namespace LibDmd.Converter.Colorize
 		/// </summary>
 		uint Crc32 { get; }
 
+
+
 		/// <summary>
 		/// Mask for "Follow" switch mode.
 		/// </summary>
 		byte[] Mask { get; }
+
+		protected byte[][] Masks;
+
+		private List<byte[]> LCMBufferPlanes = new List<byte[]>();
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -135,24 +143,22 @@ namespace LibDmd.Converter.Colorize
 			IsRunning = true;
 			SwitchMode = mode;
 			_frameIndex = 0;
-			if (AddPlanes) {
-				StartEnhance(render);
-			} else {
-				StartReplace(render, completed);
+
+			switch (SwitchMode)
+			{
+				case SwitchMode.ColorMask:
+				case SwitchMode.Follow:
+					StartEnhance(render);
+					break;
+				case SwitchMode.Replace:
+					StartReplace(render, completed);
+					break;
+				case SwitchMode.LayeredColorMask:
+					StartLCM(render);
+					break;
 			}
 		}
 
-		/// <summary>
-		/// Tuät d Animazion looslah wo tuät vo zwe uif viär Bit erwiitärä
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// S Timing wird im Gägäsatz zum Modus eis vo <see cref="NextFrame"/>
-		/// vorgäh. Das heisst jedes Biud vo VPM nimmt sich eis vor Animazion 
-		/// vom Schtapu zum Erwiitärä bis es keini me hed. 
-		/// </remarks>
-		/// 
-		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
 		private void StartEnhance(Action<byte[][]> render)
 		{
 			_lastTick = Environment.TickCount;
@@ -168,63 +174,98 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
-		/// <summary>
-		/// Tuät d Animazion looslah und d Biudli uif diä entschprächendi Queuä
-		/// uisgäh.
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// Das hiä isch dr Fau wo diä gsamti Animazion uisgäh und VPM ignoriärt
-		/// wird (dr Modus eis).
-		/// </remarks>
-		/// 
-		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
-		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		private void StartReplace(Action<byte[][]> render, Action completed = null)
+		private void ClearLCMBuffer()
 		{
-			if (Frames.Length == 1) {
-				Logger.Debug("[vni][{0}] Replacing one frame ({1}).", SwitchMode, Name);
-				render(Frames[0].PlaneData);
-				FinishIn(Frames[0].Delay, completed);
-				return;
-			}
-			Logger.Debug("[vni][{0}] Starting colored gray4 animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
-			_frames = Frames.ToObservable().Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)));
-			_animation = _frames
-				.Do(_ => _frameIndex++)
-				.Select(frame => frame.PlaneData)
-				.Subscribe(render.Invoke, () => FinishIn(Frames[Frames.Length - 1].Delay, completed));
+			LCMBufferPlanes.ForEach(p => Common.FrameUtil.ClearPlane(p));
 		}
 
-		/// <summary>
-		/// Tuät s gegäbänä Biud mit dä Bitplanes vom nächschtä Biud vo dr Animazion erwiitärä.
-		/// </summary>
-		/// <param name="vpmFrame">S Biud wo erwiitered wird</param>
-		/// <param name="completed">Wird uisfiährt wenns fertig erwiitered het</param>
-		private void EnhanceFrame(byte[][] vpmFrame, Action completed = null)
+		private void RenderLCM(byte[][] vpmFrame, uint NoMaskCRC)
 		{
-			var delay = Environment.TickCount - _lastTick;
-			_lastTick = Environment.TickCount;
+			bool clear = true;
+			uint checksum = NoMaskCRC;
+			var maskSize = Width * Height / 8;
+			var maskedPlane = new byte[maskSize];
 
-			_timer -= delay;
-			if (_frameIndex >= NumFrames) {
-				Logger.Error("[vni][{0}] No more frames in animation ({1}).", SwitchMode, NumFrames);
-				return;
+			for (int k = -1; k < Masks.Length; k++)
+			{
+				if (k >= 0)
+				{
+					var plane = new BitArray(vpmFrame[0]);
+					plane.And(new BitArray(Masks[k])).CopyTo(maskedPlane, 0);
+					checksum = FrameUtil.Checksum(maskedPlane);
+				}
+				foreach(var af in Frames)
+				{
+					if (af.Hash == checksum)
+					{
+						if (clear)
+						{
+							ClearLCMBuffer();
+							clear = false;
+						}
+						for(int i=0; i< af.Planes.Count; i++)
+						{
+							FrameUtil.OrPlane(af.PlaneData[i], LCMBufferPlanes[i]);
+						}
+					}
+
+				}
 			}
+			_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+		}
 
-			if (vpmFrame.Length == 2) {
-				if (Frames[_frameIndex].Planes.Count < 2) {
-					Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+
+
+
+		private void StartLCM(Action<byte[][]> render)
+		{
+			_currentRender = render;
+			LCMBufferPlanes.Clear();
+			for (int i = 0; i < Frames[0].Planes.Count; i++)
+				LCMBufferPlanes.Add(LibDmd.Common.FrameUtil.NewPlane(Width, Height));
+
+			ClearLCMBuffer();
+
+			Logger.Debug("[vni][{0}] Started LCM mode, duration = {1}ms ({2})...", SwitchMode, AnimationDuration, Name);
+		}
+
+		private void StartReplace(Action<byte[][]> render, Action completed = null)
+		{
+			Logger.Debug("[vni][{0}] Starting colored gray4 animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
+			_lastTick = Environment.TickCount;
+			_timer = 0;
+			_currentRender = render;
+			InitializeFrame();
+		}
+
+		private void RenderAnimation(byte[][] vpmFrame, uint Plane0CRC, Action completed = null)
+		{
+			if (SwitchMode != SwitchMode.LayeredColorMask)
+			{
+				var delay = Environment.TickCount - _lastTick;
+				_lastTick = Environment.TickCount;
+
+				_timer -= delay;
+				if (_frameIndex >= NumFrames)
+				{
+					Logger.Error("[vni][{0}] No more frames in animation ({1}).", SwitchMode, NumFrames);
 					return;
 				}
-				_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane });
-			} else {
-				// Not supported.   SMB colorization gets here often, though, so we pass frames through.
-				// Logger.Warn("[vni][{0}] Cannot enhance 4 bitplane sources.", SwitchMode, Frames[_frameIndex].Planes.Count);
-				_currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3] });
 			}
-
-			if (_timer <= 0 || (SwitchMode == SwitchMode.Follow && FoundFollowMatch))
+			switch (SwitchMode)
+			{
+				case SwitchMode.ColorMask:
+				case SwitchMode.Follow:
+					RenderColorMask(vpmFrame);
+					break;
+				case SwitchMode.Replace:
+					_currentRender(Frames[_frameIndex].PlaneData);
+					break;
+				case SwitchMode.LayeredColorMask:
+					RenderLCM(vpmFrame, Plane0CRC);
+					break;
+			}
+			if (SwitchMode != SwitchMode.LayeredColorMask && (_timer <= 0 || (SwitchMode == SwitchMode.Follow && FoundFollowMatch)))
 			{
 				_frameIndex++;
 				if (_frameIndex == NumFrames)
@@ -239,6 +280,18 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
+		private void RenderColorMask(byte[][] vpmFrame)
+		{
+			if (Frames[_frameIndex].Planes.Count < 4)
+			{
+				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+			}
+			else
+			{
+				_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane });
+			}
+		}
+
 		private void InitializeFrame()
 		{
 			_timer += (int)Frames[_frameIndex].Delay;
@@ -248,46 +301,14 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
-		/// <summary>
-		/// Tuät d Animazion nachärä gwissä Ziit aahautä
-		/// </summary>
-		/// <param name="milliseconds">Ziit i Millisekundä</param>
-		/// <param name="completed">Dr Callback wo muäss uifgriäft wärdä</param>
-		private void FinishIn(uint milliseconds, Action completed)
+		
+		public void NextFrame(byte[][] planes, uint Plane0CRC, Action completed = null)
 		{
-			// nu uifs letschti biud wartä bis mer fertig sind
-			_terminator = Observable
-				.Never<Unit>()
-				.StartWith(Unit.Default)
-				.Delay(TimeSpan.FromMilliseconds(milliseconds))
-				.Subscribe(_ => {
-					Stop("finished");
-					completed?.Invoke();
-				});
+			RenderAnimation(planes, Plane0CRC, completed);
 		}
 
-		/// <summary>
-		/// Tuäts Frame vo VPM aktualisiärä, wo diä erschtä zwe Bits im 
-		/// Modus <see cref="AddPlanes"/> definiärt.
-		/// </summary>
-		/// <param name="planes">S VPM Frame i Bitplanes uifgschplittet</param>
-		/// <param name="completed">Wird uisfiährt wenns fertig erwiitered het</param>
-		public void NextFrame(byte[][] planes, Action completed = null)
-		{
-			if (IsRunning && AddPlanes) {
-				EnhanceFrame(planes, completed);
-			} else {
-				Logger.Debug("[vni][{0}] Ignoring VPM frame (is running: {1}, add planes: {2}).", SwitchMode, IsRunning, AddPlanes);
-			}
-		}
-
-		/// <summary>
-		/// Tuät d Animazion aahautä.
-		/// </summary>
 		public void Stop(string what = "stopped")
 		{
-			_terminator?.Dispose();
-			_animation?.Dispose();
 			_frameIndex = 0;
 			_currentRender = null;
 			IsRunning = false;
