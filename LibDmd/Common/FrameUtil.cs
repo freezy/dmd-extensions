@@ -448,6 +448,46 @@ namespace LibDmd.Common
 			var frame = Join(width, height, planes);
 			return ColorUtil.ColorizeFrame(width, height, frame, palette);
 		}
+			
+		public static byte[] NewPlane(int width, int height)
+		{
+			var count = width / 8 * height;
+			var destFrame = new byte[count];
+			return destFrame;
+		}
+
+
+		public static void ClearPlane(byte[] Plane)
+		{
+			unsafe
+			{
+				fixed (byte* b1 = Plane)
+				{
+					memset(b1, 0, Plane.Length);
+				}
+			}
+		}
+
+		public static void OrPlane(byte[] Plane, byte[] Target)
+		{
+			unsafe
+			{
+				fixed (void* b1 = Plane, b2 = Target)
+				{
+					int* p = (int *)b1;
+					int* t = (int *)b2;
+
+					int count = Plane.Length / 4;
+
+					while(count-- > 0)
+					{
+						*t = *t | *p;
+						t++;
+						p++;
+					}
+				}
+			}
+		}
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
@@ -554,6 +594,10 @@ namespace LibDmd.Common
 			}
 		}
 
+		[DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+		public static extern unsafe IntPtr memset(byte* dest, int c, int byteCount);
+
+
 		[DllImport("msvcrt.dll", CallingConvention=CallingConvention.Cdecl)]
 		private static extern unsafe int memcmp(byte* b1, byte* b2, int count);
 
@@ -571,7 +615,7 @@ namespace LibDmd.Common
 			if (buffer1 == null || buffer2 == null) {
 				return false;
 			}
-
+			
 			fixed (byte* b1 = buffer1, b2 = buffer2) {
 				return memcmp(b1 + offset1, b2 + offset2, count) == 0;
 			}

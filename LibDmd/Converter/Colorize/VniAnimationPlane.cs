@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 
 namespace LibDmd.Converter.Colorize
@@ -11,7 +11,7 @@ namespace LibDmd.Converter.Colorize
 			Plane = reader.ReadBytes(planeSize).Select(Reverse).ToArray();
 		}
 
-		private static byte Reverse(byte a)
+		public static byte Reverse(byte a)
 		{
 			return (byte)(((a & 0x1) << 7) | ((a & 0x2) << 5) |
 				((a & 0x4) << 3) | ((a & 0x8) << 1) |

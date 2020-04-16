@@ -27,7 +27,12 @@
 		/// </summary>
 		Event = 3,
 
-		Follow = 4
+		Follow = 4,
 
+		LayeredColorMask = 5,
+
+		FollowReplace = 6,
+
+		MaskedReplace = 7
 	}
 }
