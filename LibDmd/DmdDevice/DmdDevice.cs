@@ -62,7 +62,7 @@ namespace LibDmd.DmdDevice
 
 		// Iifärbigsziig
 		private Color[] _palette;
-		byte[] _upsizedFrame;
+		DMDFrame _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
@@ -598,46 +598,51 @@ namespace LibDmd.DmdDevice
 			_palette = colors;
 		}
 
-		public void RenderGray2(int width, int height, byte[] frame)
+		public void RenderGray2(DMDFrame frame)
 		{
 			if (!_isOpen) {
 				Init();
 			}
-			if (_gray2Colorizer != null && width == 128 && height == 16 && _gray2Colorizer.Has128x32Animation)
+			int width = frame.width;
+			int height = frame.height;
+
+			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation)
 			{
 				// Pin2DMD colorization may have 512 byte masks with a 128x16 source, 
 				// indicating this should be upsized and treated as a centered 128x32 DMD.
+
+				height = frame.height;
 				height *= 2;
 				_gray2Colorizer.SetDimensions(width, height);
 				if (_upsizedFrame == null)
-					_upsizedFrame = new byte[width * height];
-				Buffer.BlockCopy(frame, 0, _upsizedFrame, 8*width, frame.Length);
-				_vpmGray2Source.NextFrame(width, height, _upsizedFrame);
+					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8*width, frame.Data.Length);
+				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
 			else
 			{
 				_gray2Colorizer?.SetDimensions(width, height);
 				_gray4Colorizer?.SetDimensions(width, height);
-				_vpmGray2Source.NextFrame(width, height, frame);
+				_vpmGray2Source.NextFrame(frame);
 			}
 		}
 
-		public void RenderGray4(int width, int height, byte[] frame)
+		public void RenderGray4(DMDFrame frame)
 		{
 			if (!_isOpen) {
 				Init();
 			}
-			_gray2Colorizer?.SetDimensions(width, height);
-			_gray4Colorizer?.SetDimensions(width, height);
-			_vpmGray4Source.NextFrame(width, height, frame);
+			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
+			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
+			_vpmGray4Source.NextFrame(frame);
 		}
 
-		public void RenderRgb24(int width, int height, byte[] frame)
+		public void RenderRgb24(DMDFrame frame)
 		{
 			if (!_isOpen) {
 				Init();
 			}
-			_vpmRgb24Source.NextFrame(width, height, frame);
+			_vpmRgb24Source.NextFrame(frame);
 		}
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
@@ -650,47 +655,47 @@ namespace LibDmd.DmdDevice
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x16Alpha(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x16Alpha(segData) });
 					break;
 				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x20Alpha(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x20Alpha(segData) });
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Alpha_2x7Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Alpha_2x7Num(segData) });
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData) });
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData) });
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended) });
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData) });
 					break;
 				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData) });
 					break;
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData) });
 					break;
 				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData) });
 					break;
 				case NumericalLayout.__4x7Num10:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render4x7Num10(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render4x7Num10(segData) });
 					break;
 				case NumericalLayout.__6x4Num_4x1Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render6x4Num_4x1Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render6x4Num_4x1Num(segData) });
 					break;
 				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData) });
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_vpmGray2Source.NextFrame(Width, Height, AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData));
+					_vpmGray2Source.NextFrame(new DMDFrame() { width = Width, height = Height, Data = AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData) });
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);

@@ -27,7 +27,7 @@ namespace LibDmd.Input.ProPinball
 
 		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
-		private IObservable<byte[]> _framesGray4;
+		private IObservable<DMDFrame> _framesGray4;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -39,7 +39,7 @@ namespace LibDmd.Input.ProPinball
 			}
 		}
 
-		public IObservable<byte[]> GetGray4Frames()
+		public IObservable<DMDFrame> GetGray4Frames()
 		{
 			if (_framesGray4 != null) {
 				return _framesGray4;
@@ -47,7 +47,7 @@ namespace LibDmd.Input.ProPinball
 			CreateBridge();
 
 			Logger.Info("Subscribing to Pro Pinball's message queue...");
-			_framesGray4 = Observable.Create<byte[]>(o => {
+			_framesGray4 = Observable.Create<DMDFrame>(o => {
 
 				var len = Dimensions.Value.Width * Dimensions.Value.Height;
 
@@ -55,8 +55,8 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var arr = new byte[len];
-							Marshal.Copy((IntPtr)frame, arr, 0, len);
+							var arr = new DMDFrame() { Data = new byte[len], height = Dimensions.Value.Height, width = Dimensions.Value.Width };
+							Marshal.Copy((IntPtr)frame, arr.Data, 0, len);
 							o.OnNext(arr);
 
 						}, err => {

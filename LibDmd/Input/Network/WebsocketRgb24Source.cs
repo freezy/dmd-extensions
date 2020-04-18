@@ -18,9 +18,9 @@ namespace LibDmd.Input.Network
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
+		public readonly Subject<DMDFrame> FramesRgb24 = new Subject<DMDFrame>();
 
-		public IObservable<byte[]> GetRgb24Frames()
+		public IObservable<DMDFrame> GetRgb24Frames()
 		{
 			return FramesRgb24;
 		}

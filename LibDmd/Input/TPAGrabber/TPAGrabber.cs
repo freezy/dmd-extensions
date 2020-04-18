@@ -21,11 +21,11 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : MemoryGrabber<byte[]>, IGray4Source
+	public class TPAGrabber : MemoryGrabber<DMDFrame>, IGray4Source
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
 
-		public IObservable<byte[]> GetGray4Frames()
+		public IObservable<DMDFrame> GetGray4Frames()
 		{
 			return GetFrames();
 		}
@@ -39,10 +39,10 @@ namespace LibDmd.Input.TPAGrabber
 
 		private static HashSet<double> lums = new HashSet<double>();
 
-		protected override byte[] CaptureDMD()
+		protected override DMDFrame CaptureDMD()
 		{
 		// Initialize a new writeable bitmap to receive DMD pixels.
-		var frame = new byte[DMDWidth * DMDHeight];
+			var frame = new byte[DMDWidth * DMDHeight];
 
 			// Init DMD hack for Stern tables.
 			InitSternDMD(_hProcess, false);
@@ -54,7 +54,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				sternInit = false; // Reset Stern DMD hack state.
-				return frame;
+				return new DMDFrame() { Data = frame, width = DMDWidth, height = DMDHeight };
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -130,7 +130,7 @@ namespace LibDmd.Input.TPAGrabber
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : frame;
+			return identical ? null : new DMDFrame() { Data = frame, width = DMDWidth, height = DMDHeight } ;
 		}
 
 		// try attaching to a process

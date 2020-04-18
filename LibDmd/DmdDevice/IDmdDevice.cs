@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using LibDmd.Input;
 
 namespace LibDmd.DmdDevice
 {
@@ -16,9 +17,9 @@ namespace LibDmd.DmdDevice
 		void Init();
 		void LoadPalette(uint palIndex);
 		void SetPalette(Color[] colors);
-		void RenderRgb24(int width, int height, byte[] frame);
-		void RenderGray4(int width, int height, byte[] frame);
-		void RenderGray2(int width, int height, byte[] frame);
+		void RenderRgb24(DMDFrame frame);
+		void RenderGray4(DMDFrame frame);
+		void RenderGray2(DMDFrame frame);
 		void RenderAlphaNumeric(NumericalLayout numericalLayout, ushort[] readUInt16Array, ushort[] ushorts);
 	}
 }

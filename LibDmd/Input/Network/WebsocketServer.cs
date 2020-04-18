@@ -112,7 +112,7 @@ namespace LibDmd.Input.Network
 			Logger.Info("OnGameName: {0}", gameName);
 		}
 
-		public void OnRgb24(uint timestamp, byte[] frame) => Rgb24Source.FramesRgb24.OnNext(frame);
+		public void OnRgb24(uint timestamp, byte[] frame) => Rgb24Source.FramesRgb24.OnNext(new DMDFrame() { Data = frame });
 
 		public void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes)
 			=> ColoredGray4Source.FramesColoredGray4.OnNext(new ColoredFrame(planes, palette));
@@ -120,9 +120,9 @@ namespace LibDmd.Input.Network
 		public void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes)
 			=> ColoredGray2Source.FramesColoredGray2.OnNext(new ColoredFrame(planes, palette));
 
-		public void OnGray4(uint timestamp, byte[] frame) => Gray4Source.FramesGray4.OnNext(frame);
+		public void OnGray4(uint timestamp, byte[] frame) => Gray4Source.FramesGray4.OnNext(new DMDFrame() { Data = frame });
 
-		public void OnGray2(uint timestamp, byte[] frame) => Gray2Source.FramesGray2.OnNext(frame);
+		public void OnGray2(uint timestamp, byte[] frame) => Gray2Source.FramesGray2.OnNext(new DMDFrame() { Data = frame });
 	}
 
 	public class DmdSocket : WebSocketBehavior

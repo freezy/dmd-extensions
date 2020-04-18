@@ -19,9 +19,9 @@ namespace LibDmd.Input.FileSystem
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		public readonly Subject<byte[]> FramesGray2 = new Subject<byte[]>();
-		public readonly Subject<byte[]> FramesGray4 = new Subject<byte[]>();
-		public readonly Subject<byte[]> FramesRgb24 = new Subject<byte[]>();
+		public readonly Subject<DMDFrame> FramesGray2 = new Subject<DMDFrame>();
+		public readonly Subject<DMDFrame> FramesGray4 = new Subject<DMDFrame>();
+		public readonly Subject<DMDFrame> FramesRgb24 = new Subject<DMDFrame>();
 		public readonly Subject<ColoredFrame> FramesColoredGray2 = new Subject<ColoredFrame>();
 		public readonly Subject<ColoredFrame> FramesColoredGray4 = new Subject<ColoredFrame>();
 		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
@@ -31,12 +31,12 @@ namespace LibDmd.Input.FileSystem
 			Name = name;
 		}
 
-		public IObservable<byte[]> GetGray2Frames()
+		public IObservable<DMDFrame> GetGray2Frames()
 		{
 			return FramesGray2;
 		}
 
-		public IObservable<byte[]> GetGray4Frames()
+		public IObservable<DMDFrame> GetGray4Frames()
 		{
 			return FramesGray4;
 		}
@@ -51,7 +51,7 @@ namespace LibDmd.Input.FileSystem
 			return FramesColoredGray4;
 		}
 
-		public IObservable<byte[]> GetRgb24Frames()
+		public IObservable<DMDFrame> GetRgb24Frames()
 		{
 			return FramesRgb24;
 		}

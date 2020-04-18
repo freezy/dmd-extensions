@@ -179,7 +179,12 @@ namespace LibDmd.Converter.Colorize
 			LCMBufferPlanes.ForEach(p => Common.FrameUtil.ClearPlane(p));
 		}
 
-		private void RenderLCM(byte[][] vpmFrame, uint NoMaskCRC)
+		private void RenderLCM(byte[][] vpmFrame)
+		{
+			_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+		}
+
+		public void DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse)
 		{
 			bool clear = true;
 			uint checksum = NoMaskCRC;
@@ -190,11 +195,9 @@ namespace LibDmd.Converter.Colorize
 			{
 				if (k >= 0)
 				{
-					var plane = new BitArray(vpmFrame[0]);
-					plane.And(new BitArray(Masks[k])).CopyTo(maskedPlane, 0);
-					checksum = FrameUtil.Checksum(maskedPlane);
+					checksum = FrameUtil.ChecksumWithMask(plane, Masks[k], Reverse);
 				}
-				foreach(var af in Frames)
+				foreach (var af in Frames)
 				{
 					if (af.Hash == checksum)
 					{
@@ -203,7 +206,7 @@ namespace LibDmd.Converter.Colorize
 							ClearLCMBuffer();
 							clear = false;
 						}
-						for(int i=0; i< af.Planes.Count; i++)
+						for (int i = 0; i < af.Planes.Count; i++)
 						{
 							FrameUtil.OrPlane(af.PlaneData[i], LCMBufferPlanes[i]);
 						}
@@ -211,11 +214,7 @@ namespace LibDmd.Converter.Colorize
 
 				}
 			}
-			_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
 		}
-
-
-
 
 		private void StartLCM(Action<byte[][]> render)
 		{
@@ -238,7 +237,7 @@ namespace LibDmd.Converter.Colorize
 			InitializeFrame();
 		}
 
-		private void RenderAnimation(byte[][] vpmFrame, uint Plane0CRC, Action completed = null)
+		private void RenderAnimation(byte[][] vpmFrame, Action completed = null)
 		{
 			if (SwitchMode != SwitchMode.LayeredColorMask)
 			{
@@ -262,7 +261,7 @@ namespace LibDmd.Converter.Colorize
 					_currentRender(Frames[_frameIndex].PlaneData);
 					break;
 				case SwitchMode.LayeredColorMask:
-					RenderLCM(vpmFrame, Plane0CRC);
+					RenderLCM(vpmFrame);
 					break;
 			}
 			if (SwitchMode != SwitchMode.LayeredColorMask && (_timer <= 0 || (SwitchMode == SwitchMode.Follow && FoundFollowMatch)))
@@ -302,9 +301,9 @@ namespace LibDmd.Converter.Colorize
 		}
 
 		
-		public void NextFrame(byte[][] planes, uint Plane0CRC, Action completed = null)
+		public void NextFrame(byte[][] planes, Action completed = null)
 		{
-			RenderAnimation(planes, Plane0CRC, completed);
+			RenderAnimation(planes, completed);
 		}
 
 		public void Stop(string what = "stopped")
