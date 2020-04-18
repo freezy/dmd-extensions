@@ -75,38 +75,56 @@ namespace LibDmd.Converter
 		{
 		}
 
-		public void Convert(byte[] frame)
+		public void Convert(DMDFrame frame)
 		{
-			if (_coloring.Palettes.Length > 1 && _animations == null) {
-				if (frame[0] == 0x08 && frame[1] == 0x09 &&
-					frame[2] == 0x0a && frame[3] == 0x0b) {
-					uint newpal = (uint)frame[5] * 8 + (uint)frame[4];
+			if (_coloring.Palettes.Length > 1 && _animations == null)
+			{
+				if (frame.Data[0] == 0x08 && frame.Data[1] == 0x09 &&
+					frame.Data[2] == 0x0a && frame.Data[3] == 0x0b)
+				{
+					uint newpal = (uint)frame.Data[5] * 8 + (uint)frame.Data[4];
 					for (int i = 0; i < 6; i++)
-						frame[i] = 0;
+						frame.Data[i] = 0;
 
-					if (newpal != _lastEmbedded) {
+					if (newpal != _lastEmbedded)
+					{
 						LoadPalette(newpal);
-						if (!_coloring.DefaultPalette.IsPersistent) {
+						if (!_coloring.DefaultPalette.IsPersistent)
+						{
 							_resetEmbedded = true;
 						}
 						_lastEmbedded = (int)newpal;
 					}
-				} else if (_resetEmbedded) {
+				}
+				else if (_resetEmbedded)
+				{
 					_lastEmbedded = _coloring.DefaultPaletteIndex;
 					SetPalette(_coloring.DefaultPalette, _coloring.DefaultPaletteIndex);
 					_resetEmbedded = false;
 				}
 			}
-			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 4, frame);
+			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 4, frame.Data);
 			uint Plane0CRC = 0;
 
-			if (_coloring.Mappings != null) {
-				TriggerAnimation(planes, out Plane0CRC );
+			if (_coloring.Mappings != null)
+			{
+				if (frame is VpmRawDMDFrame && ((VpmRawDMDFrame)frame).RawPlanes.Length > 0)
+				{
+					var vd = (VpmRawDMDFrame)frame;
+
+					// Reverse bit order for non-WPC.
+					TriggerAnimation(vd.RawPlanes, vd.RawPlanes.Length > 3);
+				}
+				else
+				{
+					TriggerAnimation(planes, false);
+				}
 			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
-			if (_activeAnimation != null) {
-				_activeAnimation.NextFrame(planes, Plane0CRC, AnimationFinished);
+			if (_activeAnimation != null)
+			{
+				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
 
@@ -116,28 +134,32 @@ namespace LibDmd.Converter
 
 		public void LoadPalette(uint newpal)
 		{
-			if (_coloring.Palettes.Length > newpal) {
+			if (_coloring.Palettes.Length > newpal)
+			{
 				SetPalette(_coloring.GetPalette(newpal), (int)newpal);
 
-			} else {
+			}
+			else
+			{
 				Logger.Warn("No palette for change to " + newpal);
 			}
 		}
 		/// <summary>
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>
-		/// <param name="planes">S Buid zum iberpriäfä</param>
-		private void TriggerAnimation(byte[][] planes, out uint Plane0CRC)
+		/// <param name="planes">S Buid zum iberpriäfä
+		/// </param>
+		/// 
+		public void ActivateMapping(Mapping mapping)
 		{
-			var mapping = FindMapping(planes, out Plane0CRC);
-
-			// Faus niid gfundä hemmr fertig
-			if (mapping == null) {
+			if (mapping.Mode == SwitchMode.Event)
+			{
 				return;
 			}
 
-			// Wird ignoriärt ("irrelevant")
-			if (mapping.Mode == SwitchMode.Event) {
+			// If same LCM scene, no need to stop/start 
+			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset)
+			{
 				return;
 			}
 
@@ -147,7 +169,8 @@ namespace LibDmd.Converter
 
 			// Palettä ladä
 			var palette = _coloring.GetPalette(mapping.PaletteIndex);
-			if (palette == null) {
+			if (palette == null)
+			{
 				Logger.Warn("[colorize] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
@@ -157,12 +180,15 @@ namespace LibDmd.Converter
 			SetPalette(palette, mapping.PaletteIndex);
 
 			// Palettä risettä wenn ä Lengi gäh isch
-			if (!mapping.IsAnimation && mapping.Duration > 0) {
+			if (!mapping.IsAnimation && mapping.Duration > 0)
+			{
 				_paletteReset = Observable
 					.Never<Unit>()
 					.StartWith(Unit.Default)
-					.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ => {
-						if (_defaultPalette != null) {
+					.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ =>
+					{
+						if (_defaultPalette != null)
+						{
 							Logger.Debug("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette, _defaultPaletteIndex);
 						}
@@ -171,21 +197,46 @@ namespace LibDmd.Converter
 			}
 
 			// Animazionä
-			if (mapping.IsAnimation) {
+			if (mapping.IsAnimation)
+			{
 
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
-				if (_animations == null) {
+				if (_animations == null)
+				{
 					Logger.Warn("[colorize] Tried to load animation but no animation file loaded.");
 					return;
 				}
 				_activeAnimation = _animations.Find(mapping.Offset);
 
-				if (_activeAnimation == null) {
+				if (_activeAnimation == null)
+				{
 					Logger.Warn("[colorize] Cannot find animation at position {0}.", mapping.Offset);
 					return;
 				}
 
 				_activeAnimation.Start(mapping.Mode, Render, AnimationFinished);
+			}
+		}
+
+		private void TriggerAnimation(byte[][] planes, bool reverse)
+		{
+			uint NoMaskCRC = 0;
+
+			for (var i = 0; i < planes.Length; i++)
+			{
+				var mapping = FindMapping(planes[i], reverse, out NoMaskCRC);
+
+				// Faus niid gfundä hemmr fertig
+				if (mapping != null)
+				{
+					ActivateMapping(mapping);
+					// Can exit if not LCM sceene.
+					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask)
+						return;
+
+				}
+				if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
+					_activeAnimation.DetectLCM(planes[i], NoMaskCRC, reverse);
 			}
 		}
 
@@ -195,39 +246,37 @@ namespace LibDmd.Converter
 		/// </summary>
 		/// <param name="planes">Bitplanes vom Biud</param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
-		private Mapping FindMapping(byte[][] planes, out uint Plane0CRC)
+		private Mapping FindMapping(byte[] plane, bool reverse, out uint NoMaskCRC)
 		{
-			Plane0CRC = 0;
+			NoMaskCRC = 0;
 			var maskSize = Dimensions.Value.Width * Dimensions.Value.Height / 8;
 
-			// Jedi Plane wird einisch duräghäscht
-			for (var i = 0; i < 2; i++) {
-				var checksum = FrameUtil.Checksum(planes[i]);
-				if (i == 0)
-					Plane0CRC = checksum;
+			var checksum = FrameUtil.Checksum(plane, reverse);
 
-				var mapping = _coloring.FindMapping(checksum);
-				if (mapping != null) {
+			NoMaskCRC = checksum;
+
+			var mapping = _coloring.FindMapping(checksum);
+			if (mapping != null)
+			{
+				return mapping;
+			}
+
+			// Wenn kä Maskä definiert, de nächschti Bitplane
+			if (_coloring.Masks == null || _coloring.Masks.Length <= 0)
+				return null;
+
+			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
+			var maskedPlane = new byte[maskSize];
+			foreach (var mask in _coloring.Masks)
+			{
+				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
+				mapping = _coloring.FindMapping(checksum);
+				if (mapping != null)
+				{
 					return mapping;
 				}
-
-				// Wenn kä Maskä definiert, de nächschti Bitplane
-				if (_coloring.Masks == null || _coloring.Masks.Length <= 0) {
-					continue;
-				}
-
-				// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
-				var maskedPlane = new byte[maskSize];
-				foreach (var mask in _coloring.Masks) {
-					var plane = new BitArray(planes[i]);
-					plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
-					checksum = FrameUtil.Checksum(maskedPlane);
-					mapping = _coloring.FindMapping(checksum);
-					if (mapping != null) {
-						return mapping;
-					}
-				}
 			}
+
 			return null;
 		}
 
@@ -238,12 +287,14 @@ namespace LibDmd.Converter
 		private void Render(byte[][] planes)
 		{
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
-			if (planes.Length == 2) {
+			if (planes.Length == 2)
+			{
 				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
-			if (planes.Length == 4) {
+			if (planes.Length == 4)
+			{
 				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 		}
@@ -255,11 +306,13 @@ namespace LibDmd.Converter
 		/// <param name="isDefault"></param>
 		public void SetPalette(Palette palette, int index, bool isDefault = false)
 		{
-			if (palette == null) {
+			if (palette == null)
+			{
 				Logger.Warn("[colorize] Ignoring null palette.");
 				return;
 			}
-			if (isDefault) {
+			if (isDefault)
+			{
 				_defaultPalette = palette;
 				_defaultPaletteIndex = index;
 			}

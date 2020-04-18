@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
+using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using NLog;
@@ -47,7 +48,7 @@ namespace PinMameDevice
 		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
 		public static void GameSettings(string gameName, ulong hardwareGeneration, IntPtr options)
 		{
-			var opt = (PMoptions) Marshal.PtrToStructure(options, typeof(PMoptions));
+			var opt = (PMoptions)Marshal.PtrToStructure(options, typeof(PMoptions));
 			Logger.Info("[vpm] PM_GameSettings({0})", opt.Colorize);
 			_dmdDevice.SetColorize(opt.Colorize != 0);
 			_dmdDevice.SetGameName(gameName);
@@ -88,8 +89,45 @@ namespace PinMameDevice
 			var frameSize = width * height * 3;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderRgb24(width, height, frame);
+			_dmdDevice.RenderRgb24(new DMDFrame() { width = width, height = height, Data = frame });
 		}
+
+		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
+		[DllExport("Render_16_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
+		public static void RenderRaw4(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
+		{
+			var frameSize = width * height;
+			var frame = new byte[frameSize];
+			Marshal.Copy(currbuffer, frame, 0, frameSize);
+
+			var rawplanes = new byte[noOfRawFrames][];
+			var planeSize = frameSize / 8;
+			for (int i = 0; i < noOfRawFrames; i++)
+			{
+				rawplanes[i] = new byte[planeSize];
+				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
+			}
+			_dmdDevice.RenderGray4(new VpmRawDMDFrame() { width = width, height = height, Data = frame, RawPlanes = rawplanes });
+		}
+
+		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
+		[DllExport("Render_4_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
+		public static void RenderRaw2(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
+		{
+			var frameSize = width * height;
+			var frame = new byte[frameSize];
+			Marshal.Copy(currbuffer, frame, 0, frameSize);
+			var rawplanes = new byte[noOfRawFrames][];
+			var planeSize = frameSize / 8;
+			for (int i = 0; i < noOfRawFrames; i++)
+			{
+				rawplanes[i] = new byte[planeSize];
+				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
+			}
+
+			_dmdDevice.RenderGray2(new VpmRawDMDFrame() { width = width, height = height, Data = frame, RawPlanes = rawplanes });
+		}
+
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
 		[DllExport("Render_16_Shades", CallingConvention = CallingConvention.Cdecl)]
@@ -98,7 +136,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderGray4(width, height, frame);
+			_dmdDevice.RenderGray4(new DMDFrame() { width = width, height = height, Data = frame });
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
@@ -108,7 +146,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderGray2(width, height, frame);
+			_dmdDevice.RenderGray2(new DMDFrame() { width = width, height = height, Data = frame });
 		}
 
 		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 

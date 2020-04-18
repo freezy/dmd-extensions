@@ -21,7 +21,8 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private readonly Subject<byte[]> _framesGray2 = new Subject<byte[]>();
+		private readonly Subject<DMDFrame> _framesGray2 = new Subject<DMDFrame>();
+
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		public VpmGray2Source(BehaviorSubject<FrameFormat> lastFrameFormat)
@@ -29,14 +30,14 @@ namespace LibDmd.Input.PinMame
 			_lastFrameFormat = lastFrameFormat;
 		}
 
-		public void NextFrame(int width, int height, byte[] frame)
+		public void NextFrame(DMDFrame frame)
 		{
-			SetDimensions(width, height);
+			SetDimensions(frame.width, frame.height);
 			_framesGray2.OnNext(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Gray2);
 		}
 
-		public IObservable<byte[]> GetGray2Frames()
+		public IObservable<DMDFrame> GetGray2Frames()
 		{
 			return _framesGray2;
 		}

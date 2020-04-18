@@ -12,27 +12,27 @@ namespace LibDmd.Input.FileSystem
 {
 	public class ImageSourceGray2 : ImageSource, IGray2Source
 	{
-		public IObservable<byte[]> GetGray2Frames() => _frames;
+		public IObservable<DMDFrame> GetGray2Frames() => _frames;
 
-		private readonly BehaviorSubject<byte[]> _frames;
+		private readonly BehaviorSubject<DMDFrame> _frames;
 
 		public ImageSourceGray2(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray2(bmp));
+			_frames = new BehaviorSubject<DMDFrame>(new DMDFrame() { Data = ImageUtil.ConvertToGray2(bmp), width = bmp.PixelWidth, height = bmp.PixelHeight });
 		}
 	}	
 	
 	public class ImageSourceGray4 : ImageSource, IGray4Source
 	{
-		public IObservable<byte[]> GetGray4Frames() => _frames;
+		public IObservable<DMDFrame> GetGray4Frames() => _frames;
 
-		private readonly BehaviorSubject<byte[]> _frames;
+		private readonly BehaviorSubject<DMDFrame> _frames;
 
 		public ImageSourceGray4(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<byte[]>(ImageUtil.ConvertToGray4(bmp));
+			_frames = new BehaviorSubject<DMDFrame>(new DMDFrame() { Data = ImageUtil.ConvertToGray4(bmp), width = bmp.PixelWidth, height = bmp.PixelHeight });
 		}
 	}
 	

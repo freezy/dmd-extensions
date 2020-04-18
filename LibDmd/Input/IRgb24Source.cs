@@ -19,6 +19,6 @@ namespace LibDmd.Input
 		/// for RGB between 0 and 255 for every pixel.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<byte[]> GetRgb24Frames();
+		IObservable<DMDFrame> GetRgb24Frames();
 	}
 }

@@ -19,7 +19,7 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private readonly Subject<byte[]> _framesRgb24 = new Subject<byte[]>();
+		private readonly Subject<DMDFrame> _framesRgb24 = new Subject<DMDFrame>();
 		private byte[] _lastFrame;
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
@@ -28,22 +28,22 @@ namespace LibDmd.Input.PinMame
 			_lastFrameFormat = lastFrameFormat;
 		}
 
-		public void NextFrame(int width, int height, byte[] frame)
+		public void NextFrame(DMDFrame frame)
 		{
-			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame != null && FrameUtil.CompareBuffers(frame, 0, _lastFrame, 0, frame.Length)) {
+			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame != null && FrameUtil.CompareBuffers(frame.Data, 0, _lastFrame, 0, frame.Data.Length)) {
 				// identical frame, drop.
 				return;
 			}
-			if (_lastFrame?.Length != frame.Length) {
-				_lastFrame = new byte[frame.Length];
+			if (_lastFrame?.Length != frame.Data.Length) {
+				_lastFrame = new byte[frame.Data.Length];
 			}
-			SetDimensions(width, height);
+			SetDimensions(frame.width, frame.height);
 			_framesRgb24.OnNext(frame);
-			Buffer.BlockCopy(frame, 0, _lastFrame, 0, frame.Length);
+			Buffer.BlockCopy(frame.Data, 0, _lastFrame, 0, frame.Data.Length);
 			_lastFrameFormat.OnNext(FrameFormat.Rgb24);
 		}
 
-		public IObservable<byte[]> GetRgb24Frames()
+		public IObservable<DMDFrame> GetRgb24Frames()
 		{
 			return _framesRgb24;
 		}

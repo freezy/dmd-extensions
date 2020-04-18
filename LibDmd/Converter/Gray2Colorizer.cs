@@ -78,18 +78,28 @@ namespace LibDmd.Converter
 		{
 		}
 
-		public void Convert(byte[] frame)
+		public void Convert(DMDFrame frame)
 		{
-			uint Plane0CRC = 0;
-
-			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame);
+			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
 
 			if (_coloring.Mappings != null)
-				TriggerAnimation(planes, out Plane0CRC );
+			{
+				if (frame is VpmRawDMDFrame && ((VpmRawDMDFrame)frame).RawPlanes.Length > 0)
+				{
+					var vd = (VpmRawDMDFrame)frame;
+
+					// Reverse bit order for non-WPC.
+					TriggerAnimation(vd.RawPlanes, vd.RawPlanes.Length > 3);
+				}
+				else
+				{
+					TriggerAnimation(planes, false);
+				}
+			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null) {
-				_activeAnimation.NextFrame(planes, Plane0CRC, AnimationFinished);
+				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
 
@@ -100,25 +110,19 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>
-		/// <param name="planes">S Buid zum iberpriäfä</param>
-		private void TriggerAnimation(byte[][] planes, out uint Plane0CRC)
+		/// <param name="planes">S Buid zum iberpriäfä
+		/// </param>
+		/// 
+		public void ActivateMapping(Mapping mapping)
 		{
-			Plane0CRC = 0;
-
-			var mapping = FindMapping(planes, out Plane0CRC);
-
-			// Faus niid gfundä hemmr fertig
-			if (mapping == null) {
+			if (mapping.Mode == SwitchMode.Event)
+			{
 				return;
 			}
 
-			// Wird ignoriärt ("irrelevant")
-			if (mapping.Mode == SwitchMode.Event) {
-				return;
-			}
-
-			// If same LCM scene, no need to stop/start.
-			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset) {
+			// If same LCM scene, no need to stop/start 
+			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset)
+			{
 				return;
 			}
 
@@ -128,7 +132,8 @@ namespace LibDmd.Converter
 
 			// Palettä ladä
 			var palette = _coloring.GetPalette(mapping.PaletteIndex);
-			if (palette == null) {
+			if (palette == null)
+			{
 				Logger.Warn("[colorize] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
@@ -138,13 +143,15 @@ namespace LibDmd.Converter
 			SetPalette(palette, mapping.PaletteIndex);
 
 			// Palettä risettä wenn ä Lengi gäh isch
-			if (!mapping.IsAnimation && mapping.Duration > 0) {
+			if (!mapping.IsAnimation && mapping.Duration > 0)
+			{
 				_paletteReset = Observable
 					.Never<Unit>()
 					.StartWith(Unit.Default)
 					.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ =>
 					{
-						if (_defaultPalette != null) {
+						if (_defaultPalette != null)
+						{
 							Logger.Debug("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette, _defaultPaletteIndex);
 						}
@@ -153,21 +160,46 @@ namespace LibDmd.Converter
 			}
 
 			// Animazionä
-			if (mapping.IsAnimation) {
+			if (mapping.IsAnimation)
+			{
 
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
-				if (_animations == null) {
+				if (_animations == null)
+				{
 					Logger.Warn("[colorize] Tried to load animation but no animation file loaded.");
 					return;
 				}
 				_activeAnimation = _animations.Find(mapping.Offset);
 
-				if (_activeAnimation == null) {
+				if (_activeAnimation == null)
+				{
 					Logger.Warn("[colorize] Cannot find animation at position {0}.", mapping.Offset);
 					return;
 				}
 
 				_activeAnimation.Start(mapping.Mode, Render, AnimationFinished);
+			}
+		}
+
+		private void TriggerAnimation(byte[][] planes, bool reverse)
+		{
+			uint NoMaskCRC = 0;
+
+			for (var i = 0; i < planes.Length; i++)
+			{
+				var mapping = FindMapping(planes[i], reverse, out NoMaskCRC);
+
+				// Faus niid gfundä hemmr fertig
+				if (mapping != null)
+				{
+					ActivateMapping(mapping);
+					// Can exit if not LCM sceene.
+					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask)
+						return;
+
+				}
+				if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
+					_activeAnimation.DetectLCM(planes[i], NoMaskCRC, reverse);
 			}
 		}
 
@@ -177,39 +209,34 @@ namespace LibDmd.Converter
 		/// </summary>
 		/// <param name="planes">Bitplanes vom Biud</param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
-		private Mapping FindMapping(byte[][] planes, out uint Plane0CRC)
+		private Mapping FindMapping(byte[] plane, bool reverse, out uint NoMaskCRC)
 		{
-			Plane0CRC = 0;
+			NoMaskCRC = 0;
 			var maskSize = Dimensions.Value.Width * Dimensions.Value.Height / 8;
 
-			// Jedi Plane wird einisch duräghäscht
-			for (var i = 0; i < 2; i++) {
-				var checksum = FrameUtil.Checksum(planes[i]);
-				if (i == 0)
-					Plane0CRC = checksum;
+			var checksum = FrameUtil.Checksum(plane, reverse);
+				
+			NoMaskCRC = checksum;
 
-				var mapping = _coloring.FindMapping(checksum);
+			var mapping = _coloring.FindMapping(checksum);
+			if (mapping != null) {
+				return mapping;
+			}
+
+			// Wenn kä Maskä definiert, de nächschti Bitplane
+			if (_coloring.Masks == null || _coloring.Masks.Length <= 0) 
+				return null;
+		
+			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
+			var maskedPlane = new byte[maskSize];
+			foreach (var mask in _coloring.Masks) {
+				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
+				mapping = _coloring.FindMapping(checksum);
 				if (mapping != null) {
 					return mapping;
 				}
-
-				// Wenn kä Maskä definiert, de nächschti Bitplane
-				if (_coloring.Masks == null || _coloring.Masks.Length <= 0) {
-					continue;
-				}
-
-				// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
-				var maskedPlane = new byte[maskSize];
-				foreach (var mask in _coloring.Masks) {
-					var plane = new BitArray(planes[i]);
-					plane.And(new BitArray(mask)).CopyTo(maskedPlane, 0);
-					checksum = FrameUtil.Checksum(maskedPlane);
-					mapping = _coloring.FindMapping(checksum);
-					if (mapping != null) {
-						return mapping;
-					}
-				}
 			}
+			
 			return null;
 		}
 
