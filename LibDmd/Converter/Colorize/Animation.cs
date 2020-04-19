@@ -276,8 +276,16 @@ namespace LibDmd.Converter.Colorize
 				FoundFollowMatch = false;
 				if (_frameIndex == NumFrames)
 				{
-					Stop("finished");
-					completed?.Invoke();
+					// If it's a follow mode the final frame should repeat indefinitely, only interrupted by another hash match elsewhere
+					if (SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)
+					{
+						_frameIndex--;
+					}
+					else
+					{
+						Stop("finished");
+						completed?.Invoke();
+					}
 				}
 				else
 				{
