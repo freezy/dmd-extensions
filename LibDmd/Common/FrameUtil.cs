@@ -490,6 +490,31 @@ namespace LibDmd.Common
 		}
 
 
+		/// <summary>
+		/// Combine Plane A and Plane B using a mask.   Masked parts from A will be used.
+		/// </summary>
+		/// <param name="PlaneA">Plane A</param>
+		/// <param name="PlaneB">Plane B</param>
+		/// <param name="Mask">Mask</param>
+		/// <returns>Combined plane</returns>
+
+		public static byte[] CombinePlaneWithMask(byte[] PlaneA, byte[] PlaneB, byte[] Mask)
+		{
+			var length = PlaneA.Length;
+			System.Diagnostics.Debug.Assert(length == PlaneB.Length && length == Mask.Length);
+			byte[] outplane = new byte[length];
+
+			unchecked
+			{
+				for (int i = 0; i < length; i++)
+				{
+					var maskbits = Mask[i];
+					outplane[i] = (byte)((PlaneA[i] & maskbits) | (PlaneB[i] & ~maskbits));
+				}
+			}
+			return outplane;
+		}
+		
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
