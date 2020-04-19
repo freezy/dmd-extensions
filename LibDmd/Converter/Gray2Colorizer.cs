@@ -198,8 +198,13 @@ namespace LibDmd.Converter
 						return;
 
 				}
-				if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
-					_activeAnimation.DetectLCM(planes[i], NoMaskCRC, reverse);
+				if (_activeAnimation != null)
+				{
+					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
+						_activeAnimation.DetectLCM(planes[i], NoMaskCRC, reverse);
+					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
+						_activeAnimation.DetectFollow(planes[i], NoMaskCRC, reverse);
+				}
 			}
 		}
 

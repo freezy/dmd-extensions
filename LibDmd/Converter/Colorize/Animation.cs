@@ -95,6 +95,7 @@ namespace LibDmd.Converter.Colorize
 		/// Current frame's following mask
 		/// </summary>
 		public byte[] FollowMask { get; private set; }
+		public uint FollowHash { get; private set; }
 
 		private IObservable<AnimationFrame> _frames;
 		private Action<byte[][]> _currentRender;
@@ -130,7 +131,7 @@ namespace LibDmd.Converter.Colorize
 		{
 			Offset = offset;
 		}
-		
+
 		/// <summary>
 		/// Tuät d Animazion startä.
 		/// </summary>
@@ -143,14 +144,17 @@ namespace LibDmd.Converter.Colorize
 			IsRunning = true;
 			SwitchMode = mode;
 			_frameIndex = 0;
+			FoundFollowMatch = true; // Always render the first frame in a follow sequence.
 
 			switch (SwitchMode)
 			{
 				case SwitchMode.ColorMask:
 				case SwitchMode.Follow:
+				case SwitchMode.MaskedReplace:
 					StartEnhance(render);
 					break;
 				case SwitchMode.Replace:
+				case SwitchMode.FollowReplace:
 					StartReplace(render, completed);
 					break;
 				case SwitchMode.LayeredColorMask:
@@ -182,6 +186,12 @@ namespace LibDmd.Converter.Colorize
 		private void RenderLCM(byte[][] vpmFrame)
 		{
 			_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+		}
+
+		public void DetectFollow(byte[] plane, uint NoMaskCRC, bool Reverse)
+		{
+			if (NoMaskCRC == FollowHash || FrameUtil.ChecksumWithMask(plane, FollowMask, Reverse) == FollowHash)
+				FoundFollowMatch = true;
 		}
 
 		public void DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse)
@@ -230,7 +240,7 @@ namespace LibDmd.Converter.Colorize
 
 		private void StartReplace(Action<byte[][]> render, Action completed = null)
 		{
-			Logger.Debug("[vni][{0}] Starting colored gray4 animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
+			Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_lastTick = Environment.TickCount;
 			_timer = 0;
 			_currentRender = render;
@@ -239,7 +249,7 @@ namespace LibDmd.Converter.Colorize
 
 		private void RenderAnimation(byte[][] vpmFrame, Action completed = null)
 		{
-			if (SwitchMode != SwitchMode.LayeredColorMask)
+			if (SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.Replace || SwitchMode == SwitchMode.MaskedReplace)
 			{
 				var delay = Environment.TickCount - _lastTick;
 				_lastTick = Environment.TickCount;
@@ -251,22 +261,19 @@ namespace LibDmd.Converter.Colorize
 					return;
 				}
 			}
-			switch (SwitchMode)
+			if (!(SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace) || FoundFollowMatch)
 			{
-				case SwitchMode.ColorMask:
-				case SwitchMode.Follow:
-					RenderColorMask(vpmFrame);
-					break;
-				case SwitchMode.Replace:
-					_currentRender(Frames[_frameIndex].PlaneData);
-					break;
-				case SwitchMode.LayeredColorMask:
-					RenderLCM(vpmFrame);
-					break;
+				OutputFrame(vpmFrame);
 			}
-			if (SwitchMode != SwitchMode.LayeredColorMask && (_timer <= 0 || (SwitchMode == SwitchMode.Follow && FoundFollowMatch)))
+			// Do not advance frames in LCM
+			// When timer runs out and not in follow modes
+			// When in follow modes and a match is detected.
+			if (SwitchMode != SwitchMode.LayeredColorMask && 
+				 ((_timer <= 0 && !(SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)) 
+				 || ((SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace) && FoundFollowMatch)))
 			{
 				_frameIndex++;
+				FoundFollowMatch = false;
 				if (_frameIndex == NumFrames)
 				{
 					Stop("finished");
@@ -276,6 +283,44 @@ namespace LibDmd.Converter.Colorize
 				{
 					InitializeFrame();
 				}
+			}
+		}
+
+		private void OutputFrame(byte[][] vpmFrame)
+		{
+			switch (SwitchMode)
+			{
+				case SwitchMode.ColorMask:
+				case SwitchMode.Follow:
+					RenderColorMask(vpmFrame);
+					break;
+				case SwitchMode.FollowReplace:
+				case SwitchMode.Replace:
+				case SwitchMode.MaskedReplace:
+					byte[][] outplanes;
+					var animplanes = Frames[_frameIndex].PlaneData;
+
+					if (SwitchMode != SwitchMode.MaskedReplace)
+					{
+						outplanes = animplanes;
+					}
+					else
+					{
+						var planecount = animplanes.Length;
+						outplanes = new byte[planecount][];
+						for (int i = 0; i < planecount; i++)
+						{
+							if (i < vpmFrame.Length)
+								outplanes[i] = FrameUtil.CombinePlaneWithMask(animplanes[i], vpmFrame[i], FollowMask);
+							else
+								outplanes[i] = animplanes[i];
+						}
+					}
+					_currentRender(outplanes);
+					break;
+				case SwitchMode.LayeredColorMask:
+					RenderLCM(vpmFrame);
+					break;
 			}
 		}
 
@@ -294,8 +339,18 @@ namespace LibDmd.Converter.Colorize
 		private void InitializeFrame()
 		{
 			_timer += (int)Frames[_frameIndex].Delay;
-			if (SwitchMode == SwitchMode.Follow)
+			if (SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)
 			{
+				// Need the *next* frame's mask and hash
+				if (_frameIndex + 1 < NumFrames)
+				{					
+					FollowHash = Frames[_frameIndex+1].Hash;
+					FollowMask = Frames[_frameIndex+1].Mask;
+				}
+			}
+			else if (SwitchMode == SwitchMode.MaskedReplace)
+			{
+				// Need the mask from this frame.
 				FollowMask = Frames[_frameIndex].Mask;
 			}
 		}
