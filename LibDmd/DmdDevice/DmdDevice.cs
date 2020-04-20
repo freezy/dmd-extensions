@@ -60,7 +60,6 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private DMDFrame _dmdFrame = new DMDFrame();
-		private RawDMDFrame _rawDMDFrame = new RawDMDFrame();
 
 		// Iifärbigsziig
 		private Color[] _palette;
