@@ -21,10 +21,13 @@ namespace PinMameDevice
 	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
 	public static class DmdDevice
 	{
+		private static DMDFrame _dmdFrame = new DMDFrame();
+		private static RawDMDFrame _rawDmdFrame = new RawDMDFrame();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static readonly IDmdDevice _dmdDevice = new LibDmd.DmdDevice.DmdDevice();
 		static readonly LinkedList<char> CData = new LinkedList<char>();
+
 
 		// int Open()
 		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
@@ -89,7 +92,7 @@ namespace PinMameDevice
 			var frameSize = width * height * 3;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderRgb24(new DMDFrame() { width = width, height = height, Data = frame });
+			_dmdDevice.RenderRgb24(_dmdFrame.Update(width, height, frame));
 		}
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
@@ -107,7 +110,7 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			_dmdDevice.RenderGray4(new VpmRawDMDFrame() { width = width, height = height, Data = frame, RawPlanes = rawplanes });
+			_dmdDevice.RenderGray4(_rawDmdFrame.Update(width, height, frame, rawplanes));
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
@@ -125,7 +128,7 @@ namespace PinMameDevice
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
 
-			_dmdDevice.RenderGray2(new VpmRawDMDFrame() { width = width, height = height, Data = frame, RawPlanes = rawplanes });
+			_dmdDevice.RenderGray2(_rawDmdFrame.Update(width, height, frame, rawplanes));
 		}
 
 
@@ -136,7 +139,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderGray4(new DMDFrame() { width = width, height = height, Data = frame });
+			_dmdDevice.RenderGray4(_dmdFrame.Update(width, height, frame));
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
@@ -146,7 +149,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			_dmdDevice.RenderGray2(new DMDFrame() { width = width, height = height, Data = frame });
+			_dmdDevice.RenderGray2(_dmdFrame.Update(width, height, frame));
 		}
 
 		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 

@@ -28,6 +28,7 @@ namespace LibDmd.Input.ProPinball
 		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
 		private IObservable<DMDFrame> _framesGray4;
+		private DMDFrame _dmdFrame = new DMDFrame();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -55,7 +56,7 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var arr = new DMDFrame() { Data = new byte[len], height = Dimensions.Value.Height, width = Dimensions.Value.Width };
+							var arr = _dmdFrame.Update(Dimensions.Value.Width, Dimensions.Value.Height, new byte[len]);
 							Marshal.Copy((IntPtr)frame, arr.Data, 0, len);
 							o.OnNext(arr);
 

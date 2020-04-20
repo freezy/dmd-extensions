@@ -36,6 +36,7 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
+		private DMDFrame _dmdFrame = new DMDFrame() { width = DMDWidth, height = DMDHeight };
 
 		private static HashSet<double> lums = new HashSet<double>();
 
@@ -54,7 +55,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				sternInit = false; // Reset Stern DMD hack state.
-				return new DMDFrame() { Data = frame, width = DMDWidth, height = DMDHeight };
+				return _dmdFrame.Update(frame);
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -130,7 +131,7 @@ namespace LibDmd.Input.TPAGrabber
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : new DMDFrame() { Data = frame, width = DMDWidth, height = DMDHeight } ;
+			return identical ? null : _dmdFrame.Update(frame);
 		}
 
 		// try attaching to a process
