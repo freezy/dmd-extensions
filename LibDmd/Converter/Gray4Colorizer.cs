@@ -217,11 +217,11 @@ namespace LibDmd.Converter
 
 		private void TriggerAnimation(byte[][] planes, bool reverse)
 		{
-			uint NoMaskCRC = 0;
+			uint nomaskcrc = 0;
 
 			for (var i = 0; i < planes.Length; i++)
 			{
-				var mapping = FindMapping(planes[i], reverse, out NoMaskCRC);
+				var mapping = FindMapping(planes[i], reverse, out nomaskcrc);
 
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
@@ -237,9 +237,9 @@ namespace LibDmd.Converter
 				if (_activeAnimation != null)
 				{
 					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
-						_activeAnimation.DetectLCM(planes[i], NoMaskCRC, reverse);
+						_activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], NoMaskCRC, reverse);
+						_activeAnimation.DetectFollow(planes[i], nomaskcrc, reverse);
 				}
 			}
 		}
