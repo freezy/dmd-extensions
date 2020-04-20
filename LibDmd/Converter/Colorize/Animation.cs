@@ -265,8 +265,8 @@ namespace LibDmd.Converter.Colorize
 			{
 				OutputFrame(vpmFrame);
 			}
-			// Do not advance frames in LCM
-			// When timer runs out and not in follow modes
+			// Advance frames - when not in LCM, AND
+			// When timer runs out and not in follow modes OR
 			// When in follow modes and a match is detected.
 			if (SwitchMode != SwitchMode.LayeredColorMask && 
 				 ((_timer <= 0 && !(SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)) 

@@ -12,6 +12,8 @@ namespace LibDmd.Input.FileSystem
 {
 	public class ImageSourceGray2 : ImageSource, IGray2Source
 	{
+		DMDFrame _dmdFrame = new DMDFrame();
+
 		public IObservable<DMDFrame> GetGray2Frames() => _frames;
 
 		private readonly BehaviorSubject<DMDFrame> _frames;
@@ -19,12 +21,14 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceGray2(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(new DMDFrame() { Data = ImageUtil.ConvertToGray2(bmp), width = bmp.PixelWidth, height = bmp.PixelHeight });
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray2(bmp)));
 		}
 	}	
 	
 	public class ImageSourceGray4 : ImageSource, IGray4Source
 	{
+		DMDFrame _dmdFrame = new DMDFrame();
+
 		public IObservable<DMDFrame> GetGray4Frames() => _frames;
 
 		private readonly BehaviorSubject<DMDFrame> _frames;
@@ -32,7 +36,7 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceGray4(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(new DMDFrame() { Data = ImageUtil.ConvertToGray4(bmp), width = bmp.PixelWidth, height = bmp.PixelHeight });
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray4(bmp)));
 		}
 	}
 	

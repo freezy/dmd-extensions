@@ -84,10 +84,8 @@ namespace LibDmd.Converter
 
 			if (_coloring.Mappings != null)
 			{
-				if (frame is VpmRawDMDFrame && ((VpmRawDMDFrame)frame).RawPlanes.Length > 0)
+				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
 				{
-					var vd = (VpmRawDMDFrame)frame;
-
 					// Reverse bit order for non-WPC.
 					TriggerAnimation(vd.RawPlanes, vd.RawPlanes.Length > 3);
 				}
@@ -192,6 +190,8 @@ namespace LibDmd.Converter
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
 				{
+					Logger.Debug("[vni]Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
+
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
 					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask)
