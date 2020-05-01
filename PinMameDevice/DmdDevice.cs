@@ -21,8 +21,8 @@ namespace PinMameDevice
 	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
 	public static class DmdDevice
 	{
-		private static DMDFrame _dmdFrame = new DMDFrame();
-		private static RawDMDFrame _rawDmdFrame = new RawDMDFrame();
+		private static readonly DMDFrame _dmdFrame = new DMDFrame();
+		private static readonly RawDMDFrame _rawDmdFrame = new RawDMDFrame();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static readonly IDmdDevice _dmdDevice = new LibDmd.DmdDevice.DmdDevice();
