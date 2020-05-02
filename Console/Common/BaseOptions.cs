@@ -10,8 +10,8 @@ namespace DmdExt.Common
 {
 	internal abstract class BaseOptions : IConfiguration
 	{
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric, network ]. Default: \"auto\", which outputs to all available devices.")]
-		public DestinationType Destination { get; set; } = DestinationType.Auto;
+		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric, network ]. Default: \"virtual\".")]
+		public DestinationType Destination { get; set; } = DestinationType.Virtual;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
 		public ResizeMode Resize { get; set; } = ResizeMode.Stretch;
