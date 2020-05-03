@@ -1,10 +1,10 @@
-using System.Resources;
+﻿using System.Resources;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("freezy <freezy@vpdb.io>")]
-[assembly: AssemblyCopyright("Copyright (C) 2019 <freezy@vpdb.io>")]
+[assembly: AssemblyCopyright("Copyright (C) 2020 <freezy@vpdb.io>")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.7.3.0")]
-[assembly: AssemblyFileVersion("1.7.3.0")]
-[assembly: AssemblyInformationalVersion("1.7.3-SNAPSHOT")]
+[assembly: AssemblyVersion("1.8.0.0")]
+[assembly: AssemblyFileVersion("1.8.0.0")]
+[assembly: AssemblyInformationalVersion("1.8.0")]
 [assembly: NeutralResourcesLanguage("en")]

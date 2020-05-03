@@ -8,7 +8,7 @@ using CommandLine;
 // associated with an assembly.
 [assembly: AssemblyTitle("DMD Extensions")]
 [assembly: AssemblyDescription("Features for DMD owners that aren't officially supported.")]
-[assembly: AssemblyProduct("DMD Extensions")]
+[assembly: AssemblyProduct("Command Line Tool")]
 [assembly: AssemblyUsage("\nUSAGE: dmdext <command> [<args>]")]
 [assembly: AssemblyLicense("This is free software. You may redistribute copies of it under the terms of the GPL License <https://opensource.org/licenses/GPL-2.0>.")]
 
