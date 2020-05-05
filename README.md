@@ -428,12 +428,18 @@ setup, however note that games that you've already configured won't be affected.
 - For `dmddevice.dll` you probably want the 32-bit version unless you've set up
   VPM with `Setup64.exe` and you know what you're doing.
 
-## Compilation Notes
+## Developer Setup
 
-There is an issue with Fody third party addin that may give you an error with the $(IntermediateOutputPath) if you do a fresh
-checkout of this project from Github.
+After cloning the repo, you'll need to restore the `DllExport` depencendy. There is
+a script that does it for you. Go into the cloned repo and run:
 
-If this occurs, simply close Visual Studio and re-launch the DMD Extensions project and the issue will go away.
+    DllExport -action Restore -sln-file DmdExtensions.sln
+
+Then there is an issue with Fody third party addin that may give you an error 
+ith the $(IntermediateOutputPath).
+
+If this occurs, simply close Visual Studio and re-launch the DMD Extensions project
+and the issue will go away.
 
 [Reference](https://github.com/Fody/Fody/issues/629)
 
