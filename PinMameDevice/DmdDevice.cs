@@ -6,7 +6,6 @@ using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using NLog;
-using RGiesecke.DllExport;
 
 namespace PinMameDevice
 {
