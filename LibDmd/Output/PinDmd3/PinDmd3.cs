@@ -372,7 +372,7 @@ namespace LibDmd.Output.PinDmd3
 			if (match.Success) {
 				var revision = Int32.Parse(match.Groups[1].Value);
 				Logger.Debug("   Revision:    {0}", revision);
-				_supportsColoredGray4 = revision >= 1013;
+				_supportsColoredGray4 = revision >= 1014;
 
 			} else {
 				Logger.Warn("Could not parse revision from firmware.");

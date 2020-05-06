@@ -430,8 +430,8 @@ setup, however note that games that you've already configured won't be affected.
 
 ## Developer Setup
 
-After cloning the repo, you'll need to restore the `DllExport` depencendy. There is
-a script that does it for you. Go into the cloned repo and run:
+After cloning the repo, you'll need to restore the [DllExport](https://github.com/3F/DllExport)
+dependency. There is a script that does it for you. Go into the cloned repo and run:
 
     DllExport -action Restore -sln-file DmdExtensions.sln
 
