@@ -53,7 +53,8 @@ namespace LibDmd.DmdDevice
 		private static string _version = "";
 		private static string _sha = "";
 		private static string _fullVersion = "";
-		private VirtualDmd _dmd;
+		private VirtualDmd _virtualDmd;
+		private VirtualAlphanumericDestination _alphaNumericDest;
 
 		// Ziigs vo VPM
 		private string _gameName;
@@ -146,15 +147,14 @@ namespace LibDmd.DmdDevice
 
 			SetupColorizer();
 
-			if (_config.VirtualDmd.Enabled) {
-				if (_dmd == null) {
-					Logger.Info("Opening virtual DMD...");
+			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
+				if (_virtualDmd == null && _alphaNumericDest == null) {
+					Logger.Info("Opening virtual display...");
 					CreateVirtualDmd();
 
-				} else {
+				} else if (_config.VirtualDmd.Enabled) {
 					try {
-						_dmd.Dispatcher.Invoke(() =>
-						{
+						_virtualDmd.Dispatcher.Invoke(() => {
 							SetupGraphs();
 							SetupVirtualDmd();
 						});
@@ -230,17 +230,20 @@ namespace LibDmd.DmdDevice
 			var thread = new Thread(() => {
 
 				// create the virtual DMD window and create the render grahps
-				_dmd = new VirtualDmd(_config.VirtualDmd as VirtualDmdConfig, _gameName);
+				if (_config.VirtualDmd.Enabled) {
+					_virtualDmd = new VirtualDmd(_config.VirtualDmd as VirtualDmdConfig, _gameName);
+				}
 
-				//---_alphaNumericDisplay = new VirtualAlphaNumericDisplay();
 				SetupGraphs();
 
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 
 				// When the window closes, shut down the dispatcher
-				_dmd.Closed += (s, e) => _dmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				_dmd.Dispatcher.Invoke(SetupVirtualDmd);
+				if (_config.VirtualDmd.Enabled) {
+					_virtualDmd.Closed += (s, e) => _virtualDmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+					_virtualDmd.Dispatcher.Invoke(SetupVirtualDmd);
+				}
 
 				// we're done with the setup - let the calling thread proceed
 				ev.Set();
@@ -305,12 +308,12 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {
-				renderers.Add(_dmd.Dmd);
+				renderers.Add(_virtualDmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
-				var alphaNumeric = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
-				renderers.Add(alphaNumeric);
+				_alphaNumericDest = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
+				renderers.Add(_alphaNumericDest);
 				Logger.Info("Added virtual alphanumeric renderer.");
 			}
 			if (_config.Video.Enabled) {
@@ -470,10 +473,10 @@ namespace LibDmd.DmdDevice
 		/// </summary>
 		private void SetupVirtualDmd()
 		{
-			_dmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
-			_dmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
-			_dmd.DotSize = _config.VirtualDmd.DotSize;
-			_dmd.SetGameName(_gameName);
+			_virtualDmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
+			_virtualDmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
+			_virtualDmd.DotSize = _config.VirtualDmd.DotSize;
+			_virtualDmd.SetGameName(_gameName);
 
 			// find the game's dmd position in VPM's registry
 			if (_config.VirtualDmd.UseRegistryPosition) {
@@ -529,8 +532,8 @@ namespace LibDmd.DmdDevice
 				SetVirtualDmdDefaultPosition();
 			}
 
-			_dmd.Dmd.Init();
-			_dmd.Show();
+			_virtualDmd.Dmd.Init();
+			_virtualDmd.Show();
 		}
 
 		/// <summary>
@@ -538,14 +541,14 @@ namespace LibDmd.DmdDevice
 		/// </summary>
 		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
 		{
-			var aspectRatio = _dmd.Width / _dmd.Height;
-			_dmd.Left = _config.VirtualDmd.HasGameOverride("left") || x < 0 ? _config.VirtualDmd.Left : x;
-			_dmd.Top = _config.VirtualDmd.HasGameOverride("top") || y < 0 ? _config.VirtualDmd.Top : y;
-			_dmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
+			var aspectRatio = _virtualDmd.Width / _virtualDmd.Height;
+			_virtualDmd.Left = _config.VirtualDmd.HasGameOverride("left") || x < 0 ? _config.VirtualDmd.Left : x;
+			_virtualDmd.Top = _config.VirtualDmd.HasGameOverride("top") || y < 0 ? _config.VirtualDmd.Top : y;
+			_virtualDmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
 			if (_config.VirtualDmd.IgnoreAr) {
-				_dmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
+				_virtualDmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
 			} else {
-				_dmd.Height = _dmd.Width / aspectRatio;
+				_virtualDmd.Height = _virtualDmd.Width / aspectRatio;
 			}
 		}
 
@@ -558,8 +561,8 @@ namespace LibDmd.DmdDevice
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
-				_dmd?.Dispatcher.Invoke(() => {
-					_dmd.Hide();
+				_virtualDmd?.Dispatcher.Invoke(() => {
+					_virtualDmd.Hide();
 				});
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");

@@ -362,7 +362,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					(_config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig).SetPosition(displayNumber, position);
 				});
 			}
-			
 
 			_displays[displayNumber] = display;
 
