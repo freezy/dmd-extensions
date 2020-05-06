@@ -745,7 +745,7 @@ namespace LibDmd.DmdDevice
 
 		private bool CreateGameConfig()
 		{
-			if (_parent.GameName == null) {
+			if (string.IsNullOrEmpty(_parent.GameName)) {
 				return false;
 			}
 
