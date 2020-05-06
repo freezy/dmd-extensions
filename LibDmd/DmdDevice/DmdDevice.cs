@@ -118,7 +118,13 @@ namespace LibDmd.DmdDevice
 			if (attr.Length > 0) {
 				var aca = (AssemblyConfigurationAttribute)attr[0];
 				_sha = aca.Configuration;
-				_fullVersion = $"{_version} ({_sha})";
+				if (string.IsNullOrEmpty(_sha)) {
+					_fullVersion = _version;
+
+				} else {
+					_fullVersion = $"{_version} ({_sha})";
+				}
+				
 			} else {
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
