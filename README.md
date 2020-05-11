@@ -84,7 +84,7 @@ run it. A few notes:
 ### Test
 
 1. Open a command prompt ([Windows]+[R], `cmd`, [enter])
-2. Type `dmdext test` [enter]
+2. Type `dmdext test -d auto` [enter]
 
 You should see a test image on your DMD as well as on a virtual DMD.
 
