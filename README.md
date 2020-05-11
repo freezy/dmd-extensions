@@ -305,10 +305,16 @@ have my sincerest sympathy, but that's as far as I go. ;)
 
 ## Breaking Changes
 
-Since version 1.8 data types in configuration files are now culture invariant. Meaning if you are running under a Windows UI Culture 
-such as German which normally represents decimals with commas instead of periods you will need to change your configuration file 
-(such as DMDDevice.ini) to use periods for decimal data. The most common example would be those users who are using `dotsize` setting
-in your DMDDevice.ini. This was done to standardize the format of numeric data accross different languages.
+### v1.8.0
+
+- Data types in configuration files are now culture invariant. Meaning if you are running under a Windows UI Culture such as German 
+  which normally represents decimals with commas instead of periods you will need to change your configuration file (such as 
+  DMDDevice.ini) to use periods for decimal data. The most common example would be those users who are using `dotsize` setting
+  in your DMDDevice.ini. This was done to standardize the format of numeric data accross different languages.
+- Hardware DMDs aren't probed per default anymore, unless you specifically set the destination. For most people that means that 
+  you'll need to provide the `-d` option when running `dmdext.exe`.
+- If you are a PinDMD3 user and are using colored ROMs, you'll want to [upgrade your firmware](https://github.com/freezy/dmd-extensions/wiki/PinDMD3:-How-to-flash-a-new-firmware).
+
 
 ## Troubleshooting
 
