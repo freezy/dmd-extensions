@@ -31,6 +31,8 @@ namespace LibDmd.Output.Pin2Dmd
 		private readonly byte[] _colorPalette;
 		private int _currentPreloadedPalette;
 		private bool _paletteIsPreloaded;
+		private bool _isXL;
+
 		private static Pin2Dmd _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -86,8 +88,8 @@ namespace LibDmd.Output.Pin2Dmd
 
 				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD")) {
 
-					var isXL = _pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL");
-					if (isXL) {
+					_isXL = _pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL");
+					if (_isXL) {
 						DmdWidth = 192;
 						DmdHeight = 64;
 					}
@@ -112,7 +114,7 @@ namespace LibDmd.Output.Pin2Dmd
 					_frameBufferGray4 = new byte[size];
 					_frameBufferGray4[0] = 0x81; // frame sync bytes
 					_frameBufferGray4[1] = 0xC3;
-					_frameBufferGray4[2] = (byte)(isXL ? 0xE8 : 0xE7);
+					_frameBufferGray4[2] = (byte)(_isXL ? 0xE8 : 0xE7);
 					_frameBufferGray4[3] = 0x00;
 
 				} else {
