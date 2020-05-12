@@ -54,7 +54,7 @@ namespace LibDmd.Common
 						var pixel = frame[(y * width) + (x + v)];
 						for (var i = 0; i < bitlen; i++) {
 							bd[i] <<= 1;
-							if ((pixel & ( 1 << i) ) != 0) {
+							if ((pixel & (1 << i)) != 0) {
 								bd[i] |= 1;
 							}
 						}
