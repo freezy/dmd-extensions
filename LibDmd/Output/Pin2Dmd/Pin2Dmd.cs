@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using LibDmd.Converter.Colorize;
-using System.Collections.Generic;
 using NLog;
 
 namespace LibDmd.Output.Pin2Dmd
@@ -64,7 +62,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void Init()
 		{
-#if (!TEST_WITHOUT_PIN2DMD)
 			// find and open the usb device.
 			var allDevices = UsbDevice.AllDevices;
 			foreach (UsbRegistry usbRegistry in allDevices) {
@@ -87,19 +84,19 @@ namespace LibDmd.Output.Pin2Dmd
 			try {
 				_pin2DmdDevice.Open();
 
-				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD"))
-				{
-					Logger.Info("Found PIN2DMD device.");
+				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD")) {
+
+					if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL")) {
+						DmdWidth = 192;
+						DmdHeight = 64;
+					}
+
+					var deviceName = DmdWidth == 192 ? "PIN2DMD XL " : "PIN2DMD";
+					Logger.Info($"Found device {deviceName} at {DmdWidth}x{DmdHeight}.");
 					Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
 					Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
 					Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
 					Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
-
-					if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL"))
-					{
-						DmdWidth = 192;
-						DmdHeight = 64;
-					}
 
 					// 15 bits per pixel plus 4 init bytes
 					var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
@@ -117,40 +114,18 @@ namespace LibDmd.Output.Pin2Dmd
 					_frameBufferGray4[2] = 0xE7;
 					_frameBufferGray4[3] = 0x00;
 
-				}
-				else
-				{
-					Logger.Debug("Device found but it's not a PIN2DMD device ({0}).",
-						_pin2DmdDevice.Info.ProductString);
+				} else {
+					Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
 					IsAvailable = false;
 					Dispose();
 					return;
 				}
 
-				if (_pin2DmdDevice is IUsbDevice usbDevice)
-				{
+				if (_pin2DmdDevice is IUsbDevice usbDevice) {
 					usbDevice.SetConfiguration(1);
 					usbDevice.ClaimInterface(0);
 				}
-#else
-				DmdWidth = 192;
-				DmdHeight = 64;
-				// 15 bits per pixel plus 4 init bytes
-				var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
-				_frameBufferRgb24 = new byte[size];
-				_frameBufferRgb24[0] = 0x81; // frame sync bytes
-				_frameBufferRgb24[1] = 0xC3;
-				_frameBufferRgb24[2] = 0xE8;
-				_frameBufferRgb24[3] = 15;   // number of planes
 
-				// 4 bits per pixel plus 4 init bytes
-				size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-				_frameBufferGray4 = new byte[size];
-				_frameBufferGray4[0] = 0x81; // frame sync bytes
-				_frameBufferGray4[1] = 0xC3;
-				_frameBufferGray4[2] = 0xE7;
-				_frameBufferGray4[3] = 0x00;
-#endif
 				IsAvailable = true;
 				_currentPreloadedPalette = -1;
 
@@ -216,7 +191,6 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderRaw(byte[] frame)
 		{
-#if (!TEST_WITHOUT_PIN2DMD)
 			try { 
 				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 				int bytesWritten;
@@ -227,7 +201,6 @@ namespace LibDmd.Output.Pin2Dmd
 			} catch (Exception e) { 
 				Logger.Error(e, "Error sending data to PIN2DMD: {0}", e.Message);
 			}
-#endif
 		}
 
 		public void SetColor(Color color)
