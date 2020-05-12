@@ -25,7 +25,6 @@ namespace LibDmd
 			this.Data = Data;
 			return this;
 		}
-
 	}
 
 	public class RawDMDFrame : DMDFrame
@@ -38,8 +37,5 @@ namespace LibDmd
 			this.RawPlanes = RawPlanes;
 			return this;
 		}
-
-
-
 	}
 }
