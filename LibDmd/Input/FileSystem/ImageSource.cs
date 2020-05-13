@@ -50,7 +50,7 @@ namespace LibDmd.Input.FileSystem
 		{
 			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
 			SetDimensions(dim);
-			var frame = new ColoredFrame(
+			var frame = new ColoredFrame(dim,
 				FrameUtil.Split(dim, 2, ImageUtil.ConvertToGray2(bmp)),
 				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
 			);
@@ -68,7 +68,7 @@ namespace LibDmd.Input.FileSystem
 		{
 			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
 			SetDimensions(dim);
-			var frame = new ColoredFrame(
+			var frame = new ColoredFrame(dim,
 				FrameUtil.Split(dim, 4, ImageUtil.ConvertToGray4(bmp)),
 				new[] {
 					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,

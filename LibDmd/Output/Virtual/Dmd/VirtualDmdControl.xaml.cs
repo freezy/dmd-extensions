@@ -58,43 +58,45 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			if (_gray2Palette != null) {
-				RenderRgb24(ColorUtil.ColorizeFrame(Size, frame, _gray2Palette));
+				RenderRgb24(frame.Colorize(_gray2Palette));
 			} else {
-				RenderBitmap(ImageUtil.ConvertFromGray2(Size, frame, _hue, _sat, _lum));
+				RenderBitmap(ImageUtil.ConvertFromGray2(Size, frame.Data, _hue, _sat, _lum));
 			}
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			if (_gray4Palette != null) {
-				RenderRgb24(ColorUtil.ColorizeFrame(Size, frame, _gray4Palette));
+				RenderRgb24(frame.Colorize(_gray4Palette));
 			} else {
-				RenderBitmap(ImageUtil.ConvertFromGray4(Size, frame, _hue, _sat, _lum));
+				RenderBitmap(ImageUtil.ConvertFromGray4(Size, frame.Data, _hue, _sat, _lum));
 			}
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
-			if (frame.Length % 3 != 0) {
-				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Length + " isn't.");
+			if (frame.Data.Length % 3 != 0) {
+				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Data.Length + " isn't.");
 			}
-			RenderBitmap(ImageUtil.ConvertFromRgb24(Size, frame));
+			RenderBitmap(ImageUtil.ConvertFromRgb24(Size, frame.Data));
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray2(FrameUtil.Join(Size, frame.Planes));
+			var coloredFrameData = FrameUtil.Join(Size, frame.Planes);
+			RenderGray2(new DmdFrame(frame.Dimensions, coloredFrameData));
 		}
 
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray4(FrameUtil.Join(Size, frame.Planes));
+			var coloredFrameData = FrameUtil.Join(Size, frame.Planes);
+			RenderGray4(new DmdFrame(frame.Dimensions, coloredFrameData));
 		}
 
 		public void SetDimensions(Dimensions dimensions)
@@ -146,7 +148,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void ClearDisplay()
 		{
-			RenderGray4(new byte[Size.Surface]);
+			RenderGray4(new DmdFrame(Size));
 		}
 
 		public void Dispose()

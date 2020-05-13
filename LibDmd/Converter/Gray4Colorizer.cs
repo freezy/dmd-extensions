@@ -121,12 +121,12 @@ namespace LibDmd.Converter
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null)
 			{
-				_activeAnimation.NextFrame(planes, AnimationFinished);
+				_activeAnimation.NextFrame(frame.Dimensions, planes, AnimationFinished);
 				return;
 			}
 
 			// Sisch diräkt uisgäh
-			Render(planes);
+			Render(frame.Dimensions, planes);
 		}
 
 		public void LoadPalette(uint newpal)
@@ -287,19 +287,20 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Tuäts Biud uif diä entschprächändä Sourcä uisgäh.
 		/// </summary>
+		/// <param name="dim">Grehssi</param>
 		/// <param name="planes">S Biud zum uisgäh</param>
-		private void Render(byte[][] planes)
+		private void Render(Dimensions dim, byte[][] planes)
 		{
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2)
 			{
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(dim, planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4)
 			{
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(dim, planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 		}
 

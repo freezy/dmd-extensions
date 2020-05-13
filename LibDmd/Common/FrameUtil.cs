@@ -212,8 +212,7 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="dim">Grehssi vom Biud</param>
 		/// <param name="bitPlanes">Ä Lischtä vo Ebänä zum zämäfiägä</param>
 		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
 		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)

@@ -98,7 +98,8 @@ namespace LibDmd.Output.PinUp
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
+			var rgb24Data = ImageUtil.ConvertToRgb24(bmp);
+			RenderRgb24(new DmdFrame(new Dimensions(bmp.PixelWidth, bmp.PixelHeight), rgb24Data));
 		}
 
 		public void Dispose()
@@ -118,14 +119,14 @@ namespace LibDmd.Output.PinUp
 			// no, we don't write a blank image.
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			try {
 				// Copy the fram array to unmanaged memory.
 
 				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
 				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-				Marshal.Copy(frame, 0, _pnt, FixedSize.Surface * 3);
+				Marshal.Copy(frame.Data, 0, _pnt, FixedSize.Surface * 3);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
@@ -134,11 +135,11 @@ namespace LibDmd.Output.PinUp
 			}
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			try {
 				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(FixedSize, 4, frame);
+				var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
 
 				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(FixedSize, planes,
 					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
@@ -152,10 +153,11 @@ namespace LibDmd.Output.PinUp
 			}
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			var gray4Data = FrameUtil.ConvertGrayToGray(frame.Data, new byte[] {0x0, 0x1, 0x4, 0xf});
+			RenderGray4(new DmdFrame(frame.Dimensions, gray4Data));
 		}
 
 		public void RenderRaw(byte[] data)

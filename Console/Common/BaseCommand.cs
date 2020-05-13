@@ -72,7 +72,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.Pin2Dmd.Enabled) {
-				var pin2Dmd = Pin2Dmd.GetInstance(config.Pin2Dmd.Delay);
+				var pin2Dmd = Pin2DmdBase.GetInstance(config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");

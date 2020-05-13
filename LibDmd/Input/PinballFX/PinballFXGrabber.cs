@@ -124,7 +124,9 @@ namespace LibDmd.Input.PinballFX
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;
 						}
-						return new ColoredFrame(FrameUtil.Split(new Dimensions(bmp.PixelWidth, bmp.PixelHeight), 2, frame), palette, index);
+
+						var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+						return new ColoredFrame(dim, FrameUtil.Split(dim, 2, frame), palette, index);
 					})
 					.Publish();
 

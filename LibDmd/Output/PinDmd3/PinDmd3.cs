@@ -193,10 +193,10 @@ namespace LibDmd.Output.PinDmd3
 			return false;
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// split to sub frames
-			var planes = FrameUtil.Split(FixedSize, 2, frame);
+			var planes = FrameUtil.Split(FixedSize, 2, frame.Data);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
@@ -222,10 +222,10 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			// split to sub frames
-			var planes = FrameUtil.Split(FixedSize, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
@@ -240,9 +240,9 @@ namespace LibDmd.Output.PinDmd3
 		{
 			// fall back if firmware doesn't support colored gray 4
 			if (!_supportsColoredGray4) {
-				var rgb24Frame = ColorUtil.ColorizeFrame(FixedSize,
+				var rgb24FrameData = ColorUtil.ColorizeFrame(FixedSize,
 					FrameUtil.Join(FixedSize, frame.Planes), frame.Palette);
-				RenderRgb24(rgb24Frame);
+				RenderRgb24(new DmdFrame(frame.Dimensions, rgb24FrameData));
 				return;
 			}
 
@@ -266,10 +266,10 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			// copy data to frame buffer
-			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
+			var changed = FrameUtil.Copy(frame.Data, _frameBufferRgb24, 1);
 
 			// can directly be sent to the device.
 			if (changed) {

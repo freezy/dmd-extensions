@@ -70,24 +70,24 @@ namespace LibDmd.Output.Network
 			IsAvailable = false;
 		}
 
-		private void SendGray(byte[] frame, int bitlength)
+		private void SendGray(DmdFrame frame, int bitlength)
 		{
-			if (frame.Length < _serializer.Dimensions.Surface) {
-				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} dim={2}", frame.Length, bitlength, _serializer.Dimensions);
+			if (frame.Data.Length < _serializer.Dimensions.Surface) {
+				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} dim={2}", frame.Data.Length, bitlength, _serializer.Dimensions);
 				return;
 			}
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeGray(frame, bitlength));
+				_client.Send(_serializer.SerializeGray(frame.Data, bitlength));
 			}
 
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			SendGray(frame, 2);
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			SendGray(frame, 4);
 		}
@@ -106,10 +106,10 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeRgb24(frame));
+				_client.Send(_serializer.SerializeRgb24(frame.Data));
 			}
 		}
 

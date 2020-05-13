@@ -509,7 +509,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
 							Subscribe(sourceGray2.GetGray2Frames()
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame.Data, destFixedSize)),
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -559,8 +559,8 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
 							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertGrayToGray(0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3))
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -568,7 +568,7 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
 							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame.Data, destFixedSize)),
+									.Select(frame => TransformGray4(frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
 
@@ -1050,45 +1050,46 @@ namespace LibDmd
 			}
 		}
 
-		private byte[] TransformGray2(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
+		private DmdFrame TransformGray2(DmdFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return TransformationUtil.Flip(dim, 1, frame, FlipHorizontally, FlipVertically);
+				return frame.Flip(1, FlipHorizontally, FlipVertically);
 			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
+			if (frame.Dimensions == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;
 			}
 
 			// block-copy for same width but smaller height
-			if (dim.Width == dest.FixedSize.Width && dim.Height < dest.FixedSize.Height && Resize != ResizeMode.Stretch && !FlipHorizontally && !FlipVertically) {
-				var transformedFrame = new byte[dest.FixedSize.Surface];
-				Buffer.BlockCopy(frame, 0, transformedFrame, ((dest.FixedSize.Height - dim.Height) / 2) * dest.FixedSize.Width, frame.Length);
-				return transformedFrame;
+			var cropHeight = frame.Dimensions.Width == dest.FixedSize.Width && frame.Dimensions.Height < dest.FixedSize.Height;
+			if (cropHeight && Resize != ResizeMode.Stretch && !FlipHorizontally && !FlipVertically) {
+				var transformedFrameData = new byte[dest.FixedSize.Surface];
+				Buffer.BlockCopy(frame.Data, 0, transformedFrameData, ((dest.FixedSize.Height - frame.Dimensions.Height) / 2) * dest.FixedSize.Width, frame.Data.Length);
+				return frame.Update(transformedFrameData);
 			}
 
-			var bmp = ImageUtil.ConvertFromGray2(dim, frame, 0, 1, 1);
+			var bmp = ImageUtil.ConvertFromGray2(frame.Dimensions, frame.Data, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			return ImageUtil.ConvertToGray2(transformedBmp);
+			return frame.Update(ImageUtil.ConvertToGray2(transformedBmp));
 		}
 
-		private byte[] TransformGray4(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
+		private DmdFrame TransformGray4(DmdFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return TransformationUtil.Flip(dim, 1, frame, FlipHorizontally, FlipVertically);
+				return frame.Flip(1, FlipHorizontally, FlipVertically);
 			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
+			if (frame.Dimensions == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;
 			}
-			var bmp = ImageUtil.ConvertFromGray4(dim, frame, 0, 1, 1);
+			var bmp = ImageUtil.ConvertFromGray4(frame.Dimensions, frame.Data, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return transformedFrame;
+			return frame.Update(transformedFrame);
 		}
 
 		private ColoredFrame TransformColoredGray2(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new ColoredFrame(TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
 			}
 			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;

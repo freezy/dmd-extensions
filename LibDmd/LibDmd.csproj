@@ -213,8 +213,11 @@
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
+    <Compile Include="Output\IMultiSizeDestination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
+    <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
+    <Compile Include="Output\Pin2Dmd\Pin2DmdXL.cs" />
     <Compile Include="Output\Pixelcade\Pixelcade.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
@@ -318,7 +321,7 @@
     <Compile Include="Output\FileOutput\BitmapOutput.cs" />
     <Compile Include="Output\IGray4Destination.cs" />
     <Compile Include="Output\IRawOutput.cs" />
-    <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
+    <Compile Include="Output\Pin2Dmd\Pin2DmdBase.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
     <Compile Include="Output\Virtual\Dmd\DmdEffect.cs" />
