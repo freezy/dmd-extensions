@@ -48,6 +48,11 @@ namespace LibDmd.DmdDevice
 		private readonly VpmRgb24Source _vpmRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
+
+		private static string _version = "";
+		private static string _sha = "";
+		private static string _fullVersion = "";
+
 		private VirtualDmd _virtualDmd;
 		private VirtualAlphanumericDestination _alphaNumericDest;
 
@@ -77,8 +82,6 @@ namespace LibDmd.DmdDevice
 
 		public DmdDevice()
 		{
-			string fullVersion;
-			string sha;
 			var currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_vpmGray2Source = new VpmGray2Source(currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(currentFrameFormat);
@@ -111,23 +114,23 @@ namespace LibDmd.DmdDevice
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
 			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			var version = fvi.ProductVersion;
+			_version = fvi.ProductVersion;
 			if (attr.Length > 0) {
 				var aca = (AssemblyConfigurationAttribute)attr[0];
-				sha = aca.Configuration;
-				if (string.IsNullOrEmpty(sha)) {
-					fullVersion = version;
+				_sha = aca.Configuration;
+				if (string.IsNullOrEmpty(_sha)) {
+					_fullVersion = _version;
 
 				} else {
-					fullVersion = $"{version} ({sha})";
+					_fullVersion = $"{_version} ({_sha})";
 				}
 
 			} else {
-				fullVersion = fvi.ProductVersion;
-				sha = "";
+				_fullVersion = fvi.ProductVersion;
+				_sha = "";
 			}
 
-			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", fullVersion, Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
 		}
 
