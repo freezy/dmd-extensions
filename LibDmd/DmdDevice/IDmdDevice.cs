@@ -17,9 +17,9 @@ namespace LibDmd.DmdDevice
 		void Init();
 		void LoadPalette(uint palIndex);
 		void SetPalette(Color[] colors);
-		void RenderRgb24(DMDFrame frame);
-		void RenderGray4(DMDFrame frame);
-		void RenderGray2(DMDFrame frame);
+		void RenderRgb24(DmdFrame frame);
+		void RenderGray4(DmdFrame frame);
+		void RenderGray2(DmdFrame frame);
 		void RenderAlphaNumeric(NumericalLayout numericalLayout, ushort[] readUInt16Array, ushort[] ushorts);
 	}
 }

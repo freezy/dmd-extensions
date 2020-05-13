@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Input;
 using MimeTypes;
 using NLog;
 using WebSocketSharp;
@@ -21,13 +22,12 @@ namespace LibDmd.Output.Network
 		public bool IsAvailable { get; } = true;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
-		private readonly Dictionary<string, string> _www = new Dictionary<string, string>(); 
+		private readonly Dictionary<string, string> _www = new Dictionary<string, string>();
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket>  _sockets = new List<DmdSocket>();
 		private readonly string _gameName;
 
-		private int _width;
-		private int _height;
+		private Dimensions _dimensions;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
 
@@ -77,7 +77,7 @@ namespace LibDmd.Output.Network
 				Logger.Info("Listening on port {0}, and providing WebSocket services: [ {1} ]", _server.Port, string.Join(", ", _server.WebSocketServices.Paths));
 			}
 		}
-				
+
 		public void Init(DmdSocket socket)
 		{
 			Logger.Debug("Init socket");
@@ -85,7 +85,7 @@ namespace LibDmd.Output.Network
 			{
 				socket.SendGameName(_gameName);
 			}
-			socket.SendDimensions(_width, _height);
+			socket.SendDimensions(_dimensions);
 			socket.SendColor(_color);
 			if (_palette != null) {
 				socket.SendPalette(_palette);
@@ -117,11 +117,10 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendRgb24(frame));
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dimensions)
 		{
-			_width = width;
-			_height = height;
-			_sockets.ForEach(s => s.SendDimensions(width, height));
+			_dimensions = dimensions;
+			_sockets.ForEach(s => s.SendDimensions(dimensions));
 		}
 
 		public void SetColor(Color color)
@@ -156,12 +155,12 @@ namespace LibDmd.Output.Network
 		{
 			// ignore
 		}
-		
+
 		public void Dispose()
 		{
 			_server.Stop();
 		}
-			
+
 		private static string GetMimeType(string ext)
 		{
 			return string.IsNullOrEmpty(ext) ? "text/html" : MimeTypeMap.GetMimeType(ext);
@@ -195,8 +194,8 @@ namespace LibDmd.Output.Network
 
 		public void SendGray(byte[] frame, int bitlength)
 		{
-			if (frame.Length < _serializer.Width * _serializer.Height) {
-				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _serializer.Width, _serializer.Height);
+			if (frame.Length < _serializer.Dimensions.Surface) {
+				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} dim={2}", frame.Length, bitlength, _serializer.Dimensions);
 				return;
 			}
 			Send(_serializer.SerializeGray(frame, bitlength));
@@ -222,7 +221,7 @@ namespace LibDmd.Output.Network
 
 		public void SendGameName(string gameName) => Send(_serializer.SerializeGameName(gameName));
 
-		public void SendDimensions(int width, int height) => Send(_serializer.SerializeDimensions(width, height));
+		public void SendDimensions(Dimensions dim) => Send(_serializer.SerializeDimensions(dim));
 
 		public void SendColor(Color color) => Send(_serializer.SerializeColor(color));
 

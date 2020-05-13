@@ -12,7 +12,7 @@ namespace LibDmd.Converter
 	/// <summary>
 	/// Converts a frame from a given bit length to another bit length.
 	/// </summary>
-	public interface IConverter 
+	public interface IConverter
 	{
 		/// <summary>
 		/// Source bit length
@@ -22,17 +22,17 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Receives frames and outputs them to the output sources the converter implements.
 		/// </summary>
-		/// 
+		///
 		/// <remarks>
 		/// Note that if your convertor doesn't implement any ISource interface,
 		/// frames will just be dropped.
-		/// 
+		///
 		/// If this method doesn't send anything to its output sources, the frame is
 		/// equally dropped.
 		/// </remarks>
-		/// 
+		///
 		/// <param name="frame">Source frame, as top-left to bottom-right pixel array</param>
-		void Convert(DMDFrame frame);
+		void Convert(DmdFrame frame);
 
 		/// <summary>
 		/// Initializes the converter. Run before rendering is started and after
@@ -44,8 +44,7 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Must be run when dimensions of the source change.
 		/// </summary>
-		/// <param name="width">New width of the source</param>
-		/// <param name="height">New height of the source</param>
-		void SetDimensions(int width, int height);
+		/// <param name="dim">New dimensions of the source</param>
+		void SetDimensions(Dimensions dim);
 	}
 }

@@ -1,41 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace LibDmd
+﻿namespace LibDmd.Input
 {
-	public class DMDFrame
+	public class DmdFrame
 	{
-		public int width;
-		public int height;
+		public Dimensions Dimensions;
 		public byte[] Data;
 
-		public DMDFrame Update(byte[] Data)
+		public DmdFrame()
 		{
-			this.Data = Data;
+		}
+
+		public DmdFrame(Dimensions dim)
+		{
+			Dimensions = dim;
+			Data = new byte[dim.Surface];
+		}
+
+		public DmdFrame Update(byte[] data)
+		{
+			Data = data;
 			return this;
 		}
 
-		public DMDFrame Update(int width, int height, byte[] Data)
+		public DmdFrame Update(Dimensions dim, byte[] data)
 		{
-			this.width = width;
-			this.height = height;
-			this.Data = Data;
+			Dimensions = dim;
+			Data = data;
 			return this;
 		}
 	}
 
-	public class RawDMDFrame : DMDFrame
+	public class RawDmdFrame : DmdFrame
 	{
 		public byte[][] RawPlanes;
 
-		public RawDMDFrame Update(int width, int height, byte[] Data, byte[][] RawPlanes)
+		public RawDmdFrame()
 		{
-			this.Update(width, height, Data);
-			this.RawPlanes = RawPlanes;
+		}
+
+		public RawDmdFrame(Dimensions dim) : base(dim)
+		{
+		}
+
+		public RawDmdFrame Update(Dimensions dim, byte[] data, byte[][]rawPlanes)
+		{
+			Update(dim, data);
+			RawPlanes = rawPlanes;
 			return this;
 		}
+
 	}
 }

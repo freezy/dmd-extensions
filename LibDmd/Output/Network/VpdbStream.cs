@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Input;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Quobject.SocketIoClientDotNet.Client;
@@ -24,15 +25,15 @@ namespace LibDmd.Output.Network
 		private readonly Socket _socket;
 		private bool _connected;
 		private bool _streaming;
-		private int _width;
-		private int _height;
+
+		private Dimensions _dimensions;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
 
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 		private JObject Welcome => new JObject {
-			{ "width", _width },
-			{ "height", _height },
+			{ "width", _dimensions.Width },
+			{ "height", _dimensions.Height },
 			{ "color", ColorUtil.ToInt(_color) },
 			{ "palette", new JArray(ColorUtil.ToIntArray(_palette)) }
 		};
@@ -95,21 +96,20 @@ namespace LibDmd.Output.Network
 			});
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dimensions)
 		{
-			_width = width;
-			_height = height;
-			EmitObject("dimensions", new JObject { { "width", width }, { "height", height } });
+			_dimensions = dimensions;
+			EmitObject("dimensions", new JObject { { "width", _dimensions.Width }, { "height", _dimensions.Height } });
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			EmitTimestampedData("gray2planes", frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 2, frame), data, offset));
+			EmitTimestampedData("gray2planes", frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 2, frame), data, offset));
 		}
 
 		public void RenderGray4(byte[] frame)
 		{
-			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_width, _height, 4, frame), data, offset));
+			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 4, frame), data, offset));
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)

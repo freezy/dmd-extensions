@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Input;
 
 namespace LibDmd
 {
@@ -39,9 +40,9 @@ namespace LibDmd
 			PaletteIndex = -1;
 		}
 
-		public ColoredFrame(int width, int height, byte[] frame, Color color)
+		public ColoredFrame(Dimensions dim, byte[] frame, Color color)
 		{
-			Planes = FrameUtil.Split(width, height, 2, frame);
+			Planes = FrameUtil.Split(dim, 2, frame);
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
 		}
 	}

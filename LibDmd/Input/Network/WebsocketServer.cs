@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using LibDmd.Output;
 using LibDmd.Output.Network;
 using NLog;
 using WebSocketSharp;
 using WebSocketSharp.Server;
-using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
+using Logger = NLog.Logger;
 
 namespace LibDmd.Input.Network
 {
@@ -26,14 +23,14 @@ namespace LibDmd.Input.Network
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 		private RenderGraphCollection _graphs;
-		private DMDFrame _dmdFrame = new DMDFrame();
+		private DmdFrame _dmdFrame = new DmdFrame();
 
-		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private const string Html = "<!DOCTYPE html><html><head><title>DmdExt Websocket Server</title></head><body><center style=\"margin-top=50px\"><h1>DmdExt Websocket Server</h1><p>Nothing to see here. Send frames to {ws_url} and you'll see them on your display.</p></center></body></html>";
 
 		public WebsocketServer(string ip, int port, string path) {
-			
+
 			Logger.Info("Starting server at http://{0}:{1}{2}...", ip, port, path);
 			_server = new HttpServer(IPAddress.Parse(ip), port);
 			var html = Html.Replace("{ws_url}", ip + path);
@@ -106,7 +103,7 @@ namespace LibDmd.Input.Network
 
 		public void OnClearPalette() => _graphs.ClearPalette();
 
-		public void OnDimensions(int width, int height) => Gray2Source.Dimensions.OnNext(new Dimensions(width, height));
+		public void OnDimensions(Dimensions dimensions) => Gray2Source.Dimensions.OnNext(dimensions);
 
 		public void OnGameName(string gameName)
 		{
@@ -131,12 +128,12 @@ namespace LibDmd.Input.Network
 		private readonly WebsocketServer _src;
 		private readonly WebsocketSerializer _serializer = new WebsocketSerializer();
 
-		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public DmdSocket(WebsocketServer src) {
 			_src = src;
 		}
-	
+
 		protected override void OnMessage(MessageEventArgs e)
 		{
 			_serializer.Unserialize(e.RawData, _src);

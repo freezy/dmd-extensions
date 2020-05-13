@@ -2,44 +2,44 @@
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {
 	public class ImageSourceGray2 : ImageSource, IGray2Source
 	{
-		DMDFrame _dmdFrame = new DMDFrame();
+		private readonly DmdFrame _dmdFrame = new DmdFrame();
 
-		public IObservable<DMDFrame> GetGray2Frames() => _frames;
+		public IObservable<DmdFrame> GetGray2Frames() => _frames;
 
-		private readonly BehaviorSubject<DMDFrame> _frames;
+		private readonly BehaviorSubject<DmdFrame> _frames;
 
 		public ImageSourceGray2(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray2(bmp)));
+			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(dim);
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(dim, ImageUtil.ConvertToGray2(bmp)));
 		}
-	}	
-	
+	}
+
 	public class ImageSourceGray4 : ImageSource, IGray4Source
 	{
-		DMDFrame _dmdFrame = new DMDFrame();
+		private readonly DmdFrame _dmdFrame = new DmdFrame();
 
-		public IObservable<DMDFrame> GetGray4Frames() => _frames;
+		public IObservable<DmdFrame> GetGray4Frames() => _frames;
 
-		private readonly BehaviorSubject<DMDFrame> _frames;
+		private readonly BehaviorSubject<DmdFrame> _frames;
 
 		public ImageSourceGray4(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray4(bmp)));
+			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(dim);
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(dim, ImageUtil.ConvertToGray4(bmp)));
 		}
 	}
-	
+
 	public class ImageSourceColoredGray2 : ImageSource, IColoredGray2Source
 	{
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => _frames;
@@ -48,15 +48,16 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray2(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(dim);
 			var frame = new ColoredFrame(
-				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, ImageUtil.ConvertToGray2(bmp)),
+				FrameUtil.Split(dim, 2, ImageUtil.ConvertToGray2(bmp)),
 				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
 			);
 			_frames = new BehaviorSubject<ColoredFrame>(frame);
 		}
 	}
-	
+
 	public class ImageSourceColoredGray4 : ImageSource, IColoredGray4Source
 	{
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _frames;
@@ -65,13 +66,14 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray4(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(dim);
 			var frame = new ColoredFrame(
-				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 4, ImageUtil.ConvertToGray4(bmp)),
+				FrameUtil.Split(dim, 4, ImageUtil.ConvertToGray4(bmp)),
 				new[] {
 					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
-					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray, 
-					Colors.Tan, Colors.Orange, Colors.Yellow, Colors.LightSkyBlue, 
+					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray,
+					Colors.Tan, Colors.Orange, Colors.Yellow, Colors.LightSkyBlue,
 					Colors.Cyan, Colors.LightGreen, Colors.Pink, Colors.White,
 				}
 			);
@@ -87,7 +89,7 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceBitmap(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
 		}
 
@@ -103,7 +105,7 @@ namespace LibDmd.Input.FileSystem
 				bmp.UriSource = new Uri(Path.IsPathRooted(fileName) ? fileName : Path.Combine(Directory.GetCurrentDirectory(), fileName));
 				bmp.EndInit();
 
-				SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+				SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
 				_frames = new BehaviorSubject<BitmapSource>(bmp);
 
 			} catch (UriFormatException) {

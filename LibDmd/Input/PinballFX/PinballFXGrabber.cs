@@ -32,11 +32,11 @@ namespace LibDmd.Input.PinballFX
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
-	
+
 		/// <summary>
 		/// Wait time between polls for the Pinball FX2 process. Stops polling as soon
-		/// as the process is found. 
-		/// 
+		/// as the process is found.
+		///
 		/// Can be set quite high, just about as long as it takes for Pinball FX2 to launch
 		/// and load a game.
 		/// </summary>
@@ -60,7 +60,7 @@ namespace LibDmd.Input.PinballFX
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-	
+
 		/// <summary>
 		/// Waits for the Pinball FX2 process and DMD window.
 		/// </summary>
@@ -113,7 +113,7 @@ namespace LibDmd.Input.PinballFX
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
+					.Select(bmp => TransformationUtil.Transform(bmp, new Dimensions(128, 32), ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;
 						var frame = ImageUtil.ConvertToGray2(bmp, 0.025, 0.3, out hue);
@@ -124,7 +124,7 @@ namespace LibDmd.Input.PinballFX
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;
 						}
-						return new ColoredFrame(FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, frame), palette, index);
+						return new ColoredFrame(FrameUtil.Split(new Dimensions(bmp.PixelWidth, bmp.PixelHeight), 2, frame), palette, index);
 					})
 					.Publish();
 

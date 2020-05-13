@@ -4,6 +4,7 @@ using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using LibDmd.Converter.Colorize;
+using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.Pin2Dmd
@@ -14,11 +15,10 @@ namespace LibDmd.Output.Pin2Dmd
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
 	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRawOutput, IFixedSizeDestination
 	{
-		public string Name { get; } = "PIN2DMD";
+		public string Name { get; private set; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
 
-		public int DmdWidth { get; private set; } = 128;
-		public int DmdHeight { get; private set; } = 32;
+		public Dimensions FixedSize { get; private set; } = new Dimensions(128, 32);
 
 		/// <summary>
 		/// How long to wait after sending data, in milliseconds
@@ -90,19 +90,18 @@ namespace LibDmd.Output.Pin2Dmd
 
 					_isXL = _pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL");
 					if (_isXL) {
-						DmdWidth = 192;
-						DmdHeight = 64;
+						FixedSize = new Dimensions(192, 64);
 					}
 
-					var deviceName = DmdWidth == 192 ? "PIN2DMD XL " : "PIN2DMD";
-					Logger.Info($"Found device {deviceName} at {DmdWidth}x{DmdHeight}.");
+					Name = _isXL ? "PIN2DMD XL " : "PIN2DMD";
+					Logger.Info($"Found device {Name} at {FixedSize}.");
 					Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
 					Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
 					Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
 					Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
 
 					// 15 bits per pixel plus 4 init bytes
-					var size = (DmdWidth * DmdHeight * 15 / 8) + 4;
+					var size = (FixedSize.Surface * 15 / 8) + 4;
 					_frameBufferRgb24 = new byte[size];
 					_frameBufferRgb24[0] = 0x81; // frame sync bytes
 					_frameBufferRgb24[1] = 0xC3;
@@ -110,7 +109,7 @@ namespace LibDmd.Output.Pin2Dmd
 					_frameBufferRgb24[3] = 15; // number of planes
 
 					// 4 bits per pixel plus 4 init bytes
-					size = (DmdWidth * DmdHeight * 4 / 8) + 4;
+					size = (FixedSize.Surface * 4 / 8) + 4;
 					_frameBufferGray4 = new byte[size];
 					_frameBufferGray4[0] = 0x81; // frame sync bytes
 					_frameBufferGray4[1] = 0xC3;
@@ -147,7 +146,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderGray4(byte[] frame)
 		{
 			// convert to bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame);
 
 			_frameBufferGray4[3] = 0x0C;
 
@@ -163,7 +162,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			var changed = FrameUtil.SplitRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4);
+			var changed = FrameUtil.SplitRgb24(FixedSize, frame, _frameBufferRgb24, 4);
 
 			// send frame buffer to device
 			if (changed) {
@@ -192,7 +191,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 			_frameBufferGray4[3] = 0x06;
 
-			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
+			var joinedFrame = FrameUtil.Join(FixedSize, frame.Planes);
 
 			// send frame buffer to device
 			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
@@ -200,14 +199,14 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderRaw(byte[] frame)
 		{
-			try { 
+			try {
 				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 				int bytesWritten;
 				var error = writer.Write(frame, 2000, out bytesWritten);
 				if (error != ErrorCode.None) {
 					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				}
-			} catch (Exception e) { 
+			} catch (Exception e) {
 				Logger.Error(e, "Error sending data to PIN2DMD: {0}", e.Message);
 			}
 		}
@@ -299,7 +298,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void ClearColor()
 		{
-			// Skip if a palette is preloaded, as it will wipe it out, 
+			// Skip if a palette is preloaded, as it will wipe it out,
 			// and we know palettes will be selected by the colorizer.
 			if (!_paletteIsPreloaded)
 				SetColor(RenderGraph.DefaultColor);

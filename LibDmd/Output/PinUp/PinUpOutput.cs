@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.PinUp
@@ -22,8 +23,7 @@ namespace LibDmd.Output.PinUp
 		public int Height = 32;
 		public uint Fps;
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 
 		private readonly IntPtr _pnt;
 		private readonly string _gameName;
@@ -49,19 +49,19 @@ namespace LibDmd.Output.PinUp
 
 			try {
 				var pAddress = NativeMethods.GetProcAddress(pDll, "Render_RGB24");
-				if (pAddress == IntPtr.Zero) { 
+				if (pAddress == IntPtr.Zero) {
 					throw new Exception("Cannot find Render_RGB24 in dmddevicePUP.dll");
 				}
 				Render_RGB24 = (_dRender_RGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dRender_RGB24));
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "Open");
-				if (pAddress == IntPtr.Zero) { 
+				if (pAddress == IntPtr.Zero) {
 					throw new Exception("Cannot map function in dmddevicePUP.dll");
 				}
 				Open = (_dOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dOpen));
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "Close");
-				if (pAddress == IntPtr.Zero) { 
+				if (pAddress == IntPtr.Zero) {
 					throw new Exception("Cannot map function in dmddevicePUP.dll");
 				}
 				Close = (_dClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dClose));
@@ -72,7 +72,7 @@ namespace LibDmd.Output.PinUp
 				//GameSettings = (_dGameSettings)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dGameSettings)); */
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "SetGameName");
-				if (pAddress == IntPtr.Zero) { 
+				if (pAddress == IntPtr.Zero) {
 					throw new Exception("Cannot map function in dmddevicePUP.dll");
 				}
 				SetGameName = (_dSetGameName)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dSetGameName));
@@ -125,8 +125,8 @@ namespace LibDmd.Output.PinUp
 
 				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
 				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-				Marshal.Copy(frame, 0, _pnt, DmdWidth * DmdHeight * 3);
-				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+				Marshal.Copy(frame, 0, _pnt, FixedSize.Surface * 3);
+				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
 				IsAvailable = false;
@@ -138,13 +138,13 @@ namespace LibDmd.Output.PinUp
 		{
 			try {
 				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+				var planes = FrameUtil.Split(FixedSize, 4, frame);
 
-				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
+				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(FixedSize, planes,
 					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
 
-				Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
-				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+				Marshal.Copy(orangeframe, 0, _pnt, FixedSize.Surface * 3);
+				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Width, _pnt);
 
 			} catch (Exception e) {
 				IsAvailable = false;

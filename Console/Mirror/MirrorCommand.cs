@@ -3,6 +3,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
+using LibDmd.Input;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
@@ -53,7 +54,7 @@ namespace DmdExt.Mirror
 					break;
 				}
 
-				case SourceType.PinballArcade: { 
+				case SourceType.PinballArcade: {
 					_graph.Source = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
 					break;
 				}
@@ -64,15 +65,14 @@ namespace DmdExt.Mirror
 				}
 
 				case SourceType.Screen:
-					
+
 					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
 						Top = _options.Position[1],
 						Width = _options.Position[2],
 						Height = _options.Position[3],
-						DestinationWidth = _options.ResizeTo[0],
-						DestinationHeight = _options.ResizeTo[1]
+						DestinationDimensions = new Dimensions(_options.ResizeTo[0], _options.ResizeTo[1])
 					};
 					if (_options.GridSpacing > 0) {
 						grabber.Processors.Add(new GridProcessor {

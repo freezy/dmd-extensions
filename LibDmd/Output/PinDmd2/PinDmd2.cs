@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Input;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using NLog;
@@ -16,8 +16,7 @@ namespace LibDmd.Output.PinDmd2
 		public string Name { get; } = "PinDMD v2";
 		public bool IsAvailable { get; private set; }
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 
 		private UsbDevice _pinDmd2Device;
 		private readonly byte[] _frameBuffer;
@@ -32,7 +31,7 @@ namespace LibDmd.Output.PinDmd2
 		private PinDmd2()
 		{
 			// 4 bits per pixel plus 4 init bytes
-			var size = (DmdWidth * DmdHeight / 2) + 4;
+			var size = (FixedSize.Surface / 2) + 4;
 			_frameBuffer = new byte[size];
 			_frameBuffer[0] = 0x81;    // frame sync bytes
 			_frameBuffer[1] = 0xC3;
@@ -61,7 +60,7 @@ namespace LibDmd.Output.PinDmd2
 			foreach (UsbRegistry usbRegistry in allDevices) {
 				UsbDevice device;
 				if (usbRegistry.Open(out device)) {
-					if (device?.Info?.Descriptor?.VendorID == 0x0314 && 
+					if (device?.Info?.Descriptor?.VendorID == 0x0314 &&
 						(device.Info.Descriptor.ProductID & 0xFFFF) == 0xe457) {
 
 						_pinDmd2Device = device;
@@ -118,7 +117,7 @@ namespace LibDmd.Output.PinDmd2
 		public void RenderGray4(byte[] frame)
 		{
 			// convert to bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame);
 
 			// copy to buffer
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
@@ -154,7 +153,7 @@ namespace LibDmd.Output.PinDmd2
 
 		public void ClearDisplay()
 		{
-			RenderGray2(new byte[DmdWidth * DmdHeight]);
+			RenderGray2(new byte[FixedSize.Surface]);
 		}
 
 		public void Dispose()

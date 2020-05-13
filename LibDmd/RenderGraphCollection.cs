@@ -12,7 +12,7 @@ namespace LibDmd
 	/// <summary>
 	/// Groups multiple render graphs.
 	/// </summary>
-	/// 
+	///
 	/// <remarks>
 	/// This should be used as soon as more than one render graph is created,
 	/// since it also manages common properties such as the dimension observable
@@ -20,7 +20,7 @@ namespace LibDmd
 	/// </remarks>
 	public class RenderGraphCollection : IDisposable
 	{
-		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
+		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly List<IConverter> _converters = new List<IConverter>();
@@ -67,7 +67,7 @@ namespace LibDmd
 				_renderer.Init();
 				return this;
 			}
-			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dim => dest.SetDimensions(dim.Width, dim.Height)));
+			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dest.SetDimensions));
 			_converters.ForEach(converter => converter.Init());
 			return this;
 		}
@@ -81,7 +81,7 @@ namespace LibDmd
 				_graphs.ForEach(graph => graph.StartRendering(onCompleted, onError));
 			}
 		}
-		
+
 		public void StartRendering()
 		{
 			if (_renderer != null) {
@@ -132,7 +132,7 @@ namespace LibDmd
 		{
 			if (_renderer != null) {
 				_renderer.Dispose();
-			
+
 			} else {
 				_rgb24Destinations.Clear();
 				_graphs.ForEach(graph => graph.Dispose());

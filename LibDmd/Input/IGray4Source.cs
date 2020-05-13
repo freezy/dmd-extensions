@@ -19,6 +19,6 @@ namespace LibDmd.Input
 		/// between 0 and 15 for every pixel.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<DMDFrame> GetGray4Frames();
+		IObservable<DmdFrame> GetGray4Frames();
 	}
 }

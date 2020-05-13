@@ -7,12 +7,12 @@ namespace LibDmd.Input
 	/// <summary>
 	/// Acts as source for any frames ending up on the DMD.
 	/// </summary>
-	/// 
+	///
 	/// <remarks>
 	/// Since we want a contineous flow of frames, the method to override
 	/// returns an observable. Note that the producer decides on the frequency
 	/// in which frames are delivered to the consumer.
-	/// 
+	///
 	/// When implementing a source, make sure to only implement the "native"
 	/// bit lengths of the source. Convertion if necessary is done in the Render
 	/// Graph directly.
@@ -48,9 +48,47 @@ namespace LibDmd.Input
 		public int Width { get; set; }
 		public int Height { get; set; }
 
+		public int Surface => Width * Height;
+
+		public double AspectRatio => (double)Width / Height;
+
+		public bool IsFlat => Width == 0 || Height == 0;
+
 		public Dimensions(int width, int height) {
 			Width = width;
 			Height = height;
+		}
+
+		public static bool operator == (Dimensions x, Dimensions y)
+		{
+			return x.Width == y.Width && x.Height == y.Height;
+		}
+
+		public static bool operator != (Dimensions x, Dimensions y)
+		{
+			return !(x == y);
+		}
+
+		public override string ToString()
+		{
+			return $"{Width}x{Height}";
+		}
+
+		public bool Equals(Dimensions other)
+		{
+			return Width == other.Width && Height == other.Height;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is Dimensions other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked {
+				return (Width * 397) ^ Height;
+			}
 		}
 	}
 

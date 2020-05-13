@@ -34,8 +34,8 @@ namespace LibDmd.Input.FileSystem
 			var dim = new FrameDimension(gif.FrameDimensionsList[0]);
 			var frameCount = gif.GetFrameCount(dim);
 
-			SetDimensions(gif.Width, gif.Height);
-			
+			SetDimensions(new Dimensions(gif.Width, gif.Height));
+
 			if (ImageAnimator.CanAnimate(gif)) {
 				var gifFrames = new GifFrame[frameCount];
 				var index = 0;

@@ -21,11 +21,11 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : MemoryGrabber<DMDFrame>, IGray4Source
+	public class TPAGrabber : MemoryGrabber<DmdFrame>, IGray4Source
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
 
-		public IObservable<DMDFrame> GetGray4Frames()
+		public IObservable<DmdFrame> GetGray4Frames()
 		{
 			return GetFrames();
 		}
@@ -36,11 +36,11 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
-		private DMDFrame _dmdFrame = new DMDFrame() { width = DMDWidth, height = DMDHeight };
+		private DmdFrame _dmdFrame = new DmdFrame(new Dimensions(DMDWidth, DMDHeight));
 
 		private static HashSet<double> lums = new HashSet<double>();
 
-		protected override DMDFrame CaptureDMD()
+		protected override DmdFrame CaptureDMD()
 		{
 		// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];

@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using LibDmd.Input;
+using LibDmd.Output;
 using NLog;
 using NLog.Fluent;
 using Color = System.Windows.Media.Color;
@@ -25,19 +27,20 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Tuät es Biud i sini Bitahteiu uifteilä.
 		/// </summary>
-		/// 
+		///
 		/// <remarks>
 		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Ebänä fir
 		/// jedes Bit uisächemid
 		/// </remarks>
-		/// 
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		///
+		/// <param name="dim">Grehssi fom DMD</param>
 		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
 		/// <param name="frame">D datä vom Biud</param>
 		/// <returns>Än Ebini fir jedes Bit</returns>
-		public static byte[][] Split(int width, int height, int bitlen, byte[] frame)
+		public static byte[][] Split(Dimensions dim, int bitlen, byte[] frame)
 		{
+			var width = dim.Width;
+			var height = dim.Height;
 			var planeSize = width * height / 8;
 			var planes = new byte[bitlen][];
 			for (var i = 0; i < bitlen; i++) {
@@ -90,14 +93,15 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Splits an RGB24 frame into each bit plane.
 		/// </summary>
-		/// <param name="width">Width of the frame</param>
-		/// <param name="height">Height of the frame</param>
+		/// <param name="dim">DMD size</param>
 		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
 		/// <param name="frameBuffer">Destination buffer where planes are written</param>
 		/// <param name="offset">Start writing at this offset</param>
 		/// <returns>True if destination buffer changed, false otherwise.</returns>
-		public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
+		public static bool SplitRgb24(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset)
 		{
+			var width = dim.Width;
+			var height = dim.Height;
 			var byteIdx = offset;
 			var identical = true;
 			for (var y = 0; y < height; y++) {
@@ -212,9 +216,11 @@ namespace LibDmd.Common
 		/// <param name="height">Heechi vom Biud</param>
 		/// <param name="bitPlanes">Ä Lischtä vo Ebänä zum zämäfiägä</param>
 		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
-		public static byte[] Join(int width, int height, byte[][] bitPlanes)
+		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)
 		{
-			var frame = new byte[width * height];
+			var width = dim.Width;
+			var height = dim.Height;
+			var frame = new byte[dim.Surface];
 
 			if (bitPlanes.Length == 2) {
 				unsafe
@@ -443,12 +449,12 @@ namespace LibDmd.Common
 			return destFrame;
 		}
 
-		public static byte[] ConvertToRgb24(int width, int height, byte[][] planes, Color[] palette)
+		public static byte[] ConvertToRgb24(Dimensions size, byte[][] planes, Color[] palette)
 		{
-			var frame = Join(width, height, planes);
-			return ColorUtil.ColorizeFrame(width, height, frame, palette);
+			var frame = Join(size, planes);
+			return ColorUtil.ColorizeFrame(size, frame, palette);
 		}
-			
+
 		public static byte[] NewPlane(int width, int height)
 		{
 			var count = width / 8 * height;
@@ -514,7 +520,7 @@ namespace LibDmd.Common
 			}
 			return outplane;
 		}
-		
+
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
@@ -718,7 +724,7 @@ namespace LibDmd.Common
 			if (buffer1 == null || buffer2 == null) {
 				return false;
 			}
-			
+
 			fixed (byte* b1 = buffer1, b2 = buffer2) {
 				return memcmp(b1 + offset1, b2 + offset2, count) == 0;
 			}
