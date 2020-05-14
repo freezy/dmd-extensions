@@ -7,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 

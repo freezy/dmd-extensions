@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 
 namespace LibDmd.Input.FileSystem
 {
@@ -16,11 +17,10 @@ namespace LibDmd.Input.FileSystem
 
 		private readonly BehaviorSubject<DmdFrame> _frames;
 
-		public ImageSourceGray2(BitmapSource bmp)
+		public ImageSourceGray2(BmpFrame frame)
 		{
-			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			SetDimensions(dim);
-			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(dim, ImageUtil.ConvertToGray2(bmp)));
+			SetDimensions(frame.Dimensions);
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(frame.Dimensions, ImageUtil.ConvertToGray2(frame.Bitmap)));
 		}
 	}
 
@@ -32,11 +32,10 @@ namespace LibDmd.Input.FileSystem
 
 		private readonly BehaviorSubject<DmdFrame> _frames;
 
-		public ImageSourceGray4(BitmapSource bmp)
+		public ImageSourceGray4(BmpFrame frame)
 		{
-			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			SetDimensions(dim);
-			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(dim, ImageUtil.ConvertToGray4(bmp)));
+			SetDimensions(frame.Dimensions);
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(frame.Dimensions, ImageUtil.ConvertToGray4(frame.Bitmap)));
 		}
 	}
 
@@ -46,15 +45,14 @@ namespace LibDmd.Input.FileSystem
 
 		private readonly BehaviorSubject<ColoredFrame> _frames;
 
-		public ImageSourceColoredGray2(BitmapSource bmp)
+		public ImageSourceColoredGray2(BmpFrame frame)
 		{
-			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			SetDimensions(dim);
-			var frame = new ColoredFrame(dim,
-				FrameUtil.Split(dim, 2, ImageUtil.ConvertToGray2(bmp)),
+			SetDimensions(frame.Dimensions);
+			var coloredFrame = new ColoredFrame(frame.Dimensions,
+				FrameUtil.Split(frame.Dimensions, 2, ImageUtil.ConvertToGray2(frame.Bitmap)),
 				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
 			);
-			_frames = new BehaviorSubject<ColoredFrame>(frame);
+			_frames = new BehaviorSubject<ColoredFrame>(coloredFrame);
 		}
 	}
 
@@ -64,12 +62,11 @@ namespace LibDmd.Input.FileSystem
 
 		private readonly BehaviorSubject<ColoredFrame> _frames;
 
-		public ImageSourceColoredGray4(BitmapSource bmp)
+		public ImageSourceColoredGray4(BmpFrame frame)
 		{
-			var dim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			SetDimensions(dim);
-			var frame = new ColoredFrame(dim,
-				FrameUtil.Split(dim, 4, ImageUtil.ConvertToGray4(bmp)),
+			SetDimensions(frame.Dimensions);
+			var coloredFrame = new ColoredFrame(frame.Dimensions,
+				FrameUtil.Split(frame.Dimensions, 4, ImageUtil.ConvertToGray4(frame.Bitmap)),
 				new[] {
 					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
 					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray,
@@ -77,20 +74,20 @@ namespace LibDmd.Input.FileSystem
 					Colors.Cyan, Colors.LightGreen, Colors.Pink, Colors.White,
 				}
 			);
-			_frames = new BehaviorSubject<ColoredFrame>(frame);
+			_frames = new BehaviorSubject<ColoredFrame>(coloredFrame);
 		}
 	}
 
 	public class ImageSourceBitmap : ImageSource, IBitmapSource
 	{
-		public IObservable<BitmapSource> GetBitmapFrames() => _frames;
+		public IObservable<BmpFrame> GetBitmapFrames() => _frames;
 
-		private readonly BehaviorSubject<BitmapSource> _frames;
+		private readonly BehaviorSubject<BmpFrame> _frames;
 
-		public ImageSourceBitmap(BitmapSource bmp)
+		public ImageSourceBitmap(BmpFrame frame)
 		{
-			SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
-			_frames = new BehaviorSubject<BitmapSource>(bmp);
+			SetDimensions(frame.Dimensions);
+			_frames = new BehaviorSubject<BmpFrame>(frame);
 		}
 
 		public ImageSourceBitmap(string fileName)
@@ -105,8 +102,9 @@ namespace LibDmd.Input.FileSystem
 				bmp.UriSource = new Uri(Path.IsPathRooted(fileName) ? fileName : Path.Combine(Directory.GetCurrentDirectory(), fileName));
 				bmp.EndInit();
 
-				SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
-				_frames = new BehaviorSubject<BitmapSource>(bmp);
+				var frame = new BmpFrame(bmp);
+				SetDimensions(frame.Dimensions);
+				_frames = new BehaviorSubject<BmpFrame>(frame);
 
 			} catch (UriFormatException) {
 				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");

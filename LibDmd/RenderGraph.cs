@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
+using LibDmd.Frame;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
@@ -159,7 +160,7 @@ namespace LibDmd
 			var source = new PassthroughSource("Bitmap Source");
 			Source = source;
 			_activeRenderer = Init().StartRendering(onCompleted);
-			source.FramesBitmap.OnNext(bmp);
+			source.FramesBitmap.OnNext(new BmpFrame(bmp));
 		}
 
 		/// <summary>
@@ -521,8 +522,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
 							Subscribe(sourceGray2.GetGray2Frames()
-									.Select(frame => ColorizeGray2(source.Dimensions.Value, frame.Data))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.Colorize(_gray2Palette ?? _gray2Colors))
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -530,10 +531,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
 							Subscribe(sourceGray2.GetGray2Frames()
-									.Select(frame => ImageUtil.ConvertFromRgb24(
-										source.Dimensions.Value,
-										ColorizeGray2(source.Dimensions.Value, frame.Data)
-									))
+									.Select(frame => frame.ConvertFromRgb24(_gray2Palette ?? _gray2Colors))
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
@@ -576,8 +574,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
 							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => ColorizeGray4(source.Dimensions.Value, frame.Data))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.Colorize(_gray4Palette ?? _gray4Colors))
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -585,10 +583,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray4, dest, destBitmap, from, to);
 							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => ImageUtil.ConvertFromRgb24(
-										source.Dimensions.Value,
-										ColorizeGray4(source.Dimensions.Value, frame.Data)
-									))
+									.Select(frame => frame.ConvertFromRgb24(_gray4Palette ?? _gray4Colors))
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
@@ -614,8 +609,8 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceRgb24, dest, destGray2, from, to);
 							Subscribe(sourceRgb24.GetRgb24Frames()
-									.Select(frame => ImageUtil.ConvertToGray(source.Dimensions.Value, frame.Data, 4))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray(4))
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -623,8 +618,8 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceRgb24, dest, destGray4, from, to);
 							Subscribe(sourceRgb24.GetRgb24Frames()
-									.Select(frame => ImageUtil.ConvertToGray(source.Dimensions.Value, frame.Data, 16))
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray(16))
+									.Select(frame => TransformGray4(frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
 
@@ -632,7 +627,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceRgb24, dest, destRgb24, from, to);
 							Subscribe(sourceRgb24.GetRgb24Frames()
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame.Data, destFixedSize)),
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -640,8 +635,8 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceRgb24, dest, destBitmap, from, to);
 							Subscribe(sourceRgb24.GetRgb24Frames()
-									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame.Data))
-									.Select(bmp => Transform(bmp, destFixedSize)),
+									.Select(frame => frame.ConvertToBmp())
+									.Select(frame => Transform(frame, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
 
@@ -666,8 +661,8 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceBitmap, dest, destGray2, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToGray2(bmp))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray2())
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -675,8 +670,8 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceBitmap, dest, destGray4, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToGray4(bmp))
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray4())
+									.Select(frame => TransformGray4(frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
 
@@ -684,8 +679,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToRgb24(bmp))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToRgb24())
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -719,8 +714,8 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceColoredGray2, dest, destGray2, from, to);
 							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
-									.Select(frame => FrameUtil.Join(source.Dimensions.Value, frame.Planes))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray())
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -732,12 +727,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray2, dest, destRgb24, from, to);
 							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
-									.Select(frame => ColorUtil.ColorizeFrame(
-										source.Dimensions.Value,
-										FrameUtil.Join(source.Dimensions.Value, frame.Planes),
-										frame.Palette)
-									)
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToRgb24())
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -745,12 +736,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceColoredGray2, dest, destBitmap, from, to);
 							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
-									.Select(frame => ColorUtil.ColorizeFrame(
-										source.Dimensions.Value,
-										FrameUtil.Join(source.Dimensions.Value, frame.Planes),
-										frame.Palette)
-									)
-									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame))
+									.Select(frame => frame.ConvertToBmp())
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
@@ -780,9 +766,8 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceColoredGray4, dest, destGray2, from, to);
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
-									.Select(frame => FrameUtil.Join(source.Dimensions.Value, frame.Planes))
-									.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray(0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3))
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
 
@@ -790,8 +775,8 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceColoredGray4, dest, destGray4, from, to);
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
-									.Select(frame => FrameUtil.Join(source.Dimensions.Value, frame.Planes))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToGray())
+									.Select(frame => TransformGray2(frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
 
@@ -799,12 +784,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray4, dest, destRgb24, from, to);
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
-									.Select(frame => ColorUtil.ColorizeFrame(
-										source.Dimensions.Value,
-										FrameUtil.Join(source.Dimensions.Value, frame.Planes),
-										frame.Palette)
-									)
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
+									.Select(frame => frame.ConvertToRgb24())
+									.Select(frame => TransformRgb24(frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -813,13 +794,8 @@ namespace LibDmd
 							AssertCompatibility(source, sourceColoredGray4, dest, destBitmap, from, to);
 							Subscribe(
 								sourceColoredGray4.GetColoredGray4Frames()
-									.Select(frame => ColorUtil.ColorizeFrame(
-										source.Dimensions.Value,
-										FrameUtil.Join(source.Dimensions.Value, frame.Planes),
-										frame.Palette)
-									)
-									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame))
-									.Select(bmp => Transform(bmp, destFixedSize)),
+									.Select(frame => frame.ConvertToBmp())
+									.Select(frame => Transform(frame, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
 
@@ -871,7 +847,7 @@ namespace LibDmd
 		/// <typeparam name="T">Frame type, already converted to match destination</typeparam>
 		/// <param name="src">Source observable</param>
 		/// <param name="onNext">Action to run on destination</param>
-		private void Subscribe<T>(IObservable<T> src, Action<T> onNext) where T : class
+		private void Subscribe<T>(IObservable<T> src, Action<T> onNext) where T : class, ICloneable
 		{
 			// always observe on default thread
 			src = src.ObserveOn(Scheduler.Default);
@@ -887,7 +863,7 @@ namespace LibDmd
 
 				// now render it
 				src = src.Do(_ => StopIdleing());
-				src = src.Do(onNext);
+				src = src.Select(frame => (T)frame.Clone()).Do(onNext);
 
 				// but subscribe to a throttled idle action
 				src = src.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
@@ -899,7 +875,7 @@ namespace LibDmd
 
 			} else {
 				// subscribe and add to active sources
-				_activeSources.Add(src.Subscribe(onNext));
+				_activeSources.Add(src.Select(frame => (T)frame.Clone()).Subscribe(onNext));
 			}
 		}
 
@@ -1089,7 +1065,7 @@ namespace LibDmd
 		private ColoredFrame TransformColoredGray2(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+				return frame.Flip(FlipHorizontally, FlipVertically);
 			}
 			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;
@@ -1097,13 +1073,13 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray2(dim, FrameUtil.Join(dim, frame.Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return new ColoredFrame(FrameUtil.Split(dest.FixedSize, 2, transformedFrame), frame.Palette, frame.PaletteIndex);
+			return frame.Update(FrameUtil.Split(dest.FixedSize, 2, transformedFrame));
 		}
 
 		private ColoredFrame TransformColoredGray4(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new ColoredFrame(TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+				return frame.Flip(FlipHorizontally, FlipVertically);
 			}
 			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;
@@ -1111,28 +1087,28 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray4(dim, FrameUtil.Join(dim, frame.Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new ColoredFrame(FrameUtil.Split(dest.FixedSize, 4, transformedFrame), frame.Palette, frame.PaletteIndex);
+			return frame.Update(FrameUtil.Split(dest.FixedSize, 4, transformedFrame));
 		}
 
-		private byte[] TransformRgb24(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
+		private DmdFrame TransformRgb24(DmdFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return TransformationUtil.Flip(dim, 3, frame, FlipHorizontally, FlipVertically);
+				return frame.Flip(3, FlipHorizontally, FlipVertically);
 			}
-			var bmp = ImageUtil.ConvertFromRgb24(dim, frame);
+			var bmp = ImageUtil.ConvertFromRgb24(frame.Dimensions, frame.Data);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = new byte[dest.FixedSize.Surface * 3];
-			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
-			return transformedFrame;
+			var transformedFrameData = new byte[dest.FixedSize.Surface * 3];
+			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrameData);
+			return frame.Update(transformedFrameData);
 		}
 
-		private BitmapSource Transform(BitmapSource bmp, IFixedSizeDestination dest)
+		private BmpFrame Transform(BmpFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null && !FlipHorizontally && !FlipVertically) {
-				return bmp;
+				return frame;
 			}
-			var dim = dest?.FixedSize ?? new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			return TransformationUtil.Transform(bmp, dim, Resize, FlipHorizontally, FlipVertically);
+			var dim = dest?.FixedSize ?? frame.Dimensions;
+			return frame.Transform(dim, Resize, FlipHorizontally, FlipVertically);
 		}
 
 		/// <summary>

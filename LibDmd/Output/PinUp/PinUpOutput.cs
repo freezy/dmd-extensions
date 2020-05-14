@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
@@ -96,10 +97,10 @@ namespace LibDmd.Output.PinUp
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
-		public void RenderBitmap(BitmapSource bmp)
+		public void RenderBitmap(BmpFrame frame)
 		{
-			var rgb24Data = ImageUtil.ConvertToRgb24(bmp);
-			RenderRgb24(new DmdFrame(new Dimensions(bmp.PixelWidth, bmp.PixelHeight), rgb24Data));
+			var rgb24Data = ImageUtil.ConvertToRgb24(frame.Bitmap);
+			RenderRgb24(new DmdFrame(frame.Dimensions, rgb24Data));
 		}
 
 		public void Dispose()

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 using static System.Text.Encoding;

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Media;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Input.ProPinball

@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using Newtonsoft.Json.Linq;
 using NLog;

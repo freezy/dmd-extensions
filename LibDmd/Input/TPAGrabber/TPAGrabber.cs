@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Input.TPAGrabber

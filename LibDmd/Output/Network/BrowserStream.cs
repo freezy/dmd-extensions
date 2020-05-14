@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using MimeTypes;
 using NLog;

@@ -1,8 +1,8 @@
 ﻿namespace LibDmd.Output.Pin2Dmd
 {
-	public class Pin2DmdXL : Pin2DmdBase, IFixedSizeDestination
+	public class Pin2DmdXL/* : Pin2DmdBase, IFixedSizeDestination*/
 	{
-
+/*
 
 		protected override void SetupFrameBuffers()
 		{
@@ -25,6 +25,6 @@
 			buffer[3] = (byte)(_isXL ? 0x0C : 0x00);
 			RenderRaw(buffer);
 			Thread.Sleep(Delay);
-		}
+		}*/
 	}
 }

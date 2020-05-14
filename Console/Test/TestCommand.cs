@@ -4,6 +4,7 @@ using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.PinMame;
@@ -33,6 +34,7 @@ namespace DmdExt.Test
 			bmp.BeginInit();
 			bmp.UriSource = new Uri("pack://application:,,,/dmdext;component/Test/TestImage.png");
 			bmp.EndInit();
+			var frame = new BmpFrame(bmp);
 
 			// chain them up
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
@@ -54,23 +56,23 @@ namespace DmdExt.Test
 				ISource source;
 				switch (_testOptions.FrameFormat) {
 					case FrameFormat.Gray2:
-						source = new ImageSourceGray2(bmp);
+						source = new ImageSourceGray2(frame);
 						break;
 
 					case FrameFormat.Gray4:
-						source = new ImageSourceGray4(bmp);
+						source = new ImageSourceGray4(frame);
 						break;
 
 					case FrameFormat.ColoredGray2:
-						source = new ImageSourceColoredGray2(bmp);
+						source = new ImageSourceColoredGray2(frame);
 						break;
 
 					case FrameFormat.ColoredGray4:
-						source = new ImageSourceColoredGray4(bmp);
+						source = new ImageSourceColoredGray4(frame);
 						break;
 
 					default:
-						source = new ImageSourceBitmap(bmp);
+						source = new ImageSourceBitmap(frame);
 						break;
 				}
 				_graph = new RenderGraph {

@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Processor;
 
 namespace LibDmd.Input.ScreenGrabber
@@ -42,9 +43,10 @@ namespace LibDmd.Input.ScreenGrabber
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private IObservable<BitmapSource> _frames;
+		private readonly BmpFrame _frame = new BmpFrame();
+		private IObservable<BmpFrame> _frames;
 
-		public IObservable<BitmapSource> GetBitmapFrames()
+		public IObservable<BmpFrame> GetBitmapFrames()
 		{
 			var enabledProcessors = Processors.Where(processor => processor.Enabled);
 			return _frames ?? (
@@ -54,9 +56,9 @@ namespace LibDmd.Input.ScreenGrabber
 					.Select(bmp => enabledProcessors.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp)))
 					.Select(bmp => {
 						if (!_destDimensions.IsFlat) {
-							return TransformationUtil.Transform(bmp, _destDimensions, ResizeMode.Stretch, false, false);
+							return _frame.Update(TransformationUtil.Transform(bmp, _destDimensions, ResizeMode.Stretch, false, false));
 						}
-						return bmp;
+						return _frame.Update(bmp);
 					})
 					.Publish()
 					.RefCount()

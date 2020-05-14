@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Windows.Media;
+using LibDmd.Frame;
 using LibDmd.Output;
 using LibDmd.Output.Network;
 using NLog;

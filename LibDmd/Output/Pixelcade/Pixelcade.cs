@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 

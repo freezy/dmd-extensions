@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
@@ -49,10 +50,10 @@ namespace LibDmd.Output.Virtual.Dmd
 			ClearColor();
 		}
 
-		public void RenderBitmap(BitmapSource bmp)
+		public void RenderBitmap(BmpFrame frame)
 		{
 			try {
-				Dispatcher.Invoke(() => Dmd.Source = bmp);
+				Dispatcher.Invoke(() => Dmd.Source = frame.Bitmap);
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
 			}
@@ -62,8 +63,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			if (_gray2Palette != null) {
 				RenderRgb24(frame.Colorize(_gray2Palette));
+
 			} else {
-				RenderBitmap(ImageUtil.ConvertFromGray2(Size, frame.Data, _hue, _sat, _lum));
+				RenderBitmap(frame.ConvertFromGray2(Size, _hue, _sat, _lum));
 			}
 		}
 
@@ -72,7 +74,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_gray4Palette != null) {
 				RenderRgb24(frame.Colorize(_gray4Palette));
 			} else {
-				RenderBitmap(ImageUtil.ConvertFromGray4(Size, frame.Data, _hue, _sat, _lum));
+				RenderBitmap(frame.ConvertFromGray4(Size, _hue, _sat, _lum));
 			}
 		}
 
@@ -81,7 +83,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (frame.Data.Length % 3 != 0) {
 				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Data.Length + " isn't.");
 			}
-			RenderBitmap(ImageUtil.ConvertFromRgb24(Size, frame.Data));
+			RenderBitmap(frame.ConvertToBmp());
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)

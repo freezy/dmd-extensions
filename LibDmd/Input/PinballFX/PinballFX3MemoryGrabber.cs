@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows.Media;
+using LibDmd.Frame;
 
 namespace LibDmd.Input.PinballFX
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 using WebSocketSharp;

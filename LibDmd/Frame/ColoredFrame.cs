@@ -1,10 +1,11 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
 
-namespace LibDmd
+namespace LibDmd.Frame
 {
-	public class ColoredFrame
+	public class ColoredFrame : ICloneable
 	{
 		/// <summary>
 		/// Dimensions of the frame, in pixel
@@ -58,11 +59,61 @@ namespace LibDmd
 			return this;
 		}
 
+		public ColoredFrame Update(byte[][] planes)
+		{
+			Planes = planes;
+			return this;
+		}
+
 		public ColoredFrame Update(byte[][] planes, Color[] palette)
 		{
 			Planes = planes;
 			Palette = palette;
 			return this;
+		}
+
+		public ColoredFrame Flip(bool flipHorizontally, bool flipVertically)
+		{
+			Planes = TransformationUtil.Flip(Dimensions, Planes, flipHorizontally, flipVertically);
+			return this;
+		}
+
+		public object Clone()
+		{
+			return new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
+		}
+
+		public DmdFrame ConvertToGray(params byte[] mapping)
+		{
+			var data = FrameUtil.Join(Dimensions, Planes);
+			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping));
+		}
+
+		public DmdFrame ConvertToGray()
+		{
+			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes));
+		}
+
+		public DmdFrame ConvertToRgb24()
+		{
+			return new DmdFrame(Dimensions, ColorUtil.ColorizeFrame(
+				Dimensions,
+				FrameUtil.Join(Dimensions, Planes),
+				Palette
+			));
+		}
+
+		public BmpFrame ConvertToBmp()
+		{
+			return new BmpFrame(
+				ImageUtil.ConvertFromRgb24(Dimensions,
+					ColorUtil.ColorizeFrame(
+						Dimensions,
+						FrameUtil.Join(Dimensions, Planes),
+						Palette
+					)
+				)
+			);
 		}
 	}
 }
