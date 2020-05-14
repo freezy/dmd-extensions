@@ -2,6 +2,7 @@ using System;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Input;
+using LibDmd.Output;
 
 namespace LibDmd.Frame
 {
@@ -44,6 +45,15 @@ namespace LibDmd.Frame
 		public DmdFrame ConvertToRgb24()
 		{
 			return new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap));
+		}
+
+		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+			var dim = dest?.FixedSize ?? Dimensions;
+			return Transform(dim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 		}
 
 

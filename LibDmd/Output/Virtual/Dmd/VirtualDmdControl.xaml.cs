@@ -62,7 +62,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderGray2(DmdFrame frame)
 		{
 			if (_gray2Palette != null) {
-				RenderRgb24(frame.Colorize(_gray2Palette));
+				RenderRgb24(frame.ConvertToRgb24(_gray2Palette));
 
 			} else {
 				RenderBitmap(frame.ConvertFromGray2(Size, _hue, _sat, _lum));
@@ -72,7 +72,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderGray4(DmdFrame frame)
 		{
 			if (_gray4Palette != null) {
-				RenderRgb24(frame.Colorize(_gray4Palette));
+				RenderRgb24(frame.ConvertToRgb24(_gray4Palette));
 			} else {
 				RenderBitmap(frame.ConvertFromGray4(Size, _hue, _sat, _lum));
 			}

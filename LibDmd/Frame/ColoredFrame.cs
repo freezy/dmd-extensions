@@ -2,6 +2,7 @@
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
+using LibDmd.Output;
 
 namespace LibDmd.Frame
 {
@@ -101,6 +102,34 @@ namespace LibDmd.Frame
 				FrameUtil.Join(Dimensions, Planes),
 				Palette
 			));
+		}
+
+		public ColoredFrame TransformColoredGray2(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null) {
+				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+			var bmp = ImageUtil.ConvertFromGray2(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
+			return Update(FrameUtil.Split(dest.FixedSize, 2, transformedFrame));
+		}
+
+		public ColoredFrame TransformColoredGray4(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null) {
+				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+			var bmp = ImageUtil.ConvertFromGray4(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
+			return Update(FrameUtil.Split(dest.FixedSize, 4, transformedFrame));
 		}
 
 		public BmpFrame ConvertToBmp()

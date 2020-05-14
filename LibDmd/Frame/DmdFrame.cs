@@ -2,16 +2,13 @@
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
+using LibDmd.Output;
 
 namespace LibDmd.Frame
 {
 	/// <summary>
-	/// A non-colored frame.
+	/// A frame sent without a palette or color.
 	/// </summary>
-	///
-	/// <remarks>
-	/// Frames
-	/// </remarks>
 	public class DmdFrame : ICloneable
 	{
 		public Dimensions Dimensions { get; private set; }
@@ -52,7 +49,7 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame Colorize(Color[] palette)
+		public DmdFrame ConvertToRgb24(Color[] palette)
 		{
 			Data = ColorUtil.ColorizeFrame(Dimensions, Data, palette);
 			return this;
@@ -66,7 +63,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame ConvertToGray(int numColors)
 		{
-			Data = ImageUtil.ConvertToGray(Dimensions, Data, 4);
+			Data = ImageUtil.ConvertToGray(Dimensions, Data, numColors);
 			return this;
 		}
 
@@ -89,8 +86,65 @@ namespace LibDmd.Frame
 		{
 			return new BmpFrame(ImageUtil.ConvertFromRgb24(
 				Dimensions,
-				Colorize(palette).Data
+				ConvertToRgb24(palette).Data
 			));
+		}
+
+		public DmdFrame TransformGray2(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null) {
+				return Flip(1, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+
+			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+
+			// block-copy for same width but smaller height
+			var cropHeight = Dimensions.Width == dest.FixedSize.Width && Dimensions.Height < dest.FixedSize.Height;
+			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				var transformedFrameData = new byte[dest.FixedSize.Surface];
+				Buffer.BlockCopy(
+					Data,
+					0,
+					transformedFrameData,
+					((dest.FixedSize.Height - Dimensions.Height) / 2) * dest.FixedSize.Width, Data.Length
+				);
+				return Update(transformedFrameData);
+			}
+
+			var bmp = ImageUtil.ConvertFromGray2(Dimensions, Data, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			return Update(ImageUtil.ConvertToGray2(transformedBmp));
+		}
+
+		public DmdFrame TransformGray4(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null) {
+				return Flip(1, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+			var bmp = ImageUtil.ConvertFromGray4(Dimensions, Data, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
+			return Update(transformedFrame);
+		}
+
+		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		{
+			if (dest == null) {
+				return Flip(3, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+				return this;
+			}
+			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrameData = new byte[dest.FixedSize.Surface * 3];
+			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrameData);
+			return Update(transformedFrameData);
 		}
 
 		public DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
