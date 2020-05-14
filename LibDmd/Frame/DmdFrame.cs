@@ -8,7 +8,7 @@ namespace LibDmd.Frame
 {
 	/// <summary>
 	/// A frame sent without a palette or color.
-	/// </summary>
+	/// </summary>RGB24 buffer must be divisible by 3
 	public class DmdFrame : ICloneable
 	{
 		public Dimensions Dimensions { get; private set; }

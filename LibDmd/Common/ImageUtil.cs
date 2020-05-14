@@ -5,17 +5,16 @@ using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
-using PixelFormat = System.Drawing.Imaging.PixelFormat;
+using PixelFormat = System.Windows.Media.PixelFormat;
 using Point = System.Drawing.Point;
 
 namespace LibDmd.Common
 {
-	public class ImageUtil
+	public static class ImageUtil
 	{
-		private static readonly Dictionary<int, Frame> FrameDatas = new Dictionary<int,Frame>();
+		private static readonly Dictionary<int, FrameData> FrameDatas = new Dictionary<int, FrameData>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
@@ -26,11 +25,11 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="dim">Frame dimensions</param>
 		/// <returns></returns>
-		private static Frame FrameData(Dimensions dim)
+		private static FrameData GetFrameData(Dimensions dim)
 		{
 			var key = dim.Surface;
 			if (!FrameDatas.ContainsKey(key)) {
-				FrameDatas.Add(key, new Frame());
+				FrameDatas.Add(key, new FrameData());
 			}
 			return FrameDatas[key];
 		}
@@ -221,9 +220,9 @@ namespace LibDmd.Common
 			src.EndInit();
 
 			// copy to bitmap
-			var bitmap = new Bitmap(src.PixelWidth, src.PixelHeight, PixelFormat.Format32bppArgb);
-			var data = bitmap.LockBits(new Rectangle(Point.Empty, bitmap.Size), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-			src.CopyPixels(System.Windows.Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
+			var bitmap = new Bitmap(src.PixelWidth, src.PixelHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			var data = bitmap.LockBits(new Rectangle(Point.Empty, bitmap.Size), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			src.CopyPixels(Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
 			bitmap.UnlockBits(data);
 
 			return bitmap;
@@ -261,12 +260,13 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Converts an 2-bit grayscale array to a bitmap.
 		/// </summary>
+		/// <param name="dim">Frame dimensions</param>
 		/// <param name="frame">2-bit grayscale array</param>
 		/// <param name="hue">Hue in which the bitmap will be created</param>
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromGray2(Dimensions dim, Frame frame, double hue, double saturation, double luminosity)
+		private static BitmapSource ConvertFromGray2(Dimensions dim, FrameData frame, double hue, double saturation, double luminosity)
 		{
 			var width = dim.Width;
 			var height = dim.Height;
@@ -315,7 +315,7 @@ namespace LibDmd.Common
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromGray4(Dimensions dim, Frame frame, double hue, double saturation, double luminosity)
+		private static BitmapSource ConvertFromGray4(Dimensions dim, FrameData frame, double hue, double saturation, double luminosity)
 		{
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
@@ -349,7 +349,7 @@ namespace LibDmd.Common
 		/// <param name="dim">Image dimensions</param>
 		/// <param name="frame">RGB values for each pixel between 0 and 255</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromRgb24(Dimensions dim, Frame frame)
+		private static BitmapSource ConvertFromRgb24(Dimensions dim, FrameData frame)
 		{
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
@@ -389,7 +389,7 @@ namespace LibDmd.Common
 		public static unsafe BitmapSource ConvertFromGray2(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDatas) {
-				return ConvertFromGray2(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray2(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -405,7 +405,7 @@ namespace LibDmd.Common
 		public static BitmapSource ConvertFromGray2(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDatas) {
-				return ConvertFromGray2(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray2(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -421,7 +421,7 @@ namespace LibDmd.Common
 		public static unsafe BitmapSource ConvertFromGray4(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDatas) {
-				return ConvertFromGray4(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray4(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -437,7 +437,7 @@ namespace LibDmd.Common
 		public static BitmapSource ConvertFromGray4(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDatas) {
-				return ConvertFromGray4(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray4(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace LibDmd.Common
 		public static unsafe BitmapSource ConvertFromRgb24(Dimensions dim, byte* frame)
 		{
 			lock (FrameDatas) {
-				return ConvertFromRgb24(dim, FrameData(dim).With(frame));
+				return ConvertFromRgb24(dim, GetFrameData(dim).With(frame));
 			}
 		}
 
@@ -463,7 +463,7 @@ namespace LibDmd.Common
 		public static BitmapSource ConvertFromRgb24(Dimensions dim, byte[] frame)
 		{
 			lock (FrameDatas) {
-				return ConvertFromRgb24(dim, FrameData(dim).With(frame));
+				return ConvertFromRgb24(dim, GetFrameData(dim).With(frame));
 			}
 		}
 
@@ -498,33 +498,33 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="sourceFormat">Source format</param>
 		/// <returns>Destination format</returns>
-		private static System.Windows.Media.PixelFormat ConvertPixelFormat(PixelFormat sourceFormat)
+		private static PixelFormat ConvertPixelFormat(System.Drawing.Imaging.PixelFormat sourceFormat)
 		{
 			switch (sourceFormat) {
-				case PixelFormat.Format24bppRgb: return PixelFormats.Bgr24;
-				case PixelFormat.Format32bppArgb: return PixelFormats.Bgra32;
-				case PixelFormat.Format32bppRgb: return PixelFormats.Bgr32;
-				case PixelFormat.Indexed: return PixelFormats.Indexed1;
-				case PixelFormat.Format1bppIndexed: return PixelFormats.Indexed1;
-				case PixelFormat.Format4bppIndexed: return PixelFormats.Indexed4;
-				case PixelFormat.Format8bppIndexed: return PixelFormats.Indexed8;
-				case PixelFormat.Format16bppGrayScale: return PixelFormats.Gray16;
-				case PixelFormat.Format16bppRgb555: return PixelFormats.Bgr555;
-				case PixelFormat.Format16bppRgb565: return PixelFormats.Bgr565;
-				case PixelFormat.Format16bppArgb1555: return PixelFormats.Bgr101010;
-				case PixelFormat.Format32bppPArgb: return PixelFormats.Pbgra32;
-				case PixelFormat.Format48bppRgb: return PixelFormats.Rgb48;
-				case PixelFormat.Format64bppArgb: return PixelFormats.Rgba64;
-				case PixelFormat.Format64bppPArgb: return PixelFormats.Prgba64;
-				case PixelFormat.Gdi:
-				case PixelFormat.Alpha:
-				case PixelFormat.PAlpha:
-				case PixelFormat.Extended:
-				case PixelFormat.Canonical:
-				case PixelFormat.Undefined:
-				case PixelFormat.Max:
+				case System.Drawing.Imaging.PixelFormat.Format24bppRgb: return PixelFormats.Bgr24;
+				case System.Drawing.Imaging.PixelFormat.Format32bppArgb: return PixelFormats.Bgra32;
+				case System.Drawing.Imaging.PixelFormat.Format32bppRgb: return PixelFormats.Bgr32;
+				case System.Drawing.Imaging.PixelFormat.Indexed: return PixelFormats.Indexed1;
+				case System.Drawing.Imaging.PixelFormat.Format1bppIndexed: return PixelFormats.Indexed1;
+				case System.Drawing.Imaging.PixelFormat.Format4bppIndexed: return PixelFormats.Indexed4;
+				case System.Drawing.Imaging.PixelFormat.Format8bppIndexed: return PixelFormats.Indexed8;
+				case System.Drawing.Imaging.PixelFormat.Format16bppGrayScale: return PixelFormats.Gray16;
+				case System.Drawing.Imaging.PixelFormat.Format16bppRgb555: return PixelFormats.Bgr555;
+				case System.Drawing.Imaging.PixelFormat.Format16bppRgb565: return PixelFormats.Bgr565;
+				case System.Drawing.Imaging.PixelFormat.Format16bppArgb1555: return PixelFormats.Bgr101010;
+				case System.Drawing.Imaging.PixelFormat.Format32bppPArgb: return PixelFormats.Pbgra32;
+				case System.Drawing.Imaging.PixelFormat.Format48bppRgb: return PixelFormats.Rgb48;
+				case System.Drawing.Imaging.PixelFormat.Format64bppArgb: return PixelFormats.Rgba64;
+				case System.Drawing.Imaging.PixelFormat.Format64bppPArgb: return PixelFormats.Prgba64;
+				case System.Drawing.Imaging.PixelFormat.Gdi:
+				case System.Drawing.Imaging.PixelFormat.Alpha:
+				case System.Drawing.Imaging.PixelFormat.PAlpha:
+				case System.Drawing.Imaging.PixelFormat.Extended:
+				case System.Drawing.Imaging.PixelFormat.Canonical:
+				case System.Drawing.Imaging.PixelFormat.Undefined:
+				case System.Drawing.Imaging.PixelFormat.Max:
 				default:
-					return new System.Windows.Media.PixelFormat();
+					return new PixelFormat();
 			}
 		}
 
@@ -532,7 +532,7 @@ namespace LibDmd.Common
 		/// Sometimes we have a pointer, sometimes an array, but we don't want to implement
 		/// everything twice, so this is a wrapper that supports both.
 		/// </summary>
-		private unsafe class Frame
+		private unsafe class FrameData
 		{
 			public int Size => IsPointer ? -1 : ArraySrc.Length;
 
@@ -540,14 +540,14 @@ namespace LibDmd.Common
 			public byte[] ArraySrc;
 			public bool IsPointer;
 
-			public Frame With(byte* src)
+			public FrameData With(byte* src)
 			{
 				PointerSrc = src;
 				IsPointer = true;
 				return this;
 			}
 
-			public Frame With(byte[] src)
+			public FrameData With(byte[] src)
 			{
 				ArraySrc = src;
 				IsPointer = false;

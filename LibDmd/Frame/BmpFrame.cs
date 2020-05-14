@@ -21,6 +21,12 @@ namespace LibDmd.Frame
 			Dimensions = new Dimensions(bitmap.PixelWidth, bitmap.PixelHeight);
 		}
 
+		public BmpFrame(BitmapSource bitmap, Dimensions dim)
+		{
+			Bitmap = bitmap;
+			Dimensions = dim;
+		}
+
 		public BmpFrame Transform(Dimensions dim, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{
 			Bitmap = TransformationUtil.Transform(Bitmap, dim, resize, flipHorizontally, flipVertically);
@@ -59,7 +65,7 @@ namespace LibDmd.Frame
 
 		public object Clone()
 		{
-			return new BmpFrame(Bitmap);
+			return new BmpFrame(Bitmap, Dimensions);
 		}
 	}
 }
