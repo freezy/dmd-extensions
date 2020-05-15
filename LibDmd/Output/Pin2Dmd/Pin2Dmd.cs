@@ -1,8 +1,6 @@
 ﻿using System.Threading;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
 using LibDmd.Frame;
-using LibDmd.Input;
 
 namespace LibDmd.Output.Pin2Dmd
 {

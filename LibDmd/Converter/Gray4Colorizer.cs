@@ -5,7 +5,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
-using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;

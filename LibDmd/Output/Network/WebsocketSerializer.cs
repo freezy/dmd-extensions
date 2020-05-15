@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.Network

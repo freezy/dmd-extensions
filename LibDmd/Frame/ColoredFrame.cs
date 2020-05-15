@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
 using LibDmd.Output;
 
 namespace LibDmd.Frame
 {
-	public class ColoredFrame : ICloneable
+	public class ColoredFrame : BaseFrame, ICloneable
 	{
-		/// <summary>
-		/// Dimensions of the frame, in pixel
-		/// </summary>
-		public Dimensions Dimensions;
-
 		/// <summary>
 		/// Frame data, split into bit planes
 		/// </summary>
@@ -61,6 +54,13 @@ namespace LibDmd.Frame
 			return this;
 		}
 
+		public ColoredFrame Update(Dimensions dimensions, byte[][] planes)
+		{
+			Dimensions = dimensions;
+			Planes = planes;
+			return this;
+		}
+
 		public ColoredFrame Update(byte[][] planes)
 		{
 			Planes = planes;
@@ -78,11 +78,6 @@ namespace LibDmd.Frame
 		{
 			Planes = TransformationUtil.Flip(Dimensions, Planes, flipHorizontally, flipVertically);
 			return this;
-		}
-
-		public object Clone()
-		{
-			return new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
 		}
 
 		public DmdFrame ConvertToGray(params byte[] mapping)
@@ -105,32 +100,44 @@ namespace LibDmd.Frame
 			));
 		}
 
-		public ColoredFrame TransformColoredGray2(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		public ColoredFrame TransformColoredGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			if (dest == null) {
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+
+			if (targetDim == Dimensions.Dynamic) {
 				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			}
-			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
+			}
+			if (Dimensions < targetDim) {
+				var centered = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
+				return Update(targetDim, FrameUtil.Split(targetDim, 2, centered));
 			}
 			var bmp = ImageUtil.ConvertFromGray2(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return Update(FrameUtil.Split(dest.FixedSize, 2, transformedFrame));
+			return Update(FrameUtil.Split(targetDim, 2, transformedFrame));
 		}
 
-		public ColoredFrame TransformColoredGray4(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		public ColoredFrame TransformColoredGray4(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			if (dest == null) {
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+
+			if (targetDim == Dimensions.Dynamic) {
 				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			}
-			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
 			}
+			if (Dimensions < targetDim) {
+				var centered = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
+				return Update(targetDim, FrameUtil.Split(targetDim, 4, centered));
+			}
 			var bmp = ImageUtil.ConvertFromGray4(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return Update(FrameUtil.Split(dest.FixedSize, 4, transformedFrame));
+			return Update(FrameUtil.Split(targetDim, 4, transformedFrame));
 		}
 
 		public BmpFrame ConvertToBmp()
@@ -145,5 +152,11 @@ namespace LibDmd.Frame
 				)
 			);
 		}
+
+		public object Clone()
+		{
+			return new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
+		}
+
 	}
 }

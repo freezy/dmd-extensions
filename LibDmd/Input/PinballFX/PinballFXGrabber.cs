@@ -11,7 +11,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Processor;

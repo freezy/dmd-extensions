@@ -1,9 +1,7 @@
 ﻿using System;
 using FTD2XX_NET;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
 using LibDmd.Frame;
-using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.PinDmd1

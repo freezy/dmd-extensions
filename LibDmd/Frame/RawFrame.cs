@@ -1,7 +1,4 @@
-﻿using LibDmd.DmdDevice;
-using LibDmd.Input;
-
-namespace LibDmd.Frame
+﻿namespace LibDmd.Frame
 {
 	public class RawDmdFrame : DmdFrame
 	{

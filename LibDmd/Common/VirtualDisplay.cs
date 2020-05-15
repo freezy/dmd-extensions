@@ -7,8 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using LibDmd.Output;
 using NLog;
 

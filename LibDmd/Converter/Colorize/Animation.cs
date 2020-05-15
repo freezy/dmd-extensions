@@ -2,8 +2,7 @@
 using System.Windows.Media;
 using System.Collections.Generic;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Converter.Colorize

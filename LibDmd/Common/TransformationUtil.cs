@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd.Common

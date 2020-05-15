@@ -15,7 +15,6 @@ using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Frame;
-using LibDmd.Input;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;

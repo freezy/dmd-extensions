@@ -1,5 +1,4 @@
-﻿using LibDmd.DmdDevice;
-using LibDmd.Input;
+﻿using LibDmd.Frame;
 
 namespace LibDmd.Output
 {

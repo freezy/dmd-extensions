@@ -7,7 +7,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using NLog;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output;
 using NLog;
@@ -11,9 +10,8 @@ namespace LibDmd.Frame
 	/// <summary>
 	/// A frame sent without a palette or color.
 	/// </summary>RGB24 buffer must be divisible by 3
-	public class DmdFrame : ICloneable
+	public class DmdFrame : BaseFrame, ICloneable
 	{
-		public Dimensions Dimensions { get; private set; }
 		public byte[] Data { get; private set; }
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -94,30 +92,6 @@ namespace LibDmd.Frame
 			));
 		}
 
-		private Dimensions GetTargetDimensions(IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			if (fixedDest == null && multiDest == null) {
-				return Dimensions.Dynamic;
-			}
-
-			if (fixedDest != null) {
-				return fixedDest.FixedSize;
-			}
-
-			var dim = Dimensions.Dynamic;
-			foreach (var multiDim in multiDest.Sizes) {
-				if (Dimensions == multiDim) {
-					return multiDim;
-				}
-
-				if (Dimensions < multiDim && multiDim > dim) {
-					dim = multiDim;
-				}
-			}
-
-			return dim == Dimensions.Dynamic ? Dimensions : dim;
-		}
-
 		public DmdFrame TransformGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);
@@ -133,12 +107,12 @@ namespace LibDmd.Frame
 			// block-copy for same width but smaller height
 			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
 			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(targetDim, CenterVertically(targetDim));
+				return Update(targetDim, CenterVertically(targetDim, Data));
 			}
 
 			// also copy for centering image if smaller
 			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, 1));
+				return Update(targetDim, CenterFrame(targetDim, Data, 1));
 			}
 
 			// otherwise, convert to bitmap, resize, convert back.
@@ -160,12 +134,12 @@ namespace LibDmd.Frame
 			// block-copy for same width but smaller height
 			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
 			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(targetDim, CenterVertically(targetDim));
+				return Update(targetDim, CenterVertically(targetDim, Data));
 			}
 
 			// also copy for centering image if smaller
 			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, 1));
+				return Update(targetDim, CenterFrame(targetDim, Data, 1));
 			}
 
 			// otherwise, convert to bitmap, resize, convert back.
@@ -188,7 +162,7 @@ namespace LibDmd.Frame
 
 			// also copy for centering image if smaller
 			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, 3));
+				return Update(targetDim, CenterFrame(targetDim, Data, 3));
 			}
 
 			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
@@ -202,37 +176,6 @@ namespace LibDmd.Frame
 		{
 			Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, flipHorizontally, flipVertically);
 			return this;
-		}
-
-		private byte[] CenterFrame(Dimensions targetDim, int bytesPerPixel)
-		{
-			var paddingX = (targetDim.Width - Dimensions.Width) / 2;
-			var paddingY = (targetDim.Height - Dimensions.Height) / 2;
-			var frameData = new byte[targetDim.Surface * bytesPerPixel];
-			var ySrc = 0;
-			for (var yDest = paddingY; yDest < paddingY + Dimensions.Height; yDest++) {
-				Buffer.BlockCopy(
-					Data,
-					ySrc * Dimensions.Width * bytesPerPixel,
-					frameData,
-					(yDest * targetDim.Width + paddingX) * bytesPerPixel,
-					Dimensions.Width * bytesPerPixel);
-				ySrc++;
-			}
-
-			return frameData;
-		}
-
-		private byte[] CenterVertically(Dimensions targetDim)
-		{
-			var transformedFrameData = new byte[targetDim.Surface];
-			Buffer.BlockCopy(
-				Data,
-				0,
-				transformedFrameData,
-				((targetDim.Height - Dimensions.Height) / 2) * targetDim.Width, Data.Length
-			);
-			return transformedFrameData;
 		}
 
 		/// <summary>

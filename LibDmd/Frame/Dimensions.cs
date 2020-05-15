@@ -1,4 +1,4 @@
-﻿namespace LibDmd.DmdDevice
+﻿namespace LibDmd.Frame
 {
 	/// <summary>
 	/// A set of dimensions, in pixel.

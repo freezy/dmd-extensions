@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using LibDmd.DmdDevice;
+using LibDmd.Frame;
 
 namespace LibDmd.Input
 {

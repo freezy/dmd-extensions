@@ -2,7 +2,7 @@
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;

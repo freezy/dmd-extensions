@@ -6,8 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.DmdDevice;
-using LibDmd.Input;
+using LibDmd.Frame;
 using NLog;
 using SkiaSharp;
 
