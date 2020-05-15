@@ -9,7 +9,7 @@ namespace DmdExt.Common
 {
 	internal abstract class BaseOptions : IConfiguration
 	{
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric, network ]. Default: \"virtual\".")]
+		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, pin2dmdxl, virtual, alphanumeric, network ]. Default: \"virtual\".")]
 		public DestinationType Destination { get; set; } = DestinationType.Virtual;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
@@ -74,6 +74,7 @@ namespace DmdExt.Common
 		public IPinDmd2Config PinDmd2 { get; }
 		public IPinDmd3Config PinDmd3 { get; }
 		public IPin2DmdConfig Pin2Dmd { get; }
+		public IPin2DmdConfig Pin2DmdXL { get; }
 		public IPixelcadeConfig Pixelcade { get; }
 		public IVideoConfig Video { get; }
 		public IGifConfig Gif { get; }
@@ -92,6 +93,7 @@ namespace DmdExt.Common
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
+			Pin2DmdXL = new Pin2DmdOptions(this);
 			Pixelcade = new PixelcadeOptions(this);
 			Video = new VideoOptions();
 			Gif = new GifOptions();
@@ -104,7 +106,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIXELCADE, Virtual, AlphaNumeric, Network
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIN2DMDXL, PIXELCADE, Virtual, AlphaNumeric, Network
 		}
 
 		public void Validate()
@@ -228,7 +230,7 @@ namespace DmdExt.Common
 
 	internal class Pin2DmdOptions : IPin2DmdConfig
 	{
-		private readonly BaseOptions _options;
+		protected readonly BaseOptions _options;
 
 		public Pin2DmdOptions(BaseOptions options)
 		{
@@ -240,7 +242,18 @@ namespace DmdExt.Common
 
 		public int Delay => _options.OutputDelay;
 	}
-	
+
+	internal class Pin2DmdXLOptions : Pin2DmdOptions
+	{
+
+		public Pin2DmdXLOptions(BaseOptions options) : base(options) {
+		}
+
+		public new bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+							   _options.Destination == BaseOptions.DestinationType.PIN2DMDXL;
+	}
+
+
 	internal class PixelcadeOptions : IPixelcadeConfig
 	{
 		private readonly BaseOptions _options;

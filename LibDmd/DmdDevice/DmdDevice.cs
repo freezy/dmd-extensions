@@ -304,6 +304,16 @@ namespace LibDmd.DmdDevice
 					Logger.Info("Added PIN2DMD renderer.");
 				}
 			}
+			if (_config.Pin2DmdXL.Enabled) {
+				var pin2DmdXL = Pin2DmdXL.GetInstance(_config.Pin2DmdXL.Delay);
+				if (pin2DmdXL.IsAvailable) {
+					renderers.Add(pin2DmdXL);
+					if (_coloring != null) {
+						pin2DmdXL.PreloadPalettes(_coloring);
+					}
+					Logger.Info("Added PIN2DMD XL renderer.");
+				}
+			}
 			if (_config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port, _config.Pixelcade.ColorMatrix);
 				if (pixelcade.IsAvailable) {
