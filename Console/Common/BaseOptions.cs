@@ -93,7 +93,7 @@ namespace DmdExt.Common
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
-			Pin2DmdXL = new Pin2DmdOptions(this);
+			Pin2DmdXL = new Pin2DmdXLOptions(this);
 			Pixelcade = new PixelcadeOptions(this);
 			Video = new VideoOptions();
 			Gif = new GifOptions();
@@ -305,7 +305,7 @@ namespace DmdExt.Common
 		public bool Enabled => false;
 		public int Port => 0;
 	}
-	
+
 	internal class NetworkOptions : INetworkConfig
 	{
 		private readonly BaseOptions _options;
