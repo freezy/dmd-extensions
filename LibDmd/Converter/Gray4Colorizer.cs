@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
 using LibDmd.Frame;

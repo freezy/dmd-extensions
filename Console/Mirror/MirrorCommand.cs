@@ -1,7 +1,6 @@
 ﻿using System;
 using DmdExt.Common;
 using LibDmd;
-using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.PinballFX;

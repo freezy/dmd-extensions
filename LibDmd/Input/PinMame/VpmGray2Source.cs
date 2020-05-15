@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using LibDmd.Common;
-using LibDmd.Converter.Colorize;
 using LibDmd.Frame;
-using NLog.Targets;
 
 namespace LibDmd.Input.PinMame
 {

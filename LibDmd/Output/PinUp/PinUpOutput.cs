@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;

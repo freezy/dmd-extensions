@@ -1,18 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
 using LibDmd.Input;
-using LibDmd.Output;
 using NLog;
-using NLog.Fluent;
 using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Common

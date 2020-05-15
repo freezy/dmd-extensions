@@ -1,6 +1,4 @@
-﻿using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using LibDmd.Frame;
+﻿using LibDmd.Frame;
 
 namespace LibDmd.Output
 {

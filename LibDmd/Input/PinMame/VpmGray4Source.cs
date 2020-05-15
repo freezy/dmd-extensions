@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using LibDmd.Common;
 using LibDmd.Frame;
 
 namespace LibDmd.Input.PinMame

@@ -6,7 +6,6 @@ using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
 using NLog;
-using WebSocketSharp;
 
 namespace LibDmd.Output.Network
 {

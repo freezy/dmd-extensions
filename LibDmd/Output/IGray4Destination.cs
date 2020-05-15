@@ -1,5 +1,4 @@
 ﻿using LibDmd.Frame;
-using LibDmd.Input;
 
 namespace LibDmd.Output
 {

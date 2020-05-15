@@ -5,7 +5,6 @@ using System.Windows.Media;
 using LibDmd.Converter;
 using LibDmd.Input;
 using LibDmd.Output;
-using LibDmd.Output.FileOutput;
 
 namespace LibDmd
 {

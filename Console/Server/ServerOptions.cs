@@ -1,6 +1,5 @@
 ﻿using CommandLine;
 using DmdExt.Common;
-using LibDmd;
 
 namespace DmdExt.Server
 {

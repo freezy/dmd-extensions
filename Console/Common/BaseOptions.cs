@@ -4,7 +4,6 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using NLog.LayoutRenderers;
 
 namespace DmdExt.Common
 {
