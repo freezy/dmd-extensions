@@ -133,12 +133,12 @@ namespace LibDmd.Frame
 			// block-copy for same width but smaller height
 			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
 			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(CropVertically(targetDim));
+				return Update(targetDim, CenterVertically(targetDim));
 			}
 
 			// also copy for centering image if smaller
 			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim));
+				return Update(targetDim, CenterFrame(targetDim, 1));
 			}
 
 			// otherwise, convert to bitmap, resize, convert back.
@@ -160,12 +160,12 @@ namespace LibDmd.Frame
 			// block-copy for same width but smaller height
 			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
 			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(CropVertically(targetDim));
+				return Update(targetDim, CenterVertically(targetDim));
 			}
 
 			// also copy for centering image if smaller
 			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim));
+				return Update(targetDim, CenterFrame(targetDim, 1));
 			}
 
 			// otherwise, convert to bitmap, resize, convert back.
@@ -175,17 +175,25 @@ namespace LibDmd.Frame
 			return Update(transformedFrame);
 		}
 
-		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			if (dest == null) {
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+			if (targetDim == Dimensions.Dynamic) {
 				return Flip(3, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			}
-			if (Dimensions == dest.FixedSize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+
+			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
 			}
+
+			// also copy for centering image if smaller
+			if (Dimensions < targetDim) {
+				return Update(targetDim, CenterFrame(targetDim, 3));
+			}
+
 			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrameData = new byte[dest.FixedSize.Surface * 3];
+			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrameData = new byte[targetDim.Surface * 3];
 			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrameData);
 			return Update(transformedFrameData);
 		}
@@ -196,26 +204,26 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		private byte[] CenterFrame(Dimensions targetDim)
+		private byte[] CenterFrame(Dimensions targetDim, int bytesPerPixel)
 		{
 			var paddingX = (targetDim.Width - Dimensions.Width) / 2;
 			var paddingY = (targetDim.Height - Dimensions.Height) / 2;
-			var frameData = new byte[targetDim.Surface];
+			var frameData = new byte[targetDim.Surface * bytesPerPixel];
 			var ySrc = 0;
 			for (var yDest = paddingY; yDest < paddingY + Dimensions.Height; yDest++) {
 				Buffer.BlockCopy(
 					Data,
-					ySrc * Dimensions.Width,
+					ySrc * Dimensions.Width * bytesPerPixel,
 					frameData,
-					yDest * targetDim.Width + paddingX,
-					Dimensions.Width);
+					(yDest * targetDim.Width + paddingX) * bytesPerPixel,
+					Dimensions.Width * bytesPerPixel);
 				ySrc++;
 			}
 
 			return frameData;
 		}
 
-		private byte[] CropVertically(Dimensions targetDim)
+		private byte[] CenterVertically(Dimensions targetDim)
 		{
 			var transformedFrameData = new byte[targetDim.Surface];
 			Buffer.BlockCopy(
