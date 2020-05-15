@@ -33,31 +33,34 @@ namespace LibDmd.Frame
 
 		protected byte[] CenterFrame(Dimensions targetDim, byte[] data, int bytesPerPixel)
 		{
-			var paddingX = (targetDim.Width - Dimensions.Width) / 2;
-			var paddingY = (targetDim.Height - Dimensions.Height) / 2;
+			var padX = (targetDim.Width - Dimensions.Width) / 2;
+			var padY = (targetDim.Height - Dimensions.Height) / 2;
 			var frameData = new byte[targetDim.Surface * bytesPerPixel];
 			var ySrc = 0;
-			for (var yDest = paddingY; yDest < paddingY + Dimensions.Height; yDest++) {
+			for (var yDest = padY; yDest < padY + Dimensions.Height; yDest++) {
 				Buffer.BlockCopy(
 					data,
 					ySrc * Dimensions.Width * bytesPerPixel,
 					frameData,
-					(yDest * targetDim.Width + paddingX) * bytesPerPixel,
-					Dimensions.Width * bytesPerPixel);
+					(yDest * targetDim.Width + padX) * bytesPerPixel,
+					Dimensions.Width * bytesPerPixel
+				);
 				ySrc++;
 			}
 
 			return frameData;
 		}
 
-		protected byte[] CenterVertically(Dimensions targetDim, byte[] data)
+		protected byte[] CenterVertically(Dimensions targetDim, byte[] data, int bytesPerPixel)
 		{
-			var transformedFrameData = new byte[targetDim.Surface];
+			var padY = (targetDim.Height - Dimensions.Height) / 2;
+			var transformedFrameData = new byte[targetDim.Surface * bytesPerPixel];
 			Buffer.BlockCopy(
 				data,
 				0,
 				transformedFrameData,
-				((targetDim.Height - Dimensions.Height) / 2) * targetDim.Width, data.Length
+				padY * targetDim.Width * bytesPerPixel,
+				data.Length
 			);
 			return transformedFrameData;
 		}

@@ -2,6 +2,7 @@
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Output;
+using NLog;
 
 namespace LibDmd.Frame
 {
@@ -21,6 +22,8 @@ namespace LibDmd.Frame
 		/// Palette index from animation or -1 if not set.
 		/// </summary>
 		public int PaletteIndex { get; }
+
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ColoredFrame()
 		{
@@ -102,42 +105,44 @@ namespace LibDmd.Frame
 
 		public ColoredFrame TransformColoredGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-
-			if (targetDim == Dimensions.Dynamic) {
-				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
-			}
-			if (Dimensions < targetDim) {
-				var centered = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
-				return Update(targetDim, FrameUtil.Split(targetDim, 2, centered));
-			}
-			var bmp = ImageUtil.ConvertFromGray2(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray2(transformedBmp);
-			return Update(FrameUtil.Split(targetDim, 2, transformedFrame));
+			return TransformColoredGray(2, renderGraph, fixedDest, multiDest);
 		}
 
 		public ColoredFrame TransformColoredGray4(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+			return TransformColoredGray(4, renderGraph, fixedDest, multiDest);
+		}
 
-			if (targetDim == Dimensions.Dynamic) {
+		private ColoredFrame TransformColoredGray(int bitLen, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+		{
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
+				// no resizing, we're done here.
 				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			}
-			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
+
+			// perf: if no flipping these cases can easily done on the byte array directly
+			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+
+				// copy whole block if only vertical padding
+				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
+					var centeredData = CenterVertically(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
+					return Update(targetDim, FrameUtil.Split(targetDim, bitLen, centeredData));
+				}
+
+				// copy line by line if centering image
+				if (Dimensions < targetDim) {
+					var centeredData = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
+					return Update(targetDim, FrameUtil.Split(targetDim, bitLen, centeredData));
+				}
 			}
-			if (Dimensions < targetDim) {
-				var centered = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
-				return Update(targetDim, FrameUtil.Split(targetDim, 4, centered));
-			}
-			var bmp = ImageUtil.ConvertFromGray4(Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
+
+			// otherwise, convert to bitmap, resize, convert back.
+			var bmp = ImageUtil.ConvertFrom(bitLen, Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return Update(FrameUtil.Split(targetDim, 4, transformedFrame));
+			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
+
+			return Update(targetDim, FrameUtil.Split(targetDim, bitLen, transformedFrame));
 		}
 
 		public BmpFrame ConvertToBmp()

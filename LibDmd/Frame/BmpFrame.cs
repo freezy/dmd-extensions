@@ -6,10 +6,9 @@ using LibDmd.Output;
 
 namespace LibDmd.Frame
 {
-	public class BmpFrame : ICloneable
+	public class BmpFrame : BaseFrame, ICloneable
 	{
 		public BitmapSource Bitmap;
-		public Dimensions Dimensions;
 
 		public BmpFrame()
 		{
@@ -25,12 +24,6 @@ namespace LibDmd.Frame
 		{
 			Bitmap = bitmap;
 			Dimensions = dim;
-		}
-
-		public BmpFrame Transform(Dimensions dim, ResizeMode resize, bool flipHorizontally, bool flipVertically)
-		{
-			Bitmap = TransformationUtil.Transform(Bitmap, dim, resize, flipHorizontally, flipVertically);
-			return this;
 		}
 
 		public BmpFrame Update(BitmapSource bmp)
@@ -53,15 +46,21 @@ namespace LibDmd.Frame
 			return new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap));
 		}
 
-		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination dest, IMultiSizeDestination multiDest)
+		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			if (dest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+			var mustResize = targetDim != Dimensions.Dynamic && Dimensions != targetDim;
+			if (mustResize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
 			}
-			var dim = dest?.FixedSize ?? Dimensions;
-			return Transform(dim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			return Transform(targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 		}
 
+		private BmpFrame Transform(Dimensions dim, ResizeMode resize, bool flipHorizontally, bool flipVertically)
+		{
+			Bitmap = TransformationUtil.Transform(Bitmap, dim, resize, flipHorizontally, flipVertically);
+			return this;
+		}
 
 		public object Clone()
 		{

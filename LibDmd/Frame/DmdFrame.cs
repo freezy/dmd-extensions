@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.Input;
 using LibDmd.Output;
 using NLog;
 
@@ -94,85 +93,65 @@ namespace LibDmd.Frame
 
 		public DmdFrame TransformGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-
-			if (targetDim == Dimensions.Dynamic) {
-				return Flip(1, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-
-			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
-			}
-
-			// block-copy for same width but smaller height
-			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
-			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(targetDim, CenterVertically(targetDim, Data));
-			}
-
-			// also copy for centering image if smaller
-			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, Data, 1));
-			}
-
-			// otherwise, convert to bitmap, resize, convert back.
-			var bmp = ImageUtil.ConvertFromGray2(Dimensions, Data, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			return Update(ImageUtil.ConvertToGray2(transformedBmp));
+			return Transform(2, 1, renderGraph, fixedDest, multiDest);
 		}
 
 		public DmdFrame TransformGray4(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			if (targetDim == Dimensions.Dynamic) {
-				return Flip(1, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
-			}
-
-			// block-copy for same width but smaller height
-			var cropHeight = Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height;
-			if (cropHeight && renderGraph.Resize != ResizeMode.Stretch && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(targetDim, CenterVertically(targetDim, Data));
-			}
-
-			// also copy for centering image if smaller
-			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, Data, 1));
-			}
-
-			// otherwise, convert to bitmap, resize, convert back.
-			var bmp = ImageUtil.ConvertFromGray4(Dimensions, Data, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return Update(transformedFrame);
+			return Transform(4, 1, renderGraph, fixedDest, multiDest);
 		}
 
 		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			if (targetDim == Dimensions.Dynamic) {
-				return Flip(3, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-
-			if (Dimensions == targetDim && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
-			}
-
-			// also copy for centering image if smaller
-			if (Dimensions < targetDim) {
-				return Update(targetDim, CenterFrame(targetDim, Data, 3));
-			}
-
-			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrameData = new byte[targetDim.Surface * 3];
-			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrameData);
-			return Update(transformedFrameData);
+			return Transform(24, 3, renderGraph, fixedDest, multiDest);
 		}
 
-		public DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
+		/// <summary>
+		/// Up- or downscales image, and flips if necessary.
+		/// </summary>
+		///
+		/// <remarks>
+		/// Images are actually never upscaled, if the source image is smaller than destination frame, it gets centered.
+		/// Downscaling is done depending on the render graph's `Resize` setting.
+		/// </remarks>
+		/// <param name="bitLen"></param>
+		/// <param name="bytesPerPixel"></param>
+		/// <param name="renderGraph"></param>
+		/// <param name="fixedDest"></param>
+		/// <param name="multiDest"></param>
+		/// <returns></returns>
+		private DmdFrame Transform(int bitLen, int bytesPerPixel, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+		{
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+
+			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
+				// no resizing, we're done here.
+				return Flip(bytesPerPixel, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+
+			// perf: if no flipping these cases can easily done on the byte array directly
+			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+
+				// copy whole block if only vertical padding
+				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
+					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel));
+				}
+
+				// copy line by line if centering image
+				if (Dimensions < targetDim) {
+					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel));
+				}
+			}
+
+			// otherwise, convert to bitmap, resize, convert back.
+			var bmp = ImageUtil.ConvertFrom(bitLen, Dimensions, Data, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
+
+			return Update(transformedFrame);
+		}
+
+		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
 		{
 			Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, flipHorizontally, flipVertically);
 			return this;

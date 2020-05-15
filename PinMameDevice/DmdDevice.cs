@@ -21,7 +21,7 @@ namespace PinMameDevice
 	public static class DmdDevice
 	{
 		private static readonly DmdFrame _dmdFrame = new DmdFrame();
-		private static readonly RawDmdFrame _rawDmdFrame = new RawDmdFrame();
+		private static readonly RawFrame RawFrame = new RawFrame();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static readonly IDmdDevice _dmdDevice = new LibDmd.DmdDevice.DmdDevice();
@@ -111,7 +111,7 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			_dmdDevice.RenderGray4(_rawDmdFrame.Update(dim, frame, rawplanes));
+			_dmdDevice.RenderGray4(RawFrame.Update(dim, frame, rawplanes));
 		}
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
@@ -130,7 +130,7 @@ namespace PinMameDevice
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
 
-			_dmdDevice.RenderGray2(_rawDmdFrame.Update(dim, frame, rawplanes));
+			_dmdDevice.RenderGray2(RawFrame.Update(dim, frame, rawplanes));
 		}
 
 

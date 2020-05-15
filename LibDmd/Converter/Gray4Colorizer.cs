@@ -106,7 +106,7 @@ namespace LibDmd.Converter
 
 			if (_coloring.Mappings != null)
 			{
-				if (frame is RawDmdFrame vd && vd.RawPlanes.Length > 0)
+				if (frame is RawFrame vd && vd.RawPlanes.Length > 0)
 				{
 					// Reverse bit order for non-WPC.
 					TriggerAnimation(vd.RawPlanes, vd.RawPlanes.Length > 3);

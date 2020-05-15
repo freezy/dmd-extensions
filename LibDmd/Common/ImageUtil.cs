@@ -140,6 +140,23 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts a bitmap to a 4-bit grayscale array.
+		/// </summary>
+		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
+		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
+		/// <returns>Array with value for every pixel between 0 and 15</returns>
+		public static byte[] ConvertTo(int bitLength, BitmapSource bmp, double lum = 1)
+		{
+			switch (bitLength) {
+				case 2: return ConvertToGray4(bmp, lum);
+				case 4: return ConvertToGray4(bmp, lum);
+				case 24: return ConvertToRgb24(bmp, lum);
+				default: throw new ArgumentException("Bit length must be either 2, 4 or 24.");
+			}
+		}
+
+		/// <summary>
 		/// Converts a bitmap to an RGB24 array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
@@ -422,6 +439,28 @@ namespace LibDmd.Common
 		{
 			lock (FrameDatas) {
 				return ConvertFromGray4(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
+			}
+		}
+
+		/// <summary>
+		/// Converts an 2- or 4-bit grayscale array to a bitmap.
+		/// </summary>
+		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
+		/// <param name="dim">Image dimensions</param>
+		/// <param name="frame">4-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created (for gray only)</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created (for gray only)</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created (for gray only)</param>
+		/// <returns>Bitmap</returns>
+		public static BitmapSource ConvertFrom(int bitLength, Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
+		{
+			lock (FrameDatas) {
+				switch (bitLength) {
+					case 2: return ConvertFromGray2(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
+					case 4: return ConvertFromGray4(dim, GetFrameData(dim).With(frame), hue, saturation, luminosity);
+					case 24: return ConvertFromRgb24(dim, GetFrameData(dim).With(frame));
+					default: throw new ArgumentException("Bit length must be either 2, 4 or 24.");
+				}
 			}
 		}
 
