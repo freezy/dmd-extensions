@@ -24,17 +24,20 @@ namespace LibDmd.Output.Pin2Dmd
 		public int Delay { get; set; } = 25;
 
 		private UsbDevice _pin2DmdDevice;
+
 		private byte[] _frameBufferRgb24;
+		private byte[] _frameBufferGray4;
+
 		private readonly byte[] _colorPalette;
 		private int _currentPreloadedPalette;
 		private bool _paletteIsPreloaded;
 
-		private Dimensions _size128x32 = new Dimensions(128, 32);
+		protected static readonly Dimensions Dim128x32 = new Dimensions(128, 32);
+		protected static readonly Dimensions Dim192x64 = new Dimensions(192, 64);
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		protected abstract bool HasValidName(string name);
-		protected abstract void SetupFrameBuffers();
 		public abstract string Name { get; }
 
 		protected Pin2DmdBase()
@@ -47,6 +50,22 @@ namespace LibDmd.Output.Pin2Dmd
 			_colorPalette[3] = 0xFF;
 			_colorPalette[4] = 0x04;
 			_paletteIsPreloaded = false;
+
+			// 4 bits per pixel plus 4 init bytes
+			var size = (Dim128x32.Surface * 4 / 8) + 4;
+			_frameBufferGray4 = new byte[size];
+			_frameBufferGray4[0] = 0x81; // frame sync bytes
+			_frameBufferGray4[1] = 0xC3;
+			_frameBufferGray4[2] = 0xE7;
+			_frameBufferGray4[3] = 0x00;
+
+			// 15 bits per pixel plus 4 init bytes
+			size = (Dim128x32.Surface * 15 / 8) + 4;
+			_frameBufferRgb24 = new byte[size];
+			_frameBufferRgb24[0] = 0x81; // frame sync bytes
+			_frameBufferRgb24[1] = 0xC3;
+			_frameBufferRgb24[2] = 0xE8;
+			_frameBufferRgb24[3] = 15; // number of planes
 		}
 
 		public void Init()
@@ -81,19 +100,6 @@ namespace LibDmd.Output.Pin2Dmd
 					Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
 					Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
 
-					// 15 bits per pixel plus 4 init bytes
-					const int size = (32 * 128 * 15 / 8) + 4;
-
-					// both pin2dmd and pin2dmd xl only take in 128x32 rgb24 frames, so do that here.
-					_frameBufferRgb24 = new byte[size];
-					_frameBufferRgb24[0] = 0x81; // frame sync bytes
-					_frameBufferRgb24[1] = 0xC3;
-					_frameBufferRgb24[2] = 0xE8;
-					_frameBufferRgb24[3] = 15; // number of planes
-
-					// let the children set up their own buffers
-					SetupFrameBuffers();
-
 				} else {
 					Logger.Debug("Device found but it's not a PIN2DMD device ({0}).", _pin2DmdDevice.Info.ProductString);
 					IsAvailable = false;
@@ -115,10 +121,50 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
+		public void RenderGray2(DmdFrame frame)
+		{
+			// 2-bit frames are rendered as 4-bit
+			RenderGray4(frame.ConvertGrayToGray(0x0, 0x1, 0x4, 0xf));
+		}
+
+		public void RenderGray4(DmdFrame frame)
+		{
+			// convert to bit planes
+			var planes = FrameUtil.Split(Dim128x32, 4, frame.Data);
+
+			// copy to buffer
+			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
+
+			// send frame buffer to device
+			if (changed) {
+				RenderRaw(_frameBufferGray4);
+			}
+		}
+
+		public void RenderColoredGray2(ColoredFrame frame)
+		{
+			SetPalette(frame.Palette, frame.PaletteIndex);
+
+			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
+		}
+
+		public void RenderColoredGray4(ColoredFrame frame)
+		{
+			SetPalette(frame.Palette, frame.PaletteIndex);
+
+			// copy to buffer
+			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray4, 4);
+
+			// send frame buffer to device
+			if (changed) {
+				RenderRaw(_frameBufferGray4);
+			}
+		}
+
 		public void RenderRgb24(DmdFrame frame)
 		{
 			// split into sub frames
-			var changed = FrameUtil.SplitRgb24(_size128x32, frame.Data, _frameBufferRgb24, 4);
+			var changed = FrameUtil.SplitRgb24(Dim128x32, frame.Data, _frameBufferRgb24, 4);
 
 			// send frame buffer to device
 			if (changed) {
@@ -130,7 +176,7 @@ namespace LibDmd.Output.Pin2Dmd
 		{
 			try {
 				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
-				var error = writer.Write(frame, 2000, out var bytesWritten);
+				var error = writer.Write(frame, 2000, out _);
 				if (error != ErrorCode.None) {
 					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				}
@@ -168,11 +214,14 @@ namespace LibDmd.Output.Pin2Dmd
 		public void SetPalette(Color[] colors, int index)
 		{
 			if (index >= 0 && _paletteIsPreloaded) {
-				if (index == _currentPreloadedPalette)
+				if (index == _currentPreloadedPalette) {
 					return;
+				}
+
 				Logger.Debug("[Pin2DMD] Switch to index " + index.ToString());
 				SwitchToPreloadedPalette((ushort)index);
 				_currentPreloadedPalette = index;
+
 			} else { // We have a palette request not associated with an index
 				Logger.Debug("[Pin2DMD] Palette switch without index");
 

@@ -79,7 +79,7 @@ namespace DmdExt.Common
 					Logger.Warn("Device {0} is not available.", PIN2DMD);
 				}
 			}
-
+			
 			if (config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(config.Pixelcade.Port, config.Pixelcade.ColorMatrix);
 				if (pixelcade.IsAvailable) {

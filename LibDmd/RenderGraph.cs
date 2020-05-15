@@ -364,6 +364,11 @@ namespace LibDmd
 					}
 
 					// then, start at the bottom
+					// gray2 -> gray4
+					if (sourceGray2 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Gray4);
+						continue;
+					}
 					// gray2 -> rgb24
 					if (sourceGray2 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Rgb24);
