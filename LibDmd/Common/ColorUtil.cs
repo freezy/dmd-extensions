@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 
 namespace LibDmd.Common

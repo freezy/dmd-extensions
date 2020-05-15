@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Frame;
-using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.Virtual.Dmd
@@ -64,7 +64,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				RenderRgb24(frame.ConvertToRgb24(_gray2Palette));
 
 			} else {
-				RenderBitmap(frame.ConvertFromGray2(Size, _hue, _sat, _lum));
+				RenderBitmap(frame.ConvertFromGray2(_hue, _sat, _lum));
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_gray4Palette != null) {
 				RenderRgb24(frame.ConvertToRgb24(_gray4Palette));
 			} else {
-				RenderBitmap(frame.ConvertFromGray4(Size, _hue, _sat, _lum));
+				RenderBitmap(frame.ConvertFromGray4(_hue, _sat, _lum));
 			}
 		}
 

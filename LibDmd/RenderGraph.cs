@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
+using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;

@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 using NLog;
 using PixelFormat = System.Windows.Media.PixelFormat;

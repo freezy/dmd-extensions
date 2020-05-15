@@ -1,4 +1,5 @@
-﻿using LibDmd.Frame;
+﻿using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using LibDmd.Input;
 
 namespace LibDmd.Converter

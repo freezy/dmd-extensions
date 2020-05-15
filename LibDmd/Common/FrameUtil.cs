@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 using NLog;
 using Color = System.Windows.Media.Color;

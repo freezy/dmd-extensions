@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output;
 

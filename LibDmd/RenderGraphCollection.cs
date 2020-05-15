@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Converter;
+using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output;
 

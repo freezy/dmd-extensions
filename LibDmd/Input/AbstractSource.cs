@@ -2,6 +2,7 @@
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using LibDmd.DmdDevice;
 using NLog;
 
 namespace LibDmd.Input

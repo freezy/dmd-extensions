@@ -1,5 +1,6 @@
 ﻿using System;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
 using LibUsbDotNet;

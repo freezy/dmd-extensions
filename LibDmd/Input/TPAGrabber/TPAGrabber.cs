@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.DmdDevice;
 using LibDmd.Frame;
 
 namespace LibDmd.Input.TPAGrabber
