@@ -121,13 +121,13 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void RenderGray2(DmdFrame frame)
+		public virtual void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
 			RenderGray4(frame.ConvertGrayToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
-		public void RenderGray4(DmdFrame frame)
+		public virtual void RenderGray4(DmdFrame frame)
 		{
 			// convert to bit planes
 			var planes = FrameUtil.Split(Dim128x32, 4, frame.Data);
@@ -141,14 +141,14 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void RenderColoredGray2(ColoredFrame frame)
+		public virtual void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
 			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
-		public void RenderColoredGray4(ColoredFrame frame)
+		public virtual void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette, frame.PaletteIndex);
 

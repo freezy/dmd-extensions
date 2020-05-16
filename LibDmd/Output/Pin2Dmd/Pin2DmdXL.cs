@@ -44,7 +44,7 @@ namespace LibDmd.Output.Pin2Dmd
 			return name.Contains("PIN2DMD XL");
 		}
 
-		public new void RenderGray2(DmdFrame frame)
+		public override void RenderGray2(DmdFrame frame)
 		{
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray2(frame);
@@ -55,7 +55,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public new void RenderGray4(DmdFrame frame)
+		public override void RenderGray4(DmdFrame frame)
 		{
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray4(frame);
@@ -65,7 +65,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public new void RenderColoredGray2(ColoredFrame frame)
+		public override void RenderColoredGray2(ColoredFrame frame)
 		{
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderColoredGray2(frame);
@@ -77,7 +77,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public new void RenderColoredGray4(ColoredFrame frame)
+		public override void RenderColoredGray4(ColoredFrame frame)
 		{
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderColoredGray4(frame);

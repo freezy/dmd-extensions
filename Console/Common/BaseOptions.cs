@@ -237,7 +237,7 @@ namespace DmdExt.Common
 			_options = options;
 		}
 
-		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		public virtual bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.PIN2DMD;
 
 		public int Delay => _options.OutputDelay;
@@ -249,7 +249,7 @@ namespace DmdExt.Common
 		public Pin2DmdXLOptions(BaseOptions options) : base(options) {
 		}
 
-		public new bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+		public override bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 							   _options.Destination == BaseOptions.DestinationType.PIN2DMDXL;
 	}
 
