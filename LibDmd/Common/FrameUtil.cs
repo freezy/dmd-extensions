@@ -96,6 +96,7 @@ namespace LibDmd.Common
 			var height = dim.Height;
 			var byteIdx = offset;
 			var identical = true;
+			var planeSize = dim.Surface / 8;
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x += 8) {
 					byte r3 = 0;
@@ -119,9 +120,9 @@ namespace LibDmd.Common
 					for (var v = 7; v >= 0; v--) {
 						var pos = (y * width + x + v) * 3;
 
-						var pixelr = frame[pos];
-						var pixelg = frame[pos + 1];
-						var pixelb = frame[pos + 2];
+						var pixelR = frame[pos];
+						var pixelG = frame[pos + 1];
+						var pixelB = frame[pos + 2];
 
 						r3 <<= 1;
 						r4 <<= 1;
@@ -139,62 +140,62 @@ namespace LibDmd.Common
 						b6 <<= 1;
 						b7 <<= 1;
 
-						if ((pixelr & 8) != 0) r3 |= 1;
-						if ((pixelr & 16) != 0) r4 |= 1;
-						if ((pixelr & 32) != 0) r5 |= 1;
-						if ((pixelr & 64) != 0) r6 |= 1;
-						if ((pixelr & 128) != 0) r7 |= 1;
+						if ((pixelR & 8) != 0) r3 |= 1;
+						if ((pixelR & 16) != 0) r4 |= 1;
+						if ((pixelR & 32) != 0) r5 |= 1;
+						if ((pixelR & 64) != 0) r6 |= 1;
+						if ((pixelR & 128) != 0) r7 |= 1;
 
-						if ((pixelg & 8) != 0) g3 |= 1;
-						if ((pixelg & 16) != 0) g4 |= 1;
-						if ((pixelg & 32) != 0) g5 |= 1;
-						if ((pixelg & 64) != 0) g6 |= 1;
-						if ((pixelg & 128) != 0) g7 |= 1;
+						if ((pixelG & 8) != 0) g3 |= 1;
+						if ((pixelG & 16) != 0) g4 |= 1;
+						if ((pixelG & 32) != 0) g5 |= 1;
+						if ((pixelG & 64) != 0) g6 |= 1;
+						if ((pixelG & 128) != 0) g7 |= 1;
 
-						if ((pixelb & 8) != 0) b3 |= 1;
-						if ((pixelb & 16) != 0) b4 |= 1;
-						if ((pixelb & 32) != 0) b5 |= 1;
-						if ((pixelb & 64) != 0) b6 |= 1;
-						if ((pixelb & 128) != 0) b7 |= 1;
+						if ((pixelB & 8) != 0) b3 |= 1;
+						if ((pixelB & 16) != 0) b4 |= 1;
+						if ((pixelB & 32) != 0) b5 |= 1;
+						if ((pixelB & 64) != 0) b6 |= 1;
+						if ((pixelB & 128) != 0) b7 |= 1;
 					}
 
 					identical = identical &&
-						frameBuffer[byteIdx + 5120] == r3 &&
-						frameBuffer[byteIdx + 5632] == r4 &&
-						frameBuffer[byteIdx + 6144] == r5 &&
-						frameBuffer[byteIdx + 6656] == r6 &&
-						frameBuffer[byteIdx + 7168] == r7 &&
+						frameBuffer[byteIdx + 0xa * planeSize] == r3 &&
+						frameBuffer[byteIdx + 0xb * planeSize] == r4 &&
+						frameBuffer[byteIdx + 0xc * planeSize] == r5 &&
+						frameBuffer[byteIdx + 0xd * planeSize] == r6 &&
+						frameBuffer[byteIdx + 0xe * planeSize] == r7 &&
 
-						frameBuffer[byteIdx + 2560] == g3 &&
-						frameBuffer[byteIdx + 3072] == g4 &&
-						frameBuffer[byteIdx + 3584] == g5 &&
-						frameBuffer[byteIdx + 4096] == g6 &&
-						frameBuffer[byteIdx + 4608] == g7 &&
+						frameBuffer[byteIdx + 0x5 * planeSize] == g3 &&
+						frameBuffer[byteIdx + 0x6 * planeSize] == g4 &&
+						frameBuffer[byteIdx + 0x7 * planeSize] == g5 &&
+						frameBuffer[byteIdx + 0x8 * planeSize] == g6 &&
+						frameBuffer[byteIdx + 0x9 * planeSize] == g7 &&
 
-						frameBuffer[byteIdx + 0] == b3 &&
-						frameBuffer[byteIdx + 512] == b4 &&
-						frameBuffer[byteIdx + 1024] == b5 &&
-						frameBuffer[byteIdx + 1536] == b6 &&
-						frameBuffer[byteIdx + 2048] == b7;
+						frameBuffer[byteIdx + 0x0 * planeSize] == b3 &&
+						frameBuffer[byteIdx + 0x1 * planeSize] == b4 &&
+						frameBuffer[byteIdx + 0x2 * planeSize] == b5 &&
+						frameBuffer[byteIdx + 0x3 * planeSize] == b6 &&
+						frameBuffer[byteIdx + 0x4 * planeSize] == b7;
 
 
-					frameBuffer[byteIdx + 5120] = r3;
-					frameBuffer[byteIdx + 5632] = r4;
-					frameBuffer[byteIdx + 6144] = r5;
-					frameBuffer[byteIdx + 6656] = r6;
-					frameBuffer[byteIdx + 7168] = r7;
+					frameBuffer[byteIdx + 0xa * planeSize] = r3;
+					frameBuffer[byteIdx + 0xb * planeSize] = r4;
+					frameBuffer[byteIdx + 0xc * planeSize] = r5;
+					frameBuffer[byteIdx + 0xd * planeSize] = r6;
+					frameBuffer[byteIdx + 0xe * planeSize] = r7;
 
-					frameBuffer[byteIdx + 2560] = g3;
-					frameBuffer[byteIdx + 3072] = g4;
-					frameBuffer[byteIdx + 3584] = g5;
-					frameBuffer[byteIdx + 4096] = g6;
-					frameBuffer[byteIdx + 4608] = g7;
+					frameBuffer[byteIdx + 0x5 * planeSize] = g3;
+					frameBuffer[byteIdx + 0x6 * planeSize] = g4;
+					frameBuffer[byteIdx + 0x7 * planeSize] = g5;
+					frameBuffer[byteIdx + 0x8 * planeSize] = g6;
+					frameBuffer[byteIdx + 0x9 * planeSize] = g7;
 
-					frameBuffer[byteIdx + 0] = b3;
-					frameBuffer[byteIdx + 512] = b4;
-					frameBuffer[byteIdx + 1024] = b5;
-					frameBuffer[byteIdx + 1536] = b6;
-					frameBuffer[byteIdx + 2048] = b7;
+					frameBuffer[byteIdx + 0x0 * planeSize] = b3;
+					frameBuffer[byteIdx + 0x1 * planeSize] = b4;
+					frameBuffer[byteIdx + 0x2 * planeSize] = b5;
+					frameBuffer[byteIdx + 0x3 * planeSize] = b6;
+					frameBuffer[byteIdx + 0x4 * planeSize] = b7;
 					byteIdx++;
 				}
 			}

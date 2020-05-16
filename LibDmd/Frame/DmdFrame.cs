@@ -123,7 +123,6 @@ namespace LibDmd.Frame
 		private DmdFrame Transform(int bitLen, int bytesPerPixel, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			Logger.Info("Gray{0} {1} -> {2}", bitLen, Dimensions, targetDim);
 			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
 				// no resizing, we're done here.
 				return Flip(bytesPerPixel, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
