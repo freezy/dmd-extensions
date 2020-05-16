@@ -31,6 +31,13 @@ namespace LibDmd.Frame
 			Data = data;
 		}
 
+		public DmdFrame Update(DmdFrame frame)
+		{
+			Dimensions = frame.Dimensions;
+			Data = frame.Data;
+			return this;
+		}
+
 		public DmdFrame Update(byte[] data)
 		{
 			Data = data;
@@ -114,11 +121,11 @@ namespace LibDmd.Frame
 		/// Images are actually never upscaled, if the source image is smaller than destination frame, it gets centered.
 		/// Downscaling is done depending on the render graph's `Resize` setting.
 		/// </remarks>
-		/// <param name="bitLen"></param>
-		/// <param name="bytesPerPixel"></param>
-		/// <param name="renderGraph"></param>
-		/// <param name="fixedDest"></param>
-		/// <param name="multiDest"></param>
+		/// <param name="bitLen">Number of bit planes</param>
+		/// <param name="bytesPerPixel">Pixel size in bytes</param>
+		/// <param name="renderGraph">Render graph reference to retrieve flipping and resizing config</param>
+		/// <param name="fixedDest">If not null, the fixed destination we're transforming for.</param>
+		/// <param name="multiDest">If not null, the multi-res destination we're transforming for.</param>
 		/// <returns></returns>
 		private DmdFrame Transform(int bitLen, int bytesPerPixel, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{

@@ -140,7 +140,7 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Converts a bitmap to a 4-bit grayscale array.
+		/// Converts a bitmap to a 2- or 4-bit grayscale or rgb24 array.
 		/// </summary>
 		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
 		/// <param name="bmp">Source bitmap</param>
@@ -443,7 +443,7 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Converts an 2- or 4-bit grayscale array to a bitmap.
+		/// Converts an 2- or 4-bit grayscale or rgb24 array to a bitmap.
 		/// </summary>
 		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
 		/// <param name="dim">Image dimensions</param>
