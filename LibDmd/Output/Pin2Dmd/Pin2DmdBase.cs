@@ -157,7 +157,10 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			if (changed) {
+				Logger.Debug("[PIN2DMD] Sending {0} bytes of (colored) gray4 ({1}).", _frameBufferGray4.Length, Dim128x32);
 				RenderRaw(_frameBufferGray4);
+			} else {
+				Logger.Debug("[PIN2DMD] Skipping identical (colored) gray4 frame.");
 			}
 		}
 
@@ -168,7 +171,10 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			if (changed) {
+				Logger.Debug("[PIN2DMD] Sending {0} bytes of RGBA24 ({1}).", _frameBufferRgb24.Length, Dim128x32);
 				RenderRaw(_frameBufferRgb24);
+			} else {
+				Logger.Debug("[PIN2DMD] Skipping identical RGBA24 frame.");
 			}
 		}
 

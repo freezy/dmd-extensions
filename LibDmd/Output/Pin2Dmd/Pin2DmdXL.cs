@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using LibDmd.Common;
 using LibDmd.Frame;
+using NLog;
 
 namespace LibDmd.Output.Pin2Dmd
 {
@@ -11,14 +12,15 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public Dimensions[] Sizes { get; } = {Dim128x32, Dim192x64};
 
-		private byte[] _frameBufferGray4XL;
+		private readonly byte[] _frameBufferGray4XL;
 
 		private static Pin2DmdXL _instance;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public Pin2DmdXL()
 		{
-			var size192x64 = (Dim192x64.Surface * 4 / 8) + 4;
-			_frameBufferGray4XL = new byte[size192x64];
+			var size = (Dim192x64.Surface * 4 / 8) + 4;
+			_frameBufferGray4XL = new byte[size];
 			_frameBufferGray4XL[0] = 0x81; // frame sync bytes
 			_frameBufferGray4XL[1] = 0xC3;
 			_frameBufferGray4XL[2] = 0xE8;
@@ -46,6 +48,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderGray2(DmdFrame frame)
 		{
+			Logger.Debug("[PIN2DMD-XL] Gray2 at {0}", frame.Dimensions);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray2(frame);
 
@@ -57,6 +60,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderGray4(DmdFrame frame)
 		{
+			Logger.Debug("[PIN2DMD-XL] Gray4 at {0}", frame.Dimensions);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray4(frame);
 
@@ -67,6 +71,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderColoredGray2(ColoredFrame frame)
 		{
+			Logger.Debug("[PIN2DMD-XL] Colored gray2 at {0}", frame.Dimensions);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderColoredGray2(frame);
 
@@ -79,6 +84,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderColoredGray4(ColoredFrame frame)
 		{
+			Logger.Debug("[PIN2DMD-XL] Colored gray4 at {0}", frame.Dimensions);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderColoredGray4(frame);
 
@@ -115,7 +121,10 @@ namespace LibDmd.Output.Pin2Dmd
 
 			// send frame buffer to device
 			if (changed) {
+				Logger.Debug("[PIN2DMD-XL] Sending {0} bytes of gray4 ({1}).", _frameBufferGray4XL.Length, Dim192x64);
 				RenderRaw(_frameBufferGray4XL);
+			} else {
+				Logger.Debug("[PIN2DMD-XL] Skipping identical gray4 frame.");
 			}
 		}
 	}
