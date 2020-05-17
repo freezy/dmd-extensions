@@ -17,18 +17,23 @@ namespace LibDmd.Frame
 				return fixedDest.FixedSize;
 			}
 
-			var dim = Dimensions.Dynamic;
+			var nextLargerDim = Dimensions.Dynamic;
+			var maxDim = Dimensions.Dynamic;
 			foreach (var multiDim in multiDest.Sizes) {
 				if (Dimensions == multiDim) {
 					return multiDim;
 				}
 
-				if (Dimensions < multiDim && multiDim > dim) {
-					dim = multiDim;
+				if (Dimensions < multiDim && multiDim > nextLargerDim) {
+					nextLargerDim = multiDim;
+				}
+
+				if (multiDim > maxDim) {
+					maxDim = multiDim;
 				}
 			}
 
-			return dim == Dimensions.Dynamic ? Dimensions : dim;
+			return nextLargerDim == Dimensions.Dynamic ? maxDim : nextLargerDim;
 		}
 
 		protected byte[] CenterFrame(Dimensions targetDim, byte[] data, int bytesPerPixel)

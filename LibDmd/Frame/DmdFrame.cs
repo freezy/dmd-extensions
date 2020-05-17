@@ -152,7 +152,7 @@ namespace LibDmd.Frame
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
 
-			return Update(transformedFrame);
+			return Update(targetDim, transformedFrame);
 		}
 
 		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)

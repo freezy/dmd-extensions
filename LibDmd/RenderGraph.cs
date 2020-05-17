@@ -854,14 +854,13 @@ namespace LibDmd
 		/// enabling idle detection, etc.
 		/// </remarks>
 		///
-		/// <typeparam name="T">Frame type, already converted to match destination</typeparam>
+		/// <typeparam name="TIn">Source frame type</typeparam>
+		/// <typeparam name="TOut">Destination frame type</typeparam>
 		/// <param name="src">Source observable</param>
+		/// <param name="processor">Converts and transforms the frame to match to the destination format</param>
 		/// <param name="onNext">Action to run on destination</param>
-		private void Subscribe<TIN, TOUT>(IObservable<TIN> src, Func<TIN, TOUT> converter, Action<TOUT> onNext) where TIN : class, ICloneable
+		private void Subscribe<TIn, TOut>(IObservable<TIn> src, Func<TIn, TOut> processor, Action<TOut> onNext) where TIn : class, ICloneable
 		{
-			// always observe on default thread
-			src = src.ObserveOn(Scheduler.Default);
-
 			// set idle timeout if enabled
 			if (IdleAfter > 0) {
 
@@ -873,7 +872,7 @@ namespace LibDmd
 
 				// now render it
 				src = src.Do(_ => StopIdleing());
-				var dest = src.Select(frame => (TIN)frame.Clone()).Select(converter).Do(onNext);
+				var dest = src.Select(frame => (TIn)frame.Clone()).Select(processor).Do(onNext);
 
 				// but subscribe to a throttled idle action
 				dest = dest.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
@@ -885,7 +884,9 @@ namespace LibDmd
 
 			} else {
 				// subscribe and add to active sources
-				_activeSources.Add(src.Select(frame => (TIN)frame.Clone()).Select(converter).Subscribe(onNext));
+				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+				src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+				_activeSources.Add(src.Select(frame => (TIn)frame.Clone()).Select(processor).Subscribe(onNext));
 			}
 		}
 
