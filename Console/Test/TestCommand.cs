@@ -52,15 +52,15 @@ namespace DmdExt.Test
 				// figure out with image
 				if (!Enum.TryParse($"Size{_testOptions.FrameSize}", true, out FrameSize frameSize)) {
 					Logger.Warn("Ignoring invalid frame size \"{0}\".", _testOptions.FrameSize);
-					frameSize = FrameSize.Size128x132;
+					frameSize = FrameSize.Size128x32;
 				}
 
 				Uri uri;
 				switch (frameSize) {
-					case FrameSize.Size192x168:
+					case FrameSize.Size192x64:
 						uri = TestImage192x64;
 						break;
-					case FrameSize.Size256x168:
+					case FrameSize.Size256x64:
 						uri = TestImage256x64;
 						break;
 					default:
@@ -114,6 +114,6 @@ namespace DmdExt.Test
 	}
 
 	public enum FrameSize {
-		Size128x132, Size192x168, Size256x168,
+		Size128x32, Size192x64, Size256x64,
 	}
 }
