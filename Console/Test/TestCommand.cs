@@ -16,6 +16,10 @@ namespace DmdExt.Test
 		private readonly TestOptions _testOptions;
 		private RenderGraph _graph;
 
+		private static Uri TestImage128x32 = new Uri("pack://application:,,,/dmdext;component/Test/TestImage.png");
+		private static Uri TestImage192x64 = new Uri("pack://application:,,,/dmdext;component/Test/TestImage192x64.png");
+		private static Uri TestImage256x64 = new Uri("pack://application:,,,/dmdext;component/Test/TestImage256x64.png");
+
 		public TestCommand(IConfiguration config, TestOptions testOptions)
 		{
 			_config = config;
@@ -30,7 +34,7 @@ namespace DmdExt.Test
 			// retrieve image
 			var bmp = new BitmapImage();
 			bmp.BeginInit();
-			bmp.UriSource = new Uri("pack://application:,,,/dmdext;component/Test/TestImage.png");
+			bmp.UriSource = TestImage128x32;
 			bmp.EndInit();
 			var frame = new BmpFrame(bmp);
 
