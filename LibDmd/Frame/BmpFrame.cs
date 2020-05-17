@@ -50,7 +50,7 @@ namespace LibDmd.Frame
 		{
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);
 			var mustResize = targetDim != Dimensions.Dynamic && Dimensions != targetDim;
-			if (mustResize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+			if (!mustResize && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
 			}
 			return Transform(targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
