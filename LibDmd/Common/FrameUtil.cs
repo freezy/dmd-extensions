@@ -436,6 +436,9 @@ namespace LibDmd.Common
 		{
 			var destFrame = new byte[srcFrame.Length];
 			for (var i = 0; i < destFrame.Length; i++) {
+				if (srcFrame[i] >= mapping.Length) {
+					throw new InvalidOperationException("Tried to map value " + srcFrame[i] + " with " + mapping.Length + " mappings while converting to gray.");
+				}
 				destFrame[i] = mapping[srcFrame[i]];
 			}
 			return destFrame;
