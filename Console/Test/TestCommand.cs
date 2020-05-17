@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
@@ -31,14 +32,6 @@ namespace DmdExt.Test
 			// define renderers
 			var renderers = GetRenderers(_config);
 
-			// retrieve image
-			var bmp = new BitmapImage();
-			bmp.BeginInit();
-			bmp.UriSource = TestImage128x32;
-			bmp.EndInit();
-			var frame = new BmpFrame(bmp);
-
-			// chain them up
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				var alphaNumericFrame = new AlphaNumericFrame(NumericalLayout.__2x20Alpha,
 					new ushort[] {
@@ -55,6 +48,33 @@ namespace DmdExt.Test
 				};
 
 			} else {
+
+				// figure out with image
+				if (!Enum.TryParse($"Size{_testOptions.FrameSize}", true, out FrameSize frameSize)) {
+					Logger.Warn("Ignoring invalid frame size \"{0}\".", _testOptions.FrameSize);
+					frameSize = FrameSize.Size128x132;
+				}
+
+				Uri uri;
+				switch (frameSize) {
+					case FrameSize.Size192x168:
+						uri = TestImage192x64;
+						break;
+					case FrameSize.Size256x168:
+						uri = TestImage256x64;
+						break;
+					default:
+						uri = TestImage128x32;
+						break;
+				}
+
+				// retrieve image
+				var bmp = new BitmapImage();
+				bmp.BeginInit();
+				bmp.UriSource = uri;
+				bmp.EndInit();
+				var frame = new BmpFrame(bmp);
+
 				ISource source;
 				switch (_testOptions.FrameFormat) {
 					case FrameFormat.Gray2:
@@ -77,6 +97,9 @@ namespace DmdExt.Test
 						source = new ImageSourceBitmap(frame);
 						break;
 				}
+
+				// chain them up
+				source.Dimensions = new BehaviorSubject<Dimensions>(frame.Dimensions);
 				_graph = new RenderGraph {
 					Source = source,
 					Destinations = renderers,
@@ -88,5 +111,9 @@ namespace DmdExt.Test
 
 			graphs.Add(_graph);
 		}
+	}
+
+	public enum FrameSize {
+		Size128x132, Size192x168, Size256x168,
 	}
 }

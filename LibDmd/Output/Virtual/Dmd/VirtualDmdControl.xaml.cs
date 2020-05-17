@@ -110,9 +110,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdateEffectParams()
 		{
 			Dispatcher.Invoke(() => {
-				Effect.AspectRatio = Size.AspectRatio;
-				Effect.BlockCount = Math.Max(Size.Width, Size.Height);
-				Effect.Max = Effect.AspectRatio * 0.47 * _dotSize;
+				DmdEffect.AspectRatio = Size.AspectRatio;
+				DmdEffect.BlockCount = Math.Max(Size.Width, Size.Height);
+				DmdEffect.Max = DmdEffect.AspectRatio * 0.47 * _dotSize;
 			});
 		}
 

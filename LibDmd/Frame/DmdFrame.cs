@@ -13,8 +13,6 @@ namespace LibDmd.Frame
 	{
 		public byte[] Data { get; private set; }
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
 		public DmdFrame()
 		{
 		}

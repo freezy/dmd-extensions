@@ -41,6 +41,7 @@ namespace LibDmd.Frame
 		{
 			return new DmdFrame(Dimensions, ImageUtil.ConvertToGray4(Bitmap));
 		}
+
 		public DmdFrame ConvertToRgb24()
 		{
 			return new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap));

@@ -38,9 +38,11 @@ namespace LibDmd
 		public void Add(RenderGraph renderGraph)
 		{
 			// use a common observable for all sources so we get proper notification when any of them changes size
+			if (renderGraph.Source.Dimensions != null) {
+				_dimensions.OnNext(renderGraph.Source.Dimensions.Value);
+			}
 			renderGraph.Source.Dimensions = _dimensions;
-			var converter = renderGraph.Converter as ISource;
-			if (converter != null) {
+			if (renderGraph.Converter is ISource converter) {
 				converter.Dimensions = _dimensions;
 			}
 			_graphs.Add(renderGraph);

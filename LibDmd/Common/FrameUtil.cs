@@ -352,7 +352,7 @@ namespace LibDmd.Common
 							| (r1 & 1) << 2
 							| (g1 & 1) << 1
 							| (b1 & 1) << 0;
-						var indexWithinSubframe = mapAdafruitIndex(x, y, width, height, numLogicalRows);
+						var indexWithinSubframe = MapAdafruitIndex(x, y, width, height, numLogicalRows);
 						var indexWithinOutput = subframe * subframeSize + indexWithinSubframe;
 						dest[indexWithinOutput] = (byte)dotPair;
 						r0 >>= 1;
@@ -366,9 +366,8 @@ namespace LibDmd.Common
 			}
 		}
 
-		private static int mapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
+		private static int MapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
 		{
-			var pairOffset = 16;
 			var logicalRowLengthPerMatrix = 32 * 32 / 2 / numLogicalRows;
 			var logicalRow = y % numLogicalRows;
 			var dotPairsPerLogicalRow = width * height / numLogicalRows / 2;

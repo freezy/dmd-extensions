@@ -15,7 +15,7 @@ namespace LibDmd.Input
 	/// in which frames are delivered to the consumer.
 	///
 	/// When implementing a source, make sure to only implement the "native"
-	/// bit lengths of the source. Convertion if necessary is done in the Render
+	/// bit lengths of the source. Conversion if necessary is done in the Render
 	/// Graph directly.
 	/// </remarks>
 	public interface ISource

@@ -23,8 +23,6 @@ namespace LibDmd.Frame
 		/// </summary>
 		public int PaletteIndex { get; }
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
 		public ColoredFrame()
 		{
 		}
