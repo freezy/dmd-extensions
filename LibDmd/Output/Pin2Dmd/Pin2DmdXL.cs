@@ -48,7 +48,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderGray2(DmdFrame frame)
 		{
-			Logger.Debug("[PIN2DMD-XL] Gray2 at {0}", frame.Dimensions);
+			Logger.Debug("[PIN2DMD-XL] Gray2 at {0} ({1} bytes)", frame.Dimensions, frame.Data.Length);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray2(frame);
 
@@ -60,7 +60,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public override void RenderGray4(DmdFrame frame)
 		{
-			Logger.Debug("[PIN2DMD-XL] Gray4 at {0}", frame.Dimensions);
+			Logger.Debug("[PIN2DMD-XL] Gray4 at {0} ({1} bytes)", frame.Dimensions, frame.Data.Length);
 			if (frame.Dimensions == Dim128x32) {
 				base.RenderGray4(frame);
 
