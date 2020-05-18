@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using LibDmd.Frame;
 
 namespace LibDmd.Output.Pin2Dmd

@@ -290,6 +290,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void Dispose()
 		{
 			if (_pin2DmdDevice != null) {
+				Logger.Debug("[Pin2DMD] Closing device.");
 				var buffer = new byte[2052];
 
 				// reset settings
