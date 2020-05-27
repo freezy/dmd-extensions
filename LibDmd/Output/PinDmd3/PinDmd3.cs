@@ -153,7 +153,7 @@ namespace LibDmd.Output.PinDmd3
 
 		private bool Connect(string port, bool checkFirmware)
 		{
-			var firmwareRegex = new Regex(@"^rev-vpin-\d+$", RegexOptions.IgnoreCase);
+			var firmwareRegex = new Regex(@"^rev-vpin-\d+R?$", RegexOptions.IgnoreCase);
 			try {
 				Logger.Info("Checking port {0} for PinDMDv3...", port);
 				_serialPort = new SerialPort(port, 8176000, Parity.None, 8, StopBits.One);
@@ -368,7 +368,7 @@ namespace LibDmd.Output.PinDmd3
 		private void _parseFirmware()
 		{
 			// parse firmware
-			var match = Regex.Match(Firmware, @"REV-vPin-(\d+)$", RegexOptions.IgnoreCase);
+			var match = Regex.Match(Firmware, @"REV-vPin-(\d+)", RegexOptions.IgnoreCase);
 			if (match.Success) {
 				var revision = Int32.Parse(match.Groups[1].Value);
 				Logger.Debug("   Revision:    {0}", revision);
