@@ -67,6 +67,10 @@ namespace DmdExt.Common
 		[Option("url", HelpText = "Websocket URL for streaming via network. Default: ws://localhost/server")]
 		public string WebsocketUrl { get; set; } = null;
 
+		[Option("retry", HelpText = "If set, retry connecting if the Websocket connection fails. Default: false" )]
+		public bool WebsocketRetry { get; set; } = false;
+		[Option("retry-interval", HelpText = "In seconds, interval between Websocket connection retry attempts. Default: 5 seconds")]
+		public int WebsocketRetryInterval { get; set; } = 5;
 
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
@@ -305,6 +309,8 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Network;
 		public string Url => _options.WebsocketUrl;
+		public bool Retry => _options.WebsocketRetry;
+		public int RetryInterval => _options.WebsocketRetryInterval;
 	}
 
 	internal class PinUpOptions : IPinUpConfig

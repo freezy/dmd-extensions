@@ -493,6 +493,8 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 
 		public string Url => GetString("url", "ws://127.0.0.1/server");
+		public bool Retry => GetBoolean("retry", false);
+		public int RetryInterval => GetInt("retry-interval", 5);
 
 		public NetworkConfig(IniData data, Configuration parent) : base(data, parent)
 		{

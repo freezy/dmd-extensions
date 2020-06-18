@@ -114,6 +114,8 @@ namespace LibDmd.DmdDevice
 	{
 		bool Enabled { get; }
 		string Url { get; }
+		bool Retry { get; }
+		int RetryInterval { get; }
 	}
 
 	public interface IVpdbConfig
