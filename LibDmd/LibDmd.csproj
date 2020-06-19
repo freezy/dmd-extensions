@@ -24,6 +24,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -216,6 +217,7 @@
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
     <Compile Include="Output\Pixelcade\Pixelcade.cs" />
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumEffect.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml.cs">
       <DependentUpon>AlphaNumericLayerSetting.xaml</DependentUpon>
     </Compile>
@@ -295,7 +297,11 @@
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
+    <Resource Include="Output\Virtual\AlphaNumeric\AlphaNum.ps" />
     <None Include="Output\Virtual\AlphaNumeric\README.md" />
+    <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericShaderControl.xaml.cs">
+      <DependentUpon>AlphaNumericShaderControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Output\Virtual\AlphaNumeric\DisplaySetting.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeDimensions.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeLayerStyle.cs" />
@@ -433,6 +439,7 @@
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full-10.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full.svg" />
+    <Content Include="Output\Virtual\AlphaNumeric\AlphaNum.fx" />
     <Content Include="Output\Virtual\Dmd\Dmd.fx" />
     <Resource Include="Output\Virtual\Dmd\red-128x32.png" />
   </ItemGroup>
@@ -458,6 +465,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericShaderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

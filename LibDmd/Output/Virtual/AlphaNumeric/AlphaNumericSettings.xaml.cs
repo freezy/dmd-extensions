@@ -101,6 +101,10 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			});
 
 			Res.Rasterize(_displaySetting, true);
+
+			ShaderPreview.Source = new WriteableBitmap((int)ShaderPreview.Width, (int)ShaderPreview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
+			ShaderEffect.TargetWidth = (int)ShaderPreview.Width;
+			ShaderEffect.TargetHeight = (int)ShaderPreview.Height;
 		}
 
 		private void SetupTriggers()

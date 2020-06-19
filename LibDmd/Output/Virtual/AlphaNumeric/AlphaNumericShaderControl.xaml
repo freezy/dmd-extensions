@@ -1,14 +1,18 @@
-﻿<UserControl x:Class="LibDmd.Output.Virtual.AlphaNumeric.AlphanumericControl"
+﻿<UserControl x:Class="LibDmd.Output.Virtual.AlphaNumeric.AlphaNumericShaderControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:virtual="clr-namespace:LibDmd.Output.Virtual" 
+			 xmlns:virtual="clr-namespace:LibDmd.Output.Virtual" 
 			 xmlns:alphaNumeric="clr-namespace:LibDmd.Output.Virtual.AlphaNumeric"
 			 mc:Ignorable="d" 
              Background="Transparent"
              d:DesignHeight="100" d:DesignWidth="400">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-		<Image x:Name="AlphanumericDisplay"/>
+	<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+		<Image x:Name="AlphanumericDisplay">
+			<Image.Effect>
+				<alphaNumeric:AlphaNumEffect x:Name="ShaderEffect"/>
+			</Image.Effect>
+		</Image>
 	</Grid>
 </UserControl>

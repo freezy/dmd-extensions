@@ -34,7 +34,7 @@
     </Window.Resources>
 
     <Grid>
-        <alphaNumeric:AlphanumericControl 
+        <alphaNumeric:AlphaNumericShaderControl
             x:Name="AlphaNumericDisplay" 
             x:FieldModifier="public"
             Canvas.ZIndex="1"
