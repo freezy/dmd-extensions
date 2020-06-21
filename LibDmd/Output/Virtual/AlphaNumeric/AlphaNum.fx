@@ -24,17 +24,16 @@ static float2 tm = float2(.0, 1);
 static float2 mm = float2(.0, 0);   // middle
 static float2 bm = float2(.0, -1);
 
-static float gSegmentWidth = 0.07;
-static float gSegmentGap = gSegmentWidth * 1.4;
+static float gSegmentGap = SegmentWidth * 1.4;
 
-static float2 dtl = tl + float2(0.0, -gSegmentWidth);
-static float2 dtr = tr + float2(0.0, -gSegmentWidth);
-static float2 dtm = mm + float2(0.0, gSegmentWidth);
-static float2 dbm = mm + float2(0.0, -gSegmentWidth);
-static float2 dbl = bl + float2(0.0, gSegmentWidth);
-static float2 dbr = br + float2(0.0, gSegmentWidth);
+static float2 dtl = tl + float2(0.0, -SegmentWidth);
+static float2 dtr = tr + float2(0.0, -SegmentWidth);
+static float2 dtm = mm + float2(0.0, SegmentWidth);
+static float2 dbm = mm + float2(0.0, -SegmentWidth);
+static float2 dbl = bl + float2(0.0, SegmentWidth);
+static float2 dbr = br + float2(0.0, SegmentWidth);
 
-static float2 dp = br + float2(gSegmentWidth * 4.0, gSegmentGap);
+static float2 dp = br + float2(SegmentWidth * 4.0, gSegmentGap);
 
 float Manhattan(float2 v)
 {
@@ -51,7 +50,7 @@ float LongLine(float2 a, float2 b, float2 p)
 	float2 pa = p - a;
 	float2 ba = b - a;
 	float t = clamp(dot(pa, ba) / dot(ba, ba), gSegmentGap, 1.0 - gSegmentGap);
-	return smoothstep(gSegmentWidth, gSegmentWidth * 0.9, Manhattan(pa - ba * t));
+	return smoothstep(SegmentWidth, SegmentWidth * 0.9, Manhattan(pa - ba * t));
 }
 
 float ShortLine(float2 a, float2 b, float2 p)
@@ -59,7 +58,7 @@ float ShortLine(float2 a, float2 b, float2 p)
 	float2 pa = p - a;
 	float2 ba = b - a;
 	float t = clamp(dot(pa, ba) / dot(ba, ba), gSegmentGap * 2.0, 1.0 - (gSegmentGap * 2.0));
-	return smoothstep(gSegmentWidth, gSegmentWidth * 0.9, Manhattan(pa - ba * t));
+	return smoothstep(SegmentWidth, SegmentWidth * 0.9, Manhattan(pa - ba * t));
 }
 
 float DiagLine(float2 a, float2 b, float2 p)
@@ -68,7 +67,7 @@ float DiagLine(float2 a, float2 b, float2 p)
 	float2 ba = b - a;
 	float t = clamp((pa.x * ba.x) / (ba.x * ba.x), gSegmentGap * 2.0, 1.0 - (gSegmentGap * 2.0));
 	float2 intersectP = abs(pa - ba * t);
-	return smoothstep(gSegmentWidth * 2.0, gSegmentWidth * 1.25, intersectP.y) * smoothstep(0.001, 0.0, intersectP.x);
+	return smoothstep(SegmentWidth * 2.0, SegmentWidth * 1.25, intersectP.y) * smoothstep(0.001, 0.0, intersectP.x);
 }
 
 float SegDisp(int key, float2 p)
@@ -94,27 +93,37 @@ float SegDisp(int key, float2 p)
 	return r;
 }
 
-float4 main(float2 fragCoord : TEXCOORD) : COLOR {
+float4 main(float2 fragCoord : VPOS) : COLOR
+{
 
-	float2 iResolution = float2(TargetWidth, TargetHeight);
-	float fCharacterCount = 6.0; //float(NumChars);
+	float2 resolution = float2(float(TargetWidth), float(TargetHeight));
+	float numChars = float(NumChars);
 
 	float width = 1.5;
-	float height = 0.75 + gSegmentWidth * 2.0;
-	float2 cellSize = float2(width / (fCharacterCount + 1.0), height / float(NumLines));
+	float height = 0.75 + SegmentWidth * 2.0;
+	float2 cellSize = float2(width / (numChars + 1.0), height / float(NumLines));
 	float2 originPos = float2((-width / 2.0) + cellSize.x, (height / 2.0) - cellSize.y * 0.5);
 	
-	float2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+	float2 uv = float2(
+		(fragCoord.x / resolution.x) - 0.5,
+		(fragCoord.y / resolution.y * 2) - 1
+	);
 
-	float2 pos = originPos + float2(1, 0);
+	float2 pos = originPos;
 	float d = 0.0;
-
-	d += SegDisp(0x088CF, (uv/* - pos*/) * fCharacterCount);
-	pos.x += cellSize.x;
-
+	
+	for (int linePos = 0; linePos < NumLines; linePos++) {
+		for (int charPos = 0; charPos < NumChars; charPos++) {
+			d += SegDisp(0x088CF, (uv - pos) * numChars);
+			pos.x += cellSize.x;
+		}
+		pos.x = originPos.x;
+		pos.y -= cellSize.y;
+	}
+	
 	d = lerp(0.0, 1.0, clamp(d, 0.0, 1.0));
 
 	float3 col = lerp(float3(.01, .01, .01), float3(1.0, 0.1, 0), d);
 
-	return float4(col,1.0);
+	return float4(col, 1.0);
 }
