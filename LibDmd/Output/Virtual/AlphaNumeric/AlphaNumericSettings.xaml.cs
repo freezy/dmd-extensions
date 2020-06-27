@@ -103,8 +103,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Res.Rasterize(_displaySetting, true);
 
 			ShaderPreview.Source = new WriteableBitmap((int)ShaderPreview.Width, (int)ShaderPreview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
-			ShaderEffect.TargetWidth = (int)ShaderPreview.Width;
-			ShaderEffect.TargetHeight = (int)ShaderPreview.Height;
+			ShaderEffect.TargetWidth = (float)ShaderPreview.Width;
+			ShaderEffect.TargetHeight = (float)ShaderPreview.Height;
+			Logger.Info("Shader: {0}x{1}", ShaderEffect.TargetWidth, ShaderEffect.TargetHeight);
 		}
 
 		private void SetupTriggers()

@@ -6,12 +6,11 @@
 /// <defaultValue>0.07</defaultValue>
 float SegmentWidth: register(C0);
 
-int TargetWidth : register(C1);
-int TargetHeight : register(C2);
-int Segments[17] : register(C3);
+float TargetWidth : register(C1);
+float TargetHeight : register(C2);
 
-int NumLines : register(C4);
-int NumChars : register(C5);
+float NumLines : register(C3);
+float NumChars : register(C4);
 
 // Static computed vars for optimization
 static float2 tl = float2(-.5, 1) ; // top    left  corner
@@ -70,7 +69,7 @@ float DiagLine(float2 a, float2 b, float2 p)
 	return smoothstep(SegmentWidth * 2.0, SegmentWidth * 1.25, intersectP.y) * smoothstep(0.001, 0.0, intersectP.x);
 }
 
-float SegDisp(int key, float2 p)
+float SegDisp(float2 p)
 {
 	float r = 0.0;
 	r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
@@ -95,14 +94,21 @@ float SegDisp(int key, float2 p)
 
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
+	float2 resolution = float2(TargetWidth, TargetHeight);
+	float numChars = NumChars;
+	float numLines = NumLines;
+	float linePadding = 0.2;
+	float verticalPadding = 0.2;
 
-	float2 resolution = float2(float(TargetWidth), float(TargetHeight));
-	float numChars = float(NumChars);
-
-	float width = 1.5;
-	float height = 0.75 + SegmentWidth * 2.0;
-	float2 cellSize = float2(width / (numChars + 1.0), height / float(NumLines));
-	float2 originPos = float2((-width / 2.0) + cellSize.x, (height / 2.0) - cellSize.y * 0.5);
+	float2 cellSize = float2(
+		1 / numChars,
+		1 / numLines * 2 // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
+	);
+	
+	float2 originPos = float2(
+		-0.5 + cellSize.x / 2,
+		0.0
+	);
 	
 	float2 uv = float2(
 		(fragCoord.x / resolution.x) - 0.5,
@@ -112,18 +118,20 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	float2 pos = originPos;
 	float d = 0.0;
 	
-	for (int linePos = 0; linePos < NumLines; linePos++) {
-		for (int charPos = 0; charPos < NumChars; charPos++) {
-			d += SegDisp(0x088CF, (uv - pos) * numChars);
+	for (int currLine = 0; currLine < numLines; currLine++) {
+		for (int character = 0; character < numChars; character++) {
+			d += SegDisp((uv - pos) * float2(numChars, numLines));
 			pos.x += cellSize.x;
 		}
 		pos.x = originPos.x;
 		pos.y -= cellSize.y;
 	}
 	
+	float g = 0;
+	float b = 0;
+
 	d = lerp(0.0, 1.0, clamp(d, 0.0, 1.0));
 
-	float3 col = lerp(float3(.01, .01, .01), float3(1.0, 0.1, 0), d);
-
+	float3 col = float3(d, g, b);
 	return float4(col, 1.0);
 }

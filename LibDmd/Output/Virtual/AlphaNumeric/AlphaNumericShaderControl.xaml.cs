@@ -55,6 +55,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			SetBitmap(new WriteableBitmap(width, height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent));
 			ShaderEffect.TargetWidth = width;
 			ShaderEffect.TargetHeight = height;
+			Logger.Info("Shader: {0}x{1}", ShaderEffect.TargetWidth, ShaderEffect.TargetHeight);
 		}
 
 		public void UpdateData(ushort[] data)
