@@ -13,6 +13,11 @@ float NumLines : register(C3);
 float NumChars : register(C4);
 float NumSegments : register(C5);
 
+float4 Color : register(C6);
+float4 InnerColor : register(C7);
+float4 OuterColor : register(C8);
+float4 UnlitColor : register(C9);
+
 sampler2D input : register(S0);
 
 // Static computed vars for optimization
@@ -72,29 +77,6 @@ float DiagLine(float2 a, float2 b, float2 p)
 	return smoothstep(SegmentWidth * 2.0, SegmentWidth * 1.25, intersectP.y) * smoothstep(0.001, 0.0, intersectP.x);
 }
 
-float SegDisp(float2 p)
-{
-	float r = 0.0;
-	r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
-	r += ShortLine(mm, ml, p);
-	r += DiagLine(dbm, dbl, p);
-	r += LongLine(mm, bm, p);
-	r += DiagLine(dbm, dbr, p); 
-	r += ShortLine(mr, mm, p);
-	r += DiagLine(dtr, dtm, p); 
-	r += LongLine(tm, mm, p);
-	r += DiagLine(dtl, dtm, p);
-	r += LongLine(ml, tl, p);
-	r += LongLine(bl, ml, p);
-	r += ShortLine(bm, bl, p);
-	r += ShortLine(br, bm, p);
-	r += LongLine(mr, br, p);
-	r += LongLine(tr, mr, p);
-	r += ShortLine(tm, tr, p);
-	r += ShortLine(tl, tm, p);
-	return r;
-}
-
 bool ShowSeg(int charIndex, int segIndex)
 { 
 	float2 d = float2(1. / NumSegments, 1. / NumChars);
@@ -129,24 +111,44 @@ float Seg(int charIndex, float2 p)
 
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
+	float InnerPaddingX = 0.3;
+	float InnerPaddingY = 0.3;
+	float OuterPaddingX = 0.1;
+	float OuterPaddingY = 0.1;
+	
 	float2 resolution = float2(TargetWidth, TargetHeight);
-	float numChars = NumChars;
-	float numLines = NumLines;
+
+	float2 outerPadding = float2(OuterPaddingX * resolution.y / resolution.x, OuterPaddingY);
+	float2 innerPadding = float2(InnerPaddingX * resolution.y / resolution.x, InnerPaddingY);
 	
 	float2 cellSize = float2(
-		1 / numChars,
-		1 / numLines * 2 // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
+		1. / NumChars + innerPadding.x,
+		1. / NumLines * 2. // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
 	);
 	
 	float2 originPos = float2(
-		-0.5 + cellSize.x / 2,
-		0.0
+		-.5 + cellSize.x / 2.,
+		0. 
 	);
 	
 	float2 uv = float2(
-		(fragCoord.x / resolution.x) - 0.5,
-		(fragCoord.y / resolution.y * 2) - 1
+		(fragCoord.x / resolution.x) * (1 + NumChars * outerPadding.x) - 0.5,
+		(fragCoord.y / resolution.y * 2.) - 1.
 	);
+	
+	/*
+	const float width = 1.5;
+	const float height = 0.75 + SegmentWidth * 2.0;
+	float2 cellSize = float2(
+		width / (NumChars + 1.0),
+		height / NumLines
+	);
+	float2 originPos = float2(
+		(-width / 2.0) + cellSize.x, 
+		(height / 2.0) - cellSize.y * 0.5
+	);*/
+	
+	//uv = (fragCoord - 0.5 * resolution.xy) / resolution.y;
 
 	float2 pos = originPos;
 	float d = 0.0;
@@ -154,13 +156,12 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	int charIndex = 0;
 	//for (int currLine = 0; currLine < numLines; currLine++) {
 	for (int character = 0; character < 20; character++) {
-			d += Seg(charIndex, (uv - pos) * float2(numChars, numLines));
-			//d += SegDisp((uv - pos) * float2(numChars, numLines));
-			pos.x += cellSize.x;
-			charIndex++;
-		}
-		pos.x = originPos.x;
-		pos.y -= cellSize.y;
+		d += Seg(charIndex, (uv - pos) * float2(NumChars * (1. + innerPadding.x), NumLines));
+		pos.x += cellSize.x;
+		charIndex++;
+	}
+	pos.x = originPos.x;
+	pos.y -= cellSize.y;
 	//}
 	
 	float g = 0;
