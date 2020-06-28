@@ -49,24 +49,24 @@ float DiagDist(float2 v)
 
 float LongLine(float2 a, float2 b, float2 p)
 {
-	float2 pa = p - a;
-	float2 ba = b - a;
+	float2 pa = p - float2(a.x, -a.y);
+	float2 ba = float2(b.x, -b.y) - float2(a.x, -a.y);
 	float t = clamp(dot(pa, ba) / dot(ba, ba), gSegmentGap, 1.0 - gSegmentGap);
 	return smoothstep(SegmentWidth, SegmentWidth * 0.9, Manhattan(pa - ba * t));
 }
 
 float ShortLine(float2 a, float2 b, float2 p)
 {
-	float2 pa = p - a;
-	float2 ba = b - a;
+	float2 pa = p - float2(a.x, -a.y);
+	float2 ba = float2(b.x, -b.y) - float2(a.x, -a.y);
 	float t = clamp(dot(pa, ba) / dot(ba, ba), gSegmentGap * 2.0, 1.0 - (gSegmentGap * 2.0));
 	return smoothstep(SegmentWidth, SegmentWidth * 0.9, Manhattan(pa - ba * t));
 }
 
 float DiagLine(float2 a, float2 b, float2 p)
 {
-	float2 pa = p - a;
-	float2 ba = b - a;
+	float2 pa = p - float2(a.x, -a.y);
+	float2 ba = float2(b.x, -b.y) - float2(a.x, -a.y);
 	float t = clamp((pa.x * ba.x) / (ba.x * ba.x), gSegmentGap * 2.0, 1.0 - (gSegmentGap * 2.0));
 	float2 intersectP = abs(pa - ba * t);
 	return smoothstep(SegmentWidth * 2.0, SegmentWidth * 1.25, intersectP.y) * smoothstep(0.001, 0.0, intersectP.x);
@@ -109,25 +109,21 @@ bool ShowSeg(int charIndex, int segIndex)
 float Seg(int charIndex, float2 p)
 {
 	float r = 0.0;
-	
-	if (ShowSeg(charIndex, 0)) r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
-	if (ShowSeg(charIndex, 1)) r += ShortLine(mm, ml, p);
-	if (ShowSeg(charIndex, 2)) r += DiagLine(dbm, dbl, p);
-	if (ShowSeg(charIndex, 3)) r += LongLine(mm, bm, p);
-	if (ShowSeg(charIndex, 4)) r += DiagLine(dbm, dbr, p);
-	if (ShowSeg(charIndex, 5)) r += ShortLine(mr, mm, p);
-	if (ShowSeg(charIndex, 6)) r += DiagLine(dtr, dtm, p);
-	if (ShowSeg(charIndex, 7)) r += LongLine(tm, mm, p);
+	if (ShowSeg(charIndex, 0)) r += ShortLine(tl, tr, p);
+	if (ShowSeg(charIndex, 1)) r += LongLine(tr, mr, p);
+	if (ShowSeg(charIndex, 2)) r += LongLine(mr, br, p);
+	if (ShowSeg(charIndex, 3)) r += ShortLine(br, bl, p);
+	if (ShowSeg(charIndex, 4)) r += LongLine(bl, ml, p);
+	if (ShowSeg(charIndex, 5)) r += LongLine(ml, tl, p);
+	if (ShowSeg(charIndex, 6)) r += ShortLine(mm, ml, p);
+	if (ShowSeg(charIndex, 7)) r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
 	if (ShowSeg(charIndex, 8)) r += DiagLine(dtl, dtm, p);
-	if (ShowSeg(charIndex, 9)) r += LongLine(ml, tl, p);
-	if (ShowSeg(charIndex, 10)) r += LongLine(bl, ml, p);
-	if (ShowSeg(charIndex, 11)) r += ShortLine(bm, bl, p);
-	if (ShowSeg(charIndex, 12)) r += ShortLine(br, bm, p);
-	if (ShowSeg(charIndex, 13)) r += LongLine(mr, br, p);
-	if (ShowSeg(charIndex, 14)) r += LongLine(tr, mr, p);
-	if (ShowSeg(charIndex, 15)) r += ShortLine(tm, tr, p);
-	r += ShortLine(tl, tm, p);
-	
+	if (ShowSeg(charIndex, 9)) r += LongLine(tm, mm, p);
+	if (ShowSeg(charIndex, 10)) r += DiagLine(dtr, dtm, p);
+	if (ShowSeg(charIndex, 11)) r += ShortLine(mm, mr, p);
+	if (ShowSeg(charIndex, 12)) r += DiagLine(dbm, dbr, p);
+	if (ShowSeg(charIndex, 13)) r += LongLine(mm, bm, p);
+	if (ShowSeg(charIndex, 14)) r += DiagLine(dbm, dbl, p);
 	return r;
 }
 
