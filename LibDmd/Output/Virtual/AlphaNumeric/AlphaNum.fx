@@ -102,10 +102,10 @@ float SegDisp(float2 p)
 }
 
 bool ShowSeg(int charIndex, int segIndex)
-{
+{ 
 	float2 d = float2(ceil(1. / NumSegments), ceil(1. / float(NumChars)));
 	float2 pos = float2(float(segIndex), float(charIndex));
-	float4 pixel = tex2Dlod(input, float4(d * pos, 0., 0.));
+	float4 pixel = tex2Dlod(input, float4(d.x * pos.x, d.y * pos.y, 0., 0.));
 	
 	if (pixel.b > 0.0) {
 		return true;
@@ -119,8 +119,21 @@ float Seg(int charIndex, float2 p)
 	
 	if (ShowSeg(charIndex, 0)) r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
 	if (ShowSeg(charIndex, 1)) r += ShortLine(mm, ml, p);
-	
-	r += DiagLine(dbm, dbl, p);
+	if (ShowSeg(charIndex, 2)) r += DiagLine(dbm, dbl, p);
+	if (ShowSeg(charIndex, 3)) r += LongLine(mm, bm, p);
+	if (ShowSeg(charIndex, 4)) r += DiagLine(dbm, dbr, p);
+	if (ShowSeg(charIndex, 5)) r += ShortLine(mr, mm, p);
+	if (ShowSeg(charIndex, 6)) r += DiagLine(dtr, dtm, p);
+	if (ShowSeg(charIndex, 7)) r += LongLine(tm, mm, p);
+	if (ShowSeg(charIndex, 8)) r += DiagLine(dtl, dtm, p);
+	if (ShowSeg(charIndex, 9)) r += LongLine(ml, tl, p);
+	if (ShowSeg(charIndex, 10)) r += LongLine(bl, ml, p);
+	if (ShowSeg(charIndex, 11)) r += ShortLine(bm, bl, p);
+	if (ShowSeg(charIndex, 12)) r += ShortLine(br, bm, p);
+	if (ShowSeg(charIndex, 13)) r += LongLine(mr, br, p);
+	if (ShowSeg(charIndex, 14)) r += LongLine(tr, mr, p);
+	if (ShowSeg(charIndex, 15)) r += ShortLine(tm, tr, p);
+	r += ShortLine(tl, tm, p);
 	
 	return r;
 }
@@ -130,6 +143,13 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	float2 resolution = float2(TargetWidth, TargetHeight);
 	float numChars = NumChars;
 	float numLines = NumLines;
+	
+	/*return tex2Dlod(input, float4(
+		fragCoord.x / resolution.x,
+		fragCoord.y / resolution.y,
+		0.,
+		0.
+	));*/
 
 	float2 cellSize = float2(
 		1 / numChars,
@@ -151,7 +171,7 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	
 	int charIndex = 0;
 	//for (int currLine = 0; currLine < numLines; currLine++) {
-		for (int character = 0; character < numChars; character++) {
+	for (int character = 0; character < 20; character++) {
 			d += Seg(charIndex, (uv - pos) * float2(numChars, numLines));
 			//d += SegDisp((uv - pos) * float2(numChars, numLines));
 			pos.x += cellSize.x;

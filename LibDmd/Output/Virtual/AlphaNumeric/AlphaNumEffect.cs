@@ -19,6 +19,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			PixelShader = _pixelShader;
 			//UpdateShaderValue(SegmentsProperty);
+			UpdateShaderValue(InputProperty);
 			UpdateShaderValue(SegmentWidthProperty);
 			UpdateShaderValue(TargetWidthProperty);
 			UpdateShaderValue(TargetHeightProperty);

@@ -75,7 +75,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			for (var y = 0; y < height; y++) {
 				for (var x = 0; x < width; x++) {
 					var seg = data[y] >> x & 0x1;
-					frameBuffer[index] = (byte)(seg == 1 ? 0xff : 0x00);
+					var val = (byte)(seg == 1 ? 0xff : 0x00);
+					frameBuffer[index] = val;
+					frameBuffer[index + 1] = val;
+					frameBuffer[index + 2] = val;
+					frameBuffer[index + 3] = val;
 					index += 4;
 				}
 			}
@@ -84,7 +88,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			bmp.Freeze();
 
 			try {
-				Dispatcher.Invoke(() => AlphanumericDisplay.Source = bmp);
+				Dispatcher.Invoke(() => ShaderEffect.Input = new ImageBrush(bmp));
 
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
