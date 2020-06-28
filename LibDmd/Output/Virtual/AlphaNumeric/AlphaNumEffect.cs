@@ -24,19 +24,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			UpdateShaderValue(TargetHeightProperty);
 			UpdateShaderValue(NumLinesProperty);
 			UpdateShaderValue(NumCharsProperty);
+			UpdateShaderValue(NumSegmentsProperty);
 		}
 
-		//#region Segments
-		//public int[] Segments
-		//{
-		//	get { return (int[])GetValue(SegmentsProperty); }
-		//	set { SetValue(SegmentsProperty, value); }
-		//}
+		#region Input
+		public Brush Input
+		{
+			get { return (Brush)GetValue(InputProperty); }
+			set { SetValue(InputProperty, value); }
+		}
 
-		//public static readonly DependencyProperty SegmentsProperty =
-		//	DependencyProperty.Register("Segments", typeof(int[]), typeof(AlphaNumEffect),
-		//	  new UIPropertyMetadata(new int[] { 0x0 }, PixelShaderConstantCallback(0)));
-		//#endregion
+		public static readonly DependencyProperty InputProperty =
+			RegisterPixelShaderSamplerProperty("Input", typeof(AlphaNumEffect), 0);
+		#endregion
 
 		#region SegmentWidth
 		public float SegmentWidth
@@ -96,6 +96,18 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public static readonly DependencyProperty NumCharsProperty =
 			DependencyProperty.Register("NumChars", typeof(float), typeof(AlphaNumEffect),
 			  new UIPropertyMetadata(0f, PixelShaderConstantCallback(4)));
+		#endregion
+
+		#region NumSegments
+		public float NumSegments
+		{
+			get { return (float)GetValue(NumSegmentsProperty); }
+			set { SetValue(NumSegmentsProperty, value); }
+		}
+
+		public static readonly DependencyProperty NumSegmentsProperty =
+			DependencyProperty.Register("NumSegments", typeof(float), typeof(AlphaNumEffect),
+			  new UIPropertyMetadata(0f, PixelShaderConstantCallback(5)));
 		#endregion
 	}
 

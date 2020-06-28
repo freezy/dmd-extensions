@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -45,6 +46,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Logger.Info("Shader: NumLines = {0}, NumChars = {1}", DisplaySetting.NumLines, DisplaySetting.NumChars);
 			ShaderEffect.NumLines = DisplaySetting.NumLines;
 			ShaderEffect.NumChars = DisplaySetting.NumChars;
+			ShaderEffect.NumSegments = SegmentSize[DisplaySetting.SegmentType];
 
 			ObservableExtensions.Subscribe(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
 		}
@@ -60,6 +62,33 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void UpdateData(ushort[] data)
 		{
+			var numSegments = SegmentSize[DisplaySetting.SegmentType];
+			var width = numSegments;
+			var height = DisplaySetting.NumChars;
+
+			var bmp = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+			var bufferSize = (Math.Abs(bmp.BackBufferStride) * height + 2);
+			var frameBuffer = new byte[bufferSize];
+
+			var index = 0;
+			bmp.Lock();
+			for (var y = 0; y < height; y++) {
+				for (var x = 0; x < width; x++) {
+					var seg = data[y] >> x & 0x1;
+					frameBuffer[index] = (byte)(seg == 1 ? 0xff : 0x00);
+					index += 4;
+				}
+			}
+			bmp.WritePixels(new Int32Rect(0, 0, width, height), frameBuffer, bmp.BackBufferStride, 0);
+			bmp.Unlock();
+			bmp.Freeze();
+
+			try {
+				Dispatcher.Invoke(() => AlphanumericDisplay.Source = bmp);
+
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
+			}
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)
@@ -117,5 +146,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public void Dispose()
 		{
 		}
+
+		private readonly Dictionary<SegmentType, int> SegmentSize = new Dictionary<SegmentType, int> {
+			{ SegmentType.Alphanumeric, 16 },
+			{ SegmentType.Numeric8, 8 },
+			{ SegmentType.Numeric10, 10 },
+		};
 	}
 }

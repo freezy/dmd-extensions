@@ -11,6 +11,15 @@ float TargetHeight : register(C2);
 
 float NumLines : register(C3);
 float NumChars : register(C4);
+float NumSegments : register(C5);
+
+sampler2D input : register(S0);
+sampler2D inputSampler = sampler_state {
+	Texture = input;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	MipFilter = LINEAR;
+};
 
 // Static computed vars for optimization
 static float2 tl = float2(-.5, 1) ; // top    left  corner
@@ -92,13 +101,35 @@ float SegDisp(float2 p)
 	return r;
 }
 
+bool ShowSeg(int charIndex, int segIndex)
+{
+	float2 d = float2(ceil(1. / NumSegments), ceil(1. / float(NumChars)));
+	float2 pos = float2(float(segIndex), float(charIndex));
+	float4 pixel = tex2Dlod(input, float4(d * pos, 0., 0.));
+	
+	if (pixel.b > 0.0) {
+		return true;
+	}
+	return false;
+}
+
+float Seg(int charIndex, float2 p)
+{
+	float r = 0.0;
+	
+	if (ShowSeg(charIndex, 0)) r += ShortLine(dp, dp + float2(gSegmentGap * 0.5, 0.0), p);
+	if (ShowSeg(charIndex, 1)) r += ShortLine(mm, ml, p);
+	
+	r += DiagLine(dbm, dbl, p);
+	
+	return r;
+}
+
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
 	float2 resolution = float2(TargetWidth, TargetHeight);
 	float numChars = NumChars;
 	float numLines = NumLines;
-	float linePadding = 0.2;
-	float verticalPadding = 0.2;
 
 	float2 cellSize = float2(
 		1 / numChars,
@@ -118,14 +149,17 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	float2 pos = originPos;
 	float d = 0.0;
 	
-	for (int currLine = 0; currLine < numLines; currLine++) {
+	int charIndex = 0;
+	//for (int currLine = 0; currLine < numLines; currLine++) {
 		for (int character = 0; character < numChars; character++) {
-			d += SegDisp((uv - pos) * float2(numChars, numLines));
+			d += Seg(charIndex, (uv - pos) * float2(numChars, numLines));
+			//d += SegDisp((uv - pos) * float2(numChars, numLines));
 			pos.x += cellSize.x;
+			charIndex++;
 		}
 		pos.x = originPos.x;
 		pos.y -= cellSize.y;
-	}
+	//}
 	
 	float g = 0;
 	float b = 0;
