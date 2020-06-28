@@ -103,7 +103,7 @@ float SegDisp(float2 p)
 
 bool ShowSeg(int charIndex, int segIndex)
 { 
-	float2 d = float2(ceil(1. / NumSegments), ceil(1. / float(NumChars)));
+	float2 d = float2(1. / NumSegments, 1. / NumChars);
 	float2 pos = float2(float(segIndex), float(charIndex));
 	float4 pixel = tex2Dlod(input, float4(d.x * pos.x, d.y * pos.y, 0., 0.));
 	

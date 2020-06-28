@@ -71,30 +71,24 @@
     rcp r4.z, c2.x
     dp2add r5.y, vPos.y, r4.z, c10.y  // ::uv<1>
 
-#line 106
-    frc r4.z, -r2.w
-    add r4.z, r2.w, r4.z  // ::d<1>
-
 #line 68
-    mul r4.w, r3.y, r3.y
-    rcp r4.w, r4.w
+    mul r4.z, r3.y, r3.y
+    rcp r4.z, r4.z
 
 #line 78
     mul r5.zw, r2.x, c11.xyxy
 
 #line 69
-    rcp r5.z, r5.z
+    rcp r4.w, r5.z
 
 #line 106
-    rcp r6.x, c5.x
-    frc r6.y, -r6.x
-    add r6.x, r6.y, r6.x  // ::d<0>
+    rcp r6.x, c5.x  // ::d<0>
 
 #line 75
     mad r1.zw, c0.x, -r0.xyxy, r1  // ::ba<0,1>
 
 #line 78
-    rcp r5.w, r5.w
+    rcp r5.z, r5.w
 
 #line 60
     mad r7.xy, r2.x, -c6.zxzw, c6.w
@@ -122,123 +116,123 @@
       mul r11.yw, r10.y, c3.x  // Seg::p<1,1>
 
 #line 108
-      mul r6.y, r4.z, r9.z
+      mul r6.y, r2.w, r9.z
       texldl r10, r6.zyzz, s0  // ::pixel<2>
 
 #line 66
       add r10.xy, -r4, r11.zwzw  // ::pa<0,1>
-      mul r9.w, r3.y, r10.x
-      mul r9.w, r4.w, r9.w
-      max r10.w, r9.w, r3.z
-      min r9.w, r7.x, r10.w  // ::t<0>
-      mad r10.xy, r8.zwzw, -r9.w, r10  // Manhattan::v<0,1>
+      mul r5.w, r3.y, r10.x
+      mul r5.w, r4.z, r5.w
+      max r9.w, r5.w, r3.z
+      min r5.w, r7.x, r9.w  // ::t<0>
+      mad r10.xy, r8.zwzw, -r5.w, r10  // Manhattan::v<0,1>
+
+#line 48
+      add r5.w, r10_abs.y, r10_abs.x  // ::Manhattan<0>
+
+#line 69
+      add r5.w, r5.w, -c0.x
+      mul_sat r5.w, r4.w, r5.w
+      mad r9.w, r5.w, c8.z, c8.w
+      mul r5.w, r5.w, r5.w
+      mul r5.w, r5.w, r9.w  // ::ShortLine<0>
+
+#line 120
+      cmp r5.w, -r10.z, c10.x, r5.w  // ::r<0>
+
+#line 108
+      texldl r10, r6.xyzz, s0  // ::pixel<2>
+
+#line 68
+      mul r9.w, r11.z, c8.z
+      max r10.x, r9.w, r3.z
+      min r9.w, r7.x, r10.x  // ::t<0>
+      mad r10.xy, r9.w, -c10.zxzw, r11.zwzw  // Manhattan::v<0,1>
 
 #line 48
       add r9.w, r10_abs.y, r10_abs.x  // ::Manhattan<0>
 
 #line 69
       add r9.w, r9.w, -c0.x
-      mul_sat r9.w, r5.z, r9.w
+      mul_sat r9.w, r4.w, r9.w
       mad r10.x, r9.w, c8.z, c8.w
       mul r9.w, r9.w, r9.w
-      mul r9.w, r9.w, r10.x  // ::ShortLine<0>
-
-#line 120
-      cmp r9.w, -r10.z, c10.x, r9.w  // ::r<0>
-
-#line 108
-      texldl r10, r6.xyzz, s0  // ::pixel<2>
-
-#line 68
-      mul r10.x, r11.z, c8.z
-      max r12.x, r10.x, r3.z
-      min r10.x, r7.x, r12.x  // ::t<0>
-      mad r10.xy, r10.x, -c10.zxzw, r11.zwzw  // Manhattan::v<0,1>
-
-#line 48
-      add r10.x, r10_abs.y, r10_abs.x  // ::Manhattan<0>
-
-#line 69
-      add r10.x, r10.x, -c0.x
-      mul_sat r10.x, r5.z, r10.x
-      mad r10.y, r10.x, c8.z, c8.w
-      mul r10.x, r10.x, r10.x
 
 #line 121
-      mad r10.x, r10.y, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r10.x, r9.w, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       texldl r10, r6.wyzz, s0  // ::pixel<2>
 
 #line 74
       mad r10.xy, c0.x, -r0, r11.zwzw  // ::pa<0,1>
-      mul r10.w, r10.x, c8.z
-      max r12.x, r10.w, r3.z
-      min r10.w, r7.x, r12.x  // ::t<0>
-      mad r12.xy, r1.zwzw, -r10.w, r10
-      mad r10.w, r2.x, -c8.x, r12_abs.y
-      mul_sat r10.w, r5.w, r10.w
-      mad r12.y, r10.w, c8.z, c8.w
-      mul r10.w, r10.w, r10.w
-      mul r10.w, r10.w, r12.y
-      add r12.x, r12_abs.x, c7.x
-      mul r12.x, r12.x, c7.y
-      max r13.x, r12.x, c10.x
-      mad r12.x, r13.x, c8.z, c8.w
-      mul r12.y, r13.x, r13.x
-      mul r12.x, r12.y, r12.x
+      mul r9.w, r10.x, c8.z
+      max r10.w, r9.w, r3.z
+      min r9.w, r7.x, r10.w  // ::t<0>
+      mad r12.xy, r1.zwzw, -r9.w, r10
+      mad r9.w, r2.x, -c8.x, r12_abs.y
+      mul_sat r9.w, r5.z, r9.w
+      mad r10.w, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
+      mul r9.w, r9.w, r10.w
+      add r10.w, r12_abs.x, c7.x
+      mul r10.w, r10.w, c7.y
+      max r12.x, r10.w, c10.x
+      mad r10.w, r12.x, c8.z, c8.w
+      mul r12.x, r12.x, r12.x
+      mul r10.w, r10.w, r12.x
 
 #line 122
-      mad r10.w, r10.w, r12.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.w  // ::r<0>
+      mad r9.w, r9.w, r10.w, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r12, r6.xyzz, c7.zwww
       texldl r12, r12, s0  // ::pixel<2>
 
 #line 60
-      max r10.z, -r11.w, r3.x
-      min r12.x, r7.y, r10.z  // ::t<0>
-      mad r10.zw, r12.x, -c10.xyxy, r11  // Manhattan::v<0,1>
+      max r9.w, -r11.w, r3.x
+      min r10.z, r7.y, r9.w  // ::t<0>
+      mad r10.zw, r10.z, -c10.xyxy, r11  // Manhattan::v<0,1>
 
 #line 48
-      add r10.z, r10_abs.w, r10_abs.z  // ::Manhattan<0>
+      add r9.w, r10_abs.w, r10_abs.z  // ::Manhattan<0>
 
 #line 61
-      add r10.z, r10.z, -c0.x
-      mul_sat r10.z, r5.z, r10.z
-      mad r10.w, r10.z, c8.z, c8.w
-      mul r10.z, r10.z, r10.z
+      add r9.w, r9.w, -c0.x
+      mul_sat r9.w, r4.w, r9.w
+      mad r10.z, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
 
 #line 123
-      mad r10.z, r10.w, r10.z, r9.w  // ::r<0>
-      cmp r9.w, -r12.z, r9.w, r10.z  // ::r<0>
+      mad r9.w, r10.z, r9.w, r5.w  // ::r<0>
+      cmp r5.w, -r12.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r12, r6.xyzz, c9_abs.xwww
       texldl r12, r12, s0  // ::pixel<2>
 
 #line 76
-      add r10.z, r10.x, r10.x
-      max r12.x, r10.z, r3.z
-      min r10.z, r7.x, r12.x  // ::t<0>
-      mad r10.xy, r2.yzzw, -r10.z, r10
-      mad r10.y, r2.x, -c8.x, r10_abs.y
-      mul_sat r10.y, r5.w, r10.y
-      mad r10.z, r10.y, c8.z, c8.w
-      mul r10.y, r10.y, r10.y
-      mul r10.y, r10.y, r10.z
+      add r9.w, r10.x, r10.x
+      max r10.z, r9.w, r3.z
+      min r9.w, r7.x, r10.z  // ::t<0>
+      mad r10.xy, r2.yzzw, -r9.w, r10
+      mad r9.w, r2.x, -c8.x, r10_abs.y
+      mul_sat r9.w, r5.z, r9.w
+      mad r10.y, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
+      mul r9.w, r9.w, r10.y
       add r10.x, r10_abs.x, c7.x
       mul r10.x, r10.x, c7.y
       max r12.x, r10.x, c10.x
       mad r10.x, r12.x, c8.z, c8.w
-      mul r10.z, r12.x, r12.x
-      mul r10.x, r10.z, r10.x
+      mul r10.y, r12.x, r12.x
+      mul r10.x, r10.y, r10.x
 
 #line 124
-      mad r10.x, r10.y, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r12.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r9.w, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r12.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r10, r6.xyzz, c12.xyyy
@@ -248,23 +242,23 @@
       add r12, r11.zwzw, -c10_abs.xyzx  // ::pa<0,1,0,1>
 
 #line 68
-      mul r10.x, r12.z, c8.z
-      max r13.x, r10.x, r3.z
-      min r10.x, r7.x, r13.x  // ::t<0>
-      mad r10.xy, r10.x, -c10.zxzw, r12.zwzw  // Manhattan::v<0,1>
+      mul r9.w, r12.z, c8.z
+      max r10.x, r9.w, r3.z
+      min r9.w, r7.x, r10.x  // ::t<0>
+      mad r10.xy, r9.w, -c10.zxzw, r12.zwzw  // Manhattan::v<0,1>
 
 #line 48
-      add r10.x, r10_abs.y, r10_abs.x  // ::Manhattan<0>
+      add r9.w, r10_abs.y, r10_abs.x  // ::Manhattan<0>
 
 #line 69
-      add r10.x, r10.x, -c0.x
-      mul_sat r10.x, r5.z, r10.x
-      mad r10.y, r10.x, c8.z, c8.w
-      mul r10.x, r10.x, r10.x
+      add r9.w, r9.w, -c0.x
+      mul_sat r9.w, r4.w, r9.w
+      mad r10.x, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
 
 #line 125
-      mad r10.x, r10.y, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r10.x, r9.w, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r10, r6.xyzz, c12.zyyy
@@ -272,25 +266,25 @@
 
 #line 74
       add r10.xy, -r1, r11.zwzw  // ::pa<0,1>
-      mul r10.w, r10.x, c8.z
-      max r13.x, r10.w, r3.z
-      min r10.w, r7.x, r13.x  // ::t<0>
-      mad r10.xy, r7.zwzw, -r10.w, r10
-      mad r10.y, r2.x, -c8.x, r10_abs.y
-      mul_sat r10.y, r5.w, r10.y
-      mad r10.w, r10.y, c8.z, c8.w
-      mul r10.y, r10.y, r10.y
-      mul r10.y, r10.y, r10.w
+      mul r9.w, r10.x, c8.z
+      max r10.w, r9.w, r3.z
+      min r9.w, r7.x, r10.w  // ::t<0>
+      mad r10.xy, r7.zwzw, -r9.w, r10
+      mad r9.w, r2.x, -c8.x, r10_abs.y
+      mul_sat r9.w, r5.z, r9.w
+      mad r10.y, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
+      mul r9.w, r9.w, r10.y
       add r10.x, r10_abs.x, c7.x
       mul r10.x, r10.x, c7.y
       max r13.x, r10.x, c10.x
       mad r10.x, r13.x, c8.z, c8.w
-      mul r10.w, r13.x, r13.x
-      mul r10.x, r10.w, r10.x
+      mul r10.y, r13.x, r13.x
+      mul r10.x, r10.y, r10.x
 
 #line 126
-      mad r10.x, r10.y, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r9.w, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r10, r6.xyzz, c12.wyyy
@@ -308,13 +302,13 @@
 
 #line 61
       add r10.xy, r10, -c0.x
-      mul_sat r10.xy, r5.z, r10
+      mul_sat r10.xy, r4.w, r10
       mad r12.zw, r10.xyxy, c8.z, c8.w
       mul r10.xy, r10, r10
 
 #line 127
-      mad r10.x, r12.z, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r12.z, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r13, r6.xyzz, c13.xyyy
@@ -322,25 +316,25 @@
 
 #line 74
       add r10.xz, -r0.zyww, r11.zyww  // ::pa<0,1>
-      add r10.w, r10.x, r10.x
-      max r12.z, r10.w, r3.z
-      min r10.w, r7.x, r12.z  // ::t<0>
-      mad r10.xz, r8.xyyw, -r10.w, r10
-      mad r10.z, r2.x, -c8.x, r10_abs.z
-      mul_sat r10.z, r5.w, r10.z
-      mad r10.w, r10.z, c8.z, c8.w
-      mul r10.z, r10.z, r10.z
-      mul r10.z, r10.z, r10.w
+      add r9.w, r10.x, r10.x
+      max r10.w, r9.w, r3.z
+      min r9.w, r7.x, r10.w  // ::t<0>
+      mad r10.xz, r8.xyyw, -r9.w, r10
+      mad r9.w, r2.x, -c8.x, r10_abs.z
+      mul_sat r9.w, r5.z, r9.w
+      mad r10.z, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
+      mul r9.w, r9.w, r10.z
       add r10.x, r10_abs.x, c7.x
       mul r10.x, r10.x, c7.y
       max r12.z, r10.x, c10.x
       mad r10.x, r12.z, c8.z, c8.w
-      mul r10.w, r12.z, r12.z
-      mul r10.x, r10.w, r10.x
+      mul r10.z, r12.z, r12.z
+      mul r10.x, r10.z, r10.x
 
 #line 128
-      mad r10.x, r10.z, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r13.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r9.w, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r13.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r13, r6.xyzz, c13.zyyy
@@ -358,21 +352,21 @@
 
 #line 61
       add r10.xz, r10, -c0.x
-      mul_sat r10.xz, r5.z, r10
+      mul_sat r10.xz, r4.w, r10
       mad r13.xy, r10.xzzw, c8.z, c8.w
       mul r10.xz, r10, r10
 
 #line 129
-      mad r10.x, r13.x, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r13.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r13.x, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r13.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r14, r6.xyzz, c13.wyyy
       texldl r14, r14, s0  // ::pixel<2>
 
 #line 130
-      mad r10.x, r13.y, r10.z, r9.w  // ::r<0>
-      cmp r9.w, -r14.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r13.y, r10.z, r5.w  // ::r<0>
+      cmp r5.w, -r14.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r13, r6.xyzz, c15.xyyy
@@ -392,29 +386,29 @@
 
 #line 69
       add r10.xz, r10, -c0.x
-      mul_sat r10.xz, r5.z, r10
+      mul_sat r10.xz, r4.w, r10
       mad r13.xy, r10.xzzw, c8.z, c8.w
       mul r10.xz, r10, r10
 
 #line 131
-      mad r10.x, r13.x, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r13.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r13.x, r10.x, r5.w  // ::r<0>
+      cmp r5.w, -r13.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r14, r6.xyzz, c15.zyyy
       texldl r14, r14, s0  // ::pixel<2>
 
 #line 132
-      mad r10.x, r13.y, r10.z, r9.w  // ::r<0>
-      cmp r9.w, -r14.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r13.y, r10.z, r5.w  // ::r<0>
+      cmp r5.w, -r14.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r13, r6.xyzz, c15.wyyy
       texldl r13, r13, s0  // ::pixel<2>
 
 #line 133
-      mad r10.x, r12.w, r10.y, r9.w  // ::r<0>
-      cmp r9.w, -r13.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r12.w, r10.y, r5.w  // ::r<0>
+      cmp r5.w, -r13.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r10, r6.xyzz, c16.xyyy
@@ -424,22 +418,22 @@
       add r11, r11, c10.zywy  // ::pa<0,1,0,1>
 
 #line 60
-      max r10.x, -r11.y, r3.x
-      min r12.z, r7.y, r10.x  // ::t<0>
-      mad r10.xy, r12.z, -c10, r11  // Manhattan::v<0,1>
+      max r9.w, -r11.y, r3.x
+      min r10.x, r7.y, r9.w  // ::t<0>
+      mad r10.xy, r10.x, -c10, r11  // Manhattan::v<0,1>
 
 #line 48
-      add r10.x, r10_abs.y, r10_abs.x  // ::Manhattan<0>
+      add r9.w, r10_abs.y, r10_abs.x  // ::Manhattan<0>
 
 #line 61
-      add r10.x, r10.x, -c0.x
-      mul_sat r10.x, r5.z, r10.x
-      mad r10.y, r10.x, c8.z, c8.w
-      mul r10.x, r10.x, r10.x
+      add r9.w, r9.w, -c0.x
+      mul_sat r9.w, r4.w, r9.w
+      mad r10.x, r9.w, c8.z, c8.w
+      mul r9.w, r9.w, r9.w
 
 #line 134
-      mad r10.x, r10.y, r10.x, r9.w  // ::r<0>
-      cmp r9.w, -r10.z, r9.w, r10.x  // ::r<0>
+      mad r9.w, r10.x, r9.w, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r9.w  // ::r<0>
 
 #line 108
       mul r10, r6.xyzz, c16.zyyy
@@ -447,8 +441,8 @@
 
 #line 68
       add r6.y, r12.x, r12.x
-      max r10.x, r6.y, r3.z
-      min r6.y, r7.x, r10.x  // ::t<0>
+      max r9.w, r6.y, r3.z
+      min r6.y, r7.x, r9.w  // ::t<0>
       mad r10.xy, r6.y, -c10.wxzw, r12  // Manhattan::v<0,1>
 
 #line 48
@@ -456,34 +450,34 @@
 
 #line 69
       add r6.y, r6.y, -c0.x
-      mul_sat r6.y, r5.z, r6.y
-      mad r10.x, r6.y, c8.z, c8.w
+      mul_sat r6.y, r4.w, r6.y
+      mad r9.w, r6.y, c8.z, c8.w
       mul r6.y, r6.y, r6.y
 
 #line 135
-      mad r6.y, r10.x, r6.y, r9.w  // ::r<0>
-      cmp r6.y, -r10.z, r9.w, r6.y  // ::r<0>
+      mad r6.y, r9.w, r6.y, r5.w  // ::r<0>
+      cmp r5.w, -r10.z, r5.w, r6.y  // ::r<0>
 
 #line 68
-      add r9.w, r11.z, r11.z
-      max r10.x, r9.w, r3.z
-      min r9.w, r7.x, r10.x  // ::t<0>
-      mad r10.xy, r9.w, -c10.wxzw, r11.zwzw  // Manhattan::v<0,1>
+      add r6.y, r11.z, r11.z
+      max r9.w, r6.y, r3.z
+      min r6.y, r7.x, r9.w  // ::t<0>
+      mad r10.xy, r6.y, -c10.wxzw, r11.zwzw  // Manhattan::v<0,1>
 
 #line 48
-      add r9.w, r10_abs.y, r10_abs.x  // ::Manhattan<0>
+      add r6.y, r10_abs.y, r10_abs.x  // ::Manhattan<0>
 
 #line 69
-      add r9.w, r9.w, -c0.x
-      mul_sat r9.w, r5.z, r9.w
-      mad r10.x, r9.w, c8.z, c8.w
-      mul r9.w, r9.w, r9.w
+      add r6.y, r6.y, -c0.x
+      mul_sat r6.y, r4.w, r6.y
+      mad r9.w, r6.y, c8.z, c8.w
+      mul r6.y, r6.y, r6.y
 
 #line 136
-      mad r6.y, r10.x, r9.w, r6.y  // ::r<0>
+      mad r5.w, r9.w, r6.y, r5.w  // ::r<0>
 
 #line 175
-      add r9.y, r6.y, r9.y  // ::d<0>
+      add r9.y, r5.w, r9.y  // ::d<0>
       add r9.x, r2.w, r9.x  // ::pos<0>
       add r9.z, r9.z, -c10.y  // ::charIndex<0>
     endrep
@@ -492,4 +486,4 @@
 #line 187
     mov oC0.yzw, c10_abs.xxxy  // ::main<1,2,3>
 
-// approximately 289 instruction slots used (32 texture, 257 arithmetic)
+// approximately 285 instruction slots used (32 texture, 253 arithmetic)
