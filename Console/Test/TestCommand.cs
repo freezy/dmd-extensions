@@ -37,11 +37,16 @@ namespace DmdExt.Test
 			// chain them up
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				var alphaNumericFrame = new AlphaNumericFrame(NumericalLayout.__2x20Alpha,
-					new ushort[] {
+				new ushort[] {
+						0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0, 0, 0, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+					}
+				/*new ushort[] {
 						0, 10767, 2167, 8719, 0, 2109, 8713, 6259, 56, 2157, 0, 4957, 0, 8719, 62, 8719, 121, 2157, 0,
 						0, 0, 0, 5120, 8704, 16640, 0, 0, 0, 0, 2112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-					});
+					}*/);
 				_graph = new RenderGraph {
 					Source = new VpmAlphaNumericSource(alphaNumericFrame),
 					Destinations = renderers,

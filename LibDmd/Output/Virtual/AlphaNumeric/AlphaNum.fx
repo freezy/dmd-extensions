@@ -14,12 +14,6 @@ float NumChars : register(C4);
 float NumSegments : register(C5);
 
 sampler2D input : register(S0);
-sampler2D inputSampler = sampler_state {
-	Texture = input;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	MipFilter = LINEAR;
-};
 
 // Static computed vars for optimization
 static float2 tl = float2(-.5, 1) ; // top    left  corner
@@ -105,9 +99,8 @@ bool ShowSeg(int charIndex, int segIndex)
 { 
 	float2 d = float2(1. / NumSegments, 1. / NumChars);
 	float2 pos = float2(float(segIndex), float(charIndex));
-	float4 pixel = tex2Dlod(input, float4(d.x * pos.x, d.y * pos.y, 0., 0.));
-	
-	if (pixel.b > 0.0) {
+	float4 pixel = tex2Dlod(input, float4(d.x * (pos.x + .5), d.y * (pos.y + .5), 0., 0.));
+	if (pixel.b > .5) {
 		return true;
 	}
 	return false;
@@ -144,13 +137,6 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	float numChars = NumChars;
 	float numLines = NumLines;
 	
-	/*return tex2Dlod(input, float4(
-		fragCoord.x / resolution.x,
-		fragCoord.y / resolution.y,
-		0.,
-		0.
-	));*/
-
 	float2 cellSize = float2(
 		1 / numChars,
 		1 / numLines * 2 // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
