@@ -111,7 +111,7 @@ float Seg(int charIndex, float2 p)
 
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
-	float InnerPaddingX = 0.3;
+	float InnerPaddingX = 0.5;
 	float InnerPaddingY = 0.3;
 	float OuterPaddingX = 0.1;
 	float OuterPaddingY = 0.1;
@@ -123,17 +123,17 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	
 	float2 cellSize = float2(
 		1. / NumChars + innerPadding.x,
-		1. / NumLines * 2. // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
+		1. / NumLines * 2. + SegmentWidth * 2.  // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
 	);
 	
 	float2 originPos = float2(
-		-.5 + cellSize.x / 2.,
-		0. 
+		-.5 + cellSize.x / 2. - innerPadding.x / 2.,
+		SegmentWidth 
 	);
 	
 	float2 uv = float2(
-		(fragCoord.x / resolution.x) * (1 + NumChars * outerPadding.x) - 0.5,
-		(fragCoord.y / resolution.y * 2.) - 1.
+		(fragCoord.x / resolution.x) * (1 + NumChars * innerPadding.x) - 0.5,
+		(fragCoord.y / resolution.y * 2.) * (1 + SegmentWidth) - 1.
 	);
 	
 	/*
