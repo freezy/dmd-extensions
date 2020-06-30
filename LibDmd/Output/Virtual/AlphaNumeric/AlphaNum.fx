@@ -112,9 +112,9 @@ float Seg(int charIndex, float2 p)
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
 	float InnerPaddingX = 0.5;
-	float InnerPaddingY = 0.3;
-	float OuterPaddingX = 0.1;
-	float OuterPaddingY = 0.1;
+	float InnerPaddingY = 0.4;
+	float OuterPaddingX = 0.2;
+	float OuterPaddingY = 0.2;
 	
 	float2 resolution = float2(TargetWidth, TargetHeight);
 
@@ -123,33 +123,19 @@ float4 main(float2 fragCoord : VPOS) : COLOR
 	
 	float2 cellSize = float2(
 		1. / NumChars + innerPadding.x,
-		1. / NumLines * 2. + SegmentWidth * 2.  // * 2.0 + linePadding * height * (numLines - 1) // + 2.0 * verticalPadding
+		1. / NumLines * 2. + SegmentWidth * 2.
 	);
 	
 	float2 originPos = float2(
-		-.5 + cellSize.x / 2. - innerPadding.x / 2.,
-		SegmentWidth 
+		-.5 + cellSize.x / 2. - innerPadding.x / 2. + outerPadding.x,
+		SegmentWidth + outerPadding.y
 	);
 	
 	float2 uv = float2(
-		(fragCoord.x / resolution.x) * (1 + NumChars * innerPadding.x) - 0.5,
-		(fragCoord.y / resolution.y * 2.) * (1 + SegmentWidth) - 1.
+		(fragCoord.x / resolution.x) * (1 + (NumChars - 1) * innerPadding.x + 4.0 * outerPadding.x) - 0.5 - outerPadding.x,
+		(fragCoord.y / resolution.y * 2.) * (1 + SegmentWidth + 2. * outerPadding.y) - 1. - outerPadding.y
 	);
-	
-	/*
-	const float width = 1.5;
-	const float height = 0.75 + SegmentWidth * 2.0;
-	float2 cellSize = float2(
-		width / (NumChars + 1.0),
-		height / NumLines
-	);
-	float2 originPos = float2(
-		(-width / 2.0) + cellSize.x, 
-		(height / 2.0) - cellSize.y * 0.5
-	);*/
-	
-	//uv = (fragCoord - 0.5 * resolution.xy) / resolution.y;
-
+		
 	float2 pos = originPos;
 	float d = 0.0;
 	
