@@ -26,481 +26,1463 @@
 //
 
     ps_3_0
-    def c6, 0.5, -0.5, 0.25, -1
+    def c6, -0.300000012, 0, 0.707106769, 0.699999988
     def c7, 0.5, 1.5, 2.5, 3.5
-    def c8, -2, 3, 5.5, 1
-    def c9, -0.00100000005, -999.999939, 9.5, 1
-    def c10, 4, 0, -1.20000005, -0.75
-    def c11, 1.39999998, 2.79999995, -0.100000024, 0.200000003
-    def c12, 0.699999988, 0, 4.5, 0
-    def c13, 4, -1.39999998, 0.5, 1
-    def c14, 6.5, 1, 7.5, 8.5
-    def c15, 2.79999995, 1.39999998, 1, -0
-    def c16, 10.5, 1, 11.5, 12.5
-    def c17, 13.5, 1, 14.5, 0
-    def c18, 4, 1.39999998, 0.5, 0
-    def c19, 0, 1, -0.5, -1
-    def c20, 0, 1, 0.5, -1
-    defi i0, 20, 0, 0, 0
+    def c8, -0.449999958, 1.55000007, 9999, 16.4500008
+    def c9, 4.99999952, 0.5, 0.000100023499, 0.0666666627
+    def c10, 0.5, -4, -3, 0
+    def c11, -1, 1, 4, 0
+    def c12, 2.4000001, 1.20000005, 1, 3
+    def c13, 1, 0.899999976, 0, 0
+    def c14, 14.5, 1, 0.50999999, 0.00999999978
+    def c15, 2, 0.5, -0.5, 0.25
+    def c16, -1, 0.200000003, 1.39999998, -0.5
+    def c17, 2.4000001, 1.20000005, 0.200000003, 0.5
+    def c18, 0.5, 1, 0.300000012, 0.699999988
+    def c19, 0.0250000004, 0.810000002, -2, 3
+    def c20, 0.150000006, 5.5, 1, 6.5
+    def c21, 7.5, 1, 2.20000005, -0.200000048
+    def c22, -1, 0.600000024, 0, 1
+    def c23, 4, -1.20000005, 0.5, 1
+    def c24, 4.5, 0, 0, 0.699999988
+    def c25, 8.5, 1, 9.5, 10.5
+    def c26, 11.5, 1, 12.5, 13.5
+    def c27, 4, 1.20000005, 0.5, 0
+    def c28, 0, 1, -0.5, -1
+    def c29, 0, 1, 0.5, -1
+    def c30, 0.5, 0.300000012, 0, 0
+    defi i0, 2, 0, 0, 0
+    defi i1, 20, 0, 0, 0
     dcl vPos.xy  // fragCoord<0,1>
     dcl_2d s0
 
-#line 89 "C:\Development\dmd-extensions\LibDmd\Output\Virtual\AlphaNumeric\AlphaNum.fx"
-    mov r0.x, c0.x  // ::SegmentWidth<0>
-    mul r0.yzw, r0.x, c11.xxyz  // ::gSegmentGap<0>
+#line 254 "C:\Development\dmd-extensions\LibDmd\Output\Virtual\AlphaNumeric\AlphaNum.fx"
+    mov r0.xyz, c17
+    mul r0.xy, r0, c0.x  // ::SegmentGap<0>
 
-#line 52
-    mov r1.w, c11.w
-    mul r1.x, r1.w, c2.x
-    rcp r1.y, c1.x
-    mul r1.z, r1.y, r1.x  // ::outerPadding<0>
-    mul r1.w, r1.y, c2.x
+#line 63
+    mul r0.z, r0.z, c2.x
+    rcp r0.w, c1.x
+    mul r1.x, r0.w, r0.z  // ::outerPadding<0>
+    mul r1.y, r0.w, c2.x
 
-#line 61
-    mul r2.x, r1.w, c6.x  // ::innerPadding<0>
+#line 72
+    mul r1.z, r1.y, c17.w  // ::innerPadding<0>
 
-#line 56
-    rcp r2.y, c4.x
-    mad r2.z, r1.w, c6.x, r2.y  // ::cellSize<0>
+#line 67
+    rcp r1.w, c4.x
+    mad r2.x, r1.y, c17.w, r1.w  // ::cellSize<0>
+    rcp r2.y, c3.x
+    add r2.z, c0.x, c0.x
+    mad r2.y, r2.y, c15.x, r2.z  // ::cellSize<1>
 
-#line 61
-    mad r2.w, r2.z, c6.x, c6.y
-    mad r2.w, r1.w, -c6.z, r2.w
-    mad r2.w, r1.x, r1.y, r2.w  // ::originPos<0>
+#line 72
+    mad r2.z, r2.x, c15.y, c15.z
+    mad r2.z, r1.y, -c15.w, r2.z
+    mad r3.x, r0.z, r0.w, r2.z  // ::originPos<0>
 
-#line 137
-    mul r3.x, r1.y, vPos.x
-    mov r3.w, c6.w
-    add r3.y, r3.w, c4.x
-    mad r2.x, r3.y, r2.x, -c6.w
-    mad r1.z, r1.z, c10.x, r2.x
-    mad r1.z, r3.x, r1.z, c6.y
-    mad r1.x, r1.x, -r1.y, r1.z  // ::uv<0>
-    rcp r1.z, c2.x
-    dp2add r1.z, vPos.y, r1.z, c10.y
-    add r2.x, r0.x, c11.x
-    mad r1.y, r1.z, r2.x, c10.z  // ::uv<1>
+#line 269
+    mul r2.z, r0.w, vPos.x
+    mov r4.xyw, c11
+    add r2.w, r4.x, c4.x
+    mad r1.z, r2.w, r1.z, c11.y
+    mad r1.x, r1.x, c11.z, r1.z
+    mad r1.x, r2.z, r1.x, -c17.w
+    mad r5.y, r0.z, -r0.w, r1.x  // ::uv<0>
+    rcp r0.z, c2.x
+    dp2add r0.z, vPos.y, r0.z, c11.w
+    mov r1.x, c0.x  // ::SegmentWidth<0>
+    add r6.xyz, r1.x, c16  // ::dbl<1>, ::originPos<1>
+    mad r5.z, r0.z, r6.z, -c17.y  // ::uv<1>
 
-#line 147
-    mad r1.z, r1.w, -c6.y, -c6.w
-    mul r1.z, r1.z, c4.x
+#line 277
+    mad r0.z, r1.y, -c16.w, -c16.x
+    mul r1.y, r0.z, c4.x  // ::f<0>
 
-#line 103
-    rcp r3.x, c5.x  // ::d<0>
+#line 291
+    add r0.z, r4.x, c3.x
 
-#line 89
-    rcp r0.w, r0.w
+#line 171
+    rcp r0.w, c0.x
 
-#line 80
-    mad r4, r0.x, -c15.xxyy, c15.z
+#line 233
+    rcp r7.x, c5.x  // ::d<0>
 
-#line 105
-    mul r5, r3.x, c7
+#line 160
+    mad r3.zw, r1.x, -c12.xyxy, c12.z
 
-#line 98
-    mul r1.w, r0.x, c10.w
+#line 235
+    mul r8, r7.x, c7
 
-#line 122
-    mad r6.xy, r0.x, c18, c18.zwzw
-    mov r6.zw, c15
-    mad r6.zw, r0.x, c12.xyxy, -r6.xywz
-    add r6.xy, r6.zwzw, r6  // ShortLine::b<0,1>
+#line 254
+    mad r4.xz, r1.x, c27.xyyw, c27.zyww
+    mad r9.xyz, r1.x, c22, c22.wzxw  // ::dtl<1>
+    add r10.xy, r4.xzzw, r9.yzzw  // ShortLine::b<0,1>
 
-#line 86
-    mad r7.xy, r0.x, c13, c13.zwzw
-    mov r6.z, -r6.y
-    add r6.xy, r6.xzzw, -r7  // ::ba<0,1>
-    dp2add r2.x, r6, r6, c10.y
-    rcp r2.x, r2.x
+#line 168
+    mad r4.xz, r1.x, c23.xyyw, c23.zyww
+    mov r10.z, -r10.y
+    add r5.xw, -r4.xyzz, r10.xyzz  // ::ba<0,1>
+    dp2add r2.z, r5.xwzw, r5.xwzw, c11.w
+    rcp r2.z, r2.z
 
-#line 94
-    mad r6.zw, r0.x, c19.xyxy, c19
-    mad r7.zw, r0.x, -c15.xywz, -r6  // ::ba<0,1>
+#line 178
+    mad r6.zw, r1.x, c28.xyxy, c28
+    add r9.x, r9.x, -c0.x  // ::ba<1>
 
-#line 98
-    rcp r1.w, r1.w
+#line 186
+    rcp r9.y, r9.x
 
-#line 94
-    mad r8.xy, r0.x, c20, c20.zwzw
-    mad r8.zw, r0.x, -c15.xywz, -r8.xyxy  // ::ba<0,1>
-    mad r9.xy, r0.x, c20.xwzw, c20.zyzw
-    mad r9.xy, r0.x, -c15_abs.wzzw, r9  // ::ba<0,1>
-    mad r9.zw, r0.x, c19.xyxw, c19.xyzy
-    mad r9.zw, r0.x, -c15_abs.xywz, r9  // ::ba<0,1>
+#line 183
+    mul r9.z, r1.x, c12.w
 
-#line 147
-    add r10.y, r0.x, c11.w
+#line 191
+    rcp r9.z, r9.z
+    rcp r9.w, r0.y
 
-#line 105
-    mul r11.xzw, r5.x, c15_abs.zyww
-    mul r12.xzw, r5.yyxx, c15_abs.zyww
-    mul r13.xzw, r5.zyxx, c15_abs.zyww
-    mul r5.xzw, r5.wyxx, c15_abs.zyww
-    mul r3.yz, r3.x, c12.xzyw
+#line 178
+    mad r10.xy, r1.x, c29, c29.zwzw
+    add r6.x, -r6.x, -c0.x  // ::ba<1>
 
-#line 146
-    mov r14.x, r2.w  // ::pos<0>
-    mov r14.yz, c10.y  // ::d<0>, ::charIndex<0>
+#line 186
+    rcp r10.z, r6.x
+
+#line 281
+    mov r1.z, c3.x
+
+#line 235
+    mul r11.xzw, r8.x, c11.yyww
+    mul r12.xzw, r8.yyxx, c11.yyww
+    mul r13.xzw, r8.zyxx, c11.yyww
+    mul r8.xzw, r8.wyxx, c11.yyww
+    mul r7.yz, r7.x, c24.xxyw
+
+#line 278
+    mov r14.x, r3.x  // ::pos<0>
+    mov r15.z, r6.y  // ::pos<1>
+    mov r10.w, c11.w  // ::d<0>
+    mov r14.yzw, c11.w  // ::charIndex<0>, ::d<1,2>
     rep i0
-      mov r10.x, r14.x
-      add r10.xz, r1.xyyw, -r10.xyyw
-      mul r15.x, r1.z, r10.x  // Seg::p<0>
-      mul r15.y, r10.z, c3.x  // Seg::p<1>
-      add r14.zw, r14.z, -c6.xywy  // ::charIndex<0>
+      mov r15.y, r14.x  // ::pos<0>
+      mov r16.x, r10.w  // ::d<0>
+      mov r16.yz, r14.xzww  // ::d<1,2>
+      mov r3.y, r14.y  // ::charIndex<0>
+      mov r15.x, c11.w  // ::character<0>
+      rep i1
+        add r17.xy, r5.yzzw, -r15.yzzw
+        mul r17.yz, r1, r17.xxyw  // SegDisp::p<0,1>
 
-#line 105
-      mul r11.y, r2.y, r14.w
-      texldl r16, r11, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
+#line 245
+        mad r17.x, r17.z, c17.z, r17.y  // SegDisp::p<0>
 
-#line 78
-      add r16, r15.xyxy, -c6.ywxw  // ::pa<0,1,0,1>
-      max r17, r16.xxww, r0.zzyy
-      add r18, -r4.yyww, r17.yyww
-      cmp r17, r18, r4, r17  // ::t<0,0,0,0>
-      mad r16, r17, -c15_abs.zwwz, r16  // Manhattan::v<0,1,0,1>
+#line 168
+        add r17.yw, r17.xxzz, -c16.xwzx  // ::pa<0,1>
+        max r15.w, r17.y, r0.x
+        min r16.w, r3.z, r15.w  // ::t<0>
+        mad r18.xy, r16.w, -c11.ywzw, r17.ywzw
+        mul r18.xy, r0.w, r18_abs
+        mul r15.w, r18.y, c17.w  // ::v<1>
 
-#line 68
-      add r10.zw, r16_abs.xyyw, r16_abs.xyxz  // ::Manhattan<0,0>
+#line 131
+        mad r18.yz, r18.x, -c18.x, c18  // Rounder2::x<0>
 
-#line 81
-      add r10.zw, r10, -c0.x
-      mul_sat r10.zw, r0.w, r10
-      mad r15.zw, r10, c8.x, c8.y
-      mul r10.zw, r10, r10
-      mul r10.z, r10.z, r15.z  // ::ShortLine<0>
-
-#line 115
-      cmp r10.x, r10.x, c10.y, r10.z  // ::r<0>
-
-#line 105
-      mov r12.y, r11.y
-      texldl r16, r12, s0  // ::pixel<2>
-      add r10.z, -r16.z, c6.x
-
-#line 116
-      mad r10.w, r15.w, r10.w, r10.x  // ::r<0>
-      cmp r10.x, r10.z, r10.x, r10.w  // ::r<0>
-
-#line 105
-      mov r13.y, r12.y
-      texldl r16, r13, s0  // ::pixel<2>
-      add r10.z, -r16.z, c6.x
-
-#line 86
-      add r16, r15.xyxy, c19.zxzw  // ::pa<0,1,0,1>
-
-#line 80
-      max r10.w, r16.y, r0.y
-      min r11.y, r4.w, r10.w  // ::t<0>
-      mad r15.zw, r11.y, -c15_abs.xywz, r16.xyxy  // Manhattan::v<0,1>
-
-#line 68
-      add r10.w, r15_abs.w, r15_abs.z  // ::Manhattan<0>
-
-#line 81
-      add r10.w, r10.w, -c0.x
-      mul_sat r10.w, r0.w, r10.w
-      mad r11.y, r10.w, c8.x, c8.y
-      mul r10.w, r10.w, r10.w
-
-#line 117
-      mad r10.w, r11.y, r10.w, r10.x  // ::r<0>
-      cmp r10.x, r10.z, r10.x, r10.w  // ::r<0>
-
-#line 105
-      mov r5.y, r13.y
-      texldl r17, r5, s0  // ::pixel<2>
-      add r10.z, -r17.z, c6.x
-
-#line 88
-      max r10.w, -r16.z, r0.z
-      min r11.y, r4.y, r10.w  // ::t<0>
-      mad r15.zw, r11.y, c15, r16  // Manhattan::v<0,1>
-
-#line 68
-      add r10.w, r15_abs.w, r15_abs.z  // ::Manhattan<0>
-
-#line 89
-      add r10.w, r10.w, -c0.x
-      mul_sat r10.w, r0.w, r10.w
-      mad r11.y, r10.w, c8.x, c8.y
-      mul r10.w, r10.w, r10.w
-
-#line 118
-      mad r10.w, r11.y, r10.w, r10.x  // ::r<0>
-      cmp r10.x, r10.z, r10.x, r10.w  // ::r<0>
-
-#line 105
-      mov r3.w, r5.y
-      texldl r16, r3.ywzz, s0  // ::pixel<2>
-      add r5.y, -r16.z, c6.x
-
-#line 78
-      add r16, r15.xyxy, c20.zwzx  // ::pa<0,1,0,1>
-      mad r17, r0.x, -c11.x, -r16.yyww
-      cmp r17, r17, -r16.yyww, r0.y
-      add r18, -r4.w, r17.yyww
-      cmp r17, r18, r4.w, r17  // ::t<0,0,0,0>
-      mad r16, r17, c15.wzwz, r16  // Manhattan::v<0,1,0,1>
-
-#line 68
-      add r10.zw, r16_abs.xyyw, r16_abs.xyxz  // ::Manhattan<0,0>
-
-#line 81
-      add r10.zw, r10, -c0.x
-      mul_sat r10.zw, r0.w, r10
-      mad r15.zw, r10, c8.x, c8.y
-      mul r10.zw, r10, r10
-
-#line 119
-      mad r10.z, r15.z, r10.z, r10.x  // ::r<0>
-      cmp r5.y, r5.y, r10.x, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c8.zwww
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 120
-      mad r10.z, r15.w, r10.w, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c14.xyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 88
-      mul r10.z, r15.x, c8.x
-      max r11.y, r10.z, r0.z
-      min r10.z, r4.y, r11.y  // ::t<0>
-      mad r10.zw, r10.z, -c19.xyzx, r15.xyxy  // Manhattan::v<0,1>
-
-#line 68
-      add r10.z, r10_abs.w, r10_abs.z  // ::Manhattan<0>
-
-#line 89
-      add r10.z, r10.z, -c0.x
-      mul_sat r10.z, r0.w, r10.z
-      mad r10.w, r10.z, c8.x, c8.y
-      mul r10.z, r10.z, r10.z
-
-#line 121
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c14.zyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 86
-      add r10.zw, -r7.xyxy, r15.xyxy  // ::pa<0,1>
-      dp2add r11.y, r10.zwzw, r6, c10.y
-      mul r11.y, r2.x, r11.y
-      max r12.y, r11.y, r0.z
-      min r11.y, r4.y, r12.y  // ::t<0>
-      mad r10.zw, r6.xyxy, -r11.y, r10  // Manhattan::v<0,1>
-
-#line 68
-      add r10.z, r10_abs.w, r10_abs.z  // ::Manhattan<0>
-
-#line 89
-      add r10.z, r10.z, -c0.x
-      mul_sat r10.z, r0.w, r10.z
-      mad r10.w, r10.z, c8.x, c8.y
-      mul r10.z, r10.z, r10.z
-
-#line 122
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c14.wyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 94
-      add r10.zw, -r6, r15.xyxy  // ::pa<0,1>
-      add r11.y, r10.z, r10.z
-      max r12.y, r11.y, r0.z
-      min r11.y, r4.y, r12.y  // ::t<0>
-      mad r10.zw, r7, -r11.y, r10
-      mad r10.w, r0.x, c8.x, r10_abs.w
-      mul_sat r10.w, r1.w, r10.w
-      mad r11.y, r10.w, c8.x, c8.y
-      mul r10.w, r10.w, r10.w
-      mul r10.w, r10.w, r11.y
-      add r10.z, r10_abs.z, c9.x
-      mul r10.z, r10.z, c9.y
-      max r11.y, r10.z, c10.y
-      mad r10.z, r11.y, c8.x, c8.y
-      mul r11.y, r11.y, r11.y
-      mul r10.z, r10.z, r11.y
-
-#line 123
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c9.zwww
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 78
-      add r10.zw, r15.xyxy, c15.xywz  // ::pa<0,1>
-      max r11.y, r10.w, r0.y
-      min r12.y, r4.w, r11.y  // ::t<0>
-      mad r10.zw, r12.y, -c15_abs.xywz, r10  // Manhattan::v<0,1>
-
-#line 68
-      add r10.z, r10_abs.w, r10_abs.z  // ::Manhattan<0>
-
-#line 81
-      add r10.z, r10.z, -c0.x
-      mul_sat r10.z, r0.w, r10.z
-      mad r10.w, r10.z, c8.x, c8.y
-      mul r10.z, r10.z, r10.z
-
-#line 124
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c16.xyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 94
-      add r10.zw, -r8.xyxy, r15.xyxy  // ::pa<0,1>
-      mul r11.y, r10.z, c8.x
-      max r12.y, r11.y, r0.z
-      min r11.y, r4.y, r12.y  // ::t<0>
-      mad r10.zw, r8, -r11.y, r10
-      mad r10.w, r0.x, c8.x, r10_abs.w
-      mul_sat r10.w, r1.w, r10.w
-      mad r11.y, r10.w, c8.x, c8.y
-      mul r10.w, r10.w, r10.w
-      mul r10.w, r10.w, r11.y
-      add r10.z, r10_abs.z, c9.x
-      mul r10.z, r10.z, c9.y
-      max r11.y, r10.z, c10.y
-      mad r10.z, r11.y, c8.x, c8.y
-      mul r11.y, r11.y, r11.y
-      mul r10.z, r10.z, r11.y
-
-#line 125
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c16.zyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 88
-      add r10.z, r15.x, r15.x
-      max r11.y, r10.z, r0.z
-      min r10.z, r4.y, r11.y  // ::t<0>
-      mad r10.zw, r10.z, -c18, r15.xyxy  // Manhattan::v<0,1>
-
-#line 68
-      add r10.z, r10_abs.w, r10_abs.z  // ::Manhattan<0>
-
-#line 89
-      add r10.z, r10.z, -c0.x
-      mul_sat r10.z, r0.w, r10.z
-      mad r10.w, r10.z, c8.x, c8.y
-      mul r10.z, r10.z, r10.z
-
-#line 126
-      mad r10.z, r10.w, r10.z, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r10.z  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c16.wyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 94
-      mad r10.zw, r0.x, -c15_abs.xywz, r15.xyxy  // ::pa<0,1>
-      add r11.y, r10.z, r10.z
-      max r12.y, r11.y, r0.z
-      min r11.y, r4.y, r12.y  // ::t<0>
-      mad r15.zw, r9.xyxy, -r11.y, r10
-      mad r11.y, r0.x, c8.x, r15_abs.w
-      mul_sat r11.y, r1.w, r11.y
-      mad r12.y, r11.y, c8.x, c8.y
-      mul r11.y, r11.y, r11.y
-      mul r11.y, r11.y, r12.y
-      add r12.y, r15_abs.z, c9.x
-      mul r12.y, r12.y, c9.y
-      max r13.y, r12.y, c10.y
-      mad r12.y, r13.y, c8.x, c8.y
-      mul r13.y, r13.y, r13.y
-      mul r12.y, r12.y, r13.y
-
-#line 127
-      mad r11.y, r11.y, r12.y, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r11.y  // ::r<0>
-
-#line 105
-      mul r16, r3.xwzz, c17.xyyy
-      texldl r16, r16, s0  // ::pixel<2>
-      add r10.x, -r16.z, c6.x
-
-#line 80
-      max r11.y, r15.y, r0.y
-      min r12.y, r4.w, r11.y  // ::t<0>
-      mad r15.xy, r12.y, -c15_abs.wzzw, r15  // Manhattan::v<0,1>
-
-#line 68
-      add r11.y, r15_abs.y, r15_abs.x  // ::Manhattan<0>
-
-#line 81
-      add r11.y, r11.y, -c0.x
-      mul_sat r11.y, r0.w, r11.y
-      mad r12.y, r11.y, c8.x, c8.y
-      mul r11.y, r11.y, r11.y
+#line 173
+        mad r15.w, r18.x, -c17.w, -r15.w
 
 #line 128
-      mad r11.y, r12.y, r11.y, r5.y  // ::r<0>
-      cmp r5.y, r10.x, r5.y, r11.y  // ::r<0>
+        add r19.xy, r15.w, c18.yzzw  // Rounder2::y<0>
+        add r15.w, -r18.y, r19.x
+        add r20.x, r18.y, -r19.x  // ::a<0>
 
-#line 105
-      mul r15, r3.xwzz, c17.zyyy
-      texldl r15, r15, s0  // ::pixel<2>
-      add r3.w, -r15.z, c6.x
+#line 134
+        add r20.yz, -r18.y, c18.xwyw  // ::b<0>
 
-#line 96
-      mul r10.x, r10.z, c8.x
-      max r11.y, r10.x, r0.z
-      min r10.x, r4.y, r11.y  // ::t<0>
-      mad r10.xz, r9.zyww, -r10.x, r10.zyww
-      mad r10.z, r0.x, c8.x, r10_abs.z
-      mul_sat r10.z, r1.w, r10.z
-      mad r10.w, r10.z, c8.x, c8.y
-      mul r10.z, r10.z, r10.z
-      mul r10.z, r10.z, r10.w
-      add r10.x, r10_abs.x, c9.x
-      mul r10.x, r10.x, c9.y
-      max r11.y, r10.x, c10.y
-      mad r10.x, r11.y, c8.x, c8.y
-      mul r10.w, r11.y, r11.y
-      mul r10.x, r10.w, r10.x
+#line 131
+        add r16.w, -r20.y, r20.x
+        dp2add r17.w, r20, r20, c11.w
+        rsq r17.w, r17.w
+        rcp r17.w, r17.w
+        add r17.w, -r17.w, c24.w  // ::d<0>
+        mad r18.x, r18.x, -c17.w, -r19.x
+        add r18.x, r18.x, c24.w
+        add r18.x, -r18.x, r20.z
 
-#line 129
-      mad r10.x, r10.z, r10.x, r5.y  // ::r<0>
-      cmp r3.w, r3.w, r5.y, r10.x  // ::r<0>
+#line 137
+        add r20.w, r20.x, -c18.z
+        add r18.yw, r20.xxzz, c6.xxzy
+        dp2add r18.y, r20.wzzw, r18.ywzw, c11.w
+        rsq r18.y, r18.y
+        rcp r18.y, r18.y
+        add r18.y, -r18.y, c24.w  // ::d<0>
 
-#line 147
-      add r14.y, r3.w, r14.y  // ::d<0>
-      add r14.x, r2.z, r14.x  // ::pos<0>
-    endrep
-    mov_sat oC0.x, r14.y  // ::main<0>
+#line 140
+        mad r18.w, r19.y, c6.z, c6.w  // ::d<0>
+        cmp r18.x, r18.x, r18.w, r18.y  // ::d<0>
+        cmp r16.w, r16.w, -c11.w, -c11.y
+        cmp r16.w, r18.z, c11.w, r16.w
+        cmp r16.w, r16.w, r18.x, r17.w  // ::d<0>
+        cmp r15.w, r15.w, -c11.w, -c11.y
+        cmp r15.w, r19.y, c11.w, r15.w
+        cmp r15.w, r15.w, r19.x, r16.w  // ::d<0>
+
+#line 283
+        add r18.xy, r3.y, -c16.wxzw  // ::charIndex<0>
+
+#line 235
+        mul r11.y, r1.w, r18.x
+        texldl r19, r11, s0  // ::pixel<2>
+        add r16.w, -r19.z, c17.w
+
+#line 220
+        cmp r16.w, r16.w, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r19, r15.w, c8
+        mul_sat r19, r19, c9
+        mad r20, r19, c19.z, c19.w
+        mul r19, r19, r19
+        mul r18.xzw, r19, r20  // ::r<0>, ::b<0>
+
+#line 92
+        mad r15.w, r20.y, r19.y, -r18.x  // ::g<0>
+
+#line 225
+        mul r18.xw, r16.w, r18.wyzx  // ::Combine<0>
+
+#line 222
+        mul r17.w, r18.z, r18.x
+
+#line 226
+        mul r15.w, r16.w, r15.w
+        mul r15.w, r15.w, r15.w
+        rsq r15.w, r15.w
+        rcp r19.x, r15.w  // ::Combine<1>
+        mul r15.w, r17.w, c20.x
+        mul r15.w, r15.w, r15.w
+        rsq r15.w, r15.w
+        rcp r20.x, r15.w  // ::Combine<2>
 
 #line 158
-    mov oC0.yzw, c15_abs.xwwz  // ::main<1,2,3>
+        add r18.xz, r17, c28.zyyw  // ::pa<0,1>
+        max r15.w, r18.z, r0.y
+        min r16.w, r3.w, r15.w  // ::t<0>
+        mad r18.xz, r16.w, -c11.wyyw, r18
+        mul r18.xz, r0.w, r18_abs
+        mul r15.w, r18.z, c17.w  // ::v<1>
 
-// approximately 311 instruction slots used (30 texture, 281 arithmetic)
+#line 131
+        mad r19.zw, r18.x, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 163
+        mad r15.w, r18.x, -c17.w, -r15.w
+
+#line 128
+        add r20.zw, r15.w, c18.xyyz  // Rounder2::y<0>
+        add r15.w, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r16.w, -r21.y, r21.x
+        dp2add r17.w, r21, r21, c11.w
+        rsq r17.w, r17.w
+        rcp r17.w, r17.w
+        add r17.w, -r17.w, c24.w  // ::d<0>
+        mad r18.x, r18.x, -c17.w, -r20.z
+        add r18.x, r18.x, c24.w
+        add r18.x, -r18.x, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r21.xy, r21.xzzw, c6
+        dp2add r18.z, r21.wzzw, r21, c11.w
+        rsq r18.z, r18.z
+        rcp r18.z, r18.z
+        add r18.z, -r18.z, c24.w  // ::d<0>
+
+#line 140
+        mad r19.z, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r18.x, r18.x, r19.z, r18.z  // ::d<0>
+        cmp r16.w, r16.w, -c11.w, -c11.y
+        cmp r16.w, r19.w, c11.w, r16.w
+        cmp r16.w, r16.w, r18.x, r17.w  // ::d<0>
+        cmp r15.w, r15.w, -c11.w, -c11.y
+        cmp r15.w, r20.w, c11.w, r15.w
+        cmp r15.w, r15.w, r20.z, r16.w  // ::d<0>
+
+#line 235
+        mov r12.y, r11.y
+        texldl r21, r12, s0  // ::pixel<2>
+        add r11.y, -r21.z, c17.w
+
+#line 220
+        cmp r11.y, r11.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r15.w, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r15.w, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.xz, r11.y, r21.wyxw
+
+#line 222
+        mul r16.w, r21.z, r18.x
+
+#line 225
+        max r17.w, r18.w, r18.z  // ::Combine<0>
+        mul r19.y, r11.y, r15.w
+        dp2add r11.y, r19, r19, c11.w
+        rsq r11.y, r11.y
+        rcp r19.x, r11.y  // ::Combine<1>
+        mul r20.y, r16.w, c20.x
+        dp2add r11.y, r20, r20, c11.w
+        rsq r11.y, r11.y
+        rcp r20.x, r11.y  // ::Combine<2>
+
+#line 158
+        add r18.xz, r17, c28.zyxw  // ::pa<0,1>
+        max r11.y, r18.z, r0.y
+        min r15.w, r3.w, r11.y  // ::t<0>
+        mad r18.xz, r15.w, -c11.wyyw, r18
+        mul r18.xz, r0.w, r18_abs
+        mul r11.y, r18.z, c17.w  // ::v<1>
+
+#line 131
+        mad r18.zw, r18.x, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 163
+        mad r11.y, r18.x, -c17.w, -r11.y
+
+#line 128
+        add r19.zw, r11.y, c18.xyyz  // Rounder2::y<0>
+        add r11.y, -r18.z, r19.z
+        add r21.x, r18.z, -r19.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r18.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r15.w, -r21.y, r21.x
+        dp2add r16.w, r21, r21, c11.w
+        rsq r16.w, r16.w
+        rcp r16.w, r16.w
+        add r16.w, -r16.w, c24.w  // ::d<0>
+        mad r18.x, r18.x, -c17.w, -r19.z
+        add r18.x, r18.x, c24.w
+        add r18.x, -r18.x, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r20.zw, r21.xyxz, c6.xyxy
+        dp2add r18.z, r21.wzzw, r20.zwzw, c11.w
+        rsq r18.z, r18.z
+        rcp r18.z, r18.z
+        add r18.z, -r18.z, c24.w  // ::d<0>
+
+#line 140
+        mad r20.z, r19.w, c6.z, c6.w  // ::d<0>
+        cmp r18.x, r18.x, r20.z, r18.z  // ::d<0>
+        cmp r15.w, r15.w, -c11.w, -c11.y
+        cmp r15.w, r18.w, c11.w, r15.w
+        cmp r15.w, r15.w, r18.x, r16.w  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r19.w, c11.w, r11.y
+        cmp r11.y, r11.y, r19.z, r15.w  // ::d<0>
+
+#line 235
+        mov r13.y, r12.y
+        texldl r21, r13, s0  // ::pixel<2>
+        add r12.y, -r21.z, c17.w
+
+#line 220
+        cmp r12.y, r12.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r11.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r18.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r11.y, r22.y, r21.y, -r18.x  // ::g<0>
+
+#line 225
+        mul r18.xw, r12.y, r18.wyzx
+
+#line 222
+        mul r15.w, r18.z, r18.x
+
+#line 225
+        max r16.w, r17.w, r18.w  // ::Combine<0>
+        mul r19.y, r12.y, r11.y
+        dp2add r11.y, r19, r19, c11.w
+        rsq r11.y, r11.y
+        rcp r19.x, r11.y  // ::Combine<1>
+        mul r20.y, r15.w, c20.x
+        dp2add r11.y, r20, r20, c11.w
+        rsq r11.y, r11.y
+        rcp r20.x, r11.y  // ::Combine<2>
+
+#line 168
+        add r18.xz, r17, c16.wyxw  // ::pa<0,1>
+        max r11.y, -r18.x, r0.x
+        min r12.y, r3.z, r11.y  // ::t<0>
+        mad r18.zw, r12.y, -c11.xyxw, r18.xyxz
+        mul r18.zw, r0.w, r18_abs
+        mul r11.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 173
+        mad r11.y, r18.z, -c17.w, -r11.y
+
+#line 128
+        add r20.zw, r11.y, c18.xyyz  // Rounder2::y<0>
+        add r11.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r12.y, -r21.y, r21.x
+        dp2add r15.w, r21, r21, c11.w
+        rsq r15.w, r15.w
+        rcp r15.w, r15.w
+        add r15.w, -r15.w, c24.w  // ::d<0>
+        mad r17.w, r18.z, -c17.w, -r20.z
+        add r17.w, r17.w, c24.w
+        add r17.w, -r17.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r18.z, r21.wzzw, r18.zwzw, c11.w
+        rsq r18.z, r18.z
+        rcp r18.z, r18.z
+        add r18.z, -r18.z, c24.w  // ::d<0>
+
+#line 140
+        mad r18.w, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r17.w, r17.w, r18.w, r18.z  // ::d<0>
+        cmp r12.y, r12.y, -c11.w, -c11.y
+        cmp r12.y, r19.w, c11.w, r12.y
+        cmp r12.y, r12.y, r17.w, r15.w  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r20.w, c11.w, r11.y
+        cmp r11.y, r11.y, r20.z, r12.y  // ::d<0>
+
+#line 235
+        mov r8.y, r13.y
+        texldl r21, r8, s0  // ::pixel<2>
+        add r12.y, -r21.z, c17.w
+
+#line 220
+        cmp r12.y, r12.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r11.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r11.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r12.y, r21.xywx
+
+#line 222
+        mul r13.y, r21.z, r18.z
+
+#line 225
+        max r15.w, r16.w, r18.w  // ::Combine<0>
+        mul r19.y, r12.y, r11.y
+        dp2add r11.y, r19, r19, c11.w
+        rsq r11.y, r11.y
+        rcp r19.x, r11.y  // ::Combine<1>
+        mul r20.y, r13.y, c20.x
+        dp2add r11.y, r20, r20, c11.w
+        rsq r11.y, r11.y
+        rcp r20.x, r11.y  // ::Combine<2>
+
+#line 158
+        add r18.zw, r17.xyxz, -c28.xyzy  // ::pa<0,1>
+        max r11.y, -r18.w, r0.y
+        min r12.y, r3.w, r11.y  // ::t<0>
+        mad r18.zw, r12.y, -c11.xywx, r18
+        mul r18.zw, r0.w, r18_abs
+        mul r11.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 163
+        mad r11.y, r18.z, -c17.w, -r11.y
+
+#line 128
+        add r20.zw, r11.y, c18.xyyz  // Rounder2::y<0>
+        add r11.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r12.y, -r21.y, r21.x
+        dp2add r13.y, r21, r21, c11.w
+        rsq r13.y, r13.y
+        rcp r13.y, r13.y
+        add r13.y, -r13.y, c24.w  // ::d<0>
+        mad r16.w, r18.z, -c17.w, -r20.z
+        add r16.w, r16.w, c24.w
+        add r16.w, -r16.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r17.w, r21.wzzw, r18.zwzw, c11.w
+        rsq r17.w, r17.w
+        rcp r17.w, r17.w
+        add r17.w, -r17.w, c24.w  // ::d<0>
+
+#line 140
+        mad r18.z, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r16.w, r16.w, r18.z, r17.w  // ::d<0>
+        cmp r12.y, r12.y, -c11.w, -c11.y
+        cmp r12.y, r19.w, c11.w, r12.y
+        cmp r12.y, r12.y, r16.w, r13.y  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r20.w, c11.w, r11.y
+        cmp r11.y, r11.y, r20.z, r12.y  // ::d<0>
+
+#line 235
+        mov r7.w, r8.y
+        texldl r21, r7.ywzz, s0  // ::pixel<2>
+        add r8.y, -r21.z, c17.w
+
+#line 220
+        cmp r8.y, r8.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r11.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r11.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r8.y, r21.xywx
+
+#line 222
+        mul r12.y, r21.z, r18.z
+
+#line 225
+        max r13.y, r15.w, r18.w  // ::Combine<0>
+        mul r19.y, r8.y, r11.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r12.y, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 158
+        add r18.zw, r17.xyxz, c27  // ::pa<0,1>
+        max r8.y, -r18.w, r0.y
+        min r11.y, r3.w, r8.y  // ::t<0>
+        mad r18.zw, r11.y, -c11.xywx, r18
+        mul r18.zw, r0.w, r18_abs
+        mul r8.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 163
+        mad r8.y, r18.z, -c17.w, -r8.y
+
+#line 128
+        add r20.zw, r8.y, c18.xyyz  // Rounder2::y<0>
+        add r8.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r11.y, -r21.y, r21.x
+        dp2add r12.y, r21, r21, c11.w
+        rsq r12.y, r12.y
+        rcp r12.y, r12.y
+        add r12.y, -r12.y, c24.w  // ::d<0>
+        mad r15.w, r18.z, -c17.w, -r20.z
+        add r15.w, r15.w, c24.w
+        add r15.w, -r15.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r16.w, r21.wzzw, r18.zwzw, c11.w
+        rsq r16.w, r16.w
+        rcp r16.w, r16.w
+        add r16.w, -r16.w, c24.w  // ::d<0>
+
+#line 140
+        mad r17.w, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r15.w, r15.w, r17.w, r16.w  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r19.w, c11.w, r11.y
+        cmp r11.y, r11.y, r15.w, r12.y  // ::d<0>
+        cmp r8.y, r8.y, -c11.w, -c11.y
+        cmp r8.y, r20.w, c11.w, r8.y
+        cmp r8.y, r8.y, r20.z, r11.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c20.yzzz
+        texldl r21, r21, s0  // ::pixel<2>
+        add r11.y, -r21.z, c17.w
+
+#line 220
+        cmp r11.y, r11.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r11.y, r21.xywx
+
+#line 222
+        mul r12.y, r21.z, r18.z
+
+#line 225
+        max r15.w, r13.y, r18.w  // ::Combine<0>
+        mul r19.y, r11.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r12.y, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 170
+        mul r8.y, r17.x, -c15.x
+        max r11.y, r8.y, r0.x
+        min r8.y, r3.z, r11.y  // ::t<0>
+        mad r18.zw, r8.y, -c28.xyzx, r17.xyxz
+        mul r18.zw, r0.w, r18_abs
+        mul r8.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 173
+        mad r8.y, r18.z, -c17.w, -r8.y
+
+#line 128
+        add r20.zw, r8.y, c18.xyyz  // Rounder2::y<0>
+        add r8.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r11.y, -r21.y, r21.x
+        dp2add r12.y, r21, r21, c11.w
+        rsq r12.y, r12.y
+        rcp r12.y, r12.y
+        add r12.y, -r12.y, c24.w  // ::d<0>
+        mad r13.y, r18.z, -c17.w, -r20.z
+        add r13.y, r13.y, c24.w
+        add r13.y, -r13.y, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r16.w, r21.wzzw, r18.zwzw, c11.w
+        rsq r16.w, r16.w
+        rcp r16.w, r16.w
+        add r16.w, -r16.w, c24.w  // ::d<0>
+
+#line 140
+        mad r17.w, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r13.y, r13.y, r17.w, r16.w  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r19.w, c11.w, r11.y
+        cmp r11.y, r11.y, r13.y, r12.y  // ::d<0>
+        cmp r8.y, r8.y, -c11.w, -c11.y
+        cmp r8.y, r20.w, c11.w, r8.y
+        cmp r8.y, r8.y, r20.z, r11.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c20.wzzz
+        texldl r21, r21, s0  // ::pixel<2>
+        add r11.y, -r21.z, c17.w
+
+#line 220
+        cmp r11.y, r11.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r11.y, r21.xywx
+
+#line 222
+        mul r12.y, r21.z, r18.z
+
+#line 225
+        max r13.y, r15.w, r18.w  // ::Combine<0>
+        mul r19.y, r11.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r12.y, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 168
+        add r18.zw, -r4.xyxz, r17.xyxz  // ::pa<0,1>
+        dp2add r8.y, r18.zwzw, r5.xwzw, c11.w
+        mul r8.y, r2.z, r8.y
+        max r11.y, r8.y, r0.x
+        min r8.y, r3.z, r11.y  // ::t<0>
+        mad r18.zw, r5.xyxw, -r8.y, r18
+        mul r18.zw, r0.w, r18_abs
+        mul r8.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 173
+        mad r8.y, r18.z, -c17.w, -r8.y
+
+#line 128
+        add r20.zw, r8.y, c18.xyyz  // Rounder2::y<0>
+        add r8.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r11.y, -r21.y, r21.x
+        dp2add r12.y, r21, r21, c11.w
+        rsq r12.y, r12.y
+        rcp r12.y, r12.y
+        add r12.y, -r12.y, c24.w  // ::d<0>
+        mad r15.w, r18.z, -c17.w, -r20.z
+        add r15.w, r15.w, c24.w
+        add r15.w, -r15.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r16.w, r21.wzzw, r18.zwzw, c11.w
+        rsq r16.w, r16.w
+        rcp r16.w, r16.w
+        add r16.w, -r16.w, c24.w  // ::d<0>
+
+#line 140
+        mad r17.w, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r15.w, r15.w, r17.w, r16.w  // ::d<0>
+        cmp r11.y, r11.y, -c11.w, -c11.y
+        cmp r11.y, r19.w, c11.w, r11.y
+        cmp r11.y, r11.y, r15.w, r12.y  // ::d<0>
+        cmp r8.y, r8.y, -c11.w, -c11.y
+        cmp r8.y, r20.w, c11.w, r8.y
+        cmp r8.y, r8.y, r20.z, r11.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c21.xyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r11.y, -r21.z, c17.w
+
+#line 220
+        cmp r11.y, r11.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r11.y, r21.xywx
+
+#line 222
+        mul r12.y, r21.z, r18.z
+
+#line 225
+        max r15.w, r13.y, r18.w  // ::Combine<0>
+        mul r19.y, r11.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r12.y, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 178
+        add r18.zw, -r6, r17.xyxz  // ::pa<0,1>
+
+#line 181
+        dp2add r8.y, r18.z, -r9.x, r18.w
+        mad r17.yw, r1.x, c21.xzzw, r17.y
+        mul r17.yw, r0.w, r17
+        mul r11.y, r17.w, c17.w
+        mad r12.y, r17.y, c16.w, -c16.x
+        max r13.y, -c8.z, r12.y
+        min r12.y, r13.y, c11.y  // ::xl<0>
+        mad r17.yw, r1.x, c21.xwzz, r17.x
+        mul r17.yw, r0.w, r17
+        mul r13.y, r17.y, c17.w
+        max r16.w, r13.y, -c8.z
+        min r13.y, r16.w, c11.y  // ::xr<0>
+
+#line 187
+        mad r16.w, r18.w, r9.y, -r0.x
+        add r16.w, r16.w, c11.y
+        max r17.y, -c8.z, r16.w
+        min r16.w, r17.y, c11.y  // ::yu<0>
+        mad r17.y, r18.w, -r9.y, -r0.x
+        add r17.y, r17.y, c15.x
+        max r18.z, -c8.z, r17.y
+        min r17.y, r18.z, c11.y  // ::yd<0>
+
+#line 191
+        mad r8.y, r8_abs.y, -r9.z, c11.y  // Rounder::x<0>
+        mul r18.z, r12.y, r13.y  // Rounder::y<0>
+        mul r16.w, r16.w, r17.y
+        mul r16.w, r9.w, r16.w
+
+#line 102
+        mad r19.zw, r16.w, c10.x, c10.xyzy  // Rounder::z<0>
+        min r16.w, r19.w, r8.y
+        mov_sat r19.z, r19.z
+        lrp r17.y, r19.z, r8.y, r16.w  // Rounder::x<0>
+        cmp r8.y, r19.w, r8.y, r17.y  // Rounder::x<0>
+        min r16.w, r18.z, r8.y  // ::d<0>
+        add r17.y, r8.y, -c24.w
+        add r8.y, -r8.y, c24.w  // Rounder::x<0>
+        mad r18.z, r12.y, -r13.y, c24.w  // Rounder::y<0>
+        max r18.w, r8.y, c11.w
+        min r21.x, r18.w, c8.z  // Rounder::x<0>
+        max r8.y, r18.z, c11.w
+        min r21.y, r8.y, c8.z  // Rounder::y<0>
+        dp2add r8.y, r21, r21, c11.w
+        rsq r8.y, r8.y
+        rcp r8.y, r8.y
+        add r8.y, -r8.y, c24.w  // ::d<0>
+
+#line 113
+        mad r12.y, r12.y, r13.y, -c24.w
+
+#line 119
+        cmp r12.y, r12.y, r16.w, r8.y  // ::d<0>
+        cmp r8.y, r17.y, r12.y, r8.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c25.xyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r12.y, -r21.z, c17.w
+
+#line 220
+        cmp r12.y, r12.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r12.y, r21.xywx
+
+#line 222
+        mul r16.w, r21.z, r18.z
+
+#line 225
+        max r17.y, r15.w, r18.w  // ::Combine<0>
+        mul r19.y, r12.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r16.w, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 158
+        add r18.zw, r17.xyxz, -c11.xywx  // ::pa<0,1>
+        max r8.y, r18.w, r0.y
+        min r12.y, r3.w, r8.y  // ::t<0>
+        mad r18.zw, r12.y, -c11.xywy, r18
+        mul r18.zw, r0.w, r18_abs
+        mul r8.y, r18.w, c17.w  // ::v<1>
+
+#line 131
+        mad r19.zw, r18.z, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 163
+        mad r8.y, r18.z, -c17.w, -r8.y
+
+#line 128
+        add r20.zw, r8.y, c18.xyyz  // Rounder2::y<0>
+        add r8.y, -r19.z, r20.z
+        add r21.x, r19.z, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r19.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r12.y, -r21.y, r21.x
+        dp2add r15.w, r21, r21, c11.w
+        rsq r15.w, r15.w
+        rcp r15.w, r15.w
+        add r15.w, -r15.w, c24.w  // ::d<0>
+        mad r16.w, r18.z, -c17.w, -r20.z
+        add r16.w, r16.w, c24.w
+        add r16.w, -r16.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.zw, r21.xyxz, c6.xyxy
+        dp2add r18.z, r21.wzzw, r18.zwzw, c11.w
+        rsq r18.z, r18.z
+        rcp r18.z, r18.z
+        add r18.z, -r18.z, c24.w  // ::d<0>
+
+#line 140
+        mad r18.w, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r16.w, r16.w, r18.w, r18.z  // ::d<0>
+        cmp r12.y, r12.y, -c11.w, -c11.y
+        cmp r12.y, r19.w, c11.w, r12.y
+        cmp r12.y, r12.y, r16.w, r15.w  // ::d<0>
+        cmp r8.y, r8.y, -c11.w, -c11.y
+        cmp r8.y, r20.w, c11.w, r8.y
+        cmp r8.y, r8.y, r20.z, r12.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c25.zyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r12.y, -r21.z, c17.w
+
+#line 220
+        cmp r12.y, r12.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.zw, r12.y, r21.xywx
+
+#line 222
+        mul r15.w, r21.z, r18.z
+
+#line 225
+        max r16.w, r17.y, r18.w  // ::Combine<0>
+        mul r19.y, r12.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r15.w, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 178
+        add r18.zw, -r10.xyxy, r17.xyxz  // ::pa<0,1>
+        mul r8.y, r9.x, r18.z
+        mad r8.y, r8.y, c15.x, r18.w
+        mad r18.xz, r1.x, c21.zyww, r18.x
+        mul r18.xz, r0.w, r18
+        mul r12.y, r18.z, c17.w
+        mad r15.w, r18.x, c16.w, -c16.x
+        max r17.y, -c8.z, r15.w
+        min r15.w, r17.y, c11.y  // ::xl<0>
+
+#line 187
+        mad r17.y, r18.w, r9.y, -r0.x
+        add r17.y, r17.y, c11.y
+        max r18.x, -c8.z, r17.y
+        min r17.y, r18.x, c11.y  // ::yu<0>
+        mad r18.x, r18.w, -r9.y, -r0.x
+        add r18.x, r18.x, c15.x
+        max r19.z, -c8.z, r18.x
+        min r18.x, r19.z, c11.y  // ::yd<0>
+
+#line 191
+        mad r8.y, r8_abs.y, -r9.z, c11.y  // Rounder::x<0>
+        mul r18.z, r13.y, r15.w  // Rounder::y<0>
+        mul r17.y, r17.y, r18.x
+        mul r17.y, r9.w, r17.y
+
+#line 102
+        mad r18.xw, r17.y, c10.x, c10.zyzy  // Rounder::z<0>
+        min r17.y, r18.w, r8.y
+        mov_sat r18.x, r18.x
+        lrp r19.z, r18.x, r8.y, r17.y  // Rounder::x<0>
+        cmp r8.y, r18.w, r8.y, r19.z  // Rounder::x<0>
+        min r17.y, r18.z, r8.y  // ::d<0>
+        add r18.x, r8.y, -c24.w
+        add r8.y, -r8.y, c24.w  // Rounder::x<0>
+        mad r18.z, r15.w, -r13.y, c24.w  // Rounder::y<0>
+        max r18.w, r8.y, c11.w
+        min r21.x, r18.w, c8.z  // Rounder::x<0>
+        max r8.y, r18.z, c11.w
+        min r21.y, r8.y, c8.z  // Rounder::y<0>
+        dp2add r8.y, r21, r21, c11.w
+        rsq r8.y, r8.y
+        rcp r8.y, r8.y
+        add r8.y, -r8.y, c24.w  // ::d<0>
+
+#line 113
+        mad r13.y, r15.w, r13.y, -c24.w
+
+#line 119
+        cmp r13.y, r13.y, r17.y, r8.y  // ::d<0>
+        cmp r8.y, r18.x, r13.y, r8.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c25.wyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r13.y, -r21.z, c17.w
+
+#line 220
+        cmp r13.y, r13.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r18.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r18.x  // ::g<0>
+
+#line 225
+        mul r18.xw, r13.y, r18.wyzx
+
+#line 222
+        mul r15.w, r18.z, r18.x
+
+#line 225
+        max r17.y, r16.w, r18.w  // ::Combine<0>
+        mul r19.y, r13.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r15.w, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 170
+        add r8.y, r17.x, r17.x
+        max r13.y, r8.y, r0.x
+        min r8.y, r3.z, r13.y  // ::t<0>
+        mad r18.xz, r8.y, -c27.zyww, r17
+        mul r18.xz, r0.w, r18_abs
+        mul r8.y, r18.z, c17.w  // ::v<1>
+
+#line 131
+        mad r18.zw, r18.x, -c18.x, c18.xyyz  // Rounder2::x<0>
+
+#line 173
+        mad r8.y, r18.x, -c17.w, -r8.y
+
+#line 128
+        add r19.zw, r8.y, c18.xyyz  // Rounder2::y<0>
+        add r8.y, -r18.z, r19.z
+        add r21.x, r18.z, -r19.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r18.z, c18.xwyw  // ::b<0>
+
+#line 131
+        add r13.y, -r21.y, r21.x
+        dp2add r15.w, r21, r21, c11.w
+        rsq r15.w, r15.w
+        rcp r15.w, r15.w
+        add r15.w, -r15.w, c24.w  // ::d<0>
+        mad r16.w, r18.x, -c17.w, -r19.z
+        add r16.w, r16.w, c24.w
+        add r16.w, -r16.w, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r18.xz, r21, c6.xyyw
+        dp2add r18.x, r21.wzzw, r18.xzzw, c11.w
+        rsq r18.x, r18.x
+        rcp r18.x, r18.x
+        add r18.x, -r18.x, c24.w  // ::d<0>
+
+#line 140
+        mad r18.z, r19.w, c6.z, c6.w  // ::d<0>
+        cmp r16.w, r16.w, r18.z, r18.x  // ::d<0>
+        cmp r13.y, r13.y, -c11.w, -c11.y
+        cmp r13.y, r18.w, c11.w, r13.y
+        cmp r13.y, r13.y, r16.w, r15.w  // ::d<0>
+        cmp r8.y, r8.y, -c11.w, -c11.y
+        cmp r8.y, r19.w, c11.w, r8.y
+        cmp r8.y, r8.y, r19.z, r13.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c26.xyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r13.y, -r21.z, c17.w
+
+#line 220
+        cmp r13.y, r13.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r8.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r18.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r22.y, r21.y, -r18.x  // ::g<0>
+
+#line 225
+        mul r18.xw, r13.y, r18.wyzx
+
+#line 222
+        mul r15.w, r18.z, r18.x
+
+#line 225
+        max r16.w, r17.y, r18.w  // ::Combine<0>
+        mul r19.y, r13.y, r8.y
+        dp2add r8.y, r19, r19, c11.w
+        rsq r8.y, r8.y
+        rcp r19.x, r8.y  // ::Combine<1>
+        mul r20.y, r15.w, c20.x
+        dp2add r8.y, r20, r20, c11.w
+        rsq r8.y, r8.y
+        rcp r20.x, r8.y  // ::Combine<2>
+
+#line 178
+        mad r18.xz, c0.x, -r4.wyyw, r17  // ::pa<0,1>
+        mul r8.y, r6.x, r18.x
+        mad r13.y, r8.y, -c15.x, r18.z
+        mad r15.w, r17.w, c16.w, -c16.x
+        max r17.y, -c8.z, r15.w
+        min r15.w, r17.y, c11.y  // ::xl<0>
+        max r17.y, r12.y, -c8.z
+        min r12.y, r17.y, c11.y  // ::xr<0>
+
+#line 187
+        mad r17.y, r18.z, r10.z, -r0.x
+        add r17.y, r17.y, c11.y
+        max r18.x, -c8.z, r17.y
+        min r17.y, r18.x, c11.y  // ::yu<0>
+        mad r17.w, r18.z, -r10.z, -r0.x
+        add r17.w, r17.w, c15.x
+        max r18.x, -c8.z, r17.w
+        min r17.w, r18.x, c11.y  // ::yd<0>
+
+#line 191
+        mad r13.y, r13_abs.y, -r9.z, c11.y  // Rounder::x<0>
+        mul r18.x, r12.y, r15.w  // Rounder::y<0>
+        mul r17.y, r17.y, r17.w
+        mul r17.y, r9.w, r17.y
+
+#line 102
+        mad r17.yw, r17.y, c10.x, c10.xzzy  // Rounder::z<0>
+        min r18.w, r17.w, r13.y
+        mov_sat r17.y, r17.y
+        lrp r19.z, r17.y, r13.y, r18.w  // Rounder::x<0>
+        cmp r13.y, r17.w, r13.y, r19.z  // Rounder::x<0>
+        min r19.z, r18.x, r13.y  // ::d<0>
+        add r18.x, r13.y, -c24.w
+        add r13.y, -r13.y, c24.w  // Rounder::x<0>
+        mad r18.w, r15.w, -r12.y, c24.w  // Rounder::y<0>
+        max r19.w, r13.y, c11.w
+        min r21.x, r19.w, c8.z  // Rounder::x<0>
+        max r13.y, r18.w, c11.w
+        min r21.y, r13.y, c8.z  // Rounder::y<0>
+        dp2add r13.y, r21, r21, c11.w
+        rsq r13.y, r13.y
+        rcp r13.y, r13.y
+        add r13.y, -r13.y, c24.w  // ::d<0>
+
+#line 113
+        mad r12.y, r15.w, r12.y, -c24.w
+
+#line 119
+        cmp r12.y, r12.y, r19.z, r13.y  // ::d<0>
+        cmp r12.y, r18.x, r12.y, r13.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c26.zyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r13.y, -r21.z, c17.w
+
+#line 220
+        cmp r13.y, r13.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r12.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r12.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r18.xw, r13.y, r21.wyzx
+
+#line 222
+        mul r18.x, r21.z, r18.x
+
+#line 225
+        max r19.z, r16.w, r18.w  // ::Combine<0>
+        mul r19.y, r13.y, r12.y
+        dp2add r12.y, r19, r19, c11.w
+        rsq r12.y, r12.y
+        rcp r19.x, r12.y  // ::Combine<1>
+        mul r20.y, r18.x, c20.x
+        dp2add r12.y, r20, r20, c11.w
+        rsq r12.y, r12.y
+        rcp r20.x, r12.y  // ::Combine<2>
+
+#line 160
+        max r12.y, r17.z, r0.y
+        min r13.y, r3.w, r12.y  // ::t<0>
+        mad r17.xz, r13.y, -c11.wyyw, r17
+        mul r17.xz, r0.w, r17_abs
+        mul r12.y, r17.z, c17.w  // ::v<1>
+
+#line 131
+        mad r18.xw, r17.x, -c18.x, c18.yyzz  // Rounder2::x<0>
+
+#line 163
+        mad r12.y, r17.x, -c17.w, -r12.y
+
+#line 128
+        add r20.zw, r12.y, c18.xyyz  // Rounder2::y<0>
+        add r12.y, -r18.x, r20.z
+        add r21.x, r18.x, -r20.z  // ::a<0>
+
+#line 134
+        add r21.yz, -r18.x, c18.xwyw  // ::b<0>
+
+#line 131
+        add r13.y, -r21.y, r21.x
+        dp2add r16.w, r21, r21, c11.w
+        rsq r16.w, r16.w
+        rcp r16.w, r16.w
+        add r16.w, -r16.w, c24.w  // ::d<0>
+        mad r17.x, r17.x, -c17.w, -r20.z
+        add r17.x, r17.x, c24.w
+        add r17.x, -r17.x, r21.z
+
+#line 137
+        add r21.w, r21.x, -c18.z
+        add r21.xy, r21.xzzw, c6
+        dp2add r17.z, r21.wzzw, r21, c11.w
+        rsq r17.z, r17.z
+        rcp r17.z, r17.z
+        add r17.z, -r17.z, c24.w  // ::d<0>
+
+#line 140
+        mad r18.x, r20.w, c6.z, c6.w  // ::d<0>
+        cmp r17.x, r17.x, r18.x, r17.z  // ::d<0>
+        cmp r13.y, r13.y, -c11.w, -c11.y
+        cmp r13.y, r18.w, c11.w, r13.y
+        cmp r13.y, r13.y, r17.x, r16.w  // ::d<0>
+        cmp r12.y, r12.y, -c11.w, -c11.y
+        cmp r12.y, r20.w, c11.w, r12.y
+        cmp r12.y, r12.y, r20.z, r13.y  // ::d<0>
+
+#line 235
+        mul r21, r7.xwzz, c26.wyyy
+        texldl r21, r21, s0  // ::pixel<2>
+        add r13.y, -r21.z, c17.w
+
+#line 220
+        cmp r13.y, r13.y, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r21, r12.y, c8
+        mul_sat r21, r21, c9
+        mad r22, r21, c19.z, c19.w
+        mul r21, r21, r21
+        mul r21.xzw, r21, r22  // ::r<0>, ::b<0>
+
+#line 92
+        mad r12.y, r22.y, r21.y, -r21.x  // ::g<0>
+
+#line 225
+        mul r17.xz, r13.y, r21.wyxw
+
+#line 222
+        mul r16.w, r21.z, r17.x
+
+#line 225
+        max r18.x, r19.z, r17.z  // ::Combine<0>
+        mul r19.y, r13.y, r12.y
+        dp2add r12.y, r19, r19, c11.w
+        rsq r12.y, r12.y
+        rcp r19.x, r12.y  // ::Combine<1>
+        mul r20.y, r16.w, c20.x
+        dp2add r12.y, r20, r20, c11.w
+        rsq r12.y, r12.y
+        rcp r20.x, r12.y  // ::Combine<2>
+
+#line 181
+        mad r8.y, r8.y, c15.x, r18.z
+        max r12.y, r11.y, -c8.z
+        min r11.y, r12.y, c11.y  // ::xr<0>
+
+#line 191
+        mad r8.y, r8_abs.y, -r9.z, c11.y  // Rounder::x<0>
+        mul r12.y, r11.y, r15.w  // Rounder::y<0>
+
+#line 102
+        min r13.y, r17.w, r8.y
+        lrp r16.w, r17.y, r8.y, r13.y  // Rounder::x<0>
+        cmp r8.y, r17.w, r8.y, r16.w  // Rounder::x<0>
+        min r13.y, r12.y, r8.y  // ::d<0>
+        add r12.y, r8.y, -c24.w
+        add r8.y, -r8.y, c24.w  // Rounder::x<0>
+        mad r16.w, r15.w, -r11.y, c24.w  // Rounder::y<0>
+        max r17.x, r8.y, c11.w
+        min r21.x, r17.x, c8.z  // Rounder::x<0>
+        max r8.y, r16.w, c11.w
+        min r21.y, r8.y, c8.z  // Rounder::y<0>
+        dp2add r8.y, r21, r21, c11.w
+        rsq r8.y, r8.y
+        rcp r8.y, r8.y
+        add r8.y, -r8.y, c24.w  // ::d<0>
+
+#line 113
+        mad r11.y, r15.w, r11.y, -c24.w
+
+#line 119
+        cmp r11.y, r11.y, r13.y, r8.y  // ::d<0>
+        cmp r8.y, r12.y, r11.y, r8.y  // ::d<0>
+
+#line 235
+        mul r17, r7.xwzz, c14.xyyy
+        texldl r17, r17, s0  // ::pixel<2>
+        add r7.w, -r17.z, c17.w
+
+#line 220
+        cmp r7.w, r7.w, c19.x, c19.y  // ::lev<0>
+
+#line 95
+        add r17, r8.y, c8
+        mul_sat r17, r17, c9
+        mad r21, r17, c19.z, c19.w
+        mul r17, r17, r17
+        mul r17.xzw, r17, r21  // ::r<0>, ::b<0>
+
+#line 92
+        mad r8.y, r21.y, r17.y, -r17.x  // ::g<0>
+
+#line 225
+        mul r17.xy, r7.w, r17.wxzw
+
+#line 222
+        mul r11.y, r17.z, r17.x
+
+#line 225
+        max r21.x, r18.x, r17.y  // ::Combine<0>
+        mul r19.y, r7.w, r8.y
+        dp2add r7.w, r19, r19, c11.w
+        rsq r7.w, r7.w
+        rcp r21.y, r7.w  // ::Combine<1>
+        mul r20.y, r11.y, c20.x
+        dp2add r7.w, r20, r20, c11.w
+        rsq r7.w, r7.w
+        rcp r21.z, r7.w  // ::Combine<2>
+
+#line 281
+        add r17.xyz, r21, r16  // ::d<0,1,2>
+        add r15.y, r2.x, r15.y  // ::pos<0>
+
+#line 285
+        if_ge r15.x, r2.w
+          mov r16.xyz, r17  // ::d<0,1,2>
+          mov r3.y, r18.y  // ::charIndex<0>
+          break_ne c11.y, -c11.y
+        endif
+
+#line 279
+        add r15.x, r15.x, c11.y  // ::character<0>
+
+#line 288
+        mov r16.xyz, r17  // ::d<0,1,2>
+        mov r3.y, r18.y  // ::charIndex<0>
+      endrep
+      add r15.z, -r2.y, r15.z  // ::pos<1>
+      if_ge r15.x, r0.z
+        mov r10.w, r16.x  // ::d<0>
+        mov r14.zw, r16.xyyz  // ::d<1,2>
+        break_ne c11.y, -c11.y
+      endif
+      mov r14.xy, r3  // ::pos<0>, ::charIndex<0>
+      mov r10.w, r16.x  // ::d<0>
+      mov r14.zw, r16.xyyz  // ::d<1,2>
+    endrep
+
+#line 302
+    mul r0.xyz, r14.z, c14.zwww
+    mad r0.xyz, r10.w, c13, r0
+    mad oC0.xyz, r14.w, c30, r0  // ::main<0,1,2>
+    mov oC0.w, c11.y  // ::main<3>
+
+// approximately 1022 instruction slots used (30 texture, 992 arithmetic)

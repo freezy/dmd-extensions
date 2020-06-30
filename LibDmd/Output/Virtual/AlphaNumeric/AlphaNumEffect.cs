@@ -10,8 +10,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		static AlphaNumEffect()
 		{
 			// Associate _pixelShader with our compiled pixel shader
-			// fxc /O1 /Fc /Zi /T ps_5_0 /Gec /Fo AlphaNum.ps AlphaNum.fx
-			// nodemon -e fx --exec "fxc /O1 /Fc /Zi /T ps_3_0 /Fo AlphaNum.ps AlphaNum.fx"
+			// fxc /O1 /Fc /Zi /T ps_3_0 /Fo AlphaNum.ps AlphaNum.fx
+			// or: nodemon -e fx --exec "fxc /O1 /Fc /Zi /T ps_3_0 /Fo AlphaNum.ps AlphaNum.fx"
 			_pixelShader.UriSource = Global.MakePackUri("Output/Virtual/AlphaNumeric/AlphaNum.ps");
 		}
 		private static readonly PixelShader _pixelShader = new PixelShader();
