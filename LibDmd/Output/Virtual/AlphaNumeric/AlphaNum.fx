@@ -18,6 +18,11 @@ float4 InnerColor : register(C7);
 float4 OuterColor : register(C8);
 float4 UnlitColor : register(C9);
 
+static float InnerPaddingX = 0.5;
+static float InnerPaddingY = 0.4;
+static float OuterPaddingX = 0.2;
+static float OuterPaddingY = 0.2;
+
 sampler2D input : register(S0);
 
 // Static computed vars for optimization
@@ -41,6 +46,22 @@ static float2 dbl = bl + float2(0.0, SegmentWidth);
 static float2 dbr = br + float2(0.0, SegmentWidth);
 
 static float2 dp = br + float2(SegmentWidth * 4.0, gSegmentGap);
+
+static float2 resolution = float2(TargetWidth, TargetHeight);
+
+static float2 outerPadding = float2(OuterPaddingX * resolution.y / resolution.x, OuterPaddingY);
+static float2 innerPadding = float2(InnerPaddingX * resolution.y / resolution.x, InnerPaddingY);
+	
+static float2 cellSize = float2(
+	1. / NumChars + innerPadding.x,
+	1. / NumLines * 2. + SegmentWidth * 2.
+);
+	
+static float2 originPos = float2(
+	-.5 + cellSize.x / 2. - innerPadding.x / 2. + outerPadding.x,
+	SegmentWidth + outerPadding.y
+);
+	
 
 float Manhattan(float2 v)
 {
@@ -111,26 +132,7 @@ float Seg(int charIndex, float2 p)
 
 float4 main(float2 fragCoord : VPOS) : COLOR
 {
-	float InnerPaddingX = 0.5;
-	float InnerPaddingY = 0.4;
-	float OuterPaddingX = 0.2;
-	float OuterPaddingY = 0.2;
-	
-	float2 resolution = float2(TargetWidth, TargetHeight);
 
-	float2 outerPadding = float2(OuterPaddingX * resolution.y / resolution.x, OuterPaddingY);
-	float2 innerPadding = float2(InnerPaddingX * resolution.y / resolution.x, InnerPaddingY);
-	
-	float2 cellSize = float2(
-		1. / NumChars + innerPadding.x,
-		1. / NumLines * 2. + SegmentWidth * 2.
-	);
-	
-	float2 originPos = float2(
-		-.5 + cellSize.x / 2. - innerPadding.x / 2. + outerPadding.x,
-		SegmentWidth + outerPadding.y
-	);
-	
 	float2 uv = float2(
 		(fragCoord.x / resolution.x) * (1 + (NumChars - 1) * innerPadding.x + 4.0 * outerPadding.x) - 0.5 - outerPadding.x,
 		(fragCoord.y / resolution.y * 2.) * (1 + SegmentWidth + 2. * outerPadding.y) - 1. - outerPadding.y

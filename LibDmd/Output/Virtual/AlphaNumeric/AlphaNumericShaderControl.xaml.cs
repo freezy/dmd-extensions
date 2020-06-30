@@ -24,7 +24,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public bool IsAvailable => true;
 
 		public DisplaySetting DisplaySetting { get; set; }
-		public bool IgnoreAspectRatio { get; set; }
+		public bool IgnoreAspectRatio { get; set; } = true;
 		public VirtualDisplay Host { get; set; }
 
 		private const int Dpi = 96;

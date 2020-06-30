@@ -97,7 +97,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
 					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
 					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
-					SendToDisplay(5, data10x1);
+					SendToDisplay(4, data10x1);
 					break;
 
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
