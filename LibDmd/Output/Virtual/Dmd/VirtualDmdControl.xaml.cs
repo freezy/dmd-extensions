@@ -11,7 +11,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
 	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
-	// these others are for debugging purpose. basically you can make the virtual dmd 
+	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
 	// pindmd1/2: IGray2Destination, IGray4Destination, IResizableDestination, IFixedSizeDestination
@@ -110,9 +110,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdateEffectParams()
 		{
 			Dispatcher.Invoke(() => {
-				Effect.AspectRatio = (double)DmdWidth / DmdHeight;
-				Effect.BlockCount = Math.Max(DmdWidth, DmdHeight);
-				Effect.Max = Effect.AspectRatio * 0.47 * _dotSize;
+				Effect.Width = DmdWidth;
+				Effect.Height = DmdHeight;
+				Effect.Size = Effect.Width / Effect.Height * 0.47f * (float)_dotSize;
 			});
 		}
 

@@ -22,11 +22,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			PixelShader = _pixelShader;
 			UpdateShaderValue(InputProperty);
-			UpdateShaderValue(BlockCountProperty);
-			UpdateShaderValue(MaxProperty);
-			UpdateShaderValue(AspectRatioProperty);
-			UpdateShaderValue(FilterColorProperty);
-			UpdateShaderValue(IsMonochromeProperty);
+			UpdateShaderValue(WidthProperty);
+			UpdateShaderValue(HeightProperty);
+			UpdateShaderValue(SizeProperty);
 		}
 
 		public Brush Input
@@ -38,55 +36,36 @@ namespace LibDmd.Output.Virtual.Dmd
 		public static readonly DependencyProperty InputProperty =
 			RegisterPixelShaderSamplerProperty("Input", typeof(DmdEffect), 0);
 
-		public double BlockCount
+		public float Width
 		{
-			get { return (double)GetValue(BlockCountProperty); }
-			set { SetValue(BlockCountProperty, value); }
+			get { return (float)GetValue(WidthProperty); }
+			set { SetValue(WidthProperty, value); }
 		}
 
-		public static readonly DependencyProperty BlockCountProperty =
-			DependencyProperty.Register("BlockCount", typeof(double), typeof(DmdEffect),
-			  new UIPropertyMetadata(1.0d, PixelShaderConstantCallback(0)));
+		public static readonly DependencyProperty WidthProperty =
+			DependencyProperty.Register("Width", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(1024f, PixelShaderConstantCallback(0)));
 
-		public double Max
+		public float Height
 		{
-			get { return (double)GetValue(MaxProperty); }
-			set { SetValue(MaxProperty, value); }
+			get { return (float)GetValue(HeightProperty); }
+			set { SetValue(HeightProperty, value); }
 		}
 
-		public static readonly DependencyProperty MaxProperty =
-			DependencyProperty.Register("Max", typeof(double), typeof(DmdEffect),
-			  new UIPropertyMetadata(1.0d, PixelShaderConstantCallback(2)));
+		public static readonly DependencyProperty HeightProperty =
+			DependencyProperty.Register("Height", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(256f, PixelShaderConstantCallback(1)));
 
-		public double AspectRatio
+		public float Size
 		{
-			get { return (double)GetValue(AspectRatioProperty); }
-			set { SetValue(AspectRatioProperty, value); }
+			get { return (float)GetValue(SizeProperty); }
+			set { SetValue(SizeProperty, value); }
 		}
 
-		public static readonly DependencyProperty AspectRatioProperty =
-			DependencyProperty.Register("AspectRatio", typeof(double), typeof(DmdEffect),
-			  new UIPropertyMetadata(1.0d, PixelShaderConstantCallback(3)));
+		public static readonly DependencyProperty SizeProperty =
+			DependencyProperty.Register("Size", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(1.0f, PixelShaderConstantCallback(2)));
 
-		public Color FilterColor
-		{
-			get { return (Color)GetValue(FilterColorProperty); }
-			set { SetValue(FilterColorProperty, value); }
-		}
-
-		public static readonly DependencyProperty FilterColorProperty =
-			DependencyProperty.Register("FilterColor", typeof(Color), typeof(DmdEffect),
-			  new UIPropertyMetadata(new Color(), PixelShaderConstantCallback(1)));
-
-		public double IsMonochrome
-		{
-			get { return (double)GetValue(IsMonochromeProperty); }
-			set { SetValue(IsMonochromeProperty, value); }
-		}
-
-		public static readonly DependencyProperty IsMonochromeProperty =
-			DependencyProperty.Register("IsMonochrome", typeof(double), typeof(DmdEffect),
-			  new UIPropertyMetadata(0.0d, PixelShaderConstantCallback(4)));
 	}
 
 	internal static class Global
