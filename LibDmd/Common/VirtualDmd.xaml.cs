@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -62,8 +63,14 @@ namespace LibDmd.Common
 				toggleAspect.Header = "Ignore Aspect Ratio";
 				toggleAspect.IsCheckable = true;
 				ParentGrid.ContextMenu.Items.Add(toggleAspect);
-
 			}
+			PositionChanged.Throttle(TimeSpan.FromMilliseconds(16)).Subscribe(position => {
+				Logger.Info("Position changed: {0}", position);
+				Dispatcher.Invoke(() => {
+					Dmd.Effect.Width = (float)position.Width;
+					Dmd.Effect.Height = (float)position.Height;
+				});
+			});
 		}
 
 		private void SavePositionGlobally(object sender, RoutedEventArgs e)

@@ -53,7 +53,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderBitmap(BitmapSource bmp)
 		{
 			try {
-				Dispatcher.Invoke(() => Dmd.Source = bmp);
+				Dispatcher.Invoke(() => Effect.Input = new ImageBrush(bmp));
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Virtual DMD renderer task seems to be lost.");
 			}
@@ -110,9 +110,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdateEffectParams()
 		{
 			Dispatcher.Invoke(() => {
-				Effect.Width = DmdWidth;
-				Effect.Height = DmdHeight;
-				Effect.Size = Effect.Width / Effect.Height * 0.47f * (float)_dotSize;
+				Effect.NumCols = DmdWidth;
+				Effect.NumRows = DmdHeight;
+				Effect.Size = 1.0f;
 			});
 		}
 

@@ -56,6 +56,26 @@ namespace LibDmd.Output.Virtual.Dmd
 			DependencyProperty.Register("Height", typeof(float), typeof(DmdEffect),
 			  new UIPropertyMetadata(256f, PixelShaderConstantCallback(1)));
 
+		public float NumCols
+		{
+			get { return (float)GetValue(NumColsProperty); }
+			set { SetValue(NumColsProperty, value); }
+		}
+
+		public static readonly DependencyProperty NumColsProperty =
+			DependencyProperty.Register("NumCols", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(128f, PixelShaderConstantCallback(2)));
+
+		public float NumRows
+		{
+			get { return (float)GetValue(NumRowsProperty); }
+			set { SetValue(NumRowsProperty, value); }
+		}
+
+		public static readonly DependencyProperty NumRowsProperty =
+			DependencyProperty.Register("NumRows", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(32f, PixelShaderConstantCallback(3)));
+
 		public float Size
 		{
 			get { return (float)GetValue(SizeProperty); }
@@ -64,7 +84,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public static readonly DependencyProperty SizeProperty =
 			DependencyProperty.Register("Size", typeof(float), typeof(DmdEffect),
-			  new UIPropertyMetadata(1.0f, PixelShaderConstantCallback(2)));
+			  new UIPropertyMetadata(1.25f, PixelShaderConstantCallback(4)));
 
 	}
 
