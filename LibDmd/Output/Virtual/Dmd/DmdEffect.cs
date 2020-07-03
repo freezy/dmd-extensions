@@ -22,8 +22,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			PixelShader = _pixelShader;
 			UpdateShaderValue(InputProperty);
-			UpdateShaderValue(WidthProperty);
-			UpdateShaderValue(HeightProperty);
+			UpdateShaderValue(DotWidthProperty);
+			UpdateShaderValue(DotHeightProperty);
+			UpdateShaderValue(PixelWidthProperty);
+			UpdateShaderValue(PixelHeightProperty);
 			UpdateShaderValue(SizeProperty);
 		}
 
@@ -36,45 +38,45 @@ namespace LibDmd.Output.Virtual.Dmd
 		public static readonly DependencyProperty InputProperty =
 			RegisterPixelShaderSamplerProperty("Input", typeof(DmdEffect), 0);
 
-		public float Width
+		public float DotWidth
 		{
-			get { return (float)GetValue(WidthProperty); }
-			set { SetValue(WidthProperty, value); }
+			get { return (float)GetValue(DotWidthProperty); }
+			set { SetValue(DotWidthProperty, value); }
 		}
 
-		public static readonly DependencyProperty WidthProperty =
-			DependencyProperty.Register("Width", typeof(float), typeof(DmdEffect),
-			  new UIPropertyMetadata(1024f, PixelShaderConstantCallback(0)));
+		public static readonly DependencyProperty DotWidthProperty =
+			DependencyProperty.Register("DotWidth", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(128f, PixelShaderConstantCallback(0)));
 
-		public float Height
+		public float DotHeight
 		{
-			get { return (float)GetValue(HeightProperty); }
-			set { SetValue(HeightProperty, value); }
+			get { return (float)GetValue(DotHeightProperty); }
+			set { SetValue(DotHeightProperty, value); }
 		}
 
-		public static readonly DependencyProperty HeightProperty =
-			DependencyProperty.Register("Height", typeof(float), typeof(DmdEffect),
-			  new UIPropertyMetadata(256f, PixelShaderConstantCallback(1)));
+		public static readonly DependencyProperty DotHeightProperty =
+			DependencyProperty.Register("DotHeight", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(32f, PixelShaderConstantCallback(1)));
 
-		public float NumCols
+		public float PixelWidth
 		{
-			get { return (float)GetValue(NumColsProperty); }
-			set { SetValue(NumColsProperty, value); }
+			get { return (float)GetValue(PixelWidthProperty); }
+			set { SetValue(PixelWidthProperty, value); }
 		}
 
-		public static readonly DependencyProperty NumColsProperty =
-			DependencyProperty.Register("NumCols", typeof(float), typeof(DmdEffect),
-			  new UIPropertyMetadata(128f, PixelShaderConstantCallback(2)));
+		public static readonly DependencyProperty PixelWidthProperty =
+			DependencyProperty.Register("PixelWidth", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(1024f, PixelShaderConstantCallback(2)));
 
-		public float NumRows
+		public float PixelHeight
 		{
-			get { return (float)GetValue(NumRowsProperty); }
-			set { SetValue(NumRowsProperty, value); }
+			get { return (float)GetValue(PixelHeightProperty); }
+			set { SetValue(PixelHeightProperty, value); }
 		}
 
-		public static readonly DependencyProperty NumRowsProperty =
-			DependencyProperty.Register("NumRows", typeof(float), typeof(DmdEffect),
-			  new UIPropertyMetadata(32f, PixelShaderConstantCallback(3)));
+		public static readonly DependencyProperty PixelHeightProperty =
+			DependencyProperty.Register("PixelHeight", typeof(float), typeof(DmdEffect),
+			  new UIPropertyMetadata(256f, PixelShaderConstantCallback(3)));
 
 		public float Size
 		{

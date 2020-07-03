@@ -64,12 +64,8 @@ namespace LibDmd.Common
 				toggleAspect.IsCheckable = true;
 				ParentGrid.ContextMenu.Items.Add(toggleAspect);
 			}
-			PositionChanged.Throttle(TimeSpan.FromMilliseconds(16)).Subscribe(position => {
-				Logger.Info("Position changed: {0}", position);
-				Dispatcher.Invoke(() => {
-					Dmd.Effect.Width = (float)position.Width;
-					Dmd.Effect.Height = (float)position.Height;
-				});
+			PositionChanged.Subscribe(position => {
+				Dispatcher.Invoke(() => Dmd.UpdateResolution((float)position.Width, (float)position.Height));
 			});
 		}
 

@@ -10,7 +10,7 @@
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Image x:Name="Dmd" Source="red-128x32.png">
             <Image.Effect>
-                <dmd:DmdEffect x:Name="Effect" Width="1024" Height="256" NumCols="128" NumRows="32" Size="1.0"/>
+                <dmd:DmdEffect x:Name="Effect" Size="1.0"/>
             </Image.Effect>
         </Image>
         <Grid.Effect>

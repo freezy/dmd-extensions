@@ -98,6 +98,13 @@ namespace LibDmd.Output.Virtual.Dmd
 			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
 		}
 
+		public void UpdateResolution(float width, float height) {
+			Dispatcher.Invoke(() => {
+				Effect.PixelWidth = width;
+				Effect.PixelHeight = height;
+			});
+		}
+
 		public void SetDimensions(int width, int height)
 		{
 			Logger.Info("Resizing virtual DMD to {0}x{1}", width, height);
@@ -110,8 +117,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdateEffectParams()
 		{
 			Dispatcher.Invoke(() => {
-				Effect.NumCols = DmdWidth;
-				Effect.NumRows = DmdHeight;
+				Effect.DotWidth = DmdWidth;
+				Effect.DotHeight = DmdHeight;
 				Effect.Size = 1.0f;
 			});
 		}
