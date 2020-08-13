@@ -124,6 +124,15 @@
       <HintPath>..\packages\SharpAvi.2.1.0\lib\net45\SharpAvi.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SharpGL, Version=3.1.1.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.3.1.1\lib\net45\SharpGL.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGL.SceneGraph, Version=3.1.1.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.SceneGraph.3.1.1\lib\net45\SharpGL.SceneGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGL.WPF, Version=3.1.1.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.WPF.3.1.1\lib\net45\SharpGL.WPF.dll</HintPath>
+    </Reference>
     <Reference Include="SkiaSharp, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\SkiaSharp.1.68.0-preview28\lib\net45\SkiaSharp.dll</HintPath>
     </Reference>
@@ -304,6 +313,16 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml.cs">
+      <DependentUpon>DmdPaddingSetting.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\Dmd\DmdSettings.xaml.cs">
+      <DependentUpon>DmdSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\Dmd\Helper.cs" />
+    <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
+      <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\ISource.cs" />
@@ -321,12 +340,8 @@
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
-    <Compile Include="Output\Virtual\Dmd\DmdEffect.cs" />
     <Compile Include="Output\IDestination.cs" />
     <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
-    <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
-      <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
@@ -336,11 +351,16 @@
     <Compile Include="RenderGraphCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Output\Virtual\Dmd\Dmd.ps" />
     <None Include="app.config" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Dmd.frag" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Blur.vert" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Blur.frag" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Dmd.vert" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x32.png" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\08-center-top.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\full-10.svg" />
@@ -434,8 +454,6 @@
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full-10.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full.svg" />
-    <Content Include="Output\Virtual\Dmd\Dmd.fx" />
-    <Resource Include="Output\Virtual\Dmd\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml">
@@ -462,9 +480,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\DmdSettings.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

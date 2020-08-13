@@ -218,9 +218,25 @@ namespace LibDmd.DmdDevice
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
 		public double DotSize => GetDouble("dotsize", 1.0);
+		public double DotRounding => GetDouble("dotrounding", 1.0);
+		public double UnlitDot => GetDouble("unlitdot", 0.0);
+
+		public double Brightness => GetDouble("brightness", 1.0);
+		public double DotGlow => GetDouble("dotglow", 0.0);
+		public double BackGlow => GetDouble("backglow", 0.0);
+		public string GlassTexture => GetString("glass", null);
+		public System.Windows.Thickness GlassPadding => new System.Windows.Thickness(GetDouble("glass.padding.left", 0), GetDouble("glass.padding.top", 0), GetDouble("glass.padding.right", 0), GetDouble("glass.padding.bottom", 0));
+		public Color GlassColor => fromSKColor(GetSKColor("glass.color", SKColor.Empty));
+		public string FrameTexture => GetString("frame", null);
+		public System.Windows.Thickness FramePadding => new System.Windows.Thickness(GetDouble("frame.padding.left", 0), GetDouble("frame.padding.top", 0), GetDouble("frame.padding.right", 0), GetDouble("frame.padding.bottom", 0));
 
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+		}
+
+		private static Color fromSKColor(SKColor skColor)
+		{
+			return Color.FromArgb(skColor.Alpha, skColor.Red, skColor.Green, skColor.Blue);
 		}
 
 		public void SetPosition(VirtualDisplayPosition position, bool onlyForGame)
@@ -237,6 +253,29 @@ namespace LibDmd.DmdDevice
 		{
 			DoWrite = false;
 			Set("ignorear", ignoreAspectRatio, false);
+			Save();
+		}
+
+		public void SetOptions(double brightness, double dotSize, double dotRounding, double unlitDot, double dotGlow, double backGlow, string glass, System.Windows.Thickness glassPadding, Color glassColor, string frame, System.Windows.Thickness framePadding, bool onlyForGame)
+		{
+			DoWrite = false;
+			Set("brightness", brightness, onlyForGame);
+			Set("dotsize", dotSize, onlyForGame);
+			Set("dotrounding", dotRounding, onlyForGame);
+			Set("unlitdot", unlitDot, onlyForGame);
+			Set("dotglow", dotGlow, onlyForGame);
+			Set("backglow", backGlow, onlyForGame);
+			Set("glass", glass, onlyForGame);
+			Set("glass.color", new SKColor(glassColor.R, glassColor.G, glassColor.B, glassColor.A).ToString(), onlyForGame);
+			Set("glass.padding.left", glassPadding.Left, onlyForGame);
+			Set("glass.padding.top", glassPadding.Top, onlyForGame);
+			Set("glass.padding.right", glassPadding.Right, onlyForGame);
+			Set("glass.padding.bottom", glassPadding.Bottom, onlyForGame);
+			Set("frame", frame, onlyForGame);
+			Set("frame.padding.left", framePadding.Left, onlyForGame);
+			Set("frame.padding.top", framePadding.Top, onlyForGame);
+			Set("frame.padding.right", framePadding.Right, onlyForGame);
+			Set("frame.padding.bottom", framePadding.Bottom, onlyForGame);
 			Save();
 		}
 	}
