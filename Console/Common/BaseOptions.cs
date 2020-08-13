@@ -28,6 +28,54 @@ namespace DmdExt.Common
 		[Option("virtual-dotsize", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
 		public double VirtualDmdDotSize { get; set; } = 1;
 
+		[Option("virtual-dotrounding", HelpText = "Roundiness the dots of the virtual DMD. Default: 1")]
+		public double VirtualDmdDotRounding { get; set; } = 1;
+
+		[Option("virtual-unlitdot", HelpText = "Default light for unlit dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdUnlitDot { get; set; } = 0;
+
+		[Option("virtual-brightness", HelpText = "Brightness of the dots of the virtual DMD. Default: 1")]
+		public double VirtualDmdBrightness { get; set; } = 1;
+
+		[Option("virtual-dotglow", HelpText = "Glow of the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdDotGlow { get; set; } = 0;
+
+		[Option("virtual-backglow", HelpText = "Glow of the background behind the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdBackGlow { get; set; } = 0;
+
+		[Option("virtual-glasstexture", HelpText = "Texture for the glass above the dots of the virtual DMD. Default: no texture")]
+		public string VirtualDmdGlassTexture { get; set; } = "";
+
+		[Option("virtual-glasspaddingleft", HelpText = "Left padding of the glass above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdGlassPaddingLeft { get; set; } = 0;
+		
+		[Option("virtual-glasspaddingright", HelpText = "Right padding of the glass above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdGlassPaddingRight { get; set; } = 0;
+		
+		[Option("virtual-glasspaddingtop", HelpText = "Top padding of the glass above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdGlassPaddingTop { get; set; } = 0;
+		
+		[Option("virtual-glasspaddingbottom", HelpText = "Bottom padding of the glass above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdGlassPaddingBottom { get; set; } = 0;
+
+		[Option("virtual-glasscolor", HelpText = "Tint of the glass above the dots of the virtual DMD. Default: invisible")]
+		public Color VirtualDmdGlassColor { get; set; } = Color.FromArgb(0, 0, 0, 0);
+
+		[Option("virtual-frametexture", HelpText = "Texture for the frame above the dots of the virtual DMD. Default: no texture")]
+		public string VirtualDmdFrameTexture { get; set; } = "";
+
+		[Option("virtual-framepaddingleft", HelpText = "Left padding of the frame above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdFramePaddingLeft { get; set; } = 0;
+
+		[Option("virtual-framepaddingright", HelpText = "Right padding of the frame above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdFramePaddingRight { get; set; } = 0;
+
+		[Option("virtual-framepaddingtop", HelpText = "Top padding of the frame above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdFramePaddingTop { get; set; } = 0;
+
+		[Option("virtual-framepaddingbottom", HelpText = "Bottom padding of the frame above the dots of the virtual DMD. Default: 0")]
+		public double VirtualDmdFramePaddingBottom { get; set; } = 0;
+
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 
@@ -170,6 +218,26 @@ namespace DmdExt.Common
 			: (int) ((double)_options.VirtualDmdPosition[2] / 4);
 
 		public double DotSize => _options.VirtualDmdDotSize;
+
+		public double DotRounding => _options.VirtualDmdDotRounding;
+
+		public double UnlitDot => _options.VirtualDmdUnlitDot;
+
+		public double Brightness => _options.VirtualDmdBrightness;
+
+		public double DotGlow => _options.VirtualDmdDotGlow;
+
+		public double BackGlow => _options.VirtualDmdBackGlow;
+
+		public string GlassTexture => _options.VirtualDmdGlassTexture;
+
+		public System.Windows.Thickness GlassPadding => new System.Windows.Thickness(_options.VirtualDmdGlassPaddingLeft, _options.VirtualDmdGlassPaddingTop, _options.VirtualDmdGlassPaddingRight, _options.VirtualDmdGlassPaddingBottom);
+
+		public Color GlassColor => _options.VirtualDmdGlassColor;
+
+		public string FrameTexture => _options.VirtualDmdFrameTexture;
+
+		public System.Windows.Thickness FramePadding => new System.Windows.Thickness(_options.VirtualDmdFramePaddingLeft, _options.VirtualDmdFramePaddingTop, _options.VirtualDmdFramePaddingRight, _options.VirtualDmdFramePaddingBottom);
 
 		public bool HasGameOverride(string key)
 		{

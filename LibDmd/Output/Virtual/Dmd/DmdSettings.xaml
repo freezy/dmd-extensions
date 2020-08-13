@@ -1,0 +1,179 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:local="clr-namespace:LibDmd.Common"
+        xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual"
+        xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        x:Class="LibDmd.Output.Virtual.Dmd.DmdSettings"
+        mc:Ignorable="d" 
+        WindowStyle="ToolWindow" 
+        Height="auto" 
+        Width="auto" 
+        ResizeMode="NoResize" 
+        SizeToContent="WidthAndHeight" 
+        Title="Customize DMD display">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="1024" Height="256" Margin="0,0,0,16"></dmd:VirtualDmdControl>
+
+        <GroupBox x:Name="Frame" Grid.Row="1" Header="Frame" Padding="8,0,8,0" Margin="0,0,0,16" Width="1024">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row ="0" Orientation="Horizontal">
+                        <Label Content="Frame overlay:" VerticalAlignment="Center" Width="100"/>
+                        <TextBox x:Name="FramePath" VerticalAlignment="Center" Width="450"/>
+                        <Button Content="..." VerticalAlignment="Center" Width="24" Height="18" Margin="0,0,8,0" Click="SelectFrameClicked"/>
+                    </StackPanel>
+
+                    <dmd:DmdPaddingSetting Grid.Row="1" x:Name="FramePadding" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+                </Grid>
+
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Grid.Column="1" Margin="8,0,8,0" />
+
+                <TextBlock TextWrapping="WrapWithOverflow" Grid.Column="2">
+					The <Bold>frame texture</Bold> is overlayed above the DMD. It may be usefull for setups where the DMD is placed on 
+					a landscape oriented screen together with the backglass, or if the DMD screen aspect ratio does not match the emulated DMD aspect ratio.
+					The <Bold>padding</Bold> allows to layout the DMD inside the frame.
+                </TextBlock>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox x:Name="Glass" Grid.Row="2" Header="Glass" Padding="8,0,8,0" Margin="0,0,0,16" Width="1024">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Glass texture:" VerticalAlignment="Center" Width="100"/>
+                            <TextBox x:Name="GlassPath" VerticalAlignment="Center" Width="450"/>
+                            <Button Content="..." VerticalAlignment="Center" Width="24" Height="18" Margin="0,0,8,0" Click="SelectGlassClicked"/>
+                        </StackPanel>
+
+                        <Label Grid.Row="1" Content="Glass tint:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <xctk:ColorPicker x:Name="GlassColor" Grid.Row="1" VerticalAlignment="Bottom" Width="60" Margin="40,2,370,2" DisplayColorAndName="False"/>
+
+                        <Label Grid.Row="1" Content="Glass/DMD lighting:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,140,0"/>
+                        <Slider x:Name="GlassDMDLightingSlider" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="100" Maximum="1" Margin="0,0,38,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+                        <TextBox x:Name="GlassDMDLightingValue" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
+
+                        <dmd:DmdPaddingSetting Grid.Row="2" x:Name="GlassPadding" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+                    </Grid>
+                </Grid>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Grid.Column="1" Margin="8,0,8,0" />
+                <TextBlock TextWrapping="WrapWithOverflow" Grid.Column="2">
+					The <Bold>glass texture</Bold> is blended other the DMD using additive blending (it may add light but never darken the DMD).
+					It is first tinted by the selected <Bold>color</Bold>, and then lighted by the DMD according to the selected <Bold>light factor</Bold>. 
+					The <Bold>padding</Bold> allows to extend the DMD with fake dots under the glass, for example near the frame border.
+                </TextBlock>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="3" Grid.Column="2" Header="DMD" Padding="8,0,8,0" Margin="0,0,0,16" Width="1024">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="588"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+                    <Label Grid.Column="0" Content="Dot Size:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                    <Slider x:Name="DotSizeSlider" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.8"/>
+                    <TextBox x:Name="DotSizeValue" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Row="1" Grid.Column="0" Content="Dot Rounding:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<Slider x:Name="DotRoundingSlider" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.1"/>
+					<TextBox x:Name="DotRoundingValue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Row="2" Grid.Column="0" Content="Unlit Dot:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<Slider x:Name="UnlitDotSlider" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.25" Margin="110,0,8,0" LargeChange="0.01" SmallChange="0.001" TickFrequency="0.005" Value="0.01"/>
+					<TextBox x:Name="UnlitDotValue" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+                    <Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>
+                    <TextBox x:Name="BrightnessValue" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Row="1" Grid.Column="1" Content="Dot Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<Slider x:Name="DotGlowSlider" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+					<TextBox x:Name="DotGlowValue" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
+
+					<Label Grid.Row="2" Grid.Column="1" Content="Background Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+                    <Slider x:Name="BackLevelSlider" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+                    <TextBox x:Name="BackLevelValue" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
+
+					<CheckBox x:Name="IgnoreAspectRatio" Grid.Column="0" Grid.Row="3" Content="Ignore Aspect Ratio" VerticalAlignment="Center" Margin="8,8,0,8"/>
+                </Grid>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Grid.Column="1" Margin="8,0,8,0" />
+                <TextBlock TextWrapping="WrapWithOverflow" Grid.Column="2">
+					<Bold>Dot Size</Bold> allow to select from small dots to sqaure dots. <Bold>Brightness</Bold> adjust the overall brightness. 
+					<Bold>Dot Glow</Bold> adjusts the level of glow around the dots while <Bold>Background Glow</Bold> adjusts the overall, very fuzzy, 
+					glow of the DMD on its background. Check <Bold>Ignore Aspect Ratio</Bold> to allow other aspect ratios than the one of the emulated DMD.
+                </TextBlock>
+            </Grid>
+        </GroupBox>
+
+        <Button Content="Reset" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Top" Width="90" Height="24" IsCancel="True" Click="ResetClicked"/>
+
+		<Button x:Name="SaveForAllButton" Content="Save globally" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" IsDefault="True" Click="SaveGloballyClicked" Margin="0,0,100,0"/>
+        <Button x:Name="SaveForGameButton" Content="Save for game" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Click="SaveForGameClicked" Margin="0,0,200,0"/>
+
+        <Button Content="Close" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Margin="0,0,0,0" IsCancel="True" Click="CancelClicked"/>
+	</Grid>
+</Window>
