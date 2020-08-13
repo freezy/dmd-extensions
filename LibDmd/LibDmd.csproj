@@ -304,6 +304,18 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\Dmd\BaseDmdEffect.cs" />
+    <Compile Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml.cs">
+      <DependentUpon>DmdPaddingSetting.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\Dmd\DmdSettings.xaml.cs">
+      <DependentUpon>DmdSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Output\Virtual\Dmd\EnhancedDmdEffect.cs" />
+    <Compile Include="Output\Virtual\Dmd\Helper.cs" />
+    <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
+      <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />
     <Compile Include="Input\ISource.cs" />
@@ -321,12 +333,8 @@
     <Compile Include="Output\Pin2Dmd\Pin2Dmd.cs" />
     <Compile Include="Output\PinDmd1\PinDmd1.cs" />
     <Compile Include="Output\PinDmd2\PinDmd2.cs" />
-    <Compile Include="Output\Virtual\Dmd\DmdEffect.cs" />
     <Compile Include="Output\IDestination.cs" />
     <Compile Include="Input\ScreenGrabber\NativeCapture.cs" />
-    <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
-      <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Output\PinDmd3\PinDmd3.cs" />
     <Compile Include="Processor\GridProcessor.cs" />
     <Compile Include="Processor\AbstractProcessor.cs" />
@@ -336,11 +344,15 @@
     <Compile Include="RenderGraphCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Output\Virtual\Dmd\Dmd.ps" />
     <None Include="app.config" />
+    <Resource Include="Output\Virtual\Dmd\EnhancedDmd.ps" />
+    <Resource Include="Output\Virtual\Dmd\BaseDmd.ps" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Output\Virtual\Dmd\BaseDmd.fx" />
+    <Content Include="Output\Virtual\Dmd\EnhancedDmd.fx" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x32.png" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\08-center-top.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\full-10.svg" />
@@ -433,8 +445,6 @@
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full-10.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full.svg" />
-    <Content Include="Output\Virtual\Dmd\Dmd.fx" />
-    <Resource Include="Output\Virtual\Dmd\red-128x32.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml">
@@ -461,9 +471,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\DmdSettings.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\VirtualDmdControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

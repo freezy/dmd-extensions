@@ -3,18 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:virtual="clr-namespace:LibDmd.Output.Virtual"
              xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
              mc:Ignorable="d" 
+			 Background="Transparent"
              d:DesignHeight="100" d:DesignWidth="400">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Image x:Name="Dmd" Source="red-128x32.png">
-            <Image.Effect>
-                <dmd:DmdEffect x:Name="Effect" BlockCount="128" AspectRatio="4" Max="1.25"/>
-            </Image.Effect>
-        </Image>
-        <Grid.Effect>
-            <BlurEffect Radius="2"></BlurEffect>
-        </Grid.Effect>
-    </Grid>
+	<UserControl.Resources>
+		<ImageBrush x:Name="Glass"  x:Key="Glass"/>
+		<ImageBrush x:Name="DmdLevel1" x:Key="DmdLevel1"/>
+		<ImageBrush x:Name="DmdLevel2" x:Key="DmdLevel2"/>
+		<ImageBrush x:Name="DmdLevel3" x:Key="DmdLevel3"/>
+		<ImageBrush x:Name="DmdLevel4" x:Key="DmdLevel4"/>
+		<dmd:EnhancedDmdEffect x:Name="FullEffect" x:Key="FullEffect" Glass="{StaticResource Glass}" DmdLevel1="{StaticResource DmdLevel1}" DmdLevel2="{StaticResource DmdLevel2}" DmdLevel3="{StaticResource DmdLevel3}" DmdLevel4="{StaticResource DmdLevel4}" Brightness="1.0" />
+		<dmd:BaseDmdEffect x:Name="BaseEffect" x:Key="BaseEffect" Brightness="1.0" />
+	</UserControl.Resources>
+	<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+		<Image x:Name="Dmd" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+		<Image x:Name="DmdFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+	</Grid>
 </UserControl>

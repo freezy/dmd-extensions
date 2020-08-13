@@ -77,6 +77,14 @@ namespace LibDmd.DmdDevice
 		double Height { get; }
 		double DotSize { get; }
 		bool HasGameOverride(string key);
+		double Brightness { get; }
+		double DotGlow { get; }
+		double BackGlow { get; }
+		string GlassTexture { get; }
+		System.Windows.Thickness GlassPadding { get; }
+		Color GlassColor { get; }
+		string FrameTexture { get; }
+		System.Windows.Thickness FramePadding { get; }
 	}
 
 	public interface IVirtualAlphaNumericDisplayConfig

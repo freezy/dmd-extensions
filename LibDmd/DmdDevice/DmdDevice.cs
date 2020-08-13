@@ -482,6 +482,14 @@ namespace LibDmd.DmdDevice
 			_virtualDmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 			_virtualDmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
 			_virtualDmd.DotSize = _config.VirtualDmd.DotSize;
+			_virtualDmd.Brightness = _config.VirtualDmd.Brightness;
+			_virtualDmd.DotGlow = _config.VirtualDmd.DotGlow;
+			_virtualDmd.BackGlow = _config.VirtualDmd.BackGlow;
+			_virtualDmd.GlassTexture = _config.VirtualDmd.GlassTexture;
+			_virtualDmd.GlassPadding = _config.VirtualDmd.GlassPadding;
+			_virtualDmd.GlassColor = _config.VirtualDmd.GlassColor;
+			_virtualDmd.FrameTexture = _config.VirtualDmd.FrameTexture;
+			_virtualDmd.FramePadding = _config.VirtualDmd.FramePadding;
 			_virtualDmd.SetGameName(_gameName);
 
 			// find the game's dmd position in VPM's registry

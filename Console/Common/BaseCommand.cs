@@ -131,7 +131,15 @@ namespace DmdExt.Common
 				Width = config.Width,
 				Height = config.Height,
 				IgnoreAspectRatio = config.IgnoreAr,
-				DotSize = config.DotSize
+				DotSize = config.DotSize,
+				Brightness = config.Brightness,
+				DotGlow = config.DotGlow,
+				BackGlow = config.BackGlow,
+				GlassTexture = config.GlassTexture,
+				GlassPadding = config.GlassPadding,
+				GlassColor = config.GlassColor,
+				FrameTexture = config.FrameTexture,
+				FramePadding = config.FramePadding
 			};
 			var thread = new Thread(() => {
 				

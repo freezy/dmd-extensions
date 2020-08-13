@@ -11,7 +11,7 @@
         Height="256"
         Width="1024"
         WindowStyle="None"
-        Background="Black"
+        Background="Transparent"
         AllowsTransparency="True"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
