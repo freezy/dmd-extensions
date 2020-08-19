@@ -276,34 +276,37 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
 		{
-			var glassWidth = DmdWidth + _glassPad.Left + _glassPad.Right;
-			var glassHeight = DmdHeight + _glassPad.Top + _glassPad.Bottom;
-
-			var frameWidth = glassWidth + _framePad.Left + _framePad.Right;
-			var frameHeight = glassHeight + _framePad.Top + _framePad.Bottom;
-
-			var alphaW = ActualWidth / frameWidth;
-			var alphaH = ActualHeight / frameHeight;
-			if (!IgnoreAspectRatio)
+			Dispatcher.Invoke(() =>
 			{
-				var alpha = Math.Min(alphaW, alphaH);
-				alphaW = alpha;
-				alphaH = alpha;
-			}
+				var glassWidth = DmdWidth + _glassPad.Left + _glassPad.Right;
+				var glassHeight = DmdHeight + _glassPad.Top + _glassPad.Bottom;
 
-			var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
-			var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
+				var frameWidth = glassWidth + _framePad.Left + _framePad.Right;
+				var frameHeight = glassHeight + _framePad.Top + _framePad.Bottom;
 
-			DmdFrame.Width = frameWidth * alphaW;
-			DmdFrame.Height = frameHeight * alphaH;
-			DmdFrame.Margin = new Thickness(hpad, vpad, hpad, vpad);
+				var alphaW = ActualWidth / frameWidth;
+				var alphaH = ActualHeight / frameHeight;
+				if (!IgnoreAspectRatio)
+				{
+					var alpha = Math.Min(alphaW, alphaH);
+					alphaW = alpha;
+					alphaH = alpha;
+				}
 
-			Dmd.Width = glassWidth * alphaW;
-			Dmd.Height = glassHeight * alphaH;
-			Dmd.Margin = new Thickness(hpad + _framePad.Left * alphaW, vpad + _framePad.Top * alphaH, hpad + _framePad.Right * alphaW, vpad + _framePad.Bottom * alphaH);
+				var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
+				var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
 
-			if (Host != null) Host.SetDimensions((int)frameWidth, (int)frameHeight);
-			UpdateEffectParams();
+				DmdFrame.Width = frameWidth * alphaW;
+				DmdFrame.Height = frameHeight * alphaH;
+				DmdFrame.Margin = new Thickness(hpad, vpad, hpad, vpad);
+
+				Dmd.Width = glassWidth * alphaW;
+				Dmd.Height = glassHeight * alphaH;
+				Dmd.Margin = new Thickness(hpad + _framePad.Left * alphaW, vpad + _framePad.Top * alphaH, hpad + _framePad.Right * alphaW, vpad + _framePad.Bottom * alphaH);
+
+				if (Host != null) Host.SetDimensions((int)frameWidth, (int)frameHeight);
+				UpdateEffectParams();
+			});
 		}
 
 		private void UpdateEffectParams()
