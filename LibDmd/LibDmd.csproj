@@ -355,6 +355,7 @@
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\full.svg" />
     <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
+    <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
     <Content Include="FodyWeavers.xml">
       <SubType>Designer</SubType>
     </Content>
