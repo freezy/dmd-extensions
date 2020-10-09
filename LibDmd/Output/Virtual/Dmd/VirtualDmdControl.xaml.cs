@@ -187,7 +187,10 @@ namespace LibDmd.Output.Virtual.Dmd
 							group.Children.Add(new ImageDrawing(bmp, rect));
 							var drawingVisual = new DrawingVisual();
 							using (var drawingContext = drawingVisual.RenderOpen())
+							{
+								drawingContext.DrawRectangle(new SolidColorBrush(Color.FromRgb(0,0,0)), new Pen(), new Rect(0, 0, width, height));
 								drawingContext.DrawDrawing(group);
+							}
 							if (_mipmap[0] == null || !(_mipmap[0] is RenderTargetBitmap) || _mipmap[0].Width != width || _mipmap[0].Height != height)
 								_mipmap[0] = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Default);
 							((RenderTargetBitmap)_mipmap[0]).Render(drawingVisual);
