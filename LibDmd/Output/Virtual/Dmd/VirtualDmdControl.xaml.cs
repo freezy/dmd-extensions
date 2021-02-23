@@ -189,7 +189,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			Application.Current.Dispatcher.Invoke(() =>
+			Dispatcher.Invoke(() =>
 			{
 				bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, 2.2);
 			});
@@ -262,6 +262,50 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 		}
 
+		private void ogl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
+		{
+			// FIXME these native objects should be released when the DMD is closed (but this need to have the OpenGL context active while closing the window)
+			var gl = args.OpenGL;
+
+			gl.GenTextures(2, _textures);
+			_fbos[0] = _fbos[1] = _fbos[2] = _fbos[3] = 0;
+			_textures[2] = _textures[3] = _textures[4] = _textures[5] = 0;
+
+			const uint positionAttribute = 0;
+			const uint texCoordAttribute = 1;
+			var attributeLocations = new Dictionary<uint, string> { { positionAttribute, "Position" }, { texCoordAttribute, "TexCoord" }, };
+			try
+			{
+				_dmdShader = new ShaderProgram();
+				_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"), attributeLocations);
+			}
+			catch (Exception e)
+			{
+				Logger.Error(e, "DMD Shader compilation failed");
+			}
+			try
+			{
+				_blurShader = new ShaderProgram();
+				_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), attributeLocations);
+			}
+			catch (Exception e)
+			{
+				Logger.Error(e, "Blur Shader compilation failed");
+			}
+			_quadVBO = new VertexBufferArray();
+			_quadVBO.Create(gl);
+			_quadVBO.Bind(gl);
+			var posVBO = new VertexBuffer();
+			posVBO.Create(gl);
+			posVBO.Bind(gl);
+			posVBO.SetData(gl, positionAttribute, new float[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
+			var texVBO = new VertexBuffer();
+			texVBO.Create(gl);
+			texVBO.Bind(gl);
+			texVBO.SetData(gl, texCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
+			_quadVBO.Unbind(gl);
+		}
+
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
 		{
 			var gl = args.OpenGL;
@@ -271,10 +315,17 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (fboInvalid)
 			{
-				// FIXME release all these native objects
+				// Release previous textures and FBOs if any (0 are ignored by OpenGL driver)
+				uint[] texs = new uint[4] { _textures[2], _textures[3], _textures[4], _textures[5]};
+				gl.DeleteTextures(4, texs);
+				gl.DeleteFramebuffersEXT(4, _fbos);
 				Logger.Info("Creating FBOs for {0}x{1}", DmdWidth, DmdHeight);
-				gl.GenTextures(6, _textures);
+				gl.GenTextures(4, texs);
 				gl.GenFramebuffersEXT(4, _fbos);
+				_textures[2] = texs[0];
+				_textures[3] = texs[1];
+				_textures[4] = texs[2];
+				_textures[5] = texs[3];
 				for (int i = 0; i < _fbos.Length; i++)
 				{
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]);
@@ -299,39 +350,6 @@ namespace LibDmd.Output.Virtual.Dmd
 							break;
 					}
 				}
-				const uint positionAttribute = 0;
-				const uint texCoordAttribute = 1;
-				var attributeLocations = new Dictionary<uint, string> { { positionAttribute, "Position" }, { texCoordAttribute, "TexCoord" }, };
-				try
-				{
-					_dmdShader = new ShaderProgram();
-					_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"), attributeLocations);
-				}
-				catch (Exception e)
-				{
-					Logger.Error(e, "DMD Shader compilation failed");
-				}
-				try
-				{
-					_blurShader = new ShaderProgram();
-					_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), attributeLocations);
-				}
-				catch (Exception e)
-				{
-					Logger.Error(e, "Blur Shader compilation failed");
-				}
-				_quadVBO = new VertexBufferArray();
-				_quadVBO.Create(gl);
-				_quadVBO.Bind(gl);
-				var posVBO = new VertexBuffer();
-				posVBO.Create(gl);
-				posVBO.Bind(gl);
-				posVBO.SetData(gl, positionAttribute, new float[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
-				var texVBO = new VertexBuffer();
-				texVBO.Create(gl);
-				texVBO.Bind(gl);
-				texVBO.SetData(gl, texCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
-				_quadVBO.Unbind(gl);
 				fboInvalid = false;
 			}
 

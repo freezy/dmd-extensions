@@ -8,7 +8,7 @@
 			 Background="Transparent"
              d:DesignHeight="100" d:DesignWidth="400">
 	<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-		<sharpgl:OpenGLControl Name="Dmd" OpenGLDraw="ogl_OpenGLDraw" RenderContextType="FBO" DrawFPS="False" />
+		<sharpgl:OpenGLControl Name="Dmd" OpenGLInitialized="ogl_OpenGLInitialized" OpenGLDraw="ogl_OpenGLDraw" RenderContextType="FBO" DrawFPS="False" />
 		<Image x:Name="DmdFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
 	</Grid>
 </UserControl>
