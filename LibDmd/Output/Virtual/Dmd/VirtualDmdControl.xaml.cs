@@ -189,7 +189,10 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, 2.2);
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, 2.2);
+			});
 		}
 
 		public void RenderGray2(byte[] frame)
