@@ -16,23 +16,23 @@ namespace LibDmd.Output.Virtual.Dmd
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly VirtualDmdConfig _config;
+		private readonly IVirtualDmdConfig _config;
 
 		private readonly BitmapImage _preview;
 
 		private double _brightness = 1.0;
 		private double _dotSize = 1.0;
 		private double _dotRounding = 0.0;
-		private double _unlitDot = 0.0;
+		private Color _unlitDot = Color.FromArgb(0, 0, 0, 0);
 		private double _dotGlow = 0.0;
 		private double _backGlow = 0.0;
 		private Color _glassColor = Color.FromArgb(0, 0, 0, 0);
-		public ISubject<VirtualDmdConfig> OnConfigUpdated { get; } = new Subject<VirtualDmdConfig>();
+		public ISubject<IVirtualDmdConfig> OnConfigUpdated { get; } = new Subject<IVirtualDmdConfig>();
 
-		public DmdSettings(VirtualDmdConfig config)
+		public DmdSettings(IVirtualDmdConfig config)
 		{
 			_config = config;
-			_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32.png"));
+			_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8.png"));
 
 			DataContext = this;
 			InitializeComponent();
@@ -52,10 +52,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			DotRoundingSlider.ValueChanged += (sender, e) => _dotRounding = DotRoundingSlider.Value;
 			DotRoundingSlider.ValueChanged += (sender, e) => UpdatePreview();
 
-			UnlitDotSlider.ValueChanged += (sender, e) => UnlitDotValue.Text = DoubleToString3(UnlitDotSlider.Value);
-			UnlitDotValue.TextChanged += (sender, e) => UnlitDotSlider.Value = StringToDouble(UnlitDotValue.Text, UnlitDotSlider.Value);
-			UnlitDotSlider.ValueChanged += (sender, e) => _unlitDot = UnlitDotSlider.Value;
-			UnlitDotSlider.ValueChanged += (sender, e) => UpdatePreview();
+			UnlitDotColor.SelectedColorChanged += (sender, e) => _unlitDot = UnlitDotColor.SelectedColor.Value;
+			UnlitDotColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
 			DotGlowSlider.ValueChanged += (sender, e) => DotGlowValue.Text = DoubleToString2(DotGlowSlider.Value);
 			DotGlowValue.TextChanged += (sender, e) => DotGlowSlider.Value = StringToDouble(DotGlowValue.Text, DotGlowSlider.Value);
@@ -86,10 +84,23 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			FramePath.TextChanged += (sender, e) => UpdatePreview();
 			FramePadding.OnPaddingChanged.Subscribe(padding => UpdatePreview());
+
+			if (_config is VirtualDmdConfig)
+			{
+				SaveForAllButton.Visibility = Visibility.Visible;
+				SaveForGameButton.Visibility = Visibility.Visible;
+			}
+			else
+			{
+				SaveForAllButton.Visibility = Visibility.Hidden;
+				SaveForGameButton.Visibility = Visibility.Hidden;
+			}
+
 		}
 
 		private void UpdatePreview()
 		{
+			DMD.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
 			DMD.IgnoreAspectRatio = IgnoreAspectRatio.IsChecked == true;
 			DMD.Glass = GlassPath.Text;
 			DMD.GlassPad = GlassPadding.Pad;
@@ -141,14 +152,66 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void SaveForGameClicked(object sender, RoutedEventArgs e)
 		{
-			_config.SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, true);
-			OnConfigUpdated.OnNext(_config);
+			if (_config is VirtualDmdConfig)
+			{
+				((VirtualDmdConfig)_config).SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, true);
+				OnConfigUpdated.OnNext(_config);
+			}
 		}
 
 		private void SaveGloballyClicked(object sender, RoutedEventArgs e)
 		{
-			_config.SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, false);
-			OnConfigUpdated.OnNext(_config);
+			if (_config is VirtualDmdConfig)
+			{
+				((VirtualDmdConfig)_config).SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, false);
+				OnConfigUpdated.OnNext(_config);
+			}
+		}
+
+		private class VirtualDmdLiveConfig : IVirtualDmdConfig
+		{
+			public bool Enabled { get; set; }
+			public bool StayOnTop { get; set; }
+			public bool IgnoreAr { get; set; }
+			public bool UseRegistryPosition { get; set; }
+			public double Left { get; set; }
+			public double Top { get; set; }
+			public double Width { get; set; }
+			public double Height { get; set; }
+			public double DotSize { get; set; }
+			public double DotRounding { get; set; }
+			public Color UnlitDot { get; set; }
+			public bool HasGameOverride(string key) => false;
+			public double Brightness { get; set; }
+			public double DotGlow { get; set; }
+			public double BackGlow { get; set; }
+			public string GlassTexture { get; set; }
+			public Thickness GlassPadding { get; set; }
+			public Color GlassColor { get; set; }
+			public string FrameTexture { get; set; }
+			public Thickness FramePadding { get; set; }
+
+		}
+
+		private void ApplyClicked(object sender, RoutedEventArgs e)
+		{
+			var config = new VirtualDmdLiveConfig()
+			{
+				DotSize = _dotSize,
+				DotRounding = _dotRounding,
+				UnlitDot = _unlitDot,
+				IgnoreAr = _config.IgnoreAr,
+				Brightness = _brightness,
+				DotGlow = _dotGlow,
+				BackGlow = _backGlow,
+				GlassTexture = GlassPath.Text,
+				GlassPadding = GlassPadding.Pad,
+				GlassColor = _glassColor,
+				FrameTexture = FramePath.Text,
+				FramePadding = FramePadding.Pad,
+				StayOnTop = _config.StayOnTop
+			};
+			OnConfigUpdated.OnNext(config);
 		}
 
 		private void ResetClicked(object sender, RoutedEventArgs e)
@@ -171,8 +234,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			DotRoundingValue.Text = DoubleToString2(_dotRounding);
 			DotRoundingSlider.Value = _dotRounding;
 
-			UnlitDotValue.Text = DoubleToString3(_unlitDot);
-			UnlitDotSlider.Value = _unlitDot;
+			UnlitDotColor.SelectedColor = _unlitDot;
 
 			DotGlowValue.Text = DoubleToString2(_dotGlow);
 			DotGlowSlider.Value = _dotGlow;
@@ -202,11 +264,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private static string DoubleToString2(double d)
 		{
 			return (Math.Round(d * 100) / 100).ToString("G", CultureInfo.InvariantCulture);
-		}
-
-		private static string DoubleToString3(double d)
-		{
-			return (Math.Round(d * 1000) / 1000).ToString("G", CultureInfo.InvariantCulture);
 		}
 
 		private static double StringToDouble(string str, double fallback)

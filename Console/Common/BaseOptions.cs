@@ -31,8 +31,8 @@ namespace DmdExt.Common
 		[Option("virtual-dotrounding", HelpText = "Roundiness the dots of the virtual DMD. Default: 1")]
 		public double VirtualDmdDotRounding { get; set; } = 1;
 
-		[Option("virtual-unlitdot", HelpText = "Default light for unlit dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdUnlitDot { get; set; } = 0;
+		[Option("virtual-unlitdot", HelpText = "Default color for unlit dots of the virtual DMD. Default: invisible")]
+		public Color VirtualDmdUnlitDot { get; set; } = Color.FromArgb(0, 0, 0, 0);
 
 		[Option("virtual-brightness", HelpText = "Brightness of the dots of the virtual DMD. Default: 1")]
 		public double VirtualDmdBrightness { get; set; } = 1;
@@ -221,7 +221,7 @@ namespace DmdExt.Common
 
 		public double DotRounding => _options.VirtualDmdDotRounding;
 
-		public double UnlitDot => _options.VirtualDmdUnlitDot;
+		public Color UnlitDot => _options.VirtualDmdUnlitDot;
 
 		public double Brightness => _options.VirtualDmdBrightness;
 

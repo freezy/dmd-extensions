@@ -237,7 +237,7 @@ namespace LibDmd.DmdDevice
 
 				// create the virtual DMD window and create the render grahps
 				if (_config.VirtualDmd.Enabled) {
-					_virtualDmd = new VirtualDmd(_config.VirtualDmd as VirtualDmdConfig, _gameName);
+					_virtualDmd = new VirtualDmd(_config.VirtualDmd, _gameName);
 				}
 
 				SetupGraphs();
@@ -479,93 +479,9 @@ namespace LibDmd.DmdDevice
 		/// </summary>
 		private void SetupVirtualDmd()
 		{
-			_virtualDmd.IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
-			_virtualDmd.AlwaysOnTop = _config.VirtualDmd.StayOnTop;
-			_virtualDmd.DotSize = _config.VirtualDmd.DotSize;
-			_virtualDmd.DotRounding = _config.VirtualDmd.DotRounding;
-			_virtualDmd.UnlitDot = _config.VirtualDmd.UnlitDot;
-			_virtualDmd.Brightness = _config.VirtualDmd.Brightness;
-			_virtualDmd.DotGlow = _config.VirtualDmd.DotGlow;
-			_virtualDmd.BackGlow = _config.VirtualDmd.BackGlow;
-			_virtualDmd.GlassTexture = _config.VirtualDmd.GlassTexture;
-			_virtualDmd.GlassPadding = _config.VirtualDmd.GlassPadding;
-			_virtualDmd.GlassColor = _config.VirtualDmd.GlassColor;
-			_virtualDmd.FrameTexture = _config.VirtualDmd.FrameTexture;
-			_virtualDmd.FramePadding = _config.VirtualDmd.FramePadding;
-			_virtualDmd.SetGameName(_gameName);
-
-			// find the game's dmd position in VPM's registry
-			if (_config.VirtualDmd.UseRegistryPosition) {
-				try {
-					var regPath = @"Software\Freeware\Visual PinMame\" + (_gameName.Length > 0 ? _gameName : "default");
-					var key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
-					key = key.OpenSubKey(regPath);
-
-					if (key == null) {
-						// couldn't find the value in the 32-bit view so grab the 64-bit view
-						key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
-						key = key.OpenSubKey(regPath);
-					}
-
-					if (key != null) {
-						var values = key.GetValueNames();
-						if (!values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
-							Logger.Warn("Not all values were found at HKEY_CURRENT_USER\\{0}. Trying default.", regPath);
-							key?.Dispose();
-							regPath = @"Software\Freeware\Visual PinMame\default";
-							key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
-							key = key.OpenSubKey(regPath);
-						}
-					}
-					// still null?
-					if (key != null) {
-						var values = key.GetValueNames();
-						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height"))
-						{
-							SetVirtualDmdDefaultPosition(
-								Convert.ToInt64(key.GetValue("dmd_pos_x").ToString()),
-								Convert.ToInt64(key.GetValue("dmd_pos_y").ToString()),
-								Convert.ToInt64(key.GetValue("dmd_width").ToString()),
-								Convert.ToInt64(key.GetValue("dmd_height").ToString())
-							);
-						} else {
-							Logger.Warn("Ignoring VPM registry for DMD position because not all values were found at HKEY_CURRENT_USER\\{0}. Found keys: [ {1} ]", regPath, string.Join(", ", values));
-							SetVirtualDmdDefaultPosition();
-						}
-					} else {
-						Logger.Warn("Ignoring VPM registry for DMD position because key was not found at HKEY_CURRENT_USER\\{0}", regPath);
-						SetVirtualDmdDefaultPosition();
-					}
-					key?.Dispose();
-
-				} catch (Exception ex) {
-					Logger.Warn(ex, "Could not retrieve registry values for DMD position for game \"" + _gameName + "\".");
-					SetVirtualDmdDefaultPosition();
-				}
-
-			} else {
-				Logger.Debug("DMD position: No registry because it's ignored.");
-				SetVirtualDmdDefaultPosition();
-			}
-
+			_virtualDmd.Setup(_config.VirtualDmd, _gameName);
 			_virtualDmd.Dmd.Init();
 			_virtualDmd.Show();
-		}
-
-		/// <summary>
-		/// Sets the position of the DMD as defined in the .ini file.
-		/// </summary>
-		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
-		{
-			var aspectRatio = _virtualDmd.Width / _virtualDmd.Height;
-			_virtualDmd.Left = _config.VirtualDmd.HasGameOverride("left") || x < 0 ? _config.VirtualDmd.Left : x;
-			_virtualDmd.Top = _config.VirtualDmd.HasGameOverride("top") || y < 0 ? _config.VirtualDmd.Top : y;
-			_virtualDmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
-			if (_config.VirtualDmd.IgnoreAr) {
-				_virtualDmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
-			} else {
-				_virtualDmd.Height = _virtualDmd.Width / aspectRatio;
-			}
 		}
 
 		/// <summary>

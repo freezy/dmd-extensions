@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.Dmd;
+using Microsoft.Win32;
 using NLog;
 
 namespace LibDmd.Common
@@ -16,8 +18,8 @@ namespace LibDmd.Common
 	{
 		public override IVirtualControl VirtualControl => Dmd;
 
-		private readonly VirtualDmdConfig _config;
-		private readonly MenuItem _saveGamePosItem;
+		private IVirtualDmdConfig _config;
+		private string _gameName;
 		private IDisposable _settingSubscription;
 
 		public double DotSize
@@ -42,7 +44,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		public double UnlitDot
+		public Color UnlitDot
 		{
 			set
 			{
@@ -97,7 +99,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		public System.Windows.Thickness GlassPadding
+		public Thickness GlassPadding
 		{
 			set
 			{
@@ -130,7 +132,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		public System.Windows.Thickness FramePadding
+		public Thickness FramePadding
 		{
 			set
 			{
@@ -142,44 +144,61 @@ namespace LibDmd.Common
 		}
 
 
-		public VirtualDmd(VirtualDmdConfig config = null, string gameName = null) : base()
+		public VirtualDmd(IVirtualDmdConfig config = null, string gameName = null) : base()
 		{
 			InitializeComponent();
 			Initialize();
+			Setup(config, gameName);
+		}
+
+		public void Setup(IVirtualDmdConfig config = null, string gameName = null)
+		{
+			_config = config;
+			_gameName = gameName;
+
 			if (config != null)
 			{
-				_config = config;
-
 				ParentGrid.ContextMenu = new ContextMenu();
 
-				var saveGlobalPos = new MenuItem();
-				saveGlobalPos.Click += SavePositionGlobally;
-				saveGlobalPos.Header = "Save position globally";
-				ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
-
-				if (gameName != null)
+				if (config is VirtualDmdConfig)
 				{
-					_saveGamePosItem = new MenuItem();
-					_saveGamePosItem.Click += SavePositionGame;
-					_saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
-					ParentGrid.ContextMenu.Items.Add(_saveGamePosItem);
-				}
+					var saveGlobalPos = new MenuItem();
+					saveGlobalPos.Click += SavePositionGlobally;
+					saveGlobalPos.Header = "Save position globally";
+					ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
 
-				ParentGrid.ContextMenu.Items.Add(new Separator());
+					if (gameName != null)
+					{
+						var saveGamePosItem = new MenuItem();
+						saveGamePosItem.Click += SavePositionGame;
+						saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
+						ParentGrid.ContextMenu.Items.Add(saveGamePosItem);
+					}
+
+					ParentGrid.ContextMenu.Items.Add(new Separator());
+				}
 
 				var openSettings = new MenuItem();
 				openSettings.Click += OpenSettings;
 				openSettings.Header = "Open display settings";
 				ParentGrid.ContextMenu.Items.Add(openSettings);
 
-				ParentGrid.ContextMenu.Items.Add(new Separator());
+				if (config is VirtualDmdConfig)
+				{
+					ParentGrid.ContextMenu.Items.Add(new Separator());
 
-				var toggleAspect = new MenuItem();
-				toggleAspect.Click += ToggleAspectRatio;
-				toggleAspect.Header = "Ignore Aspect Ratio";
-				toggleAspect.IsCheckable = true;
-				ParentGrid.ContextMenu.Items.Add(toggleAspect);
+					var toggleAspect = new MenuItem();
+					toggleAspect.Click += ToggleAspectRatio;
+					toggleAspect.Header = "Ignore Aspect Ratio";
+					toggleAspect.IsCheckable = true;
+					ParentGrid.ContextMenu.Items.Add(toggleAspect);
+				}
 
+				ApplyConfig(_config, _gameName);
+			}
+			else
+			{
+				ParentGrid.ContextMenu = null;
 			}
 		}
 
@@ -199,12 +218,12 @@ namespace LibDmd.Common
 
 		private void SavePositionGlobally(object sender, RoutedEventArgs e)
 		{
-			_config.SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), false);
+			((VirtualDmdConfig)_config).SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), false);
 		}
 
 		private void SavePositionGame(object sender, RoutedEventArgs e)
 		{
-			_config.SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), true);
+			((VirtualDmdConfig)_config).SetPosition(new VirtualDisplayPosition(Left, Top, Width, Height), true);
 		}
 
 		private void OpenSettings(object sender, RoutedEventArgs e)
@@ -212,36 +231,120 @@ namespace LibDmd.Common
 			var settingWindow = new DmdSettings(_config);
 			_settingSubscription = settingWindow.OnConfigUpdated.Subscribe(config =>
 			{
-				Logger.Info("Applying new config to DMD.");
-				DotSize = config.DotSize;
-				DotRounding = config.DotRounding;
-				UnlitDot = config.UnlitDot;
-				IgnoreAspectRatio = config.IgnoreAr;
-				Brightness = config.Brightness;
-				DotGlow = config.DotGlow;
-				BackGlow = config.BackGlow;
-				GlassTexture = config.GlassTexture;
-				GlassPadding = config.GlassPadding;
-				GlassColor = config.GlassColor;
-				FrameTexture = config.FrameTexture;
-				FramePadding = config.FramePadding;
-				GlassPadding = config.GlassPadding;
+				ApplyConfig(config, _gameName);
 			});
 			settingWindow.Show();
+		}
+
+		private void ApplyConfig(IVirtualDmdConfig config, string gameName)
+		{
+			Logger.Info("Applying config to DMD.");
+			DotSize = config.DotSize;
+			DotRounding = config.DotRounding;
+			UnlitDot = config.UnlitDot;
+			IgnoreAspectRatio = config.IgnoreAr;
+			Brightness = config.Brightness;
+			DotGlow = config.DotGlow;
+			BackGlow = config.BackGlow;
+			GlassTexture = config.GlassTexture;
+			GlassPadding = config.GlassPadding;
+			GlassColor = config.GlassColor;
+			FrameTexture = config.FrameTexture;
+			FramePadding = config.FramePadding;
+			AlwaysOnTop = config.StayOnTop;
+
+			// find the game's dmd position in VPM's registry
+			if (config.UseRegistryPosition)
+			{
+				try
+				{
+					var regPath = @"Software\Freeware\Visual PinMame\" + (gameName.Length > 0 ? gameName : "default");
+					var key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
+					key = key.OpenSubKey(regPath);
+
+					if (key == null)
+					{
+						// couldn't find the value in the 32-bit view so grab the 64-bit view
+						key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+						key = key.OpenSubKey(regPath);
+					}
+
+					if (key != null)
+					{
+						var values = key.GetValueNames();
+						if (!values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height"))
+						{
+							Logger.Warn("Not all values were found at HKEY_CURRENT_USER\\{0}. Trying default.", regPath);
+							key?.Dispose();
+							regPath = @"Software\Freeware\Visual PinMame\default";
+							key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32);
+							key = key.OpenSubKey(regPath);
+						}
+					}
+					// still null?
+					if (key != null)
+					{
+						var values = key.GetValueNames();
+						if (values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height"))
+						{
+							SetVirtualDmdDefaultPosition(
+								Convert.ToInt64(key.GetValue("dmd_pos_x").ToString()),
+								Convert.ToInt64(key.GetValue("dmd_pos_y").ToString()),
+								Convert.ToInt64(key.GetValue("dmd_width").ToString()),
+								Convert.ToInt64(key.GetValue("dmd_height").ToString())
+							);
+						}
+						else
+						{
+							Logger.Warn("Ignoring VPM registry for DMD position because not all values were found at HKEY_CURRENT_USER\\{0}. Found keys: [ {1} ]", regPath, string.Join(", ", values));
+							SetVirtualDmdDefaultPosition();
+						}
+					}
+					else
+					{
+						Logger.Warn("Ignoring VPM registry for DMD position because key was not found at HKEY_CURRENT_USER\\{0}", regPath);
+						SetVirtualDmdDefaultPosition();
+					}
+					key?.Dispose();
+
+				}
+				catch (Exception ex)
+				{
+					Logger.Warn(ex, "Could not retrieve registry values for DMD position for game \"" + gameName + "\".");
+					SetVirtualDmdDefaultPosition();
+				}
+
+			}
+			else
+			{
+				Logger.Debug("DMD position: No registry because it's ignored.");
+				SetVirtualDmdDefaultPosition();
+			}
+		}
+
+		/// <summary>
+		/// Sets the position of the DMD as defined in the .ini file.
+		/// </summary>
+		private void SetVirtualDmdDefaultPosition(double x = -1d, double y = -1d, double width = -1d, double height = -1d)
+		{
+			var aspectRatio = Width / Height;
+			Left = _config.HasGameOverride("left") || x < 0 ? _config.Left : x;
+			Top = _config.HasGameOverride("top") || y < 0 ? _config.Top : y;
+			Width = _config.HasGameOverride("width") || width < 0 ? _config.Width : width;
+			if (_config.IgnoreAr)
+			{
+				Height = _config.HasGameOverride("height") || height < 0 ? _config.Height : height;
+			}
+			else
+			{
+				Height = Width / aspectRatio;
+			}
 		}
 
 		private void ToggleAspectRatio(object sender, RoutedEventArgs e)
 		{
 			IgnoreAspectRatio = (sender as MenuItem).IsChecked;
-			_config.SetIgnoreAspectRatio(IgnoreAspectRatio);
-		}
-
-		internal void SetGameName(string gameName)
-		{
-			if (_saveGamePosItem != null)
-			{
-				_saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
-			}
+			((VirtualDmdConfig)_config).SetIgnoreAspectRatio(IgnoreAspectRatio);
 		}
 	}
 }
