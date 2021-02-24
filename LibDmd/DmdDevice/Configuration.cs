@@ -219,7 +219,7 @@ namespace LibDmd.DmdDevice
 		public double Height => GetDouble("height", 256);
 		public double DotSize => GetDouble("dotsize", 1.0);
 		public double DotRounding => GetDouble("dotrounding", 1.0);
-		public double UnlitDot => GetDouble("unlitdot", 0.0);
+		public Color UnlitDot => fromSKColor(GetSKColor("unlitdot", SKColor.Empty)); 
 
 		public double Brightness => GetDouble("brightness", 1.0);
 		public double DotGlow => GetDouble("dotglow", 0.0);
@@ -256,13 +256,13 @@ namespace LibDmd.DmdDevice
 			Save();
 		}
 
-		public void SetOptions(double brightness, double dotSize, double dotRounding, double unlitDot, double dotGlow, double backGlow, string glass, System.Windows.Thickness glassPadding, Color glassColor, string frame, System.Windows.Thickness framePadding, bool onlyForGame)
+		public void SetOptions(double brightness, double dotSize, double dotRounding, Color unlitDot, double dotGlow, double backGlow, string glass, System.Windows.Thickness glassPadding, Color glassColor, string frame, System.Windows.Thickness framePadding, bool onlyForGame)
 		{
 			DoWrite = false;
 			Set("brightness", brightness, onlyForGame);
 			Set("dotsize", dotSize, onlyForGame);
 			Set("dotrounding", dotRounding, onlyForGame);
-			Set("unlitdot", unlitDot, onlyForGame);
+			Set("unlitdot", new SKColor(unlitDot.R, unlitDot.G, unlitDot.B, unlitDot.A).ToString(), onlyForGame);
 			Set("dotglow", dotGlow, onlyForGame);
 			Set("backglow", backGlow, onlyForGame);
 			Set("glass", glass, onlyForGame);

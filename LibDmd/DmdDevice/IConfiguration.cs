@@ -77,7 +77,7 @@ namespace LibDmd.DmdDevice
 		double Height { get; }
 		double DotSize { get; }
 		double DotRounding { get; }
-		double UnlitDot { get; }
+		Color UnlitDot { get; }
 		bool HasGameOverride(string key);
 		double Brightness { get; }
 		double DotGlow { get; }

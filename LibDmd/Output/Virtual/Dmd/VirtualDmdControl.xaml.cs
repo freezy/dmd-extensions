@@ -45,7 +45,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public double DotRounding { get; set; }
 
-		public double UnlitDot { get; set; }
+		public Color UnlitDot { get; set; }
 
 		public double DotGlow { get; set; }
 
@@ -366,7 +366,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			{
 				Logger.Info("Glass texture updated");
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0);
-				var data = glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, glassToRender.Width, glassToRender.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
+				var data = glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, glassToRender.Width, glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
 				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, glassToRender.Width, glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.GenerateMipmapEXT(OpenGL.GL_TEXTURE_2D);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
@@ -380,7 +380,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (bitmapToRender != null)
 			{
 				gl.ActiveTexture(OpenGL.GL_TEXTURE1);
-				var data = bitmapToRender.LockBits(new System.Drawing.Rectangle(0, 0, bitmapToRender.Width, bitmapToRender.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
+				var data = bitmapToRender.LockBits(new System.Drawing.Rectangle(0, 0, bitmapToRender.Width, bitmapToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
 				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, bitmapToRender.Width, bitmapToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
@@ -416,7 +416,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur2"), 3);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur3"), 4);
 			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "dmdSize"), (float)DmdWidth, (float)DmdHeight);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "unlitDot"), (float)UnlitDot);
+			gl.Uniform3(_dmdShader.GetUniformLocation(gl, "unlitDot"), UnlitDot.ScR, UnlitDot.ScG, UnlitDot.ScB);
 			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_glassPad.Left / DmdWidth), (float)(_glassPad.Top / DmdHeight));
 			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_glassPad.Left + _glassPad.Right) / DmdWidth), (float)(1f + (_glassPad.Top + _glassPad.Bottom) / DmdHeight));
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "backGlow"), (float)BackGlow);

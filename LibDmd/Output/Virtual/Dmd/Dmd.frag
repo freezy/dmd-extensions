@@ -10,7 +10,7 @@ uniform sampler2D dmdTextureBlur3; // DMD Blur level 3
 uniform sampler2D glassTexture; // The glass texture (lit by the room's ambient color and by the DMD texture)
 
 uniform vec2 dmdSize; // DMD size
-uniform float unlitDot; // light for unlit dots
+uniform vec3 unlitDot; // light for unlit dots
 uniform float backGlow; // Background reflectiveness
 uniform float brightness; // Dot brightness
 uniform float dotSize; // Dot size
@@ -49,7 +49,7 @@ void main()
 	dotColor *= brightness;
 
 	// Add a little shadow for unlit dots which are lightly visible on real DMDs
-	dotColor += vec3(unlitDot * dot);
+	dotColor += dot * unlitDot;
 
 	// Apply the glass as a tinted (lighten by the DMD, using large blur, and the base color) additive blend.
 	vec4 glass = texture(glassTexture, glassUv);

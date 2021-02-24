@@ -358,6 +358,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Output\Virtual\Dmd\preview-32x8.png" />
     <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
     <EmbeddedResource Include="Output\Virtual\Dmd\Dmd.vert" />
     <Resource Include="Output\Virtual\Dmd\preview-128x32.png" />

@@ -124,24 +124,12 @@ namespace DmdExt.Common
 
 		private static IDestination ShowVirtualDmd(IVirtualDmdConfig config)
 		{
-			var dmd = new VirtualDmd {
-				AlwaysOnTop = config.StayOnTop,
+			var dmd = new VirtualDmd(config)
+			{
 				Left = config.Left,
 				Top = config.Top,
 				Width = config.Width,
-				Height = config.Height,
-				IgnoreAspectRatio = config.IgnoreAr,
-				DotSize = config.DotSize,
-				DotRounding = config.DotRounding,
-				UnlitDot = config.UnlitDot,
-				Brightness = config.Brightness,
-				DotGlow = config.DotGlow,
-				BackGlow = config.BackGlow,
-				GlassTexture = config.GlassTexture,
-				GlassPadding = config.GlassPadding,
-				GlassColor = config.GlassColor,
-				FrameTexture = config.FrameTexture,
-				FramePadding = config.FramePadding
+				Height = config.Height
 			};
 			var thread = new Thread(() => {
 				
