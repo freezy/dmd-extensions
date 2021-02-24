@@ -157,8 +157,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			DMD.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
 			DMD.SetStyle(_previewStyle);
 			DMD.RenderBitmap(_preview);
-			var baseWidth = 128.0 * 5;
-			var baseHeight = baseWidth / 4.0;
+			var baseWidth = 128.0 * 6.0; // Need to be a multiple of 128.0 to avoid aliasing of the previews
+			var baseHeight = 64.0 * 3.0; // Need to be a multiple of 64.0 to avoid aliasing for 192x64 preview
 			if (DMD.AspectRatio > 4.0)
 			{
 				DMD.Width = baseWidth;

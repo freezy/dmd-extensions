@@ -29,7 +29,7 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="640" Height="160" Margin="0,0,0,16"></dmd:VirtualDmdControl>
+		<dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="768" Height="192" Margin="0,0,0,16"></dmd:VirtualDmdControl>
 
 		<StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" HorizontalAlignment="Center">
 			<Label Content="Preview size::" VerticalAlignment="Center" Width="100"/>
@@ -39,8 +39,8 @@
 			<RadioButton GroupName="Preview" x:Name="PreviewMono128x16" Content="128x16" VerticalAlignment="Center" Margin="16,0,16,0" />
 			<RadioButton GroupName="Preview" x:Name="PreviewMono192x64" Content="192x64" VerticalAlignment="Center" Margin="16,0,16,0" />
 		</StackPanel >
-		
-		<GroupBox x:Name="Frame" Grid.Row="2" Header="Frame" Padding="8,0,8,0" Margin="0,0,0,16">
+
+		<GroupBox x:Name="Frame" Grid.Row="2" Header="Frame" Padding="72,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -59,7 +59,7 @@
 					<StackPanel Grid.Row ="0" Orientation="Horizontal">
 						<Label Content="Frame overlay:" VerticalAlignment="Center" Width="100"/>
 						<TextBox x:Name="FramePath" VerticalAlignment="Center" Width="450"/>
-						<Button Content="..." VerticalAlignment="Center" Width="24" Height="18" Margin="0,0,8,0" Click="SelectFrameClicked"/>
+						<Button Content="..." VerticalAlignment="Center" Width="32" Height="18" Margin="0,0,8,0" Click="SelectFrameClicked"/>
 					</StackPanel>
 
 					<dmd:DmdPaddingSetting Grid.Row="1" x:Name="FramePadding" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
@@ -67,7 +67,7 @@
 			</Grid>
 		</GroupBox>
 
-		<GroupBox x:Name="Glass" Grid.Row="3" Header="Glass" Padding="8,0,8,0" Margin="0,0,0,16">
+		<GroupBox x:Name="Glass" Grid.Row="3" Header="Glass" Padding="72,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -96,11 +96,11 @@
 						<StackPanel Orientation="Horizontal">
 							<Label Content="Glass texture:" VerticalAlignment="Center" Width="100"/>
 							<TextBox x:Name="GlassPath" VerticalAlignment="Center" Width="450"/>
-							<Button Content="..." VerticalAlignment="Center" Width="24" Height="18" Margin="0,0,8,0" Click="SelectGlassClicked"/>
+							<Button Content="..." VerticalAlignment="Center" Width="32" Height="18" Margin="0,4,8,4" Click="SelectGlassClicked"/>
 						</StackPanel>
 
 						<Label Grid.Row="1" Content="Ambient lighting:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-						<xctk:ColorPicker x:Name="GlassColor" Grid.Row="1" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="100,2,0,2" DisplayColorAndName="False" UsingAlphaChannel="False"/>
+						<xctk:ColorPicker x:Name="GlassColor" Grid.Row="1" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="100,2,0,2" DisplayColorAndName="False" UsingAlphaChannel="False" ShowAvailableColors="False" ColorMode="ColorCanvas"/>
 
 						<Label Grid.Row="1" Content="DMD lighting:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,140,0"/>
 						<Slider x:Name="GlassDMDLightingSlider" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="100" Maximum="1" Margin="0,0,38,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
@@ -112,12 +112,13 @@
 			</Grid>
 		</GroupBox>
 
-		<GroupBox Grid.Row="4" Grid.Column="2" Header="DMD" Padding="8,0,8,0" Margin="0,0,0,16">
+		<GroupBox Grid.Row="4" Grid.Column="2" Header="DMD" Padding="72,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="588"></ColumnDefinition>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
-					<ColumnDefinition></ColumnDefinition>
+					<ColumnDefinition Width="16*"></ColumnDefinition>
+					<ColumnDefinition Width="3*"/>
 				</Grid.ColumnDefinitions>
 				<Grid Grid.Column="0">
 					<Grid.ColumnDefinitions>
@@ -140,7 +141,7 @@
 					<TextBox x:Name="DotRoundingValue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
 
 					<Label Grid.Row="2" Grid.Column="0" Content="Unlit Dot:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False"/>
+					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
 
 					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
 					<Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>
