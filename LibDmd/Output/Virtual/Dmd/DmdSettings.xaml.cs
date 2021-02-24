@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -15,105 +16,163 @@ namespace LibDmd.Output.Virtual.Dmd
 	public partial class DmdSettings
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private readonly Configuration _config;
+		private readonly VirtualDmdConfig _dmdConfig;
+		private readonly DmdStyle _originalStyle;
+		private BitmapImage _preview;
+		private DmdStyle _previewStyle;
+		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
+		public string NewStyleName { get; set; }
 
-		private readonly IVirtualDmdConfig _config;
+		public ISubject<DmdStyle> OnConfigUpdated { get; } = new Subject<DmdStyle>();
 
-		private readonly BitmapImage _preview;
-
-		private double _brightness = 1.0;
-		private double _dotSize = 1.0;
-		private double _dotRounding = 0.0;
-		private Color _unlitDot = Color.FromArgb(0, 0, 0, 0);
-		private double _dotGlow = 0.0;
-		private double _backGlow = 0.0;
-		private Color _glassColor = Color.FromArgb(0, 0, 0, 0);
-		public ISubject<IVirtualDmdConfig> OnConfigUpdated { get; } = new Subject<IVirtualDmdConfig>();
-
-		public DmdSettings(IVirtualDmdConfig config)
+		public DmdSettings(DmdStyle style, Configuration config)
 		{
 			_config = config;
-			_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8.png"));
+			_originalStyle = style.Copy();
+			_previewStyle = _originalStyle.Copy();
+			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
 
 			DataContext = this;
 			InitializeComponent();
 
-			ResetClicked(null, null);
+			UpdateControls();
+			LoadPreview();
+
+			if (config == null)
+			{
+				SaveGroup.Visibility = Visibility.Collapsed;
+			}
 
 			IgnoreAspectRatio.Unchecked += (sender, e) => UpdatePreview();
 			IgnoreAspectRatio.Checked += (sender, e) => UpdatePreview();
 
 			DotSizeSlider.ValueChanged += (sender, e) => DotSizeValue.Text = DoubleToString2(DotSizeSlider.Value);
 			DotSizeValue.TextChanged += (sender, e) => DotSizeSlider.Value = StringToDouble(DotSizeValue.Text, DotSizeSlider.Value);
-			DotSizeSlider.ValueChanged += (sender, e) => _dotSize = DotSizeSlider.Value;
+			DotSizeSlider.ValueChanged += (sender, e) => _previewStyle.DotSize = DotSizeSlider.Value;
 			DotSizeSlider.ValueChanged += (sender, e) => UpdatePreview();
 
 			DotRoundingSlider.ValueChanged += (sender, e) => DotRoundingValue.Text = DoubleToString2(DotRoundingSlider.Value);
 			DotRoundingValue.TextChanged += (sender, e) => DotRoundingSlider.Value = StringToDouble(DotRoundingValue.Text, DotRoundingSlider.Value);
-			DotRoundingSlider.ValueChanged += (sender, e) => _dotRounding = DotRoundingSlider.Value;
+			DotRoundingSlider.ValueChanged += (sender, e) => _previewStyle.DotRounding = DotRoundingSlider.Value;
 			DotRoundingSlider.ValueChanged += (sender, e) => UpdatePreview();
 
-			UnlitDotColor.SelectedColorChanged += (sender, e) => _unlitDot = UnlitDotColor.SelectedColor.Value;
+			UnlitDotColor.SelectedColorChanged += (sender, e) => _previewStyle.UnlitDot = UnlitDotColor.SelectedColor.Value;
 			UnlitDotColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
 			DotGlowSlider.ValueChanged += (sender, e) => DotGlowValue.Text = DoubleToString2(DotGlowSlider.Value);
 			DotGlowValue.TextChanged += (sender, e) => DotGlowSlider.Value = StringToDouble(DotGlowValue.Text, DotGlowSlider.Value);
-			DotGlowSlider.ValueChanged += (sender, e) => _dotGlow = DotGlowSlider.Value;
+			DotGlowSlider.ValueChanged += (sender, e) => _previewStyle.DotGlow = DotGlowSlider.Value;
 			DotGlowSlider.ValueChanged += (sender, e) => UpdatePreview();
 
 			BrightnessSlider.ValueChanged += (sender, e) => BrightnessValue.Text = DoubleToString2(BrightnessSlider.Value);
 			BrightnessValue.TextChanged += (sender, e) => BrightnessSlider.Value = StringToDouble(BrightnessValue.Text, BrightnessSlider.Value);
-			BrightnessSlider.ValueChanged += (sender, e) => _brightness = BrightnessSlider.Value;
+			BrightnessSlider.ValueChanged += (sender, e) => _previewStyle.Brightness = BrightnessSlider.Value;
 			BrightnessSlider.ValueChanged += (sender, e) => UpdatePreview();
 
 			BackLevelSlider.ValueChanged += (sender, e) => BackLevelValue.Text = DoubleToString2(BackLevelSlider.Value);
 			BackLevelValue.TextChanged += (sender, e) => BackLevelSlider.Value = StringToDouble(BackLevelValue.Text, BackLevelSlider.Value);
-			BackLevelSlider.ValueChanged += (sender, e) => _backGlow = BackLevelSlider.Value;
+			BackLevelSlider.ValueChanged += (sender, e) => _previewStyle.BackGlow = BackLevelSlider.Value;
 			BackLevelSlider.ValueChanged += (sender, e) => UpdatePreview();
 
+			GlassPath.TextChanged += (sender, e) => _previewStyle.GlassTexture = GlassPath.Text;
 			GlassPath.TextChanged += (sender, e) => UpdatePreview();
 
 			GlassDMDLightingSlider.ValueChanged += (sender, e) => GlassDMDLightingValue.Text = DoubleToString2(GlassDMDLightingSlider.Value);
 			GlassDMDLightingValue.TextChanged += (sender, e) => GlassDMDLightingSlider.Value = StringToDouble(GlassDMDLightingValue.Text, GlassDMDLightingSlider.Value);
-			GlassDMDLightingSlider.ValueChanged += (sender, e) => _glassColor = Color.FromArgb((byte)(255 * GlassDMDLightingSlider.Value), GlassColor.SelectedColor.Value.R, GlassColor.SelectedColor.Value.G, GlassColor.SelectedColor.Value.B);
+			GlassDMDLightingSlider.ValueChanged += (sender, e) => _previewStyle.GlassLighting = GlassDMDLightingSlider.Value;
 			GlassDMDLightingSlider.ValueChanged += (sender, e) => UpdatePreview();
 
-			GlassColor.SelectedColorChanged += (sender, e) => _glassColor = Color.FromArgb((byte)(255 * GlassDMDLightingSlider.Value), GlassColor.SelectedColor.Value.R, GlassColor.SelectedColor.Value.G, GlassColor.SelectedColor.Value.B);
+			GlassColor.SelectedColorChanged += (sender, e) => _previewStyle.GlassColor = Color.FromArgb((byte)(255 * GlassDMDLightingSlider.Value), GlassColor.SelectedColor.Value.R, GlassColor.SelectedColor.Value.G, GlassColor.SelectedColor.Value.B);
 			GlassColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
+			GlassPadding.OnPaddingChanged.Subscribe(padding => _previewStyle.GlassPadding = padding);
 			GlassPadding.OnPaddingChanged.Subscribe(padding => UpdatePreview());
 
+			FramePath.TextChanged += (sender, e) => _previewStyle.FrameTexture = FramePath.Text;
 			FramePath.TextChanged += (sender, e) => UpdatePreview();
+			FramePadding.OnPaddingChanged.Subscribe(padding => _previewStyle.FramePadding = padding);
 			FramePadding.OnPaddingChanged.Subscribe(padding => UpdatePreview());
 
-			if (_config is VirtualDmdConfig)
-			{
-				SaveForAllButton.Visibility = Visibility.Visible;
-				SaveForGameButton.Visibility = Visibility.Visible;
-			}
-			else
-			{
-				SaveForAllButton.Visibility = Visibility.Hidden;
-				SaveForGameButton.Visibility = Visibility.Hidden;
-			}
+			PreviewMono32x8.Checked += (sender, e) => LoadPreview();
+			PreviewMono128x32.Checked += (sender, e) => LoadPreview();
+			PreviewColor128x32.Checked += (sender, e) => LoadPreview();
+			PreviewMono128x16.Checked += (sender, e) => LoadPreview();
+			PreviewMono192x64.Checked += (sender, e) => LoadPreview();
+		}
 
+		private void UpdateControls()
+		{
+			BrightnessValue.Text = DoubleToString2(_previewStyle.Brightness);
+			BrightnessSlider.Value = _previewStyle.Brightness;
+
+			DotSizeValue.Text = DoubleToString2(_previewStyle.DotSize);
+			DotSizeSlider.Value = _previewStyle.DotSize;
+
+			DotRoundingValue.Text = DoubleToString2(_previewStyle.DotRounding);
+			DotRoundingSlider.Value = _previewStyle.DotRounding;
+
+			Color unlitColor = _previewStyle.UnlitDot;
+			unlitColor.A = 255;
+			UnlitDotColor.SelectedColor = unlitColor;
+
+			DotGlowValue.Text = DoubleToString2(_previewStyle.DotGlow);
+			DotGlowSlider.Value = _previewStyle.DotGlow;
+
+			BackLevelValue.Text = DoubleToString2(_previewStyle.BackGlow);
+			BackLevelSlider.Value = _previewStyle.BackGlow;
+
+			GlassDMDLightingValue.Text = DoubleToString2(_previewStyle.GlassLighting);
+			GlassDMDLightingSlider.Value = _previewStyle.GlassLighting;
+
+			Color glassColor = _previewStyle.GlassColor;
+			glassColor.A = 255;
+			GlassColor.SelectedColor = glassColor;
+
+			GlassPath.Text = _previewStyle.GlassTexture;
+			GlassPadding.Pad = _previewStyle.GlassPadding;
+
+			FramePath.Text = _previewStyle.FrameTexture;
+			FramePadding.Pad = _previewStyle.FramePadding;
+		}
+
+		private void LoadPreview()
+		{
+			Logger.Info("Loading preview...");
+			if (PreviewMono32x8.IsChecked == true)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8-mono.png"));
+			else if (PreviewMono128x32.IsChecked == true)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32-mono.png"));
+			else if (PreviewColor128x32.IsChecked == true)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32-color.png"));
+			else if (PreviewMono128x16.IsChecked == true)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x16-mono.png"));
+			else if (PreviewMono192x64.IsChecked == true)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-192x64-mono.png"));
+			UpdatePreview();
 		}
 
 		private void UpdatePreview()
 		{
 			DMD.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
-			DMD.IgnoreAspectRatio = IgnoreAspectRatio.IsChecked == true;
-			DMD.Glass = GlassPath.Text;
-			DMD.GlassPad = GlassPadding.Pad;
-			DMD.Frame = FramePath.Text;
-			DMD.FramePad = FramePadding.Pad;
-			DMD.BackGlow = _backGlow;
-			DMD.Brightness = _brightness;
-			DMD.DotSize = _dotSize;
-			DMD.DotRounding = _dotRounding;
-			DMD.DotGlow = _dotGlow;
-			DMD.UnlitDot = _unlitDot;
-			DMD.GlassColor = _glassColor;
+			DMD.SetStyle(_previewStyle);
 			DMD.RenderBitmap(_preview);
+			var baseWidth = 128.0 * 5;
+			var baseHeight = baseWidth / 4.0;
+			if (DMD.AspectRatio > 4.0)
+			{
+				DMD.Width = baseWidth;
+				DMD.Height = DMD.Width / DMD.AspectRatio;
+				var margin = (baseHeight - DMD.Height) *0.5;
+				DMD.Margin = new Thickness(0.0, margin, 0.0, margin + 16.0);
+			}
+			else
+			{
+				DMD.Height = baseHeight;
+				DMD.Width = DMD.Height * DMD.AspectRatio;
+				var margin = (baseWidth - DMD.Width) * 0.5;
+				DMD.Margin = new Thickness(margin, 0.0, margin, 16.0);
+			}
 		}
 
 		private void SelectGlassClicked(object sender, RoutedEventArgs e)
@@ -150,115 +209,66 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 		}
 
-		private void SaveForGameClicked(object sender, RoutedEventArgs e)
-		{
-			if (_config is VirtualDmdConfig)
-			{
-				((VirtualDmdConfig)_config).SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, true);
-				OnConfigUpdated.OnNext(_config);
-			}
-		}
-
-		private void SaveGloballyClicked(object sender, RoutedEventArgs e)
-		{
-			if (_config is VirtualDmdConfig)
-			{
-				((VirtualDmdConfig)_config).SetOptions(_brightness, _dotSize, _dotRounding, _unlitDot, _dotGlow, _backGlow, GlassPath.Text, GlassPadding.Pad, _glassColor, FramePath.Text, FramePadding.Pad, false);
-				OnConfigUpdated.OnNext(_config);
-			}
-		}
-
-		private class VirtualDmdLiveConfig : IVirtualDmdConfig
-		{
-			public bool Enabled { get; set; }
-			public bool StayOnTop { get; set; }
-			public bool IgnoreAr { get; set; }
-			public bool UseRegistryPosition { get; set; }
-			public double Left { get; set; }
-			public double Top { get; set; }
-			public double Width { get; set; }
-			public double Height { get; set; }
-			public double DotSize { get; set; }
-			public double DotRounding { get; set; }
-			public Color UnlitDot { get; set; }
-			public bool HasGameOverride(string key) => false;
-			public double Brightness { get; set; }
-			public double DotGlow { get; set; }
-			public double BackGlow { get; set; }
-			public string GlassTexture { get; set; }
-			public Thickness GlassPadding { get; set; }
-			public Color GlassColor { get; set; }
-			public string FrameTexture { get; set; }
-			public Thickness FramePadding { get; set; }
-
-		}
-
 		private void ApplyClicked(object sender, RoutedEventArgs e)
 		{
-			var config = new VirtualDmdLiveConfig()
+			OnConfigUpdated.OnNext(_previewStyle.Copy());
+			if (NewStyleName != null)
 			{
-				DotSize = _dotSize,
-				DotRounding = _dotRounding,
-				UnlitDot = _unlitDot,
-				IgnoreAr = _config.IgnoreAr,
-				Brightness = _brightness,
-				DotGlow = _dotGlow,
-				BackGlow = _backGlow,
-				GlassTexture = GlassPath.Text,
-				GlassPadding = GlassPadding.Pad,
-				GlassColor = _glassColor,
-				FrameTexture = FramePath.Text,
-				FramePadding = FramePadding.Pad,
-				StayOnTop = _config.StayOnTop
-			};
-			OnConfigUpdated.OnNext(config);
+				_dmdConfig.ApplyStyle(NewStyleName);
+			}
 		}
 
 		private void ResetClicked(object sender, RoutedEventArgs e)
 		{
-			_dotSize = _config.DotSize;
-			_dotRounding = _config.DotRounding;
-			_unlitDot = _config.UnlitDot;
-			_brightness = _config.Brightness;
-			_dotGlow = _config.DotGlow;
-			_backGlow = _config.BackGlow;
-			_glassColor = _config.GlassColor;
-			IgnoreAspectRatio.IsChecked = _config.IgnoreAr;
-
-			BrightnessValue.Text = DoubleToString2(_brightness);
-			BrightnessSlider.Value = _brightness;
-
-			DotSizeValue.Text = DoubleToString2(_dotSize);
-			DotSizeSlider.Value = _dotSize;
-
-			DotRoundingValue.Text = DoubleToString2(_dotRounding);
-			DotRoundingSlider.Value = _dotRounding;
-
-			UnlitDotColor.SelectedColor = _unlitDot;
-
-			DotGlowValue.Text = DoubleToString2(_dotGlow);
-			DotGlowSlider.Value = _dotGlow;
-
-			BackLevelValue.Text = DoubleToString2(_backGlow);
-			BackLevelSlider.Value = _backGlow;
-
-			GlassDMDLightingValue.Text = DoubleToString2(_glassColor.A / 255.0);
-			GlassDMDLightingSlider.Value = _glassColor.A / 255.0;
-
-			GlassColor.SelectedColor = _glassColor;
-
-			GlassPath.Text = _config.GlassTexture;
-			GlassPadding.Pad = _config.GlassPadding;
-
-			FramePath.Text = _config.FrameTexture;
-			FramePadding.Pad = _config.FramePadding;
-
+			_previewStyle = _originalStyle.Copy();
+			// FIXME IgnoreAspectRatio.IsChecked = _config.IgnoreAr;
+			UpdateControls();
 			UpdatePreview();
 		}
 
 		private void CancelClicked(object sender, RoutedEventArgs e)
 		{
 			Hide();
+		}
+
+		private void StyleSelectionChanged(string name)
+		{
+			Logger.Info("Selection changed to {0}", name);
+			if (StyleNames.Contains(name))
+			{
+				LoadStyleButton.IsEnabled = true;
+				DeleteStyleButton.IsEnabled = true;
+			}
+			else
+			{
+				LoadStyleButton.IsEnabled = false;
+				DeleteStyleButton.IsEnabled = false;
+			}
+		}
+
+		private void SaveToIniClicked(object sender, RoutedEventArgs e)
+		{
+			Logger.Info("Saving style {0} to DmdDevice.ini...", StyleNameComboBox.Text);
+			var styleName = NewStyleName ?? StyleNameComboBox.Text;
+			_dmdConfig.SetStyle(styleName, _previewStyle);
+			StyleSelectionChanged(styleName);
+			StyleNameComboBox.ItemsSource = StyleNames;
+			StyleNameComboBox.SelectedItem = styleName;
+		}
+
+		private void LoadFromIniClicked(object sender, RoutedEventArgs e)
+		{
+			_previewStyle = _dmdConfig.GetStyle(NewStyleName);
+			UpdateControls();
+			UpdatePreview();
+		}
+
+		private void DeleteFromIniClicked(object sender, RoutedEventArgs e)
+		{
+			_dmdConfig.RemoveStyle(NewStyleName);
+			StyleNameComboBox.ItemsSource = StyleNames;
+			StyleNameComboBox.Text = "";
+			StyleSelectionChanged("");
 		}
 
 		private static string DoubleToString2(double d)

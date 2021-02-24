@@ -12,6 +12,8 @@ using IniParser.Model;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.Dmd;
+using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
 
@@ -34,9 +36,11 @@ namespace LibDmd.DmdDevice
 
 		public ISubject<Unit> OnSave = new Subject<Unit>();
 
-		public string GameName {
+		public string GameName
+		{
 			get => _gameName;
-			set {
+			set
+			{
 				_gameName = value;
 				var gameSection = _data.Sections.FirstOrDefault(s => s.SectionName == _gameName);
 				GameConfig = gameSection != null ? new GameConfig(_gameName, _data, this) : null;
@@ -63,30 +67,42 @@ namespace LibDmd.DmdDevice
 
 		public Configuration(string iniPath = null)
 		{
-			if (iniPath != null) {
-				if (!File.Exists(iniPath)) {
+			if (iniPath != null)
+			{
+				if (!File.Exists(iniPath))
+				{
 					throw new IniNotFoundException(iniPath);
 				}
 				_iniPath = iniPath;
 
-			} else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
+			}
+			else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig)))
+			{
 				_iniPath = Environment.GetEnvironmentVariable(EnvConfig);
 
-			} else {
+			}
+			else
+			{
 				var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 				_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
 			}
 			_parser = new FileIniDataParser();
 
-			try {
-				if (File.Exists(_iniPath)) {
+			try
+			{
+				if (File.Exists(_iniPath))
+				{
 					_data = _parser.ReadFile(_iniPath);
 					Logger.Info("Successfully loaded config from {0}.", _iniPath);
-				} else {
+				}
+				else
+				{
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
 					_data = new IniData();
 				}
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
 			}
@@ -107,12 +123,16 @@ namespace LibDmd.DmdDevice
 			NetworkStream = new NetworkConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
 
-			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
+			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ =>
+			{
 				Logger.Info("Saving config to {0}", _iniPath);
-				try {
+				try
+				{
 					_parser.WriteFile(_iniPath, _data);
 
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					Logger.Error("Error writing to file: {0}", e.Message);
 				}
 			});
@@ -207,31 +227,188 @@ namespace LibDmd.DmdDevice
 	public class VirtualDmdConfig : AbstractConfiguration, IVirtualDmdConfig
 	{
 		public override string Name { get; } = "virtualdmd";
-
 		public bool Enabled => GetBoolean("enabled", true);
 		public bool StayOnTop => GetBoolean("stayontop", false);
 		public bool IgnoreAr => GetBoolean("ignorear", false);
 		public bool UseRegistryPosition => GetBoolean("useregistry", false);
 		public double Left => GetDouble("left", 0);
 		public double Top => GetDouble("top", 0);
-
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
-		public double DotSize => GetDouble("dotsize", 1.0);
-		public double DotRounding => GetDouble("dotrounding", 1.0);
-		public Color UnlitDot => fromSKColor(GetSKColor("unlitdot", SKColor.Empty)); 
 
-		public double Brightness => GetDouble("brightness", 1.0);
-		public double DotGlow => GetDouble("dotglow", 0.0);
-		public double BackGlow => GetDouble("backglow", 0.0);
-		public string GlassTexture => GetString("glass", null);
-		public System.Windows.Thickness GlassPadding => new System.Windows.Thickness(GetDouble("glass.padding.left", 0), GetDouble("glass.padding.top", 0), GetDouble("glass.padding.right", 0), GetDouble("glass.padding.bottom", 0));
-		public Color GlassColor => fromSKColor(GetSKColor("glass.color", SKColor.Empty));
-		public string FrameTexture => GetString("frame", null);
-		public System.Windows.Thickness FramePadding => new System.Windows.Thickness(GetDouble("frame.padding.left", 0), GetDouble("frame.padding.top", 0), GetDouble("frame.padding.right", 0), GetDouble("frame.padding.bottom", 0));
+		private readonly Dictionary<string, DmdStyle> _styles = new Dictionary<string, DmdStyle>();
+
+		public DmdStyle Style
+		{
+			get
+			{
+				var style = GetString("style", "default");
+				return _styles.ContainsKey(style) ? _styles[style] : new DmdStyle();
+			}
+		}
 
 		public VirtualDmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+			if (data[Name] == null)
+			{
+				return;
+			}
+			var keyValues = data[Name].GetEnumerator();
+			while (keyValues.MoveNext())
+			{
+				var names = keyValues.Current.KeyName.Split(new[] { '.' }, 4);
+				if (names.Length > 1 && names[0] == "style")
+				{
+					var styleName = names[1];
+					var styleProperty = string.Join(".", names.Skip(2).ToArray()); // names[2];
+					if (!_styles.ContainsKey(styleName))
+					{
+						_styles.Add(styleName, new DmdStyle());
+					}
+					switch (styleProperty)
+					{
+						case "dotsize":
+							_styles[styleName].DotSize = GetDouble(keyValues.Current.KeyName, 1.0);
+							break;
+						case "dotrounding":
+							_styles[styleName].DotRounding = GetDouble(keyValues.Current.KeyName, 0.0);
+							break;
+						case "unlitdot":
+							_styles[styleName].UnlitDot = fromSKColor(GetSKColor(keyValues.Current.KeyName, SKColor.Empty));
+							break;
+						case "brightness":
+							_styles[styleName].Brightness = GetDouble(keyValues.Current.KeyName, 1.0);
+							break;
+						case "dotglow":
+							_styles[styleName].DotGlow = GetDouble(keyValues.Current.KeyName, 0.0);
+							break;
+						case "backglow":
+							_styles[styleName].BackGlow = GetDouble(keyValues.Current.KeyName, 0.0);
+							break;
+						case "glass":
+							var glassTex = GetString(keyValues.Current.KeyName, null);
+							_styles[styleName].GlassTexture = glassTex.Equals("null") ? null : GetString(keyValues.Current.KeyName, "null");
+							break;
+						case "glass.padding.left":
+							_styles[styleName].GlassPadding = new System.Windows.Thickness(GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].GlassPadding.Top, _styles[styleName].GlassPadding.Right, _styles[styleName].GlassPadding.Bottom);
+							break;
+						case "glass.padding.top":
+							_styles[styleName].GlassPadding = new System.Windows.Thickness(_styles[styleName].GlassPadding.Left, GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].GlassPadding.Right, _styles[styleName].GlassPadding.Bottom);
+							break;
+						case "glass.padding.right":
+							_styles[styleName].GlassPadding = new System.Windows.Thickness(_styles[styleName].GlassPadding.Left, _styles[styleName].GlassPadding.Top, GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].GlassPadding.Bottom);
+							break;
+						case "glass.padding.bottom":
+							_styles[styleName].GlassPadding = new System.Windows.Thickness(_styles[styleName].GlassPadding.Left, _styles[styleName].GlassPadding.Top, _styles[styleName].GlassPadding.Right, GetDouble(keyValues.Current.KeyName, 0.0));
+							break;
+						case "glass.color":
+							_styles[styleName].GlassColor = fromSKColor(GetSKColor(keyValues.Current.KeyName, SKColor.Empty));
+							break;
+						case "glass.lighting":
+							_styles[styleName].GlassLighting = GetDouble(keyValues.Current.KeyName, 0.0);
+							break;
+						case "frame":
+							var frameTex = GetString(keyValues.Current.KeyName, null);
+							_styles[styleName].FrameTexture = frameTex.Equals("null") ? null : GetString(keyValues.Current.KeyName, "null");
+							break;
+						case "frame.padding.left":
+							_styles[styleName].FramePadding = new System.Windows.Thickness(GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].FramePadding.Top, _styles[styleName].FramePadding.Right, _styles[styleName].FramePadding.Bottom);
+							break;
+						case "frame.padding.top":
+							_styles[styleName].FramePadding = new System.Windows.Thickness(_styles[styleName].FramePadding.Left, GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].FramePadding.Right, _styles[styleName].FramePadding.Bottom);
+							break;
+						case "frame.padding.right":
+							_styles[styleName].FramePadding = new System.Windows.Thickness(_styles[styleName].FramePadding.Left, _styles[styleName].FramePadding.Top, GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].FramePadding.Bottom);
+							break;
+						case "Frame.padding.bottom":
+							_styles[styleName].FramePadding = new System.Windows.Thickness(_styles[styleName].FramePadding.Left, _styles[styleName].FramePadding.Top, _styles[styleName].FramePadding.Right, GetDouble(keyValues.Current.KeyName, 0.0));
+							break;
+					}
+				}
+			}
+			//Logger.Info("Parsed styles: {0}", string.Join("\n", _styles.Keys.Select(k => $"{k}: {_styles[k]}")));
+		}
+
+		public List<string> GetStyleNames()
+		{
+			return _styles.Keys.ToList();
+		}
+
+		public DmdStyle GetStyle(string name)
+		{
+			return _styles[name];
+		}
+
+		public void ApplyStyle(string name)
+		{
+			Set("style", name, true);
+		}
+
+		public void SetStyle(string name, DmdStyle style)
+		{
+			if (_styles.ContainsKey(name))
+			{
+				_styles.Remove(name);
+			}
+			_styles.Add(name, style);
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+
+			Set(prefix + "brightness", style.Brightness);
+			Set(prefix + "dotsize", style.DotSize);
+			Set(prefix + "dotrounding", style.DotRounding);
+			Set(prefix + "unlitdot", style.UnlitDot);
+			Set(prefix + "dotglow", style.DotGlow);
+			Set(prefix + "backglow", style.BackGlow);
+			if (style.GlassTexture == null)
+				Set(prefix + "glass", "null");
+			else
+				Set(prefix + "glass", style.GlassTexture);
+			Set(prefix + "glass.color", new SKColor(style.GlassColor.R, style.GlassColor.G, style.GlassColor.B, style.GlassColor.A).ToString());
+			Set(prefix + "glass.lighting", style.GlassLighting);
+			Set(prefix + "glass.padding.left", style.GlassPadding.Left);
+			Set(prefix + "glass.padding.top", style.GlassPadding.Top);
+			Set(prefix + "glass.padding.right", style.GlassPadding.Right);
+			Set(prefix + "glass.padding.bottom", style.GlassPadding.Bottom);
+			if (style.FrameTexture == null)
+				Set(prefix + "frame", "null");
+			else
+				Set(prefix + "frame", style.FrameTexture);
+			Set(prefix + "frame.padding.left", style.FramePadding.Left);
+			Set(prefix + "frame.padding.top", style.FramePadding.Top);
+			Set(prefix + "frame.padding.right", style.FramePadding.Right);
+			Set(prefix + "frame.padding.bottom", style.FramePadding.Bottom);
+			Save();
+		}
+
+		public void RemoveStyle(string name)
+		{
+			if (_styles.ContainsKey(name))
+			{
+				_styles.Remove(name);
+			}
+			var prefix = "style." + name + ".";
+			DoWrite = false;
+			Remove("style");
+			Remove(prefix + "brightness");
+			Remove(prefix + "dotsize");
+			Remove(prefix + "dotrounding");
+			Remove(prefix + "unlitdot");
+			Remove(prefix + "dotglow");
+			Remove(prefix + "backglow");
+			Remove(prefix + "glass");
+			Remove(prefix + "glass.color");
+			Remove(prefix + "glass.lighting");
+			Remove(prefix + "glass.padding.left");
+			Remove(prefix + "glass.padding.top");
+			Remove(prefix + "glass.padding.right");
+			Remove(prefix + "glass.padding.bottom");
+			Remove(prefix + "frame");
+			Remove(prefix + "frame.padding.left");
+			Remove(prefix + "frame.padding.top");
+			Remove(prefix + "frame.padding.right");
+			Remove(prefix + "frame.padding.bottom");
+			Save();
 		}
 
 		private static Color fromSKColor(SKColor skColor)
@@ -255,29 +432,6 @@ namespace LibDmd.DmdDevice
 			Set("ignorear", ignoreAspectRatio, false);
 			Save();
 		}
-
-		public void SetOptions(double brightness, double dotSize, double dotRounding, Color unlitDot, double dotGlow, double backGlow, string glass, System.Windows.Thickness glassPadding, Color glassColor, string frame, System.Windows.Thickness framePadding, bool onlyForGame)
-		{
-			DoWrite = false;
-			Set("brightness", brightness, onlyForGame);
-			Set("dotsize", dotSize, onlyForGame);
-			Set("dotrounding", dotRounding, onlyForGame);
-			Set("unlitdot", new SKColor(unlitDot.R, unlitDot.G, unlitDot.B, unlitDot.A).ToString(), onlyForGame);
-			Set("dotglow", dotGlow, onlyForGame);
-			Set("backglow", backGlow, onlyForGame);
-			Set("glass", glass, onlyForGame);
-			Set("glass.color", new SKColor(glassColor.R, glassColor.G, glassColor.B, glassColor.A).ToString(), onlyForGame);
-			Set("glass.padding.left", glassPadding.Left, onlyForGame);
-			Set("glass.padding.top", glassPadding.Top, onlyForGame);
-			Set("glass.padding.right", glassPadding.Right, onlyForGame);
-			Set("glass.padding.bottom", glassPadding.Bottom, onlyForGame);
-			Set("frame", frame, onlyForGame);
-			Set("frame.padding.left", framePadding.Left, onlyForGame);
-			Set("frame.padding.top", framePadding.Top, onlyForGame);
-			Set("frame.padding.right", framePadding.Right, onlyForGame);
-			Set("frame.padding.bottom", framePadding.Bottom, onlyForGame);
-			Save();
-		}
 	}
 
 	public class VirtualAlphaNumericDisplayConfig : AbstractConfiguration, IVirtualAlphaNumericDisplayConfig
@@ -288,30 +442,37 @@ namespace LibDmd.DmdDevice
 
 		private readonly Dictionary<string, RasterizeStyleDefinition> _styles = new Dictionary<string, RasterizeStyleDefinition>();
 
-		public RasterizeStyleDefinition Style {
-			get {
+		public RasterizeStyleDefinition Style
+		{
+			get
+			{
 				var style = GetString("style", "default");
 				return _styles.ContainsKey(style) ? _styles[style] : new RasterizeStyleDefinition();
 			}
 		}
-	
+
 		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
-			if (data[Name] == null) {
+			if (data[Name] == null)
+			{
 				return;
 			}
 			var keyValues = data[Name].GetEnumerator();
-			while (keyValues.MoveNext()) {
-				var names = keyValues.Current.KeyName.Split(new []{'.'}, 4);
-				if (names.Length > 1 && names[0] == "style") {
+			while (keyValues.MoveNext())
+			{
+				var names = keyValues.Current.KeyName.Split(new[] { '.' }, 4);
+				if (names.Length > 1 && names[0] == "style")
+				{
 					var styleName = names[1];
 					var styleProperty = names[2];
-					if (!_styles.ContainsKey(styleName)) {
+					if (!_styles.ContainsKey(styleName))
+					{
 						_styles.Add(styleName, new RasterizeStyleDefinition());
 					}
-					switch (styleProperty) {
+					switch (styleProperty)
+					{
 						case "skewangle":
-							_styles[styleName].SkewAngle = -(float) GetDouble(keyValues.Current.KeyName, 0);
+							_styles[styleName].SkewAngle = -(float)GetDouble(keyValues.Current.KeyName, 0);
 							break;
 						case "weight":
 							_styles[styleName].SegmentWeight = GetEnum(keyValues.Current.KeyName, SegmentWeight.Thin);
@@ -350,7 +511,8 @@ namespace LibDmd.DmdDevice
 		public VirtualDisplayPosition GetPosition(int displayNumber)
 		{
 			var prefix = "pos." + displayNumber + ".";
-			if (!HasValue(prefix + "height")) {
+			if (!HasValue(prefix + "height"))
+			{
 				return null;
 			}
 			return new VirtualDisplayPosition(GetDouble(prefix + "left", 0), GetDouble(prefix + "top", 0), 0, GetDouble(prefix + "height", 0));
@@ -373,13 +535,14 @@ namespace LibDmd.DmdDevice
 
 		public void SetStyle(string name, RasterizeStyleDefinition style)
 		{
-			if (_styles.ContainsKey(name)) {
+			if (_styles.ContainsKey(name))
+			{
 				_styles.Remove(name);
 			}
 			_styles.Add(name, style);
 			var prefix = "style." + name + ".";
 			DoWrite = false;
-			
+
 			Set(prefix + "skewangle", -style.SkewAngle);
 			Set(prefix + "weight", style.SegmentWeight);
 			Set(prefix + "backgroundcolor", style.BackgroundColor);
@@ -392,7 +555,8 @@ namespace LibDmd.DmdDevice
 
 		public void RemoveStyle(string name)
 		{
-			if (_styles.ContainsKey(name)) {
+			if (_styles.ContainsKey(name))
+			{
 				_styles.Remove(name);
 			}
 			var prefix = "style." + name + ".";
@@ -411,27 +575,36 @@ namespace LibDmd.DmdDevice
 		{
 			var prefix = "style." + styleName + "." + layerName + ".";
 			Set(prefix + "enabled", layerStyle.IsEnabled);
-			if (layerStyle.IsEnabled) {
+			if (layerStyle.IsEnabled)
+			{
 
 				Set(prefix + "color", layerStyle.Color);
 				Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
-				if (layerStyle.IsBlurEnabled) {
+				if (layerStyle.IsBlurEnabled)
+				{
 					Set(prefix + "blur.x", layerStyle.Blur.X);
 					Set(prefix + "blur.y", layerStyle.Blur.Y);
-				} else {
+				}
+				else
+				{
 					Remove(prefix + "blur.x");
 					Remove(prefix + "blur.y");
 				}
 
 				Set(prefix + "dilate.enabled", layerStyle.IsDilateEnabled);
-				if (layerStyle.IsDilateEnabled) {
+				if (layerStyle.IsDilateEnabled)
+				{
 					Set(prefix + "dilate.x", layerStyle.Dilate.X);
 					Set(prefix + "dilate.y", layerStyle.Dilate.Y);
-				} else {
+				}
+				else
+				{
 					Remove(prefix + "dilate.x");
 					Remove(prefix + "dilate.y");
 				}
-			} else {
+			}
+			else
+			{
 
 				Remove(prefix + "color");
 				Remove(prefix + "blur.enabled");
@@ -525,7 +698,7 @@ namespace LibDmd.DmdDevice
 		{
 		}
 	}
-	
+
 	public class NetworkConfig : AbstractConfiguration, INetworkConfig
 	{
 		public override string Name { get; } = "networkstream";
@@ -589,17 +762,22 @@ namespace LibDmd.DmdDevice
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return _parent.GameConfig.GetBoolean(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key))
+			{
 				return fallback;
 			}
 
-			try {
+			try
+			{
 				return bool.Parse(_data[Name][key]);
-			} catch (FormatException e) {
+			}
+			catch (FormatException e)
+			{
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
 				return fallback;
 			}
@@ -607,17 +785,22 @@ namespace LibDmd.DmdDevice
 
 		protected int GetInt(string key, int fallback)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return _parent.GameConfig.GetInt(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key))
+			{
 				return fallback;
 			}
 
-			try {
+			try
+			{
 				return int.Parse(_data[Name][key]);
-			} catch (FormatException e) {
+			}
+			catch (FormatException e)
+			{
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
 				return fallback;
 			}
@@ -625,17 +808,22 @@ namespace LibDmd.DmdDevice
 
 		protected double GetDouble(string key, double fallback)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return _parent.GameConfig.GetDouble(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key))
+			{
 				return fallback;
 			}
 
-			try {
+			try
+			{
 				return double.Parse(_data[Name][key]);
-			} catch (FormatException) {
+			}
+			catch (FormatException)
+			{
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
 				return fallback;
 			}
@@ -643,11 +831,13 @@ namespace LibDmd.DmdDevice
 
 		protected string GetString(string key, string fallback)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return _parent.GameConfig.GetString(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key))
+			{
 				return fallback;
 			}
 			return _data[Name][key];
@@ -655,12 +845,16 @@ namespace LibDmd.DmdDevice
 
 		protected SKColor GetSKColor(string key, SKColor fallback)
 		{
-			try {
-				if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			try
+			{
+				if (_data[Name] == null || !_data[Name].ContainsKey(key))
+				{
 					return fallback;
 				}
 				return SKColor.Parse(_data[Name][key]);
-			} catch (ArgumentException) {
+			}
+			catch (ArgumentException)
+			{
 				Logger.Error("Cannot parse color {0} for {1}, using fallback {2}", _data[Name][key], key, fallback.ToString());
 				return fallback;
 			}
@@ -668,20 +862,26 @@ namespace LibDmd.DmdDevice
 
 		protected T GetEnum<T>(string key, T fallback)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return _parent.GameConfig.GetEnum(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+			if (_data[Name] == null || !_data[Name].ContainsKey(key))
+			{
 				return fallback;
 			}
-			try {
+			try
+			{
 				var e = (T)Enum.Parse(typeof(T), _data[Name][key].Substring(0, 1).ToUpper() + _data[Name][key].Substring(1));
-				if (!Enum.IsDefined(typeof(T), e)) {
+				if (!Enum.IsDefined(typeof(T), e))
+				{
 					throw new ArgumentException();
 				}
 				return e;
-			} catch (ArgumentException) {
+			}
+			catch (ArgumentException)
+			{
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
 				return fallback;
 			}
@@ -689,36 +889,45 @@ namespace LibDmd.DmdDevice
 
 		protected void Set(string key, bool value)
 		{
-			if (_data[Name] == null) {
+			if (_data[Name] == null)
+			{
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value ? "true" : "false";
-			if (DoWrite) {
+			if (DoWrite)
+			{
 				_parent.Save();
 			}
 		}
 
 		protected void Set(string key, int value)
 		{
-			if (_data[Name] == null) {
+			if (_data[Name] == null)
+			{
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value.ToString();
-			if (DoWrite) {
+			if (DoWrite)
+			{
 				_parent.Save();
 			}
 		}
 
 		protected void Set(string key, double value, bool onlyForGame = false)
 		{
-			if (onlyForGame && CreateGameConfig()) {
+			if (onlyForGame && CreateGameConfig())
+			{
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			} else {
-				if (_data[Name] == null) {
+			}
+			else
+			{
+				if (_data[Name] == null)
+				{
 					_data.Sections.Add(new SectionData(Name));
 				}
 				_data[Name][key] = value.ToString();
-				if (DoWrite) {
+				if (DoWrite)
+				{
 					_parent.Save();
 				}
 			}
@@ -731,14 +940,19 @@ namespace LibDmd.DmdDevice
 
 		protected void Set(string key, string value, bool onlyForGame = false)
 		{
-			if (onlyForGame && CreateGameConfig()) {
+			if (onlyForGame && CreateGameConfig())
+			{
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			} else {
-				if (_data[Name] == null) {
+			}
+			else
+			{
+				if (_data[Name] == null)
+				{
 					_data.Sections.Add(new SectionData(Name));
 				}
 				_data[Name][key] = value;
-				if (DoWrite) {
+				if (DoWrite)
+				{
 					_parent.Save();
 				}
 			}
@@ -746,25 +960,30 @@ namespace LibDmd.DmdDevice
 
 		protected void Set<T>(string key, T value)
 		{
-			if (_data[Name] == null) {
+			if (_data[Name] == null)
+			{
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value.ToString();
-			if (DoWrite) {
+			if (DoWrite)
+			{
 				_parent.Save();
 			}
 		}
 
 		protected void Remove(string key)
 		{
-			if (_data[Name] == null) {
+			if (_data[Name] == null)
+			{
 				return;
 			}
-			if (!_data[Name].ContainsKey(key)) {
+			if (!_data[Name].ContainsKey(key))
+			{
 				return;
 			}
 			_data[Name].RemoveKey(key);
-			if (DoWrite) {
+			if (DoWrite)
+			{
 				_parent.Save();
 			}
 		}
@@ -772,13 +991,14 @@ namespace LibDmd.DmdDevice
 		private bool HasGameSpecificValue(string key)
 		{
 			return Name != _parent.GameName
-			       && _parent.GameConfig != null
-			       && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key);
+				   && _parent.GameConfig != null
+				   && _data[_parent.GameName].ContainsKey(GameOverridePrefix + key);
 		}
 
 		protected bool HasValue(string key)
 		{
-			if (HasGameSpecificValue(key)) {
+			if (HasGameSpecificValue(key))
+			{
 				return true;
 			}
 			return _data[Name] != null && _data[Name].ContainsKey(key);
@@ -786,11 +1006,13 @@ namespace LibDmd.DmdDevice
 
 		private bool CreateGameConfig()
 		{
-			if (string.IsNullOrEmpty(_parent.GameName)) {
+			if (string.IsNullOrEmpty(_parent.GameName))
+			{
 				return false;
 			}
 
-			if (_parent.GameConfig != null) {
+			if (_parent.GameConfig != null)
+			{
 				return true;
 			}
 

@@ -24,17 +24,17 @@
 		<Label Grid.Column="0" Grid.Row="0" Content="Padding" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60" Margin="0,0,8,0"/>
 
 		<Label Grid.Column="1" Grid.Row="0" Content="Left:" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60" Margin="0,0,8,0"/>
-		<Slider x:Name="LeftSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" Width="150" Maximum="150" Margin="0,0,8,0"/>
+		<Slider x:Name="LeftSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" Width="150" Maximum="64" Margin="0,0,8,0"/>
 		<TextBox x:Name="LeftValue" Grid.Column="3" Grid.Row="0" VerticalAlignment="Center" Width="30" Margin="0,0,8,0"/>
 		<Label Grid.Column="4" Grid.Row="0" Content="Right:" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60" Margin="0,0,8,0"/>
-		<Slider x:Name="RightSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Center" Width="150" Maximum="150" Margin="0,0,8,0"/>
+		<Slider x:Name="RightSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Center" Width="150" Maximum="64" Margin="0,0,8,0"/>
 		<TextBox x:Name="RightValue" Grid.Column="6" Grid.Row="0" VerticalAlignment="Center" Width="30"/>
 
 		<Label Grid.Column="1" Grid.Row="2" Content="Top:" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60" Margin="0,0,8,0"/>
-		<Slider x:Name="TopSlider" Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" Width="150" Maximum="150" Margin="0,0,8,0"/>
+		<Slider x:Name="TopSlider" Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" Width="150" Maximum="64" Margin="0,0,8,0"/>
 		<TextBox x:Name="TopValue" Grid.Column="3" Grid.Row="2" VerticalAlignment="Center" Width="30" Margin="0,0,8,0"/>
 		<Label Grid.Column="4" Grid.Row="2" Content="Bottom:" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60" Margin="0,0,8,0"/>
-		<Slider x:Name="BottomSlider" Grid.Column="5" Grid.Row="2" VerticalAlignment="Center" Width="150" Maximum="150" Margin="0,0,8,0"/>
+		<Slider x:Name="BottomSlider" Grid.Column="5" Grid.Row="2" VerticalAlignment="Center" Width="150" Maximum="64" Margin="0,0,8,0"/>
 		<TextBox x:Name="BottomValue" Grid.Column="6" Grid.Row="2" VerticalAlignment="Center" Width="30"/>
 	</Grid>
 </UserControl>

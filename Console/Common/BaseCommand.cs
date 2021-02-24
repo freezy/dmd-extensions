@@ -14,6 +14,7 @@ using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.Dmd;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;
@@ -92,7 +93,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config.VirtualDmd));
+				renderers.Add(ShowVirtualDmd(config));
 				Logger.Info("Added virtual DMD renderer.");
 			}
 
@@ -122,15 +123,16 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IDestination ShowVirtualDmd(IVirtualDmdConfig config)
+		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
-			var dmd = new VirtualDmd(config)
+			var dmd = new VirtualDmd()
 			{
-				Left = config.Left,
-				Top = config.Top,
-				Width = config.Width,
-				Height = config.Height
+				Left = config.VirtualDmd.Left,
+				Top = config.VirtualDmd.Top,
+				Width = config.VirtualDmd.Width,
+				Height = config.VirtualDmd.Height
 			};
+			dmd.Setup(config as Configuration, null);
 			var thread = new Thread(() => {
 				
 				// Create our context, and install it:

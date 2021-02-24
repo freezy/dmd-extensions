@@ -4,6 +4,7 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.Dmd;
 using NLog.LayoutRenderers;
 
 namespace DmdExt.Common
@@ -204,6 +205,8 @@ namespace DmdExt.Common
 			_options = options;
 		}
 
+		public DmdStyle Style => new DmdStyle();
+
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
 							|| _options.Destination == BaseOptions.DestinationType.Virtual;
 		public bool StayOnTop => _options.VirtualDmdOnTop;
@@ -216,28 +219,6 @@ namespace DmdExt.Common
 		public double Height => _options.VirtualDmdPosition.Length == 4
 			? _options.VirtualDmdPosition[3]
 			: (int) ((double)_options.VirtualDmdPosition[2] / 4);
-
-		public double DotSize => _options.VirtualDmdDotSize;
-
-		public double DotRounding => _options.VirtualDmdDotRounding;
-
-		public Color UnlitDot => _options.VirtualDmdUnlitDot;
-
-		public double Brightness => _options.VirtualDmdBrightness;
-
-		public double DotGlow => _options.VirtualDmdDotGlow;
-
-		public double BackGlow => _options.VirtualDmdBackGlow;
-
-		public string GlassTexture => _options.VirtualDmdGlassTexture;
-
-		public System.Windows.Thickness GlassPadding => new System.Windows.Thickness(_options.VirtualDmdGlassPaddingLeft, _options.VirtualDmdGlassPaddingTop, _options.VirtualDmdGlassPaddingRight, _options.VirtualDmdGlassPaddingBottom);
-
-		public Color GlassColor => _options.VirtualDmdGlassColor;
-
-		public string FrameTexture => _options.VirtualDmdFrameTexture;
-
-		public System.Windows.Thickness FramePadding => new System.Windows.Thickness(_options.VirtualDmdFramePaddingLeft, _options.VirtualDmdFramePaddingTop, _options.VirtualDmdFramePaddingRight, _options.VirtualDmdFramePaddingBottom);
 
 		public bool HasGameOverride(string key)
 		{

@@ -25,11 +25,22 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="620" Height="155" Margin="0,0,0,16"></dmd:VirtualDmdControl>
+		<dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="640" Height="160" Margin="0,0,0,16"></dmd:VirtualDmdControl>
 
-		<GroupBox x:Name="Frame" Grid.Row="1" Header="Frame" Padding="8,0,8,0" Margin="0,0,0,16" Width="620">
+		<StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" HorizontalAlignment="Center">
+			<Label Content="Preview size::" VerticalAlignment="Center" Width="100"/>
+			<RadioButton GroupName="Preview" x:Name="PreviewMono32x8" IsChecked="True" Content="32x8" VerticalAlignment="Center" Margin="16,0,16,0" />
+			<RadioButton GroupName="Preview" x:Name="PreviewMono128x32" Content="128x32" VerticalAlignment="Center" Margin="16,0,16,0" />
+			<RadioButton GroupName="Preview" x:Name="PreviewColor128x32" Content="128x32 Color" VerticalAlignment="Center" Margin="16,0,16,0" />
+			<RadioButton GroupName="Preview" x:Name="PreviewMono128x16" Content="128x16" VerticalAlignment="Center" Margin="16,0,16,0" />
+			<RadioButton GroupName="Preview" x:Name="PreviewMono192x64" Content="192x64" VerticalAlignment="Center" Margin="16,0,16,0" />
+		</StackPanel >
+		
+		<GroupBox x:Name="Frame" Grid.Row="2" Header="Frame" Padding="8,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -56,7 +67,7 @@
 			</Grid>
 		</GroupBox>
 
-		<GroupBox x:Name="Glass" Grid.Row="2" Header="Glass" Padding="8,0,8,0" Margin="0,0,0,16" Width="620">
+		<GroupBox x:Name="Glass" Grid.Row="3" Header="Glass" Padding="8,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -88,10 +99,10 @@
 							<Button Content="..." VerticalAlignment="Center" Width="24" Height="18" Margin="0,0,8,0" Click="SelectGlassClicked"/>
 						</StackPanel>
 
-						<Label Grid.Row="1" Content="Glass tint:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-						<xctk:ColorPicker x:Name="GlassColor" Grid.Row="1" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="100,2,0,2" DisplayColorAndName="False"/>
+						<Label Grid.Row="1" Content="Ambient lighting:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+						<xctk:ColorPicker x:Name="GlassColor" Grid.Row="1" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="100,2,0,2" DisplayColorAndName="False" UsingAlphaChannel="False"/>
 
-						<Label Grid.Row="1" Content="Glass/DMD lighting:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,140,0"/>
+						<Label Grid.Row="1" Content="DMD lighting:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,140,0"/>
 						<Slider x:Name="GlassDMDLightingSlider" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="100" Maximum="1" Margin="0,0,38,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
 						<TextBox x:Name="GlassDMDLightingValue" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
 
@@ -101,7 +112,7 @@
 			</Grid>
 		</GroupBox>
 
-		<GroupBox Grid.Row="3" Grid.Column="2" Header="DMD" Padding="8,0,8,0" Margin="0,0,0,16" Width="620">
+		<GroupBox Grid.Row="4" Grid.Column="2" Header="DMD" Padding="8,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="588"></ColumnDefinition>
@@ -129,7 +140,7 @@
 					<TextBox x:Name="DotRoundingValue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
 
 					<Label Grid.Row="2" Grid.Column="0" Content="Unlit Dot:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False"/>
+					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False"/>
 
 					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
 					<Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>
@@ -148,13 +159,19 @@
 			</Grid>
 		</GroupBox>
 
-		<Button Content="Reset" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Top" Width="90" Height="24" IsCancel="True" Click="ResetClicked"/>
+		<GroupBox x:Name="SaveGroup"  Grid.Row="5" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
+			<Grid>
+				<ComboBox ItemsSource="{Binding StyleNames}" SelectedValue="{Binding NewStyleName, Mode=TwoWay}"  IsSynchronizedWithCurrentItem="True" x:Name="StyleNameComboBox" Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
+				<Button x:Name="LoadStyleButton" Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load" Click="LoadFromIniClicked"/>
+				<Button x:Name="SaveStyleButton" Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,68,0" Content="Save" Click="SaveToIniClicked"/>
+				<Button x:Name="DeleteStyleButton" Width="60" HorizontalAlignment="Right" Height="24" Margin="0,7,0,0" Content="Delete" Click="DeleteFromIniClicked" />
+			</Grid>
+		</GroupBox>
 
-		<Button x:Name="SaveForAllButton" Content="Save globally" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" IsDefault="True" Click="SaveGloballyClicked" Margin="0,0,200,0"/>
-		<Button x:Name="SaveForGameButton" Content="Save for game" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Click="SaveForGameClicked" Margin="0,0,300,0"/>
+		<Button Content="Reset" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Top" Width="90" Height="24" IsCancel="True" Click="ResetClicked"/>
 
-		<Button x:Name="ApplyButton" Content="Apply" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Click="ApplyClicked" Margin="0,0,100,0"/>
+		<Button x:Name="ApplyButton" Content="Apply" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Click="ApplyClicked" Margin="0,0,100,0"/>
 
-		<Button Content="Close" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Margin="0,0,0,0" IsCancel="True" Click="CancelClicked"/>
+		<Button Content="Close" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" Height="24" Margin="0,0,0,0" IsCancel="True" Click="CancelClicked"/>
 	</Grid>
 </Window>
