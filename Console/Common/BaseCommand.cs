@@ -125,8 +125,7 @@ namespace DmdExt.Common
 
 		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
-			var dmd = new VirtualDmd()
-			{
+			var dmd = new VirtualDmd {
 				Left = config.VirtualDmd.Left,
 				Top = config.VirtualDmd.Top,
 				Width = config.VirtualDmd.Width,

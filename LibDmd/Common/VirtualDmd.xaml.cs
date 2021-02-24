@@ -35,19 +35,18 @@ namespace LibDmd.Common
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
 			_gameName = gameName;
 
-			if (_dmdConfig != null)
-			{
+			if (_dmdConfig != null) {
+
 				ParentGrid.ContextMenu = new ContextMenu();
 
-				if (_dmdConfig is VirtualDmdConfig)
-				{
+				if (_dmdConfig is VirtualDmdConfig) {
+
 					var saveGlobalPos = new MenuItem();
 					saveGlobalPos.Click += SavePositionGlobally;
 					saveGlobalPos.Header = "Save position globally";
 					ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
 
-					if (gameName != null)
-					{
+					if (gameName != null) {
 						var saveGamePosItem = new MenuItem();
 						saveGamePosItem.Click += SavePositionGame;
 						saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
@@ -69,14 +68,12 @@ namespace LibDmd.Common
 				openSettings.Click += OpenSettings;
 				openSettings.Header = "Open display settings";
 				ParentGrid.ContextMenu.Items.Add(openSettings);
-			}
-			else
-			{
+			
+			} else {
 				ParentGrid.ContextMenu = null;
 			}
 
-			if (_config != null)
-			{
+			if (_config != null) {
 				Dmd.SetStyle(_config.VirtualDmd.Style);
 				IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 				AlwaysOnTop = _config.VirtualDmd.StayOnTop;
