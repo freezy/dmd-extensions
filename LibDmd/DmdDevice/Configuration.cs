@@ -36,11 +36,9 @@ namespace LibDmd.DmdDevice
 
 		public ISubject<Unit> OnSave = new Subject<Unit>();
 
-		public string GameName
-		{
+		public string GameName {
 			get => _gameName;
-			set
-			{
+			set {
 				_gameName = value;
 				var gameSection = _data.Sections.FirstOrDefault(s => s.SectionName == _gameName);
 				GameConfig = gameSection != null ? new GameConfig(_gameName, _data, this) : null;
@@ -67,42 +65,32 @@ namespace LibDmd.DmdDevice
 
 		public Configuration(string iniPath = null)
 		{
-			if (iniPath != null)
-			{
-				if (!File.Exists(iniPath))
-				{
+			if (iniPath != null) {
+				if (!File.Exists(iniPath)) {
 					throw new IniNotFoundException(iniPath);
 				}
 				_iniPath = iniPath;
 
-			}
-			else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig)))
-			{
+			} else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
 				_iniPath = Environment.GetEnvironmentVariable(EnvConfig);
 
-			}
-			else
-			{
+			} else {
 				var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 				_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
 			}
 			_parser = new FileIniDataParser();
 
-			try
-			{
-				if (File.Exists(_iniPath))
-				{
+			try {
+				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);
 					Logger.Info("Successfully loaded config from {0}.", _iniPath);
-				}
-				else
-				{
+				
+				} else {
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
 					_data = new IniData();
 				}
-			}
-			catch (Exception e)
-			{
+			
+			} catch (Exception e) {
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
 			}
@@ -126,13 +114,10 @@ namespace LibDmd.DmdDevice
 			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ =>
 			{
 				Logger.Info("Saving config to {0}", _iniPath);
-				try
-				{
+				try {
 					_parser.WriteFile(_iniPath, _data);
 
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					Logger.Error("Error writing to file: {0}", e.Message);
 				}
 			});
@@ -349,8 +334,7 @@ namespace LibDmd.DmdDevice
 
 		public void SetStyle(string name, DmdStyle style)
 		{
-			if (_styles.ContainsKey(name))
-			{
+			if (_styles.ContainsKey(name)) {
 				_styles.Remove(name);
 			}
 			_styles.Add(name, style);
@@ -364,20 +348,14 @@ namespace LibDmd.DmdDevice
 			Set(prefix + "dotglow", style.DotGlow);
 			Set(prefix + "backglow", style.BackGlow);
 			Set(prefix + "gamma", style.Gamma);
-			if (style.GlassTexture == null)
-				Set(prefix + "glass", "null");
-			else
-				Set(prefix + "glass", style.GlassTexture);
+			Set(prefix + "glass", style.GlassTexture ?? "null");
 			Set(prefix + "glass.color", new SKColor(style.GlassColor.R, style.GlassColor.G, style.GlassColor.B, style.GlassColor.A).ToString());
 			Set(prefix + "glass.lighting", style.GlassLighting);
 			Set(prefix + "glass.padding.left", style.GlassPadding.Left);
 			Set(prefix + "glass.padding.top", style.GlassPadding.Top);
 			Set(prefix + "glass.padding.right", style.GlassPadding.Right);
 			Set(prefix + "glass.padding.bottom", style.GlassPadding.Bottom);
-			if (style.FrameTexture == null)
-				Set(prefix + "frame", "null");
-			else
-				Set(prefix + "frame", style.FrameTexture);
+			Set(prefix + "frame", style.FrameTexture ?? "null");
 			Set(prefix + "frame.padding.left", style.FramePadding.Left);
 			Set(prefix + "frame.padding.top", style.FramePadding.Top);
 			Set(prefix + "frame.padding.right", style.FramePadding.Right);
@@ -387,8 +365,7 @@ namespace LibDmd.DmdDevice
 
 		public void RemoveStyle(string name)
 		{
-			if (_styles.ContainsKey(name))
-			{
+			if (_styles.ContainsKey(name)) {
 				_styles.Remove(name);
 			}
 			var prefix = "style." + name + ".";
@@ -449,8 +426,7 @@ namespace LibDmd.DmdDevice
 
 		public RasterizeStyleDefinition Style
 		{
-			get
-			{
+			get {
 				var style = GetString("style", "default");
 				return _styles.ContainsKey(style) ? _styles[style] : new RasterizeStyleDefinition();
 			}
@@ -458,24 +434,23 @@ namespace LibDmd.DmdDevice
 
 		public VirtualAlphaNumericDisplayConfig(IniData data, Configuration parent) : base(data, parent)
 		{
-			if (data[Name] == null)
-			{
+			if (data[Name] == null) {
 				return;
 			}
+			
 			var keyValues = data[Name].GetEnumerator();
-			while (keyValues.MoveNext())
-			{
+			while (keyValues.MoveNext()) {
 				var names = keyValues.Current.KeyName.Split(new[] { '.' }, 4);
-				if (names.Length > 1 && names[0] == "style")
-				{
+				
+				if (names.Length > 1 && names[0] == "style") {
 					var styleName = names[1];
 					var styleProperty = names[2];
-					if (!_styles.ContainsKey(styleName))
-					{
+					
+					if (!_styles.ContainsKey(styleName)) {
 						_styles.Add(styleName, new RasterizeStyleDefinition());
 					}
-					switch (styleProperty)
-					{
+					
+					switch (styleProperty) {
 						case "skewangle":
 							_styles[styleName].SkewAngle = -(float)GetDouble(keyValues.Current.KeyName, 0);
 							break;
@@ -516,8 +491,7 @@ namespace LibDmd.DmdDevice
 		public VirtualDisplayPosition GetPosition(int displayNumber)
 		{
 			var prefix = "pos." + displayNumber + ".";
-			if (!HasValue(prefix + "height"))
-			{
+			if (!HasValue(prefix + "height")) {
 				return null;
 			}
 			return new VirtualDisplayPosition(GetDouble(prefix + "left", 0), GetDouble(prefix + "top", 0), 0, GetDouble(prefix + "height", 0));
@@ -540,8 +514,7 @@ namespace LibDmd.DmdDevice
 
 		public void SetStyle(string name, RasterizeStyleDefinition style)
 		{
-			if (_styles.ContainsKey(name))
-			{
+			if (_styles.ContainsKey(name)) {
 				_styles.Remove(name);
 			}
 			_styles.Add(name, style);
@@ -560,8 +533,7 @@ namespace LibDmd.DmdDevice
 
 		public void RemoveStyle(string name)
 		{
-			if (_styles.ContainsKey(name))
-			{
+			if (_styles.ContainsKey(name)) {
 				_styles.Remove(name);
 			}
 			var prefix = "style." + name + ".";
@@ -580,37 +552,30 @@ namespace LibDmd.DmdDevice
 		{
 			var prefix = "style." + styleName + "." + layerName + ".";
 			Set(prefix + "enabled", layerStyle.IsEnabled);
-			if (layerStyle.IsEnabled)
-			{
+			if (layerStyle.IsEnabled) {
 
 				Set(prefix + "color", layerStyle.Color);
 				Set(prefix + "blur.enabled", layerStyle.IsBlurEnabled);
-				if (layerStyle.IsBlurEnabled)
-				{
+				if (layerStyle.IsBlurEnabled) {
 					Set(prefix + "blur.x", layerStyle.Blur.X);
 					Set(prefix + "blur.y", layerStyle.Blur.Y);
-				}
-				else
-				{
+				
+				} else {
 					Remove(prefix + "blur.x");
 					Remove(prefix + "blur.y");
 				}
 
 				Set(prefix + "dilate.enabled", layerStyle.IsDilateEnabled);
-				if (layerStyle.IsDilateEnabled)
-				{
+				if (layerStyle.IsDilateEnabled) {
 					Set(prefix + "dilate.x", layerStyle.Dilate.X);
 					Set(prefix + "dilate.y", layerStyle.Dilate.Y);
-				}
-				else
-				{
+				
+				} else {
 					Remove(prefix + "dilate.x");
 					Remove(prefix + "dilate.y");
 				}
-			}
-			else
-			{
 
+			} else {
 				Remove(prefix + "color");
 				Remove(prefix + "blur.enabled");
 				Remove(prefix + "blur.x");
@@ -636,8 +601,7 @@ namespace LibDmd.DmdDevice
 
 		private void ParseLayerStyle(string property, KeyData keyData, RasterizeLayerStyleDefinition style)
 		{
-			switch (property)
-			{
+			switch (property) {
 				case "enabled":
 					style.IsEnabled = GetBoolean(keyData.KeyName, false);
 					break;
@@ -767,22 +731,18 @@ namespace LibDmd.DmdDevice
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetBoolean(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key))
-			{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
 
-			try
-			{
+			try {
 				return bool.Parse(_data[Name][key]);
-			}
-			catch (FormatException e)
-			{
+			
+			} catch (FormatException e) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
 				return fallback;
 			}
@@ -790,22 +750,18 @@ namespace LibDmd.DmdDevice
 
 		protected int GetInt(string key, int fallback)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetInt(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key))
-			{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
 
-			try
-			{
+			try {
 				return int.Parse(_data[Name][key]);
-			}
-			catch (FormatException e)
-			{
+			
+			} catch (FormatException e) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
 				return fallback;
 			}
@@ -813,22 +769,18 @@ namespace LibDmd.DmdDevice
 
 		protected double GetDouble(string key, double fallback)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetDouble(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key))
-			{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
 
-			try
-			{
+			try {
 				return double.Parse(_data[Name][key]);
-			}
-			catch (FormatException)
-			{
+			
+			} catch (FormatException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
 				return fallback;
 			}
@@ -836,13 +788,11 @@ namespace LibDmd.DmdDevice
 
 		protected string GetString(string key, string fallback)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetString(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key))
-			{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
 			return _data[Name][key];
@@ -850,16 +800,13 @@ namespace LibDmd.DmdDevice
 
 		protected SKColor GetSKColor(string key, SKColor fallback)
 		{
-			try
-			{
-				if (_data[Name] == null || !_data[Name].ContainsKey(key))
-				{
+			try {
+				if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 					return fallback;
 				}
 				return SKColor.Parse(_data[Name][key]);
-			}
-			catch (ArgumentException)
-			{
+			
+			} catch (ArgumentException) {
 				Logger.Error("Cannot parse color {0} for {1}, using fallback {2}", _data[Name][key], key, fallback.ToString());
 				return fallback;
 			}
@@ -867,26 +814,22 @@ namespace LibDmd.DmdDevice
 
 		protected T GetEnum<T>(string key, T fallback)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return _parent.GameConfig.GetEnum(GameOverridePrefix + key, fallback);
 			}
 
-			if (_data[Name] == null || !_data[Name].ContainsKey(key))
-			{
+			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
 				return fallback;
 			}
-			try
-			{
+
+			try {
 				var e = (T)Enum.Parse(typeof(T), _data[Name][key].Substring(0, 1).ToUpper() + _data[Name][key].Substring(1));
-				if (!Enum.IsDefined(typeof(T), e))
-				{
+				if (!Enum.IsDefined(typeof(T), e)) {
 					throw new ArgumentException();
 				}
 				return e;
-			}
-			catch (ArgumentException)
-			{
+			
+			} catch (ArgumentException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
 				return fallback;
 			}
@@ -894,45 +837,37 @@ namespace LibDmd.DmdDevice
 
 		protected void Set(string key, bool value)
 		{
-			if (_data[Name] == null)
-			{
+			if (_data[Name] == null) {
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value ? "true" : "false";
-			if (DoWrite)
-			{
+			if (DoWrite) {
 				_parent.Save();
 			}
 		}
 
 		protected void Set(string key, int value)
 		{
-			if (_data[Name] == null)
-			{
+			if (_data[Name] == null) {
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value.ToString();
-			if (DoWrite)
-			{
+			if (DoWrite) {
 				_parent.Save();
 			}
 		}
 
 		protected void Set(string key, double value, bool onlyForGame = false)
 		{
-			if (onlyForGame && CreateGameConfig())
-			{
+			if (onlyForGame && CreateGameConfig()) {
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			}
-			else
-			{
-				if (_data[Name] == null)
-				{
+			
+			} else {
+				if (_data[Name] == null) {
 					_data.Sections.Add(new SectionData(Name));
 				}
 				_data[Name][key] = value.ToString();
-				if (DoWrite)
-				{
+				if (DoWrite) {
 					_parent.Save();
 				}
 			}
@@ -945,19 +880,15 @@ namespace LibDmd.DmdDevice
 
 		protected void Set(string key, string value, bool onlyForGame = false)
 		{
-			if (onlyForGame && CreateGameConfig())
-			{
+			if (onlyForGame && CreateGameConfig()) {
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			}
-			else
-			{
-				if (_data[Name] == null)
-				{
+			
+			} else {
+				if (_data[Name] == null) {
 					_data.Sections.Add(new SectionData(Name));
 				}
 				_data[Name][key] = value;
-				if (DoWrite)
-				{
+				if (DoWrite) {
 					_parent.Save();
 				}
 			}
@@ -965,30 +896,25 @@ namespace LibDmd.DmdDevice
 
 		protected void Set<T>(string key, T value)
 		{
-			if (_data[Name] == null)
-			{
+			if (_data[Name] == null) {
 				_data.Sections.Add(new SectionData(Name));
 			}
 			_data[Name][key] = value.ToString();
-			if (DoWrite)
-			{
+			if (DoWrite) {
 				_parent.Save();
 			}
 		}
 
 		protected void Remove(string key)
 		{
-			if (_data[Name] == null)
-			{
+			if (_data[Name] == null) {
 				return;
 			}
-			if (!_data[Name].ContainsKey(key))
-			{
+			if (!_data[Name].ContainsKey(key)) {
 				return;
 			}
 			_data[Name].RemoveKey(key);
-			if (DoWrite)
-			{
+			if (DoWrite) {
 				_parent.Save();
 			}
 		}
@@ -1002,8 +928,7 @@ namespace LibDmd.DmdDevice
 
 		protected bool HasValue(string key)
 		{
-			if (HasGameSpecificValue(key))
-			{
+			if (HasGameSpecificValue(key)) {
 				return true;
 			}
 			return _data[Name] != null && _data[Name].ContainsKey(key);
@@ -1011,13 +936,11 @@ namespace LibDmd.DmdDevice
 
 		private bool CreateGameConfig()
 		{
-			if (string.IsNullOrEmpty(_parent.GameName))
-			{
+			if (string.IsNullOrEmpty(_parent.GameName)) {
 				return false;
 			}
 
-			if (_parent.GameConfig != null)
-			{
+			if (_parent.GameConfig != null) {
 				return true;
 			}
 
