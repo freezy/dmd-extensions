@@ -319,6 +319,7 @@
     <Compile Include="Output\Virtual\Dmd\DmdSettings.xaml.cs">
       <DependentUpon>DmdSettings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\Dmd\DmdStyle.cs" />
     <Compile Include="Output\Virtual\Dmd\Helper.cs" />
     <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
@@ -358,10 +359,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Output\Virtual\Dmd\preview-32x8.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x16-mono.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x32-mono.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-192x64-mono.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-32x8-mono.png" />
     <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
     <EmbeddedResource Include="Output\Virtual\Dmd\Dmd.vert" />
-    <Resource Include="Output\Virtual\Dmd\preview-128x32.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x32-color.png" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\08-center-top.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\09-center-bottom.svg" />
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-thin\full-10.svg" />

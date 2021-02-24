@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.Virtual.Dmd;
 
 namespace LibDmd.DmdDevice
 {
@@ -75,18 +76,8 @@ namespace LibDmd.DmdDevice
 		double Top { get; }
 		double Width { get; }
 		double Height { get; }
-		double DotSize { get; }
-		double DotRounding { get; }
-		Color UnlitDot { get; }
 		bool HasGameOverride(string key);
-		double Brightness { get; }
-		double DotGlow { get; }
-		double BackGlow { get; }
-		string GlassTexture { get; }
-		System.Windows.Thickness GlassPadding { get; }
-		Color GlassColor { get; }
-		string FrameTexture { get; }
-		System.Windows.Thickness FramePadding { get; }
+		DmdStyle Style { get; }
 	}
 
 	public interface IVirtualAlphaNumericDisplayConfig

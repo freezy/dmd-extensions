@@ -41,79 +41,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public int DmdHeight { get; private set; } = 32;
 
-		public double DotSize { get; set; }
-
-		public double DotRounding { get; set; }
-
-		public Color UnlitDot { get; set; }
-
-		public double DotGlow { get; set; }
-
-		public double BackGlow { get; set; }
-
-		public double Brightness { get; set; }
-
-		public Color GlassColor { get; set; }
-
-		public string Glass
-		{
-			get { return _glass; }
-			set
-			{
-				_glass = value;
-				try
-				{
-					glassToRender = new System.Drawing.Bitmap(_glass);
-				}
-				catch
-				{
-					glassToRender = null;
-				}
-			}
-		}
-
-		public Thickness GlassPad
-		{
-			get { return _glassPad; }
-			set
-			{
-				_glassPad = value;
-				OnSizeChanged(null, null);
-			}
-		}
-
-		public string Frame
-		{
-			get { return _frame; }
-			set
-			{
-				_frame = value;
-				try
-				{
-					var image = new BitmapImage(new Uri(_frame));
-					DmdFrame.Source = image;
-					if (image != null)
-						DmdFrame.Visibility = Visibility.Visible;
-					else
-						DmdFrame.Visibility = Visibility.Hidden;
-				}
-				catch
-				{
-					DmdFrame.Source = null;
-					DmdFrame.Visibility = Visibility.Hidden;
-				}
-			}
-		}
-
-		public Thickness FramePad
-		{
-			get { return _framePad; }
-			set
-			{
-				_framePad = value;
-				OnSizeChanged(null, null);
-			}
-		}
+		public double AspectRatio { get; private set; } = 1.0;
 
 		public bool IgnoreAspectRatio
 		{
@@ -130,10 +58,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private double _lum;
 
 		private bool _ignoreAr = true;
-		private string _glass = null;
-		private Thickness _glassPad = new Thickness(0);
-		private string _frame = null;
-		private Thickness _framePad = new Thickness(0);
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 		private bool fboInvalid = true;
@@ -141,6 +65,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private ShaderProgram _dmdShader, _blurShader;
 		private readonly uint[] _textures = new uint[6];
 		private readonly uint[] _fbos = new uint[4];
+		private System.Drawing.Bitmap bitmapToRender = null;
+		private System.Drawing.Bitmap glassToRender = null;
+		private DmdStyle _style = new DmdStyle();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -151,8 +78,33 @@ namespace LibDmd.Output.Virtual.Dmd
 			ClearColor();
 		}
 
-		private System.Drawing.Bitmap bitmapToRender = null;
-		private System.Drawing.Bitmap glassToRender = null;
+		public void SetStyle(DmdStyle style)
+		{
+			_style = style;
+			try
+			{
+				glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
+			}
+			catch
+			{
+				glassToRender = null;
+			}
+			try
+			{
+				var image = new BitmapImage(new Uri(_style.FrameTexture));
+				DmdFrame.Source = image;
+				if (image != null)
+					DmdFrame.Visibility = Visibility.Visible;
+				else
+					DmdFrame.Visibility = Visibility.Hidden;
+			}
+			catch
+			{
+				DmdFrame.Source = null;
+				DmdFrame.Visibility = Visibility.Hidden;
+			}
+			OnSizeChanged(null, null);
+		}
 
 		private System.Drawing.Bitmap GammaCorrection(System.Drawing.Bitmap img, double gamma, double c = 1d)
 		{
@@ -264,7 +216,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void ogl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
 		{
-			// FIXME these native objects should be released when the DMD is closed (but this need to have the OpenGL context active while closing the window)
 			var gl = args.OpenGL;
 
 			gl.GenTextures(2, _textures);
@@ -316,7 +267,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (fboInvalid)
 			{
 				// Release previous textures and FBOs if any (0 are ignored by OpenGL driver)
-				uint[] texs = new uint[4] { _textures[2], _textures[3], _textures[4], _textures[5]};
+				uint[] texs = new uint[4] { _textures[2], _textures[3], _textures[4], _textures[5] };
 				gl.DeleteTextures(4, texs);
 				gl.DeleteFramebuffersEXT(4, _fbos);
 				Logger.Info("Creating FBOs for {0}x{1}", DmdWidth, DmdHeight);
@@ -394,13 +345,13 @@ namespace LibDmd.Output.Virtual.Dmd
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
 					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), i + 1);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, (float)DmdHeight);
+					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
 					gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 1.0f, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
 					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), 5);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, (float)DmdHeight);
+					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
 					gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 0.0f, 1.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 				}
@@ -415,16 +366,16 @@ namespace LibDmd.Output.Virtual.Dmd
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur1"), 2);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur2"), 3);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur3"), 4);
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "dmdSize"), (float)DmdWidth, (float)DmdHeight);
-			gl.Uniform3(_dmdShader.GetUniformLocation(gl, "unlitDot"), UnlitDot.ScR, UnlitDot.ScG, UnlitDot.ScB);
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_glassPad.Left / DmdWidth), (float)(_glassPad.Top / DmdHeight));
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_glassPad.Left + _glassPad.Right) / DmdWidth), (float)(1f + (_glassPad.Top + _glassPad.Bottom) / DmdHeight));
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "backGlow"), (float)BackGlow);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "brightness"), (float)Brightness);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotSize"), (float)DotSize);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotRounding"), (float)DotRounding);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotGlow"), (float)DotGlow);
-			gl.Uniform4(_dmdShader.GetUniformLocation(gl, "glassColor"), GlassColor.ScR, GlassColor.ScG, GlassColor.ScB, GlassColor.ScA);
+			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "dmdSize"), (float)DmdWidth, DmdHeight);
+			gl.Uniform3(_dmdShader.GetUniformLocation(gl, "unlitDot"), _style.UnlitDot.ScR, _style.UnlitDot.ScG, _style.UnlitDot.ScB);
+			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
+			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "backGlow"), (float)_style.BackGlow);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "brightness"), (float)_style.Brightness);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotSize"), (float)_style.DotSize);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotRounding"), (float)_style.DotRounding);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotGlow"), (float)_style.DotGlow);
+			gl.Uniform4(_dmdShader.GetUniformLocation(gl, "glassColor"), _style.GlassColor.ScR, _style.GlassColor.ScG, _style.GlassColor.ScB, (float)_style.GlassLighting);
 			gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 			_dmdShader.Unbind(gl);
 
@@ -435,11 +386,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			Dispatcher.Invoke(() =>
 			{
-				var glassWidth = DmdWidth + _glassPad.Left + _glassPad.Right;
-				var glassHeight = DmdHeight + _glassPad.Top + _glassPad.Bottom;
+				var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
+				var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
 
-				var frameWidth = glassWidth + _framePad.Left + _framePad.Right;
-				var frameHeight = glassHeight + _framePad.Top + _framePad.Bottom;
+				var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
+				var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
+				AspectRatio = frameWidth / (double)frameHeight;
 
 				var alphaW = ActualWidth / frameWidth;
 				var alphaH = ActualHeight / frameHeight;
@@ -459,7 +411,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 				Dmd.Width = glassWidth * alphaW;
 				Dmd.Height = glassHeight * alphaH;
-				Dmd.Margin = new Thickness(hpad + _framePad.Left * alphaW, vpad + _framePad.Top * alphaH, hpad + _framePad.Right * alphaW, vpad + _framePad.Bottom * alphaH);
+				Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
 
 				if (Host != null) Host.SetDimensions((int)frameWidth, (int)frameHeight);
 			});
@@ -503,7 +455,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Dispose()
 		{
-			// nothing to dispose
+			// FIXME we should dispose the OpenGL native objects allocated in ogl_Initalized but this need to have the OpenGL context which is not garanteed here
 		}
 	}
 }
