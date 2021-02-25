@@ -285,6 +285,9 @@ namespace LibDmd.DmdDevice
 						case "backglow":
 							_styles[styleName].BackGlow = GetDouble(keyValues.Current.KeyName, 0.0);
 							break;
+						case "gamma":
+							_styles[styleName].Gamma = GetDouble(keyValues.Current.KeyName, 1.0);
+							break;
 						case "glass":
 							var glassTex = GetString(keyValues.Current.KeyName, null);
 							_styles[styleName].GlassTexture = glassTex.Equals("null") ? null : GetString(keyValues.Current.KeyName, "null");
@@ -360,6 +363,7 @@ namespace LibDmd.DmdDevice
 			Set(prefix + "unlitdot", style.UnlitDot);
 			Set(prefix + "dotglow", style.DotGlow);
 			Set(prefix + "backglow", style.BackGlow);
+			Set(prefix + "gamma", style.Gamma);
 			if (style.GlassTexture == null)
 				Set(prefix + "glass", "null");
 			else
@@ -396,6 +400,7 @@ namespace LibDmd.DmdDevice
 			Remove(prefix + "unlitdot");
 			Remove(prefix + "dotglow");
 			Remove(prefix + "backglow");
+			Remove(prefix + "gamma");
 			Remove(prefix + "glass");
 			Remove(prefix + "glass.color");
 			Remove(prefix + "glass.lighting");

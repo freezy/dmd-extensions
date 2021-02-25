@@ -44,9 +44,6 @@ namespace LibDmd.Output.Virtual.Dmd
 				SaveGroup.Visibility = Visibility.Collapsed;
 			}
 
-			IgnoreAspectRatio.Unchecked += (sender, e) => UpdatePreview();
-			IgnoreAspectRatio.Checked += (sender, e) => UpdatePreview();
-
 			DotSizeSlider.ValueChanged += (sender, e) => DotSizeValue.Text = DoubleToString2(DotSizeSlider.Value);
 			DotSizeValue.TextChanged += (sender, e) => DotSizeSlider.Value = StringToDouble(DotSizeValue.Text, DotSizeSlider.Value);
 			DotSizeSlider.ValueChanged += (sender, e) => _previewStyle.DotSize = DotSizeSlider.Value;
@@ -74,6 +71,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			BackLevelValue.TextChanged += (sender, e) => BackLevelSlider.Value = StringToDouble(BackLevelValue.Text, BackLevelSlider.Value);
 			BackLevelSlider.ValueChanged += (sender, e) => _previewStyle.BackGlow = BackLevelSlider.Value;
 			BackLevelSlider.ValueChanged += (sender, e) => UpdatePreview();
+
+			GammaSlider.ValueChanged += (sender, e) => GammaValue.Text = DoubleToString2(GammaSlider.Value);
+			GammaValue.TextChanged += (sender, e) => GammaSlider.Value = StringToDouble(GammaValue.Text, GammaSlider.Value);
+			GammaSlider.ValueChanged += (sender, e) => _previewStyle.Gamma = GammaSlider.Value;
+			GammaSlider.ValueChanged += (sender, e) => UpdatePreview();
 
 			GlassPath.TextChanged += (sender, e) => _previewStyle.GlassTexture = GlassPath.Text;
 			GlassPath.TextChanged += (sender, e) => UpdatePreview();
@@ -111,6 +113,9 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			DotRoundingValue.Text = DoubleToString2(_previewStyle.DotRounding);
 			DotRoundingSlider.Value = _previewStyle.DotRounding;
+
+			GammaValue.Text = DoubleToString2(_previewStyle.Gamma);
+			GammaSlider.Value = _previewStyle.Gamma;
 
 			Color unlitColor = _previewStyle.UnlitDot;
 			unlitColor.A = 255;
@@ -157,8 +162,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			DMD.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
 			DMD.SetStyle(_previewStyle);
 			DMD.RenderBitmap(_preview);
-			var baseWidth = 128.0 * 6.0; // Need to be a multiple of 128.0 to avoid aliasing of the previews
-			var baseHeight = 64.0 * 3.0; // Need to be a multiple of 64.0 to avoid aliasing for 192x64 preview
+			var baseWidth = 128.0 * 6.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
+			var baseHeight = 64.0 * 3.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews
 			if (DMD.AspectRatio > 4.0)
 			{
 				DMD.Width = baseWidth;
@@ -221,7 +226,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void ResetClicked(object sender, RoutedEventArgs e)
 		{
 			_previewStyle = _originalStyle.Copy();
-			// FIXME IgnoreAspectRatio.IsChecked = _config.IgnoreAr;
 			UpdateControls();
 			UpdatePreview();
 		}

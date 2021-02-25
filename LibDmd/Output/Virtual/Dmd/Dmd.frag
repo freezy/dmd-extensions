@@ -1,4 +1,4 @@
-#version 130
+
 
 in vec2 dmdUv;
 in vec2 glassUv;
@@ -17,10 +17,9 @@ uniform float dotSize; // Dot size
 uniform float dotRounding; // Dot corner radius
 uniform float dotGlow; // Dot glow
 uniform vec4 glassColor; // Glass color: RGB components are used to tint the glass, the A component is the amount of light from the DMD that the glass reflects
+uniform float gamma; // Gamma correction
 
 out vec4 FragColor;
-
-const float gamma = 2.2;
 
 // from http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 float udRoundBox(vec2 p, vec2 b, float r)
@@ -30,11 +29,17 @@ float udRoundBox(vec2 p, vec2 b, float r)
 
 void main()
 {
-    // base background diffuse light (very blurry from 3rd level of the DMD blur)
-	vec3 dotColor = texture(dmdTextureBlur2, dmdUv).rgb * backGlow;
+	vec3 dotColor = vec3(0.0);
 
+#ifdef BACKGLOW
+    // base background diffuse light (very blurry from 3rd level of the DMD blur)
+	dotColor += texture(dmdTextureBlur2, dmdUv).rgb * backGlow;
+#endif
+
+#ifdef DOTGLOW
 	// glow from nearby lamps (taken from first level of blur)
 	dotColor += texture(dmdTextureBlur1, dmdUv).rgb * dotGlow;
+#endif
 
 	// Nearest filtering for base dots
 	vec2 nearest = (floor(dmdUv * dmdSize) + vec2(0.5, 0.5)) / dmdSize;
@@ -45,29 +50,34 @@ void main()
 	vec3 dmd = texture(dmdTexture, nearest).rgb;
 	dotColor += dmd * dot;
 
+#ifdef BRIGHTNESS
 	// Apply the overall brightness
 	dotColor *= brightness;
+#endif
 
+#ifdef UNLIT
 	// Add a little shadow for unlit dots which are lightly visible on real DMDs
 	dotColor += dot * unlitDot;
+#endif
 
+#ifdef GLASS
 	// Apply the glass as a tinted (lighten by the DMD, using large blur, and the base color) additive blend.
 	vec4 glass = texture(glassTexture, glassUv);
 	vec3 glassLight = glassColor.rgb + 2.5 * glassColor.a * texture(dmdTextureBlur3, dmdUv).rgb * brightness;
 	dotColor += glass.rgb * glassLight.rgb;
-
-	// No tone mapping
-	vec3 mapped = dotColor;
+#endif
 
 	// Reinhard tone mapping
-	// mapped = mapped / (mapped + vec3(1.0)); 
+	// dotColor = dotColor / (dotColor + vec3(1.0)); 
 
 	// Exposure adjusted tone mapping
 	// const float exposure = 2.0;
-	// mapped = vec3(1.0, 1.0, 1.0) - exp(-mapped * exposure);
+	// dotColor = vec3(1.0, 1.0, 1.0) - exp(-dotColor * exposure);
 
+#ifdef GAMMA
 	// Gamma correction 
-	mapped = pow(mapped, vec3(1.0 / gamma));
+	dotColor = pow(dotColor, vec3(1.0 / gamma));
+#endif
 
-    FragColor = vec4(mapped, 1.0);
+    FragColor = vec4(dotColor, 1.0);
 }

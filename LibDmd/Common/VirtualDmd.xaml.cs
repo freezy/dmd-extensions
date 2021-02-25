@@ -55,23 +55,20 @@ namespace LibDmd.Common
 					}
 
 					ParentGrid.ContextMenu.Items.Add(new Separator());
-				}
-
-				var openSettings = new MenuItem();
-				openSettings.Click += OpenSettings;
-				openSettings.Header = "Open display settings";
-				ParentGrid.ContextMenu.Items.Add(openSettings);
-
-				if (_dmdConfig is VirtualDmdConfig)
-				{
-					ParentGrid.ContextMenu.Items.Add(new Separator());
 
 					var toggleAspect = new MenuItem();
 					toggleAspect.Click += ToggleAspectRatio;
 					toggleAspect.Header = "Ignore Aspect Ratio";
 					toggleAspect.IsCheckable = true;
 					ParentGrid.ContextMenu.Items.Add(toggleAspect);
+
+					ParentGrid.ContextMenu.Items.Add(new Separator());
 				}
+
+				var openSettings = new MenuItem();
+				openSettings.Click += OpenSettings;
+				openSettings.Header = "Open display settings";
+				ParentGrid.ContextMenu.Items.Add(openSettings);
 			}
 			else
 			{
