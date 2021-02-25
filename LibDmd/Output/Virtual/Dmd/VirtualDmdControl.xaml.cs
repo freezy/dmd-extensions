@@ -16,9 +16,9 @@ using SharpGL.VertexBuffers;
 using SharpGL.WPF;
 
 // This used to be standard WPF code with ShaderEffect, the problem is that WPF will always resize the provided ImageBrush
-// (see https://docs.microsoft.com/en-us/archive/blogs/greg_schechter/introducing-multi-input-shader-effects) and therefore 
+// (see https://docs.microsoft.com/en-us/archive/blogs/greg_schechter/introducing-multi-input-shader-effects) and therefore
 // produce unacceptable artifacts.
-// 
+//
 // This lead to move toward SharpGL (OpenGL) for a clean, fast and artifact free implementation.
 namespace LibDmd.Output.Virtual.Dmd
 {
@@ -26,7 +26,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
 	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
-	// these others are for debugging purpose. basically you can make the virtual dmd 
+	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
 	// pindmd1/2: IGray2Destination, IGray4Destination, IResizableDestination, IFixedSizeDestination
@@ -62,7 +62,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private Color[] _gray4Palette;
 		private bool _fboInvalid = true;
 		private bool _dmdShaderInvalid = true;
-		private VertexBufferArray _quadVBO;
+		private VertexBufferArray _quadVbo;
 		private ShaderProgram _dmdShader, _blurShader;
 		private int _bsTexture, _bsResolution, _bsDirection;
 		private int _dsDmdTexture, _dsDmdTextureBlur1, _dsDmdTextureBlur2, _dsDmdTextureBlur3, _dsDmdSize;
@@ -70,8 +70,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		private int _dsGlassTexture, _dsGlassTexOffset, _dsGlassTexScale, _dsGlassColor;
 		private readonly uint[] _textures = new uint[6];
 		private readonly uint[] _fbos = new uint[4];
-		private System.Drawing.Bitmap _bitmapToRender = null;
-		private System.Drawing.Bitmap _glassToRender = null;
+		private System.Drawing.Bitmap _bitmapToRender;
+		private System.Drawing.Bitmap _glassToRender;
 		private DmdStyle _style = new DmdStyle();
 		private const uint PositionAttribute = 0;
 		private const uint TexCoordAttribute = 1;
@@ -90,28 +90,23 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			_style = style;
 			_dmdShaderInvalid = true;
-			try
-			{
+			try {
 				_glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
-			}
-			catch
-			{
+
+			} catch {
 				_glassToRender = null;
 			}
-			try
-			{
+
+			try {
 				var image = new BitmapImage(new Uri(_style.FrameTexture));
 				DmdFrame.Source = image;
-				if (image != null)
-					DmdFrame.Visibility = Visibility.Visible;
-				else
-					DmdFrame.Visibility = Visibility.Hidden;
-			}
-			catch
-			{
+				DmdFrame.Visibility = Visibility.Visible;
+
+			} catch {
 				DmdFrame.Source = null;
 				DmdFrame.Visibility = Visibility.Hidden;
 			}
+
 			OnSizeChanged(null, null);
 		}
 
@@ -152,40 +147,34 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			Dispatcher.Invoke(() =>
-			{
+			Dispatcher.Invoke(() => {
 				_bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, _style.Gamma);
 			});
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			if (_gray2Palette != null)
-			{
+			if (_gray2Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray2Palette));
-			}
-			else
-			{
+
+			} else {
 				RenderBitmap(ImageUtil.ConvertFromGray2(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
 		}
 
 		public void RenderGray4(byte[] frame)
 		{
-			if (_gray4Palette != null)
-			{
+			if (_gray4Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray4Palette));
-			}
-			else
-			{
+
+			} else {
 				RenderBitmap(ImageUtil.ConvertFromGray4(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
 		}
 
 		public void RenderRgb24(byte[] frame)
 		{
-			if (frame.Length % 3 != 0)
-			{
+			if (frame.Length % 3 != 0) {
 				throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + frame.Length + " isn't.");
 			}
 			RenderBitmap(ImageUtil.ConvertFromRgb24(DmdWidth, DmdHeight, frame));
@@ -243,9 +232,9 @@ namespace LibDmd.Output.Virtual.Dmd
 			{
 				Logger.Error(e, "Blur Shader compilation failed");
 			}
-			_quadVBO = new VertexBufferArray();
-			_quadVBO.Create(gl);
-			_quadVBO.Bind(gl);
+			_quadVbo = new VertexBufferArray();
+			_quadVbo.Create(gl);
+			_quadVbo.Bind(gl);
 			var posVBO = new VertexBuffer();
 			posVBO.Create(gl);
 			posVBO.Bind(gl);
@@ -254,7 +243,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			texVBO.Create(gl);
 			texVBO.Bind(gl);
 			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
-			_quadVBO.Unbind(gl);
+			_quadVbo.Unbind(gl);
 		}
 
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
@@ -267,8 +256,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_dmdShaderInvalid)
 			{
 				_dmdShaderInvalid = false;
-				if (_dmdShader != null)
-					_dmdShader.Delete(gl);
+				_dmdShader?.Delete(gl);
 				try
 				{
 					_dmdShader = new ShaderProgram();
@@ -345,7 +333,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 			}
 
-			_quadVBO.Bind(gl);
+			_quadVbo.Bind(gl);
 
 			// Textures are: glass, dmd, blur 1, blur 2, blur 3, temp
 			for (int i = 0; i < 6; i++)
@@ -424,7 +412,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 			_dmdShader.Unbind(gl);
 
-			_quadVBO.Unbind(gl);
+			_quadVbo.Unbind(gl);
 		}
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
@@ -458,7 +446,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				Dmd.Height = glassHeight * alphaH;
 				Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
 
-				if (Host != null) Host.SetDimensions((int)frameWidth, (int)frameHeight);
+				Host?.SetDimensions((int)frameWidth, (int)frameHeight);
 			});
 		}
 
