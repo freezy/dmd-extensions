@@ -275,6 +275,7 @@ namespace LibDmd.Common
 				bpalvalues[i] = palette[i].B;
 			}
 
+			var maxPixel = (byte)(palette.Length - 1);
 			unsafe
 			{
 				fixed (byte* pFrame = frame, pcolorFrame = colorizedFrame)
@@ -284,6 +285,7 @@ namespace LibDmd.Common
 
 					for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += 3) {
 						var pixel = *pFrameCur;
+						if (pixel > maxPixel) pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
 						*pColorFrameCur = rpalvalues[pixel];
 						*(pColorFrameCur + 1) = gpalvalues[pixel];
 						*(pColorFrameCur + 2) = bpalvalues[pixel];
