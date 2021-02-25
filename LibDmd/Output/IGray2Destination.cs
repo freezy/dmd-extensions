@@ -1,6 +1,4 @@
-﻿using System.Windows.Media.Imaging;
-
-namespace LibDmd.Output
+﻿namespace LibDmd.Output
 {
 	/// <summary>
 	/// Output devices implementing this interface are able to

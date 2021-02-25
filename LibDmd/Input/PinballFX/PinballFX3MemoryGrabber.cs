@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
 using System.Windows.Media;
-using NLog;
 
 namespace LibDmd.Input.PinballFX
 {

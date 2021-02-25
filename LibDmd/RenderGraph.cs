@@ -16,9 +16,7 @@ using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
-using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
-using ImageSource = LibDmd.Input.FileSystem.ImageSource;
 using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd

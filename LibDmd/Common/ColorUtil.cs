@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Windows.Media;
 
 namespace LibDmd.Common

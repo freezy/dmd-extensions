@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Reactive;
-using System.Reactive.Linq;
 using System.Windows.Media;
 using System.Collections.Generic;
 using LibDmd.Common;

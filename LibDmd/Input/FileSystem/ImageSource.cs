@@ -2,11 +2,9 @@
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.Output;
 
 namespace LibDmd.Input.FileSystem
 {

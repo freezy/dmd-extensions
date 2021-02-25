@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using NLog;
 
 namespace LibDmd.Output.FileOutput
 {
