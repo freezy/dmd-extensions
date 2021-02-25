@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.Dmd;
-using Microsoft.Win32;
 using NLog;
 
 namespace LibDmd.Common
@@ -20,7 +17,6 @@ namespace LibDmd.Common
 
 		private Configuration _config;
 		private VirtualDmdConfig _dmdConfig;
-		private string _gameName;
 		private IDisposable _settingSubscription;
 
 		public VirtualDmd() : base()
@@ -33,36 +29,32 @@ namespace LibDmd.Common
 		{
 			_config = config;
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
-			_gameName = gameName;
 
 			if (_dmdConfig != null) {
 
 				ParentGrid.ContextMenu = new ContextMenu();
 
-				if (_dmdConfig is VirtualDmdConfig) {
+				var saveGlobalPos = new MenuItem();
+				saveGlobalPos.Click += SavePositionGlobally;
+				saveGlobalPos.Header = "Save position globally";
+				ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
 
-					var saveGlobalPos = new MenuItem();
-					saveGlobalPos.Click += SavePositionGlobally;
-					saveGlobalPos.Header = "Save position globally";
-					ParentGrid.ContextMenu.Items.Add(saveGlobalPos);
-
-					if (gameName != null) {
-						var saveGamePosItem = new MenuItem();
-						saveGamePosItem.Click += SavePositionGame;
-						saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
-						ParentGrid.ContextMenu.Items.Add(saveGamePosItem);
-					}
-
-					ParentGrid.ContextMenu.Items.Add(new Separator());
-
-					var toggleAspect = new MenuItem();
-					toggleAspect.Click += ToggleAspectRatio;
-					toggleAspect.Header = "Ignore Aspect Ratio";
-					toggleAspect.IsCheckable = true;
-					ParentGrid.ContextMenu.Items.Add(toggleAspect);
-
-					ParentGrid.ContextMenu.Items.Add(new Separator());
+				if (gameName != null) {
+					var saveGamePosItem = new MenuItem();
+					saveGamePosItem.Click += SavePositionGame;
+					saveGamePosItem.Header = "Save position for \"" + gameName + "\"";
+					ParentGrid.ContextMenu.Items.Add(saveGamePosItem);
 				}
+
+				ParentGrid.ContextMenu.Items.Add(new Separator());
+
+				var toggleAspect = new MenuItem();
+				toggleAspect.Click += ToggleAspectRatio;
+				toggleAspect.Header = "Ignore Aspect Ratio";
+				toggleAspect.IsCheckable = true;
+				ParentGrid.ContextMenu.Items.Add(toggleAspect);
+
+				ParentGrid.ContextMenu.Items.Add(new Separator());
 
 				var openSettings = new MenuItem();
 				openSettings.Click += OpenSettings;
@@ -107,8 +99,7 @@ namespace LibDmd.Common
 		private void OpenSettings(object sender, RoutedEventArgs e)
 		{
 			var settingWindow = new DmdSettings(_dmdConfig.Style, _config);
-			_settingSubscription = settingWindow.OnConfigUpdated.Subscribe(style =>
-			{
+			_settingSubscription = settingWindow.OnConfigUpdated.Subscribe(style => {
 				Dmd.SetStyle(style);
 			});
 			settingWindow.Show();
