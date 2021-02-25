@@ -13,7 +13,6 @@ using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.Virtual.Dmd;
-using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
 
@@ -84,12 +83,12 @@ namespace LibDmd.DmdDevice
 				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);
 					Logger.Info("Successfully loaded config from {0}.", _iniPath);
-				
+
 				} else {
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
 					_data = new IniData();
 				}
-			
+
 			} catch (Exception e) {
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
@@ -424,8 +423,7 @@ namespace LibDmd.DmdDevice
 
 		private readonly Dictionary<string, RasterizeStyleDefinition> _styles = new Dictionary<string, RasterizeStyleDefinition>();
 
-		public RasterizeStyleDefinition Style
-		{
+		public RasterizeStyleDefinition Style {
 			get {
 				var style = GetString("style", "default");
 				return _styles.ContainsKey(style) ? _styles[style] : new RasterizeStyleDefinition();
@@ -437,19 +435,19 @@ namespace LibDmd.DmdDevice
 			if (data[Name] == null) {
 				return;
 			}
-			
+
 			var keyValues = data[Name].GetEnumerator();
 			while (keyValues.MoveNext()) {
 				var names = keyValues.Current.KeyName.Split(new[] { '.' }, 4);
-				
+
 				if (names.Length > 1 && names[0] == "style") {
 					var styleName = names[1];
 					var styleProperty = names[2];
-					
+
 					if (!_styles.ContainsKey(styleName)) {
 						_styles.Add(styleName, new RasterizeStyleDefinition());
 					}
-					
+
 					switch (styleProperty) {
 						case "skewangle":
 							_styles[styleName].SkewAngle = -(float)GetDouble(keyValues.Current.KeyName, 0);
@@ -559,7 +557,7 @@ namespace LibDmd.DmdDevice
 				if (layerStyle.IsBlurEnabled) {
 					Set(prefix + "blur.x", layerStyle.Blur.X);
 					Set(prefix + "blur.y", layerStyle.Blur.Y);
-				
+
 				} else {
 					Remove(prefix + "blur.x");
 					Remove(prefix + "blur.y");
@@ -569,7 +567,7 @@ namespace LibDmd.DmdDevice
 				if (layerStyle.IsDilateEnabled) {
 					Set(prefix + "dilate.x", layerStyle.Dilate.X);
 					Set(prefix + "dilate.y", layerStyle.Dilate.Y);
-				
+
 				} else {
 					Remove(prefix + "dilate.x");
 					Remove(prefix + "dilate.y");
@@ -741,7 +739,7 @@ namespace LibDmd.DmdDevice
 
 			try {
 				return bool.Parse(_data[Name][key]);
-			
+
 			} catch (FormatException e) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
 				return fallback;
@@ -760,7 +758,7 @@ namespace LibDmd.DmdDevice
 
 			try {
 				return int.Parse(_data[Name][key]);
-			
+
 			} catch (FormatException e) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be an integer.", e);
 				return fallback;
@@ -779,7 +777,7 @@ namespace LibDmd.DmdDevice
 
 			try {
 				return double.Parse(_data[Name][key]);
-			
+
 			} catch (FormatException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
 				return fallback;
@@ -805,7 +803,7 @@ namespace LibDmd.DmdDevice
 					return fallback;
 				}
 				return SKColor.Parse(_data[Name][key]);
-			
+
 			} catch (ArgumentException) {
 				Logger.Error("Cannot parse color {0} for {1}, using fallback {2}", _data[Name][key], key, fallback.ToString());
 				return fallback;
@@ -828,7 +826,7 @@ namespace LibDmd.DmdDevice
 					throw new ArgumentException();
 				}
 				return e;
-			
+
 			} catch (ArgumentException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
 				return fallback;
@@ -861,7 +859,7 @@ namespace LibDmd.DmdDevice
 		{
 			if (onlyForGame && CreateGameConfig()) {
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			
+
 			} else {
 				if (_data[Name] == null) {
 					_data.Sections.Add(new SectionData(Name));
@@ -882,7 +880,7 @@ namespace LibDmd.DmdDevice
 		{
 			if (onlyForGame && CreateGameConfig()) {
 				_parent.GameConfig.Set(GameOverridePrefix + key, value);
-			
+
 			} else {
 				if (_data[Name] == null) {
 					_data.Sections.Add(new SectionData(Name));

@@ -8,7 +8,6 @@ using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Processor;
-using NLog;
 
 namespace LibDmd.Input.ScreenGrabber
 {

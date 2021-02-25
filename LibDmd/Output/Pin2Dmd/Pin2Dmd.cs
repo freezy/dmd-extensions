@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using LibDmd.Converter.Colorize;
-using System.Collections.Generic;
 using NLog;
 
 namespace LibDmd.Output.Pin2Dmd

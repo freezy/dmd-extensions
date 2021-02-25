@@ -3,14 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
 using System.Text;
 using LibDmd.Common;
-using NLog;
 
 namespace LibDmd.Input.TPAGrabber
 {

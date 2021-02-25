@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibDmd.Input;
-
-namespace LibDmd.Output
+﻿namespace LibDmd.Output
 {
 	/// <summary>
 	/// Indicates that the output device can adapt its pixel size in real time.

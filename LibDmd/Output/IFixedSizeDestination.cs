@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.RightsManagement;
-using System.Text;
-using System.Threading.Tasks;
-using LibDmd.Input;
-
-namespace LibDmd.Output
+﻿namespace LibDmd.Output
 {
 	/// <summary>
 	/// Indicates that an output device's pixel dimensions are constant.

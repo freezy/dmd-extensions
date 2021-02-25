@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using LibDmd.Input;
-using LibDmd.Output;
-
-namespace LibDmd.Converter
+﻿namespace LibDmd.Converter
 {
 	/// <summary>
 	/// Converts a frame from a given bit length to another bit length.

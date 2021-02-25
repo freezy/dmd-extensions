@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using LibDmd.DmdDevice;
 using LibDmd.Output.Virtual.Dmd;
-using NLog;
 
 namespace LibDmd.Common
 {
