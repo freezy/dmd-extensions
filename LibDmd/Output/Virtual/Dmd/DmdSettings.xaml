@@ -133,7 +133,7 @@
 					</Grid.RowDefinitions>
 
 					<Label Grid.Column="0" Content="Dot Size:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<Slider x:Name="DotSizeSlider" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.8"/>
+					<Slider x:Name="DotSizeSlider" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="2" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.8"/>
 					<TextBox x:Name="DotSizeValue" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
 
 					<Label Grid.Row="1" Grid.Column="0" Content="Dot Rounding:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>

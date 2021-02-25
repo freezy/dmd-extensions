@@ -268,6 +268,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					if (_style.HasUnlitDot) code.Append("#define UNLIT\n");
 					if (_style.HasGlass) code.Append("#define GLASS\n");
 					if (_style.HasGamma) code.Append("#define GAMMA\n");
+					if (_style.DotSize > 0.5) code.Append("#define DOT_OVERLAP\n");
 					code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"));
 					_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), code.ToString(), _attributeLocations);
 					_dsDmdTexture = _dmdShader.GetUniformLocation(gl, "dmdTexture");
@@ -287,9 +288,10 @@ namespace LibDmd.Output.Virtual.Dmd
 					_dsGlassTexScale = _dmdShader.GetUniformLocation(gl, "glassTexScale");
 					_dsGlassColor = _dmdShader.GetUniformLocation(gl, "glassColor");
 				}
-				catch (Exception e)
+				catch (ShaderCompilationException e)
 				{
-					Logger.Error(e, "DMD Shader compilation failed");
+					Logger.Error(e, "DMD Shader compilation failed:");
+					Logger.Error(e.CompilerOutput);
 				}
 			}
 
