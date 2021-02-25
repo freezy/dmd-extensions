@@ -5,7 +5,6 @@ using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.Virtual.Dmd;
-using NLog.LayoutRenderers;
 
 namespace DmdExt.Common
 {
@@ -26,19 +25,19 @@ namespace DmdExt.Common
 		[OptionArray("virtual-position", HelpText = "Position and size of virtual DMD. Four values: <Left> <Top> <Width> [<Height>]. Height is optional and can be used for custom aspect ratio. Default: \"0 0 1024\".")]
 		public int[] VirtualDmdPosition { get; set; } = { 0, 0, 1024 };
 
-		[Option("virtual-dotsize", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
+		[Option("virtual-dot-size", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
 		public double VirtualDmdDotSize { get; set; } = 1;
 
-		[Option("virtual-dotrounding", HelpText = "Roundiness the dots of the virtual DMD. Default: 1")]
+		[Option("virtual-dot-rounding", HelpText = "Roundness the dots of the virtual DMD. 0 = square, 1 = circle. Default: 1")]
 		public double VirtualDmdDotRounding { get; set; } = 1;
 
-		[Option("virtual-unlitdot", HelpText = "Default color for unlit dots of the virtual DMD. Default: invisible")]
+		[Option("virtual-dot-unlit", HelpText = "Default color for unlit dots of the virtual DMD. Default: #000000")]
 		public Color VirtualDmdUnlitDot { get; set; } = Color.FromArgb(0, 0, 0, 0);
 
 		[Option("virtual-brightness", HelpText = "Brightness of the dots of the virtual DMD. Default: 1")]
 		public double VirtualDmdBrightness { get; set; } = 1;
 
-		[Option("virtual-dotglow", HelpText = "Glow of the dots of the virtual DMD. Default: 0")]
+		[Option("virtual-dot-glow", HelpText = "Glow of the dots of the virtual DMD. Default: 0")]
 		public double VirtualDmdDotGlow { get; set; } = 0;
 
 		[Option("virtual-backglow", HelpText = "Glow of the background behind the dots of the virtual DMD. Default: 0")]
@@ -47,41 +46,23 @@ namespace DmdExt.Common
 		[Option("virtual-gamma", HelpText = "Gamma of the virtual DMD. Default: 1")]
 		public double VirtualDmdGamma { get; set; } = 1;
 
-		[Option("virtual-glasstexture", HelpText = "Texture for the glass above the dots of the virtual DMD. Default: no texture")]
+		[Option("virtual-glass-texture", HelpText = "Path to texture for the glass above the dots of the virtual DMD.")]
 		public string VirtualDmdGlassTexture { get; set; } = "";
 
-		[Option("virtual-glasspaddingleft", HelpText = "Left padding of the glass above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdGlassPaddingLeft { get; set; } = 0;
-		
-		[Option("virtual-glasspaddingright", HelpText = "Right padding of the glass above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdGlassPaddingRight { get; set; } = 0;
-		
-		[Option("virtual-glasspaddingtop", HelpText = "Top padding of the glass above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdGlassPaddingTop { get; set; } = 0;
-		
-		[Option("virtual-glasspaddingbottom", HelpText = "Bottom padding of the glass above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdGlassPaddingBottom { get; set; } = 0;
+		[OptionArray("virtual-glass-padding", HelpText = "Padding of the glass of the virtual DMD. Four values: <Left> <Top> <Right> <Bottom>. Default: \"0 0 0 0\".")]
+		public int[] VirtualDmdGlassPadding { get; set; } = { 0, 0, 0, 0 };
 
-		[Option("virtual-glasscolor", HelpText = "Tint of the glass above the dots of the virtual DMD. Default: invisible")]
+		[Option("virtual-glass-color", HelpText = "Tint of the glass above the dots of the virtual DMD. Default: #00000000")]
 		public Color VirtualDmdGlassColor { get; set; } = Color.FromArgb(0, 0, 0, 0);
 
-		[Option("virtual-glasslighting", HelpText = "Amount of lighting from the DMD that lights the glass. Default: 0")]
+		[Option("virtual-glass-lighting", HelpText = "Amount of lighting from the DMD that lights the glass. Default: 0")]
 		public double VirtualDmdGlassLighting { get; set; } = 0;
 
-		[Option("virtual-frametexture", HelpText = "Texture for the frame above the dots of the virtual DMD. Default: no texture")]
+		[Option("virtual-frame-texture", HelpText = "Path to the texture for the frame above the dots of the virtual DMD.")]
 		public string VirtualDmdFrameTexture { get; set; } = "";
 
-		[Option("virtual-framepaddingleft", HelpText = "Left padding of the frame above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdFramePaddingLeft { get; set; } = 0;
-
-		[Option("virtual-framepaddingright", HelpText = "Right padding of the frame above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdFramePaddingRight { get; set; } = 0;
-
-		[Option("virtual-framepaddingtop", HelpText = "Top padding of the frame above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdFramePaddingTop { get; set; } = 0;
-
-		[Option("virtual-framepaddingbottom", HelpText = "Bottom padding of the frame above the dots of the virtual DMD. Default: 0")]
-		public double VirtualDmdFramePaddingBottom { get; set; } = 0;
+		[OptionArray("virtual-frame-padding", HelpText = "Padding of the frame above the dots of the virtual DMD. Four values: <Left> <Top> <Right> <Bottom>. Default: \"0 0 0 0\".")]
+		public int[] VirtualDmdFramePadding { get; set; } = { 0, 0, 0, 0 };
 
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
@@ -180,6 +161,10 @@ namespace DmdExt.Common
 			if (VirtualDmdDotSize <= 0 || VirtualDmdDotSize > 2) {
 				throw new InvalidOptionException("Argument --virtual-dotsize must be larger than 0 and smaller than 10.");
 			}
+
+			if (VirtualDmdGlassPadding.Length != 4) {
+				throw new InvalidOptionException("Argument --virtual-glass-padding must have four values: \"<Left> <Top> <Right> <Bottom>\".");
+			}
 		}
 	}
 
@@ -221,11 +206,11 @@ namespace DmdExt.Common
 			BackGlow = _options.VirtualDmdBackGlow,
 			Gamma = _options.VirtualDmdGamma,
 			GlassTexture = _options.VirtualDmdGlassTexture,
-			GlassPadding = new System.Windows.Thickness(_options.VirtualDmdGlassPaddingLeft, _options.VirtualDmdGlassPaddingTop, _options.VirtualDmdGlassPaddingRight, _options.VirtualDmdGlassPaddingBottom),
+			GlassPadding = new System.Windows.Thickness(_options.VirtualDmdGlassPadding[0], _options.VirtualDmdGlassPadding[1], _options.VirtualDmdGlassPadding[2], _options.VirtualDmdGlassPadding[3]),
 			GlassColor = _options.VirtualDmdGlassColor,
 			GlassLighting = _options.VirtualDmdGlassLighting,
 			FrameTexture = _options.VirtualDmdFrameTexture,
-			FramePadding = new System.Windows.Thickness(_options.VirtualDmdFramePaddingLeft, _options.VirtualDmdFramePaddingTop, _options.VirtualDmdFramePaddingRight, _options.VirtualDmdFramePaddingBottom)
+			FramePadding = new System.Windows.Thickness(_options.VirtualDmdFramePadding[0], _options.VirtualDmdFramePadding[1], _options.VirtualDmdFramePadding[2], _options.VirtualDmdFramePadding[3])
 		};
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
