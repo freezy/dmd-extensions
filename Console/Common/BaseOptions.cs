@@ -165,6 +165,10 @@ namespace DmdExt.Common
 			if (VirtualDmdGlassPadding.Length != 4) {
 				throw new InvalidOptionException("Argument --virtual-glass-padding must have four values: \"<Left> <Top> <Right> <Bottom>\".");
 			}
+
+			if (VirtualDmdFramePadding.Length != 4) {
+				throw new InvalidOptionException("Argument --virtual-frame-padding must have four values: \"<Left> <Top> <Right> <Bottom>\".");
+			}
 		}
 	}
 
