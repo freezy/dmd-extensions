@@ -64,6 +64,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _dmdShaderInvalid = true;
 		private VertexBufferArray _quadVBO;
 		private ShaderProgram _dmdShader, _blurShader;
+		private int _bsTexture, _bsResolution, _bsDirection;
+		private int _dsDmdTexture, _dsDmdTextureBlur1, _dsDmdTextureBlur2, _dsDmdTextureBlur3, _dsDmdSize;
+		private int _dsUnlitDot, _dsBackGlow, _dsBrightness, _dsDotSize, _dsDotRounding, _dsDotGlow, _dsGamma;
+		private int _dsGlassTexture, _dsGlassTexOffset, _dsGlassTexScale, _dsGlassColor;
 		private readonly uint[] _textures = new uint[6];
 		private readonly uint[] _fbos = new uint[4];
 		private System.Drawing.Bitmap _bitmapToRender = null;
@@ -231,6 +235,9 @@ namespace LibDmd.Output.Virtual.Dmd
 			{
 				_blurShader = new ShaderProgram();
 				_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), _attributeLocations);
+				_bsTexture = _blurShader.GetUniformLocation(gl, "texture");
+				_bsResolution = _blurShader.GetUniformLocation(gl, "resolution");
+				_bsDirection = _blurShader.GetUniformLocation(gl, "direction");
 			}
 			catch (Exception e)
 			{
@@ -275,6 +282,22 @@ namespace LibDmd.Output.Virtual.Dmd
 					if (_style.HasGamma) code.Append("#define GAMMA\n");
 					code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"));
 					_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), code.ToString(), _attributeLocations);
+					_dsDmdTexture = _dmdShader.GetUniformLocation(gl, "dmdTexture");
+					_dsDmdTextureBlur1 = _dmdShader.GetUniformLocation(gl, "dmdTextureBlur1");
+					_dsDmdTextureBlur2 = _dmdShader.GetUniformLocation(gl, "dmdTextureBlur2");
+					_dsDmdTextureBlur3 = _dmdShader.GetUniformLocation(gl, "dmdTextureBlur3");
+					_dsDmdSize = _dmdShader.GetUniformLocation(gl, "dmdSize");
+					_dsUnlitDot = _dmdShader.GetUniformLocation(gl, "unlitDot");
+					_dsBackGlow = _dmdShader.GetUniformLocation(gl, "backGlow");
+					_dsBrightness = _dmdShader.GetUniformLocation(gl, "brightness");
+					_dsDotSize = _dmdShader.GetUniformLocation(gl, "dotSize");
+					_dsDotRounding = _dmdShader.GetUniformLocation(gl, "dotRounding");
+					_dsDotGlow = _dmdShader.GetUniformLocation(gl, "dotGlow");
+					_dsGamma = _dmdShader.GetUniformLocation(gl, "gamma");
+					_dsGlassTexture = _dmdShader.GetUniformLocation(gl, "glassTexture");
+					_dsGlassTexOffset = _dmdShader.GetUniformLocation(gl, "glassTexOffset");
+					_dsGlassTexScale = _dmdShader.GetUniformLocation(gl, "glassTexScale");
+					_dsGlassColor = _dmdShader.GetUniformLocation(gl, "glassColor");
 				}
 				catch (Exception e)
 				{
@@ -364,15 +387,15 @@ namespace LibDmd.Output.Virtual.Dmd
 					{
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
 						gl.Viewport(0, 0, DmdWidth, DmdHeight);
-						gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), i + 1);
-						gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
-						gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 1.0f, 0.0f);
+						gl.Uniform1(_bsTexture, i + 1);
+						gl.Uniform2(_bsResolution, (float)DmdWidth, DmdHeight);
+						gl.Uniform2(_bsDirection, 1.0f, 0.0f);
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
 						gl.Viewport(0, 0, DmdWidth, DmdHeight);
-						gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), 5);
-						gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
-						gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 0.0f, 1.0f);
+						gl.Uniform1(_bsTexture, 5);
+						gl.Uniform2(_bsResolution, (float)DmdWidth, DmdHeight);
+						gl.Uniform2(_bsDirection, 0.0f, 1.0f);
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					}
 					_blurShader.Unbind(gl);
@@ -382,22 +405,22 @@ namespace LibDmd.Output.Virtual.Dmd
 			gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
 			gl.Viewport(0, 0, (int)Dmd.Width, (int)Dmd.Height);
 			_dmdShader.Bind(gl);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTexture"), 1);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur1"), 2);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur2"), 3);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur3"), 4);
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "dmdSize"), (float)DmdWidth, DmdHeight);
-			gl.Uniform3(_dmdShader.GetUniformLocation(gl, "unlitDot"), _style.UnlitDot.ScR, _style.UnlitDot.ScG, _style.UnlitDot.ScB);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "backGlow"), (float)_style.BackGlow);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "brightness"), (float)_style.Brightness);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotSize"), (float)_style.DotSize);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotRounding"), (float)_style.DotRounding);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotGlow"), (float)_style.DotGlow);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "gamma"), (float)_style.Gamma);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "glassTexture"), 0);
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
-			gl.Uniform4(_dmdShader.GetUniformLocation(gl, "glassColor"), _style.GlassColor.ScR, _style.GlassColor.ScG, _style.GlassColor.ScB, (float)_style.GlassLighting);
+			if (_dsDmdTexture != -1) gl.Uniform1(_dsDmdTexture, 1);
+			if (_dsDmdTextureBlur1 != -1) gl.Uniform1(_dsDmdTextureBlur1, 2);
+			if (_dsDmdTextureBlur2 != -1) gl.Uniform1(_dsDmdTextureBlur2, 3);
+			if (_dsDmdTextureBlur3 != -1) gl.Uniform1(_dsDmdTextureBlur3, 4);
+			if (_dsDmdSize != -1) gl.Uniform2(_dsDmdSize, (float)DmdWidth, DmdHeight);
+			if (_dsUnlitDot != -1) gl.Uniform3(_dsUnlitDot, _style.UnlitDot.ScR, _style.UnlitDot.ScG, _style.UnlitDot.ScB);
+			if (_dsBackGlow != -1) gl.Uniform1(_dsBackGlow, (float)_style.BackGlow);
+			if (_dsBrightness != -1) gl.Uniform1(_dsBrightness, (float)_style.Brightness);
+			if (_dsDotSize != -1) gl.Uniform1(_dsDotSize, (float)_style.DotSize);
+			if (_dsDotRounding != -1) gl.Uniform1(_dsDotRounding, (float)_style.DotRounding);
+			if (_dsDotGlow != -1) gl.Uniform1(_dsDotGlow, (float)_style.DotGlow);
+			if (_dsGamma != -1) gl.Uniform1(_dsGamma, (float)_style.Gamma);
+			if (_dsGlassTexture != -1) gl.Uniform1(_dsGlassTexture, 0);
+			if (_dsGlassTexOffset != -1) gl.Uniform2(_dsGlassTexOffset, (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
+			if (_dsGlassTexScale != -1) gl.Uniform2(_dsGlassTexScale, (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
+			if (_dsGlassColor != -1) gl.Uniform4(_dsGlassColor, _style.GlassColor.ScR, _style.GlassColor.ScG, _style.GlassColor.ScB, (float)_style.GlassLighting);
 			gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 			_dmdShader.Unbind(gl);
 
