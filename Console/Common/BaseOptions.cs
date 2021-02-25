@@ -44,6 +44,9 @@ namespace DmdExt.Common
 		[Option("virtual-backglow", HelpText = "Glow of the background behind the dots of the virtual DMD. Default: 0")]
 		public double VirtualDmdBackGlow { get; set; } = 0;
 
+		[Option("virtual-gamma", HelpText = "Gamma of the virtual DMD. Default: 1")]
+		public double VirtualDmdGamma { get; set; } = 1;
+
 		[Option("virtual-glasstexture", HelpText = "Texture for the glass above the dots of the virtual DMD. Default: no texture")]
 		public string VirtualDmdGlassTexture { get; set; } = "";
 
@@ -61,6 +64,9 @@ namespace DmdExt.Common
 
 		[Option("virtual-glasscolor", HelpText = "Tint of the glass above the dots of the virtual DMD. Default: invisible")]
 		public Color VirtualDmdGlassColor { get; set; } = Color.FromArgb(0, 0, 0, 0);
+
+		[Option("virtual-glasslighting", HelpText = "Amount of lighting from the DMD that lights the glass. Default: 0")]
+		public double VirtualDmdGlassLighting { get; set; } = 0;
 
 		[Option("virtual-frametexture", HelpText = "Texture for the frame above the dots of the virtual DMD. Default: no texture")]
 		public string VirtualDmdFrameTexture { get; set; } = "";
@@ -205,7 +211,22 @@ namespace DmdExt.Common
 			_options = options;
 		}
 
-		public DmdStyle Style => new DmdStyle();
+		public DmdStyle Style => new DmdStyle()
+		{
+			DotSize = _options.VirtualDmdDotSize,
+			DotRounding = _options.VirtualDmdDotRounding,
+			UnlitDot = _options.VirtualDmdUnlitDot,
+			Brightness = _options.VirtualDmdBrightness,
+			DotGlow = _options.VirtualDmdDotGlow,
+			BackGlow = _options.VirtualDmdBackGlow,
+			Gamma = _options.VirtualDmdGamma,
+			GlassTexture = _options.VirtualDmdGlassTexture,
+			GlassPadding = new System.Windows.Thickness(_options.VirtualDmdGlassPaddingLeft, _options.VirtualDmdGlassPaddingTop, _options.VirtualDmdGlassPaddingRight, _options.VirtualDmdGlassPaddingBottom),
+			GlassColor = _options.VirtualDmdGlassColor,
+			GlassLighting = _options.VirtualDmdGlassLighting,
+			FrameTexture = _options.VirtualDmdFrameTexture,
+			FramePadding = new System.Windows.Thickness(_options.VirtualDmdFramePaddingLeft, _options.VirtualDmdFramePaddingTop, _options.VirtualDmdFramePaddingRight, _options.VirtualDmdFramePaddingBottom)
+		};
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto && !_options.NoVirtualDmd
 							|| _options.Destination == BaseOptions.DestinationType.Virtual;

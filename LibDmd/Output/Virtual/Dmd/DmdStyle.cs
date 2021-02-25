@@ -1,9 +1,5 @@
 ﻿using System.Windows.Media;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LibDmd.Output.Virtual.Dmd
 {
@@ -23,26 +19,37 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// Color of unlit dots (use additive blending).
 		/// </summary>
 		public Color UnlitDot { get; set; } = Color.FromArgb(0, 0, 0, 0);
+		public bool HasUnlitDot => UnlitDot.R > 0 || UnlitDot.G > 0 || UnlitDot.B > 0;
 
 		/// <summary>
 		/// Overall brightness of dots.
 		/// </summary>
 		public double Brightness { get; set; } = 1.0;
+		public bool HasBrightness => Math.Abs(Brightness - 1.0) > 0.01;
 
 		/// <summary>
 		/// Glow caused by dots (blurry light directly around them).
 		/// </summary>
 		public double DotGlow { get; set; } = 0.0;
+		public bool HasDotGlow => DotGlow > 0.01;
 
 		/// <summary>
 		/// Glow caused by DMD background (very blurry light that spreads far away from dots).
 		/// </summary>
 		public double BackGlow { get; set; } = 0.0;
+		public bool HasBackGlow => BackGlow > 0.01;
+
+		/// <summary>
+		/// Gamma of color space (1.0 for legacy).
+		/// </summary>
+		public double Gamma { get; set; } = 1.0;
+		public bool HasGamma => Math.Abs(Gamma - 1.0) > 0.01;
 
 		/// <summary>
 		/// Path to the texture of the DMD glass (can be either absolute or relative).
 		/// </summary>
 		public string GlassTexture { get; set; } = null;
+		public bool HasGlass => GlassTexture != null && (GlassLighting > 0.0 || GlassColor.R > 0 || GlassColor.G > 0 || GlassColor.B > 0);
 
 		/// <summary>
 		/// Padding of the DMD inside the glass. Fake unlit dots are rendered in this padding area.
@@ -83,6 +90,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				Brightness = Brightness,
 				DotGlow = DotGlow,
 				BackGlow = BackGlow,
+				Gamma = Gamma,
 				GlassTexture = GlassTexture,
 				GlassPadding = new System.Windows.Thickness(GlassPadding.Left, GlassPadding.Top, GlassPadding.Right, GlassPadding.Bottom),
 				GlassColor = Color.FromArgb(GlassColor.A, GlassColor.R, GlassColor.G, GlassColor.B),

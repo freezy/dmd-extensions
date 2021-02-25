@@ -155,7 +155,9 @@
 					<Slider x:Name="BackLevelSlider" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
 					<TextBox x:Name="BackLevelValue" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
 
-					<CheckBox x:Name="IgnoreAspectRatio" Grid.Column="0" Grid.Row="3" Content="Ignore Aspect Ratio" VerticalAlignment="Center" Margin="8,8,0,8"/>
+					<Label Grid.Row="3" Grid.Column="1" Content="Gamma:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+					<Slider x:Name="GammaSlider" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Minimum="0.5" Maximum="4.0" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+					<TextBox x:Name="GammaValue" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
 				</Grid>
 			</Grid>
 		</GroupBox>

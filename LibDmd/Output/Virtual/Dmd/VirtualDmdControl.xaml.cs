@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -56,18 +57,21 @@ namespace LibDmd.Output.Virtual.Dmd
 		private double _hue;
 		private double _sat;
 		private double _lum;
-
 		private bool _ignoreAr = true;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-		private bool fboInvalid = true;
+		private bool _fboInvalid = true;
+		private bool _dmdShaderInvalid = true;
 		private VertexBufferArray _quadVBO;
 		private ShaderProgram _dmdShader, _blurShader;
 		private readonly uint[] _textures = new uint[6];
 		private readonly uint[] _fbos = new uint[4];
-		private System.Drawing.Bitmap bitmapToRender = null;
-		private System.Drawing.Bitmap glassToRender = null;
+		private System.Drawing.Bitmap _bitmapToRender = null;
+		private System.Drawing.Bitmap _glassToRender = null;
 		private DmdStyle _style = new DmdStyle();
+		private const uint PositionAttribute = 0;
+		private const uint TexCoordAttribute = 1;
+		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -81,13 +85,14 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void SetStyle(DmdStyle style)
 		{
 			_style = style;
+			_dmdShaderInvalid = true;
 			try
 			{
-				glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
+				_glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
 			}
 			catch
 			{
-				glassToRender = null;
+				_glassToRender = null;
 			}
 			try
 			{
@@ -108,6 +113,8 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private System.Drawing.Bitmap GammaCorrection(System.Drawing.Bitmap img, double gamma, double c = 1d)
 		{
+			if (!_style.HasGamma)
+				return img;
 			int width = img.Width;
 			int height = img.Height;
 			BitmapData srcData = img.LockBits(new System.Drawing.Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -143,7 +150,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			Dispatcher.Invoke(() =>
 			{
-				bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, 2.2);
+				_bitmapToRender = GammaCorrection(ImageUtil.ConvertToImage(bmp) as System.Drawing.Bitmap, _style.Gamma);
 			});
 		}
 
@@ -200,7 +207,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				Logger.Info("Resizing virtual DMD to {0}x{1}", width, height);
 				DmdWidth = width;
 				DmdHeight = height;
-				fboInvalid = true;
+				_fboInvalid = true;
 				OnSizeChanged(null, null);
 			}
 		}
@@ -217,27 +224,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void ogl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
 		{
 			var gl = args.OpenGL;
-
 			gl.GenTextures(2, _textures);
 			_fbos[0] = _fbos[1] = _fbos[2] = _fbos[3] = 0;
 			_textures[2] = _textures[3] = _textures[4] = _textures[5] = 0;
-
-			const uint positionAttribute = 0;
-			const uint texCoordAttribute = 1;
-			var attributeLocations = new Dictionary<uint, string> { { positionAttribute, "Position" }, { texCoordAttribute, "TexCoord" }, };
-			try
-			{
-				_dmdShader = new ShaderProgram();
-				_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"), attributeLocations);
-			}
-			catch (Exception e)
-			{
-				Logger.Error(e, "DMD Shader compilation failed");
-			}
 			try
 			{
 				_blurShader = new ShaderProgram();
-				_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), attributeLocations);
+				_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), _attributeLocations);
 			}
 			catch (Exception e)
 			{
@@ -249,11 +242,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			var posVBO = new VertexBuffer();
 			posVBO.Create(gl);
 			posVBO.Bind(gl);
-			posVBO.SetData(gl, positionAttribute, new float[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
+			posVBO.SetData(gl, PositionAttribute, new float[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
 			var texVBO = new VertexBuffer();
 			texVBO.Create(gl);
 			texVBO.Bind(gl);
-			texVBO.SetData(gl, texCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
+			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
 			_quadVBO.Unbind(gl);
 		}
 
@@ -264,8 +257,34 @@ namespace LibDmd.Output.Virtual.Dmd
 			gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 			gl.Color(1f, 1f, 1f);
 
-			if (fboInvalid)
+			if (_dmdShaderInvalid)
 			{
+				_dmdShaderInvalid = false;
+				if (_dmdShader != null)
+					_dmdShader.Delete(gl);
+				try
+				{
+					_dmdShader = new ShaderProgram();
+					var code = new StringBuilder();
+					code.Append("#version 130\n");
+					if (_style.HasBackGlow) code.Append("#define BACKGLOW\n");
+					if (_style.HasDotGlow) code.Append("#define DOTGLOW\n");
+					if (_style.HasBrightness) code.Append("#define BRIGHTNESS\n");
+					if (_style.HasUnlitDot) code.Append("#define UNLIT\n");
+					if (_style.HasGlass) code.Append("#define GLASS\n");
+					if (_style.HasGamma) code.Append("#define GAMMA\n");
+					code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"));
+					_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), code.ToString(), _attributeLocations);
+				}
+				catch (Exception e)
+				{
+					Logger.Error(e, "DMD Shader compilation failed");
+				}
+			}
+
+			if (_fboInvalid)
+			{
+				_fboInvalid = false;
 				// Release previous textures and FBOs if any (0 are ignored by OpenGL driver)
 				uint[] texs = new uint[4] { _textures[2], _textures[3], _textures[4], _textures[5] };
 				gl.DeleteTextures(4, texs);
@@ -301,7 +320,6 @@ namespace LibDmd.Output.Virtual.Dmd
 							break;
 					}
 				}
-				fboInvalid = false;
 			}
 
 			_quadVBO.Bind(gl);
@@ -313,68 +331,72 @@ namespace LibDmd.Output.Virtual.Dmd
 				gl.BindTexture(OpenGL.GL_TEXTURE_2D, _textures[i]);
 			}
 
-			if (glassToRender != null)
+			if (_glassToRender != null)
 			{
 				Logger.Info("Glass texture updated");
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0);
-				var data = glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, glassToRender.Width, glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
-				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, glassToRender.Width, glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
+				var data = _glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, _glassToRender.Width, _glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
+				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _glassToRender.Width, _glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.GenerateMipmapEXT(OpenGL.GL_TEXTURE_2D);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR_MIPMAP_LINEAR);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
-				glassToRender = null;
+				_glassToRender = null;
 			}
 
-			if (bitmapToRender != null)
+			if (_bitmapToRender != null)
 			{
 				gl.ActiveTexture(OpenGL.GL_TEXTURE1);
-				var data = bitmapToRender.LockBits(new System.Drawing.Rectangle(0, 0, bitmapToRender.Width, bitmapToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
-				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, bitmapToRender.Width, bitmapToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
+				var data = _bitmapToRender.LockBits(new System.Drawing.Rectangle(0, 0, _bitmapToRender.Width, _bitmapToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
+				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _bitmapToRender.Width, _bitmapToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
-				bitmapToRender = null;
-				_blurShader.Bind(gl);
-				for (int i = 0; i < 3; i++)
+				_bitmapToRender = null;
+				if (_style.HasGlass || _style.HasDotGlow || _style.HasBackGlow)
 				{
-					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
-					gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), i + 1);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 1.0f, 0.0f);
-					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
-					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
-					gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), 5);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
-					gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 0.0f, 1.0f);
-					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					_blurShader.Bind(gl);
+					for (int i = 0; i < 3; i++)
+					{
+						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
+						gl.Viewport(0, 0, DmdWidth, DmdHeight);
+						gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), i + 1);
+						gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
+						gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 1.0f, 0.0f);
+						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
+						gl.Viewport(0, 0, DmdWidth, DmdHeight);
+						gl.Uniform1(_blurShader.GetUniformLocation(gl, "texture"), 5);
+						gl.Uniform2(_blurShader.GetUniformLocation(gl, "resolution"), (float)DmdWidth, DmdHeight);
+						gl.Uniform2(_blurShader.GetUniformLocation(gl, "direction"), 0.0f, 1.0f);
+						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					}
+					_blurShader.Unbind(gl);
 				}
-				_blurShader.Unbind(gl);
 			}
 
 			gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
 			gl.Viewport(0, 0, (int)Dmd.Width, (int)Dmd.Height);
 			_dmdShader.Bind(gl);
-			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "glassTexture"), 0);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTexture"), 1);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur1"), 2);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur2"), 3);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dmdTextureBlur3"), 4);
 			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "dmdSize"), (float)DmdWidth, DmdHeight);
 			gl.Uniform3(_dmdShader.GetUniformLocation(gl, "unlitDot"), _style.UnlitDot.ScR, _style.UnlitDot.ScG, _style.UnlitDot.ScB);
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
-			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "backGlow"), (float)_style.BackGlow);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "brightness"), (float)_style.Brightness);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotSize"), (float)_style.DotSize);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotRounding"), (float)_style.DotRounding);
 			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "dotGlow"), (float)_style.DotGlow);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "gamma"), (float)_style.Gamma);
+			gl.Uniform1(_dmdShader.GetUniformLocation(gl, "glassTexture"), 0);
+			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexOffset"), (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
+			gl.Uniform2(_dmdShader.GetUniformLocation(gl, "glassTexScale"), (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
 			gl.Uniform4(_dmdShader.GetUniformLocation(gl, "glassColor"), _style.GlassColor.ScR, _style.GlassColor.ScG, _style.GlassColor.ScB, (float)_style.GlassLighting);
 			gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 			_dmdShader.Unbind(gl);
