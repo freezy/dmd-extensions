@@ -16,6 +16,11 @@ namespace LibDmd.Output.Virtual.Dmd
 		public double DotRounding { get; set; } = 0.0;
 
 		/// <summary>
+		/// Sharpness factor: 0.0 for fuzzy dot borders, 1.0 for sharp borders.
+		/// </summary>
+		public double DotSharpness { get; set; } = 0.8;
+
+		/// <summary>
 		/// Color of unlit dots (use additive blending).
 		/// </summary>
 		public Color UnlitDot { get; set; } = Color.FromArgb(0, 0, 0, 0);
@@ -86,6 +91,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			{
 				DotSize = DotSize,
 				DotRounding = DotRounding,
+				DotSharpness = DotSharpness,
 				UnlitDot = Color.FromArgb(UnlitDot.A, UnlitDot.R, UnlitDot.G, UnlitDot.B),
 				Brightness = Brightness,
 				DotGlow = DotGlow,

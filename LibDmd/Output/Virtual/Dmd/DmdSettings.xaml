@@ -140,8 +140,12 @@
 					<Slider x:Name="DotRoundingSlider" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.1"/>
 					<TextBox x:Name="DotRoundingValue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
 
-					<Label Grid.Row="2" Grid.Column="0" Content="Unlit Dot:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
+					<Label Grid.Row="2" Grid.Column="0" Content="Dot Sharpness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<Slider x:Name="DotSharpnessSlider" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.1"/>
+					<TextBox x:Name="DotSharpnessValue" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Row="3" Grid.Column="0" Content="Unlit Dot Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
 
 					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
 					<Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>

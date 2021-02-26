@@ -54,6 +54,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			DotRoundingSlider.ValueChanged += (sender, e) => _previewStyle.DotRounding = DotRoundingSlider.Value;
 			DotRoundingSlider.ValueChanged += (sender, e) => UpdatePreview();
 
+			DotSharpnessSlider.ValueChanged += (sender, e) => DotSharpnessValue.Text = DoubleToString2(DotSharpnessSlider.Value);
+			DotSharpnessValue.TextChanged += (sender, e) => DotSharpnessSlider.Value = StringToDouble(DotSharpnessValue.Text, DotSharpnessSlider.Value);
+			DotSharpnessSlider.ValueChanged += (sender, e) => _previewStyle.DotSharpness = DotSharpnessSlider.Value;
+			DotSharpnessSlider.ValueChanged += (sender, e) => UpdatePreview();
+
 			UnlitDotColor.SelectedColorChanged += (sender, e) => _previewStyle.UnlitDot = UnlitDotColor.SelectedColor.Value;
 			UnlitDotColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
@@ -113,6 +118,9 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			DotRoundingValue.Text = DoubleToString2(_previewStyle.DotRounding);
 			DotRoundingSlider.Value = _previewStyle.DotRounding;
+
+			DotSharpnessValue.Text = DoubleToString2(_previewStyle.DotSharpness);
+			DotSharpnessSlider.Value = _previewStyle.DotSharpness;
 
 			GammaValue.Text = DoubleToString2(_previewStyle.Gamma);
 			GammaSlider.Value = _previewStyle.Gamma;

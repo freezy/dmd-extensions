@@ -28,8 +28,11 @@ namespace DmdExt.Common
 		[Option("virtual-dot-size", HelpText = "Scale the dot size of the virtual DMD. Default: 1")]
 		public double VirtualDmdDotSize { get; set; } = 1;
 
-		[Option("virtual-dot-rounding", HelpText = "Roundness the dots of the virtual DMD. 0 = square, 1 = circle. Default: 1")]
+		[Option("virtual-dot-rounding", HelpText = "Roundness of the dots of the virtual DMD. 0 = square, 1 = circle. Default: 1")]
 		public double VirtualDmdDotRounding { get; set; } = 1;
+
+		[Option("virtual-dot-sharpness", HelpText = "Sharpness of the dots of the virtual DMD. 0 = fuzzy borders, 1 = sharp borders. Default: 0.8")]
+		public double VirtualDmdDotSharpness { get; set; } = 0.8;
 
 		[Option("virtual-dot-unlit", HelpText = "Default color for unlit dots of the virtual DMD. Default: #000000")]
 		public Color VirtualDmdUnlitDot { get; set; } = Color.FromArgb(0, 0, 0, 0);
@@ -204,6 +207,7 @@ namespace DmdExt.Common
 		{
 			DotSize = _options.VirtualDmdDotSize,
 			DotRounding = _options.VirtualDmdDotRounding,
+			DotSharpness = _options.VirtualDmdDotSharpness,
 			UnlitDot = _options.VirtualDmdUnlitDot,
 			Brightness = _options.VirtualDmdBrightness,
 			DotGlow = _options.VirtualDmdDotGlow,
