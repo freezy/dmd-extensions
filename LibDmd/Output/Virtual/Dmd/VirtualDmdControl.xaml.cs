@@ -75,6 +75,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private DmdStyle _style = new DmdStyle();
 		private const uint PositionAttribute = 0;
 		private const uint TexCoordAttribute = 1;
+		private const int FBOOversize = 1;
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -321,7 +322,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
-					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, DmdWidth, DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
+					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, FBOOversize * DmdWidth, FBOOversize * DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
 					gl.FramebufferTexture2DEXT(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_COLOR_ATTACHMENT0_EXT, OpenGL.GL_TEXTURE_2D, _textures[i + 2], 0);
 					uint status = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT);
 					switch (status)
@@ -379,14 +380,14 @@ namespace LibDmd.Output.Virtual.Dmd
 					for (int i = 0; i < 3; i++)
 					{
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
-						gl.Viewport(0, 0, DmdWidth, DmdHeight);
+						gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
 						gl.Uniform1(_bsTexture, i + 1);
-						gl.Uniform2(_bsDirection, 1.0f / DmdWidth, 0.0f);
+						gl.Uniform2(_bsDirection, 1.0f / (FBOOversize * DmdWidth), 0.0f);
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
-						gl.Viewport(0, 0, DmdWidth, DmdHeight);
+						gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
 						gl.Uniform1(_bsTexture, 5);
-						gl.Uniform2(_bsDirection, 0.0f, 1.0f / DmdHeight);
+						gl.Uniform2(_bsDirection, 0.0f, 1.0f / (FBOOversize * DmdHeight));
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					}
 					_blurShader.Unbind(gl);
