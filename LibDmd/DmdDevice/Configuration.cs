@@ -255,6 +255,9 @@ namespace LibDmd.DmdDevice
 						case "dotrounding":
 							_styles[styleName].DotRounding = GetDouble(keyValues.Current.KeyName, 0.0);
 							break;
+						case "dotsharpness":
+							_styles[styleName].DotSharpness = GetDouble(keyValues.Current.KeyName, 0.8);
+							break;
 						case "unlitdot":
 							_styles[styleName].UnlitDot = fromSKColor(GetSKColor(keyValues.Current.KeyName, SKColor.Empty));
 							break;
@@ -341,6 +344,7 @@ namespace LibDmd.DmdDevice
 			Set(prefix + "brightness", style.Brightness);
 			Set(prefix + "dotsize", style.DotSize);
 			Set(prefix + "dotrounding", style.DotRounding);
+			Set(prefix + "dotsharpness", style.DotSharpness);
 			Set(prefix + "unlitdot", style.UnlitDot);
 			Set(prefix + "dotglow", style.DotGlow);
 			Set(prefix + "backglow", style.BackGlow);

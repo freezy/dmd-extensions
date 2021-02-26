@@ -11,20 +11,16 @@ uniform sampler2D glassTexture; // The glass texture (lit by the room's ambient 
 
 uniform vec2 dmdSize; // DMD size
 uniform vec3 unlitDot; // light for unlit dots
-uniform float backGlow; // Background reflectiveness
-uniform float brightness; // Dot brightness
-uniform float dotSize; // Dot size
-uniform float dotRounding; // Dot corner radius
-uniform float dotGlow; // Dot glow
 uniform vec4 glassColor; // Glass color: RGB components are used to tint the glass, the A component is the amount of light from the DMD that the glass reflects
-uniform float gamma; // Gamma correction
 
 out vec4 FragColor;
 
 // from http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
-float udRoundBox(vec2 p, vec2 b, float r)
+float udRoundBox(vec2 p, float b, float r)
 {
-    return length(max(abs(p) - b + r, 0.0)) - r;
+	vec2 q = abs(p) - b + r;
+	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; // SDF with negative values inside the dot
+    // return length(max(q, 0.0)) - r; // SDF with 0 distance inside the dot
 }
 
 void main()
@@ -39,9 +35,9 @@ void main()
 			// Nearest filtering for base dots
 			vec2 nearest = (floor(dmdUv * dmdSize) + ofs) / dmdSize;
 			// Sampling position as (0,0) at dot center, (-1,-1) to (1,1) in dot corners
-			vec2 pos = 4.4 * (fract(dmdUv * dmdSize) - ofs);
+			vec2 pos = 2.0 * (fract(dmdUv * dmdSize) - ofs);
 			// Dots from the lamp
-			float dot = smoothstep(1.0, 0.0, udRoundBox(pos, vec2(2.0 * dotSize), dotRounding * 2.0 * dotSize));
+			float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
 			vec3 dmd = texture(dmdTexture, nearest).rgb;
 #ifdef UNLIT
 			// Add a little shadow for unlit dots which are lightly visible on real DMDs
@@ -55,9 +51,9 @@ void main()
 	// Nearest filtering for base dots
 	vec2 nearest = (floor(dmdUv * dmdSize) + vec2(0.5, 0.5)) / dmdSize;
 	// Sampling position as (0,0) at dot center, (-1,-1) to (1,1) in dot corners
-	vec2 pos = 4.4 * (fract(dmdUv * dmdSize) - vec2(0.5, 0.5));
+	vec2 pos = 2.0 * (fract(dmdUv * dmdSize) - vec2(0.5, 0.5));
 	// Dots from the lamp
-	float dot = smoothstep(1.0, 0.0, udRoundBox(pos, vec2(2.0 * dotSize), dotRounding));
+	float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
 	vec3 dmd = texture(dmdTexture, nearest).rgb;
 #ifdef UNLIT
 	// Add a little shadow for unlit dots which are lightly visible on real DMDs
