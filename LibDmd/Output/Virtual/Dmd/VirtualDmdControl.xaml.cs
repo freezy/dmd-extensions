@@ -381,14 +381,12 @@ namespace LibDmd.Output.Virtual.Dmd
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
 						gl.Viewport(0, 0, DmdWidth, DmdHeight);
 						gl.Uniform1(_bsTexture, i + 1);
-						gl.Uniform2(_bsResolution, (float)DmdWidth, DmdHeight);
-						gl.Uniform2(_bsDirection, 1.0f, 0.0f);
+						gl.Uniform2(_bsDirection, 1.0f / DmdWidth, 0.0f);
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
 						gl.Viewport(0, 0, DmdWidth, DmdHeight);
 						gl.Uniform1(_bsTexture, 5);
-						gl.Uniform2(_bsResolution, (float)DmdWidth, DmdHeight);
-						gl.Uniform2(_bsDirection, 0.0f, 1.0f);
+						gl.Uniform2(_bsDirection, 0.0f, 1.0f / DmdHeight);
 						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					}
 					_blurShader.Unbind(gl);
