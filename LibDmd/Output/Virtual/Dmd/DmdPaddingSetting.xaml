@@ -3,45 +3,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+			 xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
              xmlns:local="clr-namespace:LibDmd.Common"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             mc:Ignorable="d" Width="Auto" Height="Auto">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-			<ColumnDefinition Width="60"/>
-			<ColumnDefinition Width="150"/>
-			<ColumnDefinition Width="30"/>
-			<ColumnDefinition Width="60"/>
-			<ColumnDefinition Width="150"/>
-			<ColumnDefinition Width="30"/>
-			<ColumnDefinition Width="60"/>
-			<ColumnDefinition Width="150"/>
-			<ColumnDefinition Width="30"/>
-            <ColumnDefinition Width="60"/>
-			<ColumnDefinition Width="150"/>
-			<ColumnDefinition Width="30"/>
-        </Grid.ColumnDefinitions>
+             mc:Ignorable="d" Width="Auto" Height="Auto" d:DesignWidth="830.667">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="28"/>
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="45"/>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="1*"/>
+		</Grid.ColumnDefinitions>
 
-        <Label Grid.Column="0" Grid.Row="0" Content="Padding" VerticalAlignment="Top" HorizontalAlignment="Left" Width="60"/>
+		<CheckBox x:Name="Locked" Grid.Column="0" Margin="0,5,0,0" IsChecked="true">
+			<Label Content="🔒" Grid.Column="0" FontSize="15" Margin="-2,-6,0,0"></Label>
+		</CheckBox>
 
-        <Label Grid.Column="1" Grid.Row="0" Content="Left:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-        <Slider x:Name="LeftSlider" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" Maximum="64" Margin="0,4,8,4"/>
-        <TextBox x:Name="LeftValue" Grid.Column="3" Grid.Row="0" VerticalAlignment="Center" Margin="0,4,8,4"/>
+		<dmd:SliderValueSetting x:Name="PaddingLeft" Grid.Column="1" Width="Auto" LabelContent="Left:" MinValue="0" MaxValue="30" LabelAlignment="Left"></dmd:SliderValueSetting>
+		<dmd:SliderValueSetting x:Name="PaddingTop" Grid.Column="2" Width="Auto" LabelContent="Top:" MinValue="0" MaxValue="30" LabelAlignment="Left"></dmd:SliderValueSetting>
+		<dmd:SliderValueSetting x:Name="PaddingRight" Grid.Column="3" Width="Auto" LabelContent="Right:" MinValue="0" MaxValue="30" LabelAlignment="Left"></dmd:SliderValueSetting>
+		<dmd:SliderValueSetting x:Name="PaddingBottom" Grid.Column="4" Width="Auto" LabelContent="Bottom:" MinValue="0" MaxValue="30" LabelAlignment="Left"></dmd:SliderValueSetting>
 
-		<Label Grid.Column="4" Grid.Row="0" Content="Right:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-        <Slider x:Name="RightSlider" Grid.Column="5" Grid.Row="0" VerticalAlignment="Center" Maximum="64" Margin="0,4,8,4"/>
-        <TextBox x:Name="RightValue" Grid.Column="6" Grid.Row="0" VerticalAlignment="Center" Margin="0,4"/>
-
-        <Label Grid.Column="7" Grid.Row="0" Content="Top:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-        <Slider x:Name="TopSlider" Grid.Column="8" Grid.Row="0" VerticalAlignment="Center" Maximum="64" Margin="0,4,8,4"/>
-        <TextBox x:Name="TopValue" Grid.Column="9" Grid.Row="0" VerticalAlignment="Center" Margin="0,4,8,4"/>
-
-        <Label Grid.Column="10" Grid.Row="0" Content="Bottom:" VerticalAlignment="Top" HorizontalAlignment="Right" />
-        <Slider x:Name="BottomSlider" Grid.Column="11" Grid.Row="0" VerticalAlignment="Center" Maximum="64" Margin="38,4,8,4"/>
-        <TextBox x:Name="BottomValue" Grid.Column="12" Grid.Row="0" VerticalAlignment="Center" Margin="0,4"/>
-    </Grid>
+	</Grid>
 </UserControl>

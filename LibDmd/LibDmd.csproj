@@ -313,6 +313,9 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\Dmd\SliderValueSetting.xaml.cs">
+      <DependentUpon>SliderValueSetting.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml.cs">
       <DependentUpon>DmdPaddingSetting.xaml</DependentUpon>
     </Compile>
@@ -483,6 +486,10 @@
     <Page Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\SliderValueSetting.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Output\Virtual\Dmd\DmdPaddingSetting.xaml">
       <Generator>MSBuild:Compile</Generator>

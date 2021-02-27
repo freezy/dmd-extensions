@@ -15,17 +15,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		public Thickness Pad
 		{
 			get => _padding;
-			set
-			{
+			set {
 				_padding = value;
-				LeftSlider.Value = _padding.Left;
-				RightSlider.Value = _padding.Right;
-				TopSlider.Value = _padding.Top;
-				BottomSlider.Value = _padding.Bottom;
-				LeftValue.Text = DoubleToString(LeftSlider.Value);
-				RightValue.Text = DoubleToString(RightSlider.Value);
-				TopValue.Text = DoubleToString(TopSlider.Value);
-				BottomValue.Text = DoubleToString(BottomSlider.Value);
+				PaddingLeft.Value = _padding.Left;
+				PaddingTop.Value = _padding.Top;
+				PaddingRight.Value = _padding.Right;
+				PaddingBottom.Value = _padding.Bottom;
 			}
 		}
 
@@ -35,41 +30,42 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			InitializeComponent();
 
-			LeftSlider.ValueChanged += (sender, e) => LeftValue.Text = DoubleToString(LeftSlider.Value);
-			LeftValue.TextChanged += (sender, e) => LeftSlider.Value = StringToDouble(LeftValue.Text, LeftSlider.Value);
-			LeftSlider.ValueChanged += (sender, e) => _padding.Left = LeftSlider.Value;
-			LeftSlider.ValueChanged += (sender, e) => OnPaddingChanged.OnNext(_padding);
+			PaddingLeft.OnValueChanged.Subscribe((val) => {
+				_padding.Left = val;
+				ApplyLock(val);
+				OnPaddingChanged.OnNext(_padding);
+			});
 
-			RightSlider.ValueChanged += (sender, e) => RightValue.Text = DoubleToString(RightSlider.Value);
-			RightValue.TextChanged += (sender, e) => RightSlider.Value = StringToDouble(RightValue.Text, RightSlider.Value);
-			RightSlider.ValueChanged += (sender, e) => _padding.Right = RightSlider.Value;
-			RightSlider.ValueChanged += (sender, e) => OnPaddingChanged.OnNext(_padding);
+			PaddingTop.OnValueChanged.Subscribe((val) => {
+				_padding.Top = val;
+				ApplyLock(val);
+				OnPaddingChanged.OnNext(_padding);
+			});
 
-			TopSlider.ValueChanged += (sender, e) => TopValue.Text = DoubleToString(TopSlider.Value);
-			TopValue.TextChanged += (sender, e) => TopSlider.Value = StringToDouble(TopValue.Text, TopSlider.Value);
-			TopSlider.ValueChanged += (sender, e) => _padding.Top = TopSlider.Value;
-			TopSlider.ValueChanged += (sender, e) => OnPaddingChanged.OnNext(_padding);
+			PaddingRight.OnValueChanged.Subscribe((val) => {
+				_padding.Right = val;
+				ApplyLock(val);
+				OnPaddingChanged.OnNext(_padding);
+			});
 
-			BottomSlider.ValueChanged += (sender, e) => BottomValue.Text = DoubleToString(BottomSlider.Value);
-			BottomValue.TextChanged += (sender, e) => BottomSlider.Value = StringToDouble(BottomValue.Text, BottomSlider.Value);
-			BottomSlider.ValueChanged += (sender, e) => _padding.Bottom = BottomSlider.Value;
-			BottomSlider.ValueChanged += (sender, e) => OnPaddingChanged.OnNext(_padding);
+			PaddingBottom.OnValueChanged.Subscribe((val) => {
+				_padding.Bottom = val;
+				ApplyLock(val);
+				OnPaddingChanged.OnNext(_padding);
+			});
 		}
 
-		private static string DoubleToString(double d)
-		{
-			return ((int)Math.Round(d)).ToString();
-		}
+		private void ApplyLock(double val) {
+			if ((bool)Locked.IsChecked) {
+				_padding.Left = val;
+				_padding.Top = val;
+				_padding.Right = val;
+				_padding.Bottom = val;
 
-		private static double StringToDouble(string str, double fallback)
-		{
-			try
-			{
-				return double.Parse(str);
-			}
-			catch (Exception)
-			{
-				return fallback;
+				PaddingLeft.Update(val);
+				PaddingTop.Update(val);
+				PaddingRight.Update(val);
+				PaddingBottom.Update(val);
 			}
 		}
 	}

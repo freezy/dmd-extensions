@@ -44,20 +44,20 @@ namespace LibDmd.Output.Virtual.Dmd
 				SaveGroup.Visibility = Visibility.Collapsed;
 			}
 
-			DotSizeSlider.ValueChanged += (sender, e) => DotSizeValue.Text = DoubleToString2(DotSizeSlider.Value);
-			DotSizeValue.TextChanged += (sender, e) => DotSizeSlider.Value = StringToDouble(DotSizeValue.Text, DotSizeSlider.Value);
-			DotSizeSlider.ValueChanged += (sender, e) => _previewStyle.DotSize = DotSizeSlider.Value;
-			DotSizeSlider.ValueChanged += (sender, e) => UpdatePreview();
+			DotSize.OnValueChanged.Subscribe(value => {
+				_previewStyle.DotSize = value;
+				UpdatePreview();
+			});
 
-			DotRoundingSlider.ValueChanged += (sender, e) => DotRoundingValue.Text = DoubleToString2(DotRoundingSlider.Value);
-			DotRoundingValue.TextChanged += (sender, e) => DotRoundingSlider.Value = StringToDouble(DotRoundingValue.Text, DotRoundingSlider.Value);
-			DotRoundingSlider.ValueChanged += (sender, e) => _previewStyle.DotRounding = DotRoundingSlider.Value;
-			DotRoundingSlider.ValueChanged += (sender, e) => UpdatePreview();
+			DotRounding.OnValueChanged.Subscribe(value => {
+				_previewStyle.DotRounding = value;
+				UpdatePreview();
+			});
 
-			DotSharpnessSlider.ValueChanged += (sender, e) => DotSharpnessValue.Text = DoubleToString2(DotSharpnessSlider.Value);
-			DotSharpnessValue.TextChanged += (sender, e) => DotSharpnessSlider.Value = StringToDouble(DotSharpnessValue.Text, DotSharpnessSlider.Value);
-			DotSharpnessSlider.ValueChanged += (sender, e) => _previewStyle.DotSharpness = DotSharpnessSlider.Value;
-			DotSharpnessSlider.ValueChanged += (sender, e) => UpdatePreview();
+			DotSharpness.OnValueChanged.Subscribe(value => {
+				_previewStyle.DotSharpness = value;
+				UpdatePreview();
+			});
 
 			UnlitDotColor.SelectedColorChanged += (sender, e) => _previewStyle.UnlitDot = UnlitDotColor.SelectedColor.Value;
 			UnlitDotColor.SelectedColorChanged += (sender, e) => UpdatePreview();
@@ -113,14 +113,9 @@ namespace LibDmd.Output.Virtual.Dmd
 			BrightnessValue.Text = DoubleToString2(_previewStyle.Brightness);
 			BrightnessSlider.Value = _previewStyle.Brightness;
 
-			DotSizeValue.Text = DoubleToString2(_previewStyle.DotSize);
-			DotSizeSlider.Value = _previewStyle.DotSize;
-
-			DotRoundingValue.Text = DoubleToString2(_previewStyle.DotRounding);
-			DotRoundingSlider.Value = _previewStyle.DotRounding;
-
-			DotSharpnessValue.Text = DoubleToString2(_previewStyle.DotSharpness);
-			DotSharpnessSlider.Value = _previewStyle.DotSharpness;
+			DotSize.Update(_previewStyle.DotSize);
+			DotRounding.Update(_previewStyle.DotRounding);
+			DotSharpness.Update(_previewStyle.DotSharpness);
 
 			GammaValue.Text = DoubleToString2(_previewStyle.Gamma);
 			GammaSlider.Value = _previewStyle.Gamma;
@@ -167,24 +162,24 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void UpdatePreview()
 		{
-			DMD.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
-			DMD.SetStyle(_previewStyle);
-			DMD.RenderBitmap(_preview);
-			var baseWidth = 128.0 * 6.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
-			var baseHeight = 64.0 * 3.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews
-			if (DMD.AspectRatio > 4.0)
+			DmdPreview.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
+			DmdPreview.SetStyle(_previewStyle);
+			DmdPreview.RenderBitmap(_preview);
+			var baseWidth = 128.0 * 5.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
+			var baseHeight = 32.0 * 5.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews
+			if (DmdPreview.AspectRatio > 4.0)
 			{
-				DMD.Width = baseWidth;
-				DMD.Height = DMD.Width / DMD.AspectRatio;
-				var margin = (baseHeight - DMD.Height) *0.5;
-				DMD.Margin = new Thickness(0.0, margin, 0.0, margin + 16.0);
+				DmdPreview.Width = baseWidth;
+				DmdPreview.Height = DmdPreview.Width / DmdPreview.AspectRatio;
+				var margin = (baseHeight - DmdPreview.Height) *0.5;
+				DmdPreview.Margin = new Thickness(0.0, margin, 0.0, margin + 16.0);
 			}
 			else
 			{
-				DMD.Height = baseHeight;
-				DMD.Width = DMD.Height * DMD.AspectRatio;
-				var margin = (baseWidth - DMD.Width) * 0.5;
-				DMD.Margin = new Thickness(margin, 0.0, margin, 16.0);
+				DmdPreview.Height = baseHeight;
+				DmdPreview.Width = DmdPreview.Height * DmdPreview.AspectRatio;
+				var margin = (baseWidth - DmdPreview.Width) * 0.5;
+				DmdPreview.Margin = new Thickness(margin, 0.0, margin, 16.0);
 			}
 		}
 

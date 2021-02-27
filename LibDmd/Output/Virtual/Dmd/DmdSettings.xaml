@@ -9,14 +9,15 @@
         x:Class="LibDmd.Output.Virtual.Dmd.DmdSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="auto" 
-        Width="auto" 
+        Height="740" 
+        Width="680" 
         ResizeMode="NoResize" 
-        SizeToContent="WidthAndHeight" 
-        Title="Customize DMD display">
+		ShowInTaskbar="False" 
+        SizeToContent="Manual" 
+        Title="Customize DMD Style" d:DesignHeight="742.667">
 	<Grid Margin="16">
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="Auto"></ColumnDefinition>
+			<ColumnDefinition></ColumnDefinition>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -29,7 +30,7 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<dmd:VirtualDmdControl x:Name="DMD" Grid.Row="0" Width="768" Height="192" Margin="0,0,0,16"></dmd:VirtualDmdControl>
+		<dmd:VirtualDmdControl x:Name="DmdPreview" Grid.Row="0" Width="640" Height="160" Margin="0,0,0,16"></dmd:VirtualDmdControl>
 
 		<StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" HorizontalAlignment="Center">
 			<Label Content="Preview size::" VerticalAlignment="Center" Width="100"/>
@@ -40,16 +41,60 @@
 			<RadioButton GroupName="Preview" x:Name="PreviewMono192x64" Content="192x64" VerticalAlignment="Center" Margin="16,0,16,0" />
 		</StackPanel >
 
-		<GroupBox x:Name="Frame" Grid.Row="2" Header="Frame" Padding="72,0,8,0" Margin="0,0,0,16">
+		<GroupBox Grid.Row="2" Grid.Column="2" Header="DMD" Padding="20,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="588"></ColumnDefinition>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
-					<ColumnDefinition Width="Auto"></ColumnDefinition>
+					<ColumnDefinition Width="16*"></ColumnDefinition>
+					<ColumnDefinition Width="3*"/>
+				</Grid.ColumnDefinitions>
+				<Grid Grid.Column="0">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="1*"></ColumnDefinition>
+						<ColumnDefinition Width="1*"></ColumnDefinition>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+					<dmd:SliderValueSetting x:Name="DotSize"      Grid.Row="0" Grid.Column="0" Width="Auto" LabelContent="Dot Size:" MinValue="0.1" MaxValue="2" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+					<dmd:SliderValueSetting x:Name="DotRounding"  Grid.Row="1" Grid.Column="0" Width="Auto" LabelContent="Dot Rounding:" MinValue="0" MaxValue="1" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+					<dmd:SliderValueSetting x:Name="DotSharpness" Grid.Row="2" Grid.Column="0" Width="Auto" LabelContent="Dot Sharpness:" MinValue="0.1" MaxValue="1" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+
+					<Label Grid.Row="3" Grid.Column="0" Content="Unlit Dot Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="165" Margin="110,1.333,0,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
+
+					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+					<Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>
+					<TextBox x:Name="BrightnessValue" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
+
+					<Label Grid.Row="1" Grid.Column="1" Content="Dot Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+					<Slider x:Name="DotGlowSlider" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+					<TextBox x:Name="DotGlowValue" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
+
+					<Label Grid.Row="2" Grid.Column="1" Content="Background Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+					<Slider x:Name="BackLevelSlider" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+					<TextBox x:Name="BackLevelValue" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
+
+					<Label Grid.Row="3" Grid.Column="1" Content="Gamma:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
+					<Slider x:Name="GammaSlider" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Minimum="0.5" Maximum="4.0" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
+					<TextBox x:Name="GammaValue" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
+				</Grid>
+			</Grid>
+		</GroupBox>
+
+		<GroupBox x:Name="Frame" Grid.Row="3" Header="Frame" Padding="0,0,8,0" Margin="0,0,0,16">
+			<Grid>
+				<Grid.ColumnDefinitions>
 					<ColumnDefinition></ColumnDefinition>
 				</Grid.ColumnDefinitions>
 				<Grid Grid.Column="0">
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"></ColumnDefinition>
+						<ColumnDefinition></ColumnDefinition>
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -57,17 +102,17 @@
 					</Grid.RowDefinitions>
 
 					<StackPanel Grid.Row ="0" Orientation="Horizontal">
-						<Label Content="Frame overlay:" VerticalAlignment="Center" Width="100"/>
-						<TextBox x:Name="FramePath" VerticalAlignment="Center" Width="450"/>
+						<Label Content="Overlay Image" VerticalAlignment="Center" Width="100"/>
+						<TextBox x:Name="FramePath" VerticalAlignment="Center" Width="480"  Margin="0,0,8,0"/>
 						<Button Content="..." VerticalAlignment="Center" Width="32" Height="18" Margin="0,0,8,0" Click="SelectFrameClicked"/>
 					</StackPanel>
 
-					<dmd:DmdPaddingSetting Grid.Row="1" x:Name="FramePadding" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+					<dmd:DmdPaddingSetting Grid.Row="1" x:Name="FramePadding" VerticalAlignment="Top" Margin="30,0,0,8" Width="Auto"/>
 				</Grid>
 			</Grid>
 		</GroupBox>
 
-		<GroupBox x:Name="Glass" Grid.Row="3" Header="Glass" Padding="72,0,8,0" Margin="0,0,0,16">
+		<GroupBox x:Name="Glass" Grid.Row="4" Header="Glass" Padding="72,0,8,0" Margin="0,0,0,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -112,59 +157,6 @@
 			</Grid>
 		</GroupBox>
 
-		<GroupBox Grid.Row="4" Grid.Column="2" Header="DMD" Padding="72,0,8,0" Margin="0,0,0,16">
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="588"></ColumnDefinition>
-					<ColumnDefinition Width="Auto"></ColumnDefinition>
-					<ColumnDefinition Width="16*"></ColumnDefinition>
-					<ColumnDefinition Width="3*"/>
-				</Grid.ColumnDefinitions>
-				<Grid Grid.Column="0">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"></ColumnDefinition>
-						<ColumnDefinition Width="Auto"></ColumnDefinition>
-					</Grid.ColumnDefinitions>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-
-					<Label Grid.Column="0" Content="Dot Size:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<Slider x:Name="DotSizeSlider" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="2" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.8"/>
-					<TextBox x:Name="DotSizeValue" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
-
-					<Label Grid.Row="1" Grid.Column="0" Content="Dot Rounding:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<Slider x:Name="DotRoundingSlider" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.1"/>
-					<TextBox x:Name="DotRoundingValue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
-
-					<Label Grid.Row="2" Grid.Column="0" Content="Dot Sharpness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<Slider x:Name="DotSharpnessSlider" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="1" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05" Value="0.1"/>
-					<TextBox x:Name="DotSharpnessValue" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
-
-					<Label Grid.Row="3" Grid.Column="0" Content="Unlit Dot Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<xctk:ColorPicker x:Name="UnlitDotColor" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="120" Margin="110,0,8,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
-
-					<Label Grid.Column="1" Content="Brightness:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
-					<Slider x:Name="BrightnessSlider" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="10" Margin="110,0,8,0" TickFrequency="0.1" Value="1"/>
-					<TextBox x:Name="BrightnessValue" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,38,0"/>
-
-					<Label Grid.Row="1" Grid.Column="1" Content="Dot Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
-					<Slider x:Name="DotGlowSlider" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
-					<TextBox x:Name="DotGlowValue" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
-
-					<Label Grid.Row="2" Grid.Column="1" Content="Background Glow:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
-					<Slider x:Name="BackLevelSlider" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Maximum="0.5" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
-					<TextBox x:Name="BackLevelValue" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
-
-					<Label Grid.Row="3" Grid.Column="1" Content="Gamma:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,140,0"/>
-					<Slider x:Name="GammaSlider" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Minimum="0.5" Maximum="4.0" Margin="110,0,8,0" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.05"/>
-					<TextBox x:Name="GammaValue" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Margin="238,0,8,0"/>
-				</Grid>
-			</Grid>
-		</GroupBox>
 
 		<GroupBox x:Name="SaveGroup"  Grid.Row="5" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
 			<Grid>
