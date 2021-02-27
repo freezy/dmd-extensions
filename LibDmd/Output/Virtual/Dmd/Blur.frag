@@ -74,5 +74,3 @@ vec4 blur_level_12(sampler2D image, vec2 uv, vec2 direction) {
 	color += texture2D(image, uv - off2) * 0.0702702703;
 	return color;
 }
-
-void main() { FragColor = vec4(blur_level_8(texture, uv, direction).rgb, 1.0); }
