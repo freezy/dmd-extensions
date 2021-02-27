@@ -143,7 +143,7 @@
 			Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="80" Height="24" Margin="0,0,0,0"
 			Click="ApplyClicked">
 			<xctk:SplitButton.DropDownContent>
-				<MenuItem Header="Apply Globally"/>
+				<MenuItem Header="Apply Globally" Click="ApplyGloballyClicked"/>
 			</xctk:SplitButton.DropDownContent>
 			<xctk:SplitButton.ToolTip>
 				<TextBlock>

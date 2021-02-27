@@ -214,7 +214,15 @@ namespace LibDmd.Output.Virtual.Dmd
 			OnConfigUpdated.OnNext(_previewStyle.Copy());
 			if (NewStyleName != null)
 			{
-				_dmdConfig.ApplyStyle(NewStyleName);
+				_dmdConfig.ApplyStyle(NewStyleName, true);
+			}
+		}
+
+		private void ApplyGloballyClicked(object sender, RoutedEventArgs e)
+		{
+			OnConfigUpdated.OnNext(_previewStyle.Copy());
+			if (NewStyleName != null) {
+				_dmdConfig.ApplyStyle(NewStyleName, false);
 			}
 		}
 

@@ -327,9 +327,9 @@ namespace LibDmd.DmdDevice
 			return _styles[name];
 		}
 
-		public void ApplyStyle(string name)
+		public void ApplyStyle(string name, bool onlyForGame)
 		{
-			Set("style", name, true);
+			Set("style", name, onlyForGame);
 		}
 
 		public void SetStyle(string name, DmdStyle style)
@@ -375,6 +375,7 @@ namespace LibDmd.DmdDevice
 			Remove(prefix + "brightness");
 			Remove(prefix + "dotsize");
 			Remove(prefix + "dotrounding");
+			Remove(prefix + "dotsharpness");
 			Remove(prefix + "unlitdot");
 			Remove(prefix + "dotglow");
 			Remove(prefix + "backglow");
