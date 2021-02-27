@@ -62,25 +62,25 @@ namespace LibDmd.Output.Virtual.Dmd
 			UnlitDotColor.SelectedColorChanged += (sender, e) => _previewStyle.UnlitDot = UnlitDotColor.SelectedColor.Value;
 			UnlitDotColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
-			DotGlowSlider.ValueChanged += (sender, e) => DotGlowValue.Text = DoubleToString2(DotGlowSlider.Value);
-			DotGlowValue.TextChanged += (sender, e) => DotGlowSlider.Value = StringToDouble(DotGlowValue.Text, DotGlowSlider.Value);
-			DotGlowSlider.ValueChanged += (sender, e) => _previewStyle.DotGlow = DotGlowSlider.Value;
-			DotGlowSlider.ValueChanged += (sender, e) => UpdatePreview();
+			DotGlow.OnValueChanged.Subscribe(value => {
+				_previewStyle.DotGlow = value;
+				UpdatePreview();
+			});
 
-			BrightnessSlider.ValueChanged += (sender, e) => BrightnessValue.Text = DoubleToString2(BrightnessSlider.Value);
-			BrightnessValue.TextChanged += (sender, e) => BrightnessSlider.Value = StringToDouble(BrightnessValue.Text, BrightnessSlider.Value);
-			BrightnessSlider.ValueChanged += (sender, e) => _previewStyle.Brightness = BrightnessSlider.Value;
-			BrightnessSlider.ValueChanged += (sender, e) => UpdatePreview();
+			Brightness.OnValueChanged.Subscribe(value => {
+				_previewStyle.Brightness = value;
+				UpdatePreview();
+			});
 
-			BackLevelSlider.ValueChanged += (sender, e) => BackLevelValue.Text = DoubleToString2(BackLevelSlider.Value);
-			BackLevelValue.TextChanged += (sender, e) => BackLevelSlider.Value = StringToDouble(BackLevelValue.Text, BackLevelSlider.Value);
-			BackLevelSlider.ValueChanged += (sender, e) => _previewStyle.BackGlow = BackLevelSlider.Value;
-			BackLevelSlider.ValueChanged += (sender, e) => UpdatePreview();
+			BackLevel.OnValueChanged.Subscribe(value => {
+				_previewStyle.BackGlow = value;
+				UpdatePreview();
+			});
 
-			GammaSlider.ValueChanged += (sender, e) => GammaValue.Text = DoubleToString2(GammaSlider.Value);
-			GammaValue.TextChanged += (sender, e) => GammaSlider.Value = StringToDouble(GammaValue.Text, GammaSlider.Value);
-			GammaSlider.ValueChanged += (sender, e) => _previewStyle.Gamma = GammaSlider.Value;
-			GammaSlider.ValueChanged += (sender, e) => UpdatePreview();
+			Gamma.OnValueChanged.Subscribe(value => {
+				_previewStyle.Gamma = value;
+				UpdatePreview();
+			});
 
 			GlassPath.TextChanged += (sender, e) => _previewStyle.GlassTexture = GlassPath.Text;
 			GlassPath.TextChanged += (sender, e) => UpdatePreview();
@@ -110,25 +110,17 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void UpdateControls()
 		{
-			BrightnessValue.Text = DoubleToString2(_previewStyle.Brightness);
-			BrightnessSlider.Value = _previewStyle.Brightness;
-
 			DotSize.Update(_previewStyle.DotSize);
 			DotRounding.Update(_previewStyle.DotRounding);
 			DotSharpness.Update(_previewStyle.DotSharpness);
-
-			GammaValue.Text = DoubleToString2(_previewStyle.Gamma);
-			GammaSlider.Value = _previewStyle.Gamma;
+			Brightness.Update(_previewStyle.Brightness);
+			Gamma.Update(_previewStyle.Gamma);
+			DotGlow.Update(_previewStyle.DotGlow);
+			BackLevel.Update(_previewStyle.BackGlow);
 
 			Color unlitColor = _previewStyle.UnlitDot;
 			unlitColor.A = 255;
 			UnlitDotColor.SelectedColor = unlitColor;
-
-			DotGlowValue.Text = DoubleToString2(_previewStyle.DotGlow);
-			DotGlowSlider.Value = _previewStyle.DotGlow;
-
-			BackLevelValue.Text = DoubleToString2(_previewStyle.BackGlow);
-			BackLevelSlider.Value = _previewStyle.BackGlow;
 
 			GlassDMDLightingValue.Text = DoubleToString2(_previewStyle.GlassLighting);
 			GlassDMDLightingSlider.Value = _previewStyle.GlassLighting;

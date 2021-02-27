@@ -13,12 +13,12 @@
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition x:Name="LabelColumn" Width="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:SliderValueSetting}}, Path=LabelWidth}"/>
 			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="40"/>
+			<ColumnDefinition Width="32"/>
 		</Grid.ColumnDefinitions>
 
 		<Label Grid.Column="0" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:SliderValueSetting}}, Path=LabelAlignment}" Content="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:SliderValueSetting}}, Path=LabelContent}"/>
 		<Slider x:Name="SliderValue" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Maximum="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:SliderValueSetting}}, Path=MaxValue}" Minimum="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:SliderValueSetting}}, Path=MinValue}" Margin="0,4,8,4"/>
-		<TextBox x:Name="TextValue" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" Margin="0,4,8,4"/>
+		<TextBox x:Name="TextValue" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" Margin="0,4,0,4"/>
 
 	</Grid>
 </UserControl>
