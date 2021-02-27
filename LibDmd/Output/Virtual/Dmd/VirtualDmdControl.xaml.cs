@@ -412,9 +412,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					gl.Uniform1(_bs2Texture, 5);
 					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
-					_blurShader2.Unbind(gl);
 
-					_blurShader2.Bind(gl);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
 					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
 					gl.Uniform1(_bs2Texture, 3); // Previous Blur
