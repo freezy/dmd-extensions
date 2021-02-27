@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
@@ -70,7 +71,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private static string DoubleToString(double d)
 		{
-			return Math.Round(d, 2).ToString();
+			return (Math.Round(d * 100) / 100).ToString("G", CultureInfo.InvariantCulture);
 		}
 
 		private static double StringToDouble(string str, double fallback)
