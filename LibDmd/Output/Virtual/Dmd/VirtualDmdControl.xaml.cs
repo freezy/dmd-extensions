@@ -63,10 +63,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _fboInvalid = true;
 		private bool _dmdShaderInvalid = true;
 		private VertexBufferArray _quadVbo;
-		private ShaderProgram _dmdShader, _blurShader;
-		private int _bsTexture, _bsResolution, _bsDirection;
-		private int _dsDmdTexture, _dsDmdTextureBlur1, _dsDmdTextureBlur2, _dsDmdTextureBlur3, _dsDmdSize;
-		private int _dsUnlitDot;
+		private ShaderProgram _dmdShader, _blurShader1, _blurShader2;
+		private int _bs1Texture, _bs1Direction;
+		private int _bs2Texture, _bs2Direction;
+		private int _dsDmdTexture, _dsDmdTextureBlur1, _dsDmdTextureBlur2, _dsDmdTextureBlur3, _dsDmdSize, _dsUnlitDot;
 		private int _dsGlassTexture, _dsGlassTexOffset, _dsGlassTexScale, _dsGlassColor;
 		private readonly uint[] _textures = new uint[6];
 		private readonly uint[] _fbos = new uint[4];
@@ -223,15 +223,27 @@ namespace LibDmd.Output.Virtual.Dmd
 			_textures[2] = _textures[3] = _textures[4] = _textures[5] = 0;
 			try
 			{
-				_blurShader = new ShaderProgram();
-				_blurShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag"), _attributeLocations);
-				_bsTexture = _blurShader.GetUniformLocation(gl, "texture");
-				_bsResolution = _blurShader.GetUniformLocation(gl, "resolution");
-				_bsDirection = _blurShader.GetUniformLocation(gl, "direction");
+				_blurShader1 = new ShaderProgram();
+				var frag = ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag") + "void main() { FragColor = vec4(blur_level_2(texture, uv, direction).rgb, 1.0); }";
+				_blurShader1.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), frag, _attributeLocations);
+				_bs1Texture = _blurShader1.GetUniformLocation(gl, "texture");
+				_bs1Direction = _blurShader1.GetUniformLocation(gl, "direction");
 			}
 			catch (Exception e)
 			{
-				Logger.Error(e, "Blur Shader compilation failed");
+				Logger.Error(e, "Blur Shader 1 compilation failed");
+			}
+			try
+			{
+				_blurShader2 = new ShaderProgram();
+				var frag = ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.frag") + "void main() { FragColor = vec4(blur_level_12(texture, uv, direction).rgb, 1.0); }";
+				_blurShader2.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Blur.vert"), frag, _attributeLocations);
+				_bs2Texture = _blurShader2.GetUniformLocation(gl, "texture");
+				_bs2Direction = _blurShader2.GetUniformLocation(gl, "direction");
+			}
+			catch (Exception e)
+			{
+				Logger.Error(e, "Blur Shader 2 compilation failed");
 			}
 			_quadVbo = new VertexBufferArray();
 			_quadVbo.Create(gl);
@@ -376,21 +388,44 @@ namespace LibDmd.Output.Virtual.Dmd
 				_bitmapToRender = null;
 				if (_style.HasGlass || _style.HasDotGlow || _style.HasBackGlow)
 				{
-					_blurShader.Bind(gl);
-					for (int i = 0; i < 3; i++)
-					{
-						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
-						gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
-						gl.Uniform1(_bsTexture, i + 1);
-						gl.Uniform2(_bsDirection, 1.0f / (FBOOversize * DmdWidth), 0.0f);
-						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
-						gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]); // Vertical pass (from temp to destination FBO)
-						gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
-						gl.Uniform1(_bsTexture, 5);
-						gl.Uniform2(_bsDirection, 0.0f, 1.0f / (FBOOversize * DmdHeight));
-						gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
-					}
-					_blurShader.Unbind(gl);
+					_blurShader1.Bind(gl);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs1Texture, 1); // DMD texture
+					gl.Uniform2(_bs1Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[0]); // Vertical pass (from temp to destination FBO)
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs1Texture, 5);
+					gl.Uniform2(_bs1Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					_blurShader1.Unbind(gl);
+
+					_blurShader2.Bind(gl);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs2Texture, 2); // Previous Blur
+					gl.Uniform2(_bs2Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[1]); // Vertical pass (from temp to destination FBO)
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs2Texture, 5);
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					_blurShader2.Unbind(gl);
+
+					_blurShader2.Bind(gl);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Horizontal pass (from last blur level, to temp FBO (Tex #5))
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs2Texture, 3); // Previous Blur
+					gl.Uniform2(_bs2Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[2]); // Vertical pass (from temp to destination FBO)
+					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Uniform1(_bs2Texture, 5);
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
+					_blurShader2.Unbind(gl);
 				}
 			}
 
@@ -399,7 +434,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_dmdShader.Bind(gl);
 			if (_dsDmdTexture != -1) gl.Uniform1(_dsDmdTexture, 1);
 			if (_dsDmdTextureBlur1 != -1) gl.Uniform1(_dsDmdTextureBlur1, 2);
-			if (_dsDmdTextureBlur2 != -1) gl.Uniform1(_dsDmdTextureBlur2, 3);
+			if (_dsDmdTextureBlur2 != -1) gl.Uniform1(_dsDmdTextureBlur2, 4);
 			if (_dsDmdTextureBlur3 != -1) gl.Uniform1(_dsDmdTextureBlur3, 4);
 			if (_dsDmdSize != -1) gl.Uniform2(_dsDmdSize, (float)DmdWidth, DmdHeight);
 			if (_dsUnlitDot != -1) gl.Uniform3(_dsUnlitDot, _style.UnlitDot.ScR, _style.UnlitDot.ScG, _style.UnlitDot.ScB);
