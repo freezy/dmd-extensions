@@ -9,7 +9,7 @@
         x:Class="LibDmd.Output.Virtual.Dmd.DmdSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="740" 
+        Height="738" 
         Width="680" 
         ResizeMode="NoResize" 
 		ShowInTaskbar="False" 

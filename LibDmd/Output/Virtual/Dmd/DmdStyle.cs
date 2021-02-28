@@ -8,12 +8,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// Size of dots (1.0 for full size). Note that size above 0.5 may exceed dot clip rect.
 		/// </summary>
-		public double DotSize { get; set; } = 1.0;
+		public double DotSize { get; set; } = 0.92;
 
 		/// <summary>
 		/// Rounding factor: 0.0 for square dots, 1.0 for circle dots.
 		/// </summary>
-		public double DotRounding { get; set; } = 0.0;
+		public double DotRounding { get; set; } = 1.0;
 
 		/// <summary>
 		/// Sharpness factor: 0.0 for fuzzy dot borders, 1.0 for sharp borders.
@@ -29,7 +29,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// Overall brightness of dots.
 		/// </summary>
-		public double Brightness { get; set; } = 1.0;
+		public double Brightness { get; set; } = 0.95;
 		public bool HasBrightness => Math.Abs(Brightness - 1.0) > 0.01;
 
 		/// <summary>
