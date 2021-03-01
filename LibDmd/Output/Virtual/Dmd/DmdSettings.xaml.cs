@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Common;
 using LibDmd.DmdDevice;
 using NLog;
 
@@ -82,6 +83,13 @@ namespace LibDmd.Output.Virtual.Dmd
 				UpdatePreview();
 			});
 
+			TintEnabled.Checked += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+			TintEnabled.Checked += (sender, e) => LoadPreview();
+			TintEnabled.Unchecked += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+			TintEnabled.Unchecked += (sender, e) => LoadPreview();
+			TintColor.SelectedColorChanged += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+			TintColor.SelectedColorChanged += (sender, e) => UpdatePreview();
+
 			GlassPath.TextChanged += (sender, e) => _previewStyle.GlassTexture = GlassPath.Text;
 			GlassPath.TextChanged += (sender, e) => UpdatePreview();
 
@@ -90,7 +98,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			GlassDMDLightingSlider.ValueChanged += (sender, e) => _previewStyle.GlassLighting = GlassDMDLightingSlider.Value;
 			GlassDMDLightingSlider.ValueChanged += (sender, e) => UpdatePreview();
 
-			GlassColor.SelectedColorChanged += (sender, e) => _previewStyle.GlassColor = Color.FromArgb((byte)(255 * GlassDMDLightingSlider.Value), GlassColor.SelectedColor.Value.R, GlassColor.SelectedColor.Value.G, GlassColor.SelectedColor.Value.B);
+			GlassColor.SelectedColorChanged += (sender, e) => _previewStyle.GlassColor = Color.FromArgb(255, GlassColor.SelectedColor.Value.R, GlassColor.SelectedColor.Value.G, GlassColor.SelectedColor.Value.B);
 			GlassColor.SelectedColorChanged += (sender, e) => UpdatePreview();
 
 			GlassPadding.OnPaddingChanged.Subscribe(padding => _previewStyle.GlassPadding = padding);
@@ -118,6 +126,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			DotGlow.Update(_previewStyle.DotGlow);
 			BackLevel.Update(_previewStyle.BackGlow);
 
+			TintEnabled.IsChecked = _previewStyle.HasTint;
+			Color tintColor = _previewStyle.Tint;
+			tintColor.A = 255;
+			TintColor.SelectedColor = tintColor;
+
 			Color unlitColor = _previewStyle.UnlitDot;
 			unlitColor.A = 255;
 			UnlitDotColor.SelectedColor = unlitColor;
@@ -139,16 +152,24 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void LoadPreview()
 		{
 			Logger.Info("Loading preview...");
-			if (PreviewMono32x8.IsChecked == true)
+			if (PreviewMono32x8.IsChecked == true && !_previewStyle.HasTint)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8-mono.png"));
-			else if (PreviewMono128x32.IsChecked == true)
+			else if (PreviewMono32x8.IsChecked == true && _previewStyle.HasTint)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8-tint.png"));
+			else if (PreviewMono128x32.IsChecked == true && !_previewStyle.HasTint)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32-mono.png"));
+			else if (PreviewMono128x32.IsChecked == true && _previewStyle.HasTint)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32-tint.png"));
 			else if (PreviewColor128x32.IsChecked == true)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x32-color.png"));
-			else if (PreviewMono128x16.IsChecked == true)
+			else if (PreviewMono128x16.IsChecked == true && !_previewStyle.HasTint)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x16-mono.png"));
-			else if (PreviewMono192x64.IsChecked == true)
+			else if (PreviewMono128x16.IsChecked == true && _previewStyle.HasTint)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-128x16-tint.png"));
+			else if (PreviewMono192x64.IsChecked == true && !_previewStyle.HasTint)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-192x64-mono.png"));
+			else if (PreviewMono192x64.IsChecked == true && _previewStyle.HasTint)
+				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-192x64-tint.png"));
 			UpdatePreview();
 		}
 
@@ -156,7 +177,11 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			DmdPreview.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
 			DmdPreview.SetStyle(_previewStyle);
-			DmdPreview.RenderBitmap(_preview);
+			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
+				DmdPreview.RenderBitmap(_preview);
+			} else {
+				DmdPreview.RenderGray4(ImageUtil.ConvertToGray4(_preview, 1.0));
+			}
 			var baseWidth = 128.0 * 5.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
 			var baseHeight = 32.0 * 5.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews
 			if (DmdPreview.AspectRatio > 4.0)

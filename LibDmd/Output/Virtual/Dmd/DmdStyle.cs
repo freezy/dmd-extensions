@@ -51,6 +51,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		public bool HasGamma => Math.Abs(Gamma - 1.0) > 0.01;
 
 		/// <summary>
+		/// Dot tinting (RGB of given color, alpha != 0 activate tinting, disabled by default).
+		/// </summary>
+		public Color Tint { get; set; } = Color.FromArgb(0x00, 0xFF, 0x58, 0x20);
+		public bool HasTint => Tint.A != 0;
+
+		/// <summary>
 		/// Path to the texture of the DMD glass (can be either absolute or relative).
 		/// </summary>
 		public string GlassTexture { get; set; } = null;
@@ -97,6 +103,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				DotGlow = DotGlow,
 				BackGlow = BackGlow,
 				Gamma = Gamma,
+				Tint = Tint,
 				GlassTexture = GlassTexture,
 				GlassPadding = new System.Windows.Thickness(GlassPadding.Left, GlassPadding.Top, GlassPadding.Right, GlassPadding.Bottom),
 				GlassColor = Color.FromArgb(GlassColor.A, GlassColor.R, GlassColor.G, GlassColor.B),

@@ -362,6 +362,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-128x32-tint.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-192x64-tint.png" />
+    <Resource Include="Output\Virtual\Dmd\preview-32x8-tint.png" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-mono.png" />
     <Resource Include="Output\Virtual\Dmd\preview-128x32-mono.png" />
     <Resource Include="Output\Virtual\Dmd\preview-192x64-mono.png" />
