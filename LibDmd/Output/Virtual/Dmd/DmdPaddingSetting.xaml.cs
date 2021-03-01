@@ -17,6 +17,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			get => _padding;
 			set {
 				_padding = value;
+				if (_padding.Left != _padding.Top || _padding.Left != _padding.Right || _padding.Left != _padding.Bottom)
+					Locked.IsChecked = false;
 				PaddingLeft.Value = _padding.Left;
 				PaddingTop.Value = _padding.Top;
 				PaddingRight.Value = _padding.Right;
