@@ -9,12 +9,12 @@
         x:Class="LibDmd.Output.Virtual.Dmd.DmdSettings"
         mc:Ignorable="d" 
         WindowStyle="ToolWindow" 
-        Height="738" 
+        Height="766" 
         Width="680" 
         ResizeMode="NoResize" 
 		ShowInTaskbar="False" 
         SizeToContent="Manual" 
-        Title="Customize DMD Style" d:DesignHeight="742.667">
+        Title="Customize DMD Style">
 	<Grid Margin="16">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition></ColumnDefinition>
@@ -59,6 +59,7 @@
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
 					</Grid.RowDefinitions>
 
 					<dmd:SliderValueSetting x:Name="DotSize"      Grid.Row="0" Grid.Column="0" Width="Auto" LabelContent="Dot Size:" MinValue="0.1" MaxValue="2" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
@@ -72,6 +73,14 @@
 					<dmd:SliderValueSetting x:Name="DotGlow"      Grid.Row="1" Grid.Column="1" Width="Auto" LabelContent="Dot Glow:" MinValue="0" MaxValue="1" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
 					<dmd:SliderValueSetting x:Name="BackLevel"    Grid.Row="2" Grid.Column="1" Width="Auto" LabelContent="Background Glow:" MinValue="0" MaxValue="1" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
 					<dmd:SliderValueSetting x:Name="Gamma"        Grid.Row="3" Grid.Column="1" Width="Auto" LabelContent="Gamma:" MinValue="0.5" MaxValue="4" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+
+					<CheckBox x:Name="TintEnabled" Grid.Row="4" Grid.Column="0" Margin="0,5,0,0">
+						<Label Content="Enable dot tinting" Grid.Row="4" Grid.Column="0" Margin="0,-6,0,0"></Label>
+					</CheckBox>
+					<Grid Grid.Row="4" Grid.Column="1" >
+						<Label Content="Tint Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
+						<xctk:ColorPicker x:Name="TintColor" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="173" Margin="110,1.333,0,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
+					</Grid>
 				</Grid>
 			</Grid>
 		</GroupBox>

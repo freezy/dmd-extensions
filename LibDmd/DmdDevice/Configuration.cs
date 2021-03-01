@@ -273,6 +273,9 @@ namespace LibDmd.DmdDevice
 						case "gamma":
 							_styles[styleName].Gamma = GetDouble(keyValues.Current.KeyName, 1.0);
 							break;
+						case "tint":
+							_styles[styleName].Tint = fromSKColor(GetSKColor(keyValues.Current.KeyName, SKColor.Empty));
+							break;
 						case "glass":
 							var glassTex = GetString(keyValues.Current.KeyName, null);
 							_styles[styleName].GlassTexture = glassTex.Equals("null") ? null : GetString(keyValues.Current.KeyName, "null");
@@ -349,6 +352,7 @@ namespace LibDmd.DmdDevice
 			Set(prefix + "dotglow", style.DotGlow);
 			Set(prefix + "backglow", style.BackGlow);
 			Set(prefix + "gamma", style.Gamma);
+			Set(prefix + "tint", new SKColor(style.Tint.R, style.Tint.G, style.Tint.B, style.Tint.A).ToString());
 			Set(prefix + "glass", style.GlassTexture ?? "null");
 			Set(prefix + "glass.color", new SKColor(style.GlassColor.R, style.GlassColor.G, style.GlassColor.B, style.GlassColor.A).ToString());
 			Set(prefix + "glass.lighting", style.GlassLighting);

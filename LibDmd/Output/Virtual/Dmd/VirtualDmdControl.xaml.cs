@@ -25,7 +25,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
@@ -123,13 +123,12 @@ namespace LibDmd.Output.Virtual.Dmd
 			byte[] result = new byte[bytes];
 			Marshal.Copy(srcData.Scan0, buffer, 0, bytes);
 			img.UnlockBits(srcData);
-			int current = 0;
 			int cChannels = 3;
 			for (int y = 0; y < height; y++)
 			{
+				var current = y * srcData.Stride;
 				for (int x = 0; x < width; x++)
 				{
-					current = y * srcData.Stride + x * 4;
 					for (int i = 0; i < cChannels; i++)
 					{
 						double range = (double)buffer[current + i] / 255;
@@ -137,6 +136,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						result[current + i] = (byte)(correction * 255);
 					}
 					result[current + 3] = 255;
+					current += 4;
 				}
 			}
 			System.Drawing.Bitmap resImg = new System.Drawing.Bitmap(width, height);
@@ -158,6 +158,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_gray2Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray2Palette));
 
+			} else if (_style.HasTint) {
+				RenderBitmap(ImageUtil.ConvertFromGray2(DmdWidth, DmdHeight, frame, 0.0, 0.0, 1.0));
 			} else {
 				RenderBitmap(ImageUtil.ConvertFromGray2(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
@@ -168,6 +170,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_gray4Palette != null) {
 				RenderRgb24(ColorUtil.ColorizeFrame(DmdWidth, DmdHeight, frame, _gray4Palette));
 
+			} else if (_style.HasTint) {
+				RenderBitmap(ImageUtil.ConvertFromGray4(DmdWidth, DmdHeight, frame, 0.0, 0.0, 1.0));
 			} else {
 				RenderBitmap(ImageUtil.ConvertFromGray4(DmdWidth, DmdHeight, frame, _hue, _sat, _lum));
 			}
@@ -282,15 +286,17 @@ namespace LibDmd.Output.Virtual.Dmd
 					if (_style.HasGlass) code.Append("#define GLASS\n");
 					if (_style.HasGamma) code.Append("#define GAMMA\n");
 					if (_style.DotSize > 0.5) code.Append("#define DOT_OVERLAP\n");
+					if (_style.HasTint) code.Append("#define TINT\n");
 					var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
-					code.AppendFormat(nfi, "const float dotSize = {0};\n", _style.DotSize);
-					code.AppendFormat(nfi, "const float dotRounding = {0};\n", _style.DotRounding);
-					code.AppendFormat(nfi, "const float sharpMax = {0};\n", 0.01 + _style.DotSize * (1.0 - _style.DotSharpness));
-					code.AppendFormat(nfi, "const float sharpMin = {0};\n", -0.01 -_style.DotSize * (1.0 - _style.DotSharpness));
-					code.AppendFormat(nfi, "const float brightness = {0};\n", _style.Brightness);
-					code.AppendFormat(nfi, "const float backGlow = {0};\n", _style.BackGlow);
-					code.AppendFormat(nfi, "const float dotGlow = {0};\n", _style.DotGlow);
-					code.AppendFormat(nfi, "const float gamma = {0};\n", _style.Gamma);
+					code.AppendFormat(nfi, "const float dotSize = {0:0.00000};\n", _style.DotSize);
+					code.AppendFormat(nfi, "const float dotRounding = {0:0.00000};\n", _style.DotRounding);
+					code.AppendFormat(nfi, "const float sharpMax = {0:0.00000};\n", 0.01 + _style.DotSize * (1.0 - _style.DotSharpness));
+					code.AppendFormat(nfi, "const float sharpMin = {0:0.00000};\n", -0.01 -_style.DotSize * (1.0 - _style.DotSharpness));
+					code.AppendFormat(nfi, "const float brightness = {0:0.00000};\n", _style.Brightness);
+					code.AppendFormat(nfi, "const float backGlow = {0:0.00000};\n", _style.BackGlow);
+					code.AppendFormat(nfi, "const float dotGlow = {0:0.00000};\n", _style.DotGlow);
+					code.AppendFormat(nfi, "const float gamma = {0:0.00000};\n", _style.Gamma);
+					code.AppendFormat(nfi, "const vec3 tint = vec3({0:0.00000}, {1:0.00000}, {2:0.00000});\n", _style.Tint.ScR, _style.Tint.ScG, _style.Tint.ScB);
 					code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.frag"));
 					_dmdShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Dmd.vert"), code.ToString(), _attributeLocations);
 					_dsDmdTexture = _dmdShader.GetUniformLocation(gl, "dmdTexture");
@@ -303,6 +309,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					_dsGlassTexOffset = _dmdShader.GetUniformLocation(gl, "glassTexOffset");
 					_dsGlassTexScale = _dmdShader.GetUniformLocation(gl, "glassTexScale");
 					_dsGlassColor = _dmdShader.GetUniformLocation(gl, "glassColor");
+					// Logger.Info(code.ToString());
 				}
 				catch (ShaderCompilationException e)
 				{
