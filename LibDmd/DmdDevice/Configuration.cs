@@ -713,6 +713,7 @@ namespace LibDmd.DmdDevice
 		private readonly IniData _data;
 		private readonly Configuration _parent;
 		public bool HasGameName => _parent.HasGameName;
+		public string GameName => _parent.GameName;
 		private string GameOverridePrefix => Name == "global" ? "" : $"{Name} ";
 
 		protected bool DoWrite = true;

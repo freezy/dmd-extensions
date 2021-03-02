@@ -57,7 +57,7 @@ namespace LibDmd.Common
 
 				var openSettings = new MenuItem();
 				openSettings.Click += OpenSettings;
-				openSettings.Header = "Open display settings";
+				openSettings.Header = "Customize Style";
 				ParentGrid.ContextMenu.Items.Add(openSettings);
 
 			} else {
