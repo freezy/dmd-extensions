@@ -311,7 +311,7 @@ namespace LibDmd.DmdDevice
 						case "frame.padding.right":
 							_styles[styleName].FramePadding = new System.Windows.Thickness(_styles[styleName].FramePadding.Left, _styles[styleName].FramePadding.Top, GetDouble(keyValues.Current.KeyName, 0.0), _styles[styleName].FramePadding.Bottom);
 							break;
-						case "Frame.padding.bottom":
+						case "frame.padding.bottom":
 							_styles[styleName].FramePadding = new System.Windows.Thickness(_styles[styleName].FramePadding.Left, _styles[styleName].FramePadding.Top, _styles[styleName].FramePadding.Right, GetDouble(keyValues.Current.KeyName, 0.0));
 							break;
 					}
