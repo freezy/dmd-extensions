@@ -362,6 +362,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Output\Virtual\Dmd\README.md" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
     <Resource Include="Output\Virtual\Dmd\preview-128x32-tint.png" />
     <Resource Include="Output\Virtual\Dmd\preview-192x64-tint.png" />
@@ -534,7 +535,7 @@
     <Error Condition="!Exists('..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets'))" />
   </Target>
   <Import Project="..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

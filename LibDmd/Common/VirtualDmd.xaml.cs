@@ -59,7 +59,7 @@ namespace LibDmd.Common
 				openSettings.Click += OpenSettings;
 				openSettings.Header = "Open display settings";
 				ParentGrid.ContextMenu.Items.Add(openSettings);
-			
+
 			} else {
 				ParentGrid.ContextMenu = null;
 			}

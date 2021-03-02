@@ -148,7 +148,7 @@
 
 		<Button Content="Close" Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="70" Height="24" Margin="0,0,100,0" IsCancel="True" Click="CancelClicked"/>
 
-		<xctk:SplitButton x:Name="ApplyButton" Content="Apply" 
+		<xctk:SplitButton x:Name="ApplyButton" Content="Apply"
 			Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="80" Height="24" Margin="0,0,0,0"
 			Click="ApplyClicked">
 			<xctk:SplitButton.DropDownContent>
@@ -166,5 +166,21 @@
 				</TextBlock>
 			</xctk:SplitButton.ToolTip>
 		</xctk:SplitButton>
+
+		<Button x:Name="ApplyGloballyButton" Content="Apply" Visibility="Hidden"
+			Grid.Row="6" HorizontalAlignment="Right" VerticalAlignment="Top" Width="80" Height="24" Margin="0,0,0,0"
+			Click="ApplyClicked">
+			<Button.ToolTip>
+				<TextBlock>
+					This does two things:
+					<LineBreak /> 
+					1. Apply the current parameters to the running games's display, without saving it.
+					<LineBreak /> 
+					2. Assign the currently selected (saved) style to the running game.
+					<LineBreak />
+					If applied globally (dropdown), the default style for all games will be updated instead of the currently running game.
+				</TextBlock>
+			</Button.ToolTip>
+		</Button>
 	</Grid>
 </Window>
