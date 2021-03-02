@@ -47,6 +47,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			} else {
 				ApplyButton.Visibility = Visibility.Visible;
+				ApplyButton.Content = $"Apply to \"{_dmdConfig.GameName}\"";
 				ApplyGloballyButton.Visibility = Visibility.Hidden;
 			}
 
