@@ -40,6 +40,16 @@ namespace LibDmd.Output.Virtual.Dmd
 			UpdateControls();
 			LoadPreview();
 
+			// if there's no game name, don't use the split button for applying.
+			if (_dmdConfig?.HasGameName == false) {
+				ApplyButton.Visibility = Visibility.Hidden;
+				ApplyGloballyButton.Visibility = Visibility.Visible;
+
+			} else {
+				ApplyButton.Visibility = Visibility.Visible;
+				ApplyGloballyButton.Visibility = Visibility.Hidden;
+			}
+
 			if (config == null)
 			{
 				SaveGroup.Visibility = Visibility.Collapsed;
