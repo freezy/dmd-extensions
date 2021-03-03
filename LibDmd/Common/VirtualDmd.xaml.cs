@@ -65,7 +65,7 @@ namespace LibDmd.Common
 			}
 
 			if (_config != null) {
-				Dmd.SetStyle(_config.VirtualDmd.Style);
+				Dmd.SetStyle(_config.VirtualDmd.Style, _config.DataPath);
 				IgnoreAspectRatio = _config.VirtualDmd.IgnoreAr;
 				AlwaysOnTop = _config.VirtualDmd.StayOnTop;
 			}
@@ -99,7 +99,7 @@ namespace LibDmd.Common
 		{
 			var settingWindow = new DmdSettings(_dmdConfig.Style, _config);
 			_settingSubscription = settingWindow.OnConfigUpdated.Subscribe(style => {
-				Dmd.SetStyle(style);
+				Dmd.SetStyle(style, _config.DataPath);
 			});
 			settingWindow.Show();
 		}
