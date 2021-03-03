@@ -49,7 +49,7 @@ namespace DmdExt.Common
 		[Option("virtual-gamma", HelpText = "Gamma of the virtual DMD. Default: 1")]
 		public double VirtualDmdGamma { get; set; } = 1;
 
-		[Option("virtual-tint", HelpText = "Tint color of the virtual DMD. Default: #00000000 for no tinting")]
+		[Option("virtual-tint", HelpText = "Tint color of the virtual DMD. ALpha is the amount of tinting. Default: #00FF5820 for no tinting")]
 		public Color VirtualDmdTint { get; set; } = Color.FromArgb(0x00, 0xFF, 0x58, 0x20);
 
 		[Option("virtual-glass-texture", HelpText = "Path to texture for the glass above the dots of the virtual DMD.")]

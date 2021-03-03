@@ -23,19 +23,6 @@ float udRoundBox(vec2 p, float b, float r)
     // return length(max(q, 0.0)) - r; // SDF with 0 distance inside the dot
 }
 
-#ifdef TINT
-vec3 sample(sampler2D tex, vec2 uv)
-{
-	// Simplified luminance from linear RGB space. See https://en.wikipedia.org/wiki/Relative_luminance
-	return tint * (dot(texture(tex, uv).rgb, vec3(0.2126, 0.7152, 0.0722)));
-}
-#else
-vec3 sample(sampler2D tex, vec2 uv)
-{
-	return texture(tex, uv).rgb;
-}
-#endif
-
 void main()
 {
 	vec3 dotColor;
@@ -51,7 +38,7 @@ void main()
 			vec2 pos = 2.0 * (fract(dmdUv * dmdSize) - ofs);
 			// Dots from the lamp
 			float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
-			vec3 dmd = sample(dmdTexture, nearest).rgb;
+			vec3 dmd = texture(dmdTexture, nearest).rgb;
 #ifdef UNLIT
 			// Add a little shadow for unlit dots which are lightly visible on real DMDs
 			dmd += unlitDot / brightness;
@@ -67,7 +54,7 @@ void main()
 	vec2 pos = 2.0 * (fract(dmdUv * dmdSize) - vec2(0.5, 0.5));
 	// Dots from the lamp
 	float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
-	vec3 dmd = sample(dmdTexture, nearest).rgb;
+	vec3 dmd = texture(dmdTexture, nearest).rgb;
 #ifdef UNLIT
 	// Add a little shadow for unlit dots which are lightly visible on real DMDs
 	dmd += unlitDot / brightness;
@@ -77,12 +64,12 @@ void main()
 
 #ifdef BACKGLOW
     // base background diffuse light (very blurry from 3rd level of the DMD blur)
-	dotColor += sample(dmdTextureBlur2, dmdUv).rgb * backGlow;
+	dotColor += texture(dmdTextureBlur2, dmdUv).rgb * backGlow;
 #endif
 
 #ifdef DOTGLOW
 	// glow from nearby lamps (taken from first level of blur)
-	dotColor += sample(dmdTextureBlur1, dmdUv).rgb * dotGlow;
+	dotColor += texture(dmdTextureBlur1, dmdUv).rgb * dotGlow;
 #endif
 
 #ifdef BRIGHTNESS
@@ -93,7 +80,7 @@ void main()
 #ifdef GLASS
 	// Apply the glass as a tinted (lighten by the DMD, using large blur, and the base color) additive blend.
 	vec4 glass = texture(glassTexture, glassUv);
-	vec3 glassLight = glassColor.rgb + 2.5 * glassColor.a * sample(dmdTextureBlur3, dmdUv).rgb * brightness;
+	vec3 glassLight = glassColor.rgb + 2.5 * glassColor.a * texture(dmdTextureBlur3, dmdUv).rgb * brightness;
 	dotColor += glass.rgb * glassLight.rgb;
 #endif
 
