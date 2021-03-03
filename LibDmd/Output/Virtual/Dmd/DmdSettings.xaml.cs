@@ -37,6 +37,10 @@ namespace LibDmd.Output.Virtual.Dmd
 			DataContext = this;
 			InitializeComponent();
 
+			if (_dmdConfig != null) {
+				StyleNameComboBox.SelectedValue = _dmdConfig.StyleName;
+			}
+
 			UpdateControls();
 			LoadPreview();
 

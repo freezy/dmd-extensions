@@ -222,6 +222,8 @@ namespace LibDmd.DmdDevice
 
 		private readonly Dictionary<string, DmdStyle> _styles = new Dictionary<string, DmdStyle>();
 
+		public string StyleName => GetString("style", "default");
+
 		public DmdStyle Style {
 			get {
 				var style = GetString("style", "default");
