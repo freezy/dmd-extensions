@@ -75,11 +75,11 @@ namespace LibDmd.Output.Virtual.Dmd
 		private const uint PositionAttribute = 0;
 		private const uint TexCoordAttribute = 1;
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
-		private bool _hasFrame = false;
+		private bool _hasFrame;
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric;
 		private FrameFormat _nextFrameType = FrameFormat.AlphaNumeric;
-		private BitmapSource _nextFrameBitmap = null;
-		private byte[] _nextFrameData = null;
+		private BitmapSource _nextFrameBitmap;
+		private byte[] _nextFrameData;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -98,18 +98,20 @@ namespace LibDmd.Output.Virtual.Dmd
 			try {
 				_glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
 
-			} catch {
+			} catch (Exception e) {
+				Logger.Warn(e, "Could not load glass texture.");
 				_glassToRender = null;
 			}
 
 			try {
 				var image = new BitmapImage(new Uri(_style.FrameTexture));
-				DmdFrame.Source = image;
-				DmdFrame.Visibility = Visibility.Visible;
+				DmdFraming.Source = image;
+				DmdFraming.Visibility = Visibility.Visible;
 
-			} catch {
-				DmdFrame.Source = null;
-				DmdFrame.Visibility = Visibility.Hidden;
+			} catch (Exception e) {
+				Logger.Warn(e, "Could not load framing texture.");
+				DmdFraming.Source = null;
+				DmdFraming.Visibility = Visibility.Hidden;
 			}
 
 			OnSizeChanged(null, null);
@@ -168,14 +170,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 		}
 
-		private string ReadResource(string name)
-		{
-			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				return reader.ReadToEnd();
-			}
-		}
+		#region OpenGL
+
+		public const string LIBRARY_OPENGL = "opengl32.dll"; // Opengl dll is named opengl32.dll for x86 as well as x64 archs for historical reasons
+		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, byte[] pixels);
+		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, IntPtr pixels);
 
 		private void ogl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
 		{
@@ -222,10 +221,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
 			_quadVbo.Unbind(gl);
 		}
-
-		public const string LIBRARY_OPENGL = "opengl32.dll"; // Opengl dll is named opengl32.dll for x86 as well as x64 archs for historical reasons
-		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, byte[] pixels);
-		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, IntPtr pixels);
 
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
 		{
@@ -550,6 +545,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			_quadVbo.Unbind(gl);
 		}
 
+		#endregion
+
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
 		{
 			Dispatcher.Invoke(() =>
@@ -573,9 +570,9 @@ namespace LibDmd.Output.Virtual.Dmd
 				var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
 				var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
 
-				DmdFrame.Width = frameWidth * alphaW;
-				DmdFrame.Height = frameHeight * alphaH;
-				DmdFrame.Margin = new Thickness(hpad, vpad, hpad, vpad);
+				DmdFraming.Width = frameWidth * alphaW;
+				DmdFraming.Height = frameHeight * alphaH;
+				DmdFraming.Margin = new Thickness(hpad, vpad, hpad, vpad);
 
 				Dmd.Width = glassWidth * alphaW;
 				Dmd.Height = glassHeight * alphaH;
@@ -622,6 +619,15 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void ClearDisplay()
 		{
 			RenderGray4(new byte[DmdWidth * DmdHeight]);
+		}
+
+		private static string ReadResource(string name)
+		{
+			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
+			using (StreamReader reader = new StreamReader(stream))
+			{
+				return reader.ReadToEnd();
+			}
 		}
 
 		public void Dispose()
