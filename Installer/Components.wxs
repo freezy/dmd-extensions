@@ -55,6 +55,21 @@
 			<ComponentRef Id="DmdDeviceIni"/>
 			<ComponentRef Id="DmdDeviceLogConfig"/>
 			<ComponentRef Id="EnvConfigPath"/>
+			<ComponentRef Id="Glass1"/>
+			<ComponentRef Id="Glass2"/>
+			<ComponentRef Id="Glass3"/>
+			<ComponentRef Id="Glass4"/>
+			<ComponentRef Id="Glass5"/>
+			<ComponentRef Id="Glass6"/>
+			<ComponentRef Id="Glass7"/>
+			<ComponentRef Id="Broken1"/>
+			<ComponentRef Id="Broken2"/>
+			<ComponentRef Id="FrameGlass1"/>
+			<ComponentRef Id="FrameGlass2"/>
+			<ComponentRef Id="FrameGlass3"/>
+			<ComponentRef Id="FrameMetal1"/>
+			<ComponentRef Id="FrameMetal2"/>
+			<ComponentRef Id="FrameMetal3"/>
 		</ComponentGroup>
 
 		<!-- DmdDevice.dll -->
@@ -86,6 +101,57 @@
 		<DirectoryRef Id="TARGETDIR">
 			<Component Id="EnvConfigPath" Guid="{F8EAE360-4372-4B85-AC7D-4D5ABF165E98}">
 				<Environment Id="DMDDEVICE_CONFIG" Name="DMDDEVICE_CONFIG" Value="[VPMFOLDER]DmdDevice.ini" Permanent="yes" Part="last" Action="set" System="yes" />
+			</Component>
+		</DirectoryRef>
+
+		<!-- textures -->
+		<DirectoryRef Id="VPMGLASSTEXTUREFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)data\textures\glasses">
+			<Component Id="Glass1" Guid="{09AD3F92-BCC0-456D-A3B5-9C138D35FCEF}">
+				<File Id="Glass1File" Name="glass1.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass2" Guid="{B212A16D-A556-459A-A329-A9DE9940FCC0}">
+				<File Id="Glass2File" Name="glass2.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass3" Guid="{5DB0CC05-6081-48F0-BA10-BEA71133BF71}">
+				<File Id="Glass3File" Name="glass3.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass4" Guid="{516D88B8-4474-40E3-973D-ACE682ED401B}">
+				<File Id="Glass4File" Name="glass4.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass5" Guid="{EDD9A58F-A7D1-4A63-932A-53536FBC0FE8}">
+				<File Id="Glass5File" Name="glass5.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass6" Guid="{5B2C8B03-4F4B-4F7D-ACC5-EA70864B340D}">
+				<File Id="Glass6File" Name="glass6.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Glass7" Guid="{05CE0D3B-A2E4-4EF2-91BC-745E156DDD25}">
+				<File Id="Glass7File" Name="glass7.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Broken1" Guid="{CF7B85A5-3212-42A1-BCEA-007BE0F4961B}">
+				<File Id="Broken1File" Name="broken1.jpg" KeyPath="yes"/>
+			</Component>
+			<Component Id="Broken2" Guid="{FB277CDA-1017-4F18-B26E-EDC08C5BBAEB}">
+				<File Id="Broken2File" Name="broken2.jpg" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+		<DirectoryRef Id="VPMFRAMESTEXTUREFOLDER" FileSource="$(var.PinMameDevice.ProjectDir)data\textures\frames">
+			<Component Id="FrameGlass1" Guid="{06C932C9-C1E1-42BC-931C-E76AA16B7987}">
+				<File Id="FrameGlass1File" Name="glass1.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameGlass2" Guid="{85D3FBAD-1F1A-4DB5-BAD0-BD2677992F24}">
+				<File Id="FrameGlass2File" Name="glass2.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameGlass3" Guid="{5B134F99-CAE6-4407-A4EA-288767CB2DAA}">
+				<File Id="FrameGlass3File" Name="glass3.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameMetal1" Guid="{4771E7F4-3A40-4B0B-BFA8-7B6B9A06A277}">
+				<File Id="FrameMetal1File" Name="metal1.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameMetal2" Guid="{283C43F3-E672-4BEA-8261-0D7F0F02540E}">
+				<File Id="FrameMetal2File" Name="metal2.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameMetal3" Guid="{9C4281AB-6C28-41A0-BB98-0EC51B291A25}">
+				<File Id="FrameMetal3File" Name="metal3.png" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 	</Fragment>
