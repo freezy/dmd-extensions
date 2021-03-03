@@ -55,31 +55,31 @@ namespace LibDmd.Output.Virtual.Dmd
 		}
 
 		private bool _ignoreAr = true;
-		private bool _lutInvalid = true;
+		private DmdStyle _style = new DmdStyle();
 		private Color _dotColor;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-		private bool _fboInvalid = true;
-		private bool _dmdShaderInvalid = true;
-		private VertexBufferArray _quadVbo;
+		private bool _fboInvalid = true; // Flag set to true when the FBOs (Framebuffer object) need to be rebuilt (for example at startup or when DMD size changes)
+		private bool _lutInvalid = true; // Flag set to true when the LUT (look up table) of the palette has changed and needs to be updated on the GPU
+		private bool _dmdShaderInvalid = true; // Flag set to true when the DMD shader needs to be rebuilt (for example at startup or when the DMD style change)
+		private System.Drawing.Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
+		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
+		private FrameFormat _nextFrameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
+		private BitmapSource _nextFrameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
+		private byte[] _nextFrameData; // Raw data of the frame to be processed
+		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric; // Format of the compiled convert shader; if frame format, the shader will be recompiled to adapt to the incoming frame
 		private ShaderProgram _convertShader, _blurShader1, _blurShader2, _dmdShader;
-		private int _csTexture, _csPalette;
-		private int _bs1Texture, _bs1Direction;
-		private int _bs2Texture, _bs2Direction;
-		private int _dsDmdTexture, _dsDmdDotGlow, _dsDmdBackGlow, _dsDmdSize, _dsUnlitDot;
+		private int _csTexture, _csPalette; // Convert Shader uniform locations
+		private int _bs1Texture, _bs1Direction; // Blur Shader 1 uniform locations
+		private int _bs2Texture, _bs2Direction; // Blur Shader 2 uniform locations
+		private int _dsDmdTexture, _dsDmdDotGlow, _dsDmdBackGlow, _dsDmdSize, _dsUnlitDot; // Dmd Shader uniform locations
 		private int _dsGlassTexture, _dsGlassTexOffset, _dsGlassTexScale, _dsGlassColor;
-		private readonly uint[] _textures = new uint[8];
-		private readonly uint[] _fbos = new uint[5];
-		private System.Drawing.Bitmap _glassToRender;
-		private DmdStyle _style = new DmdStyle();
-		private const uint PositionAttribute = 0;
-		private const uint TexCoordAttribute = 1;
+		private readonly uint[] _textures = new uint[8]; // The 8 textures are: glass, palette LUT, input data, dmd, dot glow, intermediate blur, back blur, temp
+		private readonly uint[] _fbos = new uint[5]; // The 5 FBO used to write to the 5 last textures (dmd, dot glow, intermediate blur, back blur, temp)
+		private VertexBufferArray _quadVbo; // Cached VBO (vertex buffer object) used to render a full viewport quad
+		private const uint PositionAttribute = 0; // Fixed index of position attribute in the quad VBO
+		private const uint TexCoordAttribute = 1; // Fixed index of texture attribute in the quad VBO
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
-		private bool _hasFrame;
-		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric;
-		private FrameFormat _nextFrameType = FrameFormat.AlphaNumeric;
-		private BitmapSource _nextFrameBitmap;
-		private byte[] _nextFrameData;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -319,7 +319,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			_quadVbo.Bind(gl);
 
-			// Textures are: glass, palette LUT, input data, dmd, dot glow, intermediate blur, back blur, temp
 			for (int i = 0; i < _textures.Length; i++)
 			{
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0 + (uint)i);
