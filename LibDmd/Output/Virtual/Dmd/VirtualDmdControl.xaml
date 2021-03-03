@@ -1,14 +1,14 @@
 ﻿<UserControl x:Class="LibDmd.Output.Virtual.Dmd.VirtualDmdControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:sharpgl="clr-namespace:SharpGL.WPF;assembly=SharpGL.WPF"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
 			 Background="Transparent"
              d:DesignHeight="100" d:DesignWidth="400">
 	<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 		<sharpgl:OpenGLControl Name="Dmd" OpenGLInitialized="ogl_OpenGLInitialized" OpenGLDraw="ogl_OpenGLDraw" RenderContextType="FBO" DrawFPS="False" />
-		<Image x:Name="DmdFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+		<Image x:Name="DmdFraming" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
 	</Grid>
 </UserControl>
