@@ -272,7 +272,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void CancelClicked(object sender, RoutedEventArgs e)
 		{
-			Hide();
+			Close();
 		}
 
 		private void StyleSelectionChanged(string name)
