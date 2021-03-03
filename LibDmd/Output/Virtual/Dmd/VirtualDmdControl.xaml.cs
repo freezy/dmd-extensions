@@ -69,10 +69,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		private byte[] _nextFrameData; // Raw data of the frame to be processed
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric; // Format of the compiled convert shader; if frame format, the shader will be recompiled to adapt to the incoming frame
 		private ShaderProgram _convertShader, _blurShader1, _blurShader2, _dmdShader;
-		private int _csTexture, _csPalette; // Convert Shader uniform locations
-		private int _bs1Texture, _bs1Direction; // Blur Shader 1 uniform locations
-		private int _bs2Texture, _bs2Direction; // Blur Shader 2 uniform locations
-		private int _dsDmdTexture, _dsDmdDotGlow, _dsDmdBackGlow, _dsDmdSize, _dsUnlitDot; // Dmd Shader uniform locations
+		private int _csTexture, _csPalette; // Convert Shader (hence the _cs prefix) uniform locations
+		private int _bs1Texture, _bs1Direction; // Blur Shader 1 (hence the _bs1 prefix) uniform locations
+		private int _bs2Texture, _bs2Direction; // Blur Shader 2 (hence the _bs2 prefix) uniform locations
+		private int _dsDmdTexture, _dsDmdDotGlow, _dsDmdBackGlow, _dsDmdSize, _dsUnlitDot; // Dmd Shader (hence the _ds prefix) uniform locations
 		private int _dsGlassTexture, _dsGlassTexOffset, _dsGlassTexScale, _dsGlassColor;
 		private readonly uint[] _textures = new uint[8]; // The 8 textures are: glass, palette LUT, input data, dmd, dot glow, intermediate blur, back blur, temp
 		private readonly uint[] _fbos = new uint[5]; // The 5 FBO used to write to the 5 last textures (dmd, dot glow, intermediate blur, back blur, temp)
@@ -227,11 +227,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			var gl = args.OpenGL;
 			gl.ClearColor(0f, 0f, 0f, 1f);
 			gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
-			gl.Color(1f, 1f, 1f);
 			var createTexture = false;
 
 			if (_dmdShaderInvalid)
 			{
+				// Create a dedicated DMD shader based on the selected style settings
 				createTexture = true;
 				_dmdShaderInvalid = false;
 				_dmdShader?.Delete(gl);
@@ -327,6 +327,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_glassToRender != null)
 			{
+				// Upload glass bitmap to GPU, generate mipmaps, then release bitmap
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0);
 				var data = _glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, _glassToRender.Width, _glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
 				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _glassToRender.Width, _glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
@@ -340,7 +341,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_hasFrame)
 			{
-				// Update palette (small 16x1 texture used as a LUT when processing the DMD data on the GPU)
+				// Update palette (small 16x1 texture used as a LUT (lookup table) when processing the DMD data on the GPU)
 				if (_lutInvalid)
 				{
 					_lutInvalid = false;
@@ -391,8 +392,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 				if (_convertShader == null || _convertShaderType != _nextFrameType)
 				{
-					if (_convertShader != null)
-						_convertShader.Delete(gl);
+					_convertShader?.Delete(gl);
 					_convertShaderType = _nextFrameType;
 					createTexture = true;
 					try
