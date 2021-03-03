@@ -51,7 +51,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public bool HasGamma => Math.Abs(Gamma - 1.0) > 0.01;
 
 		/// <summary>
-		/// Dot tinting (RGB of given color, alpha != 0 activate tinting, disabled by default).
+		/// Dot tinting (RGB of given color, alpha is the amount of tinting, alpha = 0 is the default, therefore disabled).
 		/// </summary>
 		public Color Tint { get; set; } = Color.FromArgb(0x00, 0xFF, 0x58, 0x20);
 		public bool HasTint => Tint.A != 0;

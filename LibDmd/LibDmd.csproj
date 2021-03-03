@@ -359,6 +359,8 @@
     <EmbeddedResource Include="Output\Virtual\Dmd\Dmd.frag" />
     <EmbeddedResource Include="Output\Virtual\Dmd\Blur.vert" />
     <EmbeddedResource Include="Output\Virtual\Dmd\Blur.frag" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Convert.frag" />
+    <EmbeddedResource Include="Output\Virtual\Dmd\Convert.vert" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

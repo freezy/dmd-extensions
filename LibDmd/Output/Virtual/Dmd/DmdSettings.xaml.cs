@@ -94,12 +94,14 @@ namespace LibDmd.Output.Virtual.Dmd
 				UpdatePreview();
 			});
 
-			TintEnabled.Checked += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
-			TintEnabled.Checked += (sender, e) => LoadPreview();
-			TintEnabled.Unchecked += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
-			TintEnabled.Unchecked += (sender, e) => LoadPreview();
-			TintColor.SelectedColorChanged += (sender, e) => _previewStyle.Tint = Color.FromArgb((byte)(TintEnabled.IsChecked == true ? 255 : 0), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
-			TintColor.SelectedColorChanged += (sender, e) => UpdatePreview();
+			TintAmount.OnValueChanged.Subscribe(value => {
+				_previewStyle.Tint = Color.FromArgb((byte)(value * 255), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+				LoadPreview();
+			});
+			TintColor.SelectedColorChanged += (sender, e) => {
+				_previewStyle.Tint = Color.FromArgb((byte)(TintAmount.Value * 255), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+				UpdatePreview();
+			};
 
 			GlassPath.TextChanged += (sender, e) => _previewStyle.GlassTexture = GlassPath.Text;
 			GlassPath.TextChanged += (sender, e) => UpdatePreview();
@@ -137,7 +139,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			DotGlow.Update(_previewStyle.DotGlow);
 			BackLevel.Update(_previewStyle.BackGlow);
 
-			TintEnabled.IsChecked = _previewStyle.HasTint;
+			TintAmount.Value = _previewStyle.Tint.ScA;
 			Color tintColor = _previewStyle.Tint;
 			tintColor.A = 255;
 			TintColor.SelectedColor = tintColor;

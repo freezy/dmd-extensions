@@ -74,13 +74,11 @@
 					<dmd:SliderValueSetting x:Name="BackLevel"    Grid.Row="2" Grid.Column="1" Width="Auto" LabelContent="Background Glow:" MinValue="0" MaxValue="1" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
 					<dmd:SliderValueSetting x:Name="Gamma"        Grid.Row="3" Grid.Column="1" Width="Auto" LabelContent="Gamma:" MinValue="0.5" MaxValue="4" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
 
-					<CheckBox x:Name="TintEnabled" Grid.Row="4" Grid.Column="0" Margin="0,5,0,0">
-						<Label Content="Enable dot tinting" Grid.Row="4" Grid.Column="0" Margin="0,-6,0,0"></Label>
-					</CheckBox>
-					<Grid Grid.Row="4" Grid.Column="1" >
+					<Grid Grid.Row="4" Grid.Column="0" >
 						<Label Content="Tint Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
 						<xctk:ColorPicker x:Name="TintColor" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="173" Margin="110,1.333,0,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
 					</Grid>
+					<dmd:SliderValueSetting x:Name="TintAmount"   Grid.Row="4" Grid.Column="1" Width="Auto" LabelContent="Tint amount:" MinValue="0.0" MaxValue="1.0" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
 				</Grid>
 			</Grid>
 		</GroupBox>
