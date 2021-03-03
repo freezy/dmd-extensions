@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Reactive.Subjects;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -26,6 +28,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		public string NewStyleName { get; set; }
 
 		public ISubject<DmdStyle> OnConfigUpdated { get; } = new Subject<DmdStyle>();
+
+		private string _lastFramePath;
+		private string _lastGlassPath;
 
 		public DmdSettings(DmdStyle style, Configuration config)
 		{
@@ -192,7 +197,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdatePreview()
 		{
 			DmdPreview.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
-			DmdPreview.SetStyle(_previewStyle);
+			DmdPreview.SetStyle(_previewStyle, _config.DataPath);
 			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
 				DmdPreview.RenderBitmap(_preview);
 			} else {
@@ -218,31 +223,28 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void SelectGlassClicked(object sender, RoutedEventArgs e)
 		{
-			var fileDialog = new System.Windows.Forms.OpenFileDialog();
-			var result = fileDialog.ShowDialog();
-			switch (result)
-			{
-				case System.Windows.Forms.DialogResult.OK:
-					var file = fileDialog.FileName;
-					GlassPath.Text = file;
-					GlassPath.ToolTip = file;
-					break;
-				case System.Windows.Forms.DialogResult.Cancel:
-				default:
-					break;
-			}
+			SelectTextureClicked(ref _lastGlassPath, ref GlassPath, "glasses");
 		}
 
 		private void SelectFrameClicked(object sender, RoutedEventArgs e)
 		{
+			SelectTextureClicked(ref _lastFramePath, ref FramePath, "frames");
+		}
+
+		private void SelectTextureClicked(ref string lastPath, ref TextBox textbox, string textureFolder) {
 			var fileDialog = new System.Windows.Forms.OpenFileDialog();
+			var initialPath = GetTextureFolder(lastPath, textureFolder);
+			if (initialPath != null) {
+				fileDialog.InitialDirectory = initialPath;
+			}
+
 			var result = fileDialog.ShowDialog();
-			switch (result)
-			{
+			switch (result) {
 				case System.Windows.Forms.DialogResult.OK:
-					var file = fileDialog.FileName;
-					FramePath.Text = file;
-					FramePath.ToolTip = file;
+					var file = TrimTextureFolder(fileDialog.FileName);
+					textbox.Text = file;
+					textbox.ToolTip = file;
+					lastPath = Path.GetDirectoryName(fileDialog.FileName);
 					break;
 				case System.Windows.Forms.DialogResult.Cancel:
 				default:
@@ -317,6 +319,38 @@ namespace LibDmd.Output.Virtual.Dmd
 			StyleNameComboBox.ItemsSource = StyleNames;
 			StyleNameComboBox.Text = "";
 			StyleSelectionChanged("");
+		}
+
+		private string GetTextureFolder(string lastPath, string textureFolder)
+		{
+			var initialPath = lastPath;
+			if (initialPath != null) {
+				return initialPath;
+			}
+			if (_config.DataPath != null) {
+				initialPath = _config.DataPath;
+				if (Directory.Exists(Path.Combine(initialPath, "textures"))) {
+					initialPath = Path.Combine(initialPath, "textures");
+				}
+				if (Directory.Exists(Path.Combine(initialPath, textureFolder))) {
+					initialPath = Path.Combine(initialPath, textureFolder);
+				}
+			}
+			return initialPath;
+		}
+
+		private string TrimTextureFolder(string path)
+		{
+			if (_config.DataPath == null) {
+				return path;
+			}
+
+			var dataPath = Path.GetFullPath(_config.DataPath);
+			path = Path.GetFullPath(path);
+			if (path.StartsWith(dataPath)) {
+				return path.Substring(dataPath.Length + 1);
+			}
+			return path;
 		}
 
 		private static string DoubleToString2(double d)

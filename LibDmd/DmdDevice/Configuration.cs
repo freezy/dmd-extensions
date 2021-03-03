@@ -49,6 +49,7 @@ namespace LibDmd.DmdDevice
 		public IBrowserConfig BrowserStream { get; }
 		public INetworkConfig NetworkStream { get; }
 		public IPinUpConfig PinUp { get; }
+		public string DataPath { get; }
 
 		public void Validate()
 		{
@@ -92,6 +93,11 @@ namespace LibDmd.DmdDevice
 			} catch (Exception e) {
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
+			}
+
+			var dataPath = Path.Combine(Path.GetDirectoryName(_iniPath), "dmdext");
+			if (Directory.Exists(dataPath)) {
+				DataPath = dataPath;
 			}
 
 			Global = new GlobalConfig(_data, this);

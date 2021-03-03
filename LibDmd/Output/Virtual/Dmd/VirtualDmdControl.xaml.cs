@@ -90,31 +90,48 @@ namespace LibDmd.Output.Virtual.Dmd
 			ClearColor();
 		}
 
-		public void SetStyle(DmdStyle style)
+		public void SetStyle(DmdStyle style, string dataPath)
 		{
 			_style = style;
 			_dmdShaderInvalid = true;
 			_lutInvalid = true;
+			var glassTexturePath = GetAbsolutePath(_style.GlassTexture, dataPath);
 			try {
-				_glassToRender = new System.Drawing.Bitmap(_style.GlassTexture);
+				_glassToRender = glassTexturePath == null
+					? null
+					: new System.Drawing.Bitmap(glassTexturePath);
 
 			} catch (Exception e) {
-				Logger.Warn(e, "Could not load glass texture.");
+				Logger.Warn(e, $"Could not load glass texture at \"{glassTexturePath}\".");
 				_glassToRender = null;
 			}
 
+			var frameTexturePath = GetAbsolutePath(_style.FrameTexture, dataPath);
 			try {
-				var image = new BitmapImage(new Uri(_style.FrameTexture));
-				DmdFraming.Source = image;
-				DmdFraming.Visibility = Visibility.Visible;
+				if (frameTexturePath != null) {
+					var image = new BitmapImage(new Uri(frameTexturePath));
+					DmdFraming.Source = image;
+					DmdFraming.Visibility = Visibility.Visible;
+				}
 
 			} catch (Exception e) {
-				Logger.Warn(e, "Could not load framing texture.");
+				Logger.Warn(e, $"Could not load framing texture at \"{frameTexturePath}\".");
 				DmdFraming.Source = null;
 				DmdFraming.Visibility = Visibility.Hidden;
 			}
 
 			OnSizeChanged(null, null);
+		}
+
+		private string GetAbsolutePath(string path, string dataPath)
+		{
+			if (string.IsNullOrWhiteSpace(path)) {
+				return null;
+			}
+			if (!Path.IsPathRooted(path) && dataPath != null) {
+				return Path.Combine(dataPath, path);
+			}
+			return Path.GetFullPath(path);
 		}
 
 		public void RenderBitmap(BitmapSource bmp)
