@@ -74,7 +74,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private DmdStyle _style = new DmdStyle();
 		private const uint PositionAttribute = 0;
 		private const uint TexCoordAttribute = 1;
-		private const int FBOOversize = 1;
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 		private bool _hasFrame = false;
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric;
@@ -301,12 +300,12 @@ namespace LibDmd.Output.Virtual.Dmd
 				{
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]);
 					gl.BindTexture(OpenGL.GL_TEXTURE_2D, _textures[i + 3]);
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new float[] { 0f, 0f, 0f, 0f });
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
-					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, FBOOversize * DmdWidth, FBOOversize * DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
+					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, DmdWidth, DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
 					gl.FramebufferTexture2DEXT(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_COLOR_ATTACHMENT0_EXT, OpenGL.GL_TEXTURE_2D, _textures[i + 3], 0);
 					uint status = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT);
 					switch (status)
@@ -325,7 +324,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			_quadVbo.Bind(gl);
 
-			// Textures are: glass, palette, input data, dmd, blur 1, blur 2, blur 3, temp
+			// Textures are: glass, palette LUT, input data, dmd, dot glow, intermediate blur, back blur, temp
 			for (int i = 0; i < _textures.Length; i++)
 			{
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0 + (uint)i);
@@ -338,9 +337,8 @@ namespace LibDmd.Output.Virtual.Dmd
 				var data = _glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, _glassToRender.Width, _glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
 				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _glassToRender.Width, _glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.GenerateMipmapEXT(OpenGL.GL_TEXTURE_2D);
-				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
-				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
-				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
+				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_EDGE);
+				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_EDGE);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR_MIPMAP_LINEAR);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
 				_glassToRender = null;
@@ -348,7 +346,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_hasFrame)
 			{
-				// Update palette
+				// Update palette (small 16x1 texture used as a LUT when processing the DMD data on the GPU)
 				if (_lutInvalid)
 				{
 					_lutInvalid = false;
@@ -391,9 +389,8 @@ namespace LibDmd.Output.Virtual.Dmd
 					}
 					gl.ActiveTexture(OpenGL.GL_TEXTURE1);
 					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, 16, 1, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, data);
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_EDGE);
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_EDGE);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_NEAREST);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_NEAREST);
 				}
@@ -429,7 +426,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 				}
 
-				// Update texture
+				// Update DMD texture with latest frame
 				_hasFrame = false;
 				gl.ActiveTexture(OpenGL.GL_TEXTURE2);
 				switch (_nextFrameType)
@@ -476,7 +473,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 				if (createTexture)
 				{
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_CLAMP, OpenGL.GL_CLAMP_TO_EDGE);
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new float[] { 0f, 0f, 0f, 0f });
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_NEAREST);
@@ -486,7 +483,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				// Apply palette, tinting and gamma
 				_convertShader.Bind(gl);
 				gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[0]);
-				gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+				gl.Viewport(0, 0, DmdWidth, DmdHeight);
 				gl.Uniform1(_csPalette, 1); // Color palette
 				gl.Uniform1(_csTexture, 2); // DMD texture
 				gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
@@ -497,38 +494,38 @@ namespace LibDmd.Output.Virtual.Dmd
 				{
 					_blurShader1.Bind(gl);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs1Texture, 3); // DMD texture
-					gl.Uniform2(_bs1Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.Uniform2(_bs1Direction, 1.0f / DmdWidth, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[1]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs1Texture, 7);
-					gl.Uniform2(_bs1Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.Uniform2(_bs1Direction, 0.0f, 1.0f / DmdHeight);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					_blurShader1.Unbind(gl);
 
 					_blurShader2.Bind(gl);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs2Texture, 4); // Previous Blur
-					gl.Uniform2(_bs2Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.Uniform2(_bs2Direction, 1.0f / DmdWidth, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[2]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs2Texture, 7);
-					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / DmdHeight);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs2Texture, 5); // Previous Blur
-					gl.Uniform2(_bs2Direction, 1.0f / (FBOOversize * DmdWidth), 0.0f);
+					gl.Uniform2(_bs2Direction, 1.0f / DmdWidth, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, FBOOversize * DmdWidth, FBOOversize * DmdHeight);
+					gl.Viewport(0, 0, DmdWidth, DmdHeight);
 					gl.Uniform1(_bs2Texture, 7);
-					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / (FBOOversize * DmdHeight));
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / DmdHeight);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					_blurShader2.Unbind(gl);
 				}

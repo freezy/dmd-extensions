@@ -164,7 +164,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void LoadPreview()
 		{
-			Logger.Info("Loading preview...");
 			if (PreviewMono32x8.IsChecked == true && !_previewStyle.HasTint)
 				_preview = new BitmapImage(Global.MakePackUri("Output/Virtual/Dmd/preview-32x8-mono.png"));
 			else if (PreviewMono32x8.IsChecked == true && _previewStyle.HasTint)
