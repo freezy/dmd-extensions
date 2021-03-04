@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
@@ -23,11 +24,11 @@ namespace DmdExt.Mirror
 			_options = options;
 		}
 
-		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
-				Destinations = GetRenderers(_config),
+				Destinations = GetRenderers(_config, reportingTags),
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
@@ -41,30 +42,35 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					_graph.Source = new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond };
+					reportingTags.Add("In:PinballFX2");
 					break;
 				}
 
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						_graph.Source = new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond };
+						reportingTags.Add("In:PinballFX3Legacy");
 					} else {
 						_graph.Source = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
+						reportingTags.Add("In:PinballFX3");
 					}
 					break;
 				}
 
-				case SourceType.PinballArcade: { 
+				case SourceType.PinballArcade: {
 					_graph.Source = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
+					reportingTags.Add("In:PinballArcade");
 					break;
 				}
 
 				case SourceType.ProPinball: {
 					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
+					reportingTags.Add("In:ProPinball");
 					break;
 				}
 
 				case SourceType.Screen:
-					
+
 					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
@@ -83,6 +89,7 @@ namespace DmdExt.Mirror
 					}
 
 					_graph.Source = grabber;
+					reportingTags.Add("In:ScreenGrab");
 					break;
 
 				default:

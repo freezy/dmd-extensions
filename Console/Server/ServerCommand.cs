@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
@@ -22,11 +23,12 @@ namespace DmdExt.Server
 			_serverOptions = serverOptions;
 		}
 
-		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
 		{
-			var renderers = GetRenderers(_config);
+			var renderers = GetRenderers(_config, reportingTags);
 			var websocketServer = new WebsocketServer(_serverOptions.Ip, _serverOptions.Port, _serverOptions.Path);
 			websocketServer.SetupGraphs(graphs, renderers);
+			reportingTags.Add("Server");
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
@@ -23,10 +24,10 @@ namespace DmdExt.Test
 			_testOptions = testOptions;
 		}
 
-		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
 		{
 			// define renderers
-			var renderers = GetRenderers(_config);
+			var renderers = GetRenderers(_config, reportingTags);
 
 			// retrieve image
 			var bmp = new BitmapImage();
@@ -83,6 +84,7 @@ namespace DmdExt.Test
 			}
 
 			graphs.Add(_graph);
+			reportingTags.Add("In:Test");
 		}
 	}
 }

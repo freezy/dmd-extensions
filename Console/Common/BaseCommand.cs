@@ -28,18 +28,18 @@ namespace DmdExt.Common
 		private RenderGraphCollection _graphs;
 		private IConfiguration _config;
 
-		protected abstract void CreateRenderGraphs(RenderGraphCollection graphs);
+		protected abstract void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags);
 
-		public RenderGraphCollection GetRenderGraphs()
+		public RenderGraphCollection GetRenderGraphs(HashSet<string> reportingTags)
 		{
 			if (_graphs == null) {
 				_graphs = new RenderGraphCollection();
-				CreateRenderGraphs(_graphs);
+				CreateRenderGraphs(_graphs, reportingTags);
 			}
 			return _graphs;
 		}
 
-		protected List<IDestination> GetRenderers(IConfiguration config)
+		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags)
 		{
 			var renderers = new List<IDestination>();
 			if (config.PinDmd1.Enabled) {
@@ -47,6 +47,7 @@ namespace DmdExt.Common
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
+					reportingTags.Add("Out:PinDMDv1");
 				} else {
 					Logger.Warn("Device {0} is not available.", PinDMDv1);
 				}
@@ -57,6 +58,7 @@ namespace DmdExt.Common
 				if (pinDmd2.IsAvailable) {
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
+					reportingTags.Add("Out:PinDMDv2");
 				} else {
 					Logger.Warn("Device {0} is not available.", PinDMDv2);
 				}
@@ -67,6 +69,7 @@ namespace DmdExt.Common
 				if (pinDmd3.IsAvailable) {
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
+					reportingTags.Add("Out:PinDMDv3");
 				} else {
 					Logger.Warn("Device {0} is not available.", PinDMDv3);
 				}
@@ -77,6 +80,7 @@ namespace DmdExt.Common
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
+					reportingTags.Add("Out:PIN2DMD");
 				} else {
 					Logger.Warn("Device {0} is not available.", PIN2DMD);
 				}
@@ -87,6 +91,7 @@ namespace DmdExt.Common
 				if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
+					reportingTags.Add("Out:Pixelcade");
 				} else {
 					Logger.Warn("Device Pixelcade is not available.");
 				}
@@ -95,17 +100,21 @@ namespace DmdExt.Common
 			if (config.VirtualDmd.Enabled) {
 				renderers.Add(ShowVirtualDmd(config));
 				Logger.Info("Added virtual DMD renderer.");
+				reportingTags.Add("Out:VirtualDmd");
 			}
 
 			if (config.VirtualAlphaNumericDisplay.Enabled) {
 				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style, config as Configuration));
 				Logger.Info("Added virtual Alphanumeric renderer.");
+				reportingTags.Add("Out:VirtualAlphaNum");
 			}
 
 			if (config.NetworkStream.Enabled) {
 				try {
 					renderers.Add(NetworkStream.GetInstance(config.NetworkStream));
 					Logger.Info("Added websocket client renderer.");
+					reportingTags.Add("Out:NetworkStream");
+
 				} catch (Exception e) {
 					Logger.Warn("Network stream disabled: {0}", e.Message);
 				}
@@ -133,7 +142,7 @@ namespace DmdExt.Common
 			};
 			dmd.Setup(config as Configuration, null);
 			var thread = new Thread(() => {
-				
+
 				// Create our context, and install it:
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(CurrentDispatcher));
 
@@ -157,9 +166,9 @@ namespace DmdExt.Common
 			return dmd.VirtualControl;
 		}
 
-		public void Execute(Action onCompleted, Action<Exception> onError)
+		public void Execute(HashSet<string> reportingTags, Action onCompleted, Action<Exception> onError)
 		{
-			GetRenderGraphs().Init().StartRendering(onCompleted, onError);
+			GetRenderGraphs(reportingTags).Init().StartRendering(onCompleted, onError);
 		}
 
 		public void Dispose()

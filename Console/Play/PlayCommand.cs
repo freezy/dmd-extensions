@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DmdExt.Common;
@@ -21,7 +22,7 @@ namespace DmdExt.Play
 			_options = options;
 		}
 
-		protected override void CreateRenderGraphs(RenderGraphCollection graphs)
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
 		{
 			// define source
 			object source;
@@ -41,12 +42,12 @@ namespace DmdExt.Play
 					break;
 
 				default:
-					throw new UnknownFormatException("Unknown format " + Path.GetExtension(_options.FileName.ToLower()) + 
+					throw new UnknownFormatException("Unknown format " + Path.GetExtension(_options.FileName.ToLower()) +
 						". Known formats: png, jpg, gif, bin.");
 			}
 
 			// define renderers
-			var renderers = GetRenderers(_config);
+			var renderers = GetRenderers(_config, reportingTags);
 			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up

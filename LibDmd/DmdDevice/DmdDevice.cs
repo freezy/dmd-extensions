@@ -58,7 +58,7 @@ namespace LibDmd.DmdDevice
 		private string _gameName;
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
-		private DMDFrame _dmdFrame = new DMDFrame();
+		private readonly DMDFrame _dmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
 		private Color[] _palette;
@@ -77,6 +77,7 @@ namespace LibDmd.DmdDevice
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
+		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 
 		public DmdDevice()
 		{
@@ -275,12 +276,24 @@ namespace LibDmd.DmdDevice
 		{
 			_graphs.Dispose();
 
+			ReportingTags.Clear();
+			ReportingTags.Add(Process.GetCurrentProcess().ProcessName);
+#if PLATFORM_X86
+			ReportingTags.Add("x86");
+#elif PLATFORM_X64
+			ReportingTags.Add("x64");
+#endif
+			ReportingTags.Add("In:DmdDevice");
+			ReportingTags.Add("Game:" + _gameName);
+
+
 			var renderers = new List<IDestination>();
 			if (_config.PinDmd1.Enabled) {
 				var pinDmd1 = PinDmd1.GetInstance();
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
+					ReportingTags.Add("Out:PinDMDv1");
 				}
 			}
 			if (_config.PinDmd2.Enabled) {
@@ -288,6 +301,7 @@ namespace LibDmd.DmdDevice
 				if (pinDmd2.IsAvailable) {
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
+					ReportingTags.Add("Out:PinDMDv2");
 				}
 			}
 			if (_config.PinDmd3.Enabled) {
@@ -295,6 +309,7 @@ namespace LibDmd.DmdDevice
 				if (pinDmd3.IsAvailable) {
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
+					ReportingTags.Add("Out:PinDMDv3");
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
@@ -305,6 +320,7 @@ namespace LibDmd.DmdDevice
 						pin2Dmd.PreloadPalettes(_coloring);
 					}
 					Logger.Info("Added PIN2DMD renderer.");
+					ReportingTags.Add("Out:PIN2DMD");
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
@@ -312,16 +328,19 @@ namespace LibDmd.DmdDevice
 				if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
+					ReportingTags.Add("Out:Pixelcade");
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {
 				renderers.Add(_virtualDmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
+				ReportingTags.Add("Out:VirtualDMD");
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				_alphaNumericDest = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
 				renderers.Add(_alphaNumericDest);
 				Logger.Info("Added virtual alphanumeric renderer.");
+				ReportingTags.Add("Out:VirtualAlphaNum");
 			}
 			if (_config.Video.Enabled) {
 
@@ -332,10 +351,12 @@ namespace LibDmd.DmdDevice
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
 					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
 					Logger.Info("Added video renderer.");
+					ReportingTags.Add("Out:Video");
 
 				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
 					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
 					Logger.Info("Added video renderer.");
+					ReportingTags.Add("Out:Video");
 
 				} else {
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
@@ -348,6 +369,7 @@ namespace LibDmd.DmdDevice
 					if (pinupOutput.IsAvailable) {
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
+						ReportingTags.Add("Out:PinUP");
 					}
 
 				} catch (Exception e) {
@@ -365,6 +387,7 @@ namespace LibDmd.DmdDevice
 				if (Directory.Exists(Path.GetDirectoryName(path))) {
 					renderers.Add(new GifOutput(path));
 					Logger.Info("Added animated GIF renderer, saving to {0}", path);
+					ReportingTags.Add("Out:GIF");
 
 				} else {
 					Logger.Warn("Ignoring animated GIF renderer for non-existing path \"{0}\"", Path.GetDirectoryName(path));
@@ -372,12 +395,18 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.VpdbStream.Enabled) {
 				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
+				Logger.Info("Added VPDB stream renderer.");
+				ReportingTags.Add("Out:VpdbStream");
 			}
 			if (_config.BrowserStream.Enabled) {
 				renderers.Add(new BrowserStream(_config.BrowserStream.Port, _gameName));
+				Logger.Info("Added browser stream renderer.");
+				ReportingTags.Add("Out:BrowserStream");
 			}
 			if (_config.NetworkStream.Enabled) {
 				renderers.Add(NetworkStream.GetInstance(_config.NetworkStream, _gameName));
+				Logger.Info("Added network stream renderer.");
+				ReportingTags.Add("Out:NetworkStream");
 			}
 
 			if (renderers.Count == 0) {
@@ -398,6 +427,7 @@ namespace LibDmd.DmdDevice
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically
 				});
+				ReportingTags.Add("Color:Gray2");
 
 			} else {
 				_graphs.Add(new RenderGraph {
@@ -421,6 +451,7 @@ namespace LibDmd.DmdDevice
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically
 				});
+				ReportingTags.Add("Color:Gray4");
 
 			} else {
 				_graphs.Add(new RenderGraph {
@@ -721,10 +752,11 @@ namespace LibDmd.DmdDevice
 			if (ex != null) {
 				Logger.Error(ex.ToString());
 			}
+
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
 			Raygun.Send(ex,
-				new List<string> { Process.GetCurrentProcess().ProcessName },
+				ReportingTags.ToList(), // tags
 				new Dictionary<string, string> {
 					{ "log", string.Join("\n", MemLogger.Logs) },
 					{ "sha", _sha }

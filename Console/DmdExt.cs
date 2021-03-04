@@ -28,7 +28,7 @@ using NLog.Targets;
 #endif
 using NLog;
 using NLog.Config;
-
+using System.Linq;
 
 namespace DmdExt
 {
@@ -50,6 +50,8 @@ namespace DmdExt
 		private static string _sha;
 		private static string _fullVersion;
 
+		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
+
 		[STAThread]
 		static void Main(string[] args)
 		{
@@ -68,6 +70,12 @@ namespace DmdExt
 
 			CultureUtil.NormalizeUICulture();
 			_commandLineArgs = args;
+			ReportingTags.Add("Console");
+#if PLATFORM_X86
+			ReportingTags.Add("x86");
+#elif PLATFORM_X64
+			ReportingTags.Add("x64");
+#endif
 
 			// setup logger
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
@@ -79,7 +87,7 @@ namespace DmdExt
 				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, MemLogger));
 				LogManager.ReconfigExistingLoggers();
 #endif
-			} 
+			}
 #if !DEBUG
 			else {
 				SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
@@ -136,7 +144,7 @@ namespace DmdExt
 						throw new ArgumentOutOfRangeException();
 				}
 
-				var renderGraphs = _command.GetRenderGraphs();
+				var renderGraphs = _command.GetRenderGraphs(ReportingTags);
 
 				if (config.Bitmap.Enabled) {
 					renderGraphs.AddDestination(new BitmapOutput(config.Bitmap.Path));
@@ -151,7 +159,7 @@ namespace DmdExt
 					}
 				}
 
-				_command.Execute(() => {
+				_command.Execute(ReportingTags, () => {
 					if (config != null && config.Global.QuitWhenDone) {
 						Logger.Info("Exiting.");
 						_command?.Dispose();
@@ -173,7 +181,7 @@ namespace DmdExt
 				} else {
 					Logger.Info("Press CTRL+C to close.");
 				}
-				
+
 				WinApp.Run();
 
 			} catch (DeviceNotAvailableException e) {
@@ -253,8 +261,8 @@ namespace DmdExt
 			}
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
-			Raygun.Send(ex, null, new Dictionary<string, string> {
-				{ "args", string.Join(" ", _commandLineArgs) }, 
+			Raygun.Send(ex, ReportingTags.ToList(), new Dictionary<string, string> {
+				{ "args", string.Join(" ", _commandLineArgs) },
 				{ "log", string.Join("\n", MemLogger.Logs) },
 				{ "sha", _sha }
 			});
