@@ -649,6 +649,11 @@ namespace LibDmd.DmdDevice
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
+			if (_gameName.StartsWith("spagb_")) {
+				// ignore GB frames, looks like a bug from SPA side
+				return;
+			}
+
 			if (!_isOpen) {
 				Init();
 			}
