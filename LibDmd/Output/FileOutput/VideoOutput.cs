@@ -35,6 +35,16 @@ namespace LibDmd.Output.FileOutput
 			if (!Directory.Exists(Path.GetDirectoryName(VideoPath))) {
 				throw new InvalidFolderException($"Path \"{Path.GetDirectoryName(VideoPath)}\" is not a folder.");
 			}
+			
+			if (File.Exists(VideoPath)) {
+				var count = 1;
+				var oldVideoPath = VideoPath;
+				VideoPath = oldVideoPath.Replace(".avi", $" ({count}).avi");
+				while (File.Exists(VideoPath)) {
+					count++;
+					VideoPath = oldVideoPath.Replace(".avi", $" ({count}).avi");
+				}
+			}
 			Init();
 		}
 
@@ -46,12 +56,23 @@ namespace LibDmd.Output.FileOutput
 			};
 
 			try {
-				_stream = _writer.AddMpeg4VideoStream(DmdWidth, DmdHeight, Fps,
-					quality: 100, 
-					codec: KnownFourCCs.Codecs.X264, 
-					forceSingleThreadedAccess: true
-				);
-				Logger.Info("X264 encoder found.");
+				_stream = _writer.AddUncompressedVideoStream(DmdWidth, DmdHeight);
+				Logger.Info("Uncompressed encoder found.");
+			
+			} catch (InvalidOperationException e) {
+				Logger.Warn("Error creating Uncompressed encoded stream: {0}.", e.Message);
+			}
+
+			try {
+				if (_stream == null) {
+					_stream = _writer.AddMpeg4VideoStream(
+						DmdWidth, DmdHeight, Fps,
+						quality: 100,
+						codec: KnownFourCCs.Codecs.X264,
+						forceSingleThreadedAccess: true
+					);
+					Logger.Info("X264 encoder found.");
+				}
 
 			} catch (InvalidOperationException e) {
 				Logger.Warn("Error creating X264 encoded stream: {0}.", e.Message);
