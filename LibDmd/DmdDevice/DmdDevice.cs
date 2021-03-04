@@ -162,7 +162,7 @@ namespace LibDmd.DmdDevice
 							SetupGraphs();
 							SetupVirtualDmd();
 						});
-					
+
 					} catch (TaskCanceledException e) {
 						Logger.Error(e, "Main thread seems already destroyed, aborting.");
 					}
@@ -214,7 +214,7 @@ namespace LibDmd.DmdDevice
 					}
 					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
 					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
-				
+
 				} catch (Exception e) {
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 				}
@@ -224,7 +224,7 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
-		/// Tuät ä nii Inschantz vom virtueuä DMD kreiärä und tuät drnah d 
+		/// Tuät ä nii Inschantz vom virtueuä DMD kreiärä und tuät drnah d
 		/// Render-Graphä drabindä.
 		/// </summary>
 		private void CreateVirtualDmd()
@@ -268,7 +268,7 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
-		/// Kreiärt ä Render-Graph fir jedä Input-Tip und bindet si as 
+		/// Kreiärt ä Render-Graph fir jedä Input-Tip und bindet si as
 		/// virtueuä DMD.
 		/// </summary>
 		private void SetupGraphs()
@@ -564,7 +564,7 @@ namespace LibDmd.DmdDevice
 			_graphs.Dispose();
 			try {
 				_virtualDmd?.Dispatcher.Invoke(() => _virtualDmd.Hide());
-			
+
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}
@@ -579,6 +579,10 @@ namespace LibDmd.DmdDevice
 
 		public void SetGameName(string gameName)
 		{
+			if (_gameName != null) { // only reload if game name is set (i.e. we didn't just load because we just started)
+				_config.Reload();
+			}
+
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
@@ -612,7 +616,7 @@ namespace LibDmd.DmdDevice
 			int height = frame.height;
 
 			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
-				// Pin2DMD colorization may have 512 byte masks with a 128x16 source, 
+				// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 				// indicating this should be upsized and treated as a centered 128x32 DMD.
 
 				height = frame.height;

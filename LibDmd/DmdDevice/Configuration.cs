@@ -21,19 +21,19 @@ namespace LibDmd.DmdDevice
 	public class Configuration : IConfiguration
 	{
 		public static readonly string EnvConfig = "DMDDEVICE_CONFIG";
-		public IGlobalConfig Global { get; }
-		public IVirtualDmdConfig VirtualDmd { get; }
-		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
-		public IPinDmd1Config PinDmd1 { get; }
-		public IPinDmd2Config PinDmd2 { get; }
-		public IPinDmd3Config PinDmd3 { get; }
-		public IPin2DmdConfig Pin2Dmd { get; }
-		public IPixelcadeConfig Pixelcade { get; }
-		public IVideoConfig Video { get; }
-		public IGifConfig Gif { get; }
-		public IBitmapConfig Bitmap { get; }
+		public IGlobalConfig Global { get; private set; }
+		public IVirtualDmdConfig VirtualDmd { get; private set; }
+		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; private set; }
+		public IPinDmd1Config PinDmd1 { get; private set; }
+		public IPinDmd2Config PinDmd2 { get; private set; }
+		public IPinDmd3Config PinDmd3 { get; private set; }
+		public IPin2DmdConfig Pin2Dmd { get; private set; }
+		public IPixelcadeConfig Pixelcade { get; private set; }
+		public IVideoConfig Video { get; private set; }
+		public IGifConfig Gif { get; private set; }
+		public IBitmapConfig Bitmap { get; private set; }
 
-		public ISubject<Unit> OnSave = new Subject<Unit>();
+		private readonly ISubject<Unit> _onSave = new Subject<Unit>();
 
 		public string GameName {
 			get => _gameName;
@@ -45,10 +45,10 @@ namespace LibDmd.DmdDevice
 		}
 		public bool HasGameName => _gameName != null;
 		public GameConfig GameConfig { get; private set; }
-		public IVpdbConfig VpdbStream { get; }
-		public IBrowserConfig BrowserStream { get; }
-		public INetworkConfig NetworkStream { get; }
-		public IPinUpConfig PinUp { get; }
+		public IVpdbConfig VpdbStream { get; private set; }
+		public IBrowserConfig BrowserStream { get; private set; }
+		public INetworkConfig NetworkStream { get; private set; }
+		public IPinUpConfig PinUp { get; private set; }
 		public string DataPath { get; }
 
 		public void Validate()
@@ -58,10 +58,11 @@ namespace LibDmd.DmdDevice
 
 		private readonly string _iniPath;
 		private readonly FileIniDataParser _parser;
-		private readonly IniData _data;
+		private IniData _data;
 		private string _gameName;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private IDisposable _saveSubscription;
 
 		public Configuration(string iniPath = null)
 		{
@@ -84,6 +85,7 @@ namespace LibDmd.DmdDevice
 				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);
 					Logger.Info("Successfully loaded config from {0}.", _iniPath);
+					SetupConfig();
 
 				} else {
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
@@ -99,7 +101,23 @@ namespace LibDmd.DmdDevice
 			if (Directory.Exists(dataPath)) {
 				DataPath = dataPath;
 			}
+		}
 
+		public void Reload()
+		{
+			try {
+				if (!string.IsNullOrEmpty(_iniPath) && File.Exists(_iniPath)) {
+					Logger.Info("Reloading config from {0}.", _iniPath);
+					_data = _parser.ReadFile(_iniPath);
+					SetupConfig();
+				}
+			} catch (Exception e) {
+				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
+			}
+		}
+
+		private void SetupConfig()
+		{
 			Global = new GlobalConfig(_data, this);
 			VirtualDmd = new VirtualDmdConfig(_data, this);
 			VirtualAlphaNumericDisplay = new VirtualAlphaNumericDisplayConfig(_data, this);
@@ -116,8 +134,8 @@ namespace LibDmd.DmdDevice
 			NetworkStream = new NetworkConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
 
-			OnSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ =>
-			{
+			_saveSubscription?.Dispose();
+			_saveSubscription = _onSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
 				Logger.Info("Saving config to {0}", _iniPath);
 				try {
 					_parser.WriteFile(_iniPath, _data);
@@ -131,7 +149,7 @@ namespace LibDmd.DmdDevice
 		public void Save()
 		{
 			Logger.Info("Scheduling configuration save to {0}", _iniPath);
-			OnSave.OnNext(Unit.Default);
+			_onSave.OnNext(Unit.Default);
 		}
 	}
 
