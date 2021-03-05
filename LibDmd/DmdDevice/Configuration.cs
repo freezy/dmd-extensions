@@ -811,7 +811,12 @@ namespace LibDmd.DmdDevice
 			}
 
 			try {
-				return double.Parse(_data[Name][key]);
+				var val = double.Parse(_data[Name][key]);
+				if (val >= Int32.MaxValue) {
+					Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a smaller than " + Int32.MaxValue + ", falling back to " + fallback + ".");
+					return fallback;
+				}
+				return val;
 
 			} catch (FormatException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be a floating number.");
