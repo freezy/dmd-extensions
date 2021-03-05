@@ -63,6 +63,7 @@ namespace LibDmd.Common
 			LocationChanged += LocationChanged_Event;
 			SizeChanged += LocationChanged_Event;
 			ShowActivated = false;
+			WindowState = WindowState.Normal;
 			VirtualControl.Host = this;
 			PositionChanged = new BehaviorSubject<VirtualDisplayPosition>(new VirtualDisplayPosition(Left, Top, Width, Height));
 			ForceOnTop();
@@ -139,7 +140,7 @@ namespace LibDmd.Common
 			//if (!new[] {132, 32, 512 }.Contains(msg)) {
 			//	Logger.Info("hwndSource event: {0}", msg);
 			//}
-			
+
 			switch ((WM)msg) {
 				case WM.WindowPosChanging: {
 						var pos = (WindowPos)Marshal.PtrToStructure(lParam, typeof(WindowPos));
@@ -153,7 +154,7 @@ namespace LibDmd.Common
 							return IntPtr.Zero;
 						}
 
-						// determine what dimension is changed by detecting the mouse position relative to the 
+						// determine what dimension is changed by detecting the mouse position relative to the
 						// window bounds. if gripped in the corner, either will work.
 						if (!_adjustingHeight.HasValue) {
 							var p = GetMousePosition();
