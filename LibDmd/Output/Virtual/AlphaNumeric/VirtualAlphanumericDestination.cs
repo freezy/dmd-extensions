@@ -308,7 +308,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			try {
 				_settingSubscription?.Dispose();
-				foreach (var display in _displays.Values) {
+				foreach (var display in _displays.Values.ToArray()) {
 					display.Dispatcher.Invoke(() => display.Close());
 				}
 				Res.Clear();
