@@ -15,7 +15,7 @@ namespace PinMameDevice
 	/// datä z schickä. Drbi wird äs API implementiärt.
 	/// </summary>
 	/// <remarks>
-	/// Diä Klass beinhautet fasch kä Logik sondrn tuät fascht auäs diräkt a 
+	/// Diä Klass beinhautet fasch kä Logik sondrn tuät fascht auäs diräkt a
 	/// <see cref="LibDmd.DmdDevice.DmdDevice"/> weytrleitä.
 	/// </remarks>
 	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
@@ -23,154 +23,160 @@ namespace PinMameDevice
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		private static readonly DeviceInstance DefaultDevice = new DeviceInstance();
+		private static readonly List<DeviceInstance> DmdDevices = new List<DeviceInstance>();
+
 		private class DeviceInstance
 		{
 			public int Id;
 			public IDmdDevice DmdDevice { get; } = new LibDmd.DmdDevice.DmdDevice();
-			public DMDFrame DMDFrame { get; } = new DMDFrame();
-			public RawDMDFrame RawDMDFrame { get; } = new RawDMDFrame();
+			public DMDFrame DmdFrame { get; } = new DMDFrame();
+			public RawDMDFrame RawDmdFrame { get; } = new RawDMDFrame();
 			public LinkedList<char> CData { get; } = new LinkedList<char>();
 		}
 
-		private static readonly DeviceInstance _defaultDevice = new DeviceInstance();
-		private static readonly List<DeviceInstance> _dmdDevices = new List<DeviceInstance>();
-
 		static DmdDevice()
 		{
-			_defaultDevice.Id = 0;
-			_dmdDevices.Add(_defaultDevice);
+			DefaultDevice.Id = 0;
+			DmdDevices.Add(DefaultDevice);
 		}
 
-		private static DeviceInstance getDevice(int id)
+		private static DeviceInstance GetDevice(int id)
 		{
-			if (id < 0 || id >= _dmdDevices.Count || _dmdDevices[id] == null) throw new Exception("[vpm] Invalid device id requested: " + id);
-			return _dmdDevices.ElementAt(id);
+			if (id < 0 || id >= DmdDevices.Count || DmdDevices[id] == null) {
+				throw new Exception("[vpm] Invalid device id requested: " + id);
+			}
+			return DmdDevices.ElementAt(id);
 		}
 
-		private static DeviceInstance getDefaultDevice()
-		{
-			return _defaultDevice;
-		}
+		#region Device-Aware API
 
 		// int Create_Device()
 		[DllExport("Create_Device", CallingConvention = CallingConvention.Cdecl)]
 		public static int CreateDevice()
 		{
-			for (int i = 0; i < _dmdDevices.Count; i++)
+			for (int i = 0; i < DmdDevices.Count; i++)
 			{
-				if (_dmdDevices[i] == null)
+				if (DmdDevices[i] == null)
 				{
-					_dmdDevices[i] = new DeviceInstance();
-					_dmdDevices[i].Id = i;
+					DmdDevices[i] = new DeviceInstance {
+						Id = i
+					};
 					Logger.Info("[vpm] Create(): New output id is {0}", i);
 					return i;
 				}
 			}
-			var device = new DeviceInstance();
-			device.Id = _dmdDevices.Count;
-			_dmdDevices.Add(device);
+			var device = new DeviceInstance {
+				Id = DmdDevices.Count
+			};
+			DmdDevices.Add(device);
 			Logger.Info("[vpm] Create(): New output id is {0}", device.Id);
 			return device.Id;
 		}
 
 		// int Open_Device(int id)
 		[DllExport("Open_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static int OpenDevice(int id) => InternalOpenDevice(getDevice(id));
+		public static int OpenDevice(int id) => InternalOpenDevice(GetDevice(id));
 
 		// bool Close_Device(int id)
 		[DllExport("Close_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static bool CloseDevice(int id) => InternalCloseDevice(getDevice(id));
+		public static bool CloseDevice(int id) => InternalCloseDevice(GetDevice(id));
 
 		// void PM_GameSettings_Device(int id, const char* GameName, UINT64 HardwareGeneration, const PMoptions &Options)
 		[DllExport("PM_GameSettings_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void GameSettingsDevice(int id, string gameName, ulong hardwareGeneration, IntPtr options) => InternalGameSettingsDevice(getDevice(id), gameName, hardwareGeneration, options);
+		public static void GameSettingsDevice(int id, string gameName, ulong hardwareGeneration, IntPtr options) => InternalGameSettingsDevice(GetDevice(id), gameName, hardwareGeneration, options);
 
 		// void Console_Data(UINT8 data)
 		[DllExport("Console_Data_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void ConsoleDataDevice(int id, byte data) => InternalConsoleDataDevice(getDevice(id), data);
+		public static void ConsoleDataDevice(int id, byte data) => InternalConsoleDataDevice(GetDevice(id), data);
 
 		// void Render_RGB24_Device(int id, UINT16 width, UINT16 height, Rgb24 *currbuffer)
 		[DllExport("Render_RGB24_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRgb24Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(getDevice(id), width, height, currbuffer);
+		public static void RenderRgb24Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(GetDevice(id), width, height, currbuffer);
 
-		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer) 
+		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_with_Raw_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRaw4Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw4Device(getDefaultDevice(), width, height, currbuffer, noOfRawFrames, currrawbuffer);
+		public static void RenderRaw4Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw4Device(DefaultDevice, width, height, currbuffer, noOfRawFrames, currrawbuffer);
 
 		// void Render_4_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades_with_Raw_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRaw2Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw2Device(getDefaultDevice(), width, height, currbuffer, noOfRawFrames, currrawbuffer);
+		public static void RenderRaw2Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw2Device(DefaultDevice, width, height, currbuffer, noOfRawFrames, currrawbuffer);
 
-		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer) 
+		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderGray4Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray4Device(getDefaultDevice(), width, height, currbuffer);
+		public static void RenderGray4Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray4Device(DefaultDevice, width, height, currbuffer);
 
 		// void Render_4_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderGray2Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray2Device(getDefaultDevice(), width, height, currbuffer);
+		public static void RenderGray2Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray2Device(DefaultDevice, width, height, currbuffer);
 
-		//  void Render_PM_Alphanumeric_Frame_Device(int id, NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
+		//  void Render_PM_Alphanumeric_Frame_Device(int id, NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2)
 		[DllExport("Render_PM_Alphanumeric_Frame_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderAlphaNumDevice(int id, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2) => InternalRenderAlphaNumDevice(getDefaultDevice(), numericalLayout, seg_data, seg_data2);
+		public static void RenderAlphaNumDevice(int id, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2) => InternalRenderAlphaNumDevice(DefaultDevice, numericalLayout, seg_data, seg_data2);
 
-		// void Set_4_Colors_Palette_Device(int id, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
+		// void Set_4_Colors_Palette_Device(int id, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		[DllExport("Set_4_Colors_Palette_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void SetGray2PaletteDevice(int id, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) => InternalSetGray2PaletteDevice(getDefaultDevice(), color0, color33, color66, color100);
+		public static void SetGray2PaletteDevice(int id, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) => InternalSetGray2PaletteDevice(DefaultDevice, color0, color33, color66, color100);
 
 		// void Set_16_Colors_Palette_Device(int id, Rgb24 *color)
 		[DllExport("Set_16_Colors_Palette_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void SetGray4PaletteDevice(int id, IntPtr palette) => InternalSetGray4PaletteDevice(getDefaultDevice(), palette);
+		public static void SetGray4PaletteDevice(int id, IntPtr palette) => InternalSetGray4PaletteDevice(DefaultDevice, palette);
 
+		#endregion
 
-		// Original API that only support one device
+		#region Global Device API
 
 		// int Open()
 		[DllExport("Open", CallingConvention = CallingConvention.Cdecl)]
-		public static int Open() => InternalOpenDevice(getDefaultDevice());
+		public static int Open() => InternalOpenDevice(DefaultDevice);
 
 		// bool Close()
 		[DllExport("Close", CallingConvention = CallingConvention.Cdecl)]
-		public static bool Close() => InternalCloseDevice(getDefaultDevice());
+		public static bool Close() => InternalCloseDevice(DefaultDevice);
 
 		// void PM_GameSettings(const char* GameName, UINT64 HardwareGeneration, const PMoptions &Options)
 		[DllExport("PM_GameSettings", CallingConvention = CallingConvention.Cdecl)]
-		public static void GameSettings(string gameName, ulong hardwareGeneration, IntPtr options) => InternalGameSettingsDevice(getDefaultDevice(), gameName, hardwareGeneration, options);
+		public static void GameSettings(string gameName, ulong hardwareGeneration, IntPtr options) => InternalGameSettingsDevice(DefaultDevice, gameName, hardwareGeneration, options);
 
 		// void Console_Data(UINT8 data)
 		[DllExport("Console_Data", CallingConvention = CallingConvention.Cdecl)]
-		public static void ConsoleData(byte data) => InternalConsoleDataDevice(getDefaultDevice(), data);
+		public static void ConsoleData(byte data) => InternalConsoleDataDevice(DefaultDevice, data);
 
 		// void Render_RGB24(UINT16 width, UINT16 height, Rgb24 *currbuffer)
 		[DllExport("Render_RGB24", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRgb24(ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(getDefaultDevice(), width, height, currbuffer);
+		public static void RenderRgb24(ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(DefaultDevice, width, height, currbuffer);
 
-		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
+		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRaw4(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw4Device(getDefaultDevice(), width, height, currbuffer, noOfRawFrames, currrawbuffer);
+		public static void RenderRaw4(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw4Device(DefaultDevice, width, height, currbuffer, noOfRawFrames, currrawbuffer);
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRaw2(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw2Device(getDefaultDevice(), width, height, currbuffer, noOfRawFrames, currrawbuffer);
+		public static void RenderRaw2(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw2Device(DefaultDevice, width, height, currbuffer, noOfRawFrames, currrawbuffer);
 
-		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer) 
+		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderGray4(ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray4Device(getDefaultDevice(), width, height, currbuffer);
+		public static void RenderGray4(ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray4Device(DefaultDevice, width, height, currbuffer);
 
 		// void Render_4_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderGray2(ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray2Device(getDefaultDevice(), width, height, currbuffer);
+		public static void RenderGray2(ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray2Device(DefaultDevice, width, height, currbuffer);
 
-		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2) 
+		//  void Render_PM_Alphanumeric_Frame(NumericalLayout numericalLayout, const UINT16 *const seg_data, const UINT16 *const seg_data2)
 		[DllExport("Render_PM_Alphanumeric_Frame", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderAlphaNum(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2) => InternalRenderAlphaNumDevice(getDefaultDevice(), numericalLayout, seg_data, seg_data2);
+		public static void RenderAlphaNum(NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2) => InternalRenderAlphaNumDevice(DefaultDevice, numericalLayout, seg_data, seg_data2);
 
-		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) 
+		// void Set_4_Colors_Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		[DllExport("Set_4_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
-		public static void SetGray2Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) => InternalSetGray2PaletteDevice(getDefaultDevice(), color0, color33, color66, color100);
+		public static void SetGray2Palette(Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100) => InternalSetGray2PaletteDevice(DefaultDevice, color0, color33, color66, color100);
 
 		// void Set_16_Colors_Palette(Rgb24 *color)
 		[DllExport("Set_16_Colors_Palette", CallingConvention = CallingConvention.Cdecl)]
-		public static void SetGray4Palette(IntPtr palette) => InternalSetGray4PaletteDevice(getDefaultDevice(), palette);
+		public static void SetGray4Palette(IntPtr palette) => InternalSetGray4PaletteDevice(DefaultDevice, palette);
+
+		#endregion
+
+		#region API Implementation
 
 		private static int InternalOpenDevice(DeviceInstance device)
 		{
@@ -182,8 +188,9 @@ namespace PinMameDevice
 		{
 			Logger.Info("[vpm] Close({0})", device.Id);
 			device.DmdDevice.Close();
-			if (device != _defaultDevice)
-				_dmdDevices[device.Id] = null;
+			if (device != DefaultDevice) {
+				DmdDevices[device.Id] = null;
+			}
 			return true;
 		}
 
@@ -231,7 +238,7 @@ namespace PinMameDevice
 			var frameSize = width * height * 3;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderRgb24(device.DMDFrame.Update(width, height, frame));
+			device.DmdDevice.RenderRgb24(device.DmdFrame.Update(width, height, frame));
 		}
 
 		private static void InternalRenderRaw4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
@@ -247,7 +254,7 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray4(device.RawDMDFrame.Update(width, height, frame, rawplanes));
+			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(width, height, frame, rawplanes));
 		}
 
 		private static void InternalRenderRaw2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
@@ -262,16 +269,15 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray2(device.RawDMDFrame.Update(width, height, frame, rawplanes));
+			device.DmdDevice.RenderGray2(device.RawDmdFrame.Update(width, height, frame, rawplanes));
 		}
-
 
 		private static void InternalRenderGray4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
 		{
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray4(device.DMDFrame.Update(width, height, frame));
+			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width, height, frame));
 		}
 
 		private static void InternalRenderGray2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
@@ -279,7 +285,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray2(device.DMDFrame.Update(width, height, frame));
+			device.DmdDevice.RenderGray2(device.DmdFrame.Update(width, height, frame));
 		}
 
 		private static void InternalRenderAlphaNumDevice(DeviceInstance device, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
@@ -324,6 +330,8 @@ namespace PinMameDevice
 			});
 		}
 
+		#endregion
+
 		private static bool IsOldWindows()
 		{
 			return Environment.OSVersion.Version.Major < 5;
@@ -339,7 +347,7 @@ namespace PinMameDevice
 		{
 			return Color.FromRgb((byte) color.Red, (byte) color.Green, (byte) color.Blue);
 		}
-		
+
 		[StructLayout(LayoutKind.Sequential)]
 		public struct PMoptions
 		{
@@ -359,5 +367,5 @@ namespace PinMameDevice
 			public char Green;
 			public char Blue;
 		}
-    }
+	}
 }
