@@ -594,7 +594,7 @@ namespace LibDmd.DmdDevice
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
-				_virtualDmd?.Dispatcher.Invoke(() => _virtualDmd.Hide());
+				_virtualDmd?.Dispatcher.Invoke(() => _virtualDmd.Close());
 
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
