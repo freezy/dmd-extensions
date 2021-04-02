@@ -794,7 +794,7 @@ namespace LibDmd
 							AssertCompatibility(source, sourceColoredGray4, dest, destGray4, from, to);
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(frame => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes))
-									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
 
