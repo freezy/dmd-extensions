@@ -19,7 +19,6 @@
 			this.Data = Data;
 			return this;
 		}
-
 	}
 
 	public class RawDMDFrame : DMDFrame
