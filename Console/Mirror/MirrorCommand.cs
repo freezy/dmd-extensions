@@ -4,6 +4,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
+using LibDmd.Input.FutureDmd;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
@@ -90,6 +91,11 @@ namespace DmdExt.Mirror
 
 					_graph.Source = grabber;
 					reportingTags.Add("In:ScreenGrab");
+					break;
+
+				case SourceType.FuturePinball:
+					_graph.Source = new FutureDmdSink();
+					reportingTags.Add("In:FutureDmdSink");
 					break;
 
 				default:
