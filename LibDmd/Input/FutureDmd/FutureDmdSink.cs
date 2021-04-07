@@ -32,6 +32,7 @@ namespace LibDmd.Input.FutureDmd
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public FutureDmdSink() {
+
 			// spawn new thread
 			Logger.Info($"Starting pipe server for FutureDMD..");
 			_thread = new Thread(ServerThread);
@@ -55,6 +56,13 @@ namespace LibDmd.Input.FutureDmd
 			server.WaitForConnection();
 
 			Logger.Info($"FutureDMD connected to pipe.");
+
+			var messageChunk = new byte[4096];
+			do {
+				var chunkSize = server.Read(messageChunk, 0, messageChunk.Length);
+				Logger.Info($"Got chunk ({chunkSize}):\n" + Encoding.UTF8.GetString(messageChunk));
+
+			} while (!server.IsMessageComplete);
 
 
 			Logger.Info($"Pipe server for FutureDMD terminated!");
