@@ -56,6 +56,7 @@ namespace DmdExt.Mirror
 		PinballFX3,
 		Screen,
 		PinballArcade,
-		ProPinball
+		ProPinball,
+		FuturePinball
 	}
 }
