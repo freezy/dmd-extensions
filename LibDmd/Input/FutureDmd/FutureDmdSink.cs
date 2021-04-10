@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NLog;
 
 namespace LibDmd.Input.FutureDmd
@@ -30,6 +26,7 @@ namespace LibDmd.Input.FutureDmd
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<DMDFrame> _framesGray4 = new Subject<DMDFrame>();
+		private byte[] _frame;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -72,15 +69,17 @@ namespace LibDmd.Input.FutureDmd
 						chunkSize = server.Read(messageChunk, 0, messageChunk.Length);
 
 						// game table has ended, clear the DMD with an empty byte array - chunkSize is only 4 if "done" is recieved from the pipe
-						if (chunkSize == 4) messageChunk = new byte[messageChunk.Length];
+						if (chunkSize == 4) {
+							messageChunk = new byte[messageChunk.Length];
+						}
 
 					} while (chunkSize != 0 || !server.IsMessageComplete);
 
 					// convert message to frame data
-					var frame = ConvertMessage(messageChunk);
+					UpdateFrame(messageChunk);
 
 					// publish frame data
-					_framesGray4.OnNext(gray2Frame.Update(frame));
+					_framesGray4.OnNext(gray2Frame.Update(_frame));
 
 					// disconnect as the pipe was consumed
 					server.Disconnect();
@@ -95,34 +94,30 @@ namespace LibDmd.Input.FutureDmd
 
 				Logger.Info($"Pipe server for FutureDMD terminated!");
 
-				if (server != null) server.Dispose();
+				if (server != null) {
+					server.Dispose();
+				}
 				server = null;
-			}
-			catch (IOException e)
-			{
+			
+			} catch (IOException e) {
 				Logger.Error(e);
 			}
 		}
-
-
-		#region "FutureDMD helper methods"
 
 		/// <summary>
 		/// Converts a frame message byte array to format that Gray2Frame accepts.
 		/// </summary>
 		/// <param name="message"></param>
-		/// <returns></returns>
-		private static byte[] ConvertMessage(byte[] message)
+		private void UpdateFrame(byte[] message)
 		{
 			// this needs method needs to return a new byte array, otherwise the DMD will "flicker"
-			byte[] arr = new byte[message.Length];
-
-			for (int i = 0; i < message.Length; i++)
-			{
-				arr[i] = GetShaderValueFromHexByte(message[i]);
+			if (_frame == null || _frame.Length != message.Length) {
+				_frame = new byte[message.Length];
 			}
 
-			return arr;
+			for (int i = 0; i < message.Length; i++) {
+				_frame[i] = GetShaderValueFromHexByte(message[i]);
+			}
 		}
 
 		/// <summary>
@@ -135,7 +130,5 @@ namespace LibDmd.Input.FutureDmd
 				? (byte)Math.Max(c - 48, 0)
 				: (byte)Math.Min(c - 55, 15);
 		}
-
-		#endregion
 	}
 }
