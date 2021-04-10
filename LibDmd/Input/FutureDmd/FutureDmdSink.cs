@@ -124,11 +124,11 @@ namespace LibDmd.Input.FutureDmd
 		{
 			// this needs method needs to return a new byte array, otherwise the DMD will "flicker"
 			byte[] arr = new byte[message.Length];
-			Parallel.For(0, message.Length,
-							 index =>
-							 {
-								 arr[index] = GetShaderValueFromHexByte(message[index]);
-							 });
+
+			for (int i = 0; i < message.Length; i++)
+			{
+				arr[i] = GetShaderValueFromHexByte(message[i]);
+			}
 
 			return arr;
 		}
