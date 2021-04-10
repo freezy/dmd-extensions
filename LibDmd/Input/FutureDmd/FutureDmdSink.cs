@@ -70,14 +70,6 @@ namespace LibDmd.Input.FutureDmd
 					do
 					{
 						chunkSize = server.Read(messageChunk, 0, messageChunk.Length);
-						if (chunkSize > 0)
-						{
-							// The Logger call, on occasion, interupts the flow of frames. 
-							// This causes rendering to appear stuttering, as frames seem to be missed. 
-							// Perhaps it should not be called from this thread alternatively used only in debug mode or with an option to enable it.
-							// *** Leaving it in for now ***
-							Logger.Info($"Got chunk ({chunkSize}):\n" + Encoding.UTF8.GetString(messageChunk.Take(chunkSize).ToArray()));
-						}
 
 						// game table has ended, clear the DMD with an empty byte array - chunkSize is only 4 if "done" is recieved from the pipe
 						if (chunkSize == 4) messageChunk = new byte[messageChunk.Length];
@@ -139,14 +131,9 @@ namespace LibDmd.Input.FutureDmd
 		/// <param name="c"></param>
 		private static byte GetShaderValueFromHexByte(byte c)
 		{
-			if (c < 58)
-			{
-				return (byte)Math.Max(c - 48, 0);
-			}
-			else
-			{
-				return (byte)Math.Min(c - 55, 15);
-			}
+			return c < 58
+				? (byte)Math.Max(c - 48, 0)
+				: (byte)Math.Min(c - 55, 15);
 		}
 
 		#endregion
