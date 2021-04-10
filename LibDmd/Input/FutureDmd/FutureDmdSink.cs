@@ -24,6 +24,7 @@ namespace LibDmd.Input.FutureDmd
 
 		private const string PipeName = "futuredmd";
 		private readonly Thread _thread;
+    	private const int NumThreads = 2;
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
@@ -34,7 +35,6 @@ namespace LibDmd.Input.FutureDmd
 
 		public FutureDmdSink()
 		{
-
 			// spawn new thread
 			Logger.Info($"Starting pipe server for FutureDMD..");
 			_thread = new Thread(ServerThread);
@@ -53,9 +53,9 @@ namespace LibDmd.Input.FutureDmd
 		{
 			try
 			{
-				var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Message);
+				var server = new NamedPipeServerStream(PipeName, PipeDirection.In, NumThreads, PipeTransmissionMode.Message);
 
-				var isGameRunning = true;
+				var isGameRunning = true; 
 				var chunkSize = 0;
 				var gray2Frame = new DMDFrame { width = 132, height = 32 };
 				var messageChunk = new byte[4096];
@@ -72,15 +72,15 @@ namespace LibDmd.Input.FutureDmd
 						chunkSize = server.Read(messageChunk, 0, messageChunk.Length);
 						if (chunkSize > 0)
 						{
-							 // The Logger call, on occasion, interupts the flow of frames. 
-							 // This causes rendering to appear stuttering, as frames seem to be missed. 
-							 // Perhaps it should not be called from this thread alternatively used only in debug mode or with an option to enable it.
-							 // *** Leaving it in for now ***
+							// The Logger call, on occasion, interupts the flow of frames. 
+							// This causes rendering to appear stuttering, as frames seem to be missed. 
+							// Perhaps it should not be called from this thread alternatively used only in debug mode or with an option to enable it.
+							// *** Leaving it in for now ***
 							Logger.Info($"Got chunk ({chunkSize}):\n" + Encoding.UTF8.GetString(messageChunk.Take(chunkSize).ToArray()));
 						}
 
-						// game table has ended, clear the DMD - chunkSize is only 4 if "done" is recieved from the pipe
-						if (chunkSize == 4) messageChunk = GetEmptyMessage(messageChunk.Length);
+						// game table has ended, clear the DMD with an empty byte array - chunkSize is only 4 if "done" is recieved from the pipe
+						if (chunkSize == 4) messageChunk = new byte[messageChunk.Length];
 
 					} while (chunkSize != 0 || !server.IsMessageComplete);
 
@@ -93,24 +93,25 @@ namespace LibDmd.Input.FutureDmd
 					// disconnect as the pipe was consumed
 					server.Disconnect();
 
-					// don't want this thread to consume 99% of this treads CPU, thus need to yield for some 5 ms, hence the need of a thread sleep call.
-					Thread.Sleep(5);
-
-					// TODO: 5 ms sleep seems a bit arbitrary. 
-				    // It needs to be low enough not to skip an incoming frame, but still high enough not to hog down a CPU core. 
-				    // After tests on some DMD intense tables, the conclusion is that it needs to be set really low (10 or less) for some tables, or frames might be skipped. 
-                    // Tweaking the "wait" for optimized performance as an option maybe? 
+					// don't want this thread to consume 99% of this treads CPU, thus need to yield for some 5-10 ms, hence the need of a thread sleep call.
+					Thread.Sleep(10);
+					// 10 ms sleep might seem a bit arbitrary. 
+					// It needs to be low enough not to skip an incoming frame, but still high enough not to hog down a CPU core. 
+					// After tests on some DMD intense tables, the conclusion is that it needs to be set really low (10 or less) for some tables, or frames might be skipped. 
 
 				} while (isGameRunning);
 
 				Logger.Info($"Pipe server for FutureDMD terminated!");
 
+				if (server != null) server.Dispose();
+				server = null;
 			}
 			catch (IOException e)
 			{
 				Logger.Error(e);
 			}
 		}
+
 
 		#region "FutureDMD helper methods"
 
@@ -121,41 +122,31 @@ namespace LibDmd.Input.FutureDmd
 		/// <returns></returns>
 		private static byte[] ConvertMessage(byte[] message)
 		{
+			// this needs method needs to return a new byte array, otherwise the DMD will "flicker"
 			byte[] arr = new byte[message.Length];
 			Parallel.For(0, message.Length,
 							 index =>
 							 {
-								 arr[index] = GetByteFromHexCharValue((char)message[index]);
+								 arr[index] = GetShaderValueFromHexByte(message[index]);
 							 });
 
 			return arr;
 		}
 
 		/// <summary>
-		/// Returns an empty byte array used to clear the DMD
-		/// </summary>
-		/// <param name="length"></param>
-		public static byte[] GetEmptyMessage(int length)
-		{
-			byte[] arr = new byte[length];
-			Parallel.For(0, length,
-				 index =>
-				 {
-					 arr[index] = 0x00;
-				 });
-
-			return arr;
-		}
-
-		private const string _hexValues = "0123456789ABCDEF";
-		/// <summary>
-		/// Convert a numerical char representation to a byte value 
+		/// Converts one byte (hex char) numerical representation to a byte shader value
 		/// </summary>
 		/// <param name="c"></param>
-		private static byte GetByteFromHexCharValue(char c)
+		private static byte GetShaderValueFromHexByte(byte c)
 		{
-			if (c > 0 && _hexValues.Contains(c)) return (byte)Convert.ToInt32(c.ToString(), 16);
-			return 0;
+			if (c < 58)
+			{
+				return (byte)Math.Max(c - 48, 0);
+			}
+			else
+			{
+				return (byte)Math.Min(c - 55, 15);
+			}
 		}
 
 		#endregion
