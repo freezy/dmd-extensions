@@ -87,14 +87,29 @@
 			<Condition Level="1"><![CDATA[NOT PROPINBALLDIR=0]]></Condition>
 		</Feature>
 
-		<!-- Retrieve VPM and Pro Pinball folder from registry -->
+		<!-- FP: OpenGL.dll feature -->
+		<Feature
+				Id="FpOpenGlFeature"
+				Title="Future Pinball"
+				Description="Add an OpenGL wrapper for Future Pinball that sends DMD frames to dmdext."
+				Display="collapse"
+				ConfigurableDirectory="FPFOLDER"
+				Level="5">
+
+			<ComponentGroupRef Id="FpOpenGlComponents" />
+			<Condition Level="1"><![CDATA[NOT FPFROMREG=0]]></Condition>
+		</Feature>
+
+		<!-- Retrieve VPM, FP and Pro Pinball folder from registry -->
 		<Property Id="VPMFROMREG" Value="0" Secure="yes"/>
 		<Property Id="PROPINBALLDIR" Value="0" Secure="yes"/>
 		<SetProperty Id="VPMFOLDER" Sequence="ui" Value="[VPMFROMREG]" After="FindVpmAction">NOT VPMFROMREG=0</SetProperty>
 		<SetProperty Id="PROPINBALLFOLDER" Sequence="ui" Value="[PROPINBALLDIR]" After="FindProPinballAction">NOT PROPINBALLDIR=0</SetProperty>
+		<SetProperty Id="FPFOLDER" Sequence="ui" Value="[FPFROMREG]" After="FindFpAction">NOT FPFROMREG=0</SetProperty>
 		<InstallUISequence>
 			<Custom Action="FindVpmAction" After="AppSearch" />
 			<Custom Action="FindProPinballAction" After="AppSearch" />
+			<Custom Action="FindFpAction" After="AppSearch" />
 		</InstallUISequence>
 
 		<!-- Check for Vista and above -->

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -55,6 +55,34 @@ namespace Installer.Actions
 				session.Log(@"Found Pro Pinball folder at " + session["PROPINBALLDIR"]);
 
 			} catch (Exception e) {
+				session.Log(@"Error " + e);
+			}
+			return ActionResult.Success;
+		}
+
+		[CustomAction]
+		public static ActionResult GetFpFolder(Session session)
+		{
+			try
+			{
+				session.Log("Searching in registry for FP...");
+				RegistryKey reg = Registry.ClassesRoot.OpenSubKey(@"TypeLib\{FB22A459-4AD0-4CB3-B959-15158F7139F5}\1.0\0\win32");
+				if (reg != null) {
+					var fpExePath = reg.GetValue(null).ToString();
+
+					if (fpExePath != null) {
+						session["FPFROMREG"] = Path.GetDirectoryName(fpExePath);
+						session.Log(@"Found FP folder at " + session["FPFROMREG"]);
+
+					} else {
+						session.Log(@"Could not find FP path in typelib registry.");
+					}
+
+				} else {
+					session.Log(@"Could not find FP path in registry.");
+				}
+			
+				} catch (Exception e) {
 				session.Log(@"Error " + e);
 			}
 			return ActionResult.Success;
