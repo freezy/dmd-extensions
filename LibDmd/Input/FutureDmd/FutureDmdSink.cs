@@ -31,6 +31,7 @@ namespace LibDmd.Input.FutureDmd
 
 		private readonly Subject<DMDFrame> _framesGray4 = new Subject<DMDFrame>();
 		private byte[] _frame;
+		private bool _isPaused;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -78,6 +79,13 @@ namespace LibDmd.Input.FutureDmd
 						// game table has ended, clear the DMD with an empty byte array - chunkSize is only 4 if "done" is recieved from the pipe
 						if (chunkSize == 4) {
 							messageChunk = new byte[messageChunk.Length];
+							if (!_isPaused) {
+								_onPause.OnNext(Unit.Default);
+								_isPaused = true;
+							}
+						} else if (_isPaused) {
+							_onResume.OnNext(Unit.Default);
+							_isPaused = false;
 						}
 
 					} while (chunkSize != 0 || !server.IsMessageComplete);
