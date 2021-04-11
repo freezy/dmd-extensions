@@ -1,111 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" InitialTargets="EnsureWixToolsetInstalled" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<PropertyGroup>
-		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-		<Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-		<ProductVersion>3.10</ProductVersion>
-		<ProjectGuid>f9e767ac-bd5b-48f0-b988-1d3b53ba29ff</ProjectGuid>
-		<SchemaVersion>2.0</SchemaVersion>
-		<OutputName>Installer</OutputName>
-		<OutputType>Package</OutputType>
-		<Cultures>;</Cultures>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-		<DefineConstants>Debug</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-		<DefineConstants>Debug</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-	</PropertyGroup>
-	<ItemGroup>
-		<Compile Include="Components.wxs" />
-		<Compile Include="CustomActions.wxs" />
-		<Compile Include="Directories.wxs" />
-		<Compile Include="Product.wxs" />
-	</ItemGroup>
-	<ItemGroup>
-		<EmbeddedResource Include="Strings.wxl" />
-	</ItemGroup>
-	<ItemGroup>
-		<Content Include="Assets\gpl-2.0.rtf" />
-		<None Include="Assets\background.bmp" />
-		<None Include="Assets\banner.bmp" />
-		<Content Include="icon.ico" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\Console\Console.csproj">
-			<Name>Console</Name>
-			<Project>{82b73d4f-b16c-4684-b96b-249f6d35c3cf}</Project>
-			<Private>True</Private>
-			<DoNotHarvest>True</DoNotHarvest>
-			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
-		</ProjectReference>
-		<ProjectReference Include="..\Installer.Actions\Installer.Actions.csproj">
-			<Name>Installer.Actions</Name>
-			<Project>{61b45fde-2aba-4eba-99bb-08ed91f911f4}</Project>
-			<Private>True</Private>
-			<DoNotHarvest>True</DoNotHarvest>
-			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
-		</ProjectReference>
-		<ProjectReference Include="..\PinMameDevice\PinMameDevice.csproj">
-			<Name>PinMameDevice</Name>
-			<Project>{3e9138da-a0a5-449e-bfd2-965e38b9182e}</Project>
-			<Private>True</Private>
-			<DoNotHarvest>True</DoNotHarvest>
-			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
-		</ProjectReference>
-	</ItemGroup>
-	<ItemGroup>
-		<WixExtension Include="WixNetFxExtension">
-			<HintPath>$(WixExtDir)\WixNetFxExtension.dll</HintPath>
-			<Name>WixNetFxExtension</Name>
-		</WixExtension>
-		<WixExtension Include="WixUIExtension">
-			<HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
-			<Name>WixUIExtension</Name>
-		</WixExtension>
-	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Assets" />
-	</ItemGroup>
-	<Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
-	<Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
-	<Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
-		<Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
-	</Target>
-	<Target Name="BeforeBuild">
-		<!-- Read "internal" version from assembly -->
-		<GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
-			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
-		</GetAssemblyIdentity>
-		<!-- Set internal version as build version -->
-		<PropertyGroup>
-			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
-		</PropertyGroup>
-	</Target>
-	<Target Name="AfterBuild">
-		<!-- Parse product version from assembly source -->
-		<PropertyGroup>
-			<In>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\VersionAssemblyInfo.cs'))</In>
-			<Pattern>\[assembly: AssemblyInformationalVersion\("(?&lt;Version&gt;[^"]+)</Pattern>
-			<AssemblyInformationalVersion>$([System.Text.RegularExpressions.Regex]::Match($(In), $(Pattern), System.Text.RegularExpressions.RegexOptions.Multiline).Groups["Version"].Value)</AssemblyInformationalVersion>
-		</PropertyGroup>
-		<!-- Create build folder and move artifacts to it -->
-		<Exec Command="if not exist Builds mkdir Builds" />
-		<Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi" />
-	</Target>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.10</ProductVersion>
+    <ProjectGuid>f9e767ac-bd5b-48f0-b988-1d3b53ba29ff</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>Installer</OutputName>
+    <OutputType>Package</OutputType>
+    <Cultures>;</Cultures>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Components.wxs" />
+    <Compile Include="CustomActions.wxs" />
+    <Compile Include="Directories.wxs" />
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings.wxl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\gpl-2.0.rtf" />
+    <None Include="Assets\background.bmp" />
+    <None Include="Assets\banner.bmp" />
+    <Content Include="icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Console\Console.csproj">
+      <Name>Console</Name>
+      <Project>{82b73d4f-b16c-4684-b96b-249f6d35c3cf}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\Installer.Actions\Installer.Actions.csproj">
+      <Name>Installer.Actions</Name>
+      <Project>{61b45fde-2aba-4eba-99bb-08ed91f911f4}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\LibDmd\LibDmd.csproj">
+      <Name>LibDmd</Name>
+      <Project>{0318cc71-57c6-4f46-9495-6cacf0cf1505}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\PinMameDevice\PinMameDevice.csproj">
+      <Name>PinMameDevice</Name>
+      <Project>{3e9138da-a0a5-449e-bfd2-965e38b9182e}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixNetFxExtension">
+      <HintPath>$(WixExtDir)\WixNetFxExtension.dll</HintPath>
+      <Name>WixNetFxExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
+  <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
+    <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
+  </Target>
+  <Target Name="BeforeBuild">
+    <!-- Read "internal" version from assembly -->
+    <GetAssemblyIdentity AssemblyFiles="..\Console\bin\$(Platform)\$(Configuration)\dmdext.exe">
+      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+    </GetAssemblyIdentity>
+    <!-- Set internal version as build version -->
+    <PropertyGroup>
+      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+  <Target Name="AfterBuild">
+    <!-- Parse product version from assembly source -->
+    <PropertyGroup>
+      <In>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\VersionAssemblyInfo.cs'))</In>
+      <Pattern>\[assembly: AssemblyInformationalVersion\("(?&lt;Version&gt;[^"]+)</Pattern>
+      <AssemblyInformationalVersion>$([System.Text.RegularExpressions.Regex]::Match($(In), $(Pattern), System.Text.RegularExpressions.RegexOptions.Multiline).Groups["Version"].Value)</AssemblyInformationalVersion>
+    </PropertyGroup>
+    <!-- Create build folder and move artifacts to it -->
+    <Exec Command="if not exist Builds mkdir Builds" />
+    <Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi" />
+  </Target>
 </Project>

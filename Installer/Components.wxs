@@ -156,4 +156,18 @@
 		</DirectoryRef>
 	</Fragment>
 
+	<!-- FP OpenGL wrapper -->
+	<Fragment>
+		<ComponentGroup Id="FpOpenGlComponents">
+			<ComponentRef Id="OpenGLDll"/>
+		</ComponentGroup>
+
+		<!-- OpenGL.dll -->
+		<DirectoryRef Id="FPFOLDER" FileSource="$(var.LibDmd.ProjectDir)Input\FutureDmd">
+			<Component Id="OpenGLDll" NeverOverwrite="yes" Guid="{1FE61A18-72EA-4A66-AD21-FA24DA75D61A}">
+				<File Id="OpenGLDllFile" Name="OpenGL32.dll" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+	</Fragment>
+
 </Wix>

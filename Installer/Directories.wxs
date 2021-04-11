@@ -18,6 +18,7 @@
 						</Directory>
 					</Directory>
 					<Directory Id="PROPINBALLFOLDER" Name="Pro Pinball Ultra"/>
+					<Directory Id="FPFOLDER" Name="!(loc.ProductName)" />
 				</Directory>
 				
 			<?else?>
@@ -33,6 +34,7 @@
 						</Directory>
 					</Directory>
 					<Directory Id="PROPINBALLFOLDER" Name="Pro Pinball Ultra"/>
+					<Directory Id="FPFOLDER" Name="!(loc.ProductName)" />
 				</Directory>
 			<?endif?>
 
