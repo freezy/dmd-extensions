@@ -33,6 +33,7 @@ don't provide support out of the box. Supported games are:
 - Farsight's **The Pinball Arcade** through grabbing the DMD texture from memory
 - **Pro Pinball Timeshock** through their message queue
 - **Visual PinMAME** through `DmdDevice.dll` 
+- **Future Pinball** through using Macro's FP Intercept that sends DMD frames through a pipe.
 
 The command line tool can also display image files on the DMD device and render
 frames to bitmap files. Many features like this are described in the command 
@@ -171,6 +172,15 @@ can set this up as you would for a PIN2DMD:
    site, put them into that folder and name them `pin2dmd.pal` and `pin2dmd.vni`
 4. Run VPM setup, open the ROM's game options and enable *Use external DMD (dll)*
    as well as *Colorize DMD*.
+
+### Future Pinball
+
+Copy `FuturePinball/OpenGL32.dll` to your Future Pinball folder, i.e. where 
+`Future Pinball.exe` is located. Now, you can send frames to your DMD by running:
+
+```bash
+dmdext mirror -s futurepinball
+```
 
 ## Build Instructions
 
