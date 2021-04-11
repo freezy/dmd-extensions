@@ -85,7 +85,7 @@ namespace DmdExt.Common
 		[Option("output-delay", HelpText = "How long to wait in milliseconds for data to be sent to the device. Default: 25.")]
 		public int OutputDelay { get; set; } = 25;
 
-		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore. Default: false")]
+		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX or Future Pinball doesn't receive any frames anymore. Default: false")]
 		public bool QuitWhenDone { get; set; } = false;
 
 		[Option("quit-after", HelpText = "Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. Default: -1")]
