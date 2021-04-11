@@ -182,6 +182,9 @@ Copy `FuturePinball/OpenGL32.dll` to your Future Pinball folder, i.e. where
 dmdext mirror -s futurepinball
 ```
 
+The `-q` toggle works here, so instead of killing the process you could make it 
+exit automatically when the table closes.
+
 ## Build Instructions
 
 1. Download and install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
