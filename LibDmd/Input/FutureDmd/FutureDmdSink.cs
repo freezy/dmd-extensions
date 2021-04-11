@@ -19,8 +19,12 @@ namespace LibDmd.Input.FutureDmd
 		public IObservable<Unit> OnPause => _onPause;
 
 		private const string PipeName = "futuredmd";
+		private const int PollingFps = 100;
+
+		private readonly long _ticksPerCycle;
+		private long _lastTick;
+
 		private readonly Thread _thread;
-    	private const int NumThreads = 2;
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
@@ -36,6 +40,8 @@ namespace LibDmd.Input.FutureDmd
 			Logger.Info($"Starting pipe server for FutureDMD..");
 			_thread = new Thread(ServerThread);
 			_thread.Start();
+			
+			_ticksPerCycle = (long)(1000d / PollingFps * TimeSpan.TicksPerMillisecond);
 
 			// that's from the ms doc!
 			Thread.Sleep(250);
@@ -50,7 +56,7 @@ namespace LibDmd.Input.FutureDmd
 		{
 			try
 			{
-				var server = new NamedPipeServerStream(PipeName, PipeDirection.In, NumThreads, PipeTransmissionMode.Message);
+				var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Message);
 
 				var isGameRunning = true; 
 				var chunkSize = 0;
@@ -62,6 +68,7 @@ namespace LibDmd.Input.FutureDmd
 				{
 					// connect and wait for a new frame
 					server.WaitForConnection();
+					_lastTick = DateTime.Now.Ticks;
 
 					// for each chunk
 					do
@@ -84,11 +91,10 @@ namespace LibDmd.Input.FutureDmd
 					// disconnect as the pipe was consumed
 					server.Disconnect();
 
-					// don't want this thread to consume 99% of this treads CPU, thus need to yield for some 5-10 ms, hence the need of a thread sleep call.
-					Thread.Sleep(10);
-					// 10 ms sleep might seem a bit arbitrary. 
-					// It needs to be low enough not to skip an incoming frame, but still high enough not to hog down a CPU core. 
-					// After tests on some DMD intense tables, the conclusion is that it needs to be set really low (10 or less) for some tables, or frames might be skipped. 
+					// wait for next cycle
+					var sleepTicks = _ticksPerCycle - (DateTime.Now.Ticks - _lastTick);
+					var sleepMs = (int)(sleepTicks / TimeSpan.TicksPerMillisecond);
+					Thread.Sleep(sleepMs);
 
 				} while (isGameRunning);
 
