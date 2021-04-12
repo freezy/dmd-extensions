@@ -103,6 +103,9 @@ namespace DmdExt.Common
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
 
+		[Option('g', "game", HelpText = "Name of the game running. Useful when retrieving setting from DmdDevice.ini.")]
+		public string GameName { get; set; } = null;
+
 		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RBG.")]
 		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rbg;
 

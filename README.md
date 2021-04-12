@@ -182,8 +182,11 @@ Copy `FuturePinball/OpenGL32.dll` to your Future Pinball folder, i.e. where
 dmdext mirror -s futurepinball
 ```
 
-The `-q` toggle works here, so instead of killing the process you could make it 
-exit automatically when the table closes.
+Note that: 
+- The `-q` toggle works here, so instead of killing the process you could make it 
+  exit automatically when the table closes.
+- With `-g <name>`, you can set the game's name, which will, when used along
+  `--use-ini`, read the game-specific settings.
 
 ## Build Instructions
 
@@ -203,6 +206,9 @@ Since `DmdDevice.dll` is called by VPM, we can't pass any configuration
 parameters to it. Instead, we use `DmdDevice.ini` which must be located
 in the same folder as `VPinMAME.dll` or at the path where the `DMDDEVICE_CONFIG`
 environment variable is pointing to.
+
+Note however that it's also possible to make `dmdext.exe` use the ini instead of
+command line parameters (using the `--use-ini` parameter).
 
 ### Output Configuration
 
