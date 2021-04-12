@@ -19,8 +19,8 @@ namespace LibDmd.Input.FutureDmd
 		public IObservable<Unit> OnPause => _onPause;
 
 		private const string PipeName = "futuredmd";
-		private const int PollingFps = 100;
 
+		private readonly int _pollingFps;
 		private readonly long _ticksPerCycle;
 		private long _lastTick;
 
@@ -35,14 +35,16 @@ namespace LibDmd.Input.FutureDmd
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public FutureDmdSink()
+		public FutureDmdSink(double framesPerSecond)
 		{
+			_pollingFps = (int)framesPerSecond;
+
 			// spawn new thread
 			Logger.Info($"Starting pipe server for FutureDMD..");
 			_thread = new Thread(ServerThread);
 			_thread.Start();
 			
-			_ticksPerCycle = (long)(1000d / PollingFps * TimeSpan.TicksPerMillisecond);
+			_ticksPerCycle = (long)(1000d / _pollingFps * TimeSpan.TicksPerMillisecond);
 
 			// that's from the ms doc!
 			Thread.Sleep(250);

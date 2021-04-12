@@ -94,7 +94,7 @@ namespace DmdExt.Mirror
 					break;
 
 				case SourceType.FuturePinball:
-					_graph.Source = new FutureDmdSink();
+					_graph.Source = new FutureDmdSink(_options.FramesPerSecond);
 					reportingTags.Add("In:FutureDmdSink");
 					break;
 
