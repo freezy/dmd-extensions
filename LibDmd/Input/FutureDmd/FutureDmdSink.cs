@@ -102,7 +102,10 @@ namespace LibDmd.Input.FutureDmd
 					// wait for next cycle
 					var sleepTicks = _ticksPerCycle - (DateTime.Now.Ticks - _lastTick);
 					var sleepMs = (int)(sleepTicks / TimeSpan.TicksPerMillisecond);
-					Thread.Sleep(sleepMs);
+
+					if (sleepMs > 0) {
+						Thread.Sleep(sleepMs);
+					}
 
 				} while (isGameRunning);
 
