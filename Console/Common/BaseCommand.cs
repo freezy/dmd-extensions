@@ -140,7 +140,7 @@ namespace DmdExt.Common
 				Width = config.VirtualDmd.Width,
 				Height = config.VirtualDmd.Height
 			};
-			dmd.Setup(config as Configuration, null);
+			dmd.Setup(config as Configuration, config is Configuration iniConfig ? iniConfig.GameName : null);
 			var thread = new Thread(() => {
 
 				// Create our context, and install it:

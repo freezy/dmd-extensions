@@ -120,7 +120,7 @@ namespace DmdExt
 				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
 				var config = cmdLineOptions.DmdDeviceIni == null
 					? (IConfiguration)cmdLineOptions
-					: new Configuration(cmdLineOptions.DmdDeviceIni);
+					: new Configuration(cmdLineOptions.DmdDeviceIni) { GameName = cmdLineOptions.GameName };
 
 				//BaseOptions baseOptions;
 				switch (invokedVerb) {
