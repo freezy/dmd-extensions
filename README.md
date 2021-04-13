@@ -188,6 +188,8 @@ Note that:
 - With `-g <name>`, you can set the game's name, which will, when used along
   `--use-ini`, read the game-specific settings.
 
+For more details check out TerryRed's guide [here](https://vpuniverse.com/forums/topic/4928-dmdext-freezy-and-future-pinball-real-and-virtual-dmd-support/).
+
 ## Build Instructions
 
 1. Download and install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
