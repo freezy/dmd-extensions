@@ -12,7 +12,7 @@
         Height="768" 
         Width="680" 
         ResizeMode="NoResize" 
-		ShowInTaskbar="False" 
+		ShowInTaskbar="True" 
         SizeToContent="Manual" 
         Title="Customize DMD Style">
 	<Grid Margin="16">
