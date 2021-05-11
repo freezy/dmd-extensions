@@ -24,14 +24,14 @@ namespace LibDmd.Output.Virtual.Dmd
 	public partial class OpenGLControlExt : UserControl
 	{
 		// Fields to support the WritableBitmap method of rendering the image for display
-		byte[] m_imageBuffer;
-		WriteableBitmap m_writeableBitmap;
-		Int32Rect m_imageRect;
-		int m_imageStride;
-		double m_dpiX = 96;
-		double m_dpiY = 96;
-		PixelFormat m_format = PixelFormats.Bgra32;
-		int m_bytesPerPixel = 32 >> 3;
+		private byte[] m_imageBuffer;
+		private WriteableBitmap m_writeableBitmap;
+		private Int32Rect m_imageRect;
+		private int m_imageStride;
+		private double m_dpiX = 96;
+		private double m_dpiY = 96;
+		private PixelFormat m_format = PixelFormats.Bgra32;
+		private int m_bytesPerPixel = 32 >> 3;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OpenGLControlExt"/> class.
@@ -153,11 +153,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
 		void timer_Tick(object sender, EventArgs e)
 		{
-			DoRender();
-			if (RenderTrigger == RenderTrigger.Manual && gl == null && gl.RenderContextProvider == null)
-			{
-				timer.Stop();
-			}
+			// If a manual render was not triggered, perform the scheduled one
+			if (!stopwatch.IsRunning || stopwatch.ElapsedMilliseconds + 1 >= (int)(1000.0 / FrameRate)) DoRender();
 		}
 
 		/// <summary>
@@ -165,36 +162,21 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// </summary>
 		public void DoRender()
 		{
-			// Discard render is OpenGL is not yet initialized, schedule next render
-			if (gl == null || gl.RenderContextProvider == null)
-			{
-				// If rendering is manually triggered, schedule a new render
-				if (RenderTrigger == RenderTrigger.Manual)
-				{
-					timer.Stop();
-					timer.Start();
-				}
-				return;
-			}
+			// Discard render is OpenGL is not yet initialized
+			if (gl == null || gl.RenderContextProvider == null) return;
+
+			// Restart stopwatch to measure elapsed time since last rendered frame
+			stopwatch.Reset();
+			stopwatch.Start();
 
 			//  Lock on OpenGL.
 			lock (gl)
 			{
-				//  Start the stopwatch so that we can time the rendering.
-				stopwatch.Restart();
-
 				//  Make GL current.
 				gl.MakeCurrent();
 
 				//	If there is a draw handler, then call it.
 				RaiseEvent(new OpenGLRoutedEventArgs(OpenGLDrawEvent, gl));
-
-				//  Draw the FPS.
-				if (DrawFPS)
-				{
-					gl.DrawText(5, 5, 1.0f, 0.0f, 0.0f, "Courier New", 12.0f, string.Format("Draw Time: {0:0.0000} ms ~ {1:0.0} FPS", frameTime, 1000.0 / frameTime));
-					gl.Flush();
-				}
 
 				//  Render.
 				gl.Blit(IntPtr.Zero);
@@ -238,12 +220,6 @@ namespace LibDmd.Output.Virtual.Dmd
 					default:
 						break;
 				}
-
-				//  Stop the stopwatch.
-				stopwatch.Stop();
-
-				//  Store the frame time.
-				frameTime = stopwatch.Elapsed.TotalMilliseconds;
 			}
 		}
 
@@ -359,11 +335,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// A stopwatch used for timing rendering.
 		/// </summary>
 		protected Stopwatch stopwatch = new Stopwatch();
-
-		/// <summary>
-		/// The last frame time in milliseconds.
-		/// </summary>
-		protected double frameTime = 0;
 
 		private static readonly RoutedEvent OpenGLInitializedEvent = EventManager.RegisterRoutedEvent("OpenGLInitialized",
 			RoutingStrategy.Direct, typeof(OpenGLRoutedEventHandler), typeof(OpenGLControlExt));
