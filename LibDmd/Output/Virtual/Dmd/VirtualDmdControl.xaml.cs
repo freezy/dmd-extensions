@@ -241,13 +241,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			texVBO.Bind(gl);
 			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
 			_quadVbo.Unbind(gl);
-
-			Dmd.DoRender();
-		}
-
-		private void ogl_OpenGLResized(object sender, OpenGLRoutedEventArgs args)
-		{
-			Dmd.DoRender();
 		}
 
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
