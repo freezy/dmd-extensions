@@ -314,6 +314,9 @@
     <Compile Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml.cs">
       <DependentUpon>AlphanumericControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\Virtual\Dmd\OpenGLControlExt.xaml.cs">
+      <DependentUpon>OpenGLControlExt.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Output\Virtual\Dmd\SliderValueSetting.xaml.cs">
       <DependentUpon>SliderValueSetting.xaml</DependentUpon>
     </Compile>
@@ -492,6 +495,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Output\Virtual\AlphaNumeric\AlphanumericControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Output\Virtual\Dmd\OpenGLControlExt.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
