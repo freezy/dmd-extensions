@@ -139,6 +139,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = bmp;
+			Dispatcher.Invoke(() => Dmd.DoRender());
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -146,6 +147,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame;
+			Dispatcher.Invoke(() => Dmd.DoRender());
 		}
 
 		public void RenderGray4(byte[] frame)
@@ -153,6 +155,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame;
+			Dispatcher.Invoke(() => Dmd.DoRender());
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -160,6 +163,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			_nextFrameData = frame;
+			Dispatcher.Invoke(() => Dmd.DoRender());
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -237,6 +241,13 @@ namespace LibDmd.Output.Virtual.Dmd
 			texVBO.Bind(gl);
 			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
 			_quadVbo.Unbind(gl);
+
+			Dmd.DoRender();
+		}
+
+		private void ogl_OpenGLResized(object sender, OpenGLRoutedEventArgs args)
+		{
+			Dmd.DoRender();
 		}
 
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
