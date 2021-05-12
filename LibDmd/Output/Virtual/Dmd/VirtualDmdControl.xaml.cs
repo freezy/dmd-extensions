@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -89,7 +90,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			SizeChanged += OnSizeChanged;
 			ClearColor();
 		}
-
 		public void SetStyle(DmdStyle style, string dataPath)
 		{
 			_style = style;
@@ -139,7 +139,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = bmp;
-			Dispatcher.Invoke(() => Dmd.DoRender());
+			Dmd.RequestRender();
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -147,7 +147,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame;
-			Dispatcher.Invoke(() => Dmd.DoRender());
+			Dmd.RequestRender();
 		}
 
 		public void RenderGray4(byte[] frame)
@@ -155,7 +155,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame;
-			Dispatcher.Invoke(() => Dmd.DoRender());
+			Dmd.RequestRender();
 		}
 
 		public void RenderRgb24(byte[] frame)
@@ -163,7 +163,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			_nextFrameData = frame;
-			Dispatcher.Invoke(() => Dmd.DoRender());
+			Dmd.RequestRender();
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -171,7 +171,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			SetPalette(frame.Palette);
 			RenderGray2(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
 		}
-
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{

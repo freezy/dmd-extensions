@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -24,14 +23,14 @@ namespace LibDmd.Output.Virtual.Dmd
 	public partial class OpenGLControlExt : UserControl
 	{
 		// Fields to support the WritableBitmap method of rendering the image for display
-		private byte[] m_imageBuffer;
-		private WriteableBitmap m_writeableBitmap;
-		private Int32Rect m_imageRect;
-		private int m_imageStride;
-		private double m_dpiX = 96;
-		private double m_dpiY = 96;
-		private PixelFormat m_format = PixelFormats.Bgra32;
-		private int m_bytesPerPixel = 32 >> 3;
+		private byte[] _imageBuffer;
+		private WriteableBitmap _writeableBitmap;
+		private Int32Rect _imageRect;
+		private int _imageStride;
+		private double _dpiX;
+		private double _dpiY;
+		private PixelFormat _format;
+		private int _bytesPerPixel;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OpenGLControlExt"/> class.
@@ -95,6 +94,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <param name="height">The height of the OpenGL drawing area.</param>
 		private void UpdateOpenGLControl(int width, int height)
 		{
+			// Force re-creation of image buffer since size has changed
+			_imageBuffer = null;
 			// Lock on OpenGL.
 			lock (gl)
 			{
@@ -109,8 +110,12 @@ namespace LibDmd.Output.Virtual.Dmd
 					RaiseEvent(new OpenGLRoutedEventArgs(ResizedEvent, gl));
 				}
 			}
-			// Force re-creation of image buffer since size has changed
-			m_imageBuffer = null;
+
+			// Force a render on both buffers
+			Dispatcher.Invoke(() => {
+				DoRender();
+				DoRender();
+			});
 		}
 
 		/// <summary>
@@ -130,7 +135,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 
 			// Force re-set of dpi and format settings
-			m_dpiX = 0;
+			_dpiX = 0;
 
 			//  Set the most basic OpenGL styles.
 			gl.ShadeModel(OpenGL.GL_SMOOTH);
@@ -144,6 +149,12 @@ namespace LibDmd.Output.Virtual.Dmd
 			RaiseEvent(new OpenGLRoutedEventArgs(OpenGLInitializedEvent, gl));
 
 			timer.Interval = new TimeSpan(0, 0, 0, 0, (int)(1000.0 / FrameRate));
+
+			// Force a render on both buffers
+			Dispatcher.Invoke(() => {
+				DoRender();
+				DoRender();
+			});
 		}
 
 		/// <summary>
@@ -153,8 +164,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
 		void timer_Tick(object sender, EventArgs e)
 		{
-			// If a manual render was not triggered, perform the scheduled one
-			if (!stopwatch.IsRunning || stopwatch.ElapsedMilliseconds + 1 >= (int)(1000.0 / FrameRate)) DoRender();
+			DoRender();
+		}
+
+		public void RequestRender()
+		{
+			Dispatcher.Invoke(() => DoRender());
 		}
 
 		/// <summary>
@@ -162,13 +177,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// </summary>
 		public void DoRender()
 		{
-			// Discard render is OpenGL is not yet initialized
+			// Discard render if OpenGL is not yet initialized
 			if (gl == null || gl.RenderContextProvider == null) return;
-
-			// Restart stopwatch to measure elapsed time since last rendered frame
-			stopwatch.Reset();
-			stopwatch.Start();
-
 			//  Lock on OpenGL.
 			lock (gl)
 			{
@@ -237,13 +247,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			// If DPI hasn't been set, use a call to HBitmapToBitmapSource to fill the info
 			// This should happen only ONCE (near the start of the application)
-			if (m_dpiX == 0)
+			if (_dpiX == 0)
 			{
 				var bitmapSource = BitmapConversion.HBitmapToBitmapSource(hBitmap);
-				m_dpiX = bitmapSource.DpiX;
-				m_dpiY = bitmapSource.DpiY;
-				m_format = bitmapSource.Format;
-				m_bytesPerPixel = gl.RenderContextProvider.BitDepth >> 3;
+				_dpiX = bitmapSource.DpiX;
+				_dpiY = bitmapSource.DpiY;
+				_format = bitmapSource.Format;
+				_bytesPerPixel = gl.RenderContextProvider.BitDepth >> 3;
 				// FBO render context flips the image vertically, so transform to compensate
 				if (RenderContextType == RenderContextType.FBO)
 				{
@@ -258,23 +268,25 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 			// If the image buffer is null, create it
 			// This should happen when the size of the image changes
-			if (m_imageBuffer == null)
+			if (_imageBuffer == null)
 			{
 				int width = gl.RenderContextProvider.Width;
 				int height = gl.RenderContextProvider.Height;
 
-				int imageBufferSize = width * height * m_bytesPerPixel;
-				m_imageBuffer = new byte[imageBufferSize];
-				m_writeableBitmap = new WriteableBitmap(width, height, m_dpiX, m_dpiY, m_format, null);
-				m_imageRect = new Int32Rect(0, 0, width, height);
-				m_imageStride = width * m_bytesPerPixel;
+				int imageBufferSize = width * height * _bytesPerPixel;
+				_imageBuffer = new byte[imageBufferSize];
+				_writeableBitmap = new WriteableBitmap(width, height, _dpiX, _dpiY, _format, null);
+				_imageRect = new Int32Rect(0, 0, width, height);
+				_imageStride = width * _bytesPerPixel;
 			}
 
-			// Fill the image buffer from the bits and create the writeable bitmap
-			System.Runtime.InteropServices.Marshal.Copy(bits, m_imageBuffer, 0, m_imageBuffer.Length);
-			m_writeableBitmap.WritePixels(m_imageRect, m_imageBuffer, m_imageStride, 0);
+			// Fill the image buffer from the bits and update the writeable bitmap
+			System.Runtime.InteropServices.Marshal.Copy(bits, _imageBuffer, 0, _imageBuffer.Length);
+			// FIXME Remove transparency
+			// for (int i = 3; i < _imageBuffer.Length; i+=4) _imageBuffer[i] = 255;
+			_writeableBitmap.WritePixels(_imageRect, _imageBuffer, _imageStride, 0);
 
-			image.Source = m_writeableBitmap;
+			image.Source = _writeableBitmap;
 		}
 
 		/// <summary>
@@ -331,11 +343,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// </summary>
 		DispatcherTimer timer = null;
 
-		/// <summary>
-		/// A stopwatch used for timing rendering.
-		/// </summary>
-		protected Stopwatch stopwatch = new Stopwatch();
-
 		private static readonly RoutedEvent OpenGLInitializedEvent = EventManager.RegisterRoutedEvent("OpenGLInitialized",
 			RoutingStrategy.Direct, typeof(OpenGLRoutedEventHandler), typeof(OpenGLControlExt));
 
@@ -384,7 +391,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// The render context type property.
 		/// </summary>
 		private static readonly DependencyProperty RenderContextTypeProperty =
-		  DependencyProperty.Register("RenderContextType", typeof(RenderContextType), typeof(OpenGLControl),
+		  DependencyProperty.Register("RenderContextType", typeof(RenderContextType), typeof(OpenGLControlExt),
 		  new PropertyMetadata(RenderContextType.DIBSection, new PropertyChangedCallback(OnRenderContextTypeChanged)));
 
 		/// <summary>
@@ -422,25 +429,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			get { return (OpenGLVersion)GetValue(OpenGLVersionProperty); }
 			set { SetValue(OpenGLVersionProperty, value); }
-		}
-
-		/// <summary>
-		/// The DrawFPS property.
-		/// </summary>
-		private static readonly DependencyProperty DrawFPSProperty =
-		  DependencyProperty.Register("DrawFPS", typeof(bool), typeof(OpenGLControlExt),
-		  new PropertyMetadata(false, null));
-
-		/// <summary>
-		/// Gets or sets a value indicating whether to draw FPS.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if draw FPS; otherwise, <c>false</c>.
-		/// </value>
-		public bool DrawFPS
-		{
-			get { return (bool)GetValue(DrawFPSProperty); }
-			set { SetValue(DrawFPSProperty, value); }
 		}
 
 		/// <summary>
