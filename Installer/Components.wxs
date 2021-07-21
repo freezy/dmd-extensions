@@ -70,6 +70,8 @@
 			<ComponentRef Id="FrameMetal1"/>
 			<ComponentRef Id="FrameMetal2"/>
 			<ComponentRef Id="FrameMetal3"/>
+			<ComponentRef Id="FrameMetal4"/>
+			<ComponentRef Id="FrameBally"/>
 		</ComponentGroup>
 
 		<!-- DmdDevice.dll -->
@@ -152,6 +154,12 @@
 			</Component>
 			<Component Id="FrameMetal3" Guid="{9C4281AB-6C28-41A0-BB98-0EC51B291A25}">
 				<File Id="FrameMetal3File" Name="metal3.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameMetal4" Guid="{1C5CCBE9-C011-4B66-B76E-F7EACC76CF2D}">
+				<File Id="FrameMetal4File" Name="metal4.png" KeyPath="yes"/>
+			</Component>
+			<Component Id="FrameBally" Guid="{7B0D2613-83B8-4546-8394-72FD92E60DE4}">
+				<File Id="FrameBallyFile" Name="bally.png" KeyPath="yes"/>
 			</Component>
 		</DirectoryRef>
 	</Fragment>
