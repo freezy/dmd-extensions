@@ -70,8 +70,8 @@ allows you to quickly customize the styles.
 
 The way this works is that you:
 
-- Create or update a style
-- Apply the style globally or to the running game only
+1. Create or update a style
+2. Apply the style globally or to the running game only
 
 <img width="450" src="https://user-images.githubusercontent.com/70426/109726696-6fccfe80-7bb3-11eb-97a9-34fe00087031.png"/>
 
@@ -79,6 +79,11 @@ The upper sections (*DMD*, *Frame* and *Glass*) allow to customize your style.
 Changing values will immediately update the preview image at the top.
 
 ### Working with Styles
+
+It's important to understand that when we talk about "style", we mean a preset 
+of settings that you configure in the dialog above. You cannot apply these 
+settings directly to a game, you always need to create a style, and apply 
+*the style* to the game.
 
 The *Load* button in the bottom section loads a style saved in `DmdDevice.ini`
 into the upper sections and applies it to the preview image. This allows you to 
