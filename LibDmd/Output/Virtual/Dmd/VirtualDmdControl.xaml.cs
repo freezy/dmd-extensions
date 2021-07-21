@@ -97,7 +97,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_lutInvalid = true;
 			var glassTexturePath = GetAbsolutePath(_style.GlassTexture, dataPath);
 			try {
-				_glassToRender = glassTexturePath == null
+				_glassToRender = string.IsNullOrEmpty(glassTexturePath)
 					? null
 					: new System.Drawing.Bitmap(glassTexturePath);
 
@@ -108,10 +108,12 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			var frameTexturePath = GetAbsolutePath(_style.FrameTexture, dataPath);
 			try {
-				if (frameTexturePath != null) {
+				if (!string.IsNullOrEmpty(frameTexturePath)) {
 					var image = new BitmapImage(new Uri(frameTexturePath));
 					DmdFraming.Source = image;
 					DmdFraming.Visibility = Visibility.Visible;
+				} else {
+					DmdFraming.Visibility = Visibility.Hidden;
 				}
 
 			} catch (Exception e) {
