@@ -179,7 +179,7 @@ can set this up as you would for a PIN2DMD:
 
 ### Future Pinball
 
-Copy `FuturePinball/OpenGL32.dll` to your Future Pinball folder, i.e. where 
+Copy `Future Pinball/OpenGL32.dll` to your Future Pinball folder, i.e. where 
 `Future Pinball.exe` is located. Now, you can send frames to your DMD by running:
 
 ```bash

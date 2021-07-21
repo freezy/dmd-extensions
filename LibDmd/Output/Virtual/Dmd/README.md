@@ -109,3 +109,18 @@ The assign button also has a dropdown option that also applies the style to the
 game's DMD, but sets the style as the global default. This is also true when no
 game is running, in which case there is no dropdown and the button is just 
 labeled *Apply*.
+
+### Images
+
+You can use images for the border and glass effects. While you can use absolute 
+path names, dmdext also looks into its "data folder", which allows you to provide
+machine-independent relative paths. It's also where the images included with 
+dmdext are.
+
+The data path is called `dmdext` and is *relative to DmdDevice.ini*. For example,
+if your DmdDevice.ini sits at `C:\Visual Pinball\VPinMAME\DmdDevice.ini`, the data
+path is at `C:\Visual Pinball\VPinMAME\dmdext`.
+
+The default images are in the `textures` sub folder, so if you drop a new `border.png`
+into `C:\Visual Pinball\VPinMAME\dmdext\textures\frames`, the value of the relative
+path in DmdDevice.ini would be `textures\frames\border.png`.
