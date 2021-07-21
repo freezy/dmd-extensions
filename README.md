@@ -51,6 +51,8 @@ Documentation how to enable and customize this feature can be found [here](https
 
 Since v1.8, DMD Extensions come with full network support. Documentation can be found [here](Console/Server)
 
+With v1.9, we've introduced a more complex shader with awesome effects for monitor users.
+
 ## Install Instructions
 
 [Download the installer](https://github.com/freezy/dmd-extensions/releases) and
