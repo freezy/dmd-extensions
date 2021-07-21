@@ -53,6 +53,8 @@ Since v1.8, DMD Extensions come with full network support. Documentation can be 
 
 In v1.9, we've introduced a more complex shader with awesome effects for monitor users. Documentation can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
+<image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
+
 ## Install Instructions
 
 [Download the installer](https://github.com/freezy/dmd-extensions/releases) and
