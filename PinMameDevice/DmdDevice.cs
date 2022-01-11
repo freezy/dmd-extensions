@@ -97,11 +97,7 @@ namespace PinMameDevice
 		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_with_Raw_Device", CallingConvention = CallingConvention.Cdecl)]
 		public static void RenderRaw4Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw4Device(GetDevice(id), width, height, currbuffer, noOfRawFrames, currrawbuffer);
-
-		// void Render_64_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
-		[DllExport("Render_64_Shades_with_Raw_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderRaw6Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw6Device(GetDevice(id), width, height, currbuffer, noOfRawFrames, currrawbuffer);
-
+				
 		// void Render_4_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades_with_Raw_Device", CallingConvention = CallingConvention.Cdecl)]
 		public static void RenderRaw2Device(int id, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer) => InternalRenderRaw2Device(GetDevice(id), width, height, currbuffer, noOfRawFrames, currrawbuffer);
@@ -109,10 +105,6 @@ namespace PinMameDevice
 		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_Device", CallingConvention = CallingConvention.Cdecl)]
 		public static void RenderGray4Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray4Device(GetDevice(id), width, height, currbuffer);
-
-		// void Render_16_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
-		[DllExport("Render_64_Shades_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderGray6Device(int id, ushort width, ushort height, IntPtr currbuffer) => InternalRenderGray6Device(GetDevice(id), width, height, currbuffer);
 
 		// void Render_4_Shades_Device(int id, UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_4_Shades_Device", CallingConvention = CallingConvention.Cdecl)]
@@ -129,10 +121,6 @@ namespace PinMameDevice
 		// void Set_16_Colors_Palette_Device(int id, Rgb24 *color)
 		[DllExport("Set_16_Colors_Palette_Device", CallingConvention = CallingConvention.Cdecl)]
 		public static void SetGray4PaletteDevice(int id, IntPtr palette) => InternalSetGray4PaletteDevice(GetDevice(id), palette);
-
-		// void Set_16_Colors_Palette_Device(int id, Rgb24 *color)
-		[DllExport("Set_64_Colors_Palette_Device", CallingConvention = CallingConvention.Cdecl)]
-		public static void SetGray6PaletteDevice(int id, IntPtr palette) => InternalSetGray6PaletteDevice(GetDevice(id), palette);
 
 		#endregion
 
@@ -269,22 +257,6 @@ namespace PinMameDevice
 			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(width, height, frame, rawplanes));
 		}
 
-		private static void InternalRenderRaw6Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
-		{
-			var frameSize = width * height;
-			var frame = new byte[frameSize];
-			Marshal.Copy(currbuffer, frame, 0, frameSize);
-
-			var rawplanes = new byte[noOfRawFrames][];
-			var planeSize = frameSize / 8;
-			for (int i = 0; i < noOfRawFrames; i++)
-			{
-				rawplanes[i] = new byte[planeSize];
-				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
-			}
-			device.DmdDevice.RenderGray6(device.RawDmdFrame.Update(width, height, frame, rawplanes));
-		}
-
 		private static void InternalRenderRaw2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
 		{
 			var frameSize = width * height;
@@ -306,14 +278,6 @@ namespace PinMameDevice
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
 			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width, height, frame));
-		}
-
-		private static void InternalRenderGray6Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
-		{
-			var frameSize = width * height;
-			var frame = new byte[frameSize];
-			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray6(device.DmdFrame.Update(width, height, frame));
 		}
 
 		private static void InternalRenderGray2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
@@ -365,80 +329,7 @@ namespace PinMameDevice
 				ConvertColor(GetColorAtPosition(palette, 15, size)),
 			});
 		}
-
-		private static void InternalSetGray6PaletteDevice(DeviceInstance device, IntPtr palette)
-		{
-			Logger.Info("[vpm] Set_64_Colors_Palette({0},...)", device.Id);
-			var size = Marshal.SizeOf(typeof(Rgb24));
-
-			// for some shit reason, using a loop fails compilation.
-			device.DmdDevice.SetPalette(new[] {
-				ConvertColor(GetColorAtPosition(palette, 0, size)),
-				ConvertColor(GetColorAtPosition(palette, 1, size)),
-				ConvertColor(GetColorAtPosition(palette, 2, size)),
-				ConvertColor(GetColorAtPosition(palette, 3, size)),
-				ConvertColor(GetColorAtPosition(palette, 4, size)),
-				ConvertColor(GetColorAtPosition(palette, 5, size)),
-				ConvertColor(GetColorAtPosition(palette, 6, size)),
-				ConvertColor(GetColorAtPosition(palette, 7, size)),
-				ConvertColor(GetColorAtPosition(palette, 8, size)),
-				ConvertColor(GetColorAtPosition(palette, 9, size)),
-				ConvertColor(GetColorAtPosition(palette, 10, size)),
-				ConvertColor(GetColorAtPosition(palette, 11, size)),
-				ConvertColor(GetColorAtPosition(palette, 12, size)),
-				ConvertColor(GetColorAtPosition(palette, 13, size)),
-				ConvertColor(GetColorAtPosition(palette, 14, size)),
-				ConvertColor(GetColorAtPosition(palette, 15, size)),
-				ConvertColor(GetColorAtPosition(palette, 16, size)),
-				ConvertColor(GetColorAtPosition(palette, 17, size)),
-				ConvertColor(GetColorAtPosition(palette, 18, size)),
-				ConvertColor(GetColorAtPosition(palette, 19, size)),
-				ConvertColor(GetColorAtPosition(palette, 20, size)),
-				ConvertColor(GetColorAtPosition(palette, 21, size)),
-				ConvertColor(GetColorAtPosition(palette, 22, size)),
-				ConvertColor(GetColorAtPosition(palette, 23, size)),
-				ConvertColor(GetColorAtPosition(palette, 24, size)),
-				ConvertColor(GetColorAtPosition(palette, 25, size)),
-				ConvertColor(GetColorAtPosition(palette, 26, size)),
-				ConvertColor(GetColorAtPosition(palette, 27, size)),
-				ConvertColor(GetColorAtPosition(palette, 28, size)),
-				ConvertColor(GetColorAtPosition(palette, 29, size)),
-				ConvertColor(GetColorAtPosition(palette, 30, size)),
-				ConvertColor(GetColorAtPosition(palette, 31, size)),
-				ConvertColor(GetColorAtPosition(palette, 32, size)),				
-				ConvertColor(GetColorAtPosition(palette, 33, size)),
-				ConvertColor(GetColorAtPosition(palette, 34, size)),
-				ConvertColor(GetColorAtPosition(palette, 35, size)),
-				ConvertColor(GetColorAtPosition(palette, 36, size)),
-				ConvertColor(GetColorAtPosition(palette, 37, size)),
-				ConvertColor(GetColorAtPosition(palette, 38, size)),
-				ConvertColor(GetColorAtPosition(palette, 39, size)),
-				ConvertColor(GetColorAtPosition(palette, 40, size)),
-				ConvertColor(GetColorAtPosition(palette, 41, size)),
-				ConvertColor(GetColorAtPosition(palette, 42, size)),
-				ConvertColor(GetColorAtPosition(palette, 43, size)),
-				ConvertColor(GetColorAtPosition(palette, 44, size)),
-				ConvertColor(GetColorAtPosition(palette, 45, size)),
-				ConvertColor(GetColorAtPosition(palette, 46, size)),
-				ConvertColor(GetColorAtPosition(palette, 47, size)),
-				ConvertColor(GetColorAtPosition(palette, 48, size)),
-				ConvertColor(GetColorAtPosition(palette, 49, size)),
-				ConvertColor(GetColorAtPosition(palette, 50, size)),
-				ConvertColor(GetColorAtPosition(palette, 51, size)),
-				ConvertColor(GetColorAtPosition(palette, 52, size)),
-				ConvertColor(GetColorAtPosition(palette, 53, size)),
-				ConvertColor(GetColorAtPosition(palette, 54, size)),
-				ConvertColor(GetColorAtPosition(palette, 55, size)),
-				ConvertColor(GetColorAtPosition(palette, 56, size)),
-				ConvertColor(GetColorAtPosition(palette, 57, size)),
-				ConvertColor(GetColorAtPosition(palette, 58, size)),
-				ConvertColor(GetColorAtPosition(palette, 59, size)),
-				ConvertColor(GetColorAtPosition(palette, 60, size)),
-				ConvertColor(GetColorAtPosition(palette, 61, size)),
-				ConvertColor(GetColorAtPosition(palette, 62, size)),
-				ConvertColor(GetColorAtPosition(palette, 63, size)),
-			});
-		}
+				
 		#endregion
 
 		private static bool IsOldWindows()

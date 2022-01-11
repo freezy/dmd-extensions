@@ -182,7 +182,14 @@ namespace LibDmd.Converter.Colorize
 
 		private void RenderLCM(byte[][] vpmFrame)
 		{
-			_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+			if (LCMBufferPlanes.Count >= 6)
+			{
+				_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3], LCMBufferPlanes[4], LCMBufferPlanes[5] });
+			}
+			else
+			{
+				_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+			}
 		}
 
 		public void DetectFollow(byte[] plane, uint NoMaskCRC, bool Reverse)
@@ -334,6 +341,17 @@ namespace LibDmd.Converter.Colorize
 			if (Frames[_frameIndex].Planes.Count < 4)
 			{
 				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+			}
+			else if (Frames[_frameIndex].Planes.Count >= 6)
+			{
+				if (vpmFrame.Length >= 4)
+				{
+					_currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3], Frames[_frameIndex].Planes[4].Plane, Frames[_frameIndex].Planes[5].Plane });
+				}
+				else
+				{
+					_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane, Frames[_frameIndex].Planes[4].Plane, Frames[_frameIndex].Planes[5].Plane });
+				}
 			}
 			else
 			{
