@@ -214,7 +214,6 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
-    <Compile Include="Converter\Gray6Colorizer.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
