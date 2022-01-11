@@ -9,7 +9,7 @@ using NLog;
 
 namespace LibDmd.Converter
 {
-	public class Gray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source
+	public class Gray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
 		public override string Name { get; } = "2-Bit Colorizer";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
@@ -18,6 +18,7 @@ namespace LibDmd.Converter
 		public bool Has128x32Animation { get; set; }
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
+		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
 
 		/// <summary>
 		/// Datä vomer uism .pal-Feil uisägläsä hend
@@ -257,6 +258,11 @@ namespace LibDmd.Converter
 			if (planes.Length == 4) {
 				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
+
+			if (planes.Length == 6)
+			{
+				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+			}
 		}
 
 		/// <summary>
@@ -299,6 +305,11 @@ namespace LibDmd.Converter
 		public IObservable<ColoredFrame> GetColoredGray4Frames()
 		{
 			return ColoredGray4AnimationFrames;
+		}
+
+		public IObservable<ColoredFrame> GetColoredGray6Frames()
+		{
+			return ColoredGray6AnimationFrames;
 		}
 	}
 }

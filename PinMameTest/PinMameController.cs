@@ -24,7 +24,7 @@ namespace PinMameTest
 
 		public VPinMameController()
 		{
-			_controller.Antialias = true;
+			//_controller.Antialias = true;
 			_controller.ShowDMDOnly = false;
 			_controller.ShowFrame = false;
 			_controller.ShowTitle = false;

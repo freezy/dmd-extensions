@@ -44,6 +44,7 @@ namespace LibDmd.DmdDevice
 		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
+		private readonly VpmGray6Source _vpmGray6Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
@@ -65,6 +66,7 @@ namespace LibDmd.DmdDevice
 		DMDFrame _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
+		private Gray6Colorizer _gray6Colorizer;
 		private Coloring _coloring;
 		private bool _isOpen;
 
@@ -84,6 +86,7 @@ namespace LibDmd.DmdDevice
 			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
+			_vpmGray6Source = new VpmGray6Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
@@ -215,6 +218,7 @@ namespace LibDmd.DmdDevice
 					}
 					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
 					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
+					_gray6Colorizer = new Gray6Colorizer(_coloring, vni);
 
 				} catch (Exception e) {
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
@@ -463,6 +467,35 @@ namespace LibDmd.DmdDevice
 					FlipVertically = _config.Global.FlipVertically
 				});
 			}
+			
+			// 6-bit graph
+			if (_colorize && _gray6Colorizer != null)
+			{
+				_graphs.Add(new RenderGraph
+				{
+					Name = "6-bit Colored VPM Graph",
+					Source = _vpmGray6Source,
+					Destinations = renderers,
+					Converter = _gray6Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+				ReportingTags.Add("Color:Gray6");
+
+			}
+			else
+			{
+				_graphs.Add(new RenderGraph
+				{
+					Name = "6-bit VPM Graph",
+					Source = _vpmGray6Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically
+				});
+			}
 
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
@@ -484,7 +517,7 @@ namespace LibDmd.DmdDevice
 				FlipVertically = _config.Global.FlipVertically
 			});
 
-			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
+			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null || _gray6Colorizer != null)) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
 
@@ -672,6 +705,18 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);
+		}
+
+		public void RenderGray6(DMDFrame frame)
+		{
+			if (!_isOpen)
+			{
+				Init();
+			}
+			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
+			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
+			_gray6Colorizer?.SetDimensions(frame.width, frame.height);
+			_vpmGray6Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DMDFrame frame)
