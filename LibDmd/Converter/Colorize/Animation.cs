@@ -182,14 +182,20 @@ namespace LibDmd.Converter.Colorize
 
 		private void RenderLCM(byte[][] vpmFrame)
 		{
-			if (LCMBufferPlanes.Count >= 6)
+			var frame_count = LCMBufferPlanes.Count;
+			byte[][] outplanes;
+			outplanes = new byte[frame_count][];
+
+			for (int i = 0; i < vpmFrame.Length; i++)
 			{
-				_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3], LCMBufferPlanes[4], LCMBufferPlanes[5] });
+				outplanes[i] = vpmFrame[i];
 			}
-			else
+			for (int i = vpmFrame.Length; i < frame_count; i++)
 			{
-				_currentRender(new[] { vpmFrame[0], vpmFrame[1], LCMBufferPlanes[2], LCMBufferPlanes[3] });
+				outplanes[i] = LCMBufferPlanes[i];
 			}
+
+			_currentRender(outplanes);
 		}
 
 		public void DetectFollow(byte[] plane, uint NoMaskCRC, bool Reverse)
@@ -342,20 +348,21 @@ namespace LibDmd.Converter.Colorize
 			{
 				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
 			}
-			else if (Frames[_frameIndex].Planes.Count >= 6)
-			{
-				if (vpmFrame.Length >= 4)
-				{
-					_currentRender(new[] { vpmFrame[0], vpmFrame[1], vpmFrame[2], vpmFrame[3], Frames[_frameIndex].Planes[4].Plane, Frames[_frameIndex].Planes[5].Plane });
-				}
-				else
-				{
-					_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane, Frames[_frameIndex].Planes[4].Plane, Frames[_frameIndex].Planes[5].Plane });
-				}
-			}
 			else
 			{
-				_currentRender(new[] { vpmFrame[0], vpmFrame[1], Frames[_frameIndex].Planes[2].Plane, Frames[_frameIndex].Planes[3].Plane });
+				var frame_count = Frames[_frameIndex].Planes.Count;
+				byte[][] outplanes;
+				outplanes = new byte[frame_count][];
+				for (int i = 0; i < vpmFrame.Length; i++)
+				{
+					outplanes[i] = vpmFrame[i];
+				}
+				for (int i = vpmFrame.Length; i < frame_count; i++)
+				{
+					outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+				}
+
+				_currentRender(outplanes);
 			}
 		}
 
@@ -366,7 +373,7 @@ namespace LibDmd.Converter.Colorize
 			{
 				// Need the *next* frame's mask and hash
 				if (_frameIndex + 1 < NumFrames)
-				{					
+				{
 					FollowHash = Frames[_frameIndex+1].Hash;
 					FollowMask = Frames[_frameIndex+1].Mask;
 				}

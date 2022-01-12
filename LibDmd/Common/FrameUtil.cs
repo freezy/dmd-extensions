@@ -441,7 +441,7 @@ namespace LibDmd.Common
 			var frame = Join(width, height, planes);
 			return ColorUtil.ColorizeFrame(width, height, frame, palette);
 		}
-			
+
 		public static byte[] NewPlane(int width, int height)
 		{
 			var count = width / 8 * height;
@@ -507,7 +507,6 @@ namespace LibDmd.Common
 			}
 			return outplane;
 		}
-		
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
@@ -711,7 +710,7 @@ namespace LibDmd.Common
 			if (buffer1 == null || buffer2 == null) {
 				return false;
 			}
-			
+
 			fixed (byte* b1 = buffer1, b2 = buffer2) {
 				return memcmp(b1 + offset1, b2 + offset2, count) == 0;
 			}
