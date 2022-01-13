@@ -169,6 +169,13 @@ namespace LibDmd.Converter
 				return;
 			}
 
+			// If same LRM scene, no need to stop/start 
+			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.MaskedReplace && mapping.Mode == SwitchMode.MaskedReplace && mapping.Offset == _activeAnimation.Offset)
+			{
+				return;
+			}
+
+
 			// Faus scho eppis am laifä isch, ahautä
 			_activeAnimation?.Stop();
 			_activeAnimation = null;
