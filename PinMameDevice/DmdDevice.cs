@@ -26,6 +26,9 @@ namespace PinMameDevice
 		private static readonly DeviceInstance DefaultDevice = new DeviceInstance();
 		private static readonly List<DeviceInstance> DmdDevices = new List<DeviceInstance>();
 
+		private static int aniWidth = 0;
+		private static int aniHeight = 0;
+
 		private class DeviceInstance
 		{
 			public int Id;
@@ -202,6 +205,8 @@ namespace PinMameDevice
 			device.DmdDevice.SetGameName(gameName);
 			device.DmdDevice.SetColor(Color.FromRgb((byte)(opt.Red), (byte)(opt.Green), (byte)(opt.Blue)));
 			device.DmdDevice.Init();
+			aniHeight = device.DmdDevice.getAniHeight();
+			aniWidth = device.DmdDevice.getAniWidth();
 		}
 
 		private static void InternalConsoleDataDevice(DeviceInstance device, byte data)
@@ -254,7 +259,7 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(width, height, frame, rawplanes));
+			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(aniWidth, aniHeight, frame, rawplanes));
 		}
 
 		private static void InternalRenderRaw2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
@@ -269,7 +274,7 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray2(device.RawDmdFrame.Update(width, height, frame, rawplanes));
+			device.DmdDevice.RenderGray2(device.RawDmdFrame.Update(aniWidth, aniHeight, frame, rawplanes));
 		}
 
 		private static void InternalRenderGray4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
@@ -277,7 +282,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width, height, frame));
+			device.DmdDevice.RenderGray4(device.DmdFrame.Update(aniWidth, aniHeight, frame));
 		}
 
 		private static void InternalRenderGray2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
@@ -285,7 +290,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray2(device.DmdFrame.Update(width, height, frame));
+			device.DmdDevice.RenderGray2(device.DmdFrame.Update(aniWidth, aniHeight, frame));
 		}
 
 		private static void InternalRenderAlphaNumDevice(DeviceInstance device, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)

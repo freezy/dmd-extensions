@@ -392,6 +392,16 @@ namespace LibDmd.Converter.Colorize
 			return Offset == animation.Offset;
 		}
 
+		public int getWidth()
+		{
+			return Width;
+		}
+
+		public int getHeight()
+		{
+			return Height;
+		}
+
 		public override string ToString()
 		{
 			return $"{Name}, {Frames.Length} frames";

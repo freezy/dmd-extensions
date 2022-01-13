@@ -102,7 +102,12 @@ namespace LibDmd.Converter
 					_resetEmbedded = false;
 				}
 			}
-			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 4, frame.Data);
+
+			byte[][] planes;
+			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length)
+				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 4, frame.Data);
+			else
+				planes = FrameUtil.Split(128, 32, 4, frame.Data);
 
 			if (_coloring.Mappings != null)
 			{
@@ -115,6 +120,11 @@ namespace LibDmd.Converter
 				{
 					TriggerAnimation(planes, false);
 				}
+			}
+
+			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length)
+			{
+				planes = FrameUtil.Scale(Dimensions.Value.Width, Dimensions.Value.Height, planes);
 			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
