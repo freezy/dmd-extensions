@@ -79,10 +79,10 @@ namespace LibDmd.Converter
 		public void Convert(DMDFrame frame)
 		{
 			byte[][] planes;
-			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length)
+			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
 				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
 			else
-				planes = FrameUtil.Split(128, 32, 2, frame.Data);
+				planes = FrameUtil.Split(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, 2, frame.Data);
 
 			if (_coloring.Mappings != null)
 			{
@@ -97,7 +97,7 @@ namespace LibDmd.Converter
 				}
 			}
 
-			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length)
+			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length * 4)
 			{
 				planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
 			}

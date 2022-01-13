@@ -187,7 +187,7 @@ namespace LibDmd.Converter.Colorize
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					if (vpmFrame[0].Length == LCMBufferPlanes[i].Length)
+					if (vpmFrame[0].Length != LCMBufferPlanes[i].Length * 4)
 						outplanes[i] = LCMBufferPlanes[i];
 					else
 						outplanes[i] = FrameUtil.Scale2(Width * 2, Height * 2, LCMBufferPlanes[i]);
@@ -339,7 +339,7 @@ namespace LibDmd.Converter.Colorize
 				case SwitchMode.Replace:
 					byte[][] outplanes;
 					var animplanes = Frames[_frameIndex].PlaneData;
-					if (vpmFrame[0].Length == animplanes[0].Length)
+					if (vpmFrame[0].Length != animplanes[0].Length * 4)
 						outplanes = animplanes;
 					else
 						outplanes = FrameUtil.Scale2(Width * 2, Height * 2, animplanes);
@@ -370,7 +370,7 @@ namespace LibDmd.Converter.Colorize
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					if (vpmFrame[0].Length == Frames[_frameIndex].Planes[i].Plane.Length)
+					if (vpmFrame[0].Length != Frames[_frameIndex].Planes[i].Plane.Length * 4)
 						outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
 					else
 						outplanes[i] = FrameUtil.Scale2(Width*2, Height*2, Frames[_frameIndex].Planes[i].Plane);
