@@ -421,6 +421,8 @@ namespace LibDmd.Common
 			return !identical;
 		}
 
+		//Scale planes by doubling the pixels in each byte
+
 		public static readonly ushort[] doublePixel = {
 		  0x0000,0x0003,0x000C,0x000F,0x0030,0x0033,0x003C,0x003F,0x00C0,0x00C3,0x00CC,0x00CF,0x00F0,0x00F3,0x00FC,0x00FF,
 		  0x0300,0x0303,0x030C,0x030F,0x0330,0x0333,0x033C,0x033F,0x03C0,0x03C3,0x03CC,0x03CF,0x03F0,0x03F3,0x03FC,0x03FF,
@@ -440,44 +442,34 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
+		public static byte[] Scale2(int width, int height, byte[] srcplanes)
 		{
 			var planeSize = width * height / 8;
-			var planes = new byte[srcplanes.Length][];
+			byte[] plane;
 			ushort[] scaledPlane = new ushort[planeSize / 2];
+			for (var i = 0; i < height; i++)
+			{
+				for (var k = 0; k < (width / 2 / 8); k++)
+				{
+					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[((i / 2) * (width / 2 / 8)) + k]];
+				}
+				i++;
+			}
+			plane = new byte[planeSize];
+			Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
+			return plane;
+		}
+
+		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
+		{
+			var planes = new byte[srcplanes.Length][];
 			for (var l = 0; l < srcplanes.Length; l++)
 			{
-				for (var i = 0; i < height; i++)
-				{
-					for (var k = 0; k < (width/2/8); k++)
-					{
-						scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i+1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[l][((i/2) * (width / 2 / 8)) + k]];
-					}
-					i++;
-				}
-				planes[l] = new byte[planeSize];
-				Buffer.BlockCopy(scaledPlane, 0, planes[l], 0, planeSize);
+				planes[l] = Scale2(width, height, srcplanes[l]);
 			}
 			return planes;
 		}
 
-		public static byte[] Scale2(int width, int height, byte[] srcplanes)
-		{
-		var planeSize = width * height / 8;
-		byte[] plane;
-		ushort[] scaledPlane = new ushort[planeSize / 2];
-		for (var i = 0; i < height; i++)
-		{
-			for (var k = 0; k < (width / 2 / 8); k++)
-			{
-				scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[((i / 2) * (width / 2 / 8)) + k]];
-			}
-			i++;
-		}
-		plane = new byte[planeSize];
-		Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
-		return plane;
-		}
 
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame or vice versa
