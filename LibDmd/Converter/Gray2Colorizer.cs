@@ -192,16 +192,16 @@ namespace LibDmd.Converter
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
-					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask)
+					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask && _activeAnimation.SwitchMode != SwitchMode.MaskedReplace)
 						return;
 
 				}
 				if (_activeAnimation != null)
 				{
-					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
+					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
 						_activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], nomaskcrc, reverse);
+						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _coloring.Masks, reverse);
 				}
 			}
 		}
