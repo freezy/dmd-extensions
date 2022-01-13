@@ -124,7 +124,7 @@ namespace LibDmd.Converter
 
 			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length)
 			{
-				planes = FrameUtil.Scale(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
 			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt

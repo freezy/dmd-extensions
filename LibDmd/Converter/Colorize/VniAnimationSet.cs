@@ -46,7 +46,7 @@ namespace LibDmd.Converter.Colorize
 				int w = Animations[i].getWidth();
 				if (h > maxheight)
 					maxheight = h;
-				if (h > maxwidth)
+				if (w > maxwidth)
 					maxwidth = w;
 			}
 			reader.Close();

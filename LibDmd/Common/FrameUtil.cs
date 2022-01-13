@@ -440,7 +440,7 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[][] Scale(int width, int height, byte[][] srcplanes)
+		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
 		{
 			var planeSize = width * height / 8;
 			var planes = new byte[srcplanes.Length][];
@@ -459,6 +459,24 @@ namespace LibDmd.Common
 				Buffer.BlockCopy(scaledPlane, 0, planes[l], 0, planeSize);
 			}
 			return planes;
+		}
+
+		public static byte[] Scale2(int width, int height, byte[] srcplanes)
+		{
+		var planeSize = width * height / 8;
+		byte[] plane;
+		ushort[] scaledPlane = new ushort[planeSize / 2];
+		for (var i = 0; i < height; i++)
+		{
+			for (var k = 0; k < (width / 2 / 8); k++)
+			{
+				scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[((i / 2) * (width / 2 / 8)) + k]];
+			}
+			i++;
+		}
+		plane = new byte[planeSize];
+		Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
+		return plane;
 		}
 
 		/// <summary>
