@@ -187,7 +187,11 @@ namespace LibDmd.Converter.Colorize
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					outplanes[i] = LCMBufferPlanes[i];
+					if (vpmFrame[0].Length == LCMBufferPlanes[i].Length)
+						outplanes[i] = LCMBufferPlanes[i];
+					else
+						outplanes[i] = FrameUtil.Scale2(Width * 2, Height * 2, LCMBufferPlanes[i]);
+					
 				}
 			}
 			if (SwitchMode == SwitchMode.MaskedReplace)
