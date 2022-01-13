@@ -362,7 +362,10 @@ namespace LibDmd.Converter.Colorize
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+					if (vpmFrame[0].Length == Frames[_frameIndex].Planes[i].Plane.Length)
+						outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+					else
+						outplanes[i] = FrameUtil.Scale2(Width*2, Height*2, Frames[_frameIndex].Planes[i].Plane);
 				}
 
 				_currentRender(outplanes);
