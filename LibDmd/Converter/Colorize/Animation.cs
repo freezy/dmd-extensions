@@ -335,7 +335,11 @@ namespace LibDmd.Converter.Colorize
 				case SwitchMode.Replace:
 					byte[][] outplanes;
 					var animplanes = Frames[_frameIndex].PlaneData;
-					outplanes = animplanes;
+					if (vpmFrame[0].Length == animplanes[0].Length)
+						outplanes = animplanes;
+					else
+						outplanes = FrameUtil.Scale2(Width * 2, Height * 2, animplanes);
+					
 					_currentRender(outplanes);
 					break;
 				case SwitchMode.LayeredColorMask:
