@@ -40,6 +40,8 @@ namespace LibDmd.DmdDevice
 	{
 		private const int Width = 128;
 		private const int Height = 32;
+		private int aniWidth = 128;
+		private int aniHeight = 32;
 
 		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source;
@@ -214,6 +216,12 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
 						Logger.Info("Loaded animation set {0}", vni);
+						aniHeight = vni.maxheight;
+						aniWidth = vni.maxwidth;
+					} else
+					{
+						aniHeight = Height;
+						aniWidth = Width;
 					}
 					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
 					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
@@ -639,7 +647,14 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
 		}
-
+		public int getAniHeight()
+		{
+			return aniHeight;
+		}
+		public int getAniWidth()
+		{
+			return aniWidth;
+		}
 		public void RenderGray2(DMDFrame frame)
 		{
 			if (!_isOpen) {

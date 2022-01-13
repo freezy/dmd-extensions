@@ -8,6 +8,9 @@ namespace LibDmd.Converter.Colorize
 {
 	public class VniAnimationSet : AnimationSet
 	{
+		public int maxheight { get; protected set; }
+		public int maxwidth { get; protected set; }
+
 		public VniAnimationSet(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
@@ -34,8 +37,17 @@ namespace LibDmd.Converter.Colorize
 
 			Animations = new List<Animation>(numAnimations);
 			Logger.Debug("VNI[{3}] Reading {0} animations from {1} v{2}...", numAnimations, header, Version, reader.BaseStream.Position);
+
+			maxwidth = 0;
+			maxheight = 0;
 			for (var i = 0; i < numAnimations; i++) {
 				Animations.Add(new VniAnimation(reader, Version));
+				int h = Animations[i].getHeight();
+				int w = Animations[i].getWidth();
+				if (h > maxheight)
+					maxheight = h;
+				if (h > maxwidth)
+					maxwidth = w;
 			}
 			reader.Close();
 			fs.Close();
