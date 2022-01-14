@@ -442,7 +442,7 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[] Scale2(int width, int height, byte[] srcplanes)
+		public static byte[] Scale2(int width, int height, byte[] srcplane)
 		{
 			var planeSize = width * height / 8;
 			byte[] plane;
@@ -451,7 +451,7 @@ namespace LibDmd.Common
 			{
 				for (var k = 0; k < (width / 2 / 8); k++)
 				{
-					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[((i / 2) * (width / 2 / 8)) + k]];
+					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplane[((i / 2) * (width / 2 / 8)) + k]];
 				}
 				i++;
 			}
@@ -466,6 +466,38 @@ namespace LibDmd.Common
 			for (var l = 0; l < srcplanes.Length; l++)
 			{
 				planes[l] = Scale2(width, height, srcplanes[l]);
+			}
+			return planes;
+		}
+
+		//Scale down planes by displaying every second pixel
+
+		public static byte[] ScaleDown(int width, int height, byte[] srcplane)
+		{
+			var planeSize = width * height / 8;
+			byte[] scaledPlane = new byte[planeSize];
+			ushort[] plane = new ushort[planeSize * 2];
+			Buffer.BlockCopy(srcplane, 0, plane, 0, planeSize * 4);
+
+			for (var i = 0; i < height*2; i++)
+			{
+				for (var k = 0; k < (width / 8); k++)
+				{
+					ushort srcVal = plane[(i * (width / 8)) + k];
+					byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
+					scaledPlane[((i / 2) * (width / 8)) + k] = destVal;
+				}
+				i++;
+			}
+			return scaledPlane;
+		}
+
+		public static byte[][] ScaleDown(int width, int height, byte[][] srcplanes)
+		{
+			var planes = new byte[srcplanes.Length][];
+			for (var l = 0; l < srcplanes.Length; l++)
+			{
+				planes[l] = ScaleDown(width, height, srcplanes[l]);
 			}
 			return planes;
 		}
