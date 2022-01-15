@@ -89,7 +89,88 @@ namespace LibDmd.Common
 		/// <param name="frameBuffer">Destination buffer where planes are written</param>
 		/// <param name="offset">Start writing at this offset</param>
 		/// <returns>True if destination buffer changed, false otherwise.</returns>
-		public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
+		/// 
+		public static readonly byte[] GAMMA_TABLE = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+									2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+									3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5,
+									5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
+									7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+									11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14,
+									14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18,
+									19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24,
+									24, 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 29, 29, 29, 30,
+									30, 31, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37,
+									37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45,
+									45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
+									55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
+
+		public static bool CreateRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
+		{
+			var identical = true;
+			int elements = width * height / 2 ;
+			int pixel_r, pixel_g, pixel_b, pixel_rl, pixel_gl, pixel_bl;
+			for (int l = 0; l < elements; l++) {
+				int i = l * 3;
+				switch (rgbSequence) {
+					case 0: //RGB panels
+						pixel_r = frame[i];
+						pixel_g = frame[i+2];
+						pixel_b = frame[i+1];
+						// lower half of display
+						pixel_rl = frame[i + (elements * 3)];
+						pixel_gl = frame[i + 2 + (elements * 3)];
+						pixel_bl = frame[i + 1 + (elements * 3)];
+						break;
+					default: //RBG panels
+						pixel_r = frame[i];
+						pixel_g = frame[i + 1];
+						pixel_b = frame[i + 2];
+						// lower half of display
+						pixel_rl = frame[i + (elements * 3)];
+						pixel_gl = frame[i + 1 + (elements * 3)];
+						pixel_bl = frame[i + 2 + (elements * 3)];
+						break;
+				}
+
+				// color correction
+				pixel_r = GAMMA_TABLE[pixel_r];
+				pixel_g = GAMMA_TABLE[pixel_g];
+				pixel_b = GAMMA_TABLE[pixel_b];
+
+				pixel_rl = GAMMA_TABLE[pixel_rl];
+				pixel_gl = GAMMA_TABLE[pixel_gl];
+				pixel_bl = GAMMA_TABLE[pixel_bl];
+
+				int target_idx = l + offset;
+
+				for (int k = 0; k < 6; k++) {
+					byte val = (byte) (((pixel_gl & 1) << 5) | ((pixel_bl & 1) << 4) | ((pixel_rl & 1) << 3) | ((pixel_g & 1) << 2) | ((pixel_b & 1) << 1) | ((pixel_r & 1) << 0));
+					identical = identical && frameBuffer[target_idx] == val;
+					frameBuffer[target_idx] = val;
+					pixel_r >>= 1;
+					pixel_g >>= 1;
+					pixel_b >>= 1;
+					pixel_rl >>= 1;
+					pixel_gl >>= 1;
+					pixel_bl >>= 1;
+					target_idx += elements;
+				}
+			}
+			return !identical;
+		}
+			/// <summary>
+			/// Splits an RGB24 frame into each bit plane.
+			/// </summary>
+			/// <param name="width">Width of the frame</param>
+			/// <param name="height">Height of the frame</param>
+			/// <param name="frame">RGB24 data, top-left to bottom-right</param>
+			/// <param name="frameBuffer">Destination buffer where planes are written</param>
+			/// <param name="offset">Start writing at this offset</param>
+			/// <returns>True if destination buffer changed, false otherwise.</returns>
+			public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
 		{
 			var byteIdx = offset;
 			var identical = true;
@@ -442,7 +523,7 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[] Scale2(int width, int height, byte[] srcplanes)
+		public static byte[] Scale2(int width, int height, byte[] srcplane)
 		{
 			var planeSize = width * height / 8;
 			byte[] plane;
@@ -451,7 +532,7 @@ namespace LibDmd.Common
 			{
 				for (var k = 0; k < (width / 2 / 8); k++)
 				{
-					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplanes[((i / 2) * (width / 2 / 8)) + k]];
+					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplane[((i / 2) * (width / 2 / 8)) + k]];
 				}
 				i++;
 			}
@@ -513,6 +594,38 @@ namespace LibDmd.Common
 			}
 			return Split(width, height, 2, scaledData);
 		}
+		//Scale down planes by displaying every second pixel
+
+		public static byte[] ScaleDown(int width, int height, byte[] srcplane)
+		{
+			var planeSize = width * height / 8;
+			byte[] scaledPlane = new byte[planeSize];
+			ushort[] plane = new ushort[planeSize * 2];
+			Buffer.BlockCopy(srcplane, 0, plane, 0, planeSize * 4);
+
+			for (var i = 0; i < height*2; i++)
+			{
+				for (var k = 0; k < (width / 8); k++)
+				{
+					ushort srcVal = plane[(i * (width / 8)) + k];
+					byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
+					scaledPlane[((i / 2) * (width / 8)) + k] = destVal;
+				}
+				i++;
+			}
+			return scaledPlane;
+		}
+
+		public static byte[][] ScaleDown(int width, int height, byte[][] srcplanes)
+		{
+			var planes = new byte[srcplanes.Length][];
+			for (var l = 0; l < srcplanes.Length; l++)
+			{
+				planes[l] = ScaleDown(width, height, srcplanes[l]);
+			}
+			return planes;
+		}
+
 
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame or vice versa
