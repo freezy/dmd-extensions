@@ -57,15 +57,21 @@ namespace LibDmd.Converter
 		/// </summary>
 		private IDisposable _paletteReset;
 
+		/// <summary>
+		/// Used to choose a mode to scale up SD frames in HD content.
+		/// </summary>
+		private int _scalingMode;
+
 		private bool _resetEmbedded = false;
 		private int _lastEmbedded = -1;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Gray4Colorizer(Coloring coloring, AnimationSet animations)
+		public Gray4Colorizer(Coloring coloring, AnimationSet animations, int scalingMode)
 		{
 			_coloring = coloring;
 			_animations = animations;
+			_scalingMode = scalingMode;
 
 			SetPalette(coloring.DefaultPalette, coloring.DefaultPaletteIndex, true);
 		}
@@ -124,7 +130,23 @@ namespace LibDmd.Converter
 
 			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length * 4)
 			{
-				planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				// We want to do the scaling after the animations get triggered.
+				if (_scalingMode == 0)
+				{
+					// Don't scale placeholder.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				if (_scalingMode == 1)
+				{
+					// Pixel doubler will certainly be faster.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				{
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, frame.Data);
+				}
 			}
 
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt

@@ -470,6 +470,49 @@ namespace LibDmd.Common
 			return planes;
 		}
 
+		/// <summary>
+		/// Implementation of Scale2 for frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns>scaled frame planes</returns>
+		public static byte[][] Scale2x(int width, int height, byte[] data)
+		{
+			byte[] scaledData = new byte[width * height];
+
+			var inputWidth = width / 2;
+			var inputHeight = height / 2;
+
+			for (var y = 0; y < inputHeight; y++)
+			{
+				for (var x = 0; x < inputWidth; x++)
+				{
+					var colorB = ImageUtil.GetPixel(x, y - 1, inputWidth, inputHeight, data);
+					var colorH = ImageUtil.GetPixel(x, y + 1, inputWidth, inputHeight, data);
+					var colorD = ImageUtil.GetPixel(x - 1, y, inputWidth, inputHeight, data);
+					var colorF = ImageUtil.GetPixel(x + 1, y, inputWidth, inputHeight, data);
+
+					var colorE = ImageUtil.GetPixel(x, y, inputWidth, inputHeight, data);
+
+					if ((colorB != colorH) && (colorD != colorF))
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, width, scaledData);
+					}
+					else
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, width, scaledData);
+					}
+				}
+			}
+			return Split(width, height, 2, scaledData);
+		}
 
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame or vice versa

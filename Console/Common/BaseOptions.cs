@@ -70,6 +70,9 @@ namespace DmdExt.Common
 		[OptionArray("virtual-frame-padding", HelpText = "Padding of the frame above the dots of the virtual DMD. Four values: <Left> <Top> <Right> <Bottom>. Default: \"0 0 0 0\".")]
 		public int[] VirtualDmdFramePadding { get; set; } = { 0, 0, 0, 0 };
 
+		[Option("virtual-scaling-mode", HelpText = "Scaling mode for SD content in HD. 0 = off, 1 = doubling, 2 = Scale2x, Default: 2")]
+		public int VirtualDmdScalingMode { get; set; } = 2;
+
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
 
@@ -240,6 +243,8 @@ namespace DmdExt.Common
 		public double Height => _options.VirtualDmdPosition.Length == 4
 			? _options.VirtualDmdPosition[3]
 			: (int) ((double)_options.VirtualDmdPosition[2] / 4);
+
+		public int ScalingMode => _options.VirtualDmdScalingMode;
 
 		public bool HasGameOverride(string key)
 		{

@@ -677,5 +677,47 @@ namespace LibDmd.Common
 				return IsPointer ? PointerSrc[pos] : ArraySrc[pos];
 			}
 		}
+
+		/// <summary>
+		/// Get pixel color of the frame data
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		/// <returns>color of coord</returns>
+		public static byte GetPixel(int x, int y, int width, int height, byte[] frame)
+		{
+			// Clamp edges so it doesn't wrap.
+			x = Clamp(x, 0, width - 1);
+			y = Clamp(y, 0, height - 1);
+
+			return frame[x + (width * y)];
+		}
+
+		/// <summary>
+		/// Set pixel color of a texture block
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="color">color to set</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		public static void SetPixel(int x, int y, byte color, int width, byte[] frame)
+		{
+			frame[x + (width * y)] = color;
+		}
+
+		/// <summary>
+		/// Clamp values
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static int Clamp(int value, int min, int max)
+		{
+			return (value < min) ? min : (value > max) ? max : value;
+		}
 	}
 }

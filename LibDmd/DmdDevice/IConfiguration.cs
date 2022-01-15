@@ -76,6 +76,7 @@ namespace LibDmd.DmdDevice
 		double Top { get; }
 		double Width { get; }
 		double Height { get; }
+		int ScalingMode { get; }
 		bool HasGameOverride(string key);
 		DmdStyle Style { get; }
 	}

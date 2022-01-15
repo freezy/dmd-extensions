@@ -243,6 +243,7 @@ namespace LibDmd.DmdDevice
 		public double Top => GetDouble("top", 0);
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
+		public int ScalingMode => GetInt("scaling", 2);
 
 		private readonly Dictionary<string, DmdStyle> _styles = new Dictionary<string, DmdStyle>();
 

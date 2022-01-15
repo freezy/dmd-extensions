@@ -28,10 +28,11 @@ namespace PinMameTest
 			_controller.ShowDMDOnly = false;
 			_controller.ShowFrame = false;
 			_controller.ShowTitle = false;
-			_controller.DoubleSize = false;
+			_controller.DoubleSize = true;
 			_controller.LockDisplay = true;
 			_controller.ShowDMDOnly = false;
 			_controller.Hidden = true;
+			_controller.HandleKeyboard = true;
 			Console.WriteLine("[{0}] VPinMAME Controller created.", Thread.CurrentThread.ManagedThreadId);
 		}
 
