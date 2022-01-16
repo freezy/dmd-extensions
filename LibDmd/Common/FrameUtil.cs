@@ -81,205 +81,6 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Splits an RGB24 frame into each bit plane.
-		/// </summary>
-		/// <param name="width">Width of the frame</param>
-		/// <param name="height">Height of the frame</param>
-		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
-		/// <param name="frameBuffer">Destination buffer where planes are written</param>
-		/// <param name="offset">Start writing at this offset</param>
-		/// <returns>True if destination buffer changed, false otherwise.</returns>
-		/// 
-		public static readonly byte[] GAMMA_TABLE = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-									2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-									3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5,
-									5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
-									7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
-									11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14,
-									14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18,
-									19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24,
-									24, 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 29, 29, 29, 30,
-									30, 31, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37,
-									37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45,
-									45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
-									55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
-
-		public static bool CreateRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
-		{
-			var identical = true;
-			int elements = width * height / 2 ;
-			int pixel_r, pixel_g, pixel_b, pixel_rl, pixel_gl, pixel_bl;
-			for (int l = 0; l < elements; l++) {
-				int i = l * 3;
-				switch (rgbSequence) {
-					case 0: //RGB panels
-						pixel_r = frame[i];
-						pixel_g = frame[i+2];
-						pixel_b = frame[i+1];
-						// lower half of display
-						pixel_rl = frame[i + (elements * 3)];
-						pixel_gl = frame[i + 2 + (elements * 3)];
-						pixel_bl = frame[i + 1 + (elements * 3)];
-						break;
-					default: //RBG panels
-						pixel_r = frame[i];
-						pixel_g = frame[i + 1];
-						pixel_b = frame[i + 2];
-						// lower half of display
-						pixel_rl = frame[i + (elements * 3)];
-						pixel_gl = frame[i + 1 + (elements * 3)];
-						pixel_bl = frame[i + 2 + (elements * 3)];
-						break;
-				}
-
-				// color correction
-				pixel_r = GAMMA_TABLE[pixel_r];
-				pixel_g = GAMMA_TABLE[pixel_g];
-				pixel_b = GAMMA_TABLE[pixel_b];
-
-				pixel_rl = GAMMA_TABLE[pixel_rl];
-				pixel_gl = GAMMA_TABLE[pixel_gl];
-				pixel_bl = GAMMA_TABLE[pixel_bl];
-
-				int target_idx = l + offset;
-
-				for (int k = 0; k < 6; k++) {
-					byte val = (byte) (((pixel_gl & 1) << 5) | ((pixel_bl & 1) << 4) | ((pixel_rl & 1) << 3) | ((pixel_g & 1) << 2) | ((pixel_b & 1) << 1) | ((pixel_r & 1) << 0));
-					identical = identical && frameBuffer[target_idx] == val;
-					frameBuffer[target_idx] = val;
-					pixel_r >>= 1;
-					pixel_g >>= 1;
-					pixel_b >>= 1;
-					pixel_rl >>= 1;
-					pixel_gl >>= 1;
-					pixel_bl >>= 1;
-					target_idx += elements;
-				}
-			}
-			return !identical;
-		}
-			/// <summary>
-			/// Splits an RGB24 frame into each bit plane.
-			/// </summary>
-			/// <param name="width">Width of the frame</param>
-			/// <param name="height">Height of the frame</param>
-			/// <param name="frame">RGB24 data, top-left to bottom-right</param>
-			/// <param name="frameBuffer">Destination buffer where planes are written</param>
-			/// <param name="offset">Start writing at this offset</param>
-			/// <returns>True if destination buffer changed, false otherwise.</returns>
-			public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
-		{
-			var byteIdx = offset;
-			var identical = true;
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x += 8) {
-					byte r3 = 0;
-					byte r4 = 0;
-					byte r5 = 0;
-					byte r6 = 0;
-					byte r7 = 0;
-
-					byte g3 = 0;
-					byte g4 = 0;
-					byte g5 = 0;
-					byte g6 = 0;
-					byte g7 = 0;
-
-					byte b3 = 0;
-					byte b4 = 0;
-					byte b5 = 0;
-					byte b6 = 0;
-					byte b7 = 0;
-
-					for (var v = 7; v >= 0; v--) {
-						var pos = (y * width + x + v) * 3;
-
-						var pixelr = frame[pos];
-						var pixelg = frame[pos + 1];
-						var pixelb = frame[pos + 2];
-
-						r3 <<= 1;
-						r4 <<= 1;
-						r5 <<= 1;
-						r6 <<= 1;
-						r7 <<= 1;
-						g3 <<= 1;
-						g4 <<= 1;
-						g5 <<= 1;
-						g6 <<= 1;
-						g7 <<= 1;
-						b3 <<= 1;
-						b4 <<= 1;
-						b5 <<= 1;
-						b6 <<= 1;
-						b7 <<= 1;
-
-						if ((pixelr & 8) != 0) r3 |= 1;
-						if ((pixelr & 16) != 0) r4 |= 1;
-						if ((pixelr & 32) != 0) r5 |= 1;
-						if ((pixelr & 64) != 0) r6 |= 1;
-						if ((pixelr & 128) != 0) r7 |= 1;
-
-						if ((pixelg & 8) != 0) g3 |= 1;
-						if ((pixelg & 16) != 0) g4 |= 1;
-						if ((pixelg & 32) != 0) g5 |= 1;
-						if ((pixelg & 64) != 0) g6 |= 1;
-						if ((pixelg & 128) != 0) g7 |= 1;
-
-						if ((pixelb & 8) != 0) b3 |= 1;
-						if ((pixelb & 16) != 0) b4 |= 1;
-						if ((pixelb & 32) != 0) b5 |= 1;
-						if ((pixelb & 64) != 0) b6 |= 1;
-						if ((pixelb & 128) != 0) b7 |= 1;
-					}
-
-					identical = identical &&
-						frameBuffer[byteIdx + 5120] == r3 &&
-						frameBuffer[byteIdx + 5632] == r4 &&
-						frameBuffer[byteIdx + 6144] == r5 &&
-						frameBuffer[byteIdx + 6656] == r6 &&
-						frameBuffer[byteIdx + 7168] == r7 &&
-
-						frameBuffer[byteIdx + 2560] == g3 &&
-						frameBuffer[byteIdx + 3072] == g4 &&
-						frameBuffer[byteIdx + 3584] == g5 &&
-						frameBuffer[byteIdx + 4096] == g6 &&
-						frameBuffer[byteIdx + 4608] == g7 &&
-
-						frameBuffer[byteIdx + 0] == b3 &&
-						frameBuffer[byteIdx + 512] == b4 &&
-						frameBuffer[byteIdx + 1024] == b5 &&
-						frameBuffer[byteIdx + 1536] == b6 &&
-						frameBuffer[byteIdx + 2048] == b7;
-
-
-					frameBuffer[byteIdx + 5120] = r3;
-					frameBuffer[byteIdx + 5632] = r4;
-					frameBuffer[byteIdx + 6144] = r5;
-					frameBuffer[byteIdx + 6656] = r6;
-					frameBuffer[byteIdx + 7168] = r7;
-
-					frameBuffer[byteIdx + 2560] = g3;
-					frameBuffer[byteIdx + 3072] = g4;
-					frameBuffer[byteIdx + 3584] = g5;
-					frameBuffer[byteIdx + 4096] = g6;
-					frameBuffer[byteIdx + 4608] = g7;
-
-					frameBuffer[byteIdx + 0] = b3;
-					frameBuffer[byteIdx + 512] = b4;
-					frameBuffer[byteIdx + 1024] = b5;
-					frameBuffer[byteIdx + 1536] = b6;
-					frameBuffer[byteIdx + 2048] = b7;
-					byteIdx++;
-				}
-			}
-			return !identical;
-		}
-
-		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
 		/// <param name="width">Bräiti vom Biud</param>
@@ -558,7 +359,7 @@ namespace LibDmd.Common
 		/// <param name="height"></param>
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[][] Scale2x(int width, int height, byte[] data)
+		public static byte[][] Scale2x(int width, int height, int bitlen, byte[] data)
 		{
 			byte[] scaledData = new byte[width * height];
 
@@ -593,7 +394,7 @@ namespace LibDmd.Common
 				}
 			}
 
-			return Split(width, height, 2, scaledData);
+			return Split(width, height, bitlen, scaledData);
 		}
 
 		/// <summary>
@@ -606,7 +407,7 @@ namespace LibDmd.Common
 		public static byte[][] Scale2x(int width, int height, byte[][] data)
 		{
 			var colorData = Join(width, height, data);
-			return Scale2x(width, height, colorData);
+			return Scale2x(width, height, data.Length, colorData);
 		}
 
 		//Scale down planes by displaying every second pixel
