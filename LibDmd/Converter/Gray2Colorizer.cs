@@ -16,6 +16,7 @@ namespace LibDmd.Converter
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public bool Has128x32Animation { get; set; }
+		
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
@@ -103,28 +104,8 @@ namespace LibDmd.Converter
 				}
 			}
 
-			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length * 4)
+			if (_activeAnimation != null)
 			{
-				// We want to do the scaling after the animations get triggered.
-				if(_scalingMode == 0)
-				{
-					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				if (_scalingMode == 1)
-				{
-					// Pixel doubler will certainly be faster.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				{
-					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, frame.Data);
-				}
-			}
-
-			if (_activeAnimation != null) {
 				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
@@ -258,7 +239,8 @@ namespace LibDmd.Converter
 			NoMaskCRC = checksum;
 
 			var mapping = _coloring.FindMapping(checksum);
-			if (mapping != null) {
+			if (mapping != null) 
+			{
 				return mapping;
 			}
 
@@ -268,10 +250,12 @@ namespace LibDmd.Converter
 		
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			var maskedPlane = new byte[maskSize];
-			foreach (var mask in _coloring.Masks) {
+			foreach (var mask in _coloring.Masks) 
+			{
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
 				mapping = _coloring.FindMapping(checksum);
-				if (mapping != null) {
+				if (mapping != null) 
+				{
 					return mapping;
 				}
 			}
@@ -285,6 +269,28 @@ namespace LibDmd.Converter
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(byte[][] planes)
 		{
+			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
+			{
+				// We want to do the scaling after the animations get triggered.
+				if (_scalingMode == 0)
+				{
+					// Don't scale placeholder.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				if (_scalingMode == 1)
+				{
+					// Pixel doubler will certainly be faster.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				{
+					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, colorData);
+				}
+			}
+
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2) {
 				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));

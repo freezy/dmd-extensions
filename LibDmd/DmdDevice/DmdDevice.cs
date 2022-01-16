@@ -663,7 +663,8 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
+			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation)
+			{
 				// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 				// indicating this should be upsized and treated as a centered 128x32 DMD.
 
@@ -674,7 +675,9 @@ namespace LibDmd.DmdDevice
 					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
 				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
 				_vpmGray2Source.NextFrame(_upsizedFrame);
-			} else {
+			}
+			else
+			{
 				_gray2Colorizer?.SetDimensions(width, height);
 				_gray4Colorizer?.SetDimensions(width, height);
 				_vpmGray2Source.NextFrame(frame);
@@ -686,6 +689,9 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+			int width = frame.width;
+			int height = frame.height;
+
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);

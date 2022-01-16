@@ -592,10 +592,24 @@ namespace LibDmd.Common
 					}
 				}
 			}
+
 			return Split(width, height, 2, scaledData);
 		}
-		//Scale down planes by displaying every second pixel
 
+		/// <summary>
+		/// Join 
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns></returns>
+		public static byte[][] Scale2x(int width, int height, byte[][] data)
+		{
+			var colorData = Join(width, height, data);
+			return Scale2x(width, height, colorData);
+		}
+
+		//Scale down planes by displaying every second pixel
 		public static byte[] ScaleDown(int width, int height, byte[] srcplane)
 		{
 			var planeSize = width * height / 8;

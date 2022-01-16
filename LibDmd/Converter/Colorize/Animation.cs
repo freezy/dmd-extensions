@@ -173,7 +173,7 @@ namespace LibDmd.Converter.Colorize
 			LCMBufferPlanes.ForEach(p => Common.FrameUtil.ClearPlane(p));
 		}
 
-		private void RenderLCM(byte[][] vpmFrame)
+		private byte[][] RenderLCM(byte[][] vpmFrame)
 		{
 			var frame_count = LCMBufferPlanes.Count;
 			byte[][] outplanes;
@@ -181,21 +181,27 @@ namespace LibDmd.Converter.Colorize
 
 			if (SwitchMode == SwitchMode.LayeredColorMask)
 			{
+				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
+				{
+					vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
+				}
+
 				for (int i = 0; i < vpmFrame.Length; i++)
 				{
 					outplanes[i] = vpmFrame[i];
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					if (vpmFrame[0].Length != LCMBufferPlanes[i].Length * 4)
-						outplanes[i] = LCMBufferPlanes[i];
-					else
-						outplanes[i] = FrameUtil.Scale2(Width * 2, Height * 2, LCMBufferPlanes[i]);
-					
+					outplanes[i] = LCMBufferPlanes[i];
 				}
 			}
 			if (SwitchMode == SwitchMode.MaskedReplace)
 			{
+				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
+				{
+					vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
+				}
+
 				for (int i = 0; i < frame_count; i++)
 				{
 					if (i < vpmFrame.Length)
@@ -205,7 +211,7 @@ namespace LibDmd.Converter.Colorize
 				}
 			}
 
-				_currentRender(outplanes);
+			return outplanes;
 		}
 
 		public void DetectFollow(byte[] plane, uint NoMaskCRC, byte[][] masks, bool Reverse)
@@ -329,55 +335,53 @@ namespace LibDmd.Converter.Colorize
 
 		private void OutputFrame(byte[][] vpmFrame)
 		{
+			byte[][] outplanes;
+
 			switch (SwitchMode)
 			{
 				case SwitchMode.ColorMask:
 				case SwitchMode.Follow:
-					RenderColorMask(vpmFrame);
+					outplanes = RenderColorMask(vpmFrame);
 					break;
 				case SwitchMode.FollowReplace:
 				case SwitchMode.Replace:
-					byte[][] outplanes;
-					var animplanes = Frames[_frameIndex].PlaneData;
-					if (vpmFrame[0].Length != animplanes[0].Length * 4)
-						outplanes = animplanes;
-					else
-						outplanes = FrameUtil.Scale2(Width * 2, Height * 2, animplanes);
-					
-					_currentRender(outplanes);
+					outplanes = Frames[_frameIndex].PlaneData;
 					break;
 				case SwitchMode.LayeredColorMask:
 				case SwitchMode.MaskedReplace:
-					RenderLCM(vpmFrame);
+					outplanes = RenderLCM(vpmFrame);
+					break;
+				default:
+					{
+						outplanes = vpmFrame;
+					}
 					break;
 			}
+			_currentRender(outplanes);
 		}
 
-		private void RenderColorMask(byte[][] vpmFrame)
+		private byte[][] RenderColorMask(byte[][] vpmFrame)
 		{
+			var frame_count = Frames[_frameIndex].Planes.Count;
+			byte[][] outplanes;
+			outplanes = new byte[frame_count][];
+
 			if (Frames[_frameIndex].Planes.Count < 4)
 			{
 				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
 			}
 			else
 			{
-				var frame_count = Frames[_frameIndex].Planes.Count;
-				byte[][] outplanes;
-				outplanes = new byte[frame_count][];
 				for (int i = 0; i < vpmFrame.Length; i++)
 				{
 					outplanes[i] = vpmFrame[i];
 				}
 				for (int i = vpmFrame.Length; i < frame_count; i++)
 				{
-					if (vpmFrame[0].Length != Frames[_frameIndex].Planes[i].Plane.Length * 4)
-						outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
-					else
-						outplanes[i] = FrameUtil.Scale2(Width*2, Height*2, Frames[_frameIndex].Planes[i].Plane);
+					outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
 				}
-
-				_currentRender(outplanes);
 			}
+			return outplanes;
 		}
 
 		private void InitializeFrame()
@@ -385,7 +389,6 @@ namespace LibDmd.Converter.Colorize
 			_timer += (int)Frames[_frameIndex].Delay;
 		}
 
-		
 		public void NextFrame(byte[][] planes, Action completed = null)
 		{
 			RenderAnimation(planes, completed);

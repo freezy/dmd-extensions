@@ -128,27 +128,6 @@ namespace LibDmd.Converter
 				}
 			}
 
-			if (Dimensions.Value.Width * Dimensions.Value.Height == frame.Data.Length * 4)
-			{
-				// We want to do the scaling after the animations get triggered.
-				if (_scalingMode == 0)
-				{
-					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				if (_scalingMode == 1)
-				{
-					// Pixel doubler will certainly be faster.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				{
-					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, frame.Data);
-				}
-			}
-
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null)
 			{
@@ -328,6 +307,28 @@ namespace LibDmd.Converter
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(byte[][] planes)
 		{
+			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
+			{
+				// We want to do the scaling after the animations get triggered.
+				if (_scalingMode == 0)
+				{
+					// Don't scale placeholder.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				if (_scalingMode == 1)
+				{
+					// Pixel doubler will certainly be faster.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				{
+					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, colorData);
+				}
+			}
+
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2)
 			{
