@@ -359,7 +359,7 @@ namespace LibDmd.Common
 		/// <param name="height"></param>
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[][] Scale2x(int width, int height, byte[] data)
+		public static byte[][] Scale2x(int width, int height, int bitlen, byte[] data)
 		{
 			byte[] scaledData = new byte[width * height];
 
@@ -394,7 +394,7 @@ namespace LibDmd.Common
 				}
 			}
 
-			return Split(width, height, 2, scaledData);
+			return Split(width, height, bitlen, scaledData);
 		}
 
 		/// <summary>
@@ -407,7 +407,7 @@ namespace LibDmd.Common
 		public static byte[][] Scale2x(int width, int height, byte[][] data)
 		{
 			var colorData = Join(width, height, data);
-			return Scale2x(width, height, colorData);
+			return Scale2x(width, height, data.Length, colorData);
 		}
 
 		//Scale down planes by displaying every second pixel

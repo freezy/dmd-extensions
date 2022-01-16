@@ -181,11 +181,6 @@ namespace LibDmd.Converter.Colorize
 
 			if (SwitchMode == SwitchMode.LayeredColorMask)
 			{
-				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
-				{
-					vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
-				}
-
 				for (int i = 0; i < vpmFrame.Length; i++)
 				{
 					outplanes[i] = vpmFrame[i];
@@ -199,7 +194,7 @@ namespace LibDmd.Converter.Colorize
 			{
 				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
 				{
-					vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
+					vpmFrame = FrameUtil.Scale2(Width, Height, vpmFrame);
 				}
 
 				for (int i = 0; i < frame_count; i++)
