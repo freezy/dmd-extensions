@@ -9,6 +9,8 @@ using LibDmd.DmdDevice;
 using LibDmd.Output;
 using LibDmd.Output.Network;
 using LibDmd.Output.Pin2Dmd;
+using LibDmd.Output.Pin2DmdXl;
+using LibDmd.Output.Pin2DmdHd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
@@ -83,6 +85,36 @@ namespace DmdExt.Common
 					reportingTags.Add("Out:PIN2DMD");
 				} else {
 					Logger.Warn("Device {0} is not available.", PIN2DMD);
+				}
+			}
+
+			if (config.Pin2Dmd.Enabled)
+			{
+				var pin2DmdXl = Pin2DmdXl.GetInstance(config.Pin2Dmd.Delay);
+				if (pin2DmdXl.IsAvailable)
+				{
+					renderers.Add(pin2DmdXl);
+					Logger.Info("Added PIN2DMD XL renderer.");
+					reportingTags.Add("Out:PIN2DMDXL");
+				}
+				else
+				{
+					Logger.Warn("Device {0} is not available.", PIN2DMDXL);
+				}
+			}
+
+			if (config.Pin2Dmd.Enabled)
+			{
+				var pin2DmdHd = Pin2DmdHd.GetInstance(config.Pin2Dmd.Delay);
+				if (pin2DmdHd.IsAvailable)
+				{
+					renderers.Add(pin2DmdHd);
+					Logger.Info("Added PIN2DMD HD renderer.");
+					reportingTags.Add("Out:PIN2DMDHD");
+				}
+				else
+				{
+					Logger.Warn("Device {0} is not available.", PIN2DMDHD);
 				}
 			}
 

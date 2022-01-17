@@ -336,11 +336,22 @@ namespace LibDmd.DmdDevice
 				var pin2Dmd = Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
-					if (_coloring != null) {
-						pin2Dmd.PreloadPalettes(_coloring);
-					}
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
+				}
+				var pin2DmdXl = Output.Pin2DmdXl.Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
+				if (pin2DmdXl.IsAvailable)
+				{
+					renderers.Add(pin2DmdXl);
+					Logger.Info("Added PIN2DMD XL renderer.");
+					ReportingTags.Add("Out:PIN2DMDXL");
+				}
+				var pin2DmdHd = Output.Pin2DmdHd.Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
+				if (pin2DmdHd.IsAvailable)
+				{
+					renderers.Add(pin2DmdHd);
+					Logger.Info("Added PIN2DMD HD renderer.");
+					ReportingTags.Add("Out:PIN2DMDHD");
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
