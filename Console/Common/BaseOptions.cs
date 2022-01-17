@@ -160,7 +160,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIXELCADE, Virtual, AlphaNumeric, Network
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, PIN2DMD, PIN2DMDXL, PIN2DMDHD, PIXELCADE, Virtual, AlphaNumeric, Network
 		}
 
 		public void Validate()
