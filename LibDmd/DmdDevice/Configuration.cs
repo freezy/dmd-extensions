@@ -168,8 +168,11 @@ namespace LibDmd.DmdDevice
 		public ResizeMode Resize => GetEnum("resize", ResizeMode.Fit);
 		public bool FlipHorizontally => GetBoolean("fliphorizontally", false);
 		public bool FlipVertically => GetBoolean("flipvertically", false);
-
+#if DISABLE_COLORING
+		public bool Colorize { get; } = false;
+#else
 		public bool Colorize => GetBoolean("colorize", true);
+#endif
 		public bool QuitWhenDone => false;
 		public int QuitAfter => -1;
 		public bool NoClear => false;
