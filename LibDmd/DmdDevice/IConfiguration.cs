@@ -1,5 +1,6 @@
 ﻿using System.Windows.Media;
 using LibDmd.Input;
+using LibDmd.Common;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.Virtual.Dmd;
 
@@ -25,7 +26,7 @@ namespace LibDmd.DmdDevice
 		void Validate();
 	}
 
-	public interface IGlobalConfig 
+	public interface IGlobalConfig
 	{
 		ResizeMode Resize { get; }
 		bool FlipHorizontally { get; }
@@ -35,6 +36,8 @@ namespace LibDmd.DmdDevice
 		int QuitAfter { get; }
 		bool NoClear { get; }
 		Color DmdColor { get; }
+		bool ScaleToHD { get; }
+		ScalerMode ScalerMode { get; }
 	}
 
 	public interface IPinDmd1Config
@@ -76,7 +79,6 @@ namespace LibDmd.DmdDevice
 		double Top { get; }
 		double Width { get; }
 		double Height { get; }
-		int ScalingMode { get; }
 		bool HasGameOverride(string key);
 		DmdStyle Style { get; }
 	}

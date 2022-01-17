@@ -223,8 +223,18 @@ namespace LibDmd.DmdDevice
 						aniHeight = Height;
 						aniWidth = Width;
 					}
-					_gray2Colorizer = new Gray2Colorizer(_coloring, vni, _config.VirtualDmd.ScalingMode);
-					_gray4Colorizer = new Gray4Colorizer(_coloring, vni, _config.VirtualDmd.ScalingMode);
+
+					// Scale colorized content up to 256x64 regardless of size.
+					if (_config.Global.ScaleToHD)
+					{
+						aniWidth = 256;
+						aniHeight = 64;
+					}
+					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
+					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
+
+					_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
+					_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
 
 				} catch (Exception e) {
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);

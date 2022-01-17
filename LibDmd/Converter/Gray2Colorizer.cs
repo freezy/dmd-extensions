@@ -16,7 +16,8 @@ namespace LibDmd.Converter
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public bool Has128x32Animation { get; set; }
-		
+		public ScalerMode ScalerMode { get; set; }
+
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
@@ -63,18 +64,12 @@ namespace LibDmd.Converter
 		/// </summary>
 		private IDisposable _paletteReset;
 
-		/// <summary>
-		/// Used to choose a mode to scale up SD frames in HD content.
-		/// </summary>
-		private int _scalingMode;
-
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Gray2Colorizer(  Coloring coloring, AnimationSet animations, int scalingMode)
+		public Gray2Colorizer(  Coloring coloring, AnimationSet animations)
 		{
 			_coloring = coloring;
 			_animations = animations;
-			_scalingMode = scalingMode;
 			Has128x32Animation = (_coloring.Masks != null && _coloring.Masks.Length >= 1 && _coloring.Masks[0].Length == 512);
 			SetPalette(coloring.DefaultPalette, coloring.DefaultPaletteIndex, true);
 		}
@@ -272,15 +267,9 @@ namespace LibDmd.Converter
 			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
 			{
 				// We want to do the scaling after the animations get triggered.
-				if (_scalingMode == 0)
+				if (ScalerMode == ScalerMode.Doubler)
 				{
 					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				if (_scalingMode == 1)
-				{
-					// Pixel doubler will certainly be faster.
 					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
 				}
 				else

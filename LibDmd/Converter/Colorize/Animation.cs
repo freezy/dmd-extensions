@@ -59,7 +59,7 @@ namespace LibDmd.Converter.Colorize
 		#endregion
 		protected int Width;
 		protected int Height;
-
+		protected ScalerMode ScalerMode;
 
 		#region Animation-related
 
@@ -194,7 +194,14 @@ namespace LibDmd.Converter.Colorize
 			{
 				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
 				{
-					vpmFrame = FrameUtil.Scale2(Width, Height, vpmFrame);
+					if (ScalerMode == ScalerMode.Doubler)
+					{
+						vpmFrame = FrameUtil.Scale2(Width, Height, vpmFrame);
+					}
+					else
+					{
+						vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
+					}
 				}
 
 				for (int i = 0; i < frame_count; i++)
@@ -259,7 +266,7 @@ namespace LibDmd.Converter.Colorize
 							if (SwitchMode == SwitchMode.MaskedReplace)
 								Common.FrameUtil.ClearPlane(ReplaceMask);
 						}
-						
+
 						for (int i = 0; i < af.Planes.Count; i++)
 						{
 							FrameUtil.OrPlane(af.PlaneData[i], LCMBufferPlanes[i]);

@@ -720,4 +720,18 @@ namespace LibDmd.Common
 			return (value < min) ? min : (value > max) ? max : value;
 		}
 	}
+
+
+	public enum ScalerMode
+	{
+		/// <summary>
+		/// Double the pixels
+		/// </summary>
+		Doubler,
+
+		/// <summary>
+		/// Use scale2x algorithm
+		/// </summary>
+		Scale2x
+	}
 }

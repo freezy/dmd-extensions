@@ -70,8 +70,11 @@ namespace DmdExt.Common
 		[OptionArray("virtual-frame-padding", HelpText = "Padding of the frame above the dots of the virtual DMD. Four values: <Left> <Top> <Right> <Bottom>. Default: \"0 0 0 0\".")]
 		public int[] VirtualDmdFramePadding { get; set; } = { 0, 0, 0, 0 };
 
-		[Option("virtual-scaling-mode", HelpText = "Scaling mode for SD content in HD. 0 = off, 1 = doubling, 2 = Scale2x, Default: 2")]
-		public int VirtualDmdScalingMode { get; set; } = 2;
+		[Option("scale-to-hd", HelpText = "Scale colorized content up to 256x64, Default: false")]
+		public bool ScalingToHD { get; set; } = false;
+
+		[Option("scaler-mode", HelpText = "Scaling mode for colorized content.  [ doubler, scale2x ]. Default: \"scale2x\".")]
+		public ScalerMode ScalingMode { get; set; } = ScalerMode.Scale2x;
 
 		[Option('c', "color", HelpText = "Sets the color of a grayscale source that is rendered on an RGB destination. Default: ff3000")]
 		public string RenderColor { get; set; } = "ff3000";
@@ -201,6 +204,8 @@ namespace DmdExt.Common
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
+		public bool ScaleToHD => _options.ScalingToHD;
+		public ScalerMode ScalerMode => _options.ScalingMode;
 	}
 
 	internal class VirtualDmdOptions : IVirtualDmdConfig
@@ -243,8 +248,6 @@ namespace DmdExt.Common
 		public double Height => _options.VirtualDmdPosition.Length == 4
 			? _options.VirtualDmdPosition[3]
 			: (int) ((double)_options.VirtualDmdPosition[2] / 4);
-
-		public int ScalingMode => _options.VirtualDmdScalingMode;
 
 		public bool HasGameOverride(string key)
 		{
