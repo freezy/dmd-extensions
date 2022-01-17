@@ -176,7 +176,7 @@ namespace LibDmd.Output.Pin2DmdHd
 
 			} catch (Exception e) {
 				IsAvailable = false;
-				Logger.Warn(e, "Probing PIN2DMD failed, skipping.");
+				Logger.Warn(e, "Probing PIN2DMD HD failed, skipping.");
 			}
 		}
 
@@ -393,7 +393,7 @@ namespace LibDmd.Output.Pin2DmdHd
 					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 				}
 			} catch (Exception e) { 
-				Logger.Error(e, "Error sending data to PIN2DMD: {0}", e.Message);
+				Logger.Error(e, "Error sending data to PIN2DMD HD: {0}", e.Message);
 			}
 #endif
 		}
@@ -430,7 +430,7 @@ namespace LibDmd.Output.Pin2DmdHd
 			}
 			catch (Exception e)
 			{
-				Logger.Error(e, "Error sending data to PIN2DMD: {0}", e.Message);
+				Logger.Error(e, "Error sending data to PIN2DMD HD: {0}", e.Message);
 			}
 			try
 			{
@@ -448,7 +448,7 @@ namespace LibDmd.Output.Pin2DmdHd
 			}
 			catch (Exception e)
 			{
-				Logger.Error(e, "Error reading  config from PIN2DMD: {0}", e.Message);
+				Logger.Error(e, "Error reading  config from PIN2DMD HD: {0}", e.Message);
 			}
 #endif
 		}
