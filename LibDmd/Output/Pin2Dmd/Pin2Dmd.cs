@@ -13,7 +13,9 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : IRgb24Destination, IRawOutput, IFixedSizeDestination
+
+	//IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, 
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
@@ -45,7 +47,8 @@ namespace LibDmd.Output.Pin2Dmd
 			public byte mode;
 			public byte palette;
 			public fixed byte smartDMD[8];
-			public fixed byte foo[7];
+			public fixed byte foo[6];
+			public byte buffermode;
 			public byte scaler;
 			public byte copyPalToFlash;
 			public byte wifi;
@@ -273,10 +276,146 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
+		/// <summary>
+		/// Creates outputbuffer from RGB24 frame
+		/// </summary>
+		/// <param name="width">Width of the frame</param>
+		/// <param name="height">Height of the frame</param>
+		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
+		/// <param name="frameBuffer">Destination buffer where planes are written</param>
+		/// <param name="offset">Start writing at this offset</param>
+		/// <returns>True if destination buffer changed, false otherwise.</returns>
+		/// 
+		public static readonly byte[] GAMMA_TABLE = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+									1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+									2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+									3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5,
+									5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
+									7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+									11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14,
+									14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18,
+									19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24,
+									24, 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 29, 29, 29, 30,
+									30, 31, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37,
+									37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45,
+									45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
+									55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
+
+		private static bool CreateRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
+		{
+			var identical = true;
+			int elements = width * height / 2;
+			int pixel_r, pixel_g, pixel_b, pixel_rl, pixel_gl, pixel_bl;
+			for (int l = 0; l < elements; l++)
+			{
+				int i = l * 3;
+				switch (rgbSequence & 0x0F)
+				{
+					case 0: //RGB panels
+						pixel_r = frame[i];
+						pixel_g = frame[i + 2];
+						pixel_b = frame[i + 1];
+						// lower half of display
+						pixel_rl = frame[i + (elements * 3)];
+						pixel_gl = frame[i + 2 + (elements * 3)];
+						pixel_bl = frame[i + 1 + (elements * 3)];
+						break;
+					default: //RBG panels
+						pixel_r = frame[i];
+						pixel_g = frame[i + 1];
+						pixel_b = frame[i + 2];
+						// lower half of display
+						pixel_rl = frame[i + (elements * 3)];
+						pixel_gl = frame[i + 1 + (elements * 3)];
+						pixel_bl = frame[i + 2 + (elements * 3)];
+						break;
+				}
+
+				// color correction
+				pixel_r = GAMMA_TABLE[pixel_r];
+				pixel_g = GAMMA_TABLE[pixel_g];
+				pixel_b = GAMMA_TABLE[pixel_b];
+
+				pixel_rl = GAMMA_TABLE[pixel_rl];
+				pixel_gl = GAMMA_TABLE[pixel_gl];
+				pixel_bl = GAMMA_TABLE[pixel_bl];
+
+				int target_idx = l + offset;
+
+				for (int k = 0; k < 6; k++)
+				{
+					byte val = (byte)(((pixel_gl & 1) << 5) | ((pixel_bl & 1) << 4) | ((pixel_rl & 1) << 3) | ((pixel_g & 1) << 2) | ((pixel_b & 1) << 1) | ((pixel_r & 1) << 0));
+					identical = identical && frameBuffer[target_idx] == val;
+					frameBuffer[target_idx] = val;
+					pixel_r >>= 1;
+					pixel_g >>= 1;
+					pixel_b >>= 1;
+					pixel_rl >>= 1;
+					pixel_gl >>= 1;
+					pixel_bl >>= 1;
+					target_idx += elements;
+				}
+			}
+			return !identical;
+		}
+
+		private static bool CreateRgb24HD(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence, int buffermode)
+		{
+			var tmp = new byte[frameBuffer.Length];
+			var identical = true;
+			CreateRgb24(width, height, frame, tmp, offset, rgbSequence);
+			var dest_idx = offset;
+			var tmp_idx = offset;
+
+			if (buffermode == 0)
+			{
+				for (int l = 0; l < (frameBuffer.Length - 4) / 2; l++)
+				{
+					identical = identical && frameBuffer[dest_idx] == tmp[tmp_idx] && frameBuffer[dest_idx + 1] == tmp[tmp_idx + (width / 2)];
+					frameBuffer[dest_idx] = tmp[tmp_idx + (width / 2)];
+					frameBuffer[dest_idx + 1] = (byte)(tmp[tmp_idx] << 1);
+					dest_idx += 2;
+					tmp_idx++;
+					if ((dest_idx - offset) % width == 0)
+						tmp_idx += width / 2;
+				}
+			}
+			else
+			{
+				byte val;
+				for (int i = 0; i < 32; i++)
+				{  // 32 rows of source as we split into upper and lower half
+					for (int j = 0; j < 16; j++)
+					{ // 16 channels per driver IC with duplicate pixel
+						for (int k = 0; k < 8; k++)
+						{ // 8 led driver ICs per module
+							for (int l = 5; l >= 0; l--)
+							{
+								tmp_idx = k * 16 + j + i * 256 + offset;
+								val = tmp[tmp_idx + (width / 2) + (width * height / 2 * l)];
+								identical = identical && frameBuffer[dest_idx] == val;
+								frameBuffer[dest_idx++] = val;
+								val = (byte)(tmp[tmp_idx + (width * height / 2 * l)] << 1);
+								identical = identical && frameBuffer[dest_idx] == val;
+								frameBuffer[dest_idx++] = val;
+							}
+						}
+					}
+				}
+			}
+			return !identical;
+		}
+
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			var changed = FrameUtil.CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq);
+			bool changed = true;
+			if (DmdWidth == 256 && DmdHeight == 64)
+				changed = CreateRgb24HD(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq, pin2dmd_config.buffermode);
+			else
+				changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq);
 
 			// send frame buffer to device
 			if (changed) {
