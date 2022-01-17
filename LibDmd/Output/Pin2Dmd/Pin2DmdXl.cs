@@ -411,6 +411,39 @@ namespace LibDmd.Output.Pin2DmdXl
 			var identical = true;
 			var pos = 6;
 
+			if (numOfColors == 2)
+			{
+				pos = 7; // color 0
+				_colorPalette[5] = 0x00;
+				_colorPalette[6] = 0x01;
+				var color0 = palette[0];
+				var color15 = palette[1];
+				identical = identical && _colorPalette[pos] == color0.R && _colorPalette[pos + 1] == color0.G && _colorPalette[pos + 2] == color0.B;
+				_colorPalette[pos] = color0.R;
+				_colorPalette[pos + 1] = color0.G;
+				_colorPalette[pos + 2] = color0.B;
+
+				for (int i = 1; i < 15; i++)
+				{
+					pos = 7 + (i * 3);
+					_colorPalette[pos] = (byte)((color0.R / 15 * i) + ((color15.R / 15) * (15 - i)));
+					_colorPalette[pos + 1] = (byte)((color0.G / 15 * i) + ((color15.G / 15) * (15 - i)));
+					_colorPalette[pos + 2] = (byte)((color0.B / 15 * i) + ((color15.B / 15) * (15 - i)));
+				}
+
+				pos = 7 + (15 * 3); // color 15
+				color15 = palette[1];
+				identical = identical && _colorPalette[pos] == color15.R && _colorPalette[pos + 1] == color15.G && _colorPalette[pos + 2] == color15.B;
+				_colorPalette[pos] = color15.R;
+				_colorPalette[pos + 1] = color15.G;
+				_colorPalette[pos + 2] = color15.B;
+				if (!identical)
+				{
+					RenderRaw(_colorPalette);
+				}
+			}
+
+
 			if (numOfColors == 4)
 			{
 				pos = 7; // color 0

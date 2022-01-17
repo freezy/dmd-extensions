@@ -94,7 +94,7 @@ namespace DmdExt.Common
 				if (pin2DmdXl.IsAvailable)
 				{
 					renderers.Add(pin2DmdXl);
-					Logger.Info("Added PIN2DMD Xl renderer.");
+					Logger.Info("Added PIN2DMD XL renderer.");
 					reportingTags.Add("Out:PIN2DMDXL");
 				}
 				else
