@@ -3,7 +3,6 @@ using System.Windows.Media;
 using LibDmd.Common;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using LibDmd.Converter.Colorize;
 using NLog;
 using System.Runtime.InteropServices;
 
@@ -16,7 +15,7 @@ namespace LibDmd.Output.Pin2DmdHd
 	public class Pin2DmdHd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	
 	{
-		public string Name { get; } = "PIN2DMD";
+		public string Name { get; } = "PIN2DMD HD";
 		public bool IsAvailable { get; private set; }
 
 		public int DmdWidth { get; private set; } = 256;
@@ -34,11 +33,8 @@ namespace LibDmd.Output.Pin2DmdHd
 		private readonly byte[] _colorPalette;
 		private readonly byte[] _colorPalette16;
 		private readonly byte[] _colorPalette64;
-		private int _currentPreloadedPalette;
-		private bool _paletteIsPreloaded;
 		private static Pin2DmdHd _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private bool _disablePreload = true;
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		internal unsafe struct configDescriptor
@@ -67,7 +63,6 @@ namespace LibDmd.Output.Pin2DmdHd
 			_colorPalette[2] = 0xE7;
 			_colorPalette[3] = 0xFF;
 			_colorPalette[4] = 0x04;
-			_paletteIsPreloaded = false;
 
 			// New firmware color palette
 			_colorPalette16 = new byte[64];
@@ -120,7 +115,7 @@ namespace LibDmd.Output.Pin2DmdHd
 
 			// if the device is open and ready
 			if (_pin2DmdDevice == null) {
-				Logger.Debug("PIN2DMD device not found.");
+				Logger.Debug("PIN2DMD HD device not found.");
 				IsAvailable = false;
 				return;
 			}
@@ -178,7 +173,6 @@ namespace LibDmd.Output.Pin2DmdHd
 				}
 #endif
 				IsAvailable = true;
-				_currentPreloadedPalette = -1;
 
 			} catch (Exception e) {
 				IsAvailable = false;
@@ -216,22 +210,23 @@ namespace LibDmd.Output.Pin2DmdHd
 		/// <param name="offset">Start writing at this offset</param>
 		/// <returns>True if destination buffer changed, false otherwise.</returns>
 		/// 
-		public static readonly byte[] GAMMA_TABLE = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-									1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-									2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-									3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5,
-									5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
-									7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
-									11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14,
-									14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18,
-									19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24,
-									24, 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 29, 29, 29, 30,
-									30, 31, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37,
-									37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45,
-									45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
-									55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
+		public static readonly byte[] GAMMA_TABLE = 
+			{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+			2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+			3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5,
+			5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
+			7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+			11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14,
+			14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18,
+			19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24,
+			24, 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 29, 29, 29, 30,
+			30, 31, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37,
+			37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45,
+			45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
+			55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
 
 		private static bool CreateRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
 		{
@@ -341,11 +336,7 @@ namespace LibDmd.Output.Pin2DmdHd
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			bool changed = true;
-			if (DmdWidth == 256 && DmdHeight == 64)
-				changed = CreateRgb24HD(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq, pin2dmd_config.buffermode);
-			else
-				changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq);
+			var changed = CreateRgb24HD(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmd_config.rgbseq, pin2dmd_config.buffermode);
 
 			// send frame buffer to device
 			if (changed) {
@@ -467,7 +458,7 @@ namespace LibDmd.Output.Pin2DmdHd
 			SetSinglePalette(new[] { Colors.Black, color });
 		}
 
-		void SetSinglePaletteV3(Color[] colors)
+		void SetSinglePalette(Color[] colors)
 		{
 			var numOfColors = colors.Length;
 			var palette = ColorUtil.GetPalette(colors, numOfColors);
@@ -542,85 +533,10 @@ namespace LibDmd.Output.Pin2DmdHd
 			}
 		}
 
-		public void SetSinglePalette(Color[] colors) //deprecated
-		{
-			var palette = ColorUtil.GetPalette(colors, 16);
-			var identical = true;
-			var pos = 7;
-			_colorPalette[5] = 0x00;
-			_colorPalette[6] = 0x01;
-			for (var i = 0; i < 16; i++) {
-				var color = palette[i];
-				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-				_colorPalette[pos] = color.R;
-				_colorPalette[pos + 1] = color.G;
-				_colorPalette[pos + 2] = color.B;
-				pos += 3;
-			}
-			if (!identical) {
-				RenderRaw(_colorPalette);
-				System.Threading.Thread.Sleep(Delay);
-			}
-		}
-
 		public void SetPalette(Color[] colors, int index) 
 		{
-			if (_disablePreload)
-			{
-				SetSinglePaletteV3(colors);
-				return;
-			}
-			//deprecated
-			if (index >= 0 && _paletteIsPreloaded) {
-				if (index == _currentPreloadedPalette)
-					return;
-				Logger.Debug("[Pin2DMD] Switch to index " + index.ToString());
-				SwitchToPreloadedPalette((ushort)index);
-				_currentPreloadedPalette = index;
-			} else { // We have a palette request not associated with an index
-				Logger.Debug("[Pin2DMD] Palette switch without index");
-
-				SetSinglePalette(colors);
-				_currentPreloadedPalette = -1;
-				if (_paletteIsPreloaded) {
-					Logger.Warn("[Pin2DMD] Request to change without index, preloaded palette lost.");
-					_paletteIsPreloaded = false;
-				}
-			}
-		}
-
-		public void PreloadPalettes(Coloring coloring) //deprecated
-		{
-	 	    Logger.Debug("[Pin2DMD] Preloading " + coloring.Palettes.Length + "palettes.");
-			foreach (var palette in coloring.Palettes) {
-				var pos = 7;
-				for (var i = 0; i < 16; i++) {
-					var color = palette.Colors[i];
-					_colorPalette[pos] = color.R;
-					_colorPalette[pos + 1] = color.G;
-					_colorPalette[pos + 2] = color.B;
-					pos += 3;
-				}
-				_colorPalette[5] = (byte)palette.Index;
-				_colorPalette[6] = (byte)palette.Type;
-
-				RenderRaw(_colorPalette);
-				System.Threading.Thread.Sleep(Delay);
-			}
-			_paletteIsPreloaded = true;
-		}
-
-		public void SwitchToPreloadedPalette(uint index)
-		{
-			var hexIndexStr = index.ToString("X2");
-
-			var buffer = new byte[64];
-			buffer[0] = 0x01;
-			buffer[1] = 0xC3;
-			buffer[2] = 0xE7;
-			buffer[3] = (byte)hexIndexStr[0];
-			buffer[4] = (byte)hexIndexStr[1];
-			RenderRaw(buffer);
+			SetSinglePalette(colors);
+			return;
 		}
 
 		public void ClearPalette()
@@ -630,10 +546,7 @@ namespace LibDmd.Output.Pin2DmdHd
 
 		public void ClearColor()
 		{
-			// Skip if a palette is preloaded, as it will wipe it out, 
-			// and we know palettes will be selected by the colorizer.
-			if (!_paletteIsPreloaded)
-				SetColor(RenderGraph.DefaultColor);
+			SetColor(RenderGraph.DefaultColor);
 		}
 
 		public void ClearDisplay()
