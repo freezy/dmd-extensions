@@ -59,7 +59,8 @@ namespace LibDmd.Converter.Colorize
 		#endregion
 		protected int Width;
 		protected int Height;
-		protected ScalerMode ScalerMode;
+
+		public ScalerMode ScalerMode { get; set; }
 
 		#region Animation-related
 

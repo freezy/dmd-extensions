@@ -101,6 +101,7 @@ namespace LibDmd.Converter
 
 			if (_activeAnimation != null)
 			{
+				_activeAnimation.ScalerMode = ScalerMode;
 				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
