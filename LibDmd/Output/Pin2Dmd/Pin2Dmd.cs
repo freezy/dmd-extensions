@@ -13,9 +13,8 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : IRgb24Destination, IRawOutput, IFixedSizeDestination
-
-	//IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, 
+	public class Pin2Dmd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	
 	{
 		public string Name { get; } = "PIN2DMD";
 		public bool IsAvailable { get; private set; }
@@ -129,7 +128,7 @@ namespace LibDmd.Output.Pin2Dmd
 			try {
 				_pin2DmdDevice.Open();
 
-				if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD"))
+				if (_pin2DmdDevice.Info.ProductString.Equals("PIN2DMD"))
 				{
 					Logger.Info("Found PIN2DMD device.");
 					Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
@@ -139,102 +138,33 @@ namespace LibDmd.Output.Pin2Dmd
 
 					ReadConfig();
 
-					if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD XL"))
-					{
-						DmdWidth = 192;
-						DmdHeight = 64;
-					}
+					// 18 bits per pixel plus 4 init bytes
+					var size = (DmdWidth * DmdHeight / 2 * 6) + 4;
+					_frameBufferRgb24 = new byte[size];
+					_frameBufferRgb24[0] = 0x81; // frame sync bytes
+					_frameBufferRgb24[1] = 0xC3;
+					_frameBufferRgb24[2] = 0xE9;
+					_frameBufferRgb24[3] = 00; 
 
-					if (_pin2DmdDevice.Info.ProductString.Contains("PIN2DMD HD"))
-					{
-						DmdWidth = 256;
-						DmdHeight = 64;
-					}
+					// 4 bits per pixel plus 4 init bytes
+					size = (DmdWidth * DmdHeight * 4 / 8) + 4;
+					_frameBufferGray4 = new byte[size];
+					_frameBufferGray4[0] = 0x81; // frame sync bytes
+					_frameBufferGray4[1] = 0xC3;
+					_frameBufferGray4[2] = 0xE7;
+					_frameBufferGray4[3] = 0x00;
 
-					if (DmdWidth == 128 && DmdHeight == 32)
-					{
-						// 18 bits per pixel plus 4 init bytes
-						var size = (DmdWidth * DmdHeight / 2 * 6) + 4;
-						_frameBufferRgb24 = new byte[size];
-						_frameBufferRgb24[0] = 0x81; // frame sync bytes
-						_frameBufferRgb24[1] = 0xC3;
-						_frameBufferRgb24[2] = 0xE9;
-						_frameBufferRgb24[3] = 00; 
-
-						// 4 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-						_frameBufferGray4 = new byte[size];
-						_frameBufferGray4[0] = 0x81; // frame sync bytes
-						_frameBufferGray4[1] = 0xC3;
-						_frameBufferGray4[2] = 0xE7;
-						_frameBufferGray4[3] = 0x00;
-
-						// 6 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 6 / 8) + 4;
-						_frameBufferGray6 = new byte[size];
-						_frameBufferGray6[0] = 0x81; // frame sync bytes
-						_frameBufferGray6[1] = 0xC3;
-						_frameBufferGray6[2] = 0xE8;
-						_frameBufferGray6[3] = 0x06;
-					}
-
-					if (DmdWidth == 192 && DmdHeight == 64)
-					{
-						// 18 bits per pixel plus 4 init bytes
-						var size = (DmdWidth * DmdHeight / 2 * 6) + 4;
-						_frameBufferRgb24 = new byte[size];
-						_frameBufferRgb24[0] = 0x81; // frame sync bytes
-						_frameBufferRgb24[1] = 0xC3;
-						_frameBufferRgb24[2] = 0xE9;
-						_frameBufferRgb24[3] = 00; // number of planes
-
-						// 4 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-						_frameBufferGray4 = new byte[size];
-						_frameBufferGray4[0] = 0x81; // frame sync bytes
-						_frameBufferGray4[1] = 0xC3;
-						_frameBufferGray4[2] = 0xE8;
-						_frameBufferGray4[3] = 12;
-
-						// 6 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 6 / 8) + 4;
-						_frameBufferGray6 = new byte[size];
-						_frameBufferGray6[0] = 0x81; // frame sync bytes
-						_frameBufferGray6[1] = 0xC3;
-						_frameBufferGray6[2] = 0xE8;
-						_frameBufferGray6[3] = 18;
-					}
-
-					if (DmdWidth == 256 && DmdHeight == 64)
-					{
-						// 18 bits per pixel plus 4 init bytes
-						var size = (DmdWidth * DmdHeight / 2 * 6) + 4;
-						_frameBufferRgb24 = new byte[size];
-						_frameBufferRgb24[0] = 0x81; // frame sync bytes
-						_frameBufferRgb24[1] = 0xC3;
-						_frameBufferRgb24[2] = 0xE9;
-						_frameBufferRgb24[3] = 00; // number of planes
-
-						// 4 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-						_frameBufferGray4 = new byte[size];
-						_frameBufferGray4[0] = 0x81; // frame sync bytes
-						_frameBufferGray4[1] = 0xC3;
-						_frameBufferGray4[2] = 0xE8;
-						_frameBufferGray4[3] = 16;
-
-						// 6 bits per pixel plus 4 init bytes
-						size = (DmdWidth * DmdHeight * 6 / 8) + 4;
-						_frameBufferGray6 = new byte[size];
-						_frameBufferGray6[0] = 0x81; // frame sync bytes
-						_frameBufferGray6[1] = 0xC3;
-						_frameBufferGray6[2] = 0xE8;
-						_frameBufferGray6[3] = 24;
-					}
+					// 6 bits per pixel plus 4 init bytes
+					size = (DmdWidth * DmdHeight * 6 / 8) + 4;
+					_frameBufferGray6 = new byte[size];
+					_frameBufferGray6[0] = 0x81; // frame sync bytes
+					_frameBufferGray6[1] = 0xC3;
+					_frameBufferGray6[2] = 0xE8;
+					_frameBufferGray6[3] = 0x06;
 				}
 				else
 				{
-					Logger.Debug("Device found but it's not a PIN2DMD device ({0}).",
+					Logger.Debug("Device found but it's not the correct PIN2DMD device ({0}).",
 						_pin2DmdDevice.Info.ProductString);
 					IsAvailable = false;
 					Dispose();
