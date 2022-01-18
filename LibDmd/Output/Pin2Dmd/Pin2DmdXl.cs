@@ -176,7 +176,7 @@ namespace LibDmd.Output.Pin2DmdXl
 		public void RenderGray2(byte[] frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x4, 0x1, 0xf }));
 		}
 
 		public void RenderGray4(byte[] frame)
@@ -324,7 +324,7 @@ namespace LibDmd.Output.Pin2DmdXl
 			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
 
 			// send frame buffer to device
-			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x4, 0x1, 0xf }));
 		}
 
 
