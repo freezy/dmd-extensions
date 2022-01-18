@@ -530,11 +530,11 @@ namespace LibDmd.Output.Pin2DmdXl
 
 		public void ClearDisplay()
 		{
-			var buffer = new byte[2052];
+			var buffer = new byte[6148];
 			buffer[0] = 0x81;
 			buffer[1] = 0xC3;
-			buffer[2] = 0xE7;
-			buffer[3] = 0x00;
+			buffer[2] = 0xE8;
+			buffer[3] = 12;
 			RenderRaw(buffer);
 			System.Threading.Thread.Sleep(Delay);
 		}
