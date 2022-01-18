@@ -104,8 +104,13 @@ namespace LibDmd.Common
 			var cropX = 0;
 			var cropY = 0;
 
-			// image fits into dest, don't upscale, just adjust margins.
-			if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight) {
+			if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight && destWidth / bmp.PixelWidth == destHeight / bmp.PixelHeight)
+			{   // image fits into dest with same scale factor for width and height
+				width = destWidth;
+				height = destHeight;
+
+			} // image fits into dest, don't upscale, just adjust margins.
+			else if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight) {
 				marginX = (destWidth - bmp.PixelWidth) / 2;
 				marginY = (destHeight - bmp.PixelHeight) / 2;
 				width = bmp.PixelWidth;
