@@ -12,8 +12,8 @@ namespace LibDmd.Output.Pin2DmdXl
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2DmdXl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
-	
+	public class Pin2DmdXl : IRgb24Destination, IRawOutput, IFixedSizeDestination
+	// IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, 
 	{
 		public string Name { get; } = "PIN2DMD XL";
 		public bool IsAvailable { get; private set; }
