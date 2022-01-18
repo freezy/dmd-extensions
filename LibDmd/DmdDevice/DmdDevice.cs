@@ -224,12 +224,6 @@ namespace LibDmd.DmdDevice
 						aniWidth = Width;
 					}
 
-					// Scale colorized content up to 256x64 regardless of size.
-					if (_config.Global.ScaleToHD)
-					{
-						aniWidth = 256;
-						aniHeight = 64;
-					}
 					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
 					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
 
@@ -695,10 +689,37 @@ namespace LibDmd.DmdDevice
 				if (_upsizedFrame == null)
 					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
 				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
+
 				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
 			else
 			{
+				if (_config.Global.ScaleToHD && width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+
+					if (_gray2Colorizer == null)
+					{
+						byte[] data;
+
+						if (_config.Global.ScalerMode == ScalerMode.Doubler)
+						{
+							data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
+						}
+						else
+						{
+							data = FrameUtil.Scale2x(width, height, frame.Data);
+						}
+
+						frame.Update(width, height, data);
+					}
+					else
+					{
+						frame.Update(width, height, frame.Data);
+					}
+				}
+
 				_gray2Colorizer?.SetDimensions(width, height);
 				_gray4Colorizer?.SetDimensions(width, height);
 				_vpmGray2Source.NextFrame(frame);
@@ -712,6 +733,32 @@ namespace LibDmd.DmdDevice
 			}
 			int width = frame.width;
 			int height = frame.height;
+
+			if (_config.Global.ScaleToHD && width == 128 && height == 32)
+			{
+				width *= 2;
+				height *= 2;
+
+				if (_gray4Colorizer == null)
+				{
+					byte[] data;
+
+					if (_config.Global.ScalerMode == ScalerMode.Doubler)
+					{
+						data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
+					}
+					else
+					{
+						data = FrameUtil.Scale2x(width, height, frame.Data);
+					}
+
+					frame.Update(width, height, data);
+				}
+				else
+				{
+					frame.Update(width, height, frame.Data);
+				}
+			}
 
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);

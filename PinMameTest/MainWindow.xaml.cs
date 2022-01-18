@@ -26,10 +26,12 @@ namespace PinMameTest
 			//Controller.Run("sprk_103").Subscribe(status => {
 			//Controller.Run("gw_l5").Subscribe(status => {
 			//Controller.Run("fg_1200af").Subscribe(status => {
+			//Controller.Run("fg_1200al").Subscribe(status => {
 			//Controller.Run("ffv104").Subscribe(status => {
-			Controller.Run("mm_109c").Subscribe(status => {
+			//Controller.Run("mm_109c").Subscribe(status => {
+			Controller.Run("baywatch").Subscribe(status => {
 
-				Console.WriteLine("[{0}] Game status: {1}", Thread.CurrentThread.ManagedThreadId, status);
+					Console.WriteLine("[{0}] Game status: {1}", Thread.CurrentThread.ManagedThreadId, status);
 			});
 		}
 	}

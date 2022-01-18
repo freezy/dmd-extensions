@@ -282,7 +282,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray4(device.DmdFrame.Update(aniWidth, aniHeight, frame));
+			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame));
 		}
 
 		private static void InternalRenderGray2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
