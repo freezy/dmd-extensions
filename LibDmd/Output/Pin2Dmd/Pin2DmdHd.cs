@@ -12,8 +12,8 @@ namespace LibDmd.Output.Pin2DmdHd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2DmdHd : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
-	
+	public class Pin2DmdHd : IRgb24Destination, IRawOutput, IFixedSizeDestination
+	//IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, 
 	{
 		public string Name { get; } = "PIN2DMD HD";
 		public bool IsAvailable { get; private set; }
@@ -183,7 +183,7 @@ namespace LibDmd.Output.Pin2DmdHd
 		public void RenderGray2(byte[] frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x4, 0x1, 0xf }));
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 		public void RenderGray4(byte[] frame)
@@ -378,7 +378,7 @@ namespace LibDmd.Output.Pin2DmdHd
 			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
 
 			// send frame buffer to device
-			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x4, 0x1, 0xf }));
+			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 
