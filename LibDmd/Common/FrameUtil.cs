@@ -353,13 +353,41 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Double the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="bitlen"></param>
+		/// <param name="frame"></param>
+		/// <returns></returns>
+		public static byte[] ScaleDouble(int width, int height, int bitlen, byte[] frame)
+		{
+			byte[] scaledData = new byte[width * height];
+			var origwidth = width / 2;
+			var scale = 2;
+
+			int targetIdx = 0;
+			for (var i = 0; i < height; ++i)
+			{
+				var iUnscaled = i / scale;
+				for (var j = 0; j < width; ++j)
+				{
+					var jUnscaled = j / scale;
+					scaledData[targetIdx++] = frame[iUnscaled * origwidth + jUnscaled];
+				}
+			}
+
+			return scaledData;
+		}
+
+		/// <summary>
 		/// Implementation of Scale2 for frame data.
 		/// </summary>
 		/// <param name="width"></param>
 		/// <param name="height"></param>
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[][] Scale2x(int width, int height, int bitlen, byte[] data)
+		public static byte[] Scale2x(int width, int height, byte[] data)
 		{
 			byte[] scaledData = new byte[width * height];
 
@@ -394,7 +422,7 @@ namespace LibDmd.Common
 				}
 			}
 
-			return Split(width, height, bitlen, scaledData);
+			return scaledData;
 		}
 
 		/// <summary>
@@ -406,8 +434,9 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		public static byte[][] Scale2x(int width, int height, byte[][] data)
 		{
-			var colorData = Join(width, height, data);
-			return Scale2x(width, height, data.Length, colorData);
+			var joinData = Join(width, height, data);
+			var frameData = Scale2x(width, height, joinData);
+			return Split(width, height, data.Length, frameData);
 		}
 
 		//Scale down planes by displaying every second pixel

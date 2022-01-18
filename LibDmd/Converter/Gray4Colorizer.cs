@@ -313,9 +313,10 @@ namespace LibDmd.Converter
 				}
 				else
 				{
-					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
 					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					planes = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length , colorData);
+					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, colorData);
+					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
 				}
 			}
 
