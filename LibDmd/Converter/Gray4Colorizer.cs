@@ -126,6 +126,7 @@ namespace LibDmd.Converter
 			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null)
 			{
+				_activeAnimation.ScalerMode = ScalerMode;
 				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
