@@ -433,9 +433,9 @@ namespace LibDmd.Output.Pin2Dmd
 				for (int i = 1; i < 15; i++)
 				{
 					pos = 7 + (i * 3);
-					_colorPalette[pos] = (byte)((color0.R / 15 * i) + ((color15.R / 15) * (15 - i)));
-					_colorPalette[pos + 1] = (byte)((color0.G / 15 * i) + ((color15.G / 15) * (15 - i)));
-					_colorPalette[pos + 2] = (byte)((color0.B / 15 * i) + ((color15.B / 15) * (15 - i)));
+					_colorPalette[pos] = (byte)((color0.R / 15 * i) + ((color15.R / 15) * i));
+					_colorPalette[pos + 1] = (byte)((color0.G / 15 * i) + ((color15.G / 15) * i));
+					_colorPalette[pos + 2] = (byte)((color0.B / 15 * i) + ((color15.B / 15) * i));
 				}
 
 				pos = 7 + (15 * 3); // color 15
