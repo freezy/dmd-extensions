@@ -41,7 +41,7 @@ namespace DmdExt.Common
 			return _graphs;
 		}
 
-		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags)
+		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags, int[] position = null)
 		{
 			var renderers = new List<IDestination>();
 			if (config.PinDmd1.Enabled) {
@@ -130,7 +130,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config));
+				renderers.Add(ShowVirtualDmd(config, position));
 				Logger.Info("Added virtual DMD renderer.");
 				reportingTags.Add("Out:VirtualDmd");
 			}
@@ -164,7 +164,7 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IDestination ShowVirtualDmd(IConfiguration config)
+		private static IDestination ShowVirtualDmd(IConfiguration config, int[] position)
 		{
 			var dmd = new VirtualDmd {
 				Left = config.VirtualDmd.Left,
@@ -180,6 +180,8 @@ namespace DmdExt.Common
 
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
+					if(position != null)
+						dmd.Dmd.SetDimensions(position[2], position[3]);
 					dmd.Show();
 				});
 
