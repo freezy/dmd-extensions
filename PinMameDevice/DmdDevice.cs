@@ -290,7 +290,10 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray2(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame));
+			if (width == 128 && height == 16)
+				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width, height, frame));
+			else
+				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame));
 		}
 
 		private static void InternalRenderAlphaNumDevice(DeviceInstance device, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)
