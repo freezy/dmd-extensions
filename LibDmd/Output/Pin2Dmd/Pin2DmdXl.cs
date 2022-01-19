@@ -13,7 +13,6 @@ namespace LibDmd.Output.Pin2DmdXl
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
 	public class Pin2DmdXl : IRgb24Destination, IRawOutput, IFixedSizeDestination
-	// IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, 
 	{
 		public string Name { get; } = "PIN2DMD XL";
 		public bool IsAvailable { get; private set; }
@@ -28,11 +27,6 @@ namespace LibDmd.Output.Pin2DmdXl
 
 		private UsbDevice _pin2DmdDevice;
 		private byte[] _frameBufferRgb24;
-		private byte[] _frameBufferGray4;
-		private byte[] _frameBufferGray6;
-		private readonly byte[] _colorPalette;
-		private readonly byte[] _colorPalette16;
-		private readonly byte[] _colorPalette64;
 		private static Pin2DmdXl _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -56,31 +50,6 @@ namespace LibDmd.Output.Pin2DmdXl
 
 		private Pin2DmdXl()
 		{
-			// color palette
-			_colorPalette = new byte[2052];
-			_colorPalette[0] = 0x81;
-			_colorPalette[1] = 0xC3;
-			_colorPalette[2] = 0xE7;
-			_colorPalette[3] = 0xFF;
-			_colorPalette[4] = 0x04;
-
-			// New firmware color palette
-			_colorPalette16 = new byte[64];
-			_colorPalette16[0] = 0x01;
-			_colorPalette16[1] = 0xc3;
-			_colorPalette16[2] = 0xe7;
-			_colorPalette16[3] = 0xfe;
-			_colorPalette16[4] = 0xed;
-			_colorPalette16[5] = 0x10;
-
-			// New firmware color palette
-			_colorPalette64 = new byte[256];
-			_colorPalette64[0] = 0x01;
-			_colorPalette64[1] = 0xc3;
-			_colorPalette64[2] = 0xe7;
-			_colorPalette64[3] = 0xfe;
-			_colorPalette64[4] = 0xed;
-			_colorPalette64[5] = 0x40;
 		}
 		
 
@@ -133,22 +102,6 @@ namespace LibDmd.Output.Pin2DmdXl
 					_frameBufferRgb24[1] = 0xC3;
 					_frameBufferRgb24[2] = 0xE9;
 					_frameBufferRgb24[3] = 00; // number of planes
-
-					// 4 bits per pixel plus 4 init bytes
-					size = (DmdWidth * DmdHeight * 4 / 8) + 4;
-					_frameBufferGray4 = new byte[size];
-					_frameBufferGray4[0] = 0x81; // frame sync bytes
-					_frameBufferGray4[1] = 0xC3;
-					_frameBufferGray4[2] = 0xE8;
-					_frameBufferGray4[3] = 12;
-
-					// 6 bits per pixel plus 4 init bytes
-					size = (DmdWidth * DmdHeight * 6 / 8) + 4;
-					_frameBufferGray6 = new byte[size];
-					_frameBufferGray6[0] = 0x81; // frame sync bytes
-					_frameBufferGray6[1] = 0xC3;
-					_frameBufferGray6[2] = 0xE8;
-					_frameBufferGray6[3] = 18;
 				}
 				else
 				{
@@ -170,26 +123,6 @@ namespace LibDmd.Output.Pin2DmdXl
 			} catch (Exception e) {
 				IsAvailable = false;
 				Logger.Warn(e, "Probing PIN2DMD XL failed, skipping.");
-			}
-		}
-
-		public void RenderGray2(byte[] frame)
-		{
-			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
-		}
-
-		public void RenderGray4(byte[] frame)
-		{
-			// convert to bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
-
-			// copy to buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
-
-			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray4);
 			}
 		}
 
@@ -290,44 +223,6 @@ namespace LibDmd.Output.Pin2DmdXl
 			}
 		}
 
-		public void RenderColoredGray6(ColoredFrame frame)
-		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
-
-			// copy to buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray6, 4);
-
-			// send frame buffer to device
-			if (changed)
-			{
-				RenderRaw(_frameBufferGray6);
-			}
-		}
-
-		public void RenderColoredGray4(ColoredFrame frame)
-		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
-
-			// copy to buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray4, 4);
-
-			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray4);
-			}
-		}
-
-		public void RenderColoredGray2(ColoredFrame frame)
-		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
-
-			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
-
-			// send frame buffer to device
-			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
-		}
-
-
 		public void RenderRaw(byte[] frame)
 		{
 #if (!TEST_WITHOUT_PIN2DMD)
@@ -406,110 +301,6 @@ namespace LibDmd.Output.Pin2DmdXl
 
 		void SetSinglePalette(Color[] colors)
 		{
-			var numOfColors = colors.Length;
-			var palette = ColorUtil.GetPalette(colors, numOfColors);
-			var identical = true;
-			var pos = 6;
-
-			if (numOfColors == 2)
-			{
-				pos = 7; // color 0
-				_colorPalette[5] = 0x00;
-				_colorPalette[6] = 0x01;
-				var color0 = palette[0];
-				var color15 = palette[1];
-				identical = identical && _colorPalette[pos] == color0.R && _colorPalette[pos + 1] == color0.G && _colorPalette[pos + 2] == color0.B;
-				_colorPalette[pos] = color0.R;
-				_colorPalette[pos + 1] = color0.G;
-				_colorPalette[pos + 2] = color0.B;
-
-				for (int i = 1; i < 15; i++)
-				{
-					pos = 7 + (i * 3);
-					_colorPalette[pos] = (byte)((color0.R / 15 * i) + ((color15.R / 15) * i));
-					_colorPalette[pos + 1] = (byte)((color0.G / 15 * i) + ((color15.G / 15) * i));
-					_colorPalette[pos + 2] = (byte)((color0.B / 15 * i) + ((color15.B / 15) * i));
-				}
-
-				pos = 7 + (15 * 3); // color 15
-				color15 = palette[1];
-				identical = identical && _colorPalette[pos] == color15.R && _colorPalette[pos + 1] == color15.G && _colorPalette[pos + 2] == color15.B;
-				_colorPalette[pos] = color15.R;
-				_colorPalette[pos + 1] = color15.G;
-				_colorPalette[pos + 2] = color15.B;
-				if (!identical)
-				{
-					RenderRaw(_colorPalette);
-				}
-			}
-
-
-			if (numOfColors == 4)
-			{
-				pos = 7; // color 0
-				_colorPalette[5] = 0x00;
-				_colorPalette[6] = 0x01;
-				var color = palette[0];
-				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-				_colorPalette[pos] = color.R;
-				_colorPalette[pos + 1] = color.G;
-				_colorPalette[pos + 2] = color.B;
-				color = palette[1];
-				pos = 7+3; // color 1
-				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-				_colorPalette[pos] = color.R;
-				_colorPalette[pos + 1] = color.G;
-				_colorPalette[pos + 2] = color.B;
-				pos = 7+12; // color 4
-				color = palette[2];
-				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-				_colorPalette[pos] = color.R;
-				_colorPalette[pos + 1] = color.G;
-				_colorPalette[pos + 2] = color.B;
-				pos = 7+45; // color 15
-				color = palette[3];
-				identical = identical && _colorPalette[pos] == color.R && _colorPalette[pos + 1] == color.G && _colorPalette[pos + 2] == color.B;
-				_colorPalette[pos] = color.R;
-				_colorPalette[pos + 1] = color.G;
-				_colorPalette[pos + 2] = color.B;
-				if (!identical)
-				{
-					RenderRaw(_colorPalette);
-				}
-			}
-
-			if (numOfColors == 16)
-			{
-				for (var i = 0; i < 16; i++)
-				{
-					var color = palette[i];
-					identical = identical && _colorPalette16[pos] == color.R && _colorPalette16[pos + 1] == color.G && _colorPalette16[pos + 2] == color.B;
-					_colorPalette16[pos] = color.R;
-					_colorPalette16[pos + 1] = color.G;
-					_colorPalette16[pos + 2] = color.B;
-					pos += 3;
-				}
-				if (!identical)
-				{
-					RenderRaw(_colorPalette16);
-				}
-			}
-			if (numOfColors == 64)
-			{
-				for (var i = 0; i < 64; i++)
-				{
-					var color = palette[i];
-					identical = identical && _colorPalette64[pos] == color.R && _colorPalette64[pos + 1] == color.G && _colorPalette64[pos + 2] == color.B;
-					_colorPalette64[pos] = color.R;
-					_colorPalette64[pos + 1] = color.G;
-					_colorPalette64[pos + 2] = color.B;
-					pos += 3;
-				}
-				if (!identical)
-				{
-					RenderRaw(_colorPalette64);
-				}
-			}
 		}
 
 		public void SetPalette(Color[] colors, int index) 
