@@ -181,7 +181,7 @@ namespace DmdExt.Common
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
 					if(position != null)
-						dmd.Dmd.SetDimensions(position[2], position[3]);
+						dmd.Dmd.SetDimensions(position[2]- position[0], position[3]-position[1]);
 					dmd.Show();
 				});
 
