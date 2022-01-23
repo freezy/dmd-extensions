@@ -318,21 +318,26 @@ namespace LibDmd.Converter.Colorize
 				}
 			}
 
-			OutputFrame(vpmFrame);
-
 			// Advance frames - when timer runs out and not in LCM, LRM or follow modes
 			if (_timer <= 0 && SwitchMode != SwitchMode.LayeredColorMask && SwitchMode != SwitchMode.MaskedReplace && SwitchMode != SwitchMode.Follow && SwitchMode != SwitchMode.FollowReplace)
 			{
-				_frameIndex++;
-				if (_frameIndex == NumFrames)
+				
+				if (_frameIndex == NumFrames-1)
 				{
-					Stop("finished");
 					completed?.Invoke();
+					SwitchMode = SwitchMode.Palette;
+					OutputFrame(vpmFrame);
+					Stop("finished");
 				}
 				else
 				{
+					OutputFrame(vpmFrame);
+					_frameIndex++;
 					InitializeFrame();
 				}
+			} else
+			{
+				OutputFrame(vpmFrame);
 			}
 		}
 
