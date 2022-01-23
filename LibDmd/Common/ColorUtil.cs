@@ -140,7 +140,7 @@ namespace LibDmd.Common
 			if (palette.Length == numColors) {
 				return palette;
 			}
-			if (palette.Length == 16 && numColors == 4) {
+			if ((palette.Length == 16 || palette.Length == 64) && numColors == 4) {
 				return new[] { palette[0], palette[1], palette[4], palette[15] };
 			}
 			if (palette.Length == 4 && numColors == 16) {
