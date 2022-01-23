@@ -17,7 +17,7 @@ using System.Reflection;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.9.0.1")]
-[assembly: AssemblyFileVersion("1.9.0.1")]
-[assembly: AssemblyInformationalVersion("1.9.1-SNAPSHOT")]
+[assembly: AssemblyVersion("1.9.0.5")]
+[assembly: AssemblyFileVersion("1.9.0.5")]
+[assembly: AssemblyInformationalVersion("1.9.5-SNAPSHOT")]
 [assembly: NeutralResourcesLanguage("en")]

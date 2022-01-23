@@ -699,7 +699,7 @@ namespace LibDmd.DmdDevice
 					width *= 2;
 					height *= 2;
 
-					if (_gray2Colorizer == null)
+					if (!_colorize || _gray2Colorizer == null)
 					{
 						byte[] data;
 
@@ -739,7 +739,7 @@ namespace LibDmd.DmdDevice
 				width *= 2;
 				height *= 2;
 
-				if (_gray4Colorizer == null)
+				if (!_colorize || _gray4Colorizer == null)
 				{
 					byte[] data;
 

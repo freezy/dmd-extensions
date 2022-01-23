@@ -570,37 +570,40 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
 		{
-			Dispatcher.Invoke(() =>
+			if (!Dispatcher.HasShutdownFinished || !Dispatcher.HasShutdownStarted)
 			{
-				var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
-				var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
-
-				var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
-				var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
-				AspectRatio = frameWidth / (double)frameHeight;
-
-				var alphaW = ActualWidth / frameWidth;
-				var alphaH = ActualHeight / frameHeight;
-				if (!IgnoreAspectRatio)
+				Dispatcher.Invoke(() =>
 				{
-					var alpha = Math.Min(alphaW, alphaH);
-					alphaW = alpha;
-					alphaH = alpha;
-				}
+					var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
+					var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
 
-				var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
-				var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
+					var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
+					var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
+					AspectRatio = frameWidth / (double)frameHeight;
 
-				DmdFraming.Width = frameWidth * alphaW;
-				DmdFraming.Height = frameHeight * alphaH;
-				DmdFraming.Margin = new Thickness(hpad, vpad, hpad, vpad);
+					var alphaW = ActualWidth / frameWidth;
+					var alphaH = ActualHeight / frameHeight;
+					if (!IgnoreAspectRatio)
+					{
+						var alpha = Math.Min(alphaW, alphaH);
+						alphaW = alpha;
+						alphaH = alpha;
+					}
 
-				Dmd.Width = glassWidth * alphaW;
-				Dmd.Height = glassHeight * alphaH;
-				Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
+					var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
+					var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
 
-				Host?.SetDimensions((int)frameWidth, (int)frameHeight);
-			});
+					DmdFraming.Width = frameWidth * alphaW;
+					DmdFraming.Height = frameHeight * alphaH;
+					DmdFraming.Margin = new Thickness(hpad, vpad, hpad, vpad);
+
+					Dmd.Width = glassWidth * alphaW;
+					Dmd.Height = glassHeight * alphaH;
+					Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
+
+					Host?.SetDimensions((int)frameWidth, (int)frameHeight);
+				});
+			}
 		}
 
 		public void SetColor(Color color)
