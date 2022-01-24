@@ -159,14 +159,6 @@ namespace LibDmd.Converter.Colorize
 			_lastTick = Environment.TickCount;
 			_timer = 0;
 			_currentRender = render;
-			InitializeFrame();
-
-			if (NumFrames == 1) {
-				Logger.Debug("[vni][{0}] Enhancing single frame, duration = {1}ms ({2})...", SwitchMode, AnimationDuration, Name);
-				_timer = (int)AnimationDuration;
-			} else {
-				Logger.Debug("[vni][{0}] Starting enhanced animation of {1} frame{2} ({3})...", SwitchMode, NumFrames, NumFrames == 1 ? "" : "s", Name);
-			}
 		}
 
 		private void ClearLCMBuffer()
@@ -300,7 +292,6 @@ namespace LibDmd.Converter.Colorize
 			_lastTick = Environment.TickCount;
 			_timer = 0;
 			_currentRender = render;
-			InitializeFrame();
 		}
 
 		private void RenderAnimation(byte[][] vpmFrame, Action completed = null)
@@ -311,27 +302,38 @@ namespace LibDmd.Converter.Colorize
 				_lastTick = Environment.TickCount;
 
 				_timer -= delay;
-				if (_frameIndex >= NumFrames)
+			}
+
+			if (_frameIndex < NumFrames)
+			{
+				if (SwitchMode == SwitchMode.LayeredColorMask || SwitchMode == SwitchMode.MaskedReplace || SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)
 				{
-					Logger.Error("[vni][{0}] No more frames in animation ({1}).", SwitchMode, NumFrames);
+					OutputFrame(vpmFrame);
+					return;
+				}
+				if (_frameIndex < NumFrames)
+				{
+					InitializeFrame();
+					OutputFrame(vpmFrame);
+					_frameIndex++;
 					return;
 				}
 			}
-			OutputFrame(vpmFrame);
-			// Advance frames - when timer runs out and not in LCM, LRM or follow modes
-			if (_timer <= 0 && SwitchMode != SwitchMode.LayeredColorMask && SwitchMode != SwitchMode.MaskedReplace && SwitchMode != SwitchMode.Follow && SwitchMode != SwitchMode.FollowReplace)
+			else
 			{
-				_frameIndex++;
-				if (_frameIndex == NumFrames)
+				if (NumFrames == 1 && _timer > 0)
 				{
-					completed?.Invoke();
-					Stop("finished");
-				}
-				else
-				{
-					InitializeFrame();
+					if (_frameIndex == 1)
+						_frameIndex--;
+					OutputFrame(vpmFrame);
+					_frameIndex++;
+					return;
 				}
 			}
+			completed?.Invoke();
+			SwitchMode = SwitchMode.Palette;
+			OutputFrame(vpmFrame);
+			Stop("finished");
 		}
 
 		private void OutputFrame(byte[][] vpmFrame)
