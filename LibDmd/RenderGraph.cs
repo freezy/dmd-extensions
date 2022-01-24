@@ -1396,7 +1396,7 @@ namespace LibDmd
 			}
 			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
 			{
-				return frame;
+				return width * height == frame.Length ? FrameUtil.ScaleDownFrame(dest.DmdWidth, dest.DmdHeight, frame) : frame;
 			}
 
 			// block-copy for same width but smaller height
@@ -1421,7 +1421,7 @@ namespace LibDmd
 			}
 			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
 			{
-				return frame;
+				return width * height == frame.Length ? FrameUtil.ScaleDownFrame(dest.DmdWidth, dest.DmdHeight, frame) : frame;
 			}
 
 			var bmp = ImageUtil.ConvertFromGray4(width, height, frame, 0, 1, 1);
@@ -1441,7 +1441,7 @@ namespace LibDmd
 			}
 			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
 			{
-				return frame;
+				return width * height == frame.Length ? FrameUtil.ScaleDownFrame(dest.DmdWidth, dest.DmdHeight, frame) : frame;
 			}
 
 			var bmp = ImageUtil.ConvertFromGray6(width, height, frame, 0, 1, 1);

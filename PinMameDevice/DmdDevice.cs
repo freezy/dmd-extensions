@@ -337,7 +337,7 @@ namespace PinMameDevice
 				ConvertColor(GetColorAtPosition(palette, 15, size)),
 			});
 		}
-				
+
 		#endregion
 
 		private static bool IsOldWindows()

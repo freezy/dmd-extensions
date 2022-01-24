@@ -470,6 +470,30 @@ namespace LibDmd.Common
 			return planes;
 		}
 
+		/// <summary>
+		/// Scane down frame data by taking every second pixel.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns></returns>
+		public static byte[] ScaleDownFrame(int width, int height, byte[] data)
+		{
+			byte[] scaledData = new byte[width * height];
+			var origWidth = width * 2;
+			var origHeight = height * 2;
+
+			for (var y = 0; y < origHeight; y++)
+			{
+				for (var x = 0; x < origWidth; x++)
+				{
+					var color = ImageUtil.GetPixel(x, y, origWidth, origHeight, data);
+					ImageUtil.SetPixel(x/2, y/2, color, width, scaledData);
+				}
+				y++;
+			}
+			return scaledData;
+		}
 
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame or vice versa

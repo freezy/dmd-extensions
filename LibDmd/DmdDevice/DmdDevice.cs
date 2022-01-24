@@ -694,12 +694,15 @@ namespace LibDmd.DmdDevice
 			}
 			else
 			{
-				if (_config.Global.ScaleToHD && width == 128 && height == 32)
+				if (_config.Global.ScaleToHD)
 				{
-					width *= 2;
-					height *= 2;
+					if (width == 128 && height == 32)
+					{
+						width *= 2;
+						height *= 2;
+					}
 
-					if (!_colorize || _gray2Colorizer == null)
+					if ((!_colorize || _gray2Colorizer == null) && width * height != frame.Data.Length)
 					{
 						byte[] data;
 
@@ -734,12 +737,15 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_config.Global.ScaleToHD && width == 128 && height == 32)
+			if (_config.Global.ScaleToHD)
 			{
-				width *= 2;
-				height *= 2;
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+				}
 
-				if (!_colorize || _gray4Colorizer == null)
+				if ((!_colorize || _gray4Colorizer == null) && width * height != frame.Data.Length)
 				{
 					byte[] data;
 
