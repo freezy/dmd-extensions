@@ -172,7 +172,52 @@ namespace LibDmd.Output.Pin2DmdHd
 				int i = l * 3;
 				switch (rgbSequence & 0x0F)
 				{
-					case 0: //RGB panels
+					case 1:
+						pixel_r = frame[i];
+						pixel_b = frame[i + 2];
+						pixel_g = frame[i + 1];
+						// lower half of display
+						pixel_rl = frame[i + (elements * 3)];
+						pixel_bl = frame[i + 2 + (elements * 3)];
+						pixel_gl = frame[i + 1 + (elements * 3)];
+						break;
+					case 2:
+						pixel_b = frame[i];
+						pixel_g = frame[i + 2];
+						pixel_r = frame[i + 1];
+						// lower half of display
+						pixel_bl = frame[i + (elements * 3)];
+						pixel_gl = frame[i + 2 + (elements * 3)];
+						pixel_rl = frame[i + 1 + (elements * 3)];
+						break;
+					case 3:
+						pixel_g = frame[i];
+						pixel_b = frame[i + 2];
+						pixel_r = frame[i + 1];
+						// lower half of display
+						pixel_gl = frame[i + (elements * 3)];
+						pixel_bl = frame[i + 2 + (elements * 3)];
+						pixel_rl = frame[i + 1 + (elements * 3)];
+						break;
+					case 4:
+						pixel_b = frame[i];
+						pixel_r = frame[i + 2];
+						pixel_g = frame[i + 1];
+						// lower half of display
+						pixel_bl = frame[i + (elements * 3)];
+						pixel_rl = frame[i + 2 + (elements * 3)];
+						pixel_gl = frame[i + 1 + (elements * 3)];
+						break;
+					case 5:
+						pixel_g = frame[i];
+						pixel_r = frame[i + 2];
+						pixel_b = frame[i + 1];
+						// lower half of display
+						pixel_gl = frame[i + (elements * 3)];
+						pixel_rl = frame[i + 2 + (elements * 3)];
+						pixel_bl = frame[i + 1 + (elements * 3)];
+						break;
+					default:
 						pixel_r = frame[i];
 						pixel_g = frame[i + 2];
 						pixel_b = frame[i + 1];
@@ -180,15 +225,6 @@ namespace LibDmd.Output.Pin2DmdHd
 						pixel_rl = frame[i + (elements * 3)];
 						pixel_gl = frame[i + 2 + (elements * 3)];
 						pixel_bl = frame[i + 1 + (elements * 3)];
-						break;
-					default: //RBG panels
-						pixel_r = frame[i];
-						pixel_g = frame[i + 1];
-						pixel_b = frame[i + 2];
-						// lower half of display
-						pixel_rl = frame[i + (elements * 3)];
-						pixel_gl = frame[i + 1 + (elements * 3)];
-						pixel_bl = frame[i + 2 + (elements * 3)];
 						break;
 				}
 
