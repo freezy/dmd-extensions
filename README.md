@@ -55,6 +55,14 @@ In v1.9, we've introduced a more complex shader with awesome effects for monitor
 
 <image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
+In v1.9.5, we've added 64 color content support including all color modes (LCM, CM, MR, etc)!
+256x64 content also works and uses new scaling options (scale2x, doubler). Uncolorized and 
+standard colorized content can also be scaled using the new modes as well. The new options
+are listed [below](#output-configuration) with details.
+
+<image src="https://user-images.githubusercontent.com/57115343/151870548-f0f61c1c-878a-4b24-8fbc-34a37fb0e120.jpg" width="350" />
+<image src"https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
+
 ## Install Instructions
 
 [Download the installer](https://github.com/freezy/dmd-extensions/releases) and
@@ -247,8 +255,8 @@ The output are described by block below.
 | *n/a*                          | [browserstream]<br>enabled                     | Enables streaming the DMD in real time to your browser in your LAN.                                                                                                                                                                                                                                                                                                                                                                                      |
 | *n/a*                          | [browserstream]<br>port                        | Port of the web server to listen on                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `--pinup`                      | [pinup]<br>enable                              | Enables output to PinUP.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `--scale-to-hd`                | [global]<br>scaletohd                          | Always scale standard colorized content up to 256x64 (no matter the content scene size)<ul>  <li>Only works on 128x32 vpm frames</li>                                                                                                                                                                                                                                                                                                                    |
 | `--scaler-mode`                | [global]<br>scalermode                         | Scaler mode for standard content (vpm frames). <strong>Note:</strong> This is only active if you have 256x64 colorized content files <strong>OR</strong> have the scaletohd option enabled.<br><br>Can have two scaling modes:<ul>  <li>`doubler` - Doubles all pixels</li>  <li>`scale2x` - Using Scale2x algorithm for smooth 2x scaling.</li>                                                                                                         |
+| `--scale-to-hd`                | [global]<br>scaletohd                          | If true, always scale standard vpm frames to 256x64<ul>  <li>Only works on 128x32 vpm games</li>  <li>Virtual DMD output looks amazing with Scale2x!</li>  <li>Console mirror options work and can be scaled up</li>  <li>Also works with 128x32 output devices (pindmd3) using a down scale method to retain Scale2x look.</li>                                                                                                                         |
 
 You can also override all options per game by using the game's name as section 
 name and pre-fixing options with the name of the section (apart from `[global]`
@@ -480,10 +488,11 @@ and the issue will go away.
 
 - NoEx for the excellent TPA grabber code, as well as the Pinball FX3 memory grabber.
 - Tom Speirs, Lucky1, CarnyPriest and Russdx for their help on the DMD code
-- Lucky1 for instructions and details about the coloring feature
+- Lucky1 for instructions and details about the coloring features and Pin2DMD support.
 - DJRobX for helping with the dynamic coloring, better performance and much more.
 - mjrgh for debugging and optimizing stuff.
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
+- Funkyman for 64 color support, 256x64 scaling options, bug fixes and code cleanup.
 
 <a title="IntelliJ IDEA" href="https://www.jetbrains.com/resharper/"><img src="https://raw.githubusercontent.com/freezy/dmd-extensions/master/resharper.svg?sanitize=true" alt="IntelliJ Resharper" width="250"></a>
 
