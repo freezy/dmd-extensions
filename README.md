@@ -61,7 +61,7 @@ standard colorized content can also be scaled using the new modes as well. The n
 are listed [below](#output-configuration) with details.
 
 <image src="https://user-images.githubusercontent.com/57115343/151870548-f0f61c1c-878a-4b24-8fbc-34a37fb0e120.jpg" width="350" />
-<image src"https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
+<image src="https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
 
 ## Install Instructions
 
