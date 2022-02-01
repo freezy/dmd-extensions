@@ -46,7 +46,6 @@ namespace LibDmd.DmdDevice
 		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
-		private readonly VpmGray6Source _vpmGray6Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
@@ -87,7 +86,6 @@ namespace LibDmd.DmdDevice
 			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
-			_vpmGray6Source = new VpmGray6Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
@@ -216,8 +214,8 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
 						Logger.Info("Loaded animation set {0}", vni);
-						aniHeight = vni.maxheight;
-						aniWidth = vni.maxwidth;
+						aniHeight = vni.MaxHeight;
+						aniWidth = vni.MaxWidth;
 					} else
 					{
 						aniHeight = Height;
@@ -769,17 +767,6 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);
-		}
-
-		public void RenderGray6(DMDFrame frame)
-		{
-			if (!_isOpen)
-			{
-				Init();
-			}
-			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
-			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-			_vpmGray6Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DMDFrame frame)
