@@ -660,11 +660,11 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
 		}
-		public int getAniHeight()
+		public int GetAniHeight()
 		{
 			return aniHeight;
 		}
-		public int getAniWidth()
+		public int GetAniWidth()
 		{
 			return aniWidth;
 		}

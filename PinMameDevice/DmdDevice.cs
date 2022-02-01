@@ -205,8 +205,8 @@ namespace PinMameDevice
 			device.DmdDevice.SetGameName(gameName);
 			device.DmdDevice.SetColor(Color.FromRgb((byte)(opt.Red), (byte)(opt.Green), (byte)(opt.Blue)));
 			device.DmdDevice.Init();
-			aniHeight = device.DmdDevice.getAniHeight();
-			aniWidth = device.DmdDevice.getAniWidth();
+			aniHeight = device.DmdDevice.GetAniHeight();
+			aniWidth = device.DmdDevice.GetAniWidth();
 		}
 
 		private static void InternalConsoleDataDevice(DeviceInstance device, byte data)
