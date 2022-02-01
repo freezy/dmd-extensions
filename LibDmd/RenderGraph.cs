@@ -300,7 +300,7 @@ namespace LibDmd
 						// if converter emits colored gray-6 frames..
 						if (coloredGray6SourceConverter != null)
 						{
-							// if destination can render colored gray-4 frames...
+							// if destination can render colored gray-6 frames...
 							if (destColoredGray6 != null)
 							{
 								//Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", coloredGray6SourceConverter.Name, dest.Name);
