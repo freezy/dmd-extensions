@@ -39,11 +39,13 @@ The command line tool can also display image files on the DMD device and render
 frames to bitmap files. Many features like this are described in the command 
 line options below, so have a close look at those as well.
 
-###### Version 1.7
+
+#### Version 1.7
 DMD Extensions also support dynamic DMD coloring previously onlyavailable for 
 PIN2DMD displays (both side-channel and VNI).
 
-###### Version 1.8
+
+#### Version 1.8
 DMD Extensions supports high-resolution rendering of segmented alpha-numeric displays:
 
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
@@ -52,12 +54,14 @@ Documentation how to enable and customize this feature can be found [here](https
 
 Since v1.8, DMD Extensions come with full network support. Documentation can be found [here](Console/Server)
 
-###### Version 1.9
+
+#### Version 1.9
 We've introduced a more complex shader with awesome effects for monitor users. Documentation can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
 <image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
-###### Version 1.9.10
+
+#### Version 1.9.10
 Finally you've all been waiting for...added 64 color content support including all color 
 modes (LCM, CM, MR, etc)! 256x64 content also works and uses new scaling options (scale2x, doubler). 
 All current PIN2DMD vin/pal content is now officially supported. Uncolorized and standard colorized 
