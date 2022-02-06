@@ -357,7 +357,7 @@ namespace LibDmd.DmdDevice
 
 		public DmdStyle GetStyle(string name)
 		{
-			return _styles[name];
+			return _styles.ContainsKey(name) ? _styles[name] : null;
 		}
 
 		public void ApplyStyle(string name, bool onlyForGame)
