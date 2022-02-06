@@ -988,7 +988,7 @@ namespace LibDmd.DmdDevice
 
 			_data.Sections.Add(new SectionData(_parent.GameName));
 			_parent.GameName = _parent.GameName; // trigger GameConfig instantiation
-			return true;
+			return _parent.GameConfig != null;
 		}
 	}
 }
