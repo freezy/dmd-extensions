@@ -9,13 +9,12 @@ namespace LibDmd.DmdDevice
 		void SetGameName(string gameName);
 		void SetColor(Color color);
 		void Init();
-		int getAniWidth();
-		int getAniHeight();
+		int GetAniWidth();
+		int GetAniHeight();
 		void LoadPalette(uint palIndex);
 		void SetPalette(Color[] colors);
 		void RenderRgb24(DMDFrame frame);
 		void RenderGray4(DMDFrame frame);
-		void RenderGray6(DMDFrame frame);
 		void RenderGray2(DMDFrame frame);
 		void RenderAlphaNumeric(NumericalLayout numericalLayout, ushort[] readUInt16Array, ushort[] ushorts);
 	}

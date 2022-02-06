@@ -18,6 +18,7 @@ using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
+using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
@@ -46,7 +47,6 @@ namespace LibDmd.DmdDevice
 		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
-		private readonly VpmGray6Source _vpmGray6Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
@@ -87,7 +87,6 @@ namespace LibDmd.DmdDevice
 			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
-			_vpmGray6Source = new VpmGray6Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
@@ -216,8 +215,8 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
 						Logger.Info("Loaded animation set {0}", vni);
-						aniHeight = vni.maxheight;
-						aniWidth = vni.maxwidth;
+						aniHeight = vni.MaxHeight;
+						aniWidth = vni.MaxWidth;
 					} else
 					{
 						aniHeight = Height;
@@ -327,20 +326,20 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
-				var pin2Dmd = Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
+				var pin2Dmd = Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
 				}
-				var pin2DmdXl = Output.Pin2DmdXl.Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
+				var pin2DmdXl = Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2DmdXl.IsAvailable)
 				{
 					renderers.Add(pin2DmdXl);
 					Logger.Info("Added PIN2DMD XL renderer.");
 					ReportingTags.Add("Out:PIN2DMDXL");
 				}
-				var pin2DmdHd = Output.Pin2DmdHd.Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
+				var pin2DmdHd = Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2DmdHd.IsAvailable)
 				{
 					renderers.Add(pin2DmdHd);
@@ -662,11 +661,11 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
 		}
-		public int getAniHeight()
+		public int GetAniHeight()
 		{
 			return aniHeight;
 		}
-		public int getAniWidth()
+		public int GetAniWidth()
 		{
 			return aniWidth;
 		}
@@ -769,17 +768,6 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);
-		}
-
-		public void RenderGray6(DMDFrame frame)
-		{
-			if (!_isOpen)
-			{
-				Init();
-			}
-			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
-			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-			_vpmGray6Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DMDFrame frame)

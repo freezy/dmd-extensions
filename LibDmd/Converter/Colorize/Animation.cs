@@ -57,8 +57,9 @@ namespace LibDmd.Converter.Colorize
 		protected int TransitionFrom;
 
 		#endregion
-		protected int Width;
-		protected int Height;
+
+		public int Width { get; protected set; }
+		public int Height { get; protected set; }
 
 		public ScalerMode ScalerMode { get; set; }
 
@@ -407,16 +408,6 @@ namespace LibDmd.Converter.Colorize
 		public bool Equals(Animation animation)
 		{
 			return Offset == animation.Offset;
-		}
-
-		public int getWidth()
-		{
-			return Width;
-		}
-
-		public int getHeight()
-		{
-			return Height;
 		}
 
 		public override string ToString()
