@@ -487,7 +487,7 @@ namespace LibDmd.DmdDevice
 					FlipVertically = _config.Global.FlipVertically
 				});
 			}
-			
+
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
@@ -641,8 +641,6 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
-
-			SetupColorizer();
 		}
 
 		public void SetColorize(bool colorize)
