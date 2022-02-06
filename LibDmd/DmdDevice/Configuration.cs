@@ -113,6 +113,7 @@ namespace LibDmd.DmdDevice
 				}
 			} catch (Exception e) {
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
+				_data = new IniData();
 			}
 		}
 
