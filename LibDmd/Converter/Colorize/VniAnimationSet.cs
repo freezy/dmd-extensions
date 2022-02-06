@@ -19,6 +19,8 @@ namespace LibDmd.Converter.Colorize
 			// name
 			var header = Encoding.UTF8.GetString(reader.ReadBytes(4));
 			if (header != "VPIN") {
+				reader.Close();
+				fs.Close();
 				throw new WrongFormatException("Not a VPIN file: " + filename);
 			}
 
