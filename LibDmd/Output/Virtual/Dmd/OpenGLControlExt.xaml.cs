@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using NLog;
 using SharpGL;
 using SharpGL.RenderContextProviders;
 using SharpGL.Version;
@@ -31,6 +33,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		private double _dpiY;
 		private PixelFormat _format;
 		private int _bytesPerPixel;
+
+		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OpenGLControlExt"/> class.
@@ -169,7 +173,12 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RequestRender()
 		{
-			Dispatcher.Invoke(() => DoRender());
+			try{ 
+				Dispatcher.Invoke(() => DoRender());
+
+			} catch (TaskCanceledException e) {
+				Logger.Error(e, "Main thread seems already destroyed, aborting.");
+			}
 		}
 
 		/// <summary>
