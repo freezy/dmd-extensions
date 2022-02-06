@@ -162,7 +162,7 @@ namespace LibDmd.DmdDevice
 
 				} else if (_config.VirtualDmd.Enabled) {
 					try {
-						_virtualDmd.Dispatcher.Invoke(() => {
+						_virtualDmd?.Dispatcher.Invoke(() => {
 							SetupGraphs();
 							SetupVirtualDmd();
 						});

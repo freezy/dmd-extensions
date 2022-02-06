@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -570,39 +571,43 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
 		{
-			if (!Dispatcher.HasShutdownFinished || !Dispatcher.HasShutdownStarted)
-			{
-				Dispatcher.Invoke(() =>
-				{
-					var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
-					var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
+			if (!Dispatcher.HasShutdownFinished || !Dispatcher.HasShutdownStarted) {
+				try {
+					Dispatcher.Invoke(() => {
+						var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
+						var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
 
-					var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
-					var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
-					AspectRatio = frameWidth / (double)frameHeight;
+						var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
+						var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
+						AspectRatio = frameWidth / (double)frameHeight;
 
-					var alphaW = ActualWidth / frameWidth;
-					var alphaH = ActualHeight / frameHeight;
-					if (!IgnoreAspectRatio)
-					{
-						var alpha = Math.Min(alphaW, alphaH);
-						alphaW = alpha;
-						alphaH = alpha;
-					}
+						var alphaW = ActualWidth / frameWidth;
+						var alphaH = ActualHeight / frameHeight;
+						if (!IgnoreAspectRatio)
+						{
+							var alpha = Math.Min(alphaW, alphaH);
+							alphaW = alpha;
+							alphaH = alpha;
+						}
 
-					var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
-					var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
+						var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
+						var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
 
-					DmdFraming.Width = frameWidth * alphaW;
-					DmdFraming.Height = frameHeight * alphaH;
-					DmdFraming.Margin = new Thickness(hpad, vpad, hpad, vpad);
+						DmdFraming.Width = frameWidth * alphaW;
+						DmdFraming.Height = frameHeight * alphaH;
+						DmdFraming.Margin = new Thickness(hpad, vpad, hpad, vpad);
 
-					Dmd.Width = glassWidth * alphaW;
-					Dmd.Height = glassHeight * alphaH;
-					Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
+						Dmd.Width = glassWidth * alphaW;
+						Dmd.Height = glassHeight * alphaH;
+						Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
 
-					Host?.SetDimensions((int)frameWidth, (int)frameHeight);
-				});
+						Host?.SetDimensions((int)frameWidth, (int)frameHeight);
+					});
+				
+				} catch (TaskCanceledException ex) {
+
+					Logger.Error(ex, "Main thread seems already destroyed, aborting.");
+				}
 			}
 		}
 
