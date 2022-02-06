@@ -19,6 +19,7 @@ using LibDmd.Input.FileSystem;
 using LibDmd.Output;
 using ResizeMode = LibDmd.Input.ResizeMode;
 using System.Reactive;
+using System.Threading.Tasks;
 
 namespace LibDmd
 {
@@ -552,7 +553,13 @@ namespace LibDmd
 			var destColoredGray4 = dest as IColoredGray4Destination;
 			var destColoredGray6 = dest as IColoredGray6Destination;
 			var destAlphaNumeric = dest as IAlphaNumericDestination;
-			Logger.Info("Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to);
+
+			try {
+				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info("Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to));
+			
+			} catch (TaskCanceledException e) {
+				Logger.Error(e, "Main thread seems already destroyed, aborting.");
+			}
 
 			switch (from) { 
 
