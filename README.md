@@ -61,9 +61,10 @@ We've introduced a more complex shader with awesome effects for monitor users. D
 <image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
 
-#### Version 1.9.10
-Finally you've all been waiting for...added 64 color content support including all color 
-modes (LCM, CM, MR, etc)! 256x64 content also works and uses new scaling options (scale2x, doubler). 
+#### Version 1.10
+
+Thanks to Funkyman and Lucky1, we now have 64 color content support including all color 
+modes (LCM, CM, MR, etc). 256x64 content also works and uses new scaling options (scale2x, doubler). 
 All current PIN2DMD vin/pal content is now officially supported. Uncolorized and standard colorized 
 content can also be scaled using the new modes as well. The new options are listed [below](#output-configuration).
 
