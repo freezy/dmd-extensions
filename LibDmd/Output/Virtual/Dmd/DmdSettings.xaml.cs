@@ -308,9 +308,12 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void LoadFromIniClicked(object sender, RoutedEventArgs e)
 		{
-			_previewStyle = _dmdConfig.GetStyle(NewStyleName);
-			UpdateControls();
-			UpdatePreview();
+			var previewStyle = _dmdConfig.GetStyle(NewStyleName);
+			if (previewStyle != null) {
+				_previewStyle = previewStyle;
+				UpdateControls();
+				UpdatePreview();
+			}
 		}
 
 		private void DeleteFromIniClicked(object sender, RoutedEventArgs e)
