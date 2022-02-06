@@ -85,7 +85,6 @@ namespace LibDmd.DmdDevice
 				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);
 					Logger.Info("Successfully loaded config from {0}.", _iniPath);
-					SetupConfig();
 
 				} else {
 					Logger.Warn("No DmdDevice.ini found at {0}, falling back to default values.", _iniPath);
@@ -96,6 +95,7 @@ namespace LibDmd.DmdDevice
 				Logger.Error(e, "Error parsing .ini file at {0}: {1}", _iniPath, e.Message);
 				_data = new IniData();
 			}
+			SetupConfig();
 
 			var dataPath = Path.Combine(Path.GetDirectoryName(_iniPath), "dmdext");
 			if (Directory.Exists(dataPath)) {
