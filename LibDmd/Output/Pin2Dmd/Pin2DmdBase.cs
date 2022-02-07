@@ -15,6 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 		/// How long to wait after sending data, in milliseconds
 		/// </summary>
 		public int Delay { get; set; } = 25;
+		private int lastPaletteIndex = -1;
 
 		public abstract int DmdWidth { get; }
 		public abstract int DmdHeight { get; }
@@ -323,7 +324,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void SetPalette(Color[] colors, int index)
 		{
-			SetSinglePalette(colors);
+			if (index != lastPaletteIndex) {
+				lastPaletteIndex = index;
+				SetSinglePalette(colors);
+			}
+
 			return;
 		}
 
@@ -335,6 +340,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void ClearColor()
 		{
 			SetColor(RenderGraph.DefaultColor);
+			lastPaletteIndex = -1;
 		}
 
 		public void Dispose()
