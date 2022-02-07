@@ -376,13 +376,28 @@ namespace LibDmd.Converter.Colorize
 			}
 			else
 			{
-				for (int i = 0; i < vpmFrame.Length; i++)
+				if (vpmFrame.Length == frame_count)
 				{
-					outplanes[i] = vpmFrame[i];
+					for (int i = 0; i < vpmFrame.Length-2; i++)
+					{
+						outplanes[i] = vpmFrame[i];
+					}
+					for (int i = vpmFrame.Length-2; i < frame_count; i++)
+					{
+						outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+					}
+
 				}
-				for (int i = vpmFrame.Length; i < frame_count; i++)
+				else
 				{
-					outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+					for (int i = 0; i < vpmFrame.Length; i++)
+					{
+						outplanes[i] = vpmFrame[i];
+					}
+					for (int i = vpmFrame.Length; i < frame_count; i++)
+					{
+						outplanes[i] = Frames[_frameIndex].Planes[i].Plane;
+					}
 				}
 			}
 			return outplanes;
