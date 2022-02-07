@@ -361,7 +361,8 @@ namespace LibDmd.Converter.Colorize
 					}
 					break;
 			}
-			_currentRender(outplanes);
+			if (_currentRender != null)
+				_currentRender(outplanes);
 		}
 
 		private byte[][] RenderColorMask(byte[][] vpmFrame)
