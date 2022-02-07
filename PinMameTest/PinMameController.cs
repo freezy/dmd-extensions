@@ -8,30 +8,23 @@ namespace PinMameTest
 {
 	public class VPinMameController
 	{
-		//public IObservable<DmdFrame> WhenDmdUpdatesFrame  => _whenDmdUpdatesFrame;
-		public DmdSize DmdSize { get; private set; }
-		public DmdFrame Dmd => UpdateDmd();
-
 		private const int EventStarted = 1;
 		private const int EventStopped = 0;
 
 		private Subject<GameStatus> _status;
 		private readonly Controller _controller = new Controller();
-		//private readonly Subject<DmdFrame> _whenDmdUpdatesFrame = new Subject<DmdFrame>();
-
-		//private IDisposable _ticks;
-		private DmdFrame _dmd;
 
 		public VPinMameController()
 		{
-			_controller.Antialias = true;
+			//_controller.Antialias = true;
 			_controller.ShowDMDOnly = false;
 			_controller.ShowFrame = false;
 			_controller.ShowTitle = false;
-			_controller.DoubleSize = false;
+			_controller.DoubleSize = true;
 			_controller.LockDisplay = true;
 			_controller.ShowDMDOnly = false;
 			_controller.Hidden = true;
+			_controller.HandleKeyboard = true;
 			Console.WriteLine("[{0}] VPinMAME Controller created.", Thread.CurrentThread.ManagedThreadId);
 		}
 
@@ -70,36 +63,10 @@ namespace PinMameTest
 
 		private void Started()
 		{
-			DmdSize = new DmdSize(_controller.RawDmdWidth, _controller.RawDmdHeight);
-			_dmd = new DmdFrame(DmdSize);
-/*			_ticks = Observable
-				.Interval(TimeSpan.FromMilliseconds(1000))
-				.SubscribeOn(Scheduler.Default)
-				.Subscribe(x => { Update(); });*/
-		}
-
-		private void Update()
-		{
-			UpdateDmd();
-		}
-
-		private DmdFrame UpdateDmd()
-		{
-			var pixels = _controller.RawDmdPixels as object[];
-			if (pixels == null) {
-				return _dmd;
-			}
-			for (var i = 0; i < pixels.Length; i++) {
-				var pixel = (byte)pixels[i];
-				_dmd.Update(i % 128, i / 128, pixel / 100.0f);
-			}
-			//_whenDmdUpdatesFrame.OnNext(_dmd);
-			return _dmd;
 		}
 
 		private void Stopped()
 		{
-			//_ticks.Dispose();
 		}
 
 		public VPinMameController Pause()
@@ -126,53 +93,5 @@ namespace PinMameTest
 	public enum GameStatus
 	{
 		Started, Stopped, Paused, Resumed
-	}
-
-	public class DmdFrame
-	{
-		public readonly DmdPixel[,] Pixels;
-		public readonly DmdSize Size;
-
-		public DmdFrame(DmdSize size)
-		{
-			Size = size;
-			Pixels = new DmdPixel[size.Width, size.Height];
-			for (var x = 0; x < size.Width; x++) {
-				for (var y = 0; y < size.Height; y++) {
-					Pixels[x, y] = new DmdPixel();
-				}
-			}
-		}
-
-		public void Update(int x, int y, float brightness)
-		{
-			Pixels[x, y].Set(x, y, brightness);
-		}
-	}
-
-	public class DmdPixel
-	{
-		public int X { get; private set; }
-		public int Y { get; private set; }
-		public float Brightness { get; private set; }
-
-		public void Set(int x, int y, float brightness)
-		{
-			X = x;
-			Y = y;
-			Brightness = brightness;
-		}
-	}
-
-	public class DmdSize
-	{
-		public int Width { get; }
-		public int Height { get; }
-
-		public DmdSize(int width, int height)
-		{
-			Width = width;
-			Height = height;
-		}
 	}
 }

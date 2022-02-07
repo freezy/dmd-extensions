@@ -80,7 +80,7 @@ namespace LibDmd
 				_graphs.ForEach(graph => graph.StartRendering(onCompleted, onError));
 			}
 		}
-		
+
 		public void StartRendering()
 		{
 			if (_renderer != null) {
@@ -131,7 +131,7 @@ namespace LibDmd
 		{
 			if (_renderer != null) {
 				_renderer.Dispose();
-			
+
 			} else {
 				_rgb24Destinations.Clear();
 				_graphs.ForEach(graph => graph.Dispose());

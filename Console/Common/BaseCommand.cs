@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd;
 using LibDmd.Common;
@@ -14,7 +13,6 @@ using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
-using LibDmd.Output.Virtual.Dmd;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;
@@ -39,7 +37,7 @@ namespace DmdExt.Common
 			return _graphs;
 		}
 
-		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags)
+		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags, int[] position = null)
 		{
 			var renderers = new List<IDestination>();
 			if (config.PinDmd1.Enabled) {
@@ -86,6 +84,36 @@ namespace DmdExt.Common
 				}
 			}
 
+			if (config.Pin2Dmd.Enabled)
+			{
+				var pin2DmdXl = Pin2DmdXl.GetInstance(config.Pin2Dmd.Delay);
+				if (pin2DmdXl.IsAvailable)
+				{
+					renderers.Add(pin2DmdXl);
+					Logger.Info("Added PIN2DMD XL renderer.");
+					reportingTags.Add("Out:PIN2DMDXL");
+				}
+				else
+				{
+					Logger.Warn("Device {0} is not available.", PIN2DMDXL);
+				}
+			}
+
+			if (config.Pin2Dmd.Enabled)
+			{
+				var pin2DmdHd = Pin2DmdHd.GetInstance(config.Pin2Dmd.Delay);
+				if (pin2DmdHd.IsAvailable)
+				{
+					renderers.Add(pin2DmdHd);
+					Logger.Info("Added PIN2DMD HD renderer.");
+					reportingTags.Add("Out:PIN2DMDHD");
+				}
+				else
+				{
+					Logger.Warn("Device {0} is not available.", PIN2DMDHD);
+				}
+			}
+
 			if (config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(config.Pixelcade.Port, config.Pixelcade.ColorMatrix);
 				if (pixelcade.IsAvailable) {
@@ -98,7 +126,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config));
+				renderers.Add(ShowVirtualDmd(config, position));
 				Logger.Info("Added virtual DMD renderer.");
 				reportingTags.Add("Out:VirtualDmd");
 			}
@@ -132,7 +160,7 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IDestination ShowVirtualDmd(IConfiguration config)
+		private static IDestination ShowVirtualDmd(IConfiguration config, int[] position)
 		{
 			var dmd = new VirtualDmd {
 				Left = config.VirtualDmd.Left,
@@ -148,6 +176,8 @@ namespace DmdExt.Common
 
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
+					if(position != null)
+						dmd.Dmd.SetDimensions(position[2]- position[0], position[3]-position[1]);
 					dmd.Show();
 				});
 

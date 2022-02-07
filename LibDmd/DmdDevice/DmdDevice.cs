@@ -18,6 +18,7 @@ using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
+using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
@@ -40,6 +41,8 @@ namespace LibDmd.DmdDevice
 	{
 		private const int Width = 128;
 		private const int Height = 32;
+		private int aniWidth = 128;
+		private int aniHeight = 32;
 
 		private readonly Configuration _config;
 		private readonly VpmGray2Source _vpmGray2Source;
@@ -212,9 +215,19 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
 						Logger.Info("Loaded animation set {0}", vni);
+						aniHeight = vni.MaxHeight;
+						aniWidth = vni.MaxWidth;
+					} else
+					{
+						aniHeight = Height;
+						aniWidth = Width;
 					}
+
 					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
 					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
+
+					_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
+					_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
 
 				} catch (Exception e) {
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
@@ -313,14 +326,25 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
-				var pin2Dmd = Output.Pin2Dmd.Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
+				var pin2Dmd = Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
-					if (_coloring != null) {
-						pin2Dmd.PreloadPalettes(_coloring);
-					}
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
+				}
+				var pin2DmdXl = Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
+				if (pin2DmdXl.IsAvailable)
+				{
+					renderers.Add(pin2DmdXl);
+					Logger.Info("Added PIN2DMD XL renderer.");
+					ReportingTags.Add("Out:PIN2DMDXL");
+				}
+				var pin2DmdHd = Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
+				if (pin2DmdHd.IsAvailable)
+				{
+					renderers.Add(pin2DmdHd);
+					Logger.Info("Added PIN2DMD HD renderer.");
+					ReportingTags.Add("Out:PIN2DMDHD");
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
@@ -463,7 +487,7 @@ namespace LibDmd.DmdDevice
 					FlipVertically = _config.Global.FlipVertically
 				});
 			}
-
+			
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
@@ -637,7 +661,14 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
 		}
-
+		public int GetAniHeight()
+		{
+			return aniHeight;
+		}
+		public int GetAniWidth()
+		{
+			return aniWidth;
+		}
 		public void RenderGray2(DMDFrame frame)
 		{
 			if (!_isOpen) {
@@ -646,7 +677,8 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
+			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation)
+			{
 				// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 				// indicating this should be upsized and treated as a centered 128x32 DMD.
 
@@ -656,8 +688,40 @@ namespace LibDmd.DmdDevice
 				if (_upsizedFrame == null)
 					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
 				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
+
 				_vpmGray2Source.NextFrame(_upsizedFrame);
-			} else {
+			}
+			else
+			{
+				if (_config.Global.ScaleToHD)
+				{
+					if (width == 128 && height == 32)
+					{
+						width *= 2;
+						height *= 2;
+					}
+
+					if ((!_colorize || _gray2Colorizer == null) && width * height != frame.Data.Length)
+					{
+						byte[] data;
+
+						if (_config.Global.ScalerMode == ScalerMode.Doubler)
+						{
+							data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
+						}
+						else
+						{
+							data = FrameUtil.Scale2x(width, height, frame.Data);
+						}
+
+						frame.Update(width, height, data);
+					}
+					else
+					{
+						frame.Update(width, height, frame.Data);
+					}
+				}
+
 				_gray2Colorizer?.SetDimensions(width, height);
 				_gray4Colorizer?.SetDimensions(width, height);
 				_vpmGray2Source.NextFrame(frame);
@@ -669,6 +733,38 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+			int width = frame.width;
+			int height = frame.height;
+
+			if (_config.Global.ScaleToHD)
+			{
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+				}
+
+				if ((!_colorize || _gray4Colorizer == null) && width * height != frame.Data.Length)
+				{
+					byte[] data;
+
+					if (_config.Global.ScalerMode == ScalerMode.Doubler)
+					{
+						data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
+					}
+					else
+					{
+						data = FrameUtil.Scale2x(width, height, frame.Data);
+					}
+
+					frame.Update(width, height, data);
+				}
+				else
+				{
+					frame.Update(width, height, frame.Data);
+				}
+			}
+
 			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);

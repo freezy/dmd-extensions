@@ -79,125 +79,7 @@ namespace LibDmd.Common
 			Logger.Debug("[SplitBitplanes] From {0} bytes to {1} planes at {2} bytes.", src.Length, bitlen, size);
 			return planes;
 		}
-
-		/// <summary>
-		/// Splits an RGB24 frame into each bit plane.
-		/// </summary>
-		/// <param name="width">Width of the frame</param>
-		/// <param name="height">Height of the frame</param>
-		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
-		/// <param name="frameBuffer">Destination buffer where planes are written</param>
-		/// <param name="offset">Start writing at this offset</param>
-		/// <returns>True if destination buffer changed, false otherwise.</returns>
-		public static bool SplitRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset)
-		{
-			var byteIdx = offset;
-			var identical = true;
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x += 8) {
-					byte r3 = 0;
-					byte r4 = 0;
-					byte r5 = 0;
-					byte r6 = 0;
-					byte r7 = 0;
-
-					byte g3 = 0;
-					byte g4 = 0;
-					byte g5 = 0;
-					byte g6 = 0;
-					byte g7 = 0;
-
-					byte b3 = 0;
-					byte b4 = 0;
-					byte b5 = 0;
-					byte b6 = 0;
-					byte b7 = 0;
-
-					for (var v = 7; v >= 0; v--) {
-						var pos = (y * width + x + v) * 3;
-
-						var pixelr = frame[pos];
-						var pixelg = frame[pos + 1];
-						var pixelb = frame[pos + 2];
-
-						r3 <<= 1;
-						r4 <<= 1;
-						r5 <<= 1;
-						r6 <<= 1;
-						r7 <<= 1;
-						g3 <<= 1;
-						g4 <<= 1;
-						g5 <<= 1;
-						g6 <<= 1;
-						g7 <<= 1;
-						b3 <<= 1;
-						b4 <<= 1;
-						b5 <<= 1;
-						b6 <<= 1;
-						b7 <<= 1;
-
-						if ((pixelr & 8) != 0) r3 |= 1;
-						if ((pixelr & 16) != 0) r4 |= 1;
-						if ((pixelr & 32) != 0) r5 |= 1;
-						if ((pixelr & 64) != 0) r6 |= 1;
-						if ((pixelr & 128) != 0) r7 |= 1;
-
-						if ((pixelg & 8) != 0) g3 |= 1;
-						if ((pixelg & 16) != 0) g4 |= 1;
-						if ((pixelg & 32) != 0) g5 |= 1;
-						if ((pixelg & 64) != 0) g6 |= 1;
-						if ((pixelg & 128) != 0) g7 |= 1;
-
-						if ((pixelb & 8) != 0) b3 |= 1;
-						if ((pixelb & 16) != 0) b4 |= 1;
-						if ((pixelb & 32) != 0) b5 |= 1;
-						if ((pixelb & 64) != 0) b6 |= 1;
-						if ((pixelb & 128) != 0) b7 |= 1;
-					}
-
-					identical = identical &&
-						frameBuffer[byteIdx + 5120] == r3 &&
-						frameBuffer[byteIdx + 5632] == r4 &&
-						frameBuffer[byteIdx + 6144] == r5 &&
-						frameBuffer[byteIdx + 6656] == r6 &&
-						frameBuffer[byteIdx + 7168] == r7 &&
-
-						frameBuffer[byteIdx + 2560] == g3 &&
-						frameBuffer[byteIdx + 3072] == g4 &&
-						frameBuffer[byteIdx + 3584] == g5 &&
-						frameBuffer[byteIdx + 4096] == g6 &&
-						frameBuffer[byteIdx + 4608] == g7 &&
-
-						frameBuffer[byteIdx + 0] == b3 &&
-						frameBuffer[byteIdx + 512] == b4 &&
-						frameBuffer[byteIdx + 1024] == b5 &&
-						frameBuffer[byteIdx + 1536] == b6 &&
-						frameBuffer[byteIdx + 2048] == b7;
-
-
-					frameBuffer[byteIdx + 5120] = r3;
-					frameBuffer[byteIdx + 5632] = r4;
-					frameBuffer[byteIdx + 6144] = r5;
-					frameBuffer[byteIdx + 6656] = r6;
-					frameBuffer[byteIdx + 7168] = r7;
-
-					frameBuffer[byteIdx + 2560] = g3;
-					frameBuffer[byteIdx + 3072] = g4;
-					frameBuffer[byteIdx + 3584] = g5;
-					frameBuffer[byteIdx + 4096] = g6;
-					frameBuffer[byteIdx + 4608] = g7;
-
-					frameBuffer[byteIdx + 0] = b3;
-					frameBuffer[byteIdx + 512] = b4;
-					frameBuffer[byteIdx + 1024] = b5;
-					frameBuffer[byteIdx + 1536] = b6;
-					frameBuffer[byteIdx + 2048] = b7;
-					byteIdx++;
-				}
-			}
-			return !identical;
-		}
-
+				
 		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
@@ -421,6 +303,198 @@ namespace LibDmd.Common
 			return !identical;
 		}
 
+		//Scale planes by doubling the pixels in each byte
+
+		public static readonly ushort[] doublePixel = {
+		  0x0000,0x0003,0x000C,0x000F,0x0030,0x0033,0x003C,0x003F,0x00C0,0x00C3,0x00CC,0x00CF,0x00F0,0x00F3,0x00FC,0x00FF,
+		  0x0300,0x0303,0x030C,0x030F,0x0330,0x0333,0x033C,0x033F,0x03C0,0x03C3,0x03CC,0x03CF,0x03F0,0x03F3,0x03FC,0x03FF,
+		  0x0C00,0x0C03,0x0C0C,0x0C0F,0x0C30,0x0C33,0x0C3C,0x0C3F,0x0CC0,0x0CC3,0x0CCC,0x0CCF,0x0CF0,0x0CF3,0x0CFC,0x0CFF,
+		  0x0F00,0x0F03,0x0F0C,0x0F0F,0x0F30,0x0F33,0x0F3C,0x0F3F,0x0FC0,0x0FC3,0x0FCC,0x0FCF,0x0FF0,0x0FF3,0x0FFC,0x0FFF,
+		  0x3000,0x3003,0x300C,0x300F,0x3030,0x3033,0x303C,0x303F,0x30C0,0x30C3,0x30CC,0x30CF,0x30F0,0x30F3,0x30FC,0x30FF,
+		  0x3300,0x3303,0x330C,0x330F,0x3330,0x3333,0x333C,0x333F,0x33C0,0x33C3,0x33CC,0x33CF,0x33F0,0x33F3,0x33FC,0x33FF,
+		  0x3C00,0x3C03,0x3C0C,0x3C0F,0x3C30,0x3C33,0x3C3C,0x3C3F,0x3CC0,0x3CC3,0x3CCC,0x3CCF,0x3CF0,0x3CF3,0x3CFC,0x3CFF,
+		  0x3F00,0x3F03,0x3F0C,0x3F0F,0x3F30,0x3F33,0x3F3C,0x3F3F,0x3FC0,0x3FC3,0x3FCC,0x3FCF,0x3FF0,0x3FF3,0x3FFC,0x3FFF,
+		  0xC000,0xC003,0xC00C,0xC00F,0xC030,0xC033,0xC03C,0xC03F,0xC0C0,0xC0C3,0xC0CC,0xC0CF,0xC0F0,0xC0F3,0xC0FC,0xC0FF,
+		  0xC300,0xC303,0xC30C,0xC30F,0xC330,0xC333,0xC33C,0xC33F,0xC3C0,0xC3C3,0xC3CC,0xC3CF,0xC3F0,0xC3F3,0xC3FC,0xC3FF,
+		  0xCC00,0xCC03,0xCC0C,0xCC0F,0xCC30,0xCC33,0xCC3C,0xCC3F,0xCCC0,0xCCC3,0xCCCC,0xCCCF,0xCCF0,0xCCF3,0xCCFC,0xCCFF,
+		  0xCF00,0xCF03,0xCF0C,0xCF0F,0xCF30,0xCF33,0xCF3C,0xCF3F,0xCFC0,0xCFC3,0xCFCC,0xCFCF,0xCFF0,0xCFF3,0xCFFC,0xCFFF,
+		  0xF000,0xF003,0xF00C,0xF00F,0xF030,0xF033,0xF03C,0xF03F,0xF0C0,0xF0C3,0xF0CC,0xF0CF,0xF0F0,0xF0F3,0xF0FC,0xF0FF,
+		  0xF300,0xF303,0xF30C,0xF30F,0xF330,0xF333,0xF33C,0xF33F,0xF3C0,0xF3C3,0xF3CC,0xF3CF,0xF3F0,0xF3F3,0xF3FC,0xF3FF,
+		  0xFC00,0xFC03,0xFC0C,0xFC0F,0xFC30,0xFC33,0xFC3C,0xFC3F,0xFCC0,0xFCC3,0xFCCC,0xFCCF,0xFCF0,0xFCF3,0xFCFC,0xFCFF,
+		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
+		};
+
+		public static byte[] Scale2(int width, int height, byte[] srcplane)
+		{
+			var planeSize = width * height / 8;
+			byte[] plane;
+			ushort[] scaledPlane = new ushort[planeSize / 2];
+			for (var i = 0; i < height; i++)
+			{
+				for (var k = 0; k < (width / 2 / 8); k++)
+				{
+					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplane[((i / 2) * (width / 2 / 8)) + k]];
+				}
+				i++;
+			}
+			plane = new byte[planeSize];
+			Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
+			return plane;
+		}
+
+		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
+		{
+			var planes = new byte[srcplanes.Length][];
+			for (var l = 0; l < srcplanes.Length; l++)
+			{
+				planes[l] = Scale2(width, height, srcplanes[l]);
+			}
+			return planes;
+		}
+
+		/// <summary>
+		/// Double the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="bitlen"></param>
+		/// <param name="frame"></param>
+		/// <returns></returns>
+		public static byte[] ScaleDouble(int width, int height, int bitlen, byte[] frame)
+		{
+			byte[] scaledData = new byte[width * height];
+			var origwidth = width / 2;
+			var scale = 2;
+
+			int targetIdx = 0;
+			for (var i = 0; i < height; ++i)
+			{
+				var iUnscaled = i / scale;
+				for (var j = 0; j < width; ++j)
+				{
+					var jUnscaled = j / scale;
+					scaledData[targetIdx++] = frame[iUnscaled * origwidth + jUnscaled];
+				}
+			}
+
+			return scaledData;
+		}
+
+		/// <summary>
+		/// Implementation of Scale2 for frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns>scaled frame planes</returns>
+		public static byte[] Scale2x(int width, int height, byte[] data)
+		{
+			byte[] scaledData = new byte[width * height];
+
+			var inputWidth = width / 2;
+			var inputHeight = height / 2;
+
+			for (var y = 0; y < inputHeight; y++)
+			{
+				for (var x = 0; x < inputWidth; x++)
+				{
+					var colorB = ImageUtil.GetPixel(x, y - 1, inputWidth, inputHeight, data);
+					var colorH = ImageUtil.GetPixel(x, y + 1, inputWidth, inputHeight, data);
+					var colorD = ImageUtil.GetPixel(x - 1, y, inputWidth, inputHeight, data);
+					var colorF = ImageUtil.GetPixel(x + 1, y, inputWidth, inputHeight, data);
+
+					var colorE = ImageUtil.GetPixel(x, y, inputWidth, inputHeight, data);
+
+					if ((colorB != colorH) && (colorD != colorF))
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, width, scaledData);
+					}
+					else
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, width, scaledData);
+					}
+				}
+			}
+
+			return scaledData;
+		}
+
+		/// <summary>
+		/// Join 
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns></returns>
+		public static byte[][] Scale2x(int width, int height, byte[][] data)
+		{
+			var joinData = Join(width, height, data);
+			var frameData = Scale2x(width, height, joinData);
+			return Split(width, height, data.Length, frameData);
+		}
+
+		//Scale down planes by displaying every second pixel
+		public static byte[] ScaleDown(int width, int height, byte[] srcplane)
+		{
+			var planeSize = width * height / 8;
+			byte[] scaledPlane = new byte[planeSize];
+			ushort[] plane = new ushort[planeSize * 2];
+			Buffer.BlockCopy(srcplane, 0, plane, 0, planeSize * 4);
+
+			for (var i = 0; i < height*2; i++)
+			{
+				for (var k = 0; k < (width / 8); k++)
+				{
+					ushort srcVal = plane[(i * (width / 8)) + k];
+					byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
+					scaledPlane[((i / 2) * (width / 8)) + k] = destVal;
+				}
+				i++;
+			}
+			return scaledPlane;
+		}
+
+		public static byte[][] ScaleDown(int width, int height, byte[][] srcplanes)
+		{
+			var planes = new byte[srcplanes.Length][];
+			for (var l = 0; l < srcplanes.Length; l++)
+			{
+				planes[l] = ScaleDown(width, height, srcplanes[l]);
+			}
+			return planes;
+		}
+
+		/// <summary>
+		/// Scane down frame data by taking every second pixel.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns></returns>
+		public static byte[] ScaleDownFrame(int width, int height, byte[] data)
+		{
+			byte[] scaledData = new byte[width * height];
+			var origWidth = width * 2;
+			var origHeight = height * 2;
+
+			for (var y = 0; y < origHeight; y++)
+			{
+				for (var x = 0; x < origWidth; x++)
+				{
+					var color = ImageUtil.GetPixel(x, y, origWidth, origHeight, data);
+					ImageUtil.SetPixel(x/2, y/2, color, width, scaledData);
+				}
+				y++;
+			}
+			return scaledData;
+		}
+
 		/// <summary>
 		/// Converts a 2-bit frame to a 4-bit frame or vice versa
 		/// </summary>
@@ -441,7 +515,7 @@ namespace LibDmd.Common
 			var frame = Join(width, height, planes);
 			return ColorUtil.ColorizeFrame(width, height, frame, palette);
 		}
-			
+
 		public static byte[] NewPlane(int width, int height)
 		{
 			var count = width / 8 * height;
@@ -507,7 +581,6 @@ namespace LibDmd.Common
 			}
 			return outplane;
 		}
-		
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
@@ -711,7 +784,7 @@ namespace LibDmd.Common
 			if (buffer1 == null || buffer2 == null) {
 				return false;
 			}
-			
+
 			fixed (byte* b1 = buffer1, b2 = buffer2) {
 				return memcmp(b1 + offset1, b2 + offset2, count) == 0;
 			}

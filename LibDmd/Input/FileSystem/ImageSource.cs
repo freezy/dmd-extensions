@@ -77,6 +77,28 @@ namespace LibDmd.Input.FileSystem
 		}
 	}
 
+	public class ImageSourceColoredGray6 : ImageSource, IColoredGray6Source
+	{
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => _frames;
+
+		private readonly BehaviorSubject<ColoredFrame> _frames;
+
+		public ImageSourceColoredGray6(BitmapSource bmp)
+		{
+			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var frame = new ColoredFrame(
+				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 6, ImageUtil.ConvertToGray6(bmp)),
+				new[] {
+					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
+					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray,
+					Colors.Tan, Colors.Orange, Colors.Yellow, Colors.LightSkyBlue,
+					Colors.Cyan, Colors.LightGreen, Colors.Pink, Colors.White,
+				}
+			);
+			_frames = new BehaviorSubject<ColoredFrame>(frame);
+		}
+	}
+
 	public class ImageSourceBitmap : ImageSource, IBitmapSource
 	{
 		public IObservable<BitmapSource> GetBitmapFrames() => _frames;

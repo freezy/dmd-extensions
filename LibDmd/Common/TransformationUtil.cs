@@ -106,13 +106,30 @@ namespace LibDmd.Common
 
 			// image fits into dest, don't upscale, just adjust margins.
 			if (destWidth > bmp.PixelWidth && destHeight > bmp.PixelHeight) {
-				marginX = (destWidth - bmp.PixelWidth) / 2;
-				marginY = (destHeight - bmp.PixelHeight) / 2;
-				width = bmp.PixelWidth;
-				height = bmp.PixelHeight;
+				switch (resize)
+				{
+					case ResizeMode.Stretch:
+						width = destWidth;
+						height = (double) bmp.PixelHeight * ((double) destWidth / (double) bmp.PixelWidth);
+						marginY = (destHeight - (int) height) / 2;
+						break;
+					case ResizeMode.Fill:
+						width = destWidth;
+						height = destHeight;
+						break;
+					case ResizeMode.Fit:
+						marginX = (destWidth - bmp.PixelWidth) / 2;
+						marginY = (destHeight - bmp.PixelHeight) / 2;
+						width = bmp.PixelWidth;
+						height = bmp.PixelHeight;
+						break;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
+				}
 
-			// width fits into dest, only scale y-axis
-			} else if (destWidth > bmp.PixelWidth) {
+				// width fits into dest, only scale y-axis
+			}
+			else if (destWidth > bmp.PixelWidth) {
 				marginX = (destWidth - bmp.PixelWidth) / 2;
 				width = bmp.PixelWidth;
 				switch (resize) {

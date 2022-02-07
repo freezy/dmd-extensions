@@ -9,15 +9,18 @@ using NLog;
 
 namespace LibDmd.Converter
 {
-	public class Gray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source
+	public class Gray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
 		public override string Name { get; } = "2-Bit Colorizer";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public bool Has128x32Animation { get; set; }
+		public ScalerMode ScalerMode { get; set; }
+
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
 		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
+		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
 
 		/// <summary>
 		/// Datä vomer uism .pal-Feil uisägläsä hend
@@ -63,7 +66,7 @@ namespace LibDmd.Converter
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Gray2Colorizer(Coloring coloring, AnimationSet animations)
+		public Gray2Colorizer(  Coloring coloring, AnimationSet animations)
 		{
 			_coloring = coloring;
 			_animations = animations;
@@ -77,7 +80,11 @@ namespace LibDmd.Converter
 
 		public void Convert(DMDFrame frame)
 		{
-			var planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
+			byte[][] planes;
+			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
+				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
+			else
+				planes = FrameUtil.Split(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, 2, frame.Data);
 
 			if (_coloring.Mappings != null)
 			{
@@ -92,8 +99,9 @@ namespace LibDmd.Converter
 				}
 			}
 
-			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
-			if (_activeAnimation != null) {
+			if (_activeAnimation != null)
+			{
+				_activeAnimation.ScalerMode = ScalerMode;
 				_activeAnimation.NextFrame(planes, AnimationFinished);
 				return;
 			}
@@ -117,6 +125,12 @@ namespace LibDmd.Converter
 
 			// If same LCM scene, no need to stop/start 
 			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset)
+			{
+				return;
+			}
+
+			// If same LRM scene, no need to stop/start 
+			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.MaskedReplace && mapping.Mode == SwitchMode.MaskedReplace && mapping.Offset == _activeAnimation.Offset)
 			{
 				return;
 			}
@@ -157,7 +171,7 @@ namespace LibDmd.Converter
 			// Animazionä
 			if (mapping.IsAnimation)
 			{
-
+				
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
 				if (_animations == null)
 				{
@@ -191,16 +205,16 @@ namespace LibDmd.Converter
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
-					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask)
+					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask && _activeAnimation.SwitchMode != SwitchMode.MaskedReplace)
 						return;
 
 				}
 				if (_activeAnimation != null)
 				{
-					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask)
+					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
 						_activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], nomaskcrc, reverse);
+						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _coloring.Masks, reverse);
 				}
 			}
 		}
@@ -221,7 +235,8 @@ namespace LibDmd.Converter
 			NoMaskCRC = checksum;
 
 			var mapping = _coloring.FindMapping(checksum);
-			if (mapping != null) {
+			if (mapping != null) 
+			{
 				return mapping;
 			}
 
@@ -231,10 +246,12 @@ namespace LibDmd.Converter
 		
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			var maskedPlane = new byte[maskSize];
-			foreach (var mask in _coloring.Masks) {
+			foreach (var mask in _coloring.Masks) 
+			{
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
 				mapping = _coloring.FindMapping(checksum);
-				if (mapping != null) {
+				if (mapping != null) 
+				{
 					return mapping;
 				}
 			}
@@ -248,6 +265,23 @@ namespace LibDmd.Converter
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(byte[][] planes)
 		{
+			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
+			{
+				// We want to do the scaling after the animations get triggered.
+				if (ScalerMode == ScalerMode.Doubler)
+				{
+					// Don't scale placeholder.
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				{
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, colorData);
+					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
+				}
+			}
+
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2) {
 				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
@@ -256,6 +290,11 @@ namespace LibDmd.Converter
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4) {
 				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+			}
+
+			if (planes.Length == 6)
+			{
+				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
 			}
 		}
 
@@ -299,6 +338,11 @@ namespace LibDmd.Converter
 		public IObservable<ColoredFrame> GetColoredGray4Frames()
 		{
 			return ColoredGray4AnimationFrames;
+		}
+
+		public IObservable<ColoredFrame> GetColoredGray6Frames()
+		{
+			return ColoredGray6AnimationFrames;
 		}
 	}
 }

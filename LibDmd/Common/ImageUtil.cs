@@ -141,6 +141,39 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts a bitmap to a 6-bit grayscale array.
+		/// </summary>
+		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
+		/// <returns>Array with value for every pixel between 0 and 15</returns>
+		public static byte[] ConvertToGray6(BitmapSource bmp, double lum = 1)
+		{
+			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
+			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+			var bytes = new byte[bytesPerPixel];
+			var rect = new Int32Rect(0, 0, 1, 1);
+			for (var y = 0; y < bmp.PixelHeight; y++)
+			{
+				rect.Y = y;
+				for (var x = 0; x < bmp.PixelWidth; x++)
+				{
+
+					rect.X = x;
+					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+
+					// convert to HSL
+					double hue;
+					double saturation;
+					double luminosity;
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+
+					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 63d * lum);
+				}
+			}
+			return frame;
+		}
+
+		/// <summary>
 		/// Converts a bitmap to an RGB24 array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
@@ -345,6 +378,46 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Converts an 6-bit grayscale array to a bitmap.
+		/// </summary>
+		/// <param name="width">Width of the image</param>
+		/// <param name="height">Height of the image</param>
+		/// <param name="frame">6-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
+		/// <returns>Bitmap</returns>
+		private static BitmapSource ConvertFromGray6(int width, int height, Frame frame, double hue, double saturation, double luminosity)
+		{
+			var bmp = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+			var bufferSize = (Math.Abs(bmp.BackBufferStride) * height + 2);
+			var frameBuffer = new byte[bufferSize];
+
+			var index = 0;
+			bmp.Lock();
+			for (var y = 0; y < height; y++)
+			{
+				for (var x = 0; x < width; x++)
+				{
+
+					var pixelLum = frame.Get(y * width + x);
+					var lum = luminosity * pixelLum / 63;
+					byte red, green, blue;
+					ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
+
+					frameBuffer[index] = blue;
+					frameBuffer[index + 1] = green;
+					frameBuffer[index + 2] = red;
+					index += 4;
+				}
+			}
+			bmp.WritePixels(new Int32Rect(0, 0, width, height), frameBuffer, bmp.BackBufferStride, 0);
+			bmp.Unlock();
+			bmp.Freeze();
+			return bmp;
+		}
+
+		/// <summary>
 		/// Converts an RGB24 array to a bitmap.
 		/// </summary>
 		/// <param name="width">Width of the image</param>
@@ -444,6 +517,42 @@ namespace LibDmd.Common
 		{
 			lock (FrameDatas) {
 				return ConvertFromGray4(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
+		}
+
+		/// <summary>
+		/// Converts an 6-bit grayscale array to a bitmap.
+		/// </summary>
+		/// <param name="width">Width of the image</param>
+		/// <param name="height">Height of the image</param>
+		/// <param name="frame">6-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
+		/// <returns>Bitmap</returns>
+		public static unsafe BitmapSource ConvertFromGray6(int width, int height, byte* frame, double hue, double saturation, double luminosity)
+		{
+			lock (FrameDatas)
+			{
+				return ConvertFromGray6(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
+			}
+		}
+
+		/// <summary>
+		/// Converts an 6-bit grayscale array to a bitmap.
+		/// </summary>
+		/// <param name="width">Width of the image</param>
+		/// <param name="height">Height of the image</param>
+		/// <param name="frame">6-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
+		/// <returns>Bitmap</returns>
+		public static BitmapSource ConvertFromGray6(int width, int height, byte[] frame, double hue, double saturation, double luminosity)
+		{
+			lock (FrameDatas)
+			{
+				return ConvertFromGray6(width, height, FrameData(width, height).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -568,5 +677,61 @@ namespace LibDmd.Common
 				return IsPointer ? PointerSrc[pos] : ArraySrc[pos];
 			}
 		}
+
+		/// <summary>
+		/// Get pixel color of the frame data
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		/// <returns>color of coord</returns>
+		public static byte GetPixel(int x, int y, int width, int height, byte[] frame)
+		{
+			// Clamp edges so it doesn't wrap.
+			x = Clamp(x, 0, width - 1);
+			y = Clamp(y, 0, height - 1);
+
+			return frame[x + (width * y)];
+		}
+
+		/// <summary>
+		/// Set pixel color of a texture block
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="color">color to set</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		public static void SetPixel(int x, int y, byte color, int width, byte[] frame)
+		{
+			frame[x + (width * y)] = color;
+		}
+
+		/// <summary>
+		/// Clamp values
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static int Clamp(int value, int min, int max)
+		{
+			return (value < min) ? min : (value > max) ? max : value;
+		}
+	}
+
+
+	public enum ScalerMode
+	{
+		/// <summary>
+		/// Double the pixels
+		/// </summary>
+		Doubler,
+
+		/// <summary>
+		/// Use scale2x algorithm
+		/// </summary>
+		Scale2x
 	}
 }

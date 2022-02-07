@@ -70,6 +70,10 @@ namespace DmdExt.Test
 						source = new ImageSourceColoredGray4(bmp);
 						break;
 
+					case FrameFormat.ColoredGray6:
+						source = new ImageSourceColoredGray6(bmp);
+						break;
+
 					default:
 						source = new ImageSourceBitmap(bmp);
 						break;

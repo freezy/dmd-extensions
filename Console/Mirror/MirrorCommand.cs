@@ -29,7 +29,7 @@ namespace DmdExt.Mirror
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
-				Destinations = GetRenderers(_config, reportingTags),
+				Destinations = GetRenderers(_config, reportingTags, _options.Position),
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
@@ -76,8 +76,8 @@ namespace DmdExt.Mirror
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
 						Top = _options.Position[1],
-						Width = _options.Position[2],
-						Height = _options.Position[3],
+						Width = _options.Position[2] - _options.Position[0],
+						Height = _options.Position[3] - _options.Position[1],
 						DestinationWidth = _options.ResizeTo[0],
 						DestinationHeight = _options.ResizeTo[1]
 					};
@@ -102,6 +102,7 @@ namespace DmdExt.Mirror
 					throw new ArgumentOutOfRangeException();
 			}
 			graphs.Add(_graph);
+			graphs.SetDimensions(new LibDmd.Input.Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
 		}
 	}
 }

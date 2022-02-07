@@ -168,16 +168,18 @@ namespace LibDmd.DmdDevice
 		public ResizeMode Resize => GetEnum("resize", ResizeMode.Fit);
 		public bool FlipHorizontally => GetBoolean("fliphorizontally", false);
 		public bool FlipVertically => GetBoolean("flipvertically", false);
-
 #if DISABLE_COLORING
 		public bool Colorize { get; } = false;
 #else
 		public bool Colorize => GetBoolean("colorize", true);
+#endif
 		public bool QuitWhenDone => false;
 		public int QuitAfter => -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
-#endif
+		public bool ScaleToHD => GetBoolean("scaletohd", false);
+		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
+
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -243,6 +245,7 @@ namespace LibDmd.DmdDevice
 		public double Top => GetDouble("top", 0);
 		public double Width => GetDouble("width", 1024);
 		public double Height => GetDouble("height", 256);
+		public ScalerMode ScalingMode => GetEnum("scalermode", ScalerMode.Scale2x);
 
 		private readonly Dictionary<string, DmdStyle> _styles = new Dictionary<string, DmdStyle>();
 
