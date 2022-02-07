@@ -15,6 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 		/// How long to wait after sending data, in milliseconds
 		/// </summary>
 		public int Delay { get; set; } = 25;
+		private int lastPaletteIndex = -1;
 
 		public abstract int DmdWidth { get; }
 		public abstract int DmdHeight { get; }
@@ -72,43 +73,46 @@ namespace LibDmd.Output.Pin2Dmd
 				}
 			}
 
-			try
+			if (_pin2DmdDevice != null)
 			{
-				_pin2DmdDevice.Open();
-
-				if (_pin2DmdDevice.Info.ProductString.Equals(ProductString))
+				try
 				{
-					Logger.Info($"Found {ProductString} device.");
-					Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
-					Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
-					Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
-					Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
+					_pin2DmdDevice.Open();
 
-					ReadConfig();
-					InitFrameBuffers();
-				}
-				else
-				{
-					Logger.Debug($"Device found but it's not the correct {ProductString} device ({0}).",
-						_pin2DmdDevice.Info.ProductString);
-					IsAvailable = false;
-					Dispose();
-					return;
-				}
+					if (_pin2DmdDevice.Info.ProductString.Equals(ProductString))
+					{
+						Logger.Info($"Found {ProductString} device.");
+						Logger.Debug("   Manufacturer: {0}", _pin2DmdDevice.Info.ManufacturerString);
+						Logger.Debug("   Product:      {0}", _pin2DmdDevice.Info.ProductString);
+						Logger.Debug("   Serial:       {0}", _pin2DmdDevice.Info.SerialString);
+						Logger.Debug("   Language ID:  {0}", _pin2DmdDevice.Info.CurrentCultureLangID);
 
-				if (_pin2DmdDevice is IUsbDevice usbDevice)
-				{
-					usbDevice.SetConfiguration(1);
-					usbDevice.ClaimInterface(0);
-				}
+						ReadConfig();
+						InitFrameBuffers();
+					}
+					else
+					{
+						Logger.Debug($"Device found but it's not the correct {ProductString} device ({0}).",
+							_pin2DmdDevice.Info.ProductString);
+						IsAvailable = false;
+						Dispose();
+						return;
+					}
+
+					if (_pin2DmdDevice is IUsbDevice usbDevice)
+					{
+						usbDevice.SetConfiguration(1);
+						usbDevice.ClaimInterface(0);
+					}
 #endif
-				IsAvailable = true;
+					IsAvailable = true;
 
-			}
-			catch (Exception e)
-			{
-				IsAvailable = false;
-				Logger.Warn(e, "Probing PIN2DMD XL failed, skipping.");
+				}
+				catch (Exception e)
+				{
+					IsAvailable = false;
+					Logger.Warn(e, "Probing PIN2DMD failed, skipping.");
+				}
 			}
 		}
 
@@ -323,7 +327,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void SetPalette(Color[] colors, int index)
 		{
-			SetSinglePalette(colors);
+			if (index != lastPaletteIndex) {
+				lastPaletteIndex = index;
+				SetSinglePalette(colors);
+			}
+
 			return;
 		}
 
@@ -335,6 +343,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void ClearColor()
 		{
 			SetColor(RenderGraph.DefaultColor);
+			lastPaletteIndex = -1;
 		}
 
 		public void Dispose()
