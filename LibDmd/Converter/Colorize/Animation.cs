@@ -303,6 +303,14 @@ namespace LibDmd.Converter.Colorize
 				_lastTick = Environment.TickCount;
 
 				_timer -= delay;
+
+				if (_timer > 0)
+				{
+					_frameIndex--;
+					OutputFrame(vpmFrame);
+					_frameIndex++;
+					return;
+				}
 			}
 
 			if (_frameIndex < NumFrames)
@@ -312,25 +320,13 @@ namespace LibDmd.Converter.Colorize
 					OutputFrame(vpmFrame);
 					return;
 				}
-				if (_frameIndex < NumFrames)
-				{
-					InitializeFrame();
-					OutputFrame(vpmFrame);
-					_frameIndex++;
-					return;
-				}
+				
+				InitializeFrame();
+				OutputFrame(vpmFrame);
+				_frameIndex++;
+				return;
 			}
-			else
-			{
-				if (NumFrames == 1 && _timer > 0)
-				{
-					if (_frameIndex == 1)
-						_frameIndex--;
-					OutputFrame(vpmFrame);
-					_frameIndex++;
-					return;
-				}
-			}
+			
 			completed?.Invoke();
 			SwitchMode = SwitchMode.Palette;
 			OutputFrame(vpmFrame);
