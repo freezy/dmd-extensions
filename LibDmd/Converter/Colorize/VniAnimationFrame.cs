@@ -30,7 +30,7 @@ namespace LibDmd.Converter.Colorize
 
 					var compressedSize = reader.ReadInt32BE();
 					var compressedPlanes = reader.ReadBytes(compressedSize);
-					var dec = new HeatShrinkDecoder(10, 0, 1024);
+					var dec = new HeatShrinkDecoder(10, 5, 1024);
 					var decompressedStream = new MemoryStream();
 					dec.Decode(new MemoryStream(compressedPlanes), decompressedStream);
 					decompressedStream.Seek(0, SeekOrigin.Begin);

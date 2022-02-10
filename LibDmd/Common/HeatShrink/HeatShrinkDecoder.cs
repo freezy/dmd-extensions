@@ -118,7 +118,7 @@ namespace LibDmd.Common.HeatShrink
 					if (remainingInInput == 0) {
 						// read some input bytes
 
-						remainingInInput = reader.Read(inbuffer, 0, 4096);
+						remainingInInput = reader.Read(inbuffer, 0, inbuffer.Length);
 						inputOffset = 0;
 					}
 					if (remainingInInput == 0) {
