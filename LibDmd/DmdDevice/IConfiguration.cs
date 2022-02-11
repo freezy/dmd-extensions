@@ -40,34 +40,29 @@ namespace LibDmd.DmdDevice
 		ScalerMode ScalerMode { get; }
 	}
 
-	public interface IAllowHdScaling
-	{
-		bool AllowHdScaling { get; }
-	}
-
-	public interface IPinDmd1Config : IAllowHdScaling
+	public interface IPinDmd1Config
 	{
 		bool Enabled { get; }
 	}
 
-	public interface IPinDmd2Config : IAllowHdScaling
+	public interface IPinDmd2Config
 	{
 		bool Enabled { get; }
 	}
 
-	public interface IPinDmd3Config : IAllowHdScaling
+	public interface IPinDmd3Config
 	{
 		bool Enabled { get; }
 		string Port { get; }
 	}
 
-	public interface IPin2DmdConfig : IAllowHdScaling
+	public interface IPin2DmdConfig
 	{
 		bool Enabled { get; }
 		int Delay { get; }
 	}
 
-	public interface IPixelcadeConfig : IAllowHdScaling
+	public interface IPixelcadeConfig
 	{
 		bool Enabled { get; }
 		string Port { get; }
@@ -95,7 +90,7 @@ namespace LibDmd.DmdDevice
 		RasterizeStyleDefinition Style { get; }
 	}
 
-	public interface IVideoConfig : IAllowHdScaling
+	public interface IVideoConfig
 	{
 		bool Enabled { get; }
 		string Path { get; }
