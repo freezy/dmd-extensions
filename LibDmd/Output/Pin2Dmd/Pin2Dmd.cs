@@ -13,6 +13,7 @@ namespace LibDmd.Output.Pin2Dmd
 		protected override string ProductString => "PIN2DMD";
 		public override int DmdWidth { get; } = 128;
 		public override int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private byte[] _frameBufferGray4;
 		private byte[] _frameBufferGray6;

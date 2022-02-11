@@ -19,5 +19,10 @@
 		/// Height of the output device in pixels.
 		/// </summary>
 		int DmdHeight { get; }
+
+		/// <summary>
+		/// Allow scaling to HD for this destination.
+		/// </summary>
+		bool DmdAllowHdScaling { get; }
 	}
 }

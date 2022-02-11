@@ -36,33 +36,38 @@ namespace LibDmd.DmdDevice
 		int QuitAfter { get; }
 		bool NoClear { get; }
 		Color DmdColor { get; }
-		bool ScaleToHD { get; }
+		bool ScaleToHd { get; }
 		ScalerMode ScalerMode { get; }
 	}
 
-	public interface IPinDmd1Config
+	public interface IAllowHdScaling
+	{
+		bool AllowHdScaling { get; }
+	}
+
+	public interface IPinDmd1Config : IAllowHdScaling
 	{
 		bool Enabled { get; }
 	}
 
-	public interface IPinDmd2Config
+	public interface IPinDmd2Config : IAllowHdScaling
 	{
 		bool Enabled { get; }
 	}
 
-	public interface IPinDmd3Config
+	public interface IPinDmd3Config : IAllowHdScaling
 	{
 		bool Enabled { get; }
 		string Port { get; }
 	}
 
-	public interface IPin2DmdConfig
+	public interface IPin2DmdConfig : IAllowHdScaling
 	{
 		bool Enabled { get; }
 		int Delay { get; }
 	}
 
-	public interface IPixelcadeConfig
+	public interface IPixelcadeConfig : IAllowHdScaling
 	{
 		bool Enabled { get; }
 		string Port { get; }
@@ -90,7 +95,7 @@ namespace LibDmd.DmdDevice
 		RasterizeStyleDefinition Style { get; }
 	}
 
-	public interface IVideoConfig
+	public interface IVideoConfig : IAllowHdScaling
 	{
 		bool Enabled { get; }
 		string Path { get; }

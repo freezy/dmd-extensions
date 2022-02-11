@@ -100,6 +100,8 @@ namespace LibDmd
 		/// </summary>
 		public string IdlePlay { get; set; }
 
+		public ScalerMode ScalerMode { get; set; }
+
 		/// <summary>
 		/// The default color used if there is no palette defined
 		/// </summary>
@@ -1393,9 +1395,30 @@ namespace LibDmd
 			}
 		}
 
+		private byte[] TransformScaling(int width, int height, byte[] frame, IFixedSizeDestination dest)
+		{
+			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length))
+			{
+				return frame;
+			}
+
+			if (ScalerMode == ScalerMode.Doubler)
+			{
+				return FrameUtil.ScaleDouble(width, height, 4, frame);
+			}
+			else
+			{
+				return FrameUtil.Scale2x(width, height, frame);
+			}
+
+		}
+
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if (dest == null) {
+			frame = TransformScaling(width, height, frame, dest);
+
+			if (dest == null)
+			{
 				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
@@ -1420,7 +1443,10 @@ namespace LibDmd
 
 		private byte[] TransformGray4(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if (dest == null) {
+			frame = TransformScaling(width, height, frame, dest);
+
+			if (dest == null)
+			{
 				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
@@ -1438,6 +1464,8 @@ namespace LibDmd
 		}
 		private byte[] TransformGray6(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
+			frame = TransformScaling(width, height, frame, dest);
+
 			if (dest == null)
 			{
 				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);

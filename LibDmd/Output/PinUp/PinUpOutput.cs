@@ -24,6 +24,7 @@ namespace LibDmd.Output.PinUp
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; } = false;
 
 		private readonly IntPtr _pnt;
 		private readonly string _gameName;

@@ -190,7 +190,7 @@ namespace LibDmd.DmdDevice
 		private void SetupColorizer()
 		{
 			// only setup if enabled and path is set
-			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null) {
+			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize) {
 				return;
 			}
 
@@ -303,6 +303,8 @@ namespace LibDmd.DmdDevice
 			var renderers = new List<IDestination>();
 			if (_config.PinDmd1.Enabled) {
 				var pinDmd1 = PinDmd1.GetInstance();
+				pinDmd1.DmdAllowHdScaling = _config.PinDmd1.AllowHdScaling;
+
 				if (pinDmd1.IsAvailable) {
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
@@ -311,6 +313,8 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.PinDmd2.Enabled) {
 				var pinDmd2 = PinDmd2.GetInstance();
+				pinDmd2.DmdAllowHdScaling = _config.PinDmd2.AllowHdScaling;
+
 				if (pinDmd2.IsAvailable) {
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
@@ -319,6 +323,8 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.PinDmd3.Enabled) {
 				var pinDmd3 = PinDmd3.GetInstance(_config.PinDmd3.Port);
+				pinDmd3.DmdAllowHdScaling = _config.PinDmd3.AllowHdScaling;
+
 				if (pinDmd3.IsAvailable) {
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
@@ -327,21 +333,27 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.Pin2Dmd.Enabled) {
 				var pin2Dmd = Pin2Dmd.GetInstance(_config.Pin2Dmd.Delay);
+				pin2Dmd.DmdAllowHdScaling = _config.Pin2Dmd.AllowHdScaling;
+
 				if (pin2Dmd.IsAvailable) {
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
 				}
+
 				var pin2DmdXl = Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
-				if (pin2DmdXl.IsAvailable)
-				{
+				pin2DmdXl.DmdAllowHdScaling = _config.Pin2Dmd.AllowHdScaling;
+
+				if (pin2DmdXl.IsAvailable) {
 					renderers.Add(pin2DmdXl);
 					Logger.Info("Added PIN2DMD XL renderer.");
 					ReportingTags.Add("Out:PIN2DMDXL");
 				}
+
 				var pin2DmdHd = Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
-				if (pin2DmdHd.IsAvailable)
-				{
+				pin2DmdHd.DmdAllowHdScaling = _config.Pin2Dmd.AllowHdScaling;
+
+				if (pin2DmdHd.IsAvailable) {
 					renderers.Add(pin2DmdHd);
 					Logger.Info("Added PIN2DMD HD renderer.");
 					ReportingTags.Add("Out:PIN2DMDHD");
@@ -349,6 +361,8 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port, _config.Pixelcade.ColorMatrix);
+				pixelcade.DmdAllowHdScaling = _config.Pixelcade.AllowHdScaling;
+
 				if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
@@ -367,18 +381,17 @@ namespace LibDmd.DmdDevice
 				ReportingTags.Add("Out:VirtualAlphaNum");
 			}
 			if (_config.Video.Enabled) {
-
 				var rootPath = "";
 				if (_config.Video.Path.Length == 0 || !Path.IsPathRooted(_config.Video.Path)) {
 					rootPath = AssemblyPath;
 				}
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Video.AllowHdScaling));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
 				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Video.AllowHdScaling));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
@@ -387,8 +400,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.PinUp.Enabled) {
-				try
-				{
+				try {
 					var pinupOutput = new PinUpOutput(_gameName);
 					if (pinupOutput.IsAvailable) {
 						renderers.Add(pinupOutput);
@@ -449,7 +461,8 @@ namespace LibDmd.DmdDevice
 					Converter = _gray2Colorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
 				});
 				ReportingTags.Add("Color:Gray2");
 
@@ -460,7 +473,8 @@ namespace LibDmd.DmdDevice
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
 				});
 			}
 
@@ -473,7 +487,8 @@ namespace LibDmd.DmdDevice
 					Converter = _gray4Colorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
 				});
 				ReportingTags.Add("Color:Gray4");
 
@@ -484,7 +499,8 @@ namespace LibDmd.DmdDevice
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
 				});
 			}
 
@@ -495,7 +511,8 @@ namespace LibDmd.DmdDevice
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically
+				FlipVertically = _config.Global.FlipVertically,
+				ScalerMode = _config.Global.ScalerMode
 			});
 
 			// alphanumeric graph
@@ -505,7 +522,8 @@ namespace LibDmd.DmdDevice
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically
+				FlipVertically = _config.Global.FlipVertically,
+				ScalerMode = _config.Global.ScalerMode
 			});
 
 			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
@@ -691,31 +709,12 @@ namespace LibDmd.DmdDevice
 			}
 			else
 			{
-				if (_config.Global.ScaleToHD)
+				if (_config.Global.ScaleToHd)
 				{
 					if (width == 128 && height == 32)
 					{
 						width *= 2;
 						height *= 2;
-					}
-
-					if ((!_colorize || _gray2Colorizer == null) && width * height != frame.Data.Length)
-					{
-						byte[] data;
-
-						if (_config.Global.ScalerMode == ScalerMode.Doubler)
-						{
-							data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
-						}
-						else
-						{
-							data = FrameUtil.Scale2x(width, height, frame.Data);
-						}
-
-						frame.Update(width, height, data);
-					}
-					else
-					{
 						frame.Update(width, height, frame.Data);
 					}
 				}
@@ -734,31 +733,12 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_config.Global.ScaleToHD)
+			if (_config.Global.ScaleToHd)
 			{
 				if (width == 128 && height == 32)
 				{
 					width *= 2;
 					height *= 2;
-				}
-
-				if ((!_colorize || _gray4Colorizer == null) && width * height != frame.Data.Length)
-				{
-					byte[] data;
-
-					if (_config.Global.ScalerMode == ScalerMode.Doubler)
-					{
-						data = FrameUtil.ScaleDouble(width, height, 4, frame.Data);
-					}
-					else
-					{
-						data = FrameUtil.Scale2x(width, height, frame.Data);
-					}
-
-					frame.Update(width, height, data);
-				}
-				else
-				{
 					frame.Update(width, height, frame.Data);
 				}
 			}

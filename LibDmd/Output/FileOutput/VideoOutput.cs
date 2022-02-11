@@ -16,6 +16,7 @@ namespace LibDmd.Output.FileOutput
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
@@ -28,9 +29,10 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VideoOutput(string path, uint fps = 30)
+		public VideoOutput(string path, bool dmdAllowScaling, uint fps = 30)
 		{
 			Fps = fps;
+			DmdAllowHdScaling = dmdAllowScaling;
 			VideoPath = Path.GetFullPath(path);
 			if (!Directory.Exists(Path.GetDirectoryName(VideoPath))) {
 				throw new InvalidFolderException($"Path \"{Path.GetDirectoryName(VideoPath)}\" is not a folder.");

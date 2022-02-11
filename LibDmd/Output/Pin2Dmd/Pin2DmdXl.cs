@@ -12,6 +12,7 @@
 
 		public override int DmdWidth { get; } = 192;
 		public override int DmdHeight { get; } = 64;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private static Pin2DmdXl _instance;
 		
