@@ -29,15 +29,14 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VideoOutput(string path, bool dmdAllowScaling, uint fps = 30)
+		public VideoOutput(string path, uint fps = 30)
 		{
 			Fps = fps;
-			DmdAllowHdScaling = dmdAllowScaling;
 			VideoPath = Path.GetFullPath(path);
 			if (!Directory.Exists(Path.GetDirectoryName(VideoPath))) {
 				throw new InvalidFolderException($"Path \"{Path.GetDirectoryName(VideoPath)}\" is not a folder.");
 			}
-			
+
 			if (File.Exists(VideoPath)) {
 				var count = 1;
 				var oldVideoPath = VideoPath;
@@ -60,7 +59,7 @@ namespace LibDmd.Output.FileOutput
 			try {
 				_stream = _writer.AddUncompressedVideoStream(DmdWidth, DmdHeight);
 				Logger.Info("Uncompressed encoder found.");
-			
+
 			} catch (InvalidOperationException e) {
 				Logger.Warn("Error creating Uncompressed encoded stream: {0}.", e.Message);
 			}
