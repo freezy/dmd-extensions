@@ -50,7 +50,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				ShowDisplays(frame.SegmentLayout);
 				_currentLayout = frame.SegmentLayout;
 			}
-			Logger.Info("New frame type {0}", frame.SegmentLayout);
+			//Logger.Info("New frame type {0}", frame.SegmentLayout);
 
 			switch (frame.SegmentLayout) {
 
