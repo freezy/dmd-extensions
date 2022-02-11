@@ -17,6 +17,7 @@ namespace LibDmd.Output.PinDmd2
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private UsbDevice _pinDmd2Device;
 		private readonly byte[] _frameBuffer;

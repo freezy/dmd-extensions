@@ -21,6 +21,7 @@ namespace LibDmd.Output.PinDmd3
 		public int Delay { get; set; } = 100;
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private const int ReadTimeoutMs = 100;
 		private const int WriteTimeoutMs = 100;

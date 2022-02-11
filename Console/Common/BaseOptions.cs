@@ -204,7 +204,7 @@ namespace DmdExt.Common
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
-		public bool ScaleToHD => _options.ScalingToHD;
+		public bool ScaleToHd => _options.ScalingToHD;
 		public ScalerMode ScalerMode => _options.ScalingMode;
 	}
 
@@ -280,6 +280,8 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.PinDMDv1;
+
+		public bool AllowHdScaling => _options.ScalingToHD;
 	}
 
 	internal class PinDmd2Options : IPinDmd2Config
@@ -293,6 +295,8 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.PinDMDv2;
+
+		public bool AllowHdScaling => _options.ScalingToHD;
 	}
 
 	internal class PinDmd3Options : IPinDmd3Config
@@ -307,6 +311,8 @@ namespace DmdExt.Common
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 		                       _options.Destination == BaseOptions.DestinationType.PinDMDv3;
 		public string Port => _options.Port;
+
+		public bool AllowHdScaling => _options.ScalingToHD;
 	}
 
 	internal class Pin2DmdOptions : IPin2DmdConfig
@@ -322,6 +328,8 @@ namespace DmdExt.Common
 		                       _options.Destination == BaseOptions.DestinationType.PIN2DMD;
 
 		public int Delay => _options.OutputDelay;
+
+		public bool AllowHdScaling => false;
 	}
 	
 	internal class PixelcadeOptions : IPixelcadeConfig
@@ -337,12 +345,15 @@ namespace DmdExt.Common
 		                       _options.Destination == BaseOptions.DestinationType.PIXELCADE;
 		public string Port => _options.Port;
 		public ColorMatrix ColorMatrix => _options.ColorMatrix;
+
+		public bool AllowHdScaling => false;
 	}
 
 	internal class VideoOptions : IVideoConfig
 	{
 		public bool Enabled => false;
 		public string Path => null;
+		public bool AllowHdScaling => false;
 	}
 
 	internal class GifOptions : IGifConfig

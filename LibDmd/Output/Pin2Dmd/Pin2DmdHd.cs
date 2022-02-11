@@ -10,6 +10,7 @@
 		protected override string ProductString => "PIN2DMD HD";
 		public override int DmdWidth { get; } = 256;
 		public override int DmdHeight { get; } = 64;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private static Pin2DmdHd _instance;
 
