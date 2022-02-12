@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
@@ -82,6 +81,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private const uint PositionAttribute = 0; // Fixed index of position attribute in the quad VBO
 		private const uint TexCoordAttribute = 1; // Fixed index of texture attribute in the quad VBO
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
+		
+		private const ushort FboErrorMax = 30;
+		private ushort _fboErrorCount = 0;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -90,6 +92,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			InitializeComponent();
 			SizeChanged += OnSizeChanged;
 			ClearColor();
+			_fboErrorCount = 0;
 		}
 		public void SetStyle(DmdStyle style, string dataPath)
 		{
@@ -191,6 +194,17 @@ namespace LibDmd.Output.Virtual.Dmd
 				_fboInvalid = true;
 				OnSizeChanged(null, null);
 			}
+		}
+
+		private void LogErrors(string message)
+		{
+			// Don't throw an exception unless it's occuring too often.
+			if (++_fboErrorCount >= FboErrorMax)
+			{
+				throw new ArgumentException(message);
+			}
+
+			Logger.Error(message);
 		}
 
 		#region OpenGL
@@ -451,7 +465,8 @@ namespace LibDmd.Output.Virtual.Dmd
 					case FrameFormat.Gray2:
 						if (_nextFrameData.Length != DmdWidth * DmdHeight)
 						{
-							throw new ArgumentException($"Invalid frame buffer size of {_nextFrameData.Length} bytes for a frame size of {DmdWidth}x{DmdHeight}");
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							return;
 						}
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
@@ -461,7 +476,8 @@ namespace LibDmd.Output.Virtual.Dmd
 					case FrameFormat.Gray4:
 						if (_nextFrameData.Length != DmdWidth * DmdHeight)
 						{
-							throw new ArgumentException($"Invalid frame buffer size of {_nextFrameData.Length} bytes for a frame size of {DmdWidth}x{DmdHeight}");
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							return;
 						}
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
@@ -471,7 +487,8 @@ namespace LibDmd.Output.Virtual.Dmd
 					case FrameFormat.Rgb24:
 						if (_nextFrameData.Length % 3 != 0)
 						{
-							throw new ArgumentException("RGB24 buffer must be divisible by 3, but " + _nextFrameData.Length + " isn't.");
+							LogErrors("RGB24 buffer must be divisible by 3, but " + _nextFrameData.Length + " isn't.");
+							return;
 						}
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, DmdWidth, DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);

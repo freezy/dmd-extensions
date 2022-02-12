@@ -628,6 +628,7 @@ namespace LibDmd.DmdDevice
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}
 
+			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
 			_gray2Colorizer = null;
