@@ -687,11 +687,22 @@ namespace LibDmd.DmdDevice
 
 				height = frame.height;
 				height *= 2;
-				_gray2Colorizer.SetDimensions(width, height);
+
 				if (_upsizedFrame == null)
 					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+				else
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+
 				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
 
+				if (_config.Global.ScaleToHd)
+				{
+					width = 256;
+					height = 64;
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+				}
+
+				_gray2Colorizer.SetDimensions(width, height);
 				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
 			else

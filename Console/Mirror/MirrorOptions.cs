@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using DmdExt.Common;
+using NLog;
 
 namespace DmdExt.Mirror
 {
@@ -40,11 +41,26 @@ namespace DmdExt.Mirror
 			base.Validate();
 
 			if (Source == SourceType.Screen) {
-				if (Position.Length != 4) {
-					throw new InvalidOptionException("Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
+				if (Position.Length != 4)
+				{
+					throw new InvalidOptionException(
+						"Argument --position must have four values: \"<Left> <Top> <Width> <Height>\".");
 				}
-				if (ResizeTo.Length != 2) {
+
+				if (ResizeTo.Length != 2)
+				{
 					throw new InvalidOptionException("Argument --resize-to must have two values: \"<Width> <Height>\".");
+				}
+
+				var width = Position[2] - Position[0];
+				var height = Position[3] - Position[1];
+				if (width < 0 )
+				{
+					Position[2] += Position[0];
+				}
+				if (height < 0)
+				{
+					Position[3] += Position[1];
 				}
 			}
 		}
