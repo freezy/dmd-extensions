@@ -204,7 +204,7 @@ namespace DmdExt.Common
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
-		public bool ScaleToHD => _options.ScalingToHD;
+		public bool ScaleToHd => _options.ScalingToHD;
 		public ScalerMode ScalerMode => _options.ScalingMode;
 	}
 

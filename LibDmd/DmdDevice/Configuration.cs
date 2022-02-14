@@ -178,7 +178,7 @@ namespace LibDmd.DmdDevice
 		public int QuitAfter => -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
-		public bool ScaleToHD => GetBoolean("scaletohd", false);
+		public bool ScaleToHd => GetBoolean("scaletohd", false);
 		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
@@ -190,6 +190,7 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "pindmd1";
 		public bool Enabled => GetBoolean("enabled", false);
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public PinDmd1Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -199,6 +200,7 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "pindmd2";
 		public bool Enabled => GetBoolean("enabled", false);
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public PinDmd2Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -209,6 +211,7 @@ namespace LibDmd.DmdDevice
 		public override string Name { get; } = "pindmd3";
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public PinDmd3Config(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -219,6 +222,7 @@ namespace LibDmd.DmdDevice
 		public override string Name { get; } = "pin2dmd";
 		public bool Enabled => GetBoolean("enabled", false);
 		public int Delay => GetInt("delay", 25);
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public Pin2DmdConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -230,6 +234,7 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
 		public ColorMatrix ColorMatrix => GetEnum("matrix", ColorMatrix.Rbg);
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public PixelcadeConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
@@ -670,6 +675,7 @@ namespace LibDmd.DmdDevice
 		public override string Name { get; } = "video";
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Path => GetString("path", ".");
+		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public VideoConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

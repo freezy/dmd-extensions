@@ -193,6 +193,8 @@ can set this up as you would for a PIN2DMD:
 4. Run VPM setup, open the ROM's game options and enable *Use external DMD (dll)*
    as well as *Colorize DMD*.
 
+Lastly, be sure to use at least PinMAME v3.4. You can download the latest version [here](https://github.com/vpinball/pinmame/releases).
+
 ### Future Pinball
 
 Copy `Future Pinball/OpenGL32.dll` to your Future Pinball folder, i.e. where 

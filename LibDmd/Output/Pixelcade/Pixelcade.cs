@@ -19,6 +19,7 @@ namespace LibDmd.Output.Pixelcade
 		public int Delay { get; set; } = 100;
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private const int ReadTimeoutMs = 100;
 		private const byte RgbLedMatrixFrameCommandByte = 0x1F;

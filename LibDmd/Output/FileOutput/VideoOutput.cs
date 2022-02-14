@@ -16,6 +16,7 @@ namespace LibDmd.Output.FileOutput
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
@@ -35,7 +36,7 @@ namespace LibDmd.Output.FileOutput
 			if (!Directory.Exists(Path.GetDirectoryName(VideoPath))) {
 				throw new InvalidFolderException($"Path \"{Path.GetDirectoryName(VideoPath)}\" is not a folder.");
 			}
-			
+
 			if (File.Exists(VideoPath)) {
 				var count = 1;
 				var oldVideoPath = VideoPath;
@@ -58,7 +59,7 @@ namespace LibDmd.Output.FileOutput
 			try {
 				_stream = _writer.AddUncompressedVideoStream(DmdWidth, DmdHeight);
 				Logger.Info("Uncompressed encoder found.");
-			
+
 			} catch (InvalidOperationException e) {
 				Logger.Warn("Error creating Uncompressed encoded stream: {0}.", e.Message);
 			}

@@ -16,7 +16,7 @@ namespace LibDmd.Output.PinDmd1
 
 		public int DmdWidth { get; } = 128;
 		public int DmdHeight { get; } = 32;
-
+		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
 		private readonly byte[] _frameBuffer;
