@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
+using NLog.Config;
 
 namespace LibDmd.Common
 {
@@ -253,17 +254,20 @@ namespace LibDmd.Common
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeFrame(int width, int height, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
-			if (width * height != frame.Length) {
-				throw new ArgumentException("Provided source data must be " + width + "x" + height + " = "  + width * height + " but is " + frame.Length + ".");
-			}
 			var frameLength = width * height * 3;
 
 			if (colorizedFrame == null) {
 				colorizedFrame = new byte[frameLength];
-
 			} else if (colorizedFrame.Length != frameLength) {
 				throw new ArgumentException("Provided destination array must be of size " + (width * height * 3) + " but is of size " + colorizedFrame.Length + ".");
 			}
+
+			// If our frame length doesn't match, just return an empty frame.
+			if (width * height != frame.Length)
+			{
+				return colorizedFrame;
+			}
+
 			var rpalvalues = new byte[palette.Length];
 			var gpalvalues = new byte[palette.Length];
 			var bpalvalues = new byte[palette.Length];
