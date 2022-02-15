@@ -588,6 +588,9 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
 		{
+			// Resize events should reset this error count.
+			_fboErrorCount = 0;
+
 			if (!Dispatcher.HasShutdownFinished || !Dispatcher.HasShutdownStarted) {
 				try {
 					Dispatcher.Invoke(() => {
