@@ -96,7 +96,8 @@ namespace LibDmd.DmdDevice
 			var assembly = Assembly.GetCallingAssembly();
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
-			if (File.Exists(logConfigPath)) {
+			if (File.Exists(logConfigPath))
+			{
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
 #if !DEBUG
 				LogManager.Configuration.AddTarget("memory", MemLogger);
@@ -117,23 +118,37 @@ namespace LibDmd.DmdDevice
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
 			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			_version = fvi.ProductVersion;
-			if (attr.Length > 0) {
+			if (attr.Length > 0)
+			{
 				var aca = (AssemblyConfigurationAttribute)attr[0];
 				_sha = aca.Configuration;
-				if (string.IsNullOrEmpty(_sha)) {
+				if (string.IsNullOrEmpty(_sha))
+				{
 					_fullVersion = _version;
 
-				} else {
+				}
+				else
+				{
 					_fullVersion = $"{_version} ({_sha})";
 				}
 
-			} else {
+			}
+			else
+			{
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
 
-			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
+				Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
+
+			Logger.Info("ScaleToHd = " + _config.Global.ScaleToHd);
+
+			if (_config.Global.ScaleToHd)
+			{
+				Logger.Info("ScalerMode = " + _config.Global.ScalerMode.ToString());
+			}
 		}
 
 		/// <summary>
