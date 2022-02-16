@@ -14,8 +14,8 @@ namespace LibDmd.Output.FileOutput
 	{
 		public string VideoPath { get; set; }
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public int DmdWidth { get; private set; } = 128;
+		public int DmdHeight { get; private set; } = 32;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		public readonly uint Fps;
@@ -29,7 +29,7 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VideoOutput(string path, uint fps = 30)
+		public VideoOutput(string path, bool scaleToHd = false, uint fps = 30)
 		{
 			Fps = fps;
 			VideoPath = Path.GetFullPath(path);
@@ -46,6 +46,13 @@ namespace LibDmd.Output.FileOutput
 					VideoPath = oldVideoPath.Replace(".avi", $" ({count}).avi");
 				}
 			}
+
+			if (scaleToHd)
+			{
+				DmdWidth = 256;
+				DmdHeight = 64;
+			}
+
 			Init();
 		}
 
