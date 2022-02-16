@@ -387,12 +387,12 @@ namespace LibDmd.DmdDevice
 					rootPath = AssemblyPath;
 				}
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
 				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
