@@ -590,7 +590,8 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
 							Subscribe(sourceGray2.GetGray2Frames()
-									.Select(frame => ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data))
+									.Select(frame => TransformScaling(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize))
+									.Select(frame => ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
@@ -599,10 +600,11 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
 							Subscribe(sourceGray2.GetGray2Frames()
+									.Select(frame => TransformScaling(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize))
 									.Select(frame => ImageUtil.ConvertFromRgb24(
 										source.Dimensions.Value.Width,
 										source.Dimensions.Value.Height,
-										ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data)
+										ColorizeGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame)
 									))
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
