@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
+using SharpGL.SceneGraph.Feedback;
 using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Common
@@ -33,31 +34,53 @@ namespace LibDmd.Common
 		{
 			var planeSize = width * height / 8;
 			var planes = new byte[bitlen][];
-			for (var i = 0; i < bitlen; i++) {
-				planes[i] = new byte[planeSize];
-			}
-			var byteIdx = 0;
-			var bd = new byte[bitlen];
-			for (var y = 0; y < height; y++) {
-				for (var x = 0; x < width; x += 8) {
-					for (var i = 0; i < bitlen; i++) {
-						bd[i] = 0;
-					}
-					for (var v = 7; v >= 0; v--) {
-						var pixel = frame[(y * width) + (x + v)];
-						for (var i = 0; i < bitlen; i++) {
-							bd[i] <<= 1;
-							if ((pixel & ( 1 << i) ) != 0) {
-								bd[i] |= 1;
+
+			try
+			{
+				for (var i = 0; i < bitlen; i++)
+				{
+					planes[i] = new byte[planeSize];
+				}
+
+				var byteIdx = 0;
+				var bd = new byte[bitlen];
+				for (var y = 0; y < height; y++)
+				{
+					for (var x = 0; x < width; x += 8)
+					{
+						for (var i = 0; i < bitlen; i++)
+						{
+							bd[i] = 0;
+						}
+
+						for (var v = 7; v >= 0; v--)
+						{
+							var pixel = frame[(y * width) + (x + v)];
+							for (var i = 0; i < bitlen; i++)
+							{
+								bd[i] <<= 1;
+								if ((pixel & (1 << i)) != 0)
+								{
+									bd[i] |= 1;
+								}
 							}
 						}
+
+						for (var i = 0; i < bitlen; i++)
+						{
+							planes[i][byteIdx] = bd[i];
+						}
+
+						byteIdx++;
 					}
-					for (var i = 0; i < bitlen; i++) {
-						planes[i][byteIdx] = bd[i];
-					}
-					byteIdx++;
 				}
 			}
+			catch (IndexOutOfRangeException e)
+			{
+				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", width, height, frame.Length, bitlen);
+				throw new IndexOutOfRangeException(e.Message);
+			}
+
 			return planes;
 		}
 

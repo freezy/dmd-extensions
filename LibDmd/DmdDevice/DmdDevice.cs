@@ -142,13 +142,6 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
-
-			Logger.Info("ScaleToHd = " + _config.Global.ScaleToHd);
-
-			if (_config.Global.ScaleToHd)
-			{
-				Logger.Info("ScalerMode = " + _config.Global.ScalerMode.ToString());
-			}
 		}
 
 		/// <summary>
@@ -232,8 +225,10 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loaded animation set {0}", vni);
 						aniHeight = vni.MaxHeight;
 						aniWidth = vni.MaxWidth;
+						Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
 					} else
 					{
+						Logger.Info("No animation set found");
 						aniHeight = Height;
 						aniWidth = Width;
 					}
@@ -249,6 +244,15 @@ namespace LibDmd.DmdDevice
 				}
 			} else {
 				Logger.Info("No palette file found at {0}.", palPath);
+			}
+
+			if (_config.Global.ScaleToHd)
+			{
+				Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+			}
+			else
+			{
+				Logger.Info("ScaleToHd = False");
 			}
 		}
 
