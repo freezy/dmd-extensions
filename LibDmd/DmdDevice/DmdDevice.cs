@@ -96,7 +96,8 @@ namespace LibDmd.DmdDevice
 			var assembly = Assembly.GetCallingAssembly();
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
-			if (File.Exists(logConfigPath)) {
+			if (File.Exists(logConfigPath))
+			{
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
 #if !DEBUG
 				LogManager.Configuration.AddTarget("memory", MemLogger);
@@ -117,22 +118,29 @@ namespace LibDmd.DmdDevice
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
 			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			_version = fvi.ProductVersion;
-			if (attr.Length > 0) {
+			if (attr.Length > 0)
+			{
 				var aca = (AssemblyConfigurationAttribute)attr[0];
 				_sha = aca.Configuration;
-				if (string.IsNullOrEmpty(_sha)) {
+				if (string.IsNullOrEmpty(_sha))
+				{
 					_fullVersion = _version;
 
-				} else {
+				}
+				else
+				{
 					_fullVersion = $"{_version} ({_sha})";
 				}
 
-			} else {
+			}
+			else
+			{
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
 
-			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
+				Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
 		}
 
@@ -217,8 +225,10 @@ namespace LibDmd.DmdDevice
 						Logger.Info("Loaded animation set {0}", vni);
 						aniHeight = vni.MaxHeight;
 						aniWidth = vni.MaxWidth;
+						Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
 					} else
 					{
+						Logger.Info("No animation set found");
 						aniHeight = Height;
 						aniWidth = Width;
 					}
@@ -234,6 +244,15 @@ namespace LibDmd.DmdDevice
 				}
 			} else {
 				Logger.Info("No palette file found at {0}.", palPath);
+			}
+
+			if (_config.Global.ScaleToHd)
+			{
+				Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+			}
+			else
+			{
+				Logger.Info("ScaleToHd = False");
 			}
 		}
 
@@ -372,12 +391,12 @@ namespace LibDmd.DmdDevice
 					rootPath = AssemblyPath;
 				}
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi")));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
 				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path)));
+					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 
@@ -687,11 +706,22 @@ namespace LibDmd.DmdDevice
 
 				height = frame.height;
 				height *= 2;
-				_gray2Colorizer.SetDimensions(width, height);
+
 				if (_upsizedFrame == null)
 					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+				else
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+
 				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
 
+				if (_config.Global.ScaleToHd)
+				{
+					width = 256;
+					height = 64;
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+				}
+
+				_gray2Colorizer.SetDimensions(width, height);
 				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
 			else
