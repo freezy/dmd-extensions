@@ -186,7 +186,7 @@ namespace LibDmd.Converter.Colorize
 			}
 			if (SwitchMode == SwitchMode.MaskedReplace)
 			{
-				if (vpmFrame[0].Length != LCMBufferPlanes[0].Length * 4)
+				if (LCMBufferPlanes[0].Length == vpmFrame[0].Length * 4)
 				{
 					if (ScalerMode == ScalerMode.Doubler)
 					{
