@@ -40,7 +40,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			// 2 bits per pixel + 4 init pixels
-			var size = (DmdWidth * DmdHeight / 4) * 4;
+			var size = (DmdWidth * DmdHeight / 4) + 4;
 			_frameBuffer = new byte[size];
 			_frameBuffer[0] = 0x81;    // frame sync bytes
 			_frameBuffer[1] = 0xC3;
