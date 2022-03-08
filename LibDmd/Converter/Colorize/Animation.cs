@@ -236,9 +236,8 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
-		public void DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse)
+		public bool DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse, bool clear)
 		{
-			bool clear = true;
 			uint checksum = NoMaskCRC;
 			var maskSize = Width * Height / 8;
 			var maskedPlane = new byte[maskSize];
@@ -271,6 +270,7 @@ namespace LibDmd.Converter.Colorize
 
 				}
 			}
+			return clear;
 		}
 
 		private void StartLCM(Action<byte[][]> render)

@@ -230,6 +230,7 @@ namespace LibDmd.Converter
 		private void TriggerAnimation(byte[][] planes, bool reverse)
 		{
 			uint nomaskcrc = 0;
+			bool clear = true;
 
 			for (var i = 0; i < planes.Length; i++)
 			{
@@ -249,7 +250,7 @@ namespace LibDmd.Converter
 				if (_activeAnimation != null)
 				{
 					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
-						_activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse);
+						clear = _activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse, clear);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
 						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _coloring.Masks, reverse);
 				}
