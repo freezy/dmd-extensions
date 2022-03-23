@@ -147,6 +147,10 @@ namespace LibDmd.Common
 			if (palette.Length == 4 && (palette.Length == 16 || palette.Length == 64)) {
 				return new[] { palette[0], palette[1], Colors.Black, Colors.Black, palette[2], Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, Colors.Black, palette[3] };
 			}
+			if (palette.Length == 64 && numColors == 16)
+			{
+				return new[] { palette[0], palette[1], palette[2], palette[3], palette[4], palette[5], palette[6], palette[7], palette[8], palette[9], palette[10], palette[11], palette[12], palette[13], palette[14], palette[15] };
+			}
 
 			// else interpolate
 			var interpolatedPalette = new Color[numColors];
