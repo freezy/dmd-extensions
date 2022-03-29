@@ -230,6 +230,7 @@ namespace LibDmd.Converter
 		private void TriggerAnimation(byte[][] planes, bool reverse)
 		{
 			uint nomaskcrc = 0;
+			bool clear = true;
 
 			for (var i = 0; i < planes.Length; i++)
 			{
@@ -249,7 +250,7 @@ namespace LibDmd.Converter
 				if (_activeAnimation != null)
 				{
 					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
-						_activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse);
+						clear = _activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse, clear);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
 						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _coloring.Masks, reverse);
 				}
@@ -322,18 +323,18 @@ namespace LibDmd.Converter
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2)
 			{
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4)
 			{
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			if (planes.Length == 6)
 			{
-				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, _palette.GetColors(planes.Length), _paletteIndex));
+				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 		}
 
