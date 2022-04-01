@@ -14,6 +14,7 @@ namespace LibDmd.DmdDevice
 		IPinDmd1Config PinDmd1 { get; }
 		IPinDmd2Config PinDmd2 { get; }
 		IPinDmd3Config PinDmd3 { get; }
+		IZePinDMDConfig ZePinDMD { get; }
 		IPin2DmdConfig Pin2Dmd { get; }
 		IPixelcadeConfig Pixelcade { get; }
 		IVideoConfig Video { get; }
@@ -51,6 +52,12 @@ namespace LibDmd.DmdDevice
 	}
 
 	public interface IPinDmd3Config
+	{
+		bool Enabled { get; }
+		string Port { get; }
+	}
+
+	public interface IZePinDMDConfig
 	{
 		bool Enabled { get; }
 		string Port { get; }
