@@ -168,7 +168,7 @@ bool MireActive=true;
 void setup()
 {
   Serial.begin(921600);
-  Serial.setRxBufferSize(12300);
+  Serial.setRxBufferSize(3000);
   if (!SPIFFS.begin(true)) return;
 
   pinMode(ORDRE_BUTTON_PIN, INPUT_PULLUP);
@@ -223,13 +223,20 @@ void loop()
     while (!Serial.available());
     c4 = Serial.read();
   }
-  if (c4 == 6) // reinit palettes
+  if (c4==15) // shake hands with the computer
+  {
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
+  }
+  else if (c4 == 6) // reinit palettes
     InitPalettes(255, 109, 0);
   else if (c4 == 10) // clear screen
     dma_display->clearScreen();
   else if (c4 == 3)
   {
-    while (Serial.available() < 3 * 128 * 32);
+    while (Serial.available() < min(2000,3 * 128 * 32));
     for (unsigned int ti = 0; ti < 32; ti++)
     {
       for (unsigned int tj = 0; tj < 128; tj++)
@@ -243,7 +250,7 @@ void loop()
   }
   else if (c4 == 8) // mode 4 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 4 pixels par byte
   {
-    while (Serial.available() < 3 * 4 + 2 * 512);
+    while (Serial.available() < min(2000,3 * 4 + 2 * 512));
     for (int ti = 3; ti >= 0; ti--)
     {
       Palette4[ti * 3] = Serial.read();
@@ -276,7 +283,7 @@ void loop()
   }
   else if (c4 == 7) // mode 16 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 2 pixels par byte
   {
-    while (Serial.available() < 3 * 4 + 4 * 512);
+    while (Serial.available() < min(2000,3 * 4 + 4 * 512));
     // on lit la palette
     for (int ti = 3; ti >= 0; ti--)
     {
@@ -322,7 +329,7 @@ void loop()
   }
   else if (c4 == 9) // mode 16 couleurs avec 1 palette 16 couleurs (16*3 bytes) suivis de 4 bytes par groupe de 8 points (séparés en plans de bits 4*512 bytes)
   {
-    while (Serial.available() < 3 * 16 + 4 * 512);
+    while (Serial.available() < min(2000,3 * 16 + 4 * 512));
     // on lit la palette
     for (int ti = 0; ti < 16; ti++)
     {
