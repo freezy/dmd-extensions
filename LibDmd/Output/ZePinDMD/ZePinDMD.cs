@@ -2,7 +2,7 @@
 using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
-using System.Runtime.InteropServices;
+using System.IO.Ports;
 
 /// <summary>
 /// ZePinDMD - real DMD with LED matrix display controlled with a cheap ESP32
@@ -26,208 +26,64 @@ namespace DMDESP32
 		public byte ByteSize = 8;
 		public bool Opened = false;
 		public byte Parity = 0; // 0-4=no,odd,even,mark,space
-		public int PortNum;
+		public string Port;
 		public int ReadTimeout;
 		public byte StopBits = 1; // 0,1,2 = 1, 1.5, 2
 		private byte[] oldbuffer = new byte[16384];
-		// here you can define new ESP32 devices giving the Windows registry subdirectory of "SYSTEM\CurrentControlSet\Enum\USB\"
-		// where the key "FriendlyName" contain the "COMx" number in it
-		// increase the N_COMPATIBLE_DEVICES and add the string of the subdirectory in VIDPID
-		private int N_COMPATIBLE_DEVICES = 2;
-		private static readonly string[] VIDPID = { "VID_10C4&PID_EA60\\0001", "VID_10C4&PID_EA70\\0001" };
-
-		// We import a lot of functions and structures from C to access Windows registry, serial ports and direct memory access
-		[StructLayout(LayoutKind.Sequential)]
-		private struct DCB
-		{
-			//taken from c struct in platform sdk
-			public int DCBlength; // sizeof(DCB)
-			public int BaudRate; // current baud rate
-
-			public int fBinary; // binary mode, no EOF check
-			public int fParity; // enable parity checking
-			public int fOutxCtsFlow; // CTS output flow control
-			public int fOutxDsrFlow; // DSR output flow control
-			public int fDtrControl; // DTR flow control type
-			public int fDsrSensitivity; // DSR sensitivity
-			public int fTXContinueOnXoff; // XOFF continues Tx
-			public int fOutX; // XON/XOFF out flow control
-			public int fInX; // XON/XOFF in flow control
-			public int fErrorChar; // enable error replacement
-			public int fNull; // enable null stripping
-			public int fRtsControl; // RTS flow control
-			public int fAbortOnError; // abort on error
-			public int fDummy2; // reserved
-			public uint flags;
-			public ushort wReserved; // not currently used
-			public ushort XonLim; // transmit XON threshold
-			public ushort XoffLim; // transmit XOFF threshold
-			public byte ByteSize; // number of bits/byte, 4-8
-			public byte Parity; // 0-4=no,odd,even,mark,space
-			public byte StopBits; // 0,1,2 = 1, 1.5, 2
-			public char XonChar; // Tx and Rx XON character
-			public char XoffChar; // Tx and Rx XOFF character
-			public char ErrorChar; // error replacement character
-			public char EofChar; // end of input character
-			public char EvtChar; // received event character
-			public ushort wReserved1; // reserved; do not use
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		private struct COMSTAT
-		{
-			public uint fCtsHold;
-			public uint fDsrHold;
-			public uint fRlsdHold;
-			public uint fXoffHold;
-			public uint fXoffSent;
-			public uint fEof;
-			public uint fTxim;
-			public uint fReserved;
-			public uint cbInQue;
-			public uint cbOutQue;
-		}
-		[StructLayout(LayoutKind.Sequential)]
-		private struct COMMTIMEOUTS
-		{
-			public int ReadIntervalTimeout;
-			public int ReadTotalTimeoutMultiplier;
-			public int ReadTotalTimeoutConstant;
-			public int WriteTotalTimeoutMultiplier;
-			public int WriteTotalTimeoutConstant;
-		}
-
-		[DllImport("kernel32.dll")]
-		private static extern bool CloseHandle(
-			int hObject // handle to object
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern int CreateFile(
-			string lpFileName, // file name
-			uint dwDesiredAccess, // access mode
-			int dwShareMode, // share mode
-			int lpSecurityAttributes, // SD
-			int dwCreationDisposition, // how to create
-			int dwFlagsAndAttributes, // file attributes
-			int hTemplateFile // handle to template file
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool GetCommState(
-			int hFile, // handle to communications device
-			ref DCB lpDCB // device-control block
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool GetCommTimeouts(
-			int hFile, // handle to comm device
-			ref COMMTIMEOUTS lpCommTimeouts // time-out values
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern uint GetLastError();
-
-		[DllImport("kernel32.dll")]
-		private static extern bool ReadFile(
-			int hFile, // handle to file
-			byte[] lpBuffer, // data buffer
-			uint nNumberOfBytesToRead, // number of bytes to read
-			ref uint lpNumberOfBytesRead, // number of bytes read
-			IntPtr lpOverlapped // overlapped buffer
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool SetCommState(
-			int hFile, // handle to communications device
-			ref DCB lpDCB // device-control block
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool SetCommTimeouts(
-			int hFile, // handle to comm device
-			ref COMMTIMEOUTS lpCommTimeouts // time-out values
-			);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool ClearCommError(
-			int hFile, // handle to comm device
-			IntPtr lpErrors, // time-out values
-			ref COMSTAT lpstat
-			);
-
-		[DllImport("kernel32.dll")]
-		unsafe private static extern bool WriteFile(
-			int hFile, // handle to file
-			byte* lpBuffer, // data buffer
-			uint nNumberOfBytesToWrite, // number of bytes to write
-			ref uint lpNumberOfBytesWritten, // number of bytes written
-			IntPtr lpOverlapped // overlapped buffer
-			);
-
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		unsafe private static extern int memcmp(byte* b1, byte* b2, uint count);
-
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		unsafe private static extern IntPtr memcpy(byte* b1, byte* b2, uint count);
-
-		[DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
-		private static extern int RegOpenKeyEx(uint hKey, string subKey, int ulOptions, int samDesired, out uint hkResult);
-		[DllImport("Advapi32.dll", EntryPoint = "RegGetValueW", CharSet = CharSet.Unicode, SetLastError = true)]
-		internal static extern Int32 RegGetValue(uint hkey, string lpSubKey, string lpValue, uint dwFlags, uint pdwType, char[] pvData, ref UInt32 pcbData);
-		public struct RGB24
-		{
-			public byte red;
-			public byte green;
-			public byte blue;
-		};
+		private SerialPort _serialPort;
 
 		private const uint GENERIC_READ = 0x80000000;
 		private const uint GENERIC_WRITE = 0x40000000;
 		private const int INVALID_HANDLE_VALUE = -1;
 		private const int OPEN_EXISTING = 3;
 
-		private int Scom_Connect(int portnum, int baudrate)
+		private bool Scom_Connect(string port)
 		{
-			BaudRate = baudrate;
-			PortNum = portnum;
-			DCB dcbCommPort = new DCB();
-			hCOM = CreateFile("COM" + PortNum, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-			if (hCOM == INVALID_HANDLE_VALUE) return 0;
-			GetCommState(hCOM, ref dcbCommPort);
-			dcbCommPort.BaudRate = BaudRate;
-			dcbCommPort.flags = 0;
-			dcbCommPort.fDtrControl = 1;
-			dcbCommPort.flags |= 1;
-			if (Parity > 0)
+			try
 			{
-				dcbCommPort.flags |= 2;
+				BaudRate = 921600;
+				Port = port;
+				_serialPort = new SerialPort(port, BaudRate, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
+				_serialPort.ReadTimeout = 100;
+				_serialPort.WriteTimeout = 100;
+				_serialPort.Open();
+				_serialPort.Write(new byte[] { 0x81, 0xC3, 0xE7, 15 }, 0, 4);
+				System.Threading.Thread.Sleep(100);
+				var result = new byte[4];
+				_serialPort.Read(result, 0, 4);
+				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15)) return true;
 			}
-			dcbCommPort.Parity = Parity;
-			dcbCommPort.ByteSize = ByteSize;
-			dcbCommPort.StopBits = StopBits;
-			if (!SetCommState(hCOM, ref dcbCommPort)) return 0;
-			Opened = true;
-			return 1;
+			catch
+			{
+				if (_serialPort != null && _serialPort.IsOpen)
+				{
+					_serialPort.DiscardInBuffer();
+					_serialPort.DiscardOutBuffer();
+					_serialPort.Close();
+					System.Threading.Thread.Sleep(100); // otherwise the next device will fail
+				}
+			}
+			return false;
 		}
 		private void Scom_Disconnect(int comhandle)
 		{
-			CloseHandle(comhandle);
-		}
-		public bool Scom_SendBytes(byte[] pBytes, uint nBytes)
-		{
-			uint bytesSend = new uint();
-			COMSTAT status = new COMSTAT();
-			unsafe
+			if (_serialPort != null && _serialPort.IsOpen)
 			{
-				fixed (byte* pOct = pBytes)
+				_serialPort.DiscardInBuffer();
+				_serialPort.DiscardOutBuffer();
+				_serialPort.Close();
+				System.Threading.Thread.Sleep(100); // otherwise the next device will fail
+			}
+		}
+		public bool Scom_SendBytes(byte[] pBytes, int nBytes)
+		{
+			if (_serialPort.IsOpen)
+			{
+				try
 				{
-					if (!WriteFile(hCOM, pOct, nBytes, ref bytesSend, IntPtr.Zero))
-					{
-						ClearCommError(hCOM, IntPtr.Zero, ref status);
-						return false;
-					}
+					_serialPort.Write(pBytes, 0, nBytes);
 				}
+				catch { };
 			}
 			return true;
 		}
@@ -240,37 +96,16 @@ namespace DMDESP32
 			tempbuffer[3] = 0x6;  // command byte 6 = reset palettes
 			Scom_SendBytes(tempbuffer, 4);
 		}
-		private bool Scom_findESP32_COM(out int pCOMNB)
-		{
-			uint i = new uint();
-			uint cchValue = new uint();
-			uint hKey = new uint();
-			for (i = 0; i < N_COMPATIBLE_DEVICES; i++)
-			{
-				string tpbuf = "SYSTEM\\CurrentControlSet\\Enum\\USB\\" + VIDPID[i];
-				if (RegOpenKeyEx((uint)0x80000002, tpbuf, 0, (0x00020000 | 0x0001 | 0x0008 | 0x0010) & (~0x00100000), out hKey) == 0)
-				{
-					cchValue = 16383;
-					char[] tpbuf2 = new char[260];
-					if (RegGetValue(hKey, "", "FriendlyName", 0x0000ffff, 0, tpbuf2, ref cchValue) == 0)
-					{
-						string tpbuf3 = new string(tpbuf2);
-						int idx = tpbuf3.IndexOf("COM");
-						pCOMNB = int.Parse(tpbuf3[idx + 3].ToString());
-						return true;
-					}
-				}
-			}
-			pCOMNB = 0;
-			return false;
-		}
-
 		public int Scom_Open()
 		{
-			int COMPort = new int();
-			if (!Scom_findESP32_COM(out COMPort)) return 0;
-			int res = Scom_Connect(COMPort, 921600);
-			if (res == 0) return 0;
+			bool IsAvailable = false;
+			var ports = SerialPort.GetPortNames();
+			foreach (var portName in ports)
+			{
+				IsAvailable = Scom_Connect(portName);
+				if (IsAvailable) break;
+			}
+			if (!IsAvailable) return 0;
 			ResetPalettes();
 			Opened = true;
 			return 1;
@@ -470,7 +305,7 @@ namespace LibDmd.Output.ZePinDMD
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.Scom_SendBytes(data, (uint)data.Length);
+				pDMD.Scom_SendBytes(data, data.Length);
 			}
 		}
 
