@@ -48,6 +48,8 @@ unsigned char Palette4[3*4]; // palettes 4 couleurs et 16 couleurs en RGB
 static const float levels4[4]  = {10,33,67,100};
 unsigned char Palette16[3*16];
 static const float levels16[16]  = {0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100}; // SAM brightness seems okay
+unsigned char Palette64[3*64];
+static const float levels64[64]  = {0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100}; // SAM brightness seems okay
 
 // placeholder for the matrix object
 MatrixPanel_I2S_DMA *dma_display = nullptr;
@@ -97,7 +99,25 @@ void fillpannel()
   {
     for (int ti = 0; ti < 128; ti++)
     {
+      
+      
+      
+      
+      
+      
+      
+      
+      
       dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3 + 2]]);
+
+
+
+
+
+
+
+
+      
     }
   }
 }
@@ -106,15 +126,8 @@ File fordre;
 
 void LoadOrdreRGB()
 {
-  fordre=SPIFFS.open("/ordrergb.val","r");
-  if (!fordre)
-  {
-    fordre = SPIFFS.open("/ordrergb.val", "w");
-    acordreRGB = 0;
-    fordre.write(acordreRGB);
-    fordre.close();
-    return;
-  }
+  fordre=SPIFFS.open("/ordrergb.val");
+  if (!fordre) return;
   acordreRGB=fordre.read();
   fordre.close();
 }
@@ -161,6 +174,12 @@ void InitPalettes(int R, int G, int B)
     Palette16[ti * 3 + 1] = (unsigned char)((float)G*levels16[ti] / 100.0f);
     Palette16[ti * 3 + 2] = (unsigned char)((float)B*levels16[ti] / 100.0f);
   }
+  for (int ti = 0; ti < 64; ti++)
+  {
+    Palette64[ti * 3] = (unsigned char)((float)R*levels64[ti] / 100.0f);
+    Palette64[ti * 3 + 1] = (unsigned char)((float)G*levels64[ti] / 100.0f);
+    Palette64[ti * 3 + 2] = (unsigned char)((float)B*levels64[ti] / 100.0f);
+  }
 }
 
 bool MireActive=true;
@@ -168,7 +187,7 @@ bool MireActive=true;
 void setup()
 {
   Serial.begin(921600);
-  Serial.setRxBufferSize(3000);
+  Serial.setRxBufferSize(4048);
   if (!SPIFFS.begin(true)) return;
 
   pinMode(ORDRE_BUTTON_PIN, INPUT_PULLUP);
@@ -179,9 +198,9 @@ void setup()
   mxconfig.chain_length = PANELS_NUMBER;  // we have 2 pannels chained
   mxconfig.clkphase = false; // change if you have some parts of the pannel with a shift
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  dma_display->begin();
   dma_display->setBrightness8(90);    // range is 0-255, 0 - 0%, 255 - 100%
   dma_display->clearScreen();
-  dma_display->begin();
 
   LoadOrdreRGB();
   
@@ -215,7 +234,7 @@ void loop()
   c3 = Serial.read();
   while (!Serial.available());
   c4 = Serial.read();
-  while ((c1 != 0x81) || (c2 != 0xC3) || (c3 != 0xE7) || (c4 < 0) || (c4 > 15))
+  while ((c1 != 0x81) || (c2 != 0xC3) || (c3 != 0xE7) || (c4 < 0))
   {
     c1 = c2;
     c2 = c3;
@@ -231,13 +250,39 @@ void loop()
     Serial.write(15);
   }
   else if (c4 == 6) // reinit palettes
+  {
     InitPalettes(255, 109, 0);
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
+  }    
   else if (c4 == 10) // clear screen
+  {
     dma_display->clearScreen();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
+  }
   else if (c4 == 3)
   {
-    while (Serial.available() < min(2000,3 * 128 * 32));
-    for (unsigned int ti = 0; ti < 32; ti++)
+    while (Serial.available() < min(4000,8*128*3));
+    for (unsigned int ti = 0; ti < 16; ti++)
+    {
+      for (unsigned int tj = 0; tj < 128; tj++)
+      {
+        pannel[ti * 128 * 3 + tj * 3] = Serial.read();
+        pannel[ti * 128 * 3 + tj * 3 + 1] = Serial.read();
+        pannel[ti * 128 * 3 + tj * 3 + 2] = Serial.read();
+      }
+    }
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
+    while (Serial.available() < min(4000,8*128*3));
+    for (unsigned int ti = 16; ti < 32; ti++)
     {
       for (unsigned int tj = 0; tj < 128; tj++)
       {
@@ -247,18 +292,29 @@ void loop()
       }
     }
     fillpannel();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
   }
   else if (c4 == 8) // mode 4 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 4 pixels par byte
   {
-    while (Serial.available() < min(2000,3 * 4 + 2 * 512));
+    while (Serial.available() < min(4000,3 * 4 + 2 * 512));
     for (int ti = 3; ti >= 0; ti--)
     {
+      //while(!Serial.available());
       Palette4[ti * 3] = Serial.read();
+      //while(!Serial.available());
       Palette4[ti * 3 + 1] = Serial.read();
+      //while(!Serial.available());
       Palette4[ti * 3 + 2] = Serial.read();
     }
     unsigned char img[2 * 512];
-    for (int tk = 0; tk < 2 * 512; tk++) img[tk] = Serial.read();
+    for (int tk = 0; tk < 2 * 512; tk++)
+    {
+      //while(!Serial.available());
+      img[tk] = Serial.read();
+    }
     for (int tj = 0; tj < 32; tj++)
     {
       for (int ti = 0; ti < 128 / 8; ti++)
@@ -280,20 +336,31 @@ void loop()
       }
     }
     fillpannel();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
   }
   else if (c4 == 7) // mode 16 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 2 pixels par byte
   {
-    while (Serial.available() < min(2000,3 * 4 + 4 * 512));
+    while (Serial.available() < min(4000,3 * 4 + 4 * 512));
     // on lit la palette
     for (int ti = 3; ti >= 0; ti--)
     {
+      //while(!Serial.available());
       Palette16[ti * 3] = Serial.read();
+      //while(!Serial.available());
       Palette16[ti * 3 + 1] = Serial.read();
+      //while(!Serial.available());
       Palette16[ti * 3 + 2] = Serial.read();
     }
     // on lit les points
     unsigned char img[4 * 512];
-    for (int tk = 0; tk < 4 * 512; tk++) img[tk] = Serial.read();
+    for (int tk = 0; tk < 4 * 512; tk++)
+    {
+      //while(!Serial.available());
+      img[tk] = Serial.read();
+    }
     for (int tj = 0; tj < 32; tj++)
     {
       for (int ti = 0; ti < 128 / 8; ti++)
@@ -326,21 +393,29 @@ void loop()
       }
     }
     fillpannel();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
   }
   else if (c4 == 9) // mode 16 couleurs avec 1 palette 16 couleurs (16*3 bytes) suivis de 4 bytes par groupe de 8 points (séparés en plans de bits 4*512 bytes)
   {
-    while (Serial.available() < min(2000,3 * 16 + 4 * 512));
+    while (Serial.available() < min(4000,3 * 16 + 4 * 512));
     // on lit la palette
     for (int ti = 0; ti < 16; ti++)
     {
+      //while(!Serial.available());
       Palette16[ti * 3] = Serial.read();
+      //while(!Serial.available());
       Palette16[ti * 3 + 1] = Serial.read();
+      //while(!Serial.available());
       Palette16[ti * 3 + 2] = Serial.read();
     }
     // on lit les points
     unsigned char img[4 * 512];
     for (int tk = 0; tk < 4 * 512; tk++)
     {
+      //while(!Serial.available());
       img[tk] = Serial.read();
     }
     for (int tj = 0; tj < 32; tj++)
@@ -369,5 +444,63 @@ void loop()
       }
     }
     fillpannel();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
+  }
+  else if (c4 == 11) // mode 64 couleurs avec 1 palette 64 couleurs (64*3 bytes) suivis de 6 bytes par groupe de 8 points (séparés en plans de bits 6*512 bytes)
+  {
+    while (Serial.available() < min(4000,3 * 16 + 6 * 512));
+    // on lit la palette
+    for (int ti = 0; ti < 64; ti++)
+    {
+      //while(!Serial.available());
+      Palette64[ti * 3] = Serial.read();
+      //while(!Serial.available());
+      Palette64[ti * 3 + 1] = Serial.read();
+      //while(!Serial.available());
+      Palette64[ti * 3 + 2] = Serial.read();
+    }
+    // on lit les points
+    unsigned char img[6 * 512];
+    for (int tk = 0; tk < 6 * 512; tk++)
+    {
+      img[tk] = Serial.read();
+    }
+    for (int tj = 0; tj < 32; tj++)
+    {
+      for (int ti = 0; ti < 128 / 8; ti++)
+      {
+        // on reconstitue un indice à partir des plans puis une couleur à partir de la palette
+        unsigned char mask = 1;
+        unsigned char planes[6];
+        planes[0] = img[ti + tj * 16];
+        planes[1] = img[512 + ti + tj * 16];
+        planes[2] = img[1024 + ti + tj * 16];
+        planes[3] = img[1536 + ti + tj * 16];
+        planes[4] = img[2048 + ti + tj * 16];
+        planes[5] = img[2560 + ti + tj * 16];
+        for (int tk = 0; tk < 8; tk++)
+        {
+          unsigned char idx = 0;
+          if ((planes[0] & mask) > 0) idx |= 1;
+          if ((planes[1] & mask) > 0) idx |= 2;
+          if ((planes[2] & mask) > 0) idx |= 4;
+          if ((planes[3] & mask) > 0) idx |= 8;
+          if ((planes[4] & mask) > 0) idx |= 0x10;
+          if ((planes[5] & mask) > 0) idx |= 0x20;
+          pannel[(ti * 8 + tk) * 3 + tj * 128 * 3] = Palette64[idx * 3];
+          pannel[(ti * 8 + tk) * 3 + tj * 128 * 3 + 1] = Palette64[idx * 3 + 1];
+          pannel[(ti * 8 + tk) * 3 + tj * 128 * 3 + 2] = Palette64[idx * 3 + 2];
+          mask <<= 1;
+        }
+      }
+    }
+    fillpannel();
+    Serial.write(0x81);
+    Serial.write(0xC3);
+    Serial.write(0xE7);
+    Serial.write(15);
   }
 }
