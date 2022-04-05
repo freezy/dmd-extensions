@@ -3,7 +3,7 @@ using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
 using System.IO.Ports;
-
+using System.IO;
 /// <summary>
 /// ZePinDMD - real DMD with LED matrix display controlled with a cheap ESP32
 /// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
@@ -32,6 +32,17 @@ namespace DMDESP32
 		private byte[] oldbuffer = new byte[16384];
 		private SerialPort _serialPort;
 
+
+
+
+		// for debugging
+		private StreamWriter sw;
+		private uint nACK = 0;
+
+
+
+
+
 		private const uint GENERIC_READ = 0x80000000;
 		private const uint GENERIC_WRITE = 0x40000000;
 		private const int INVALID_HANDLE_VALUE = -1;
@@ -51,9 +62,12 @@ namespace DMDESP32
 				System.Threading.Thread.Sleep(100);
 				var result = new byte[4];
 				_serialPort.Read(result, 0, 4);
-				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15)) return true;
+				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
+				{
+					return true;
+				}
 			}
-			catch
+			catch (Exception e)
 			{
 				if (_serialPort != null && _serialPort.IsOpen)
 				{
@@ -82,10 +96,83 @@ namespace DMDESP32
 				try
 				{
 					_serialPort.Write(pBytes, 0, nBytes);
+
+
+
+
+					nACK++;
+					if (nACK < 50) sw.WriteLine(nACK.ToString() + ": Action " + pBytes[3].ToString() + " with " + (nBytes - 4).ToString() + "bytes sent");
+
+
+
+
+					System.Threading.Thread.Sleep(50);
+					var result = new byte[4];
+					_serialPort.Read(result, 0, 4);
+					if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
+					{
+
+
+
+
+						if (nACK < 50) sw.WriteLine("Got a COMPLETE ACK");
+
+
+
+
+					}
+					return true;
 				}
 				catch { };
 			}
-			return true;
+			return false;
+		}
+		public bool Scom_SendBytes2(byte[] pBytes, int nBytes,int nBPerTrans)
+		{
+			if (_serialPort.IsOpen)
+			{
+				byte[] pBytes2 = new byte[nBPerTrans];
+				int ti = 0;
+				int remainTrans = nBytes;
+
+
+
+
+				nACK++;
+				if (nACK < 50) sw.WriteLine(nACK.ToString() + ": Action " + pBytes[3].ToString() + " with " + (nBytes - 4).ToString() + "bytes multi-sent");
+
+
+
+
+				try
+				{
+					while (remainTrans>0)
+					{
+						Buffer.BlockCopy(pBytes,ti * nBPerTrans, pBytes2, 0, Math.Min(remainTrans,nBPerTrans));
+						_serialPort.Write(pBytes2, 0, nBPerTrans);
+						System.Threading.Thread.Sleep(50);
+						var result = new byte[4];
+						_serialPort.Read(result, 0, 4);
+						if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
+						{
+
+
+
+
+							if (nACK < 50) sw.WriteLine("Got an ACK after a transfer");
+
+
+
+
+						}
+						remainTrans -= nBPerTrans;
+						ti++;
+					}
+					return true;
+				}
+				catch { };
+			}
+			return false;
 		}
 		public void ResetPalettes()
 		{
@@ -98,6 +185,15 @@ namespace DMDESP32
 		}
 		public int Scom_Open()
 		{
+
+
+
+
+			sw = File.CreateText("E:\\ZePinDMD_log.txt");
+			
+			
+			
+			
 			bool IsAvailable = false;
 			var ports = SerialPort.GetPortNames();
 			foreach (var portName in ports)
@@ -118,6 +214,7 @@ namespace DMDESP32
 				Scom_Disconnect(hCOM);
 				hCOM = 0;
 				ResetPalettes();
+				sw.Close();
 			}
 
 			Opened = false;
@@ -133,7 +230,7 @@ namespace LibDmd.Output.ZePinDMD
 	/// Output target for ZePinDMD devices.
 	/// </summary>
 	/// Inspired from PinDMD3 code
-	public class ZePinDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRawOutput, IFixedSizeDestination
+	public class ZePinDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "ZePinDMD";
 		public bool IsAvailable { get; private set; }
@@ -153,6 +250,7 @@ namespace LibDmd.Output.ZePinDMD
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
 		private readonly byte[] _frameBufferColoredGray4;
+		private readonly byte[] _frameBufferColoredGray6;
 
 		private Color[] _currentPalette = ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 4);
 
@@ -204,7 +302,14 @@ namespace LibDmd.Output.ZePinDMD
 			_frameBufferColoredGray4[0] = 0x81;
 			_frameBufferColoredGray4[1] = 0xC3;
 			_frameBufferColoredGray4[2] = 0xE7;
-			_frameBufferColoredGray4[3] = 9; // render compressed 4 pixels/byte with 16 colors palette
+			_frameBufferColoredGray4[3] = 9; // render compressed 2 pixels/byte with 16 colors palette
+
+			// 4 control bytes, 64 color (*3 bytes), 6 bits per pixel
+			_frameBufferColoredGray6 = new byte[4 + 192 + DmdWidth * DmdHeight * 6 / 8];
+			_frameBufferColoredGray6[0] = 0x81;
+			_frameBufferColoredGray6[1] = 0xC3;
+			_frameBufferColoredGray6[2] = 0xE7;
+			_frameBufferColoredGray6[3] = 11; // render compressed 1 pixel/6bit with 64 colors palette
 
 
 			ClearColor();
@@ -289,16 +394,38 @@ namespace LibDmd.Output.ZePinDMD
 				RenderRaw(_frameBufferColoredGray4);
 			}
 		}
+		public void RenderColoredGray6(ColoredFrame frame)
+		{
+			// copy palette
+			var paletteChanged = false;
+			for (var i = 0; i < 64; i++)
+			{
+				var color = frame.Palette[i];
+				var j = i * 3 + 4;
+				paletteChanged = paletteChanged || (_frameBufferColoredGray6[j] != color.R || _frameBufferColoredGray6[j + 1] != color.G || _frameBufferColoredGray6[j + 2] != color.B);
+				_frameBufferColoredGray6[j] = color.R;
+				_frameBufferColoredGray6[j + 1] = color.G;
+				_frameBufferColoredGray6[j + 2] = color.B;
+			}
+
+			// copy frame
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray6, 196);
+
+			// send frame buffer to device
+			if (frameChanged || paletteChanged)
+			{
+				RenderRaw(_frameBufferColoredGray6);
+			}
+		}
 
 		public void RenderRgb24(byte[] frame)
 		{
 			// copy data to frame buffer
-			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
-
+			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 4);
 			// can directly be sent to the device.
 			if (changed)
 			{
-				RenderRaw(_frameBufferRgb24);
+				pDMD.Scom_SendBytes2(_frameBufferRgb24, _frameBufferRgb24.Length, 132 * 16 * 3 + 4);
 			}
 		}
 		public void RenderRaw(byte[] data)
