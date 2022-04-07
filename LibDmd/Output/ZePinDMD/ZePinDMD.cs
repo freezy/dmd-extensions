@@ -22,6 +22,7 @@ namespace DMDESP32
 	public class DMD_ESP32 // Class for locating the COM port of the ESP32 and communicating with it
 	{
 		private int hCOM;
+		public string nCOM;
 		public int BaudRate;
 		public byte ByteSize = 8;
 		public bool Opened = false;
@@ -31,24 +32,13 @@ namespace DMDESP32
 		public byte StopBits = 1; // 0,1,2 = 1, 1.5, 2
 		private byte[] oldbuffer = new byte[16384];
 		private SerialPort _serialPort;
-
-
-
-
-		// for debugging
-		private StreamWriter sw;
-		private uint nACK = 0;
-
-
-
-
-
 		private const uint GENERIC_READ = 0x80000000;
 		private const uint GENERIC_WRITE = 0x40000000;
 		private const int INVALID_HANDLE_VALUE = -1;
 		private const int OPEN_EXISTING = 3;
+		public const int MAX_SERIAL_WRITE_AT_ONCE = 9500; // empirique, au delà, il y a des erreurs de transfert
 
-		private bool Scom_Connect(string port)
+		private bool Scom_Connect(string port,byte ShakeHandCode)
 		{
 			try
 			{
@@ -58,12 +48,14 @@ namespace DMDESP32
 				_serialPort.ReadTimeout = 100;
 				_serialPort.WriteTimeout = 100;
 				_serialPort.Open();
-				_serialPort.Write(new byte[] { 0x81, 0xC3, 0xE7, 15 }, 0, 4);
-				System.Threading.Thread.Sleep(100);
+				_serialPort.Write(new byte[] { 0x81, 0xC3, 0xE7, ShakeHandCode }, 0, 4);
+				System.Threading.Thread.Sleep(20);
 				var result = new byte[4];
 				_serialPort.Read(result, 0, 4);
-				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
+				System.Threading.Thread.Sleep(20);
+				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == ShakeHandCode))
 				{
+					nCOM = port;
 					return true;
 				}
 			}
@@ -96,81 +88,82 @@ namespace DMDESP32
 				try
 				{
 					_serialPort.Write(pBytes, 0, nBytes);
-
-
-
-
-					nACK++;
-					if (nACK < 50) sw.WriteLine(nACK.ToString() + ": Action " + pBytes[3].ToString() + " with " + (nBytes - 4).ToString() + "bytes sent");
-
-
-
-
-					System.Threading.Thread.Sleep(50);
+					System.Threading.Thread.Sleep(20);
 					var result = new byte[4];
 					_serialPort.Read(result, 0, 4);
+					System.Threading.Thread.Sleep(20);
 					if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
 					{
-
-
-
-
-						if (nACK < 50) sw.WriteLine("Got a COMPLETE ACK");
-
-
-
-
+						return true;
 					}
-					return true;
 				}
-				catch { };
+				catch
+				{
+					_serialPort.DiscardInBuffer();
+					_serialPort.DiscardOutBuffer();
+				};
 			}
 			return false;
 		}
-		public bool Scom_SendBytes2(byte[] pBytes, int nBytes,int nBPerTrans)
+		public bool Scom_SendBytes2(byte[] pBytes, int nBytes)
 		{
 			if (_serialPort.IsOpen)
 			{
-				byte[] pBytes2 = new byte[nBPerTrans];
-				int ti = 0;
-				int remainTrans = nBytes;
-
-
-
-
-				nACK++;
-				if (nACK < 50) sw.WriteLine(nACK.ToString() + ": Action " + pBytes[3].ToString() + " with " + (nBytes - 4).ToString() + "bytes multi-sent");
-
-
-
-
+				byte[] pBytes2 = new byte[8 + MAX_SERIAL_WRITE_AT_ONCE]; // 4 pour la synchro + 4 pour la taille du transfert
+				int remainTrans = nBytes - 4; // la totalité - les bytes de synchro
 				try
 				{
-					while (remainTrans>0)
+					// premier transfert
+					for (uint i = 0; i < 4; i++) pBytes2[i] = pBytes[i];
+					int qtetrans = Math.Min(remainTrans, MAX_SERIAL_WRITE_AT_ONCE);
+					pBytes2[4] = (byte)(qtetrans & 0xff);
+					pBytes2[5] = (byte)((qtetrans >> 8) & 0xff);
+					pBytes2[6] = (byte)((qtetrans >> 16) & 0xff);
+					pBytes2[7] = (byte)((qtetrans >> 24) & 0xff);
+					Buffer.BlockCopy(pBytes, 4, pBytes2, 8, qtetrans);
+					_serialPort.Write(pBytes2, 0, qtetrans + 8);
+					remainTrans -= qtetrans;
+					System.Threading.Thread.Sleep(20);
+					var result = new byte[4];
+					_serialPort.Read(result, 0, 4);
+					System.Threading.Thread.Sleep(20);
+					if ((result[0] != pBytes2[4]) != (result[1] != pBytes2[5]) != (result[2] != pBytes2[6]) != (result[3] != pBytes2[7]))
 					{
-						Buffer.BlockCopy(pBytes,ti * nBPerTrans, pBytes2, 0, Math.Min(remainTrans,nBPerTrans));
-						_serialPort.Write(pBytes2, 0, nBPerTrans);
-						System.Threading.Thread.Sleep(50);
-						var result = new byte[4];
+						_serialPort.DiscardInBuffer();
+						_serialPort.DiscardOutBuffer();
+						return false;
+					}
+					int ti = 1;
+					while (remainTrans > 0) 
+					{
+						qtetrans = Math.Min(remainTrans, MAX_SERIAL_WRITE_AT_ONCE);
+						pBytes2[0] = (byte)(qtetrans & 0xff);
+						pBytes2[1] = (byte)((qtetrans>>8) & 0xff);
+						pBytes2[2] = (byte)((qtetrans>>16) & 0xff);
+						pBytes2[3] = (byte)((qtetrans>>24) & 0xff);
+						Buffer.BlockCopy(pBytes, 4 + ti * MAX_SERIAL_WRITE_AT_ONCE, pBytes2, 4, qtetrans);
+						_serialPort.Write(pBytes2, 0, qtetrans+4);
+						System.Threading.Thread.Sleep(20);
+						result = new byte[4];
 						_serialPort.Read(result, 0, 4);
-						if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
+						System.Threading.Thread.Sleep(20);
+						if ((result[0] != pBytes2[0]) != (result[1] != pBytes2[1]) != (result[2] != pBytes2[2]) != (result[3] != pBytes2[3]))
 						{
-
-
-
-
-							if (nACK < 50) sw.WriteLine("Got an ACK after a transfer");
-
-
-
-
+							_serialPort.DiscardInBuffer();
+							_serialPort.DiscardOutBuffer();
+							return false;
 						}
-						remainTrans -= nBPerTrans;
+						remainTrans -= qtetrans;
 						ti++;
 					}
 					return true;
 				}
-				catch { };
+				catch
+				{
+					_serialPort.DiscardInBuffer();
+					_serialPort.DiscardOutBuffer();
+					return false;
+				};
 			}
 			return false;
 		}
@@ -183,22 +176,13 @@ namespace DMDESP32
 			tempbuffer[3] = 0x6;  // command byte 6 = reset palettes
 			Scom_SendBytes(tempbuffer, 4);
 		}
-		public int Scom_Open()
+		public int Scom_Open(byte ShakeHandCode)
 		{
-
-
-
-
-			sw = File.CreateText("E:\\ZePinDMD_log.txt");
-			
-			
-			
-			
 			bool IsAvailable = false;
 			var ports = SerialPort.GetPortNames();
 			foreach (var portName in ports)
 			{
-				IsAvailable = Scom_Connect(portName);
+				IsAvailable = Scom_Connect(portName, ShakeHandCode);
 				if (IsAvailable) break;
 			}
 			if (!IsAvailable) return 0;
@@ -207,14 +191,13 @@ namespace DMDESP32
 			return 1;
 		}
 
-		public bool Scom_Close()
+		public bool Scom_Close()//Logger Logger)
 		{
 			if (Opened)
 			{
 				Scom_Disconnect(hCOM);
 				hCOM = 0;
 				ResetPalettes();
-				sw.Close();
 			}
 
 			Opened = false;
@@ -316,13 +299,14 @@ namespace LibDmd.Output.ZePinDMD
 		}
 		public void Init()
 		{
-			IsAvailable = (pDMD.Scom_Open() == 1);
+			IsAvailable = (pDMD.Scom_Open(15) == 1);
 
 			if (!IsAvailable)
 			{
-				Logger.Info("ZePinDMD device not found.");
+				Logger.Info(Name + " device not found");
 				return;
 			}
+			Logger.Info(Name + " device found on port " + pDMD.nCOM);
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -425,14 +409,14 @@ namespace LibDmd.Output.ZePinDMD
 			// can directly be sent to the device.
 			if (changed)
 			{
-				pDMD.Scom_SendBytes2(_frameBufferRgb24, _frameBufferRgb24.Length, 132 * 16 * 3 + 4);
+				RenderRaw(_frameBufferRgb24);
 			}
 		}
 		public void RenderRaw(byte[] data)
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.Scom_SendBytes(data, data.Length);
+				pDMD.Scom_SendBytes2(data, data.Length);
 			}
 		}
 
@@ -447,7 +431,7 @@ namespace LibDmd.Output.ZePinDMD
 			tempbuf[1] = 0xC3;
 			tempbuf[2] = 0xE7;
 			tempbuf[3] = 10; // clear screen
-			RenderRaw(tempbuf);
+			pDMD.Scom_SendBytes(tempbuf,tempbuf.Length);
 		}
 
 		public void SetColor(Color color)
