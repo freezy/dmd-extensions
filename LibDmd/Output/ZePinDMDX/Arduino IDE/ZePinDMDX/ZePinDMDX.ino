@@ -18,24 +18,6 @@
 #define PANEL_HEIGHT 64   
 #define PANELS_NUMBER 3   // Number of chained panels
 
-/* Pinout from ESP32-HUB75-MatrixPanel-I2S-DMA.h
-    #define R1_PIN_DEFAULT  25
-    #define G1_PIN_DEFAULT  26
-    #define B1_PIN_DEFAULT  27
-    #define R2_PIN_DEFAULT  14
-    #define G2_PIN_DEFAULT  12
-    #define B2_PIN_DEFAULT  13
-
-    #define A_PIN_DEFAULT   23
-    #define B_PIN_DEFAULT   19
-    #define C_PIN_DEFAULT   5
-    #define D_PIN_DEFAULT   17
-    #define E_PIN_DEFAULT   -1 // IMPORTANT: Change to a valid pin if using a 64x64px panel.
-              
-    #define LAT_PIN_DEFAULT 4
-    #define OE_PIN_DEFAULT  15
-    #define CLK_PIN_DEFAULT 16
- */
 // Change these to whatever suits
 #define R1_PIN 25
 #define G1_PIN 26
@@ -115,25 +97,7 @@ void fillpannel()
   {
     for (int ti = 0; ti < PANE_WIDTH; ti++)
     {
-      
-      
-      
-      
-      
-      
-      
-      
-      
       dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 2]]);
-
-
-
-
-
-
-
-
-      
     }
   }
 }
@@ -251,18 +215,19 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
     while (!Serial.available());
     c4 = Serial.read();
     c1+=c2*256+c3*65536+c4*16777216;
-    while (Serial.available() < min(SERIAL_BUFFER_SIZE-50,c1/2));
+    while (Serial.available() < min(SERIAL_BUFFER_SIZE-256,c1*4/5));
     for (int ti=0;ti<c1;ti++)
     {
+      //while (!Serial.available());
       pBuffer[ptrB]=Serial.read();
       ptrB++;
     }
     remBytes-=c1;
-    // ACK all received
-    Serial.write(0x81);
-    Serial.write(0xC3);
-    Serial.write(0xE7);
-    Serial.write(15);
+   // ACK transfert reçu
+    Serial.write(c1&0xff);
+    Serial.write(c2);
+    Serial.write(c3);
+    Serial.write(c4);
   }
 }
 
@@ -299,12 +264,12 @@ void loop()
     while (!Serial.available());
     c4 = Serial.read();
   }
-  if (c4==15) // shake hands with the computer
+  if (c4==16) // shake hands with the computer
   {
     Serial.write(0x81);
     Serial.write(0xC3);
     Serial.write(0xE7);
-    Serial.write(15);
+    Serial.write(16);
   }
   else if (c4 == 6) // reinit palettes
   {
@@ -344,8 +309,8 @@ void loop()
       {
         unsigned char mask = 1;
         unsigned char planes[2];
-        planes[0] = img[ti + tj * 16];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * 16];
+        planes[0] = img[ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -377,10 +342,10 @@ void loop()
       {
         unsigned char mask = 1;
         unsigned char planes[4];
-        planes[0] = img[ti + tj * 16];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * 16];
+        planes[0] = img[ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -422,10 +387,10 @@ void loop()
         // on reconstitue un indice à partir des plans puis une couleur à partir de la palette
         unsigned char mask = 1;
         unsigned char planes[4];
-        planes[0] = img[ti + tj * 16];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * 16];
+        planes[0] = img[ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -448,9 +413,9 @@ void loop()
     SerialReadBuffer(img2,3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 63; ti >= 0; ti--)
     {
-      Palette16[ti * 3] = img2[(63-ti)*3];
-      Palette16[ti * 3 + 1] = img2[(63-ti)*3+1];
-      Palette16[ti * 3 + 2] = img2[(63-ti)*3+2];
+      Palette64[ti * 3] = img2[(63-ti)*3];
+      Palette64[ti * 3 + 1] = img2[(63-ti)*3+1];
+      Palette64[ti * 3 + 2] = img2[(63-ti)*3+2];
     }
     unsigned char* img=&img2[3*64];
     for (int tj = 0; tj < PANE_HEIGHT; tj++)
@@ -460,12 +425,12 @@ void loop()
         // on reconstitue un indice à partir des plans puis une couleur à partir de la palette
         unsigned char mask = 1;
         unsigned char planes[6];
-        planes[0] = img[ti + tj * 16];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[4] = img[4*PANE_WIDTH/8*32 + ti + tj * 16];
-        planes[5] = img[5*PANE_WIDTH/8*32 + ti + tj * 16];
+        planes[0] = img[ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[4] = img[4*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[5] = img[5*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
