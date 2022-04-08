@@ -368,11 +368,11 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port, _config.Pixelcade.ColorMatrix);
-				if (pixelcade.IsAvailable) {
+				/*if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
 					ReportingTags.Add("Out:Pixelcade");
-				}
+				}*/
 			}
 			if (_config.VirtualDmd.Enabled) {
 				renderers.Add(_virtualDmd.Dmd);
@@ -407,11 +407,11 @@ namespace LibDmd.DmdDevice
 			if (_config.PinUp.Enabled) {
 				try {
 					var pinupOutput = new PinUpOutput(_gameName);
-					if (pinupOutput.IsAvailable) {
+					/*if (pinupOutput.IsAvailable) {
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
-					}
+					}*/
 
 				} catch (Exception e) {
 					Logger.Warn("Error opening PinUP output: {0}", e.Message);
@@ -769,6 +769,19 @@ namespace LibDmd.DmdDevice
 		{
 			if (!_isOpen) {
 				Init();
+			}
+
+			int width = frame.width;
+			int height = frame.height;
+
+			if (_config.Global.ScaleToHd)
+			{
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+					frame.Update(width, height, frame.Data);
+				}
 			}
 			_vpmRgb24Source.NextFrame(frame);
 		}

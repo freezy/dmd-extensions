@@ -383,6 +383,36 @@ namespace LibDmd.Common
 		/// <param name="bitlen"></param>
 		/// <param name="frame"></param>
 		/// <returns></returns>
+		public static byte[] ScaleDoubleRGB(int width, int height, int bitlen, byte[] frame)
+		{
+			byte[] scaledData = new byte[width * height * 3];
+			var origwidth = width / 2;
+			var scale = 2;
+
+			int targetIdx = 0;
+			for (var i = 0; i < height; ++i)
+			{
+				var iUnscaled = i / scale;
+				for (var j = 0; j < width; ++j)
+				{
+					var jUnscaled = j / scale;
+					scaledData[targetIdx++] = frame[iUnscaled * origwidth * 3 + jUnscaled * 3];
+					scaledData[targetIdx++] = frame[iUnscaled * origwidth * 3 + jUnscaled * 3 + 1];
+					scaledData[targetIdx++] = frame[iUnscaled * origwidth * 3 + jUnscaled * 3 + 2];
+				}
+			}
+
+			return scaledData;
+		}
+
+		/// <summary>
+		/// Double the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="bitlen"></param>
+		/// <param name="frame"></param>
+		/// <returns></returns>
 		public static byte[] ScaleDouble(int width, int height, int bitlen, byte[] frame)
 		{
 			byte[] scaledData = new byte[width * height];
@@ -397,6 +427,50 @@ namespace LibDmd.Common
 				{
 					var jUnscaled = j / scale;
 					scaledData[targetIdx++] = frame[iUnscaled * origwidth + jUnscaled];
+				}
+			}
+
+			return scaledData;
+		}
+
+		/// <summary>
+		/// Implementation of Scale2 for RGB frame data.
+		/// </summary>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="data"></param>
+		/// <returns>scaled frame planes</returns>
+		public static byte[] Scale2xRGB(int width, int height, byte[] data)
+		{
+			byte[] scaledData = new byte[width * height * 3];
+
+			var inputWidth = width / 2;
+			var inputHeight = height / 2;
+
+			for (var y = 0; y < inputHeight; y++)
+			{
+				for (var x = 0; x < inputWidth; x++)
+				{
+					var colorB = ImageUtil.GetRGBPixel(x, y - 1, inputWidth, inputHeight, data);
+					var colorH = ImageUtil.GetRGBPixel(x, y + 1, inputWidth, inputHeight, data);
+					var colorD = ImageUtil.GetRGBPixel(x - 1, y, inputWidth, inputHeight, data);
+					var colorF = ImageUtil.GetRGBPixel(x + 1, y, inputWidth, inputHeight, data);
+
+					var colorE = ImageUtil.GetRGBPixel(x, y, inputWidth, inputHeight, data);
+					if (!CompareBuffers(colorB, 0, colorH, 0, 3) && !CompareBuffers(colorD, 0, colorF, 0, 3))
+					{
+						ImageUtil.SetRGBPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, 3) ? colorD : colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, 3) ? colorF : colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, 3) ? colorD : colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, 3) ? colorF : colorE, width, scaledData);
+					}
+					else
+					{
+						ImageUtil.SetRGBPixel(2 * x, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x + 1, 2 * y, colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x, 2 * y + 1, colorE, width, scaledData);
+						ImageUtil.SetRGBPixel(2 * x + 1, 2 * y + 1, colorE, width, scaledData);
+					}
 				}
 			}
 

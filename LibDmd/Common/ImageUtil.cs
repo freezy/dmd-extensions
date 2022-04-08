@@ -679,6 +679,43 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
+		/// Get pixel color of the RGB frame data
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		/// <returns>color of coord</returns>
+		public static byte[] GetRGBPixel(int x, int y, int width, int height, byte[] frame)
+		{
+			var rgb = new byte[3];
+			// Clamp edges so it doesn't wrap.
+			x = Clamp(x, 0, width - 1);
+			y = Clamp(y, 0, height - 1);
+
+			rgb[0] = frame[x * 3 + (width * 3 * y)];
+			rgb[1] = frame[x * 3 + 1 + (width * 3 * y)];
+			rgb[2] = frame[x * 3 + 2 + (width * 3 * y)];
+
+			return rgb;
+		}
+
+		/// <summary>
+		/// Set pixel RGB color of a texture block
+		/// </summary>
+		/// <param name="x">x coord</param>
+		/// <param name="y">y coord</param>
+		/// <param name="color">color to set</param>
+		/// <param name="width">stride of data</param>
+		/// <param name="frame">data</param>
+		public static void SetRGBPixel(int x, int y, byte[] color, int width, byte[] frame)
+		{
+			frame[x * 3 + (width * 3 * y)] = color[0];
+			frame[x * 3 + 1 + (width * 3 * y)] = color[1];
+			frame[x * 3 + 2 + (width * 3 * y)] = color[2];
+		}
+
+		/// <summary>
 		/// Get pixel color of the frame data
 		/// </summary>
 		/// <param name="x">x coord</param>

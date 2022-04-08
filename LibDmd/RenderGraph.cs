@@ -1551,7 +1551,17 @@ namespace LibDmd
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return TransformationUtil.Flip(width, height, 3, frame, FlipHorizontally, FlipVertically);
+				var flipframe = TransformationUtil.Flip(width, height, 3, frame, FlipHorizontally, FlipVertically);
+
+				if (ScalerMode == ScalerMode.Doubler)
+				{
+					return FrameUtil.ScaleDoubleRGB(width, height, 4, flipframe);
+				}
+				if (ScalerMode == ScalerMode.Scale2x)
+				{
+					return FrameUtil.Scale2xRGB(width, height, flipframe);
+				}
+				return flipframe;
 			}
 			var bmp = ImageUtil.ConvertFromRgb24(width, height, frame);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
