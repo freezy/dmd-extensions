@@ -1,5 +1,5 @@
-#define PANEL_WIDTH 64
-#define PANEL_HEIGHT 32   
+#define PANEL_WIDTH 64	// Width of each panel
+#define PANEL_HEIGHT 32   // Height of each panel
 #define PANELS_NUMBER 2   // Number of chained panels
 
 // ------------------------------------------ ZePinDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
