@@ -38,7 +38,7 @@ namespace DMDESP32
 		private const int OPEN_EXISTING = 3;
 		public const int MAX_SERIAL_WRITE_AT_ONCE = 9500; // empirique, au delà, il y a des erreurs de transfert
 
-		private bool Scom_Connect(string port,byte ShakeHandCode)
+		private bool Scom_Connect(string port,ref int rx,ref int ry)
 		{
 			try
 			{
@@ -48,18 +48,27 @@ namespace DMDESP32
 				_serialPort.ReadTimeout = 100;
 				_serialPort.WriteTimeout = 100;
 				_serialPort.Open();
-				_serialPort.Write(new byte[] { 0x81, 0xC3, 0xE7, ShakeHandCode }, 0, 4);
+				var result = new byte[7];
+				result[0] = 0x81;
+				result[1] = 0xC3;
+				result[2] = 0xE7;
+				result[3] = 12; // ask for resolution
+				_serialPort.Write(result, 0, 4);
 				System.Threading.Thread.Sleep(20);
-				var result = new byte[4];
-				_serialPort.Read(result, 0, 4);
+				_serialPort.Read(result, 0, 7);
 				System.Threading.Thread.Sleep(20);
-				if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == ShakeHandCode))
+				if ((result[0] != 0x81) || (result[1] != 0xC3) || (result[2] != 0xE7))
 				{
-					nCOM = port;
-					return true;
+					_serialPort.DiscardInBuffer();
+					_serialPort.DiscardOutBuffer();
+					_serialPort.Close();
+					return false;
 				}
+				rx = (int)result[3] + (int)result[4] * 256;
+				ry = (int)result[5] + (int)result[6] * 256;
+				return true;
 			}
-			catch (Exception e)
+			catch 
 			{
 				if (_serialPort != null && _serialPort.IsOpen)
 				{
@@ -176,13 +185,13 @@ namespace DMDESP32
 			tempbuffer[3] = 0x6;  // command byte 6 = reset palettes
 			Scom_SendBytes(tempbuffer, 4);
 		}
-		public int Scom_Open(byte ShakeHandCode)
+		public int Scom_Open(ref int rx, ref int ry)
 		{
 			bool IsAvailable = false;
 			var ports = SerialPort.GetPortNames();
 			foreach (var portName in ports)
 			{
-				IsAvailable = Scom_Connect(portName, ShakeHandCode);
+				IsAvailable = Scom_Connect(portName, ref rx, ref ry);
 				if (IsAvailable) break;
 			}
 			if (!IsAvailable) return 0;
@@ -219,8 +228,8 @@ namespace LibDmd.Output.ZePinDMD
 		public bool IsAvailable { get; private set; }
 
 		public int Delay { get; set; } = 100;
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public int DmdWidth { get; private set; }
+		public int DmdHeight { get; private set; }
 		public bool DmdAllowHdScaling { get; set; } = true;
 		
 		// We get a DMD_ESP32 instance to communicate with ESP32
@@ -249,7 +258,6 @@ namespace LibDmd.Output.ZePinDMD
 			{
 				_instance = new ZePinDMD();
 			}
-			_instance.Init();
 			return _instance;
 		}
 
@@ -258,6 +266,7 @@ namespace LibDmd.Output.ZePinDMD
 		/// </summary>
 		private ZePinDMD()
 		{
+			Init();
 			// Different buffers according the type of colors we transfer
 			// 4 control bytes + 3 bytes per pixel
 			_frameBufferRgb24 = new byte[4 + DmdWidth * DmdHeight * 3];
@@ -299,13 +308,19 @@ namespace LibDmd.Output.ZePinDMD
 		}
 		public void Init()
 		{
-			IsAvailable = (pDMD.Scom_Open(15) == 1);
+			int rx = new int();
+			int ry = new int();
+			IsAvailable = (pDMD.Scom_Open(ref rx,ref ry) == 1);
 
 			if (!IsAvailable)
 			{
 				Logger.Info(Name + " device not found");
 				return;
 			}
+
+			DmdWidth = rx;
+			DmdHeight = ry;
+
 			Logger.Info(Name + " device found on port " + pDMD.nCOM);
 		}
 
