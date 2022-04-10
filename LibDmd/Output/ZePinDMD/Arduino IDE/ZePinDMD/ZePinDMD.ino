@@ -1,5 +1,5 @@
-#define PANEL_WIDTH 64	// Width of each panel
-#define PANEL_HEIGHT 32   // Height of each panel
+#define PANEL_WIDTH 64
+#define PANEL_HEIGHT 32   
 #define PANELS_NUMBER 2   // Number of chained panels
 
 // ------------------------------------------ ZePinDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
@@ -16,7 +16,7 @@
 // until the display is correct (automatically saved, no need to do it again)
 // -----------------------------------------------------------------------------------------------------------------------------------------
 
-#define PANE_WIDTH PANEL_WIDTH * PANELS_NUMBER
+#define PANE_WIDTH (PANEL_WIDTH*PANELS_NUMBER)
 #define PANE_HEIGHT PANEL_HEIGHT
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
@@ -123,7 +123,7 @@ void fillpannel()
   {
     for (int ti = 0; ti < PANE_WIDTH; ti++)
     {
-      dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * 128 + ordreRGB[acordreRGB * 3 + 2]]);
+      dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 2]]);
     }
   }
 }
@@ -145,24 +145,63 @@ void SaveOrdreRGB()
   fordre.close();
 }
 
+#define WIDTH_LOGO_FILE 128
+#define HEIGHT_LOGO_FILE 32
+
+unsigned char tempbuf[WIDTH_LOGO_FILE*HEIGHT_LOGO_FILE*3];
+
 void DisplayLogo(void)
 {
+  const float X_LOGO_RATIO=(float)WIDTH_LOGO_FILE/(float)PANE_WIDTH;
+  const float Y_LOGO_RATIO=(float)HEIGHT_LOGO_FILE/(float)PANE_HEIGHT;
   File flogo= SPIFFS.open("/logo.raw");
   if (!flogo) {
     //Serial.println("Failed to open file for reading");
     return;
   }
+  for (unsigned int tj = 0; tj < HEIGHT_LOGO_FILE; tj++)
+  {
+    for (unsigned int ti = 0; ti < WIDTH_LOGO_FILE; ti++)
+    {
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE] = flogo.read();
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 1] = flogo.read();
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 2] = flogo.read();
+    }
+  }
+  flogo.close();
   for (unsigned int tj = 0; tj < PANE_HEIGHT; tj++)
   {
     for (unsigned int ti = 0; ti < PANE_WIDTH; ti++)
     {
-      pannel[ti * 3 + tj * 3 * PANE_WIDTH] = flogo.read();
-      pannel[ti * 3 + tj * 3 * PANE_WIDTH + 1] = flogo.read();
-      pannel[ti * 3 + tj * 3 * PANE_WIDTH + 2] = flogo.read();
+      float xpos=(float)ti*X_LOGO_RATIO;
+      float ypos=(float)tj*Y_LOGO_RATIO;
+      int xposL=(int)xpos;
+      int yposU=(int)ypos;
+      float xdeci=xpos-(float)xposL;
+      float ydeci=ypos-(float)yposU;
+      int idxUL=xposL*3+yposU*WIDTH_LOGO_FILE*3;
+      idxUL=ti*3+tj*WIDTH_LOGO_FILE*3;
+      int idxUR=idxUL+3;
+      int idxDL=idxUL+WIDTH_LOGO_FILE*3;
+      int idxDR=idxDL+3;
+      float vU=(1.0f-xdeci)*tempbuf[idxUL]+xdeci*tempbuf[idxUR];
+      float vD=(1.0f-xdeci)*tempbuf[idxDL]+xdeci*tempbuf[idxDR];
+      float v=(unsigned char)((1.0f-ydeci)*vU+ydeci*vD);
+      if (v>255) v=255.0f; else if (v<0) v=0.0f;
+      pannel[ti * 3 + tj * 3 * PANE_WIDTH]=(int)v;
+      vU=(1.0f-xdeci)*tempbuf[idxUL+1]+xdeci*tempbuf[idxUR+1];
+      vD=(1.0f-xdeci)*tempbuf[idxDL+1]+xdeci*tempbuf[idxDR+1];
+      v=(unsigned char)((1.0f-ydeci)*vU+ydeci*vD);
+      if (v>255) v=255.0f; else if (v<0) v=0.0f;
+      pannel[ti * 3 + tj * 3 * PANE_WIDTH+1]=(int)v;
+      vU=(1.0f-xdeci)*tempbuf[idxUL+2]+xdeci*tempbuf[idxUR+2];
+      vD=(1.0f-xdeci)*tempbuf[idxDL+2]+xdeci*tempbuf[idxDR+2];
+      v=(unsigned char)((1.0f-ydeci)*vU+ydeci*vD);
+      if (v>255) v=255.0f; else if (v<0) v=0.0f;
+      pannel[ti * 3 + tj * 3 * PANE_WIDTH+2]=(int)v;
     }
   }
   fillpannel();
-  flogo.close();
 }
 
 void InitPalettes(int R, int G, int B)
@@ -194,6 +233,7 @@ bool MireActive=true;
 void setup()
 {
   Serial.begin(921600);
+  //Serial.begin(121200);
   Serial.setRxBufferSize(SERIAL_BUFFER_SIZE);
   if (!SPIFFS.begin(true)) return;
 
@@ -315,9 +355,9 @@ void loop()
     SerialReadBuffer(img2,3*4+2*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
-      Palette4[ti * 3] = img2[(3-ti)*3];
-      Palette4[ti * 3 + 1] = img2[(3-ti)*3+1];
-      Palette4[ti * 3 + 2] = img2[(3-ti)*3+2];
+      Palette4[ti * 3] = img2[ti*3];
+      Palette4[ti * 3 + 1] = img2[ti*3+1];
+      Palette4[ti * 3 + 2] = img2[ti*3+2];
     }
     unsigned char* img=&img2[3*4];
     for (int tj = 0; tj < PANE_HEIGHT; tj++)
@@ -348,9 +388,9 @@ void loop()
     SerialReadBuffer(img2,3*4+4*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
-      Palette16[ti * 3] = img2[(3-ti)*3];
-      Palette16[ti * 3 + 1] = img2[(3-ti)*3+1];
-      Palette16[ti * 3 + 2] = img2[(3-ti)*3+2];
+      Palette16[ti * 3] = img2[ti*3];
+      Palette16[ti * 3 + 1] = img2[ti*3+1];
+      Palette16[ti * 3 + 2] = img2[ti*3+2];
     }
     unsigned char* img=&img2[3*4];
     for (int tj = 0; tj < PANE_HEIGHT; tj++)
