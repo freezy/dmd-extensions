@@ -82,7 +82,7 @@ namespace DMDESP32
 		}
 		private void Scom_Disconnect(int comhandle)
 		{
-			if (_serialPort != null && _serialPort.IsOpen)
+			if (_serialPort != null)// && _serialPort.IsOpen)
 			{
 				_serialPort.DiscardInBuffer();
 				_serialPort.DiscardOutBuffer();
@@ -326,7 +326,8 @@ namespace LibDmd.Output.ZePinDMD
 
 		public void RenderGray2(byte[] frame)
 		{
-			// split to sub frames
+			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+/*			// split to sub frames
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
 
 			// copy to frame buffer
@@ -337,7 +338,7 @@ namespace LibDmd.Output.ZePinDMD
 			{
 				WritePalette(_currentPalette);
 				RenderRaw(_frameBufferGray2);
-			}
+			}*/
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -351,7 +352,7 @@ namespace LibDmd.Output.ZePinDMD
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBufferGray2);
+				  RenderRaw(_frameBufferGray2);
 			}
 		}
 
@@ -466,12 +467,12 @@ namespace LibDmd.Output.ZePinDMD
 			var pos = 4;
 			for (var i = 0; i < 4; i++)
 			{
-				_frameBufferGray2[pos] = palette[3 - i].R;
-				_frameBufferGray4[pos] = palette[3 - i].R;
-				_frameBufferGray2[pos + 1] = palette[3 - i].G;
-				_frameBufferGray4[pos + 1] = palette[3 - i].G;
-				_frameBufferGray2[pos + 2] = palette[3 - i].B;
-				_frameBufferGray4[pos + 2] = palette[3 - i].B;
+				_frameBufferGray2[pos] = palette[i].R;
+				_frameBufferGray4[pos] = palette[i].R;
+				_frameBufferGray2[pos + 1] = palette[i].G;
+				_frameBufferGray4[pos + 1] = palette[i].G;
+				_frameBufferGray2[pos + 2] = palette[i].B;
+				_frameBufferGray4[pos + 2] = palette[i].B;
 				pos += 3;
 			}
 		}
