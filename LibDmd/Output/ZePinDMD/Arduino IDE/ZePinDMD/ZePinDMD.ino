@@ -52,10 +52,24 @@
 #define B_PIN 19
 #define C_PIN 5
 #define D_PIN 17
-#define E_PIN 22 // required for 1/32 scan panels, like 64x64. Any available pin would do, i.e. IO32
+#define E_PIN 22 // required for 1/32 scan panels, like 64x64. Any available pin would do, i.e. IO32. If 1/16 scan panels, no connection to this pin needed
 #define LAT_PIN 4
 #define OE_PIN 15
 #define CLK_PIN 16
+
+bool min_chiffres[3*10*5]={0,1,0, 0,0,1, 1,1,0, 1,1,0, 0,0,1, 1,1,1, 0,1,1, 1,1,1, 0,1,0, 0,1,0,
+                           1,0,1, 0,1,1, 0,0,1, 0,0,1, 0,1,0, 1,0,0, 1,0,0, 0,0,1, 1,0,1, 1,0,1,
+                           1,0,1, 0,0,1, 0,1,0, 0,1,0, 1,1,1, 1,1,0, 1,1,0, 0,1,0, 0,1,0, 0,1,1,
+                           1,0,1, 0,0,1, 1,0,0, 0,0,1, 0,0,1, 0,0,1, 1,0,1, 1,0,0, 1,0,1, 0,0,1,
+                           0,1,0, 0,0,1, 1,1,1, 1,1,0, 0,0,1, 1,1,0, 0,1,0, 1,0,0, 0,1,0, 1,1,0};
+
+bool lumtxt[16*5]={0,1,0,0,0,1,0,0,1,0,1,1,0,1,1,0,
+                   0,1,0,0,0,1,0,0,1,0,1,0,1,0,1,0,
+                   0,1,0,0,0,1,0,0,1,0,1,0,0,0,1,0,
+                   0,1,0,0,0,1,0,0,1,0,1,0,0,0,1,0,
+                   0,1,1,1,0,0,1,1,1,0,1,0,0,0,1,0};
+
+
 
 HUB75_I2S_CFG::i2s_pins _pins={R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN};
 HUB75_I2S_CFG mxconfig(
@@ -84,6 +98,11 @@ unsigned char pannel[PANE_WIDTH*PANE_HEIGHT*3];
 bool OrdreBtnRel=false;
 int OrdreBtnPos;
 unsigned long OrdreBtnDebounceTime;
+
+#define LUMINOSITE_BUTTON_PIN 33
+bool LuminositeBtnRel=false;
+int LuminositeBtnPos;
+unsigned long LuminositeBtnDebounceTime;
 
 #define DEBOUNCE_DELAY 100 // in ms, to avoid buttons pushes to be counted several times https://www.arduino.cc/en/Tutorial/BuiltInExamples/Debounce
 unsigned char CheckButton(int btnpin,bool *pbtnrel,int *pbtpos,unsigned long *pbtdebouncetime)
@@ -117,6 +136,54 @@ unsigned char CheckButton(int btnpin,bool *pbtnrel,int *pbtpos,unsigned long *pb
   return 0;
 }
 
+void DisplayChiffre(unsigned int chf, int x,int y,int R, int G, int B)
+{
+  // affiche un chiffre verticalement
+  unsigned int c=chf%10;
+  const int poscar=3*c;
+  for (int ti=0;ti<5;ti++)
+  {
+    for (int tj=0;tj<4;tj++)
+    {
+      if (tj<3) {if (min_chiffres[poscar+tj+ti*3*10]==1) dma_display->drawPixelRGB888(x+tj,y+ti,R,G,B); else dma_display->drawPixelRGB888(x+tj,y+ti,0,0,0);}
+      else dma_display->drawPixelRGB888(x+tj,y+ti,0,0,0);
+    }
+  }
+}
+
+void DisplayNombre(unsigned int chf,int x,int y,int R,int G,int B)
+{
+  // affiche un nombre verticalement
+  unsigned int c=chf&0xff;
+  unsigned int acc=c,acd=100;
+  for (int ti=0;ti<3;ti++)
+  {
+    unsigned int val=(unsigned int)(acc/acd);
+    DisplayChiffre(val,x+4*ti,y,R,G,B);
+    acc=acc-val*acd;
+    acd/=10;
+  }
+}
+
+int Luminosite=95;
+
+void DisplayLum(void)
+{
+  DisplayNombre(Luminosite,PANE_WIDTH/2-16/2-3*4/2+16,PANE_HEIGHT-5,255,255,255);
+}
+
+void DisplayText(bool* text, int width, int x, int y, int R, int G, int B)
+{
+  // affiche le texte "SCORE" en (x, y)
+  for (unsigned int ti=0;ti<width;ti++)
+  {
+    for (unsigned int tj=0; tj<5;tj++)
+    {
+      if (text[ti+tj*width]==1) dma_display->drawPixelRGB888(x+ti,y+tj,R,G,B); else dma_display->drawPixelRGB888(x+ti,y+tj,0,0,0);
+    }
+  }
+}
+
 void fillpannel()
 {
   for (int tj = 0; tj < PANE_HEIGHT; tj++)
@@ -145,6 +212,23 @@ void SaveOrdreRGB()
   fordre.close();
 }
 
+File flum;
+
+void LoadLum()
+{
+  flum=SPIFFS.open("/lum.val");
+  if (!flum) return;
+  Luminosite=flum.read();
+  flum.close();
+}
+
+void SaveLum()
+{
+  flum=SPIFFS.open("/lum.val","w");
+  flum.write(Luminosite);
+  flum.close();
+}
+
 #define WIDTH_LOGO_FILE 128
 #define HEIGHT_LOGO_FILE 32
 
@@ -154,21 +238,6 @@ void DisplayLogo(void)
 {
   const float X_LOGO_RATIO=(float)WIDTH_LOGO_FILE/(float)PANE_WIDTH;
   const float Y_LOGO_RATIO=(float)HEIGHT_LOGO_FILE/(float)PANE_HEIGHT;
-  File flogo= SPIFFS.open("/logo.raw");
-  if (!flogo) {
-    //Serial.println("Failed to open file for reading");
-    return;
-  }
-  for (unsigned int tj = 0; tj < HEIGHT_LOGO_FILE; tj++)
-  {
-    for (unsigned int ti = 0; ti < WIDTH_LOGO_FILE; ti++)
-    {
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE] = flogo.read();
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 1] = flogo.read();
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 2] = flogo.read();
-    }
-  }
-  flogo.close();
   for (unsigned int tj = 0; tj < PANE_HEIGHT; tj++)
   {
     for (unsigned int ti = 0; ti < PANE_WIDTH; ti++)
@@ -202,6 +271,26 @@ void DisplayLogo(void)
     }
   }
   fillpannel();
+}
+
+void LoadLogo(void)
+{
+  File flogo= SPIFFS.open("/logo.raw");
+  if (!flogo) {
+    //Serial.println("Failed to open file for reading");
+    return;
+  }
+  for (unsigned int tj = 0; tj < HEIGHT_LOGO_FILE; tj++)
+  {
+    for (unsigned int ti = 0; ti < WIDTH_LOGO_FILE; ti++)
+    {
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE] = flogo.read();
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 1] = flogo.read();
+      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 2] = flogo.read();
+    }
+  }
+  flogo.close();
+  DisplayLogo();
 }
 
 void InitPalettes(int R, int G, int B)
@@ -238,16 +327,20 @@ void setup()
   if (!SPIFFS.begin(true)) return;
 
   pinMode(ORDRE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LUMINOSITE_BUTTON_PIN, INPUT_PULLUP);
     
   mxconfig.clkphase = false; // change if you have some parts of the pannel with a shift
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
-  dma_display->setBrightness8(90);    // range is 0-255, 0 - 0%, 255 - 100%
+  dma_display->setBrightness8(Luminosite);    // range is 0-255, 0 - 0%, 255 - 100%
   dma_display->clearScreen();
 
   LoadOrdreRGB();
+  LoadLum();
   
-  DisplayLogo();
+  LoadLogo();
+  DisplayText(lumtxt,16,PANE_WIDTH/2-16/2-3*4/2,PANE_HEIGHT-5,255,255,255);
+  DisplayLum();
 
   InitPalettes(255,109,0);
 }
@@ -258,7 +351,6 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
   int remBytes=BufferSize;
   while (remBytes>0)
   {
-    // on lit la taille à récupérer
     int c1, c2, c3, c4;
     while (!Serial.available());
     c1 = Serial.read();
@@ -295,6 +387,14 @@ void loop()
       if (acordreRGB >= 6) acordreRGB = 0;
       SaveOrdreRGB();
       fillpannel();
+    }
+    if (CheckButton(LUMINOSITE_BUTTON_PIN, &LuminositeBtnRel, &LuminositeBtnPos, &LuminositeBtnDebounceTime) == 2)
+    {
+      Luminosite+=10;
+      if (Luminosite>255) Luminosite=15;
+      dma_display->setBrightness8(Luminosite);
+      DisplayLum();
+      SaveLum();
     }
     if (Serial.available())
     {
