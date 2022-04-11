@@ -1,6 +1,6 @@
-#define PANEL_WIDTH 64
-#define PANEL_HEIGHT 32   
-#define PANELS_NUMBER 2   // Number of chained panels
+#define PANEL_WIDTH 64 // width: number of LEDs for 1 pannel
+#define PANEL_HEIGHT 32 // height: number of LEDs
+#define PANELS_NUMBER 2   // Number of horizontally chained panels 
 
 // ------------------------------------------ ZePinDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
 // - Install the ESP32 board in Arduino IDE as explained here https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
