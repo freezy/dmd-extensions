@@ -249,7 +249,6 @@ void DisplayLogo(void)
       float xdeci=xpos-(float)xposL;
       float ydeci=ypos-(float)yposU;
       int idxUL=xposL*3+yposU*WIDTH_LOGO_FILE*3;
-      idxUL=ti*3+tj*WIDTH_LOGO_FILE*3;
       int idxUR=idxUL+3;
       int idxDL=idxUL+WIDTH_LOGO_FILE*3;
       int idxDR=idxDL+3;
@@ -332,11 +331,11 @@ void setup()
   mxconfig.clkphase = false; // change if you have some parts of the pannel with a shift
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
+  LoadLum();
   dma_display->setBrightness8(Luminosite);    // range is 0-255, 0 - 0%, 255 - 100%
   dma_display->clearScreen();
 
   LoadOrdreRGB();
-  LoadLum();
   
   LoadLogo();
   DisplayText(lumtxt,16,PANE_WIDTH/2-16/2-3*4/2,PANE_HEIGHT-5,255,255,255);
