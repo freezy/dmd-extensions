@@ -66,6 +66,7 @@ namespace DMDESP32
 				}
 				rx = (int)result[3] + (int)result[4] * 256;
 				ry = (int)result[5] + (int)result[6] * 256;
+				nCOM = port;
 				return true;
 			}
 			catch 
@@ -200,7 +201,7 @@ namespace DMDESP32
 			return 1;
 		}
 
-		public bool Scom_Close()//Logger Logger)
+		public bool Scom_Close()
 		{
 			if (Opened)
 			{
@@ -258,6 +259,7 @@ namespace LibDmd.Output.ZePinDMD
 			{
 				_instance = new ZePinDMD();
 			}
+			else _instance.Init();
 			return _instance;
 		}
 
@@ -321,7 +323,7 @@ namespace LibDmd.Output.ZePinDMD
 			DmdWidth = rx;
 			DmdHeight = ry;
 
-			Logger.Info(Name + " device found on port " + pDMD.nCOM);
+			Logger.Info(Name + " device found on port " + pDMD.nCOM + " with a resolution of " + DmdWidth + "x" + DmdHeight + " LEDs");
 		}
 
 		public void RenderGray2(byte[] frame)
