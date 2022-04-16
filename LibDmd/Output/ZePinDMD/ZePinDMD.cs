@@ -4,6 +4,8 @@ using LibDmd.Common;
 using NLog;
 using System.IO.Ports;
 using System.IO;
+
+
 /// <summary>
 /// ZePinDMD - real DMD with LED matrix display controlled with a cheap ESP32
 /// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
@@ -29,15 +31,14 @@ namespace DMDESP32
 		public byte Parity = 0; // 0-4=no,odd,even,mark,space
 		public string Port;
 		public int ReadTimeout;
-		public byte StopBits = 1; // 0,1,2 = 1, 1.5, 2
+		public byte StopBits = 1; // 0,1,2 = 1, 1.5, 2*/
 		private byte[] oldbuffer = new byte[16384];
 		private SerialPort _serialPort;
 		private const uint GENERIC_READ = 0x80000000;
 		private const uint GENERIC_WRITE = 0x40000000;
 		private const int INVALID_HANDLE_VALUE = -1;
 		private const int OPEN_EXISTING = 3;
-		public const int MAX_SERIAL_WRITE_AT_ONCE = 9500; // empirique, au delà, il y a des erreurs de transfert
-
+		public const int MAX_SERIAL_WRITE_AT_ONCE = 5000;
 		private bool Scom_Connect(string port,ref int rx,ref int ry)
 		{
 			try
@@ -68,6 +69,7 @@ namespace DMDESP32
 				ry = (int)result[5] + (int)result[6] * 256;
 				nCOM = port;
 				return true;
+						
 			}
 			catch 
 			{
@@ -78,6 +80,7 @@ namespace DMDESP32
 					_serialPort.Close();
 					System.Threading.Thread.Sleep(100); // otherwise the next device will fail
 				}
+
 			}
 			return false;
 		}
@@ -133,16 +136,16 @@ namespace DMDESP32
 					Buffer.BlockCopy(pBytes, 4, pBytes2, 8, qtetrans);
 					_serialPort.Write(pBytes2, 0, qtetrans + 8);
 					remainTrans -= qtetrans;
-					System.Threading.Thread.Sleep(20);
-					var result = new byte[4];
+					System.Threading.Thread.Sleep(10);
+					/*var result = new byte[4];
 					_serialPort.Read(result, 0, 4);
-					System.Threading.Thread.Sleep(20);
+					System.Threading.Thread.Sleep(5);
 					if ((result[0] != pBytes2[4]) != (result[1] != pBytes2[5]) != (result[2] != pBytes2[6]) != (result[3] != pBytes2[7]))
 					{
 						_serialPort.DiscardInBuffer();
 						_serialPort.DiscardOutBuffer();
 						return false;
-					}
+					}*/
 					int ti = 1;
 					while (remainTrans > 0) 
 					{
@@ -153,16 +156,15 @@ namespace DMDESP32
 						pBytes2[3] = (byte)((qtetrans>>24) & 0xff);
 						Buffer.BlockCopy(pBytes, 4 + ti * MAX_SERIAL_WRITE_AT_ONCE, pBytes2, 4, qtetrans);
 						_serialPort.Write(pBytes2, 0, qtetrans+4);
-						System.Threading.Thread.Sleep(20);
-						result = new byte[4];
-						_serialPort.Read(result, 0, 4);
-						System.Threading.Thread.Sleep(20);
+						System.Threading.Thread.Sleep(10);
+						/*_serialPort.Read(result, 0, 4);
+						System.Threading.Thread.Sleep(5);
 						if ((result[0] != pBytes2[0]) != (result[1] != pBytes2[1]) != (result[2] != pBytes2[2]) != (result[3] != pBytes2[3]))
 						{
 							_serialPort.DiscardInBuffer();
 							_serialPort.DiscardOutBuffer();
 							return false;
-						}
+						}*/
 						remainTrans -= qtetrans;
 						ti++;
 					}
