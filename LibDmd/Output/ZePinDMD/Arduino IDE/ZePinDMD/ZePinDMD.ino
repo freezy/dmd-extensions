@@ -1,7 +1,6 @@
 #define PANEL_WIDTH 64 // width: number of LEDs for 1 pannel
 #define PANEL_HEIGHT 32 // height: number of LEDs
 #define PANELS_NUMBER 2   // Number of horizontally chained panels 
-
 // ------------------------------------------ ZePinDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
 // - Install the ESP32 board in Arduino IDE as explained here https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
 // - Install SPIFFS file system as explained here https://randomnerdtutorials.com/install-esp32-filesystem-uploader-arduino-ide/
@@ -151,12 +150,28 @@ void DisplayChiffre(unsigned int chf, int x,int y,int R, int G, int B)
   }
 }
 
+#define DELAY_MAX_CONNEXION 10000
+
 void DisplayNombre(unsigned int chf,int x,int y,int R,int G,int B)
 {
   // affiche un nombre verticalement
   unsigned int c=chf&0xff;
   unsigned int acc=c,acd=100;
   for (int ti=0;ti<3;ti++)
+  {
+    unsigned int val=(unsigned int)(acc/acd);
+    DisplayChiffre(val,x+4*ti,y,R,G,B);
+    acc=acc-val*acd;
+    acd/=10;
+  }
+}
+
+void DisplayNombre2(unsigned int chf,int x,int y,int R,int G,int B)
+{
+  // affiche un nombre verticalement
+  unsigned int c=chf&0xffff;
+  unsigned int acc=c,acd=10000;
+  for (int ti=0;ti<5;ti++)
   {
     unsigned int val=(unsigned int)(acc/acd);
     DisplayChiffre(val,x+4*ti,y,R,G,B);
@@ -193,6 +208,19 @@ void fillpannel()
       dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 2]]);
     }
   }
+  //delayMicroseconds(6060);
+}
+
+void fillpannel2()
+{
+  for (int tj = 0; tj < PANE_HEIGHT; tj++)
+  {
+    for (int ti = 0; ti < PANE_WIDTH; ti++)
+    {
+      dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 2]]);
+    }
+  }
+ // delayMicroseconds(6060);
 }
 
 File fordre;
@@ -269,7 +297,7 @@ void DisplayLogo(void)
       pannel[ti * 3 + tj * 3 * PANE_WIDTH+2]=(int)v;
     }
   }
-  fillpannel();
+  fillpannel2();
 }
 
 void LoadLogo(void)
@@ -316,12 +344,12 @@ void InitPalettes(int R, int G, int B)
 }
 
 bool MireActive=true;
-#define SERIAL_BUFFER_SIZE 4024
+#define SERIAL_BUFFER_SIZE 6000
 
 void setup()
 {
   Serial.begin(921600);
-  //Serial.begin(121200);
+  //Serial.begin(115200);
   Serial.setRxBufferSize(SERIAL_BUFFER_SIZE);
   if (!SPIFFS.begin(true)) return;
 
@@ -360,7 +388,7 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
     while (!Serial.available());
     c4 = Serial.read();
     c1+=c2*256+c3*65536+c4*16777216;
-    while (Serial.available() < min(SERIAL_BUFFER_SIZE-256,c1*4/5));
+    while (Serial.available() < min(SERIAL_BUFFER_SIZE-256,c1*1/2));
     for (int ti=0;ti<c1;ti++)
     {
       //while (!Serial.available());
@@ -368,11 +396,12 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
       ptrB++;
     }
     remBytes-=c1;
+    while (Serial.available()) Serial.read();
    // ACK transfert reçu
-    Serial.write(c1&0xff);
+    /*Serial.write(c1&0xff);
     Serial.write(c2);
     Serial.write(c3);
-    Serial.write(c4);
+    Serial.write(c4);*/
   }
 }
 
@@ -391,12 +420,13 @@ void loop()
     {
       Luminosite+=10;
       if (Luminosite>255) Luminosite=15;
-      dma_display->setBrightness8(Luminosite);
+      //dma_display->setBrightness8(Luminosite);
       DisplayLum();
       SaveLum();
     }
     if (Serial.available())
     {
+      //dma_display->clearScreen();
       MireActive = false;
     }
   }
