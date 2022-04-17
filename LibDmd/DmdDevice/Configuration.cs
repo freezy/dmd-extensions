@@ -27,7 +27,7 @@ namespace LibDmd.DmdDevice
 		public IPinDmd1Config PinDmd1 { get; private set; }
 		public IPinDmd2Config PinDmd2 { get; private set; }
 		public IPinDmd3Config PinDmd3 { get; private set; }
-		public IZePinDMDConfig ZePinDMD { get; private set; }
+		public IZeDMDConfig ZeDMD { get; private set; }
 		public IPin2DmdConfig Pin2Dmd { get; private set; }
 		public IPixelcadeConfig Pixelcade { get; private set; }
 		public IVideoConfig Video { get; private set; }
@@ -126,7 +126,7 @@ namespace LibDmd.DmdDevice
 			PinDmd1 = new PinDmd1Config(_data, this);
 			PinDmd2 = new PinDmd2Config(_data, this);
 			PinDmd3 = new PinDmd3Config(_data, this);
-			ZePinDMD = new ZePinDMDConfig(_data, this);
+			ZeDMD = new ZeDMDConfig(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Pixelcade = new PixelcadeConfig(_data, this);
 			Video = new VideoConfig(_data, this);
@@ -219,13 +219,13 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class ZePinDMDConfig : AbstractConfiguration, IZePinDMDConfig
+	public class ZeDMDConfig : AbstractConfiguration, IZeDMDConfig
 	{
-		public override string Name { get; } = "ZePinDMD";
+		public override string Name { get; } = "ZeDMD";
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
 		public bool AllowHdScaling => GetBoolean("scaletohd", true);
-		public ZePinDMDConfig(IniData data, Configuration parent) : base(data, parent)
+		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}
