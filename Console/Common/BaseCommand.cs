@@ -11,7 +11,7 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
-using LibDmd.Output.ZePinDMD;
+using LibDmd.Output.ZeDMD;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using NLog;
@@ -78,18 +78,18 @@ namespace DmdExt.Common
 				}
 			}
 
-			if (config.ZePinDMD.Enabled)
+			if (config.ZeDMD.Enabled)
 			{
-				var zepinDMD = ZePinDMD.GetInstance();
-				if (zepinDMD.IsAvailable)
+				var zeDMD = ZeDMD.GetInstance();
+				if (zeDMD.IsAvailable)
 				{
-					renderers.Add(zepinDMD);
-					Logger.Info("Added ZePinDMD renderer.");
-					reportingTags.Add("Out:ZePinDMD");
+					renderers.Add(zeDMD);
+					Logger.Info("Added ZeDMD renderer.");
+					reportingTags.Add("Out:ZeDMD");
 				}
 				else
 				{
-					Logger.Warn("Device {0} is not available.", zepinDMD);
+					Logger.Warn("Device {0} is not available.", zeDMD);
 				}
 			}
 

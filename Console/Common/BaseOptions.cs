@@ -129,7 +129,7 @@ namespace DmdExt.Common
 		public IPinDmd1Config PinDmd1 { get; }
 		public IPinDmd2Config PinDmd2 { get; }
 		public IPinDmd3Config PinDmd3 { get; }
-		public IZePinDMDConfig ZePinDMD { get; }
+		public IZeDMDConfig ZeDMD { get; }
 		public IPin2DmdConfig Pin2Dmd { get; }
 		public IPixelcadeConfig Pixelcade { get; }
 		public IVideoConfig Video { get; }
@@ -148,7 +148,7 @@ namespace DmdExt.Common
 			PinDmd1 = new PinDmd1Options(this);
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
-			ZePinDMD = new ZePinDMDOptions(this);
+			ZeDMD = new ZeDMDOptions(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
 			Pixelcade = new PixelcadeOptions(this);
 			Video = new VideoOptions();
@@ -162,7 +162,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, zePinDMD, PIN2DMD, PIN2DMDXL, PIN2DMDHD, PIXELCADE, Virtual, AlphaNumeric, Network
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, zeDMD, PIN2DMD, PIN2DMDXL, PIN2DMDHD, PIXELCADE, Virtual, AlphaNumeric, Network
 		}
 
 		public void Validate()
@@ -311,17 +311,17 @@ namespace DmdExt.Common
 		public string Port => _options.Port;
 	}
 
-	internal class ZePinDMDOptions : IZePinDMDConfig
+	internal class ZeDMDOptions : IZeDMDConfig
 	{
 		private readonly BaseOptions _options;
 
-		public ZePinDMDOptions(BaseOptions options)
+		public ZeDMDOptions(BaseOptions options)
 		{
 			_options = options;
 		}
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
-							   _options.Destination == BaseOptions.DestinationType.zePinDMD;
+							   _options.Destination == BaseOptions.DestinationType.zeDMD;
 		public string Port => _options.Port;
 	}
 
