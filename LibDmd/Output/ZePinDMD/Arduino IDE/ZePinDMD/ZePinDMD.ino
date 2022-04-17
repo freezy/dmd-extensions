@@ -1,6 +1,6 @@
 #define PANEL_WIDTH 64 // width: number of LEDs for 1 pannel
-#define PANEL_HEIGHT 32 // height: number of LEDs
-#define PANELS_NUMBER 2   // Number of horizontally chained panels 
+#define PANEL_HEIGHT 64 // height: number of LEDs
+#define PANELS_NUMBER 3   // Number of horizontally chained panels 
 // ------------------------------------------ ZePinDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
 // - Install the ESP32 board in Arduino IDE as explained here https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
 // - Install SPIFFS file system as explained here https://randomnerdtutorials.com/install-esp32-filesystem-uploader-arduino-ide/
@@ -16,6 +16,7 @@
 // -----------------------------------------------------------------------------------------------------------------------------------------
 
 #define PANE_WIDTH (PANEL_WIDTH*PANELS_NUMBER)
+#define PANE_WIDTH_PLANE (PANE_WIDTH>>3)
 #define PANE_HEIGHT PANEL_HEIGHT
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
@@ -180,6 +181,20 @@ void DisplayNombre2(unsigned int chf,int x,int y,int R,int G,int B)
   }
 }
 
+void DisplayNombre3(unsigned int chf,int x,int y,int R,int G,int B)
+{
+  // affiche un nombre verticalement
+  unsigned int c=chf;
+  unsigned int acc=c,acd=1000000000;
+  for (int ti=0;ti<10;ti++)
+  {
+    unsigned int val=(unsigned int)(acc/acd);
+    DisplayChiffre(val,x+4*ti,y,R,G,B);
+    acc=acc-val*acd;
+    acd/=10;
+  }
+}
+
 int Luminosite=95;
 
 void DisplayLum(void)
@@ -209,18 +224,6 @@ void fillpannel()
     }
   }
   //delayMicroseconds(6060);
-}
-
-void fillpannel2()
-{
-  for (int tj = 0; tj < PANE_HEIGHT; tj++)
-  {
-    for (int ti = 0; ti < PANE_WIDTH; ti++)
-    {
-      dma_display->drawPixelRGB888(ti, tj, pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 1]], pannel[ti * 3 + tj * 3 * PANE_WIDTH + ordreRGB[acordreRGB * 3 + 2]]);
-    }
-  }
- // delayMicroseconds(6060);
 }
 
 File fordre;
@@ -297,7 +300,7 @@ void DisplayLogo(void)
       pannel[ti * 3 + tj * 3 * PANE_WIDTH+2]=(int)v;
     }
   }
-  fillpannel2();
+  fillpannel();
 }
 
 void LoadLogo(void)
@@ -344,12 +347,11 @@ void InitPalettes(int R, int G, int B)
 }
 
 bool MireActive=true;
-#define SERIAL_BUFFER_SIZE 6000
+#define SERIAL_BUFFER_SIZE 9500
 
 void setup()
 {
   Serial.begin(921600);
-  //Serial.begin(115200);
   Serial.setRxBufferSize(SERIAL_BUFFER_SIZE);
   if (!SPIFFS.begin(true)) return;
 
@@ -405,6 +407,16 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
   }
 }
 
+void Say(unsigned char where,unsigned int what)
+{
+  DisplayNombre(where,0,where*5,255,255,255);
+  if (what!=(unsigned int)-1) DisplayNombre3(what,15,where*5,255,255,255);
+  delay(1000);
+}
+
+unsigned char img2[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
+unsigned char RLEBuffer[PANE_WIDTH*PANE_HEIGHT*4];
+
 void loop()
 {
   while (MireActive == true)
@@ -420,13 +432,13 @@ void loop()
     {
       Luminosite+=10;
       if (Luminosite>255) Luminosite=15;
-      //dma_display->setBrightness8(Luminosite);
+      dma_display->setBrightness8(Luminosite);
       DisplayLum();
       SaveLum();
     }
     if (Serial.available())
     {
-      //dma_display->clearScreen();
+      dma_display->clearScreen();
       MireActive = false;
     }
   }
@@ -478,9 +490,39 @@ void loop()
     SerialReadBuffer(pannel,PANE_WIDTH*PANE_HEIGHT*3);
     fillpannel();
   }
+  else if (c4 == 13)
+  {
+    unsigned int c1;
+    while (!Serial.available());
+    c1 = (int)Serial.read();
+    while (!Serial.available());
+    c1 += (int)Serial.read()*256;
+    while (!Serial.available());
+    c1 += (int)Serial.read()*65536;
+    while (!Serial.available());
+    c1 += (int)Serial.read()*16777216;
+    SerialReadBuffer(RLEBuffer,c1);
+    int i=0,j=0;
+    while (i<PANE_WIDTH*PANE_HEIGHT)
+    {
+      unsigned char replen=RLEBuffer[j];
+      unsigned char acR=RLEBuffer[j+1];
+      unsigned char acG=RLEBuffer[j+2];
+      unsigned char acB=RLEBuffer[j+3];
+      j+=4;
+      while((i<PANE_WIDTH*PANE_HEIGHT)&&(replen>0))
+      {
+        pannel[i*3]=acR;
+        pannel[i*3+1]=acG;
+        pannel[i*3+2]=acB;
+        replen--;
+        i++;
+      }
+    }
+    fillpannel();
+  }
   else if (c4 == 8) // mode 4 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 4 pixels par byte
   {
-    unsigned char img2[3*4+2 * PANE_WIDTH/8*PANE_HEIGHT];
     SerialReadBuffer(img2,3*4+2*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
@@ -496,7 +538,7 @@ void loop()
         unsigned char mask = 1;
         unsigned char planes[2];
         planes[0] = img[ti + tj * PANE_WIDTH/8];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -513,7 +555,6 @@ void loop()
   }
   else if (c4 == 7) // mode 16 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 2 pixels par byte
   {
-    unsigned char img2[3*4+4 * PANE_WIDTH/8*PANE_HEIGHT];
     SerialReadBuffer(img2,3*4+4*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
@@ -529,9 +570,9 @@ void loop()
         unsigned char mask = 1;
         unsigned char planes[4];
         planes[0] = img[ti + tj * PANE_WIDTH/8];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[2] = img[2*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[3] = img[3*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -557,7 +598,6 @@ void loop()
   }
   else if (c4 == 9) // mode 16 couleurs avec 1 palette 16 couleurs (16*3 bytes) suivis de 4 bytes par groupe de 8 points (séparés en plans de bits 4*512 bytes)
   {
-    unsigned char img2[3*16+4 * PANE_WIDTH/8*PANE_HEIGHT];
     SerialReadBuffer(img2,3*16+4*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 15; ti >= 0; ti--)
     {
@@ -574,9 +614,9 @@ void loop()
         unsigned char mask = 1;
         unsigned char planes[4];
         planes[0] = img[ti + tj * PANE_WIDTH/8];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[2] = img[2*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[3] = img[3*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
@@ -595,7 +635,6 @@ void loop()
   }
   else if (c4 == 11) // mode 64 couleurs avec 1 palette 64 couleurs (64*3 bytes) suivis de 6 bytes par groupe de 8 points (séparés en plans de bits 6*512 bytes)
   {
-    unsigned char img2[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
     SerialReadBuffer(img2,3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 63; ti >= 0; ti--)
     {
@@ -612,11 +651,11 @@ void loop()
         unsigned char mask = 1;
         unsigned char planes[6];
         planes[0] = img[ti + tj * PANE_WIDTH/8];
-        planes[1] = img[PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[2] = img[2*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[3] = img[3*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[4] = img[4*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
-        planes[5] = img[5*PANE_WIDTH/8*32 + ti + tj * PANE_WIDTH/8];
+        planes[1] = img[PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[2] = img[2*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[3] = img[3*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[4] = img[4*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
+        planes[5] = img[5*PANE_WIDTH_PLANE*PANE_HEIGHT + ti + tj * PANE_WIDTH_PLANE];
         for (int tk = 0; tk < 8; tk++)
         {
           unsigned char idx = 0;
