@@ -344,8 +344,17 @@ void InitPalettes(int R, int G, int B)
   }
 }
 
+void Say(unsigned char where,unsigned int what)
+{
+  DisplayNombre(where,0,where*5,255,255,255);
+  if (what!=(unsigned int)-1) DisplayNombre3(what,15,where*5,255,255,255);
+  delay(1000);
+}
+
 bool MireActive=true;
 #define SERIAL_BUFFER_SIZE 9500
+unsigned char* img2;//[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
+unsigned char* RLEBuffer;//[PANE_WIDTH*PANE_HEIGHT*4];
 
 void setup()
 {
@@ -363,6 +372,20 @@ void setup()
   dma_display->setBrightness8(Luminosite);    // range is 0-255, 0 - 0%, 255 - 100%
   dma_display->clearScreen();
 
+  img2=(unsigned char*)malloc(3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
+  if (!img2)
+  {
+    Say(0,0);
+    while (1==1);
+  }
+  
+  RLEBuffer=(unsigned char*)malloc(PANE_WIDTH*PANE_HEIGHT*4);
+  if (!RLEBuffer)
+  {
+    Say(1,1);
+    while (1==1);
+  }
+	
   LoadOrdreRGB();
   
   LoadLogo();
@@ -399,16 +422,6 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
     while (Serial.available()) Serial.read();
   }
 }
-
-void Say(unsigned char where,unsigned int what)
-{
-  DisplayNombre(where,0,where*5,255,255,255);
-  if (what!=(unsigned int)-1) DisplayNombre3(what,15,where*5,255,255,255);
-  delay(1000);
-}
-
-unsigned char img2[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
-unsigned char RLEBuffer[PANE_WIDTH*PANE_HEIGHT*4];
 
 void loop()
 {
