@@ -368,11 +368,11 @@ namespace LibDmd.DmdDevice
 			}
 			if (_config.Pixelcade.Enabled) {
 				var pixelcade = Pixelcade.GetInstance(_config.Pixelcade.Port, _config.Pixelcade.ColorMatrix);
-				/*if (pixelcade.IsAvailable) {
+				if (pixelcade.IsAvailable) {
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
 					ReportingTags.Add("Out:Pixelcade");
-				}*/
+				}
 			}
 			if (_config.VirtualDmd.Enabled) {
 				renderers.Add(_virtualDmd.Dmd);
