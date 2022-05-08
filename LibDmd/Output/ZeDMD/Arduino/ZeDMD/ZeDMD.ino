@@ -1,6 +1,6 @@
 #define PANEL_WIDTH 64 // width: number of LEDs for 1 pannel
-#define PANEL_HEIGHT 64 // height: number of LEDs
-#define PANELS_NUMBER 3   // Number of horizontally chained panels 
+#define PANEL_HEIGHT 32 // height: number of LEDs
+#define PANELS_NUMBER 2   // Number of horizontally chained panels 
 // ------------------------------------------ ZeDMD by Zedrummer (http://pincabpassion.net)---------------------------------------------
 // - Install the ESP32 board in Arduino IDE as explained here https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
 // - Install SPIFFS file system as explained here https://randomnerdtutorials.com/install-esp32-filesystem-uploader-arduino-ide/
@@ -56,6 +56,12 @@
 #define LAT_PIN 4
 #define OE_PIN 15
 #define CLK_PIN 16
+
+#define N_CTRL_CHARS 6
+#define N_INTERMEDIATE_CTR_CHARS 4
+// !!!!! PAS IDENTIQUE !!!!!
+unsigned char CtrlCharacters[6]={0x5a,0x65,0x64,0x72,0x75,0x6d}; 
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 bool min_chiffres[3*10*5]={0,1,0, 0,0,1, 1,1,0, 1,1,0, 0,0,1, 1,1,1, 0,1,1, 1,1,1, 0,1,0, 0,1,0,
                            1,0,1, 0,1,1, 0,0,1, 0,0,1, 0,1,0, 1,0,0, 1,0,0, 0,0,1, 1,0,1, 1,0,1,
@@ -344,22 +350,14 @@ void InitPalettes(int R, int G, int B)
   }
 }
 
-void Say(unsigned char where,unsigned int what)
-{
-  DisplayNombre(where,0,where*5,255,255,255);
-  if (what!=(unsigned int)-1) DisplayNombre3(what,15,where*5,255,255,255);
-  delay(1000);
-}
-
 bool MireActive=true;
-#define SERIAL_BUFFER_SIZE 9500
-unsigned char* img2;//[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
-unsigned char* RLEBuffer;//[PANE_WIDTH*PANE_HEIGHT*4];
+#define SERIAL_TRANSFER_SIZE 9400
+unsigned char img2[3*64+6 * PANE_WIDTH/8*PANE_HEIGHT];
 
 void setup()
 {
   Serial.begin(921600);
-  Serial.setRxBufferSize(SERIAL_BUFFER_SIZE);
+  Serial.setRxBufferSize(SERIAL_TRANSFER_SIZE+100);
   if (!SPIFFS.begin(true)) return;
 
   pinMode(ORDRE_BUTTON_PIN, INPUT_PULLUP);
@@ -372,33 +370,83 @@ void setup()
   dma_display->setBrightness8(Luminosite);    // range is 0-255, 0 - 0%, 255 - 100%
   dma_display->clearScreen();
 
-  img2=(unsigned char*)malloc(3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
-  if (!img2)
-  {
-    Say(0,0);
-    while (1==1);
-  }
-  
-  RLEBuffer=(unsigned char*)malloc(PANE_WIDTH*PANE_HEIGHT*4);
-  if (!RLEBuffer)
-  {
-    Say(1,1);
-    while (1==1);
-  }
-	
   LoadOrdreRGB();
-  
+
   LoadLogo();
   DisplayText(lumtxt,16,PANE_WIDTH/2-16/2-3*4/2,PANE_HEIGHT-5,255,255,255);
   DisplayLum();
 
   InitPalettes(255,109,0);
+
 }
 
-void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
+int SerialReadBuffer(unsigned char* pBuffer, unsigned int BufferSize)
 {
+  // 0 - ça s'est passé nickel
+  // 1 - caractères de contrôle détectés
+  // 255 - fin du buffer atteint
+  memset(pBuffer, 0, BufferSize);
+  unsigned int ptrB=0,iniptrB=0;
+  unsigned int remBytes=BufferSize;
+  unsigned char nCtrlCharFound=0,nCtrlIntCharFound=0;
+  unsigned int c1=min((unsigned int)SERIAL_TRANSFER_SIZE-(unsigned int)N_CTRL_CHARS-1,remBytes);
+  while (remBytes>0)
+  {
+    if (c1>500) while (Serial.available() < c1*1/2);
+    for (int ti=0;ti<c1;ti++)
+    {
+      while (Serial.available()==0);
+      pBuffer[ptrB]=Serial.read();
+      // on vérifie si on ne reçoit pas une nouvelle image
+      if (pBuffer[ptrB]==CtrlCharacters[nCtrlCharFound])
+      {
+        nCtrlCharFound++;
+        if (nCtrlCharFound==N_CTRL_CHARS) return 1;
+      }
+      else nCtrlCharFound=0;
+      // on vérifie si on n'est pas au début d'un nouveau transfert
+      if (pBuffer[ptrB]==CtrlCharacters[N_INTERMEDIATE_CTR_CHARS-1-nCtrlIntCharFound]) // ctrl chars dans l'autre sens pour le début d'un nouveau transfert
+      {
+        nCtrlIntCharFound++;
+        if (nCtrlIntCharFound==N_INTERMEDIATE_CTR_CHARS)
+        {
+          iniptrB+=c1;
+          ptrB=iniptrB;
+          break; // début du transfert suivant
+        }
+      }
+      else nCtrlIntCharFound=0;
+      ptrB++;
+      // on vérifie si on n'a pas atteint la fin du buffer
+      if (ptrB>=BufferSize)
+      {
+        //while (Serial.available()>0) Serial.read();
+        return 255;
+      }
+    }
+    remBytes-=c1;
+    c1=min((unsigned int)SERIAL_TRANSFER_SIZE-(unsigned int)N_INTERMEDIATE_CTR_CHARS,remBytes);
+    // on élimine les N_INTERMEDIATE_CTR_CHARS premiers caractères en supposant que ce sont les caractères de contrôle
+    // on ne vérifie pas que ce sont les bons
+    if (remBytes>0)
+    {
+      for (int ti=0;ti<N_INTERMEDIATE_CTR_CHARS;ti++)
+      {
+        while (Serial.available()==0);
+        Serial.read();
+      }
+    }
+    //while (Serial.available()>0) Serial.read();
+  }
+  return 0;
+}
+
+void SerialReadRLEBuffer(int FileSize)
+{
+  int remBytes=FileSize;
+  int tj=0;
   int ptrB=0;
-  int remBytes=BufferSize;
+  unsigned char readbuf[4];
   while (remBytes>0)
   {
     int c1, c2, c3, c4;
@@ -411,15 +459,47 @@ void SerialReadBuffer(unsigned char* pBuffer,int BufferSize)
     while (!Serial.available());
     c4 = Serial.read();
     c1+=c2*256+c3*65536+c4*16777216;
-    while (Serial.available() < min(SERIAL_BUFFER_SIZE-256,c1*1/2));
-    for (int ti=0;ti<c1;ti++)
+    while (Serial.available() < min(SERIAL_TRANSFER_SIZE-256,c1*1/2));
+    int ti=0;
+    while (ti<c1)
     {
-      //while (!Serial.available());
-      pBuffer[ptrB]=Serial.read();
-      ptrB++;
+      readbuf[tj]=Serial.read();
+      tj++;
+      ti++;
+      if (tj==4)
+      {
+        tj=0;
+        while((ptrB<PANE_WIDTH*PANE_HEIGHT)&&(readbuf[0]>0))
+        {
+          pannel[ptrB*3]=readbuf[1];
+          pannel[ptrB*3+1]=readbuf[2];
+          pannel[ptrB*3+2]=readbuf[3];
+          readbuf[0]--;
+          ptrB++;
+        }
+      }
     }
     remBytes-=c1;
     while (Serial.available()) Serial.read();
+  }
+}
+
+void Say(unsigned char where,unsigned int what)
+{
+  DisplayNombre(where,0,where*5,255,255,255);
+  if (what!=(unsigned int)-1) DisplayNombre3(what,15,where*5,255,255,255);
+  delay(1000);
+}
+
+unsigned int RetSRB=0;
+
+void wait_for_new_image(void)
+{
+  unsigned char nCtrlCharFound=0;
+  while (nCtrlCharFound<N_CTRL_CHARS)
+  {
+    while (Serial.available()==0);
+    if (Serial.read()==CtrlCharacters[nCtrlCharFound]) nCtrlCharFound++; else nCtrlCharFound=0;
   }
 }
 
@@ -442,34 +522,19 @@ void loop()
       DisplayLum();
       SaveLum();
     }
-    if (Serial.available())
+    if (Serial.available()>0)
     {
       dma_display->clearScreen();
       MireActive = false;
     }
   }
-  int c1, c2, c3, c4;
-  while (!Serial.available());
-  c1 = Serial.read();
-  while (!Serial.available());
-  c2 = Serial.read();
-  while (!Serial.available());
-  c3 = Serial.read();
-  while (!Serial.available());
-  c4 = Serial.read();
-  while ((c1 != 0x81) || (c2 != 0xC3) || (c3 != 0xE7))
-  {
-    c1 = c2;
-    c2 = c3;
-    c3 = c4;
-    while (!Serial.available());
-    c4 = Serial.read();
-  }
+  if (RetSRB!=1) wait_for_new_image();
+  unsigned char c4;
+  while (Serial.available()==0);
+  c4=Serial.read();
   if (c4 == 12) // ask for resolution (and shake hands)
   {
-    Serial.write(0x81);
-    Serial.write(0xC3);
-    Serial.write(0xE7);
+    for (int ti=0;ti<N_INTERMEDIATE_CTR_CHARS;ti++) Serial.write(CtrlCharacters[ti]);
     Serial.write(PANE_WIDTH&0xff);
     Serial.write((PANE_WIDTH>>8)&0xff);
     Serial.write(PANE_HEIGHT&0xff);
@@ -478,28 +543,21 @@ void loop()
   else if (c4 == 6) // reinit palettes
   {
     InitPalettes(255, 109, 0);
-    Serial.write(0x81);
-    Serial.write(0xC3);
-    Serial.write(0xE7);
-    Serial.write(15);
   }    
   else if (c4 == 10) // clear screen
   {
     dma_display->clearScreen();
-    Serial.write(0x81);
-    Serial.write(0xC3);
-    Serial.write(0xE7);
-    Serial.write(15);
   }
   else if (c4 == 3)
   {
-    SerialReadBuffer(pannel,PANE_WIDTH*PANE_HEIGHT*3);
+    RetSRB=SerialReadBuffer(pannel,PANE_WIDTH*PANE_HEIGHT*3);
     fillpannel();
   }
   else if (c4 == 13)
   {
-    unsigned int c1;
+    //while (Serial.available()) Serial.read();
     while (!Serial.available());
+    unsigned int c1;
     c1 = (int)Serial.read();
     while (!Serial.available());
     c1 += (int)Serial.read()*256;
@@ -507,29 +565,12 @@ void loop()
     c1 += (int)Serial.read()*65536;
     while (!Serial.available());
     c1 += (int)Serial.read()*16777216;
-    SerialReadBuffer(RLEBuffer,c1);
-    int i=0,j=0;
-    while (i<PANE_WIDTH*PANE_HEIGHT)
-    {
-      unsigned char replen=RLEBuffer[j];
-      unsigned char acR=RLEBuffer[j+1];
-      unsigned char acG=RLEBuffer[j+2];
-      unsigned char acB=RLEBuffer[j+3];
-      j+=4;
-      while((i<PANE_WIDTH*PANE_HEIGHT)&&(replen>0))
-      {
-        pannel[i*3]=acR;
-        pannel[i*3+1]=acG;
-        pannel[i*3+2]=acB;
-        replen--;
-        i++;
-      }
-    }
+    SerialReadRLEBuffer(c1);
     fillpannel();
   }
   else if (c4 == 8) // mode 4 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 4 pixels par byte
   {
-    SerialReadBuffer(img2,3*4+2*PANE_WIDTH/8*PANE_HEIGHT);
+    RetSRB=SerialReadBuffer(img2,3*4+2*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
       Palette4[ti * 3] = img2[ti*3];
@@ -561,7 +602,7 @@ void loop()
   }
   else if (c4 == 7) // mode 16 couleurs avec 1 palette 4 couleurs (4*3 bytes) suivis de 2 pixels par byte
   {
-    SerialReadBuffer(img2,3*4+4*PANE_WIDTH/8*PANE_HEIGHT);
+    RetSRB=SerialReadBuffer(img2,3*4+4*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 3; ti >= 0; ti--)
     {
       Palette16[ti * 3] = img2[ti*3];
@@ -604,7 +645,7 @@ void loop()
   }
   else if (c4 == 9) // mode 16 couleurs avec 1 palette 16 couleurs (16*3 bytes) suivis de 4 bytes par groupe de 8 points (séparés en plans de bits 4*512 bytes)
   {
-    SerialReadBuffer(img2,3*16+4*PANE_WIDTH/8*PANE_HEIGHT);
+    RetSRB=SerialReadBuffer(img2,3*16+4*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 15; ti >= 0; ti--)
     {
       Palette16[ti * 3] = img2[ti*3];
@@ -641,7 +682,7 @@ void loop()
   }
   else if (c4 == 11) // mode 64 couleurs avec 1 palette 64 couleurs (64*3 bytes) suivis de 6 bytes par groupe de 8 points (séparés en plans de bits 6*512 bytes)
   {
-    SerialReadBuffer(img2,3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
+    RetSRB=SerialReadBuffer(img2,3*64+6*PANE_WIDTH/8*PANE_HEIGHT);
     for (int ti = 63; ti >= 0; ti--)
     {
       Palette64[ti * 3] = img2[ti*3];
