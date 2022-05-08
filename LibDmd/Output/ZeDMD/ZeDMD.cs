@@ -3,8 +3,7 @@ using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
 using System.IO.Ports;
-using System.IO;
-
+using System.Diagnostics;
 
 /// <summary>
 /// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32
@@ -34,11 +33,14 @@ namespace DMDESP32
 		public byte StopBits = 1; // 0,1,2 = 1, 1.5, 2*/
 		private byte[] oldbuffer = new byte[16384];
 		private SerialPort _serialPort;
-		private const uint GENERIC_READ = 0x80000000;
-		private const uint GENERIC_WRITE = 0x40000000;
-		private const int INVALID_HANDLE_VALUE = -1;
-		private const int OPEN_EXISTING = 3;
-		public const int MAX_SERIAL_WRITE_AT_ONCE = 9500;
+		private static readonly uint GENERIC_READ = 0x80000000;
+		private static readonly uint GENERIC_WRITE = 0x40000000;
+		private static readonly int INVALID_HANDLE_VALUE = -1;
+		private static readonly int OPEN_EXISTING = 3;
+		private static readonly int MAX_SERIAL_WRITE_AT_ONCE = 9400;
+		public static readonly int N_CTRL_CHARS = 6;
+		public static readonly int N_INTERMEDIATE_CTR_CHARS = 4;
+		public static readonly byte[] CtrlCharacters = { (byte)0x5a, (byte)0x65, (byte)0x64, (byte)0x72, (byte)0x75, (byte)0x6d };
 		private bool Scom_Connect(string port,ref int rx,ref int ry)
 		{
 			try
@@ -47,26 +49,28 @@ namespace DMDESP32
 				Port = port;
 				_serialPort = new SerialPort(port, BaudRate, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
 				_serialPort.ReadTimeout = 100;
-				_serialPort.WriteTimeout = 100;
+				_serialPort.WriteBufferSize = MAX_SERIAL_WRITE_AT_ONCE + 100;
+				_serialPort.WriteTimeout = SerialPort.InfiniteTimeout;
 				_serialPort.Open();
-				var result = new byte[7];
-				result[0] = 0x81;
-				result[1] = 0xC3;
-				result[2] = 0xE7;
-				result[3] = 12; // ask for resolution
-				_serialPort.Write(result, 0, 4);
-				System.Threading.Thread.Sleep(20);
-				_serialPort.Read(result, 0, 7);
-				System.Threading.Thread.Sleep(20);
-				if ((result[0] != 0x81) || (result[1] != 0xC3) || (result[2] != 0xE7))
+				var result = new byte[Math.Max(N_CTRL_CHARS + 1, N_INTERMEDIATE_CTR_CHARS + 4)];
+				for (int i = 0; i < N_CTRL_CHARS; i++) result[i] = CtrlCharacters[i];
+				result[N_CTRL_CHARS] = 12; // ask for resolution
+				_serialPort.Write(result, 0, N_CTRL_CHARS + 1);
+				System.Threading.Thread.Sleep(100);
+				_serialPort.Read(result, 0, N_INTERMEDIATE_CTR_CHARS + 4);
+				System.Threading.Thread.Sleep(200);
+				for (int i=0;i< N_INTERMEDIATE_CTR_CHARS;i++)
 				{
-					_serialPort.DiscardInBuffer();
-					_serialPort.DiscardOutBuffer();
-					_serialPort.Close();
-					return false;
+					if (result[i] != CtrlCharacters[i]) 
+					{
+						_serialPort.DiscardInBuffer();
+						_serialPort.DiscardOutBuffer();
+						_serialPort.Close();
+						return false;
+					}
 				}
-				rx = (int)result[3] + (int)result[4] * 256;
-				ry = (int)result[5] + (int)result[6] * 256;
+				rx = (int)result[N_INTERMEDIATE_CTR_CHARS] + (int)result[N_INTERMEDIATE_CTR_CHARS + 1] * 256;
+				ry = (int)result[N_INTERMEDIATE_CTR_CHARS + 2] + (int)result[N_INTERMEDIATE_CTR_CHARS + 3] * 256;
 				nCOM = port;
 				return true;
 						
@@ -101,14 +105,9 @@ namespace DMDESP32
 				try
 				{
 					_serialPort.Write(pBytes, 0, nBytes);
-					System.Threading.Thread.Sleep(20);
-					var result = new byte[4];
-					_serialPort.Read(result, 0, 4);
-					System.Threading.Thread.Sleep(20);
-					if ((result[0] == 0x81) && (result[1] == 0xC3) && (result[2] == 0xE7) && (result[3] == 15))
-					{
-						return true;
-					}
+					System.Threading.Thread.Sleep(40);// 2000 / (BaudRate / (nBytes * 8)));
+					//_serialPort.DiscardOutBuffer();
+					return true;
 				}
 				catch
 				{
@@ -136,7 +135,7 @@ namespace DMDESP32
 					Buffer.BlockCopy(pBytes, 8, pBytes2, 12, qtetrans);
 					_serialPort.Write(pBytes2, 0, qtetrans + 12);
 					remainTrans -= qtetrans;
-					System.Threading.Thread.Sleep(10);
+					System.Threading.Thread.Sleep(1000 / (BaudRate / ((qtetrans + 12) * 8)));
 					int ti = 1;
 					while (remainTrans > 0)
 					{
@@ -147,7 +146,7 @@ namespace DMDESP32
 						pBytes2[3] = (byte)((qtetrans >> 24) & 0xff);
 						Buffer.BlockCopy(pBytes, 8 + ti * MAX_SERIAL_WRITE_AT_ONCE, pBytes2, 4, qtetrans);
 						_serialPort.Write(pBytes2, 0, qtetrans + 4);
-						System.Threading.Thread.Sleep(10);
+						System.Threading.Thread.Sleep(1000 / (BaudRate / ((qtetrans + 4) * 8)));
 						remainTrans -= qtetrans;
 						ti++;
 					}
@@ -166,34 +165,27 @@ namespace DMDESP32
 		{
 			if (_serialPort.IsOpen)
 			{
-				byte[] pBytes2 = new byte[8 + MAX_SERIAL_WRITE_AT_ONCE]; // 4 pour la synchro + 4 pour la taille du transfert
-				int remainTrans = nBytes - 4; // la totalité - les bytes de synchro
+				byte[] pBytes2 = new byte[N_CTRL_CHARS + MAX_SERIAL_WRITE_AT_ONCE]; // 4 pour la synchro
+				int remainTrans = nBytes; // la totalité - les bytes de synchro
 				try
 				{
 					// premier transfert
-					for (uint i = 0; i < 4; i++) pBytes2[i] = pBytes[i];
-					int qtetrans = Math.Min(remainTrans, MAX_SERIAL_WRITE_AT_ONCE);
-					pBytes2[4] = (byte)(qtetrans & 0xff);
-					pBytes2[5] = (byte)((qtetrans >> 8) & 0xff);
-					pBytes2[6] = (byte)((qtetrans >> 16) & 0xff);
-					pBytes2[7] = (byte)((qtetrans >> 24) & 0xff);
-					Buffer.BlockCopy(pBytes, 4, pBytes2, 8, qtetrans);
-					_serialPort.Write(pBytes2, 0, qtetrans + 8);
-					remainTrans -= qtetrans;
-					System.Threading.Thread.Sleep(10);
-					int ti = 1;
+					for (int i = 0; i < N_CTRL_CHARS; i++) pBytes2[i] = CtrlCharacters[i];
+					int qtetransf = Math.Min(MAX_SERIAL_WRITE_AT_ONCE - N_CTRL_CHARS, remainTrans );
+					Buffer.BlockCopy(pBytes, 0, pBytes2, N_CTRL_CHARS, qtetransf);
+					_serialPort.Write(pBytes2, 0, qtetransf + N_CTRL_CHARS);
+					System.Threading.Thread.Sleep(Math.Min(20, 1000 / (BaudRate / ((qtetransf + N_CTRL_CHARS) * 8))));
+					remainTrans -= qtetransf;
+					int ti = qtetransf;
 					while (remainTrans > 0)
 					{
-						qtetrans = Math.Min(remainTrans, MAX_SERIAL_WRITE_AT_ONCE);
-						pBytes2[0] = (byte)(qtetrans & 0xff);
-						pBytes2[1] = (byte)((qtetrans >> 8) & 0xff);
-						pBytes2[2] = (byte)((qtetrans >> 16) & 0xff);
-						pBytes2[3] = (byte)((qtetrans >> 24) & 0xff);
-						Buffer.BlockCopy(pBytes, 4 + ti * MAX_SERIAL_WRITE_AT_ONCE, pBytes2, 4, qtetrans);
-						_serialPort.Write(pBytes2, 0, qtetrans + 4);
-						System.Threading.Thread.Sleep(10);
-						remainTrans -= qtetrans;
-						ti++;
+						for (int i = N_INTERMEDIATE_CTR_CHARS - 1; i >= 0; i--) pBytes2[N_INTERMEDIATE_CTR_CHARS - 1 - i] = CtrlCharacters[i];
+						qtetransf = Math.Min(remainTrans, MAX_SERIAL_WRITE_AT_ONCE - N_INTERMEDIATE_CTR_CHARS);
+						Buffer.BlockCopy(pBytes, ti, pBytes2, N_INTERMEDIATE_CTR_CHARS, qtetransf);
+						_serialPort.Write(pBytes2, 0, qtetransf + N_INTERMEDIATE_CTR_CHARS);
+						System.Threading.Thread.Sleep(Math.Min(20, 1000 / (BaudRate / ((qtetransf + N_INTERMEDIATE_CTR_CHARS )* 8))));
+						remainTrans -= qtetransf;
+						ti += qtetransf;
 					}
 					return true;
 				}
@@ -214,6 +206,7 @@ namespace DMDESP32
 			tempbuffer[2] = 0xE7;
 			tempbuffer[3] = 0x6;  // command byte 6 = reset palettes
 			Scom_SendBytes(tempbuffer, 4);
+			System.Threading.Thread.Sleep(20);
 		}
 		public int Scom_Open(ref int rx, ref int ry)
 		{
@@ -273,7 +266,7 @@ namespace LibDmd.Output.ZeDMD
 		private readonly byte[] _frameBufferGray2;
 		private readonly byte[] _frameBufferColoredGray4;
 		private readonly byte[] _frameBufferColoredGray6;
-		private readonly bool isRLE = true;
+		private readonly bool isRLE = false;
 		private int prevLength=0;
 
 		private Color[] _currentPalette = ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 4);
@@ -301,40 +294,25 @@ namespace LibDmd.Output.ZeDMD
 		{
 			Init();
 			// Different buffers according the type of colors we transfer
-			// 4 control bytes + 3 bytes per pixel
-			_frameBufferRgb24 = new byte[4 + (int)(1.5 * DmdWidth * DmdHeight * 3)];
-			_frameBufferRgb24[0] = 0x81;
-			_frameBufferRgb24[1] = 0xC3;
-			_frameBufferRgb24[2] = 0xE7;
-			_frameBufferRgb24[3] = 3; // render RGB24, switch to 13 if RLE
+			// 4 control bytes + 4 bytes per pixel (pour le RLE)
+			_frameBufferRgb24 = new byte[1 + DmdWidth * DmdHeight * 4];
+			_frameBufferRgb24[0] = 3; // render RGB24, switch to 13 if RLE
 
-			// 4 control bytes, 4 color (*3 bytes), 4 bits per pixel
-			_frameBufferGray4 = new byte[4 + 12 + DmdWidth * DmdHeight / 2];
-			_frameBufferGray4[0] = 0x81;
-			_frameBufferGray4[1] = 0xC3;
-			_frameBufferGray4[2] = 0xE7;
-			_frameBufferGray4[3] = 7; // render compressed 4 pixels/byte with 4 colors palette
+			// 4 color (*3 bytes), 4 bits per pixel
+			_frameBufferGray4 = new byte[1 + 12 + DmdWidth * DmdHeight / 2];
+			_frameBufferGray4[0] = 7; // render compressed 4 pixels/byte with 4 colors palette
 
-			// 4 control bytes, 4 color (*3 bytes), 2 bits per pixel
-			_frameBufferGray2 = new byte[4 + 12 + DmdWidth * DmdHeight / 4];
-			_frameBufferGray2[0] = 0x81;
-			_frameBufferGray2[1] = 0xC3;
-			_frameBufferGray2[2] = 0xE7;
-			_frameBufferGray2[3] = 8; // render compressed 2 pixels/byte with 4 colors palette
+			// 4 color (*3 bytes), 2 bits per pixel
+			_frameBufferGray2 = new byte[1 + 12 + DmdWidth * DmdHeight / 4];
+			_frameBufferGray2[0] = 8; // render compressed 2 pixels/byte with 4 colors palette
 
-			// 4 control bytes, 16 color (*3 bytes), 4 bits per pixel
-			_frameBufferColoredGray4 = new byte[4 + 48 + DmdWidth * DmdHeight / 2];
-			_frameBufferColoredGray4[0] = 0x81;
-			_frameBufferColoredGray4[1] = 0xC3;
-			_frameBufferColoredGray4[2] = 0xE7;
-			_frameBufferColoredGray4[3] = 9; // render compressed 2 pixels/byte with 16 colors palette
+			// 16 color (*3 bytes), 4 bits per pixel
+			_frameBufferColoredGray4 = new byte[1 + 48 + DmdWidth * DmdHeight / 2];
+			_frameBufferColoredGray4[0] = 9; // render compressed 2 pixels/byte with 16 colors palette
 
-			// 4 control bytes, 64 color (*3 bytes), 6 bits per pixel
-			_frameBufferColoredGray6 = new byte[4 + 192 + DmdWidth * DmdHeight * 6 / 8];
-			_frameBufferColoredGray6[0] = 0x81;
-			_frameBufferColoredGray6[1] = 0xC3;
-			_frameBufferColoredGray6[2] = 0xE7;
-			_frameBufferColoredGray6[3] = 11; // render compressed 1 pixel/6bit with 64 colors palette
+			// 64 color (*3 bytes), 6 bits per pixel
+			_frameBufferColoredGray6 = new byte[1 + 192 + DmdWidth * DmdHeight * 6 / 8];
+			_frameBufferColoredGray6[0] = 11; // render compressed 1 pixel/6bit with 64 colors palette
 
 			ClearColor();
 		}
@@ -359,18 +337,6 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderGray2(byte[] frame)
 		{
 			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
-/*			// split to sub frames
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
-
-			// copy to frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 16);
-
-			// send frame buffer to device
-			if (changed)
-			{
-				WritePalette(_currentPalette);
-				RenderRaw(_frameBufferGray2);
-			}*/
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -379,7 +345,7 @@ namespace LibDmd.Output.ZeDMD
 			WritePalette(frame.Palette);
 
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 16);
+			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 13);
 
 			// send frame buffer to device
 			if (changed)
@@ -394,7 +360,7 @@ namespace LibDmd.Output.ZeDMD
 			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 16);
+			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
 
 			// send frame buffer to device
 			if (changed)
@@ -410,7 +376,7 @@ namespace LibDmd.Output.ZeDMD
 			for (var i = 0; i < 16; i++)
 			{
 				var color = frame.Palette[i];
-				var j = i * 3 + 4;
+				var j = i * 3 + 1;
 				paletteChanged = paletteChanged || (_frameBufferColoredGray4[j] != color.R || _frameBufferColoredGray4[j + 1] != color.G || _frameBufferColoredGray4[j + 2] != color.B);
 				_frameBufferColoredGray4[j] = color.R;
 				_frameBufferColoredGray4[j + 1] = color.G;
@@ -418,7 +384,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray4, 52);
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray4, 49);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
@@ -433,7 +399,7 @@ namespace LibDmd.Output.ZeDMD
 			for (var i = 0; i < 64; i++)
 			{
 				var color = frame.Palette[i];
-				var j = i * 3 + 4;
+				var j = i * 3 + 1;
 				paletteChanged = paletteChanged || (_frameBufferColoredGray6[j] != color.R || _frameBufferColoredGray6[j + 1] != color.G || _frameBufferColoredGray6[j + 2] != color.B);
 				_frameBufferColoredGray6[j] = color.R;
 				_frameBufferColoredGray6[j + 1] = color.G;
@@ -441,7 +407,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray6, 196);
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray6, 193);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
@@ -452,7 +418,7 @@ namespace LibDmd.Output.ZeDMD
 
 		private bool EncodeRLERGB24(byte[] frame, byte[] dest, int offset, out int buflen)
 		{
-			byte[] tpframeBufferRgb24 = new byte[(int)(1.5 * DmdWidth * DmdHeight * 3)];
+			byte[] tpframeBufferRgb24 = new byte[DmdWidth * DmdHeight * 4];
 			int tpbuflen = 0;
 			byte acR, acG, acB;
 			byte aclen;
@@ -492,26 +458,26 @@ namespace LibDmd.Output.ZeDMD
 			// can directly be sent to the device.
 			if (!isRLE)
 			{
-				_frameBufferRgb24[3] = 3;
+				_frameBufferRgb24[0] = 3;
 				// copy data to frame buffer
-				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 4);
+				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 				if (changed)
 				{
-					pDMD.Scom_SendBytes2(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 4);
+					pDMD.Scom_SendBytes2(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
 				}
 			}
 			else
 			{
-				_frameBufferRgb24[3] = 13;
+				_frameBufferRgb24[0] = 13;
 				int buflen;
-				changed = EncodeRLERGB24(frame, _frameBufferRgb24, 8, out buflen);
-				_frameBufferRgb24[4] = (byte)(buflen & 0xff);
-				_frameBufferRgb24[5] = (byte)((buflen >> 8) & 0xff);
-				_frameBufferRgb24[6] = (byte)((buflen >> 16) & 0xff);
-				_frameBufferRgb24[7] = (byte)((buflen >> 24) & 0xff);
+				changed = EncodeRLERGB24(frame, _frameBufferRgb24, 5, out buflen);
+				_frameBufferRgb24[1] = (byte)(buflen & 0xff);
+				_frameBufferRgb24[2] = (byte)((buflen >> 8) & 0xff);
+				_frameBufferRgb24[3] = (byte)((buflen >> 16) & 0xff);
+				_frameBufferRgb24[4] = (byte)((buflen >> 24) & 0xff);
 				if (changed)
 				{
-					pDMD.Scom_SendBytes3(_frameBufferRgb24, buflen + 8);
+					pDMD.Scom_SendBytes3(_frameBufferRgb24, buflen + 5);
 				}
 			}
 		}
@@ -529,11 +495,9 @@ namespace LibDmd.Output.ZeDMD
 			{
 				_frameBufferRgb24[i] = 0;
 			}
-			var tempbuf = new byte[4];
-			tempbuf[0] = 0x81;
-			tempbuf[1] = 0xC3;
-			tempbuf[2] = 0xE7;
-			tempbuf[3] = 10; // clear screen
+			var tempbuf = new byte[DMDESP32.DMD_ESP32.N_CTRL_CHARS+1];
+			for (int ti=0;ti< DMDESP32.DMD_ESP32.N_CTRL_CHARS;ti++) tempbuf[ti] = DMDESP32.DMD_ESP32.CtrlCharacters[ti];
+			tempbuf[DMDESP32.DMD_ESP32.N_CTRL_CHARS] = 10; // clear screen
 			pDMD.Scom_SendBytes(tempbuf,tempbuf.Length);
 		}
 
@@ -551,7 +515,7 @@ namespace LibDmd.Output.ZeDMD
 
 		private void WritePalette(Color[] palette)
 		{
-			var pos = 4;
+			var pos = 1;
 			for (var i = 0; i < 4; i++)
 			{
 				_frameBufferGray2[pos] = palette[i].R;
