@@ -59,7 +59,7 @@
 
 #define N_CTRL_CHARS 6
 #define N_INTERMEDIATE_CTR_CHARS 4
-// !!!!! PAS IDENTIQUE !!!!!
+// !!!!! NE METTRE AUCUNE VALEURE IDENTIQUE !!!!!
 unsigned char CtrlCharacters[6]={0x5a,0x65,0x64,0x72,0x75,0x6d}; 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -264,7 +264,7 @@ void SaveLum()
   flum.close();
 }
 
-#define WIDTH_LOGO_FILE 128
+/*#define WIDTH_LOGO_FILE 128
 #define HEIGHT_LOGO_FILE 32
 
 unsigned char tempbuf[WIDTH_LOGO_FILE*HEIGHT_LOGO_FILE*3];
@@ -305,26 +305,22 @@ void DisplayLogo(void)
     }
   }
   fillpannel();
-}
+}*/
 
-void LoadLogo(void)
+void DisplayLogo(void)
 {
-  File flogo= SPIFFS.open("/logo.raw");
+  File flogo;
+  if (PANEL_HEIGHT==64) flogo=SPIFFS.open("/logoHD.raw"); else flogo=SPIFFS.open("/logo.raw");
   if (!flogo) {
     //Serial.println("Failed to open file for reading");
     return;
   }
-  for (unsigned int tj = 0; tj < HEIGHT_LOGO_FILE; tj++)
+  for (unsigned int tj = 0; tj < PANE_HEIGHT*PANE_WIDTH*3; tj++)
   {
-    for (unsigned int ti = 0; ti < WIDTH_LOGO_FILE; ti++)
-    {
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE] = flogo.read();
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 1] = flogo.read();
-      tempbuf[ti * 3 + tj * 3 * WIDTH_LOGO_FILE + 2] = flogo.read();
-    }
+    pannel[tj]=flogo.read();
   }
   flogo.close();
-  DisplayLogo();
+  fillpannel();
 }
 
 void InitPalettes(int R, int G, int B)
@@ -372,7 +368,7 @@ void setup()
 
   LoadOrdreRGB();
 
-  LoadLogo();
+  DisplayLogo();
   DisplayText(lumtxt,16,PANE_WIDTH/2-16/2-3*4/2,PANE_HEIGHT-5,255,255,255);
   DisplayLum();
 
@@ -392,7 +388,16 @@ int SerialReadBuffer(unsigned char* pBuffer, unsigned int BufferSize)
   unsigned int c1=min((unsigned int)SERIAL_TRANSFER_SIZE-(unsigned int)N_CTRL_CHARS-1,remBytes);
   while (remBytes>0)
   {
+
+
+
+    
     if (c1>500) while (Serial.available() < c1*1/2);
+    
+    
+    
+    
+    
     for (int ti=0;ti<c1;ti++)
     {
       while (Serial.available()==0);
