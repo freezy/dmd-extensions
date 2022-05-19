@@ -211,31 +211,6 @@ namespace PinMameDevice
 
 		private static void InternalConsoleDataDevice(DeviceInstance device, byte data)
 		{
-			// Dä schickt immr eis Byte abr eigentlich wettr Bleck vo viär Bytes,
-			// d.h miär mind ihs merkä was diä letschtä drii Bytes gsi sind um eppis
-			// schlays chenna witr z schickä.
-			// Wemmer diä viär Bytes de mau hett isch dr erschti Wärt immer äs P und
-			// diä zwe druif sind Textzeichä womr i Hex muäss umwandlä. Am Schluss
-			// chunnt de nu ä ni i Zihlä.
-			device.CData.AddLast((char)data);
-			if (device.CData.Count <= 4)
-			{
-				// het nunig aui wärt
-				return;
-			}
-			device.CData.RemoveFirst();
-			if (device.CData.First.Value == 'P')
-			{
-				var num = new string(new[] { device.CData.First.Next.Value, device.CData.First.Next.Next.Value });
-				try
-				{
-					device.DmdDevice.LoadPalette(Convert.ToUInt32(num, 16));
-				}
-				catch (FormatException e)
-				{
-					Logger.Warn(e, "Could not parse \"{0}\" as hex number.", num);
-				}
-			}
 		}
 
 		private static void InternalRenderRgb24Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)

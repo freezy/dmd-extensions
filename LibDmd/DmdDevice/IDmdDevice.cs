@@ -11,7 +11,6 @@ namespace LibDmd.DmdDevice
 		void Init();
 		int GetAniWidth();
 		int GetAniHeight();
-		void LoadPalette(uint palIndex);
 		void SetPalette(Color[] colors);
 		void RenderRgb24(DMDFrame frame);
 		void RenderGray4(DMDFrame frame);

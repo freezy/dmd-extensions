@@ -258,18 +258,6 @@
     <Compile Include="Common\VirtualDmd.xaml.cs">
       <DependentUpon>VirtualDmd.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converter\Colorize\AnimationFrame.cs" />
-    <Compile Include="Converter\Colorize\AnimationPlane.cs" />
-    <Compile Include="Converter\Colorize\AnimationSet.cs" />
-    <Compile Include="Converter\Colorize\SwitchMode.cs" />
-    <Compile Include="Converter\Colorize\VniAnimation.cs" />
-    <Compile Include="Converter\Colorize\Animation.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationFrame.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationPlane.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationSet.cs" />
-    <Compile Include="Converter\Gray2Colorizer.cs" />
-    <Compile Include="Converter\Gray4Colorizer.cs" />
-    <Compile Include="Converter\IConverter.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
     <Compile Include="DmdDevice\IDmdDevice.cs" />
@@ -306,9 +294,6 @@
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
-    <Compile Include="Converter\Colorize\Mapping.cs" />
-    <Compile Include="Converter\Colorize\Palette.cs" />
-    <Compile Include="Converter\Colorize\Coloring.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />

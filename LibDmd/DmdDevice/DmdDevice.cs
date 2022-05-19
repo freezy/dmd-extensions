@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
-using LibDmd.Converter;
-using LibDmd.Converter.Colorize;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -66,9 +64,6 @@ namespace LibDmd.DmdDevice
 		// Iifärbigsziig
 		private Color[] _palette;
 		DMDFrame _upsizedFrame;
-		private Gray2Colorizer _gray2Colorizer;
-		private Gray4Colorizer _gray4Colorizer;
-		private Coloring _coloring;
 		private bool _isOpen;
 
 		// Wärchziig
@@ -112,7 +107,6 @@ namespace LibDmd.DmdDevice
 #endif
 			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
-			_altcolorPath = GetColorPath();
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
@@ -157,12 +151,6 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
-
-			SetupColorizer();
-
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
 				if (_virtualDmd == null && _alphaNumericDest == null) {
 					Logger.Info("Opening virtual display...");
@@ -183,77 +171,6 @@ namespace LibDmd.DmdDevice
 				SetupGraphs();
 			}
 			_isOpen = true;
-		}
-
-		/// <summary>
-		/// Wird uifgriäft wenn vom modifiziärtä ROM ibärä Sitäkanau ä Palettäwächsu
-		/// ah gä wird.
-		/// </summary>
-		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
-		public void LoadPalette(uint num)
-		{
-			_gray4Colorizer?.LoadPalette(num);
-		}
-
-		private void SetupColorizer()
-		{
-			// only setup if enabled and path is set
-			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize) {
-				return;
-			}
-
-			// abort if already setup
-			if (_gray2Colorizer != null || _gray4Colorizer != null) {
-				return;
-			}
-			var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
-			var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
-			var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
-			var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
-
-			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-
-			if (File.Exists(palPath)) {
-				try {
-					Logger.Info("Loading palette file at {0}...", palPath);
-					_coloring = new Coloring(palPath);
-					VniAnimationSet vni = null;
-					if (File.Exists(vniPath)) {
-						Logger.Info("Loading virtual animation file at {0}...", vniPath);
-						vni = new VniAnimationSet(vniPath);
-						Logger.Info("Loaded animation set {0}", vni);
-						aniHeight = vni.MaxHeight;
-						aniWidth = vni.MaxWidth;
-						Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
-					} else
-					{
-						Logger.Info("No animation set found");
-						aniHeight = Height;
-						aniWidth = Width;
-					}
-
-					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
-					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
-
-					_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
-					_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
-
-				} catch (Exception e) {
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
-				}
-			} else {
-				Logger.Info("No palette file found at {0}.", palPath);
-			}
-
-			if (_config.Global.ScaleToHd)
-			{
-				Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-			}
-			else
-			{
-				Logger.Info("ScaleToHd = False");
-			}
 		}
 
 		/// <summary>
@@ -458,56 +375,26 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
 			// 2-bit graph
-			if (_colorize && _gray2Colorizer != null) {
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit Colored VPM Graph",
-					Source = _vpmGray2Source,
-					Destinations = renderers,
-					Converter = _gray2Colorizer,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-				ReportingTags.Add("Color:Gray2");
-
-			} else {
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit VPM Graph",
-					Source = _vpmGray2Source,
-					Destinations = renderers,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-			}
-
+			_graphs.Add(new RenderGraph {
+				Name = "2-bit VPM Graph",
+				Source = _vpmGray2Source,
+				Destinations = renderers,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically = _config.Global.FlipVertically,
+				ScalerMode = _config.Global.ScalerMode
+			});
+			
 			// 4-bit graph
-			if (_colorize && _gray4Colorizer != null) {
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colored VPM Graph",
-					Source = _vpmGray4Source,
-					Destinations = renderers,
-					Converter = _gray4Colorizer,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-				ReportingTags.Add("Color:Gray4");
-
-			} else {
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit VPM Graph",
-					Source = _vpmGray4Source,
-					Destinations = renderers,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-			}
+			_graphs.Add(new RenderGraph {
+				Name = "4-bit VPM Graph",
+				Source = _vpmGray4Source,
+				Destinations = renderers,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically = _config.Global.FlipVertically,
+				ScalerMode = _config.Global.ScalerMode
+			});
 
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
@@ -530,20 +417,10 @@ namespace LibDmd.DmdDevice
 				FlipVertically = _config.Global.FlipVertically,
 				ScalerMode = _config.Global.ScalerMode
 			});
-
-			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
-				Logger.Info("Just clearing palette, colorization is done by converter.");
-				_graphs.ClearColor();
-
-			} else if (_colorize && _palette != null) {
+			if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-				if (_coloring != null) {
-					_graphs.SetPalette(_palette, _coloring.DefaultPaletteIndex);
-
-				} else {
-					_graphs.SetPalette(_palette, -1);
-				}
+				_graphs.SetPalette(_palette, -1);
 
 			} else {
 				Logger.Info("Applying default color to render graphs ({0}).", _color);
@@ -650,9 +527,6 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
 			_isOpen = false;
 		}
 
@@ -697,49 +571,19 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 			int width = frame.width;
-			int height = frame.height;
+		int height = frame.height;
 
-			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation)
+			if (_config.Global.ScaleToHd)
 			{
-				// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
-				// indicating this should be upsized and treated as a centered 128x32 DMD.
-
-				height = frame.height;
-				height *= 2;
-
-				if (_upsizedFrame == null)
-					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
-				else
-					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
-
-				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
-
-				if (_config.Global.ScaleToHd)
+				if (width == 128 && height == 32)
 				{
-					width = 256;
-					height = 64;
-					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+					width *= 2;
+					height *= 2;
+					frame.Update(width, height, frame.Data);
 				}
-
-				_gray2Colorizer.SetDimensions(width, height);
-				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
-			else
-			{
-				if (_config.Global.ScaleToHd)
-				{
-					if (width == 128 && height == 32)
-					{
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data);
-					}
-				}
 
-				_gray2Colorizer?.SetDimensions(width, height);
-				_gray4Colorizer?.SetDimensions(width, height);
-				_vpmGray2Source.NextFrame(frame);
-			}
+			_vpmGray2Source.NextFrame(frame);
 		}
 
 		public void RenderGray4(DMDFrame frame)
@@ -760,8 +604,6 @@ namespace LibDmd.DmdDevice
 				}
 			}
 
-			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
-			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
 			_vpmGray4Source.NextFrame(frame);
 		}
 
@@ -867,29 +709,6 @@ namespace LibDmd.DmdDevice
 				}
 			);
 #endif
-		}
-
-		private static string GetColorPath()
-		{
-			// first, try executing assembly.
-			var altcolor = Path.Combine(AssemblyPath, "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from assembly path: {0}", altcolor);
-				return altcolor;
-			}
-
-			// then, try vpinmame location
-			var vpmPath = GetDllPath("VPinMAME.dll");
-			if (vpmPath == null) {
-				return null;
-			}
-			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
-				return altcolor;
-			}
-			Logger.Info("No altcolor folder found, ignoring palettes.");
-			return null;
 		}
 
 		private static string GetDllPath(string name)

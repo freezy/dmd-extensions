@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Windows.Media;
-using LibDmd.Converter;
 using LibDmd.Input;
 using LibDmd.Output;
 
@@ -22,7 +21,6 @@ namespace LibDmd
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
-		private readonly List<IConverter> _converters = new List<IConverter>();
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
 
 		/// <summary>
@@ -38,10 +36,6 @@ namespace LibDmd
 		{
 			// use a common observable for all sources so we get proper notification when any of them changes size
 			renderGraph.Source.Dimensions = _dimensions;
-			var converter = renderGraph.Converter as ISource;
-			if (converter != null) {
-				converter.Dimensions = _dimensions;
-			}
 			_graphs.Add(renderGraph);
 
 			renderGraph.Destinations.ForEach(dest => {
@@ -54,10 +48,6 @@ namespace LibDmd
 					_resizableDestinations.Add(resizableDestinations);
 				}
 			});
-
-			if (renderGraph.Converter != null && !_converters.Contains(renderGraph.Converter)) {
-				_converters.Add(renderGraph.Converter);
-			}
 		}
 
 		public RenderGraphCollection Init()
@@ -67,7 +57,6 @@ namespace LibDmd
 				return this;
 			}
 			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dim => dest.SetDimensions(dim.Width, dim.Height)));
-			_converters.ForEach(converter => converter.Init());
 			return this;
 		}
 

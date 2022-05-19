@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
-using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
@@ -36,10 +35,6 @@ namespace LibDmd
 	/// way. It does also the conversion between non-matching source and
 	/// destination. 
 	/// 
-	/// A render graph can also contain an <see cref="IConverter"/>. These are
-	/// classes that for a defined input format produce different output 
-	/// formats. An example would be a 2-bit source that gets converted to
-	/// RGB24, or, to colored 2- and 4-bit.
 	/// </summary>
 	public class RenderGraph : IRenderer
 	{
@@ -63,11 +58,6 @@ namespace LibDmd
 		/// on the computer screen, PinDMD and PIN2DMD integrations.
 		/// </summary>
 		public List<IDestination> Destinations { get; set; }
-
-		/// <summary>
-		/// If set, convert the frame format.
-		/// </summary>
-		public IConverter Converter { get; set; }
 
 		/// <summary>
 		/// True of the graph is currently active, i.e. if the source is
@@ -144,12 +134,6 @@ namespace LibDmd
 				}
 			});
 
-			// initialize converter
-			if (Converter is ISource converter) {
-				converter.Dimensions = Source.Dimensions;
-			}
-			Converter?.Init();
-
 			return this;
 		}
 
@@ -205,126 +189,9 @@ namespace LibDmd
 				var sourceGray6 = Source as IGray6Source;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 
-				// init converters
-				IColoredGray2Source coloredGray2SourceConverter = null;
-				IColoredGray4Source coloredGray4SourceConverter = null;
-				IColoredGray6Source coloredGray6SourceConverter = null;
-				IRgb24Source rgb24SourceConverter = null;
-
-				if (Converter != null && HasRgb24Destination()) {
-					coloredGray2SourceConverter = Converter as IColoredGray2Source;
-					coloredGray4SourceConverter = Converter as IColoredGray4Source;
-					coloredGray6SourceConverter = Converter as IColoredGray6Source;
-					// ReSharper disable once SuspiciousTypeConversion.Global
-					rgb24SourceConverter = Converter as IRgb24Source;
-					
-					// send frames to converter
-					switch (Converter.From) {
-						case FrameFormat.Gray2:
-							if (sourceGray2 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {coloredGray2SourceConverter?.Name}.");
-							}
-							_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
-							break;
-						case FrameFormat.Gray4:
-							if (sourceGray4 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {coloredGray4SourceConverter?.Name}.");
-							}
-							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
-							break;
-						case FrameFormat.Gray6:
-							if (sourceGray6 == null)
-							{
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 6-bit compatible which is mandatory for converter {coloredGray6SourceConverter?.Name}.");
-							}
-							_activeSources.Add(sourceGray6.GetGray6Frames().Do(Converter.Convert).Subscribe());
-							break;
-						default:
-							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
-					}
-				}
-
 				foreach (var dest in Destinations) {
 
-					var destColoredGray2 = dest as IColoredGray2Destination;
-					var destColoredGray4 = dest as IColoredGray4Destination;
-					var destColoredGray6 = dest as IColoredGray6Destination;
 					var destRgb24 = dest as IRgb24Destination;
-
-					// So here's how convertors work:
-					// They have one input type, given by IConvertor.From, but they can randomly 
-					// output frames in different formats. For example, the ColoredGray2Colorizer
-					// outputs in ColoredGray2 or ColoredGray4, depending if data is enhanced
-					// or not.
-					//
-					// So for the output, the converter acts as ISource, implementing the specific 
-					// interfaces supported. Currently the following output sources are supported:
-					//
-					//    IColoredGray2Source, IColoredGray4Source and IRgb24Source.
-					//
-					// Other types don't make much sense (i.e. you don't convert *down* to 
-					// IGray2Source).
-					//
-					// In the block below, those sources are linked to each destination. If a 
-					// destination doesn't support a colored gray source, it tries to convert
-					// it up to RGB24, otherwise fails. For example, PinDMD3 which only supports
-					// IColoredGray2Source but not IColoredGray4Source due to bad software design
-					// will get the IColoredGray4Source converted up to RGB24.
-					if (Converter != null && destRgb24 != null) {
-						
-						// if converter emits colored gray-2 frames..
-						if (coloredGray2SourceConverter != null) {
-							// if destination can render colored gray-2 frames...
-							if (destColoredGray2 != null) {
-								//Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
-								Connect(coloredGray2SourceConverter, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
-
-							// otherwise, try to convert to rgb24
-							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
-								Connect(coloredGray2SourceConverter, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
-							}
-						}
-
-						// if converter emits colored gray-4 frames..
-						if (coloredGray4SourceConverter != null) {
-							// if destination can render colored gray-4 frames...
-							if (destColoredGray4 != null) {
-								//Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
-								Connect(coloredGray4SourceConverter, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
-
-							// otherwise, convert to rgb24
-							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
-								Connect(coloredGray4SourceConverter, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
-							}
-						}
-
-						// if converter emits colored gray-6 frames..
-						if (coloredGray6SourceConverter != null)
-						{
-							// if destination can render colored gray-6 frames...
-							if (destColoredGray6 != null)
-							{
-								//Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", coloredGray6SourceConverter.Name, dest.Name);
-								Connect(coloredGray6SourceConverter, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
-
-								// otherwise, convert to rgb24
-							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray6SourceConverter.Name);
-								Connect(coloredGray6SourceConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
-							}
-						}
-
-						// if converter emits RGB24 frames..
-						if (rgb24SourceConverter != null) {
-							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", rgb24SourceConverter.Name, dest.Name);
-							Connect(rgb24SourceConverter, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
-						}
-
-						// render graph is already set up through converters, so we skip the rest below
-						continue;
-					}
 
 					// Now here we need to find the most efficient way of passing data from the source
 					// to each destination. 
@@ -370,22 +237,6 @@ namespace LibDmd
 					if (sourceGray6 != null && destGray6 != null)
 					{
 						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray6);
-						continue;
-					}
-					// colored gray2 -> colored gray2
-					if (sourceColoredGray2 != null && destColoredGray2 != null) {
-						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
-						continue;
-					}
-					// colored gray4 -> colored gray4
-					if (sourceColoredGray4 != null && destColoredGray4 != null) {
-						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
-						continue;
-					}
-					// colored gray6 -> colored gray6
-					if (sourceColoredGray6 != null && destColoredGray6 != null)
-					{
-						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 						continue;
 					}
 					// rgb24 -> rgb24
