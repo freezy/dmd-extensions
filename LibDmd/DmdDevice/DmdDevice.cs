@@ -63,14 +63,12 @@ namespace LibDmd.DmdDevice
 
 		// Iifärbigsziig
 		private Color[] _palette;
-		DMDFrame _upsizedFrame;
 		private bool _isOpen;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-		private static string _altcolorPath;
 		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
