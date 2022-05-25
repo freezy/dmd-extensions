@@ -136,6 +136,26 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Assembly located at {0}", assembly.Location);
 		}
 
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate int _dColorizeOpen();
+		static _dColorizeOpen ColorizeOpen;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr _dColorize4Gray(ushort width, ushort height, IntPtr currbuffer);
+		static _dColorize4Gray Colorize4Gray;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr _dColorize2Gray(ushort width, ushort height, IntPtr currbuffer);
+		static _dColorize2Gray Colorize2Gray;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate int _dColorizeInit(IntPtr cName, int len);
+		static _dColorizeInit ColorizeInit;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate bool _dColorizeClose();
+		static _dColorizeClose ColorizeClose;
+
 		/// <summary>
 		/// Wird uisgfiärt wemmr aui Parametr hend.
 		/// </summary>
@@ -147,6 +167,65 @@ namespace LibDmd.DmdDevice
 		{
 			if (_isOpen) {
 				return;
+			}
+
+			if (_config.Global.Colorize)
+			{
+				var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+				var assemblyFolder = Path.GetDirectoryName(localPath);
+				var dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
+				var pDll = NativeMethods.LoadLibrary(dllFileName);
+
+				if (pDll == IntPtr.Zero)
+				{
+					Logger.Error("No coloring " + dllFileName + " found");
+					return;
+				}
+
+				try
+				{
+					var pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeOpen");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeInit");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize2Gray");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize4Gray");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
+
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeClose");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
+
+				}
+				catch (Exception e)
+				{
+					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
+					return;
+				}
 			}
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
