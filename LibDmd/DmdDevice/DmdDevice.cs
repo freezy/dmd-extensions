@@ -156,6 +156,10 @@ namespace LibDmd.DmdDevice
 		private delegate bool _dColorizeClose();
 		static _dColorizeClose ColorizeClose;
 
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate void _dColorizeConsoleData(byte data);
+		static _dColorizeConsoleData ColorizeConsoleData;
+
 		/// <summary>
 		/// Wird uisgfiärt wemmr aui Parametr hend.
 		/// </summary>
@@ -219,6 +223,13 @@ namespace LibDmd.DmdDevice
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeConsoleData");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
 
 				}
 				catch (Exception e)
