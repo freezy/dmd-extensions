@@ -149,6 +149,14 @@ namespace LibDmd.DmdDevice
 		static _dColorize2Gray Colorize2Gray;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr _dColorize4GrayWithRaw(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer);
+		static _dColorize4GrayWithRaw Colorize4GrayWithRaw;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr _dColorize2GrayWithRaw(ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer);
+		static _dColorize2GrayWithRaw Colorize2GrayWithRaw;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate int _dColorizeInit(IntPtr cName, int len);
 		static _dColorizeInit ColorizeInit;
 
@@ -216,6 +224,19 @@ namespace LibDmd.DmdDevice
 					}
 					Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
 
+					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize2GrayWithRaw");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
+
+					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize4GrayWithRaw");
+					if (pAddress == IntPtr.Zero)
+					{
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
 
 					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeClose");
 					if (pAddress == IntPtr.Zero)
