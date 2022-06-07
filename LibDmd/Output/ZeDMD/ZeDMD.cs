@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
-using DMDESP32;
+using ZeDMDComm;
 /// <summary>
 /// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32
 /// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
@@ -32,9 +32,7 @@ namespace LibDmd.Output.ZeDMD
 		public bool DmdAllowHdScaling { get; set; } = true;
 		
 		// We get a DMD_ESP32 instance to communicate with ESP32
-		private readonly DMD_ESP32 pDMD = new DMD_ESP32();
-
-		public string Firmware { get; private set; }
+		private readonly ZeDMD_Comm pDMD = new ZeDMD_Comm();
 
 		private static ZeDMD _instance;
 		private readonly byte[] _frameBufferRgb24;
@@ -98,9 +96,9 @@ namespace LibDmd.Output.ZeDMD
 		}
 		public void Init()
 		{
-			int rx = new int();
-			int ry = new int();
-			IsAvailable = (pDMD.Scom_Open(ref rx,ref ry) == 1);
+			int width = new int();
+			int height = new int();
+			IsAvailable = (pDMD.Scom_Open(out width,out height) == 1);
 
 			if (!IsAvailable)
 			{
@@ -108,8 +106,8 @@ namespace LibDmd.Output.ZeDMD
 				return;
 			}
 
-			DmdWidth = rx;
-			DmdHeight = ry;
+			DmdWidth = width;
+			DmdHeight = height;
 
 			Logger.Info(Name + " device found on port " + pDMD.nCOM + " with a resolution of " + DmdWidth + "x" + DmdHeight + " LEDs");
 		}
@@ -152,16 +150,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			// copy palette
-			var paletteChanged = false;
-			for (var i = 0; i < 16; i++)
-			{
-				var color = frame.Palette[i];
-				var j = i * 3 + 1;
-				paletteChanged = paletteChanged || (_frameBufferColoredGray4[j] != color.R || _frameBufferColoredGray4[j + 1] != color.G || _frameBufferColoredGray4[j + 2] != color.B);
-				_frameBufferColoredGray4[j] = color.R;
-				_frameBufferColoredGray4[j + 1] = color.G;
-				_frameBufferColoredGray4[j + 2] = color.B;
-			}
+			var paletteChanged = CopyPalette(frame.Palette, _frameBufferColoredGray4, 16);
 
 			// copy frame
 			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray4, 49);
@@ -175,16 +164,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			// copy palette
-			var paletteChanged = false;
-			for (var i = 0; i < 64; i++)
-			{
-				var color = frame.Palette[i];
-				var j = i * 3 + 1;
-				paletteChanged = paletteChanged || (_frameBufferColoredGray6[j] != color.R || _frameBufferColoredGray6[j + 1] != color.G || _frameBufferColoredGray6[j + 2] != color.B);
-				_frameBufferColoredGray6[j] = color.R;
-				_frameBufferColoredGray6[j + 1] = color.G;
-				_frameBufferColoredGray6[j + 2] = color.B;
-			}
+			var paletteChanged = CopyPalette(frame.Palette, _frameBufferColoredGray6, 64);
 
 			// copy frame
 			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray6, 193);
@@ -195,6 +175,20 @@ namespace LibDmd.Output.ZeDMD
 				RenderRaw(_frameBufferColoredGray6);
 			}
 		}
+		private bool CopyPalette(Color[] palette,byte[] framebuffer,int ncol)
+		{
+			var paletteChanged = false;
+			for (var i = 0; i < ncol; i++)
+			{
+				var color = palette[i];
+				var j = i * 3 + 1;
+				paletteChanged = paletteChanged || (framebuffer[j] != color.R || framebuffer[j + 1] != color.G || framebuffer[j + 2] != color.B);
+				framebuffer[j] = color.R;
+				framebuffer[j + 1] = color.G;
+				framebuffer[j + 2] = color.B;
+			}
+			return paletteChanged;
+		}
 		public void RenderRgb24(byte[] frame)
 		{
 			bool changed;
@@ -204,14 +198,14 @@ namespace LibDmd.Output.ZeDMD
 				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 				if (changed)
 				{
-					pDMD.Scom_SendBytes2(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
+					pDMD.SendBytes2(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
 				}
 		}
 		public void RenderRaw(byte[] data)
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.Scom_SendBytes2(data, data.Length);
+				pDMD.SendBytes2(data, data.Length);
 			}
 		}
 
@@ -221,10 +215,10 @@ namespace LibDmd.Output.ZeDMD
 			{
 				_frameBufferRgb24[i] = 0;
 			}
-			var tempbuf = new byte[DMD_ESP32.N_CTRL_CHARS+1];
-			for (int ti=0;ti< DMD_ESP32.N_CTRL_CHARS;ti++) tempbuf[ti] = DMD_ESP32.CtrlCharacters[ti];
-			tempbuf[DMD_ESP32.N_CTRL_CHARS] = 10; // clear screen
-			pDMD.Scom_SendBytes(tempbuf,tempbuf.Length);
+			var tempbuf = new byte[ZeDMD_Comm.N_CTRL_CHARS+1];
+			for (int ti=0;ti< ZeDMD_Comm.N_CTRL_CHARS;ti++) tempbuf[ti] = ZeDMD_Comm.CtrlCharacters[ti];
+			tempbuf[ZeDMD_Comm.N_CTRL_CHARS] = 10; // clear screen
+			pDMD.SendBytes(tempbuf,tempbuf.Length);
 		}
 
 		public void SetColor(Color color)
