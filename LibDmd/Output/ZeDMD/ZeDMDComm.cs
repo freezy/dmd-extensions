@@ -2,9 +2,9 @@
 using System.IO.Ports;
 using System.Linq;
 
-namespace ZeDMDComm
+namespace LibDmd.Output.ZeDMD
 {
-	public class ZeDMD_Comm // Class for locating the COM port of the ESP32 and communicating with it
+	public class ZeDMDComm // Class for locating the COM port of the ESP32 and communicating with it
 	{
 		public string nCOM;
 		public const int BaudRate = 921600;
