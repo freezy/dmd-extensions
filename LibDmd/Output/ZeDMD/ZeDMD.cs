@@ -1,26 +1,21 @@
 ﻿using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
-using ZeDMDComm;
-/// <summary>
-/// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32
-/// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
-/// so you need 2 64x32 pannels compatible (check the Readme.md in the link above), but for my tests I had 2 different pannels and it worked, the main constraint
-/// is to have a 1/16 scan
-/// you can check a video of a colorized rom here https://www.youtube.com/watch?v=IQQb7Jl1QW8
-/// The aim for this new real DMD is to propose a really cheap device with open source full code (this code for Freezy dmd-extensions + the arduino IDE
-/// C code to inject in the ESP32)
-/// On Aliexpress, you can get a µC ESP32 for around 5$ (I suggest a 38-pin to be sure to have enough I/O, but check in the Arduino code for the number of pins needed),
-/// 2 64x32-LED-matrix display for 15$-20$ each. So for less than 50$ you get a full real DMD!
-/// I am thinking about designing a shield for a 38-pin ESP32, I will give the PCB layout once done (for free, sure), then you can 
-/// </summary>
 
 namespace LibDmd.Output.ZeDMD
 {
 	/// <summary>
-	/// Output target for ZeDMD devices.
+	/// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32
+	/// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
+	/// so you need 2 64x32 pannels compatible (check the Readme.md in the link above), but for my tests I had 2 different pannels and it worked, the main constraint
+	/// is to have a 1/16 scan
+	/// you can check a video of a colorized rom here https://www.youtube.com/watch?v=IQQb7Jl1QW8
+	/// The aim for this new real DMD is to propose a really cheap device with open source full code (this code for Freezy dmd-extensions + the arduino IDE
+	/// C code to inject in the ESP32)
+	/// On Aliexpress, you can get a µC ESP32 for around 5$ (I suggest a 38-pin to be sure to have enough I/O, but check in the Arduino code for the number of pins needed),
+	/// 2 64x32-LED-matrix display for 15$-20$ each. So for less than 50$ you get a full real DMD!
+	/// I am thinking about designing a shield for a 38-pin ESP32, I will give the PCB layout once done (for free, sure), then you can
 	/// </summary>
-	/// Inspired from PinDMD3 code
 	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "ZeDMD";
@@ -30,9 +25,9 @@ namespace LibDmd.Output.ZeDMD
 		public int DmdWidth { get; private set; }
 		public int DmdHeight { get; private set; }
 		public bool DmdAllowHdScaling { get; set; } = true;
-		
+
 		// We get a DMD_ESP32 instance to communicate with ESP32
-		private readonly ZeDMD_Comm pDMD = new ZeDMD_Comm();
+		private readonly ZeDMDComm pDMD = new ZeDMDComm();
 
 		private static ZeDMD _instance;
 		private readonly byte[] _frameBufferRgb24;
@@ -215,9 +210,9 @@ namespace LibDmd.Output.ZeDMD
 			{
 				_frameBufferRgb24[i] = 0;
 			}
-			var tempbuf = new byte[ZeDMD_Comm.N_CTRL_CHARS+1];
-			for (int ti=0;ti< ZeDMD_Comm.N_CTRL_CHARS;ti++) tempbuf[ti] = ZeDMD_Comm.CtrlCharacters[ti];
-			tempbuf[ZeDMD_Comm.N_CTRL_CHARS] = 10; // clear screen
+			var tempbuf = new byte[ZeDMDComm.N_CTRL_CHARS+1];
+			for (int ti=0;ti<ZeDMDComm.N_CTRL_CHARS;ti++) tempbuf[ti] = ZeDMDComm.CtrlCharacters[ti];
+			tempbuf[ZeDMDComm.N_CTRL_CHARS] = 10; // clear screen
 			pDMD.SendBytes(tempbuf,tempbuf.Length);
 		}
 
