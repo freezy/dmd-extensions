@@ -18,6 +18,7 @@ namespace ZeDMDComm
 
 		private void SafeClose()
 		{
+			// In case of error discard serial data and close
 			_serialPort.DiscardInBuffer();
 			_serialPort.DiscardOutBuffer();
 			_serialPort.Close();
@@ -25,6 +26,7 @@ namespace ZeDMDComm
 		}
 		private bool Connect(string port, out int width, out int height)
 		{
+			// Try to find an ESP32 on the COM port and check if it answers with the shake-hand bytes
 			try
 			{
 				_serialPort = new SerialPort(port, BaudRate, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One)
@@ -66,6 +68,7 @@ namespace ZeDMDComm
 		}
 		public bool SendBytes(byte[] pBytes, int nBytes)
 		{
+			// Send a buffer of Data in one transfer
 			if (_serialPort.IsOpen)
 			{
 				try
@@ -83,8 +86,9 @@ namespace ZeDMDComm
 			}
 			return false;
 		}
-/*		public bool SendBytes3(byte[] pBytes, int nBytes)
+/*		public bool StreamBytes2(byte[] pBytes, int nBytes)
 		{
+			// Send a big buffer in several transfer sending each length
 			if (_serialPort.IsOpen)
 			{
 				byte[] pBytes2 = new byte[12 + _MAX_SERIAL_WRITE_AT_ONCE]; // 4 pour la synchro + 4 pour la taille du transfert
@@ -127,8 +131,9 @@ namespace ZeDMDComm
 			}
 			return false;
 		}*/
-		public bool SendBytes2(byte[] pBytes, int nBytes)
+		public bool StreamBytes(byte[] pBytes, int nBytes)
 		{
+			// Send a big buffer in several transfers to avoid corrupted data
 			if (_serialPort.IsOpen)
 			{
 				int remainTrans = nBytes; // la totalité - les bytes de synchro
@@ -165,6 +170,7 @@ namespace ZeDMDComm
 		}
 		public void ResetPalettes()
 		{
+			// Reset ESP32 palette
 			byte[] tempbuffer = new byte[4];
 			tempbuffer[0] = 0x81; // frame sync bytes
 			tempbuffer[1] = 0xC3;
@@ -173,8 +179,9 @@ namespace ZeDMDComm
 			SendBytes(tempbuffer, 4);
 			System.Threading.Thread.Sleep(20);
 		}
-		public int Scom_Open(out int width, out int height)
+		public int Open(out int width, out int height)
 		{
+			// Try to find an ZeDMD on each COM port available
 			bool IsAvailable = false;
 			var ports = SerialPort.GetPortNames();
 			width = 0;
@@ -190,7 +197,7 @@ namespace ZeDMDComm
 			return 1;
 		}
 
-		public bool Scom_Close()
+		public bool Close()
 		{
 			if (Opened)
 			{

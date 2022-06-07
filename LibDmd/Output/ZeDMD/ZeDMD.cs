@@ -98,7 +98,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			int width = new int();
 			int height = new int();
-			IsAvailable = (pDMD.Scom_Open(out width,out height) == 1);
+			IsAvailable = (pDMD.Open(out width,out height) == 1);
 
 			if (!IsAvailable)
 			{
@@ -198,14 +198,14 @@ namespace LibDmd.Output.ZeDMD
 				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 				if (changed)
 				{
-					pDMD.SendBytes2(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
+					pDMD.StreamBytes(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
 				}
 		}
 		public void RenderRaw(byte[] data)
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.SendBytes2(data, data.Length);
+				pDMD.StreamBytes(data, data.Length);
 			}
 		}
 
@@ -260,7 +260,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void Dispose()
 		{
-			pDMD.Scom_Close();
+			pDMD.Close();
 		}
 	}
 }
