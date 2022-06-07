@@ -22,6 +22,7 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
+using LibDmd.Output.ZeDMD;
 using LibDmd.Output.PinUp;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
@@ -336,12 +337,24 @@ namespace LibDmd.DmdDevice
 					ReportingTags.Add("Out:PinDMDv2");
 				}
 			}
-			if (_config.PinDmd3.Enabled) {
+			if (_config.PinDmd3.Enabled)
+			{
 				var pinDmd3 = PinDmd3.GetInstance(_config.PinDmd3.Port);
-				if (pinDmd3.IsAvailable) {
+				if (pinDmd3.IsAvailable)
+				{
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
 					ReportingTags.Add("Out:PinDMDv3");
+				}
+			}
+			if (_config.ZeDMD.Enabled)
+			{
+				var zeDmd = ZeDMD.GetInstance();
+				if (zeDmd.IsAvailable)
+				{
+					renderers.Add(zeDmd);
+					Logger.Info("Added ZeDMD renderer.");
+					ReportingTags.Add("Out:ZeDMD");
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
