@@ -12,6 +12,7 @@ gaps.
 
 Currently supported displays:
 
+- **ZeDMD**, full RGB support
 - **PinDMD v3**, full RGB support
 - **PinDMD v2**, 4 bit (16 shades) support
 - **PinDMD v1**, 2 bit (4 shades) support
