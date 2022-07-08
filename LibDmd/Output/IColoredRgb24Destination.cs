@@ -3,14 +3,15 @@
 namespace LibDmd.Output
 {
 	/// <summary>
-	/// Output devices implementing this interface are able to
-	/// render RGB 24-bit frames.
+	/// Adding this output device or the coloring functions of the pin2color.dll to
+	/// a new output device is not allowed without the written permission by the
+	/// pin2dmd.com team.
 	/// </summary>
 	public interface IColoredRgb24Destination : IDestination
 	{
 
 		/// <summary>
-		/// Renders a frame in 24 bit RGB.
+		/// Renders a colored frame in 24 bit RGB.
 		/// </summary>
 		/// <param name="frame">Array containing Width * Height * 3 bytes, with RGB values between 0 and 255 for every pixel.</param>
 		void RenderColoredRgb24(byte[] frame);

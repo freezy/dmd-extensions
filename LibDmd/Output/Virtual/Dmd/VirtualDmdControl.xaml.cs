@@ -167,7 +167,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderColoredRgb24(byte[] frame)
 		{
 			_hasFrame = true;
-			_nextFrameType = FrameFormat.ColoredRgb24;
+			_nextFrameType = FrameFormat.Rgb24;
 			_nextFrameData = frame;
 			Dmd.RequestRender();
 		}

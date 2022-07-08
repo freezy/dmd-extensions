@@ -46,6 +46,7 @@ namespace LibDmd.DmdDevice
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
+		private readonly VpmColoredRgb24Source _vpmColoredRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
@@ -59,6 +60,7 @@ namespace LibDmd.DmdDevice
 		private string _gameName;
 		private bool _colorize;
 		private bool _colorizerIsOpen;
+		private bool _isColored;
 		private enum ColorizerMode
 		{
 			Error = -1,
@@ -91,6 +93,7 @@ namespace LibDmd.DmdDevice
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
+			_vpmColoredRgb24Source = new VpmColoredRgb24Source(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -210,6 +213,10 @@ namespace LibDmd.DmdDevice
 			if(_colorizerIsOpen)
 			{
 				_colorizerMode = (ColorizerMode) ColorizeInit(_colorize, _gameName, _color.R, _color.G, _color.B);
+				if (_colorizerMode >= 0)
+					_isColored = true;
+				else
+					_isColored = false;
 			}
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
@@ -443,7 +450,8 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode
+				ScalerMode = _config.Global.ScalerMode,
+				Colored = _isColored
 			});
 			
 			// 4-bit graph
@@ -454,7 +462,8 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode
+				ScalerMode = _config.Global.ScalerMode,
+				Colored = _isColored
 			});
 
 			// rgb24 graph
@@ -465,7 +474,21 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode
+				ScalerMode = _config.Global.ScalerMode,
+				Colored = _isColored
+			});
+
+			// colored rgb24 graph
+			_graphs.Add(new RenderGraph
+			{
+				Name = "colored RGB24-bit VPM Graph",
+				Source = _vpmColoredRgb24Source,
+				Destinations = renderers,
+				Resize = _config.Global.Resize,
+				FlipHorizontally = _config.Global.FlipHorizontally,
+				FlipVertically = _config.Global.FlipVertically,
+				ScalerMode = _config.Global.ScalerMode,
+				Colored = _isColored
 			});
 
 			// alphanumeric graph
@@ -476,7 +499,8 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode
+				ScalerMode = _config.Global.ScalerMode,
+				Colored = _isColored
 			});
 			if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to render graphs.");
@@ -752,20 +776,23 @@ namespace LibDmd.DmdDevice
 
 			if (_colorizerIsOpen && _colorizerMode > 0)
 			{
-				if (_colorizerMode == ColorizerMode.Advanced128x32)
+				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
 				{
 					width = 128;
 					height = 32;
 				}
-				else if (_colorizerMode == ColorizerMode.Advanced192x64)
+				else if (_colorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64)
 				{
 					width = 192;
 					height = 64;
 				} 
-				else if (_colorizerMode == ColorizerMode.Advanced256x64)
+				else if (_colorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64)))
 				{
 					width = 256;
 					height = 64;
+				} else
+				{
+					_colorizerMode = ColorizerMode.SimplePalette;
 				}
 			}
 
@@ -797,22 +824,22 @@ namespace LibDmd.DmdDevice
 							height *= 2;
 						}
 					}
-					frame.Update(width, height, coloredFrame);
-					_vpmRgb24Source.NextFrame(frame);
-				} else
-				{
-					if (_config.Global.ScaleToHd)
-					{
-						if (width == 128 && height == 32)
-						{
-							width *= 2;
-							height *= 2;
-							frame.Update(width, height, frame.Data);
-						}
-					}
-					_vpmGray2Source.NextFrame(frame);
+
+					_dmdFrame.Update(width, height, coloredFrame);
+					_vpmColoredRgb24Source.NextFrame(_dmdFrame);
 				}
 			}
+
+			if (_config.Global.ScaleToHd)
+			{
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+				}
+			}
+			frame.Update(width, height, frame.Data);
+			_vpmGray2Source.NextFrame(frame);
 		}
 
 		public void RenderGray4(DMDFrame frame)
@@ -827,20 +854,24 @@ namespace LibDmd.DmdDevice
 
 			if (_colorizerIsOpen && _colorizerMode > 0)
 			{
-				if (_colorizerMode == ColorizerMode.Advanced128x32)
+				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
 				{
 					width = 128;
 					height = 32;
 				}
-				else if (_colorizerMode == ColorizerMode.Advanced192x64)
+				else if (_colorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64)
 				{
 					width = 192;
 					height = 64;
 				}
-				else if (_colorizerMode == ColorizerMode.Advanced256x64)
+				else if (_colorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64)))
 				{
 					width = 256;
 					height = 64;
+				}
+				else
+				{
+					_colorizerMode = ColorizerMode.SimplePalette;
 				}
 			}
 
@@ -872,23 +903,22 @@ namespace LibDmd.DmdDevice
 							height *= 2;
 						}
 					}
-					frame.Update(width, height, coloredFrame);
-					_vpmRgb24Source.NextFrame(frame);
-				}
-				else
-				{
-					if (_config.Global.ScaleToHd)
-					{
-						if (width == 128 && height == 32)
-						{
-							width *= 2;
-							height *= 2;
-							frame.Update(width, height, frame.Data);
-						}
-					}
-					_vpmGray4Source.NextFrame(frame);
+					_dmdFrame.Update(width, height, coloredFrame);
+					_vpmColoredRgb24Source.NextFrame(_dmdFrame);
 				}
 			}
+
+			if (_config.Global.ScaleToHd)
+			{
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+					
+				}
+			}
+			frame.Update(width, height, frame.Data);
+			_vpmGray4Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DMDFrame frame)

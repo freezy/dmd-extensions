@@ -92,6 +92,8 @@ namespace LibDmd
 
 		public ScalerMode ScalerMode { get; set; }
 
+		public bool Colored { get; set; }
+
 		/// <summary>
 		/// The default color used if there is no palette defined
 		/// </summary>
@@ -187,6 +189,7 @@ namespace LibDmd
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
 				var sourceGray6 = Source as IGray6Source;
+				var sourceColoredRgb24 = Source as IColoredRgb24Source;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 
 				foreach (var dest in Destinations) {
@@ -211,6 +214,7 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
+					var destColoredRgb24 = dest as IColoredRgb24Destination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
@@ -219,6 +223,17 @@ namespace LibDmd
 					var sourceAlphaNumeric = Source as IAlphaNumericSource;
 
 					// first, check if we do without conversion
+					// coloredRgb24 -> coloredRgb24
+					if (sourceColoredRgb24 != null && destColoredRgb24 != null && Colored)
+					{
+						Connect(Source, dest, FrameFormat.ColoredRgb24, FrameFormat.ColoredRgb24);
+						continue;
+					}
+					// if coloring is active and destination has destColoredRgb24 skip all other connectors
+					if (Colored && destColoredRgb24 != null)
+					{
+						continue;
+					}
 					// gray2 -> gray2
 					if (sourceGray2 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Gray2);
@@ -343,6 +358,7 @@ namespace LibDmd
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
 			var destRgb24 = dest as IRgb24Destination;
+			var destColoredRgb24 = dest as IColoredRgb24Destination;
 			var destBitmap = dest as IBitmapDestination;
 			var destAlphaNumeric = dest as IAlphaNumericDestination;
 
@@ -496,6 +512,24 @@ namespace LibDmd
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
+							break;
+
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+				// source is ColoredRgb24:
+				case FrameFormat.ColoredRgb24:
+					var sourceColoredRgb24 = source as IColoredRgb24Source;
+					switch (to)
+					{
+						// rgb24 -> rgb24
+						case FrameFormat.ColoredRgb24:
+							AssertCompatibility(source, sourceColoredRgb24, dest, destColoredRgb24, from, to);
+							Subscribe(sourceColoredRgb24.GetColoredRgb24Frames()
+									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize)),
+								destColoredRgb24.RenderColoredRgb24);
 							break;
 
 						default:
