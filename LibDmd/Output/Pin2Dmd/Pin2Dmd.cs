@@ -7,7 +7,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredRgb24Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
@@ -87,6 +87,18 @@ namespace LibDmd.Output.Pin2Dmd
 			// send frame buffer to device
 			if (changed) {
 				RenderRaw(_frameBufferGray4);
+			}
+		}
+
+		public void RenderColoredRgb24(byte[] frame)
+		{
+			// split into sub frames
+			var changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+
+			// send frame buffer to device
+			if (changed)
+			{
+				RenderRaw(_frameBufferRgb24);
 			}
 		}
 
