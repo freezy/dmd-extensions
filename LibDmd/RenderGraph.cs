@@ -1031,6 +1031,11 @@ namespace LibDmd
 		Rgb24,
 
 		/// <summary>
+		/// An colored RGB24 frame
+		/// </summary>
+		ColoredRgb24,
+
+		/// <summary>
 		/// A bitmap
 		/// </summary>
 		Bitmap,

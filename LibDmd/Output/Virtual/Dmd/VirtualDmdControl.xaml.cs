@@ -26,7 +26,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IColoredRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
@@ -163,6 +163,15 @@ namespace LibDmd.Output.Virtual.Dmd
 			_nextFrameData = frame;
 			Dmd.RequestRender();
 		}
+
+		public void RenderColoredRgb24(byte[] frame)
+		{
+			_hasFrame = true;
+			_nextFrameType = FrameFormat.ColoredRgb24;
+			_nextFrameData = frame;
+			Dmd.RequestRender();
+		}
+
 
 		public void RenderRgb24(byte[] frame)
 		{
