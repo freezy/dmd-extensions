@@ -59,7 +59,15 @@ namespace LibDmd.DmdDevice
 		private string _gameName;
 		private bool _colorize;
 		private bool _colorizerIsOpen;
-		private int _colorizerPlaneSize;
+		private enum ColorizerMode
+		{
+			Error = -1,
+			SimplePalette = 0,
+			Advanced128x32 = 1,
+			Advanced192x64 = 3,
+			Advanced256x64 = 4,
+		}
+		private ColorizerMode _colorizerMode;
 		private Color _color = RenderGraph.DefaultColor;
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
 
@@ -201,7 +209,7 @@ namespace LibDmd.DmdDevice
 
 			if(_colorizerIsOpen)
 			{
-				_colorizerPlaneSize = ColorizeInit(_colorize, _gameName, _color.R, _color.G, _color.B);
+				_colorizerMode = (ColorizerMode) ColorizeInit(_colorize, _gameName, _color.R, _color.G, _color.B);
 			}
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
@@ -581,6 +589,12 @@ namespace LibDmd.DmdDevice
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
 			_isOpen = false;
+
+			if (_colorizerIsOpen)
+			{
+				ColorizeClose();
+				_colorizerIsOpen = false;
+			}
 		}
 
 		public void SetGameName(string gameName)
@@ -736,19 +750,20 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_colorizerIsOpen && _colorizerPlaneSize > 0)
+			if (_colorizerIsOpen && _colorizerMode > 0)
 			{
-				if (_colorizerPlaneSize == 512)
+				if (_colorizerMode == ColorizerMode.Advanced128x32)
 				{
 					width = 128;
 					height = 32;
 				}
-				else if (_colorizerPlaneSize == 1536)
+				else if (_colorizerMode == ColorizerMode.Advanced192x64)
 				{
 					width = 192;
 					height = 64;
 				} 
-				else if (_colorizerPlaneSize == 2048){
+				else if (_colorizerMode == ColorizerMode.Advanced256x64)
+				{
 					width = 256;
 					height = 64;
 				}
@@ -762,17 +777,17 @@ namespace LibDmd.DmdDevice
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
 				{
 					var RGB24buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
-					if (_colorizerPlaneSize != -1) 
+					if (_colorizerMode != ColorizerMode.Error) 
 						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
 					var RGB24buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerPlaneSize != -1) 
+					if (_colorizerMode != ColorizerMode.Error) 
 						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
 				}
 
-				if (_colorizerPlaneSize != -1)
+				if (_colorizerMode != ColorizerMode.Error)
 				{
 					if (_config.Global.ScaleToHd)
 					{
@@ -810,19 +825,19 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_colorizerIsOpen && _colorizerPlaneSize > 0)
+			if (_colorizerIsOpen && _colorizerMode > 0)
 			{
-				if (_colorizerPlaneSize == 512)
+				if (_colorizerMode == ColorizerMode.Advanced128x32)
 				{
 					width = 128;
 					height = 32;
 				}
-				else if (_colorizerPlaneSize == 1536)
+				else if (_colorizerMode == ColorizerMode.Advanced192x64)
 				{
 					width = 192;
 					height = 64;
 				}
-				else if (_colorizerPlaneSize == 2048)
+				else if (_colorizerMode == ColorizerMode.Advanced256x64)
 				{
 					width = 256;
 					height = 64;
@@ -837,17 +852,17 @@ namespace LibDmd.DmdDevice
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
 				{
 					var RGB24buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
-					if (_colorizerPlaneSize != -1)
+					if (_colorizerMode != ColorizerMode.Error)
 						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
 					var RGB24buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerPlaneSize != -1)
+					if (_colorizerMode != ColorizerMode.Error)
 						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
 				}
 
-				if (_colorizerPlaneSize != -1)
+				if (_colorizerMode != ColorizerMode.Error)
 				{
 					if (_config.Global.ScaleToHd)
 					{
