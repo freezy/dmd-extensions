@@ -392,11 +392,11 @@ namespace LibDmd.DmdDevice
 			if (_config.PinUp.Enabled) {
 				try {
 					var pinupOutput = new PinUpOutput(_gameName);
-					/*if (pinupOutput.IsAvailable) {
+					if (pinupOutput.IsAvailable) {
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
-					}*/
+					}
 
 				} catch (Exception e) {
 					Logger.Warn("Error opening PinUP output: {0}", e.Message);
@@ -774,7 +774,7 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_colorizerIsOpen && _colorizerMode > 0)
+			if (_colorizerIsOpen && _colorizerMode >= 0)
 			{
 				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
 				{
@@ -852,7 +852,7 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_colorizerIsOpen && _colorizerMode > 0)
+			if (_colorizerIsOpen && _colorizerMode >= 0)
 			{
 				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
 				{
