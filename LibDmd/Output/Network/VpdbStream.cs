@@ -10,7 +10,7 @@ using Quobject.SocketIoClientDotNet.Client;
 
 namespace LibDmd.Output.Network
 {
-	public class VpdbStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
+	public class VpdbStream : IGray2Destination, IGray4Destination, IResizableDestination
 	{
 		public string Name { get; } = "VPDB Stream";
 		public bool IsAvailable { get; } = true;

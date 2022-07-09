@@ -288,10 +288,8 @@
     <Compile Include="Output\PinUp\PinUpOutput.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
-    <Compile Include="Output\IColoredGray2Destination.cs" />
     <Compile Include="Output\IGray2Destination.cs" />
     <Compile Include="Output\IFixedSizeDestination.cs" />
-    <Compile Include="Output\IColoredGray4Destination.cs" />
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
