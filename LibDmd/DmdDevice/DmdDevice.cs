@@ -743,6 +743,7 @@ namespace LibDmd.DmdDevice
 				}
 
 				_colorizerIsOpen = ColorizeOpen();
+				SetPalette(_palette);
 			}
 
 		}
@@ -767,7 +768,7 @@ namespace LibDmd.DmdDevice
 				var _pal = new byte[_palette.Length * 3];
 				for (int i = 0; i < _palette.Length; i++)
 				{
-					_pal[i*3] = 255;
+					_pal[i*3] = colors[i].R;
 					_pal[(i*3)+1] = colors[i].G;
 					_pal[(i*3)+2] = colors[i].B;
 				}
