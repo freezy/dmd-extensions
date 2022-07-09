@@ -8,6 +8,7 @@ namespace LibDmd.DmdDevice
 		void SetColorize(bool colorize);
 		void SetGameName(string gameName);
 		void SetColor(Color color);
+		void ConsoleData(byte data);
 		void Init();
 		int GetAniWidth();
 		int GetAniHeight();

@@ -154,11 +154,11 @@ namespace LibDmd.DmdDevice
 		static _dColorizeOpen ColorizeOpen;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_4_Colors(IntPtr palette);
+		private delegate void _dColorizeSet_4_Colors(byte[] palette);
 		static _dColorizeSet_4_Colors ColorizeSet_4_Colors;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_16_Colors(IntPtr palette);
+		private delegate void _dColorizeSet_16_Colors(byte[] palette);
 		static _dColorizeSet_16_Colors ColorizeSet_16_Colors;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -747,6 +747,12 @@ namespace LibDmd.DmdDevice
 
 		}
 
+		public void ConsoleData(byte data)
+		{
+			if (_colorizerIsOpen)
+				ColorizeConsoleData(data);
+		}
+
 		public void SetColor(Color color)
 		{
 			Logger.Info("Setting color: {0}", color);
@@ -756,6 +762,25 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
+			if (_colorizerIsOpen)
+			{
+				var _pal = new byte[_palette.Length * 3];
+				for (int i = 0; i < _palette.Length; i++)
+				{
+					_pal[i*3] = 255;
+					_pal[(i*3)+1] = colors[i].G;
+					_pal[(i*3)+2] = colors[i].B;
+				}
+				if (_palette.Length == 4)
+				{
+					ColorizeSet_4_Colors(_pal);
+				}
+				else if (_palette.Length == 16)
+				{
+					ColorizeSet_16_Colors(_pal);
+				}
+
+			}
 		}
 		public int GetAniHeight()
 		{

@@ -211,6 +211,7 @@ namespace PinMameDevice
 
 		private static void InternalConsoleDataDevice(DeviceInstance device, byte data)
 		{
+			device.DmdDevice.ConsoleData(data);
 		}
 
 		private static void InternalRenderRgb24Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)

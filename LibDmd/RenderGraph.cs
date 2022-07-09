@@ -229,7 +229,7 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.ColoredRgb24, FrameFormat.ColoredRgb24);
 						continue;
 					}
-					// if coloring is active and destination has destColoredRgb24 skip all other connectors
+					// if coloring is active and destination has destColoredRgb24 skip Gray2 and Gray4
 					if (Colored && destColoredRgb24 != null && (Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray2Source") || Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray4Source")))
 					{
 						continue;
