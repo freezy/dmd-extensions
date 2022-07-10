@@ -227,7 +227,7 @@
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
     <Compile Include="Input\PinMame\VpmColoredRgb24Sources.cs" />
-    <Compile Include="Output\IColoredRgb24Destination.cs" />
+    <Compile Include="Output\IColoredGrayDestination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2DmdBase.cs" />

@@ -214,7 +214,7 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
-					var destColoredRgb24 = dest as IColoredRgb24Destination;
+					var destColoredRgb24 = dest as IColoredGrayDestination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
@@ -358,7 +358,7 @@ namespace LibDmd
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
 			var destRgb24 = dest as IRgb24Destination;
-			var destColoredRgb24 = dest as IColoredRgb24Destination;
+			var destColoredRgb24 = dest as IColoredGrayDestination;
 			var destBitmap = dest as IBitmapDestination;
 			var destAlphaNumeric = dest as IAlphaNumericDestination;
 
@@ -529,7 +529,7 @@ namespace LibDmd
 							AssertCompatibility(source, sourceColoredRgb24, dest, destColoredRgb24, from, to);
 							Subscribe(sourceColoredRgb24.GetColoredRgb24Frames()
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize)),
-								destColoredRgb24.RenderColoredRgb24);
+								destColoredRgb24.RenderColoredGray);
 							break;
 
 						default:

@@ -13,7 +13,7 @@ namespace LibDmd.Output.PinDmd3
 	/// Output target for PinDMDv3 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd3 : IGray2Destination, IGray4Destination, IColoredRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class PinDmd3 : IGray2Destination, IGray4Destination, IColoredGrayDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsAvailable { get; private set; }
@@ -266,7 +266,7 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderColoredRgb24(byte[] frame)
+		public void RenderColoredGray(byte[] frame)
 		{
 			// copy data to frame buffer
 			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
