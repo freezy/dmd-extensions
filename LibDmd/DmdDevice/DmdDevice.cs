@@ -743,7 +743,8 @@ namespace LibDmd.DmdDevice
 				}
 
 				_colorizerIsOpen = ColorizeOpen();
-				SetPalette(_palette);
+				if (_palette != null)
+					SetPalette(_palette);
 			}
 
 		}
