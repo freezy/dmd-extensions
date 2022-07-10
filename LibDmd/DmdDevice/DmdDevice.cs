@@ -46,7 +46,7 @@ namespace LibDmd.DmdDevice
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
-		private readonly VpmColoredRgb24Source _vpmColoredRgb24Source;
+		private readonly VpmColoredGraySource _vpmColoredRgb24Source;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
@@ -93,7 +93,7 @@ namespace LibDmd.DmdDevice
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
-			_vpmColoredRgb24Source = new VpmColoredRgb24Source(_currentFrameFormat);
+			_vpmColoredRgb24Source = new VpmColoredGraySource(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

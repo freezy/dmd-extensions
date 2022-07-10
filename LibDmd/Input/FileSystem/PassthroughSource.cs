@@ -8,7 +8,7 @@ namespace LibDmd.Input.FileSystem
 	/// <summary>
 	/// An input source just contains observables with all subjects.
 	/// </summary>
-	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IColoredGray2Source, IColoredGray4Source, IBitmapSource
+	public class PassthroughSource : AbstractSource, IGray2Source, IGray4Source, IRgb24Source, IBitmapSource
 	{
 		public override string Name { get; }
 

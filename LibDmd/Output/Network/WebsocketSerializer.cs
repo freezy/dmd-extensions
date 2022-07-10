@@ -17,8 +17,6 @@ namespace LibDmd.Output.Network
 		void OnDimensions(int width, int height);
 		void OnGameName(string gameName);
 		void OnRgb24(uint timestamp, byte[] frame);
-		void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes);
-		void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes);
 		void OnGray4(uint timestamp, byte[] frame);
 		void OnGray2(uint timestamp, byte[] frame);
 	}
@@ -81,36 +79,6 @@ namespace LibDmd.Output.Network
 					}
 					case "rgb24": {
 						action.OnRgb24(reader.ReadUInt32(), reader.ReadBytes(data.Length - (int)reader.BaseStream.Position));
-						break;
-					}
-					case "coloredGray4": {
-						var timestamp = reader.ReadUInt32();
-						var numColors = reader.ReadInt32();
-						var palette = new Color[numColors];
-						for (var i = 0; i < numColors; i++) {
-							palette[i] = ColorUtil.FromInt(reader.ReadInt32());
-						}
-						var planes = new byte[4][];
-						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 4;
-						for (var i = 0; i < 4; i++) {
-							planes[i] = reader.ReadBytes(planeSize);
-						}
-						action.OnColoredGray4(timestamp, palette, planes);
-						break;
-					}
-					case "coloredGray2": {
-						var timestamp = reader.ReadUInt32();
-						var numColors = reader.ReadInt32();
-						var palette = new Color[numColors];
-						for (var i = 0; i < numColors; i++) {
-							palette[i] = ColorUtil.FromInt(reader.ReadInt32());
-						}
-						var planes = new byte[2][];
-						var planeSize = (data.Length - (int)reader.BaseStream.Position) / 2;
-						for (var i = 0; i < 2; i++) {
-							planes[i] = reader.ReadBytes(planeSize);
-						}
-						action.OnColoredGray2(timestamp, palette, planes);
 						break;
 					}
 					case "gray4Planes": {

@@ -6,12 +6,12 @@ using LibDmd.Common;
 namespace LibDmd.Input.PinMame
 {
 	/// <summary>
-	/// Receives colored RGB24 frames from VPM and forwards them to the observable
+	/// Receives colored VPM frames in RGB24 format and forwards them to the observable
 	/// after dropping duplicates.
 	/// </summary>
-	public class VpmColoredRgb24Source : AbstractSource, IColoredRgb24Source
+	public class VpmColoredGraySource : AbstractSource, IColoredGraySource
 	{
-		public override string Name { get; } = "VPM Colored RGB24 Source";
+		public override string Name { get; } = "VPM Colored Gray Source";
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -23,14 +23,14 @@ namespace LibDmd.Input.PinMame
 		private byte[] _lastFrame;
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public VpmColoredRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat)
+		public VpmColoredGraySource(BehaviorSubject<FrameFormat> lastFrameFormat)
 		{
 			_lastFrameFormat = lastFrameFormat;
 		}
 
 		public void NextFrame(DMDFrame frame)
 		{
-			if (_lastFrameFormat.Value == FrameFormat.ColoredRgb24 && _lastFrame != null && FrameUtil.CompareBuffers(frame.Data, 0, _lastFrame, 0, frame.Data.Length)) {
+			if (_lastFrameFormat.Value == FrameFormat.ColoredGray && _lastFrame != null && FrameUtil.CompareBuffers(frame.Data, 0, _lastFrame, 0, frame.Data.Length)) {
 				// identical frame, drop.
 				return;
 			}
@@ -40,10 +40,10 @@ namespace LibDmd.Input.PinMame
 			SetDimensions(frame.width, frame.height);
 			_coloredFramesRgb24.OnNext(frame);
 			Buffer.BlockCopy(frame.Data, 0, _lastFrame, 0, frame.Data.Length);
-			_lastFrameFormat.OnNext(FrameFormat.ColoredRgb24);
+			_lastFrameFormat.OnNext(FrameFormat.ColoredGray);
 		}
 
-		public IObservable<DMDFrame> GetColoredRgb24Frames()
+		public IObservable<DMDFrame> GetColoredGrayFrames()
 		{
 			return _coloredFramesRgb24;
 		}
