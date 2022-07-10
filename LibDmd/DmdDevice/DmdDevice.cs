@@ -46,7 +46,7 @@ namespace LibDmd.DmdDevice
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
-		private readonly VpmColoredGraySource _vpmColoredRgb24Source;
+		private readonly VpmColoredGraySource _vpmColoredGraySource;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
@@ -93,7 +93,7 @@ namespace LibDmd.DmdDevice
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
-			_vpmColoredRgb24Source = new VpmColoredGraySource(_currentFrameFormat);
+			_vpmColoredGraySource = new VpmColoredGraySource(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -482,7 +482,7 @@ namespace LibDmd.DmdDevice
 			_graphs.Add(new RenderGraph
 			{
 				Name = "colored RGB24-bit VPM Graph",
-				Source = _vpmColoredRgb24Source,
+				Source = _vpmColoredGraySource,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -830,19 +830,19 @@ namespace LibDmd.DmdDevice
 			{
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
 				{
-					var rawbuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
+					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
 					for (int i = 0; i < vd.RawPlanes.Length; i++) {
-						vd.RawPlanes[i].CopyTo(rawbuffer, i * vd.RawPlanes[0].Length);
+						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
-					var RGB24buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, rawbuffer);
+					var Rgb24Buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 					if (_colorizerMode != ColorizerMode.Error) 
-						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
-					var RGB24buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+					var Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
 					if (_colorizerMode != ColorizerMode.Error) 
-						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 
 				if (_colorizerMode != ColorizerMode.Error)
@@ -857,7 +857,7 @@ namespace LibDmd.DmdDevice
 					}
 
 					_dmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredRgb24Source.NextFrame(_dmdFrame);
+					_vpmColoredGraySource.NextFrame(_dmdFrame);
 				}
 			}
 
@@ -913,15 +913,20 @@ namespace LibDmd.DmdDevice
 			{
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
 				{
-					var RGB24buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
+					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
+					for (int i = 0; i < vd.RawPlanes.Length; i++)
+					{
+						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
+					}
+					var Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
 					if (_colorizerMode != ColorizerMode.Error)
-						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
-					var RGB24buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+					var Rgb24Buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
 					if (_colorizerMode != ColorizerMode.Error)
-						Marshal.Copy(RGB24buffer, coloredFrame, 0, frameSize);
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 
 				if (_colorizerMode != ColorizerMode.Error)
@@ -935,7 +940,7 @@ namespace LibDmd.DmdDevice
 						}
 					}
 					_dmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredRgb24Source.NextFrame(_dmdFrame);
+					_vpmColoredGraySource.NextFrame(_dmdFrame);
 				}
 			}
 
@@ -966,7 +971,7 @@ namespace LibDmd.DmdDevice
 				ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
 			}
 
-				if (_config.Global.ScaleToHd)
+			if (_config.Global.ScaleToHd)
 			{
 				if (width == 128 && height == 32)
 				{
