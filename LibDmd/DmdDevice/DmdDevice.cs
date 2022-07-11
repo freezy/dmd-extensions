@@ -59,23 +59,25 @@ namespace LibDmd.DmdDevice
 		// Ziigs vo VPM
 		private string _gameName;
 		private bool _colorize;
-		private bool _colorizerIsOpen;
-		private bool _isColored;
-		private enum ColorizerMode
-		{
-			Error = -1,
-			SimplePalette = 0,
-			Advanced128x32 = 1,
-			Advanced192x64 = 3,
-			Advanced256x64 = 4,
-		}
-		private ColorizerMode _colorizerMode;
 		private Color _color = RenderGraph.DefaultColor;
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
 		private Color[] _palette;
 		private bool _isOpen;
+
+		private bool _colorizerIsLoaded = false;
+		private bool _colorizerIsOpen;
+		private bool _isColored;
+		private enum ColorizerMode
+		{
+			None = -1,
+			SimplePalette = 0,
+			Advanced128x32 = 1,
+			Advanced192x64 = 3,
+			Advanced256x64 = 4,
+		}
+		private ColorizerMode _colorizerMode;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -637,11 +639,15 @@ namespace LibDmd.DmdDevice
 			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
 			_colorize = colorize;
 
-			if (_config.Global.Colorize && !_colorizerIsOpen)
+			if (_config.Global.Colorize && !_colorizerIsLoaded)
 			{
 				var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 				var assemblyFolder = Path.GetDirectoryName(localPath);
+#if _WIN64
+				var dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
+#else
 				var dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
+#endif
 				var pDll = NativeMethods.LoadLibrary(dllFileName);
 
 				if (pDll == IntPtr.Zero)
@@ -742,8 +748,15 @@ namespace LibDmd.DmdDevice
 					return;
 				}
 
-				_colorizerIsOpen = ColorizeOpen();
-				if (_palette != null)
+				_colorizerIsLoaded = true;
+			} 
+
+			if (_colorizerIsLoaded)
+			{
+				if (!_colorizerIsOpen)
+					_colorizerIsOpen = ColorizeOpen();
+
+				if (_palette != null && _colorizerIsOpen)
 					SetPalette(_palette);
 			}
 
@@ -835,17 +848,17 @@ namespace LibDmd.DmdDevice
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
 					var Rgb24Buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-					if (_colorizerMode != ColorizerMode.Error) 
+					if (_colorizerMode != ColorizerMode.None) 
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
 					var Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerMode != ColorizerMode.Error) 
+					if (_colorizerMode != ColorizerMode.None) 
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 
-				if (_colorizerMode != ColorizerMode.Error)
+				if (_colorizerMode != ColorizerMode.None)
 				{
 					if (_config.Global.ScaleToHd)
 					{
@@ -919,17 +932,17 @@ namespace LibDmd.DmdDevice
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
 					var Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
-					if (_colorizerMode != ColorizerMode.Error)
+					if (_colorizerMode != ColorizerMode.None)
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 				else
 				{
 					var Rgb24Buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerMode != ColorizerMode.Error)
+					if (_colorizerMode != ColorizerMode.None)
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 
-				if (_colorizerMode != ColorizerMode.Error)
+				if (_colorizerMode != ColorizerMode.None)
 				{
 					if (_config.Global.ScaleToHd)
 					{
