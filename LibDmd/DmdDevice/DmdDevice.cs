@@ -643,11 +643,12 @@ namespace LibDmd.DmdDevice
 			{
 				var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 				var assemblyFolder = Path.GetDirectoryName(localPath);
-#if _WIN64
-				var dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
-#else
-				var dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
-#endif
+				string dllFileName = null;
+				if (IntPtr.Size == 4)
+					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
+				else if (IntPtr.Size == 8)
+					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
+
 				var pDll = NativeMethods.LoadLibrary(dllFileName);
 
 				if (pDll == IntPtr.Zero)
