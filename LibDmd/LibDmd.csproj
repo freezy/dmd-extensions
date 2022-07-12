@@ -215,9 +215,10 @@
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
-    <Compile Include="IColoredGray2Source.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
+    <Compile Include="Input\IColoredGray2Source.cs" />
+    <Compile Include="Input\IColoredGray4Source.cs" />
     <Compile Include="Input\IColoredGraySource.cs" />
     <Compile Include="Input\IGray6Source.cs" />
     <Compile Include="Input\Network\WebsocketGray4Source .cs" />
@@ -284,8 +285,10 @@
     <Compile Include="Output\PinUp\PinUpOutput.cs" />
     <Compile Include="Output\FileOutput\VideoOutput.cs" />
     <Compile Include="Output\IBitmapDestination.cs" />
+    <Compile Include="Output\IColoredGray2Destination.cs" />
     <Compile Include="Output\IGray2Destination.cs" />
     <Compile Include="Output\IFixedSizeDestination.cs" />
+    <Compile Include="Output\IColoredGray4Destination.cs" />
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />

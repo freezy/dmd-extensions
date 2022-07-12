@@ -7,7 +7,7 @@ using WebSocketSharp;
 
 namespace LibDmd.Output.Network
 {
-	public class NetworkStream : IGray2Destination, IGray4Destination, IResizableDestination
+	public class NetworkStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
 		public string Name { get; } = "Network Stream";
 		public bool IsAvailable { get; private set; } = false;

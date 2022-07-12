@@ -7,7 +7,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGrayDestination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGrayDestination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
