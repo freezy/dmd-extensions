@@ -61,6 +61,7 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
+		private readonly DMDFrame _coloredDmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
 		private Color[] _palette;
@@ -184,7 +185,7 @@ namespace LibDmd.DmdDevice
 		static _dColorizeRGB24 ColorizeRGB24;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeAlphaNumeric(NumericalLayout numericalLayout, ushort[] seg_data, ushort[] seg_data2);
+		private delegate IntPtr _dColorizeAlphaNumeric(NumericalLayout numericalLayout, ushort[] seg_data, ushort[] seg_data2);
 		static _dColorizeAlphaNumeric ColorizeAlphaNumeric;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -870,8 +871,8 @@ namespace LibDmd.DmdDevice
 						}
 					}
 
-					_dmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredGraySource.NextFrame(_dmdFrame);
+					_coloredDmdFrame.Update(width, height, coloredFrame);
+					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
 				}
 			}
 
@@ -953,8 +954,8 @@ namespace LibDmd.DmdDevice
 							height *= 2;
 						}
 					}
-					_dmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredGraySource.NextFrame(_dmdFrame);
+					_coloredDmdFrame.Update(width, height, coloredFrame);
+					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
 				}
 			}
 
@@ -1008,9 +1009,18 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 
+			var frameSize = Width * Height * 3;
+			var coloredFrame = new byte[frameSize];
+
 			if (_colorizerIsOpen)
 			{
-				ColorizeAlphaNumeric(layout, segData, segDataExtended);
+				var Rgb24Buffer = ColorizeAlphaNumeric(layout, segData, segDataExtended);
+				if (_colorizerMode != ColorizerMode.None)
+				{
+					Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					_coloredDmdFrame.Update(Width, Height, coloredFrame);
+					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
+				}
 			}
 
 			_vpmAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
