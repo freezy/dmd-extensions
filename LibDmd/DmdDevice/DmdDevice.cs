@@ -856,8 +856,17 @@ namespace LibDmd.DmdDevice
 				else
 				{
 					var Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerMode != ColorizerMode.None) 
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					if (_colorizerMode != ColorizerMode.None)
+					{
+						if (_colorizerMode == ColorizerMode.SimplePalette && width == 128 && height == 16)
+						{
+							coloredFrame = new byte[frameSize * 2];
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize * 2);
+							height = 32;
+						}
+						else
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					}
 				}
 
 				if (_colorizerMode != ColorizerMode.None)
