@@ -28,6 +28,7 @@ namespace LibDmd.Output.PinUp
 
 		private readonly IntPtr _pnt;
 		private readonly string _gameName;
+		private readonly byte[] _frameBufferGray4;
 
 		public PinUpOutput(string romName)
 		{
@@ -92,6 +93,8 @@ namespace LibDmd.Output.PinUp
 
 			Marshal.Copy(Encoding.ASCII.GetBytes(_gameName), 0, _pnt, _gameName.Length); // convert to bytes to make DLL call work?
 			SetGameName(_pnt, _gameName.Length); // external PUP dll call
+
+			_frameBufferGray4 = new byte[DmdWidth * DmdHeight / 2];
 		}
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -137,17 +140,24 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderGray4(byte[] frame)
 		{
-			try {
-				// Render as orange palette (same as default with no PAL loaded)
+			try
+			{
 				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
-				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
-					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
+				var changed = FrameUtil.Copy(planes, _frameBufferGray4, 0);
 
-				Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
-				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+				if (changed)
+				{
+					// Render as orange palette (same as default with no PAL loaded)
+					var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
+					ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
 
-			} catch (Exception e) {
+					Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
+					Render_RGB24((ushort)DmdWidth, (ushort)DmdHeight, _pnt);
+				}
+			}
+			catch (Exception e)
+			{
 				IsAvailable = false;
 				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
 			}
