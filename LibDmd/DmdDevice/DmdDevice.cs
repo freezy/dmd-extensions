@@ -893,7 +893,16 @@ namespace LibDmd.DmdDevice
 					height *= 2;
 				}
 			}
-			frame.Update(width, height, frame.Data);
+
+			if (_colorizerIsOpen && _colorizerMode != ColorizerMode.None && frame.width == 128 && frame.height == 16)
+			{
+				var centeredFrame = new byte[width * height];
+				FrameUtil.Copy(frame.Data, centeredFrame, 1024);
+				frame.Update(width, height, centeredFrame);
+			} else {
+				frame.Update(width, height, frame.Data);
+			}
+			
 			_vpmGray2Source.NextFrame(frame);
 		}
 
