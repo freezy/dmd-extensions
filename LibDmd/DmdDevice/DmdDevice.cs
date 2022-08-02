@@ -885,21 +885,20 @@ namespace LibDmd.DmdDevice
 				}
 			}
 
-			if (_config.Global.ScaleToHd)
-			{
-				if (frame.width == 128 && frame.height == 32 && width != 256 && height != 64)
-				{
-					width *= 2;
-					height *= 2;
-				}
-			}
-
 			if (_colorizerIsOpen && _colorizerMode != ColorizerMode.None && frame.width == 128 && frame.height == 16)
 			{
-				var centeredFrame = new byte[width * height];
-				FrameUtil.Copy(frame.Data, centeredFrame, 1024);
-				frame.Update(width, height, centeredFrame);
-			} else {
+				frame.Update(width, height, frame.Data);
+			} 
+			else {
+				if (_config.Global.ScaleToHd)
+				{
+					if (width == 128 && height == 32)
+					{
+						width *= 2;
+						height *= 2;
+					}
+				}
+
 				frame.Update(width, height, frame.Data);
 			}
 			

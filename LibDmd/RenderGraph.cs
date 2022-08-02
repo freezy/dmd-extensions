@@ -1044,6 +1044,13 @@ namespace LibDmd
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
+			if (height != 16 && frame.Length == 128 * 16)
+			{
+				var centeredFrame = new byte[128 * 32];
+				FrameUtil.Copy(frame, centeredFrame, 128 * 8);
+				frame = centeredFrame;
+			}
+
 			frame = TransformScaling(width, height, frame, dest);
 
 			if (dest == null)
