@@ -950,7 +950,7 @@ namespace LibDmd.DmdDevice
 					{
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
-					var Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, vd.Data);
+					var Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 					if (_colorizerMode != ColorizerMode.None)
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
