@@ -10,7 +10,7 @@ using SharpAvi.Output;
 
 namespace LibDmd.Output.FileOutput
 {
-	public class VideoOutput : IRgb24Destination, IFixedSizeDestination
+	public class VideoOutput : IColoredGrayDestination, IRgb24Destination, IFixedSizeDestination
 	{
 		public string VideoPath { get; set; }
 
@@ -117,6 +117,19 @@ namespace LibDmd.Output.FileOutput
 			_animation.Dispose();
 			_writer.Close();
 			_stream = null;
+		}
+
+		public void RenderColoredGray(byte[] frame)
+		{
+			if (frame == null)
+			{
+				return;
+			}
+			if (_frame == null)
+			{
+				_frame = new byte[DmdWidth * DmdHeight * 4];
+			}
+			ImageUtil.ConvertRgb24ToBgr32(DmdWidth, DmdHeight, frame, _frame);
 		}
 
 		public void RenderRgb24(byte[] frame)
