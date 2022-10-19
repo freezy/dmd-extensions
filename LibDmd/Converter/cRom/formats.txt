@@ -1,0 +1,26 @@
+cROM file format:
+
+Header:
+
+char[64]					ROM name (no .zip, no path, example: afm_113b)
+uint32						Frame width=fW
+uint32						Frame height=fH
+uint32						Number of frames=nF
+uint32						Number of colors in palette of original ROM=noC
+uint32						Number of colors in palette of colorized ROM=nC
+uint32						Number of comparison masks=nM
+uint32						Number of comparison moving rectangles=nMR (not implemented yet)
+
+Data:
+
+uint32[nF]					Hashcode for the frame (taking into account the mask and the shape mode if they are active) using CRC32.
+uint8[nF]					Shape mode active if 1, inactive if 0: if active, the colors 2 and 3 of the original frame are considered as a 1, only the color 0 is distinguished from the others.
+uint8[nF]					Comparison mask ID for each frame (255 -> no mask).
+uint8[nF]					Moving comparison rectangle ID for each frame (255 -> no such mask).
+uint8[nM*fW*fH]					Comparison masks definition: if 1 we ignore this pixel for comparison
+uint8[nMR*4]					Rectangle (xmin,ymin,width,height) giving the pattern to find, this drawing may be shifted horizontally in the frame to test. (not implemented yet)
+uint8[nF*3*nC]					Palette for the colorized frames
+uint8[nF*fW*fH]					Colorized frames
+uint8[nF*fW*fH]					Mask for dynamic content (score, counter, etc...). The value (<MAX_DYNA_4COLS_PER_FRAME(=8)) points to a sequence of 4 colors in Dyna4Cols.  255 means not a dynamic content.
+uint8[nF*MAX_DYNA_RECT_PER_FRAME*4]		Sets of colors for Masked dynamic content (score, counter, etc...)
+
