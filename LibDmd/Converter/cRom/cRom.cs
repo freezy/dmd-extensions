@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Converter.Colorize;
 //using LibDmd.Converter.Colorize;
 using LibDmd.Input;
 using Xceed.Wpf.Toolkit;
@@ -21,6 +22,7 @@ namespace LibDmd.Converter.cRom
 		private UInt32 FWidth; // frame width
 		private UInt32 FHeight; // frame height
 		private UInt32 NFrames; // number of frames
+		public UInt32 NOColors; // Number of colors in palette of original ROM=nO
 		private UInt32 NCColors; // Number of colors in palette of colorized ROM=nC
 		private UInt32 NCompMasks; // Number of dynamic masks=nM
 		private UInt32 NMovMasks; // Number of moving rects=nMR
@@ -34,7 +36,7 @@ namespace LibDmd.Converter.cRom
 		private byte[] CPal;        // UINT8[3*nC*nF] Palette for each colorized frames
 		private byte[] CFrames; // UINT8[nF*fW*fH] Colorized frames color indices
 		private byte[] DynaMasks;   // UINT8[nF*fW*fH] Mask for dynamic content for each frame.  The value (<MAX_DYNA_4COLS_PER_FRAME) points to a sequence of 4 colors in Dyna4Cols. 255 means not a dynamic content.
-		private byte[] Dyna4Cols;  // UINT8[nF*MAX_DYNA_4COLS_PER_FRAME*4] Color sets used to fill the dynamic content
+		private byte[] Dyna4Cols;  // UINT8[nF*MAX_DYNA_4COLS_PER_FRAME*nO] Color sets used to fill the dynamic content
 
 		private const int MAX_DYNA_4COLS_PER_FRAME = 8;
 
@@ -54,10 +56,11 @@ namespace LibDmd.Converter.cRom
 			var reader = new BinaryReader(fs);
 			rName = new char[64];
 			rName = reader.ReadChars(64);
+			uint sizeheader = reader.ReadUInt32(); // for possible modifications in the format
 			FWidth = reader.ReadUInt32();
 			FHeight = reader.ReadUInt32();
 			NFrames = reader.ReadUInt32();
-			reader.ReadUInt32();
+			NOColors = reader.ReadUInt32();
 			NCColors = reader.ReadUInt32();
 			NCompMasks = reader.ReadUInt32();
 			NMovMasks = reader.ReadUInt32();
@@ -86,8 +89,8 @@ namespace LibDmd.Converter.cRom
 			CFrames = reader.ReadBytes((int)(NFrames * FHeight * FWidth));
 			DynaMasks = new byte[NFrames * FHeight * FWidth];
 			DynaMasks = reader.ReadBytes((int)(NFrames * FHeight * FWidth));
-			Dyna4Cols = new byte[NFrames * MAX_DYNA_4COLS_PER_FRAME * 4];
-			Dyna4Cols = reader.ReadBytes((int)(NFrames * MAX_DYNA_4COLS_PER_FRAME * 4));
+			Dyna4Cols = new byte[NFrames * MAX_DYNA_4COLS_PER_FRAME * NOColors];
+			Dyna4Cols = reader.ReadBytes((int)(NFrames * MAX_DYNA_4COLS_PER_FRAME * NOColors));
 			reader.Close();
 			cromloaded = true;
 		}
@@ -105,6 +108,7 @@ namespace LibDmd.Converter.cRom
 			DynaMasks = null;
 			Dyna4Cols = null;
 			crce = null;
+			cromloaded = false;
 		}
 
 		public void Init()
@@ -180,61 +184,15 @@ namespace LibDmd.Converter.cRom
 				if (dynacouche == 255)
 					frame[ti] = CFrames[IDfound * FWidth * FHeight + ti];
 				else
-					frame[ti] = Dyna4Cols[IDfound * MAX_DYNA_4COLS_PER_FRAME * 4 + dynacouche * 4 + frame[ti]];
+					frame[ti] = Dyna4Cols[IDfound * MAX_DYNA_4COLS_PER_FRAME * NOColors + dynacouche * NOColors + frame[ti]];
 			}
 		}
-
-		/*private void Copy_Planes_to_Frame(DMDFrame frame, byte[] Frame, byte colorbitdepth)
-		{
-			/*uint offsetplane = (FWidth * FHeight)>>3;
-			uint tk = 0;
-			for (uint ti = 0; ti < (FWidth * FHeight)>>3; ti++)
-			{
-				byte bitmsk = 1;// 0x80;
-				byte[] plane = new byte[8];
-				for (uint tl = 0; tl < colorbitdepth; tl++)
-				{
-					plane[tl] = frame.Data[ti + tl * offsetplane];
-				}
-				for (uint tj = 0; tj < 8; tj++)
-				{
-					Frame[tk] = 0;
-					byte btmsk = 1;
-					for (byte tl = 0; tl < colorbitdepth; tl++)
-					{
-						if ((plane[tl] & bitmsk) > 0) Frame[tk] += btmsk;
-						btmsk <<= 1;
-					}
-					bitmsk <<= 1;//>> 1);
-					tk++;
-				}
-			}
-			byte bitmsk = 0x80;
-			uint tj = 0;
-			for (uint ti=0;ti<FWidth*FHeight;ti++)
-			{
-				byte btmsk = (byte)(1 << (colorbitdepth - 1));
-				Frame[ti] = 0;
-				for (uint tk = 0; tk < colorbitdepth; tk++)
-				{
-					if ((frame.Data[tj] & bitmsk) > 0)
-						Frame[ti] |= btmsk;
-					btmsk >>= 1;
-					if (bitmsk == 1)
-					{
-						bitmsk = 0x80;
-						tj++;
-					}
-					else bitmsk >>= 1;
-				}
-			}
-		}*/
 
 		private void Copy_Frame_to_Planes(byte[] Frame, byte[][] planes, byte colorbitdepth)
 		{
 			byte bitmsk = 1;
 			uint tj = 0;
-			for (uint tk=0;tk<colorbitdepth;tk++) planes[tk][tj] = 0;
+			for (uint tk = 0; tk < colorbitdepth; tk++) planes[tk][tj] = 0;
 			for (uint ti = 0; ti < FWidth * FHeight; ti++) 
 			{
 				byte tl = 1;
@@ -269,6 +227,9 @@ namespace LibDmd.Converter.cRom
 
 		public void Colorize(DMDFrame frame)
 		{
+			byte[][] planes = new byte[6][];
+			for (int i = 0; i < 6; i++) planes[i] = new byte[FWidth * FHeight / 8];
+			Color[] palette = new Color[64];
 			byte[] Frame=new byte[FWidth*FHeight];
 			for (uint ti = 0; ti < FWidth * FHeight; ti++) Frame[ti] = frame.Data[ti];
 			/*if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
@@ -277,14 +238,34 @@ namespace LibDmd.Converter.cRom
 				planes = FrameUtil.Split(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, 2, frame.Data);*/
 			// Let's first identify the incoming frame among the ones we have in the crom
 			Int32 IDfound = Identify_Frame(Frame);
-			if (IDfound == -1) return; //no frame found, return without changing
-									   // Let's now generate the corresponding colorized frame
-			Colorize_Frame(Frame, IDfound);
-			byte[][] planes = new byte[6][];
-			Color[] palette = new Color[64];
-			for (int i = 0; i < 6; i++) planes[i] = new byte[FWidth * FHeight / 8];
+			if (IDfound == -1)
+			{
+				for (uint ti=0;ti<NOColors;ti++)
+				{
+					palette[ti].A = 255;
+					palette[ti].R = (byte)(255.0f * ((float)ti / (float)NOColors));
+					palette[ti].G = (byte)(127.0f * ((float)ti / (float)NOColors));
+					palette[ti].B = 0;
+				}
+				palette[16].A = 255;
+				palette[16].R = 255;
+				palette[16].G = 0;
+				palette[16].B = 0;
+				for (uint ti = 0; ti < 15; ti++)
+				{
+					for (uint tj = 0; tj < 5; tj++)
+					{
+						Frame[ti + tj * FWidth] = 16;
+					}
+				}
+				// Let's now generate the corresponding colorized frame
+			}
+			else
+			{
+				Colorize_Frame(Frame, IDfound);
+				Copy_Frame_Palette(IDfound, palette);
+			}
 			Copy_Frame_to_Planes(Frame, planes, 6);
-			Copy_Frame_Palette(IDfound, palette);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette));
 		}
 		public void Convert(DMDFrame frame)
