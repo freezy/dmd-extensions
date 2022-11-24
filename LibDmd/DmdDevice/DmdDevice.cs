@@ -1044,6 +1044,9 @@ namespace LibDmd.DmdDevice
 			_dmdFrame.width = Width;
 			_dmdFrame.height = Height;
 
+			if (_gameName.StartsWith("rvrbt_")) layout = NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num;
+			if (_gameName.StartsWith("polic_")) layout = NumericalLayout.__1x7Num_1x16Alpha_1x16Num;
+
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
@@ -1088,6 +1091,12 @@ namespace LibDmd.DmdDevice
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
 					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData)));
+					break;
+				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
+					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x7Num_1x16Alpha_1x16Num(segData)));
+					break;
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
+					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num_1x4Num(segData)));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
