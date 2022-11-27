@@ -28,7 +28,6 @@ namespace LibDmd.Output.PinUp
 
 		private readonly IntPtr _pnt;
 		private readonly string _gameName;
-		private readonly byte[] _frameBufferGray4;
 
 		public PinUpOutput(string romName)
 		{
@@ -40,7 +39,7 @@ namespace LibDmd.Output.PinUp
 
 			var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 			var assemblyFolder = Path.GetDirectoryName(localPath);
-			var dllFileName = Path.Combine(assemblyFolder, "dmddevicePUP.DLL");
+			var dllFileName = Path.Combine(assemblyFolder, Environment.Is64BitProcess ? "dmddevicePUP64.DLL" : "dmddevicePUP.DLL");
 			var pDll = NativeMethods.LoadLibrary(dllFileName);
 
 			if (pDll == IntPtr.Zero) {
@@ -93,8 +92,6 @@ namespace LibDmd.Output.PinUp
 
 			Marshal.Copy(Encoding.ASCII.GetBytes(_gameName), 0, _pnt, _gameName.Length); // convert to bytes to make DLL call work?
 			SetGameName(_pnt, _gameName.Length); // external PUP dll call
-
-			_frameBufferGray4 = new byte[DmdWidth * DmdHeight / 2];
 		}
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -140,24 +137,17 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderGray4(byte[] frame)
 		{
-			try
-			{
+			try {
+				// Render as orange palette (same as default with no PAL loaded)
 				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
-				var changed = FrameUtil.Copy(planes, _frameBufferGray4, 0);
+				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
+					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
 
-				if (changed)
-				{
-					// Render as orange palette (same as default with no PAL loaded)
-					var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
-					ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
+				Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
+				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
 
-					Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
-					Render_RGB24((ushort)DmdWidth, (ushort)DmdHeight, _pnt);
-				}
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				IsAvailable = false;
 				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
 			}
