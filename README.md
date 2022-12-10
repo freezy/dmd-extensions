@@ -460,7 +460,7 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
    copy its content to your hard drive, preferable in your `PATH`,
    and unblock the `.exe` file (right-click, properties, unblock).
 2. Download and install the [Visual C++ Redistributables for Visual Studio 2017](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
-3. If you haven't already, download and install the [.NET Framework 4.5.2](https://www.microsoft.com/en-us/download/details.aspx?id=42643).
+3. If you haven't already, download and install the [.NET Framework 4.7.2](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472).
 
 If you want to use DMD Extensions with VisualPinMAME:
 
@@ -481,6 +481,8 @@ setup, however note that games that you've already configured won't be affected.
   VPM with `Setup64.exe` and you know what you're doing.
 
 ## Developer Setup
+
+This project is built with Visual Studio 2022. Be sure to include .NET 4.7.2 when installing.
 
 After cloning the repo, you'll need to restore the [DllExport](https://github.com/3F/DllExport)
 dependency. There is a script that does it for you. Go into the cloned repo and run:
