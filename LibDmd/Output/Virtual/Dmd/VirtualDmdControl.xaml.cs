@@ -7,14 +7,18 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using NLog;
+using NLog.Time;
 using SharpGL;
 using SharpGL.Shaders;
 using SharpGL.VertexBuffers;
 using SharpGL.WPF;
+using Xceed.Wpf.Toolkit;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 // This used to be standard WPF code with ShaderEffect, the problem is that WPF will always resize the provided ImageBrush
 // (see https://docs.microsoft.com/en-us/archive/blogs/greg_schechter/introducing-multi-input-shader-effects) and therefore
@@ -26,7 +30,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
@@ -60,14 +64,19 @@ namespace LibDmd.Output.Virtual.Dmd
 		private Color _dotColor;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+		private Color[] _gray6Palette;
 		private bool _fboInvalid = true; // Flag set to true when the FBOs (Framebuffer object) need to be rebuilt (for example at startup or when DMD size changes)
 		private bool _lutInvalid = true; // Flag set to true when the LUT (look up table) of the palette has changed and needs to be updated on the GPU
+		private bool _rotInvalid = false; // Flag set to true when we need to update the frame for color rotation
 		private bool _dmdShaderInvalid = true; // Flag set to true when the DMD shader needs to be rebuilt (for example at startup or when the DMD style change)
 		private System.Drawing.Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
 		private FrameFormat _nextFrameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
 		private BitmapSource _nextFrameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
 		private byte[] _nextFrameData; // Raw data of the frame to be processed
+		private Color[] _nextFramePalette; // Palette of the frame
+		private bool _nextisRotation; // Is there any colour rotation
+		//private byte[] _nextRotations; // Colour rotations
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric; // Format of the compiled convert shader; if frame format, the shader will be recompiled to adapt to the incoming frame
 		private ShaderProgram _convertShader, _blurShader1, _blurShader2, _dmdShader;
 		private int _csTexture, _csPalette; // Convert Shader (hence the _cs prefix) uniform locations
@@ -82,7 +91,17 @@ namespace LibDmd.Output.Virtual.Dmd
 		private const uint TexCoordAttribute = 1; // Fixed index of texture attribute in the quad VBO
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 		
+		// for colour rotation
+		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
+		private byte[] RotCols=new byte[64];
+		private byte[] FirstCol = new byte[MAX_COLOR_ROTATIONS];
+		private byte[] NCol = new byte[MAX_COLOR_ROTATIONS];
+		private byte[] AcFirst = new byte[MAX_COLOR_ROTATIONS];
+		private double[] Timespan = new double[MAX_COLOR_ROTATIONS];
+		private DateTime[] StartTime = new DateTime[MAX_COLOR_ROTATIONS];
+
 		private const ushort FboErrorMax = 30;
+
 		private ushort _fboErrorCount = 0;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -145,6 +164,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = bmp;
+			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -153,6 +173,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame;
+			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -161,6 +182,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame;
+			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -169,6 +191,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			_nextFrameData = frame;
+			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -182,6 +205,80 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			SetPalette(frame.Palette);
 			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
+		}
+
+		private void UpdateRotations(ColoredFrame frame)
+		{
+			DateTime actime = DateTime.UtcNow;
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+			{
+				if (FirstCol[ti] == 255) continue;
+				_rotInvalid = true;
+				if (actime.Subtract(StartTime[ti]).TotalMilliseconds >= Timespan[ti])
+				{
+					StartTime[ti] = actime;
+					AcFirst[ti]++;
+					if (AcFirst[ti] == NCol[ti]) AcFirst[ti] = 0;
+					for (byte tj = 0; tj < NCol[ti]; tj++)
+					{
+						RotCols[tj + FirstCol[ti]] = (byte)(tj + FirstCol[ti] + AcFirst[ti]);
+						if (RotCols[tj + FirstCol[ti]] >= FirstCol[ti] + NCol[ti]) RotCols[tj + FirstCol[ti]] -= NCol[ti];
+					}
+					Color[] newpalette = new Color[64];
+					for (int tj = 0; tj < 64; tj++)
+					{
+						newpalette[tj] = frame.Palette[RotCols[tj]];
+					}
+					_hasFrame = true;
+					_nextFramePalette = newpalette;
+					SetPalette(newpalette);
+					Dmd.RequestRender();
+				}
+			}
+		}
+
+		public void RenderColoredGray6(ColoredFrame frame)
+		{
+			byte[] tframe = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
+			bool frameChanged = false;
+			if (_nextFrameData != null)
+			{
+				for (int ti = 0; ti < DmdHeight * DmdWidth; ti++)
+				{
+					if (tframe[ti] != _nextFrameData[ti])
+					{
+						frameChanged = true;
+						break;
+					}
+				}
+			}
+			else frameChanged = true;
+			if (frameChanged)
+			{
+				SetPalette(frame.Palette);
+				_nextFrameData = tframe;
+				_hasFrame = true;
+				_nextFrameType = FrameFormat.ColoredGray6;
+				_nextFramePalette = frame.Palette;
+				_nextisRotation = frame.isRotation;
+				_rotInvalid = false;
+				for (byte ti = 0; ti < 64; ti++) RotCols[ti] = ti;
+				if (_nextisRotation)
+				{
+					DateTime actime = DateTime.UtcNow;
+					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+					{
+						FirstCol[ti] = frame.Rotations[ti * 3];
+						NCol[ti] = frame.Rotations[ti * 3 + 1];
+						Timespan[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
+						StartTime[ti] = actime;
+						AcFirst[ti] = 0;
+					}
+					Dmd.RequestRender();
+					return;
+				}
+			}
+			UpdateRotations(frame);
 		}
 
 		public void SetDimensions(int width, int height)
@@ -378,27 +475,37 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_hasFrame)
 			{
-				// Update palette (small 16x1 texture used as a LUT (lookup table) when processing the DMD data on the GPU)
+				// Update palette (small 64x1 texture used as a LUT (lookup table) when processing the DMD data on the GPU)
 				if (_lutInvalid)
 				{
 					_lutInvalid = false;
-					byte[] data = new byte[3 * 16];
+					_rotInvalid = false;
+					byte[] data = new byte[3 * 64];
 					if (_nextFrameType == FrameFormat.Gray2 && _gray2Palette != null)
 					{
-						for (int i = 0; i < 16; i++)
+						for (int i = 0; i < 64; i++)
 						{
-							data[i * 3] = _gray2Palette[i / 4].R;
-							data[i * 3 + 1] = _gray2Palette[i / 4].G;
-							data[i * 3 + 2] = _gray2Palette[i / 4].B;
+							data[i * 3] = _gray2Palette[i / 16].R;
+							data[i * 3 + 1] = _gray2Palette[i / 16].G; 
+							data[i * 3 + 2] = _gray2Palette[i / 16].B;
 						}
 					}
 					else if (_nextFrameType == FrameFormat.Gray4 && _gray4Palette != null)
 					{
-						for (int i = 0; i < 16; i++)
+						for (int i = 0; i < 64; i++)
 						{
-							data[i * 3] = _gray4Palette[i].R;
-							data[i * 3 + 1] = _gray4Palette[i].G;
-							data[i * 3 + 2] = _gray4Palette[i].B;
+							data[i * 3] = _gray4Palette[i / 4].R;
+							data[i * 3 + 1] = _gray4Palette[i / 4].G;
+							data[i * 3 + 2] = _gray4Palette[i / 4].B;
+						}
+					}
+					else if (_nextFrameType == FrameFormat.ColoredGray6 && _gray6Palette != null)
+					{
+						for (int i = 0; i < 64; i++)
+						{
+							data[i * 3] = _gray6Palette[i].R;
+							data[i * 3 + 1] = _gray6Palette[i].G;
+							data[i * 3 + 2] = _gray6Palette[i].B;
 						}
 					}
 					else
@@ -407,10 +514,10 @@ namespace LibDmd.Output.Virtual.Dmd
 						var beta = _style.Tint.ScA;
 						ColorUtil.RgbToHsl(_dotColor.R, _dotColor.G, _dotColor.B, out var dotHue, out var dotSat, out var dotLum);
 						ColorUtil.RgbToHsl(_style.Tint.R, _style.Tint.G, _style.Tint.B, out var tintHue, out var tintSat, out var tintLum);
-						for (int i = 0; i < 16; i++)
+						for (int i = 0; i < 64; i++)
 						{
-							ColorUtil.HslToRgb(dotHue, dotSat, dotLum * i / 15.0, out var dotRed, out var dotGreen, out var dotBlue);
-							ColorUtil.HslToRgb(tintHue, tintSat, tintLum * i / 15.0, out var tintRed, out var tintGreen, out var tintBlue);
+							ColorUtil.HslToRgb(dotHue, dotSat, dotLum * i / 63.0, out var dotRed, out var dotGreen, out var dotBlue);
+							ColorUtil.HslToRgb(tintHue, tintSat, tintLum * i / 63.0, out var tintRed, out var tintGreen, out var tintBlue);
 							var red = (byte)(dotRed * alpha + tintRed * beta);
 							var green = (byte)(dotGreen * alpha + tintGreen * beta);
 							var blue = (byte)(dotBlue * alpha + tintBlue * beta);
@@ -420,7 +527,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						}
 					}
 					gl.ActiveTexture(OpenGL.GL_TEXTURE1);
-					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, 16, 1, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, data);
+					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, 64, 1, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, data);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_EDGE);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_EDGE);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_NEAREST);
@@ -484,6 +591,21 @@ namespace LibDmd.Output.Virtual.Dmd
 						else
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
+					case FrameFormat.ColoredGray6:
+						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+						{
+							if (FirstCol[ti] < 255) _rotInvalid = true;
+						}
+						if (_nextFrameData.Length != DmdWidth * DmdHeight)
+						{
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							return;
+						}
+						if (createTexture)
+							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+						else
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+						break;
 					case FrameFormat.Rgb24:
 						if (_nextFrameData.Length % 3 != 0)
 						{
@@ -513,7 +635,6 @@ namespace LibDmd.Output.Virtual.Dmd
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_NEAREST);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_NEAREST);
 				}
-
 				// Apply palette, tinting and gamma
 				_convertShader.Bind(gl);
 				gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[0]);
@@ -642,6 +763,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_lutInvalid = true;
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+			_gray6Palette = ColorUtil.GetPalette(colors, 64);
 		}
 
 		public void ClearPalette()
@@ -649,6 +771,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_lutInvalid = true;
 			_gray2Palette = null;
 			_gray4Palette = null;
+			_gray6Palette = null;
 		}
 
 		public void ClearColor()
@@ -665,7 +788,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			}
 		}
 
-		public void ClearDisplay()
+			public void ClearDisplay()
 		{
 			RenderGray4(new byte[DmdWidth * DmdHeight]);
 		}
