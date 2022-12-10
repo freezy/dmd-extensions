@@ -90,12 +90,11 @@
     <Reference Include="FTDI2XX, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FTD2XX.Net.1.2.1\lib\net45\FTDI2XX.dll</HintPath>
     </Reference>
-    <Reference Include="INIFileParser, Version=2.3.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
-      <HintPath>..\packages\ini-parser.2.3.0\lib\net20\INIFileParser.dll</HintPath>
+    <Reference Include="INIFileParser, Version=2.5.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
-    <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\LibUsbDotNet.2.2.8\lib\LibUsbDotNet.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="LibUsbDotNet.LibUsbDotNet, Version=2.2.0.0, Culture=neutral, PublicKeyToken=c677239abe1e02a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\LibUsbDotNet.2.2.29\lib\net45\LibUsbDotNet.LibUsbDotNet.dll</HintPath>
     </Reference>
     <Reference Include="MimeTypeMap, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MediaTypeMap.2.1.0.0\lib\net40\MimeTypeMap.dll</HintPath>
@@ -109,9 +108,8 @@
       <HintPath>..\packages\Mindscape.Raygun4Net.5.5.1\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
