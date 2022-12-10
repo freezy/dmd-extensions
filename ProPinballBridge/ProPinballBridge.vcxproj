@@ -195,11 +195,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="ProPinballBridge.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
