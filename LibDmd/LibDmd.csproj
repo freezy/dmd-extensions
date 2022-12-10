@@ -87,9 +87,8 @@
       <HintPath>..\packages\EngineIoClientDotNet.0.9.22\lib\net45\EngineIoClientDotNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FTD2XX_NET, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\FTD2XX.Net.1.0.14\lib\FTD2XX_NET.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="FTDI2XX, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FTD2XX.Net.1.2.1\lib\net45\FTDI2XX.dll</HintPath>
     </Reference>
     <Reference Include="INIFileParser, Version=2.3.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
       <HintPath>..\packages\ini-parser.2.3.0\lib\net20\INIFileParser.dll</HintPath>
@@ -377,6 +376,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="FTDI2XX.xml" />
     <Content Include="Output\Virtual\Dmd\README.md" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
     <Resource Include="Output\Virtual\Dmd\preview-128x32-tint.png" />
@@ -407,7 +407,6 @@
       <SubType>Designer</SubType>
     </Content>
     <EmbeddedResource Include="Costura32\ftd2xx.dll" />
-    <Content Include="FTD2XX_NET.XML" />
     <EmbeddedResource Include="Output\Network\www\index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
