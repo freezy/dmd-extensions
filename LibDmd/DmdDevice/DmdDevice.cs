@@ -225,13 +225,13 @@ namespace LibDmd.DmdDevice
 				return true;
 			}
 
-			var cromPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cROM");
+			var cromPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cRZ");
 			if (File.Exists(cromPath))
 			{
 				try
 				{
 					Logger.Info("Loading color rom file at {0}...", cromPath);
-					_crom = new cRom(cromPath);
+					_crom = new cRom(_altcolorPath,_gameName); 
 				}
 				catch (Exception e)
 				{
@@ -550,17 +550,34 @@ namespace LibDmd.DmdDevice
 			// 2-bit graph
 			if (_crom != null) 
 			{
-				_graphs.Add(new RenderGraph
+				if (_crom.NOColors == 16)
 				{
-					Name = "2-bit Colored VPM Graph",
-					Source = _vpmGray2Source,
-					Destinations = renderers,
-					Converter = _crom,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
+					_graphs.Add(new RenderGraph
+					{
+						Name = "4-bit Colored VPM Graph",
+						Source = _vpmGray4Source,
+						Destinations = renderers,
+						Converter = _crom,
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+				}
+				else
+				{
+					_graphs.Add(new RenderGraph
+					{
+						Name = "2-bit Colored VPM Graph",
+						Source = _vpmGray2Source,
+						Destinations = renderers,
+						Converter = _crom,
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+				}
 			}
 			else if (_colorize && _gray2Colorizer != null)
 			{
@@ -795,7 +812,7 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			_crom.Dispose();
+			if (_crom != null) _crom.Dispose();
 			_crom = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
@@ -918,19 +935,37 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_config.Global.ScaleToHd)
+			if (_crom != null)
 			{
-				if (width == 128 && height == 32)
+				if (_config.Global.ScaleToHd)
 				{
-					width *= 2;
-					height *= 2;
-					frame.Update(width, height, frame.Data);
+					if (width == 128 && height == 32)
+					{
+						width *= 2;
+						height *= 2;
+						frame.Update(width, height, frame.Data);
+					}
 				}
+				_crom.Colorize(frame);
+				_crom.SetDimensions(frame.width, frame.height);
+				_vpmGray2Source.NextFrame(frame);
 			}
+			else
+			{
+				if (_config.Global.ScaleToHd)
+				{
+					if (width == 128 && height == 32)
+					{
+						width *= 2;
+						height *= 2;
+						frame.Update(width, height, frame.Data);
+					}
+				}
 
-			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
-			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-			_vpmGray4Source.NextFrame(frame);
+				_gray2Colorizer?.SetDimensions(frame.width, frame.height);
+				_gray4Colorizer?.SetDimensions(frame.width, frame.height);
+				_vpmGray4Source.NextFrame(frame);
+			}
 		}
 
 		public void RenderRgb24(DMDFrame frame)
