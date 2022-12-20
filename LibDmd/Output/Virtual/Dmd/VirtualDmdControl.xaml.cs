@@ -67,7 +67,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private Color[] _gray6Palette;
 		private bool _fboInvalid = true; // Flag set to true when the FBOs (Framebuffer object) need to be rebuilt (for example at startup or when DMD size changes)
 		private bool _lutInvalid = true; // Flag set to true when the LUT (look up table) of the palette has changed and needs to be updated on the GPU
-		private bool _rotInvalid = false; // Flag set to true when we need to update the frame for color rotation
 		private bool _dmdShaderInvalid = true; // Flag set to true when the DMD shader needs to be rebuilt (for example at startup or when the DMD style change)
 		private System.Drawing.Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
@@ -164,7 +163,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = bmp;
-			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -173,7 +171,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame;
-			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -182,7 +179,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame;
-			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -191,7 +187,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			_nextFrameData = frame;
-			_rotInvalid = false;
 			Dmd.RequestRender();
 		}
 
@@ -213,7 +208,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
 			{
 				if (FirstCol[ti] == 255) continue;
-				_rotInvalid = true;
 				if (actime.Subtract(StartTime[ti]).TotalMilliseconds >= Timespan[ti])
 				{
 					StartTime[ti] = actime;
@@ -261,7 +255,6 @@ namespace LibDmd.Output.Virtual.Dmd
 				_nextFrameType = FrameFormat.ColoredGray6;
 				_nextFramePalette = frame.Palette;
 				_nextisRotation = frame.isRotation;
-				_rotInvalid = false;
 				for (byte ti = 0; ti < 64; ti++) RotCols[ti] = ti;
 				if (_nextisRotation)
 				{
@@ -479,7 +472,6 @@ namespace LibDmd.Output.Virtual.Dmd
 				if (_lutInvalid)
 				{
 					_lutInvalid = false;
-					_rotInvalid = false;
 					byte[] data = new byte[3 * 64];
 					if (_nextFrameType == FrameFormat.Gray2 && _gray2Palette != null)
 					{
@@ -592,10 +584,6 @@ namespace LibDmd.Output.Virtual.Dmd
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.ColoredGray6:
-						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-						{
-							if (FirstCol[ti] < 255) _rotInvalid = true;
-						}
 						if (_nextFrameData.Length != DmdWidth * DmdHeight)
 						{
 							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
