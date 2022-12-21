@@ -22,15 +22,15 @@ namespace LibDmd.Converter.Serum
 		public readonly string Filename;
 		// cROM components
 		private char[] rName; // ROM name
-		private UInt32 FWidth; // frame width
-		private UInt32 FHeight; // frame height
-		private UInt32 NFrames; // number of frames
-		public UInt32 NOColors; // Number of colors in palette of original ROM=nO
-		private UInt32 NCColors; // Number of colors in palette of colorized ROM=nC
-		private UInt32 NCompMasks; // Number of dynamic masks=nM
-		private UInt32 NMovMasks; // Number of moving rects=nMR
-		private UInt32 NSprites; // Number of sprites=nS
-		private UInt32[] HashCodes; // UINT32[nF] hashcode/checksum
+		private uint FWidth; // frame width
+		private uint FHeight; // frame height
+		private uint NFrames; // number of frames
+		public uint NOColors; // Number of colors in palette of original ROM=nO
+		private uint NCColors; // Number of colors in palette of colorized ROM=nC
+		private uint NCompMasks; // Number of dynamic masks=nM
+		private uint NMovMasks; // Number of moving rects=nMR
+		private uint NSprites; // Number of sprites=nS
+		private uint[] HashCodes; // uint[nF] hashcode/checksum
 		private byte[] ShapeCompMode;   // UINT8[nF] FALSE - full comparison (all 4 colors) TRUE - shape mode (we just compare black 0 against all the 3 other colors as if it was 1 color)
 										// HashCode take into account the ShapeCompMode parameter converting any '2' or '3' into a '1'
 		private byte[] CompMaskID;  // UINT8[nF] Comparison mask ID per frame (255 if no rectangle for this frame)
@@ -44,13 +44,13 @@ namespace LibDmd.Converter.Serum
 		private byte[] FrameSprites; // UINT8[nF*MAX_SPRITES_PER_FRAME] Sprite numbers to look for in this frame max=MAX_SPRITES_PER_FRAME
 		private byte[] SpriteDescriptionsO; // UINT8[nS*MAX_SPRITE_SIZE*MAX_SPRITE_SIZE] 4-or-16-color sprite original drawing (255 means this is a transparent=ignored pixel) for Comparison step
 		private byte[] SpriteDescriptionsC; // UINT8[nS*MAX_SPRITE_SIZE*MAX_SPRITE_SIZE] 64-color sprite for Colorization step
-		//private UInt32[] SpriteDetectDwords; // UINT32[nS] dword to quickly detect 4 consecutive distinctive pixels inside the original drawing of a sprite for optimized detection
+		//private uint[] SpriteDetectDwords; // uint[nS] dword to quickly detect 4 consecutive distinctive pixels inside the original drawing of a sprite for optimized detection
 		//private UInt16[] SpriteDetectDwordPos; // UINT16[nS] offset of the above dword in the sprite description
 		private byte[] ActiveFrames; // UINT8[nF] is the frame active (colorized or duration>16ms) or not
 		private byte[] ColorRotations; // UINT8[nF*3*MAX_COLOR_ROTATIONS] list of color rotation for each frame:
 									   // 1st byte is color # of the first color to rotate / 2nd byte id the number of colors to rotate / 3rd byte is the length in 10ms between each color switch
 		private UInt16[] SpriteDetAreas; // UINT16[nS*4*MAX_SPRITE_DETECT_AREAS] rectangles (left, top, width, height) as areas to detect sprites (left=0xffff -> no zone)
-		private UInt32[] SpriteDetDwords; // UINT32[nS*MAX_SPRITE_DETECT_AREAS] dword to quickly detect 4 consecutive distinctive pixels inside the original drawing of a sprite for optimized detection
+		private uint[] SpriteDetDwords; // uint[nS*MAX_SPRITE_DETECT_AREAS] dword to quickly detect 4 consecutive distinctive pixels inside the original drawing of a sprite for optimized detection
 		private UInt16[] SpriteDetDwordPos; // UINT16[nS*MAX_SPRITE_DETECT_AREAS] offset of the above dword in the sprite description
 
 		private const int MAX_DYNA_4COLS_PER_FRAME = 16; // max number of color sets for dynamic content for each frame
@@ -58,9 +58,9 @@ namespace LibDmd.Converter.Serum
 		private const int MAX_SPRITES_PER_FRAME = 32; // maximum amount of sprites to look for per frame
 		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
 		private const int MAX_SPRITE_DETECT_AREAS = 4; // maximum number of areas to detect the sprite
-
+		
 		private bool serumloaded = false; // is there any crom loaded?
-		private UInt32 LastFound = 0; // Which frame was found last time we recognized one?
+		private uint LastFound = 0; // Which frame was found last time we recognized one?
 		private CRC32encode crce;
 
 		public IObservable<Unit> OnResume { get; }
@@ -120,12 +120,12 @@ namespace LibDmd.Converter.Serum
 			NCColors = reader.ReadUInt32();
 			NCompMasks = reader.ReadUInt32();
 			NMovMasks = reader.ReadUInt32();
-			if (sizeheader >= 8 * sizeof(UInt32))
+			if (sizeheader >= 8 * sizeof(uint))
 			{
 				NSprites = reader.ReadUInt32();
 			}
 			else NSprites = 0;
-			HashCodes = new UInt32[NFrames];
+			HashCodes = new uint[NFrames];
 			for (ti = 0; ti < NFrames; ti++)
 				HashCodes[ti] = reader.ReadUInt32();
 			ShapeCompMode = new byte[NFrames];
@@ -161,7 +161,7 @@ namespace LibDmd.Converter.Serum
 				SpriteDescriptionsC[ti] = reader.ReadByte();
 				SpriteDescriptionsO[ti] = reader.ReadByte();
 			}
-			/*SpriteDetectDwords = new UInt32[NSprites];
+			/*SpriteDetectDwords = new uint[NSprites];
 			for (ti = 0; ti < NSprites; ti++)
 				SpriteDetectDwords[ti] = reader.ReadUInt32();
 			SpriteDetectDwordPos = new UInt16[NSprites];
@@ -171,7 +171,7 @@ namespace LibDmd.Converter.Serum
 			ActiveFrames = reader.ReadBytes((int)NFrames);
 			ColorRotations=new byte[NFrames*3*MAX_COLOR_ROTATIONS];
 			ColorRotations = reader.ReadBytes((int)NFrames * 3 * MAX_COLOR_ROTATIONS);
-			SpriteDetDwords = new UInt32[NSprites * MAX_SPRITE_DETECT_AREAS];
+			SpriteDetDwords = new uint[NSprites * MAX_SPRITE_DETECT_AREAS];
 			for (ti = 0; ti < NSprites * MAX_SPRITE_DETECT_AREAS; ti++)
 				SpriteDetDwords[ti] = reader.ReadUInt32();
 			SpriteDetDwordPos = new UInt16[NSprites * MAX_SPRITE_DETECT_AREAS];
@@ -226,8 +226,8 @@ namespace LibDmd.Converter.Serum
 			if (!serumloaded) return -1;
 			bool[] framechecked = new bool[NFrames];
 			byte[] pmask = new byte[FWidth * FHeight];
-			for (UInt32 tz = 0; tz < NFrames; tz++) framechecked[tz] = false;
-			UInt32 tj = LastFound; // we start from the frame we last found
+			for (uint tz = 0; tz < NFrames; tz++) framechecked[tz] = false;
+			uint tj = LastFound; // we start from the frame we last found
 			byte mask = 255;
 			byte Shape = 0;
 			do
@@ -235,7 +235,7 @@ namespace LibDmd.Converter.Serum
 				// calculate the hashcode for the generated frame with the mask and shapemode of the current crom frame
 				mask = CompMaskID[tj];
 				Shape = ShapeCompMode[tj];
-				UInt32 Hashc;
+				uint Hashc;
 				if (mask < 255)
 				{
 					for (uint ti = 0; ti < FWidth * FHeight; ti++) pmask[ti] = CompMasks[mask * FWidth * FHeight + ti];
@@ -282,18 +282,18 @@ namespace LibDmd.Converter.Serum
 		private void Check_Sprites(byte[] Frame, Int32 quelleframe, ref byte quelsprite, ref ushort frx,ref ushort fry, ref ushort spx, ref ushort spy, ref ushort wid,ref ushort hei)
 		{
 			byte ti=0;
-			UInt32 mdword;
+			uint mdword;
 			while ((ti < MAX_SPRITES_PER_FRAME) && (FrameSprites[quelleframe * MAX_SPRITES_PER_FRAME + ti] < 255)) 
 			{
 				byte qspr = FrameSprites[quelleframe * MAX_SPRITES_PER_FRAME + ti];
-				for (UInt32 tm=0;tm<MAX_SPRITE_DETECT_AREAS;tm++)
+				for (uint tm=0;tm<MAX_SPRITE_DETECT_AREAS;tm++)
 				{
 					if (SpriteDetAreas[qspr * MAX_SPRITE_DETECT_AREAS * 4 + tm * 4] == 0xffff) continue;
 					// we look for the sprite in the frame sent
-					mdword = (UInt32)(Frame[0] << 8) | (UInt32)(Frame[1] << 16) | (UInt32)(Frame[2] << 24);
+					mdword = (uint)(Frame[0] << 8) | (uint)(Frame[1] << 16) | (uint)(Frame[2] << 24);
 					for (UInt16 tj = 0; tj < FWidth * FHeight - 3; tj++)
 					{
-						mdword = (mdword >> 8) | (UInt32)(Frame[tj + 3] << 24);
+						mdword = (mdword >> 8) | (uint)(Frame[tj + 3] << 24);
 						// we look for the magic dword first
 						UInt16 sddp = SpriteDetDwordPos[qspr * MAX_SPRITE_DETECT_AREAS + tm];
 						if (mdword == SpriteDetDwords[qspr * MAX_SPRITE_DETECT_AREAS + tm]) 
@@ -372,7 +372,7 @@ namespace LibDmd.Converter.Serum
 		}
 		private void Colorize_Frame(byte[] frame,Int32 IDfound)
 		{
-			UInt32 ti;
+			uint ti;
 			// Generate the colorized version of a frame once identified in the crom frames
 			for (ti = 0; ti < FWidth * FHeight; ti++) 
 			{
