@@ -31,7 +31,7 @@ using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using LibDmd.Converter.cRom;
+using LibDmd.Converter.Serum;
 
 namespace LibDmd.DmdDevice
 {
@@ -84,7 +84,7 @@ namespace LibDmd.DmdDevice
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
-		private cRom _crom;
+		private Serum _crom;
 
 		public DmdDevice()
 		{
@@ -231,7 +231,7 @@ namespace LibDmd.DmdDevice
 				try
 				{
 					Logger.Info("Loading color rom file at {0}...", cromPath);
-					_crom = new cRom(_altcolorPath,_gameName); 
+					_crom = new Serum(_altcolorPath,_gameName); 
 				}
 				catch (Exception e)
 				{
