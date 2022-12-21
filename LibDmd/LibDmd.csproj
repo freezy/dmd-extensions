@@ -309,8 +309,8 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
-    <Compile Include="Converter\cRom\CRC32encode.cs" />
-    <Compile Include="Converter\cRom\cRom.cs" />
+    <Compile Include="Converter\Serum\CRC32encode.cs" />
+    <Compile Include="Converter\Serum\Serum.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
