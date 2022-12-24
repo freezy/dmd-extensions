@@ -84,7 +84,7 @@ namespace LibDmd.DmdDevice
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
-		private Serum _crom;
+		private Serum _serum;
 
 		public DmdDevice()
 		{
@@ -165,8 +165,8 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;
-			//_crom.Dispose();
-			_crom = null;
+			//_serum.Dispose();
+			_serum = null;
 
 			SetupColorizer();
 
@@ -231,14 +231,16 @@ namespace LibDmd.DmdDevice
 				try
 				{
 					Logger.Info("Loading color rom file at {0}...", cromPath);
-					_crom = new Serum(_altcolorPath,_gameName); 
+					_serum = new Serum(_altcolorPath,_gameName);
+					if (_serum.Serum_loaded == false) _serum = null;
 				}
 				catch (Exception e)
 				{
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					_serum = null;
 				}
 			}
-			if (_crom == null) 
+			if (_serum == null) 
 			{
 				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
 				var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
@@ -548,16 +550,16 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
 			// 2-bit graph
-			if (_crom != null) 
+			if (_serum != null) 
 			{
-				if (_crom.NOColors == 16)
+				if (_serum.NOColors == 16)
 				{
 					_graphs.Add(new RenderGraph
 					{
 						Name = "4-bit Colored VPM Graph",
 						Source = _vpmGray4Source,
 						Destinations = renderers,
-						Converter = _crom,
+						Converter = _serum,
 						Resize = _config.Global.Resize,
 						FlipHorizontally = _config.Global.FlipHorizontally,
 						FlipVertically = _config.Global.FlipVertically,
@@ -571,7 +573,7 @@ namespace LibDmd.DmdDevice
 						Name = "2-bit Colored VPM Graph",
 						Source = _vpmGray2Source,
 						Destinations = renderers,
-						Converter = _crom,
+						Converter = _serum,
 						Resize = _config.Global.Resize,
 						FlipHorizontally = _config.Global.FlipHorizontally,
 						FlipVertically = _config.Global.FlipVertically,
@@ -664,7 +666,7 @@ namespace LibDmd.DmdDevice
 				ScalerMode = _config.Global.ScalerMode
 			});
 
-			if ((_crom!=null) || (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)))
+			if ((_serum!=null) || (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)))
 			{
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
@@ -812,8 +814,8 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			if (_crom != null) _crom.Dispose();
-			_crom = null;
+			if (_serum != null) _serum.Dispose();
+			_serum = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;
@@ -865,7 +867,7 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_crom!=null)
+			if (_serum!=null)
 			{
 				if (_config.Global.ScaleToHd)
 				{
@@ -876,8 +878,8 @@ namespace LibDmd.DmdDevice
 						frame.Update(width, height, frame.Data);
 					}
 				}
-				_crom.Colorize(frame);
-				_crom.SetDimensions(frame.width, frame.height);
+				_serum.Colorize(frame);
+				_serum.SetDimensions(frame.width, frame.height);
 				_vpmGray2Source.NextFrame(frame);
 			}
 			else
@@ -935,7 +937,7 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_crom != null)
+			if (_serum != null)
 			{
 				if (_config.Global.ScaleToHd)
 				{
@@ -946,8 +948,8 @@ namespace LibDmd.DmdDevice
 						frame.Update(width, height, frame.Data);
 					}
 				}
-				_crom.Colorize(frame);
-				_crom.SetDimensions(frame.width, frame.height);
+				_serum.Colorize(frame);
+				_serum.SetDimensions(frame.width, frame.height);
 				_vpmGray2Source.NextFrame(frame);
 			}
 			else
