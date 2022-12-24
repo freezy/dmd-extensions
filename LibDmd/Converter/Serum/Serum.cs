@@ -20,16 +20,13 @@ namespace LibDmd.Converter.Serum
 	{
 		public override string Name { get; } = "converter to ColorizedRom";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
-		
+		public bool Serum_loaded = false;
 
 		public readonly string Filename;
 		// cROM components
 		private int FWidth; // frame width
 		private int FHeight; // frame height
 		public uint NOColors; // Number of colors in palette of original ROM=nO
-		IntPtr PFrame = (IntPtr)0;
-		IntPtr PPalette = (IntPtr)0;
-		IntPtr PRotations = (IntPtr)0;
 		public IObservable<System.Reactive.Unit> OnResume { get; }
 		public IObservable<System.Reactive.Unit> OnPause { get; }
 		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
@@ -43,7 +40,7 @@ namespace LibDmd.Converter.Serum
 		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors);
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations)
-		public static extern void Serum_Colorize(IntPtr frame, int width, int height, IntPtr palette, IntPtr rotations);
+		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations);
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// void Serum_Dispose(void)
 		public static extern void Serum_Dispose();
@@ -62,26 +59,15 @@ namespace LibDmd.Converter.Serum
 			trom[lstr1] = 0;
 			if (!Serum_Load(altcolorpath, romname, ref FWidth, ref FHeight, ref NOColors))
 			{
-				int tj = 48;
+				Serum_loaded = false;
 			}
-			int tk = 564;
-			if (PFrame == (IntPtr)0)
-			{
-				PFrame = Marshal.AllocHGlobal(FWidth * FHeight);
-				PPalette = Marshal.AllocHGlobal(64 * 3);
-				PRotations = Marshal.AllocHGlobal(3 * MAX_COLOR_ROTATIONS);
-			}
+			Serum_loaded = true;
 		}
 
 		public void Dispose()
 		{
 			Serum_Dispose();
-			if (PFrame != (IntPtr)0) Marshal.FreeHGlobal(PFrame);
-			if (PPalette != (IntPtr)0) Marshal.FreeHGlobal(PPalette);
-			if (PRotations != (IntPtr)0) Marshal.FreeHGlobal(PRotations);
-			PFrame = (IntPtr)0;
-			PPalette = (IntPtr)0;
-			PRotations = (IntPtr)0;
+			Serum_loaded = false;
 		}
 
 		public void Init()
@@ -134,11 +120,8 @@ namespace LibDmd.Converter.Serum
 			byte[][] planes = new byte[6][];
 			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[FWidth * FHeight / 8];
 			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
-			Marshal.Copy(frame.Data, 0, PFrame, FWidth * FHeight);
-			Serum_Colorize(PFrame, FWidth, FHeight, PPalette, PRotations);
-			Marshal.Copy(PFrame, Frame, 0, FWidth * FHeight);
-			Marshal.Copy(PPalette, pal, 0, 64 * 3);
-			Marshal.Copy(PRotations, rotations, 0, MAX_COLOR_ROTATIONS * 3);
+			for (uint ti = 0;ti<FWidth*FHeight;ti++) Frame[ti] = frame.Data[ti];
+			Serum_Colorize(Frame, FWidth, FHeight, pal, rotations);
 			Copy_Colours_to_Palette(pal, palette);
 			Copy_Frame_to_Planes(Frame, planes, 6);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
