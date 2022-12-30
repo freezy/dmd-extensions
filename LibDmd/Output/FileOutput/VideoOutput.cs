@@ -73,10 +73,10 @@ namespace LibDmd.Output.FileOutput
 
 			try {
 				if (_stream == null) {
-					_stream = _writer.AddMpeg4VideoStream(
+					_stream = _writer.AddMpeg4VcmVideoStream(
 						DmdWidth, DmdHeight, Fps,
 						quality: 100,
-						codec: KnownFourCCs.Codecs.X264,
+						codec: CodecIds.X264,
 						forceSingleThreadedAccess: true
 					);
 					Logger.Info("X264 encoder found.");
@@ -88,7 +88,7 @@ namespace LibDmd.Output.FileOutput
 
 			try {
 				if (_stream == null) {
-					_stream = _writer.AddMotionJpegVideoStream(DmdWidth, DmdHeight,
+					_stream = _writer.AddMJpegWpfVideoStream(DmdWidth, DmdHeight,
 						quality: 100
 					);
 				}

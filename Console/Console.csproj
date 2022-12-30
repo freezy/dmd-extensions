@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DmdExt</RootNamespace>
     <AssemblyName>dmdext</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
@@ -85,24 +85,22 @@
   <ItemGroup>
     <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Mindscape.Raygun4Net, Version=5.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Mindscape.Raygun4Net.5.5.1\lib\net40\Mindscape.Raygun4Net.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Mindscape.Raygun4Net4, Version=5.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Mindscape.Raygun4Net.5.5.1\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
-      <Private>True</Private>
     </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.5.1.0\lib\net46\NLog.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
       <Private>True</Private>
@@ -150,9 +148,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="icon.ico" />
-    <Content Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
     </None>
