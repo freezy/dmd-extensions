@@ -20,29 +20,67 @@ namespace LibDmd.Converter.Serum
 	{
 		public override string Name { get; } = "converter to ColorizedRom";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
-		public bool Serum_loaded = false;
+		public bool _serumLoaded = false;
 
-		public readonly string Filename;
 		// cROM components
-		private int FWidth; // frame width
-		private int FHeight; // frame height
-		public uint NOColors; // Number of colors in palette of original ROM=nO
+		/// <summary>
+		/// Frame width in LEDs
+		/// </summary>
+		private int _fWidth;
+		/// <summary>
+		/// Frame height in LEDs
+		/// </summary>
+		private int _fHeight;
+		/// <summary>
+		/// Number of colours in the manufacturer's ROM
+		/// </summary>
+		public uint _noColors;
+
 		public IObservable<System.Reactive.Unit> OnResume { get; }
 		public IObservable<System.Reactive.Unit> OnPause { get; }
 		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
+		/// <summary>
+		/// Maximum amount of color rotations per frame
+		/// </summary>
+		private const int MAX_COLOR_ROTATIONS = 8;
 
+		/// <summary>
+		/// Serum library functions declarations
+		/// </summary>
+
+		/// <summary>
+		/// Serum_Load: Function to call at table opening time
+		/// </summary>
+		/// <param name="altcolorpath">path of the altcolor directory, e.g. "c:/Visual Pinball/VPinMame/altcolor/"</param>
+		/// <param name="romname">rom name</param>
+		/// <param name="width">out: colorized rom width in LEDs</param>
+		/// <param name="height">out: colorized rom height in LEDs</param>
+		/// <param name="nocolors">out: number of colours in the manufacturer rom</param>
+		/// <returns></returns>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		//bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors)
+		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors)
 		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors);
+		
+		/// <summary>
+		/// Serum_Colorize: Function to call with a VpinMame frame to colorize it
+		/// </summary>
+		/// <param name="frame">width*height bytes: in: buffer with the VPinMame frame out: buffer with the colorized frame</param>
+		/// <param name="width">frame width in LEDs</param>
+		/// <param name="height">frame height in LEDs</param>
+		/// <param name="palette">64*3 bytes: out: RGB palette description 64 colours with their R, G and B component</param>
+		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations)
+		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations)
 		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations);
+		
+		/// <summary>
+		/// Serum_Dispose: Function to call at table unload time to free allocated memory
+		/// </summary>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// void Serum_Dispose(void)
+		// C format: void Serum_Dispose(void)
 		public static extern void Serum_Dispose();
 
 		public Serum(string altcolorpath,string romname)
@@ -57,17 +95,17 @@ namespace LibDmd.Converter.Serum
 			byte[] trom = new byte[lstr1 + 1];
 			for (int ti = 0; ti < lstr1; ti++) trom[ti] = tpstring1[ti];
 			trom[lstr1] = 0;
-			if (!Serum_Load(altcolorpath, romname, ref FWidth, ref FHeight, ref NOColors))
+			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors))
 			{
-				Serum_loaded = false;
+				_serumLoaded = false;
 			}
-			Serum_loaded = true;
+			_serumLoaded = true;
 		}
 
 		public void Dispose()
 		{
 			Serum_Dispose();
-			Serum_loaded = false;
+			_serumLoaded = false;
 		}
 
 		public void Init()
@@ -75,12 +113,12 @@ namespace LibDmd.Converter.Serum
 
 		}
 
-		private void Copy_Frame_to_Planes(byte[] Frame, byte[][] planes, byte colorbitdepth)
+		private void CopyFrameToPlanes(byte[] Frame, byte[][] planes, byte colorbitdepth)
 		{
 			byte bitmsk = 1;
 			uint tj = 0;
 			for (uint tk = 0; tk < colorbitdepth; tk++) planes[tk][tj] = 0;
-			for (uint ti = 0; ti < FWidth * FHeight; ti++) 
+			for (uint ti = 0; ti < _fWidth * _fHeight; ti++) 
 			{
 				byte tl = 1;
 				for (uint tk = 0; tk < colorbitdepth; tk++)
@@ -92,7 +130,7 @@ namespace LibDmd.Converter.Serum
 				{
 					bitmsk = 1;
 					tj++;
-					if (tj < FWidth * FHeight / 8)
+					if (tj < _fWidth * _fHeight / 8)
 					{
 						for (uint tk = 0; tk < colorbitdepth; tk++) planes[tk][tj] = 0;
 					}
@@ -101,7 +139,7 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		void Copy_Colours_to_Palette(byte[] scols, Color[] dpal)
+		void CopyColoursToPalette(byte[] scols, Color[] dpal)
 		{
 			for (int ti = 0; ti < 64; ti++)
 			{
@@ -116,14 +154,14 @@ namespace LibDmd.Converter.Serum
 		{
 			Color[] palette = new Color[64];
 			byte[] pal = new byte[64 * 3];
-			byte[] Frame = new byte[FWidth * FHeight];
+			byte[] Frame = new byte[_fWidth * _fHeight];
 			byte[][] planes = new byte[6][];
-			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[FWidth * FHeight / 8];
+			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
 			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
-			for (uint ti = 0;ti<FWidth*FHeight;ti++) Frame[ti] = frame.Data[ti];
-			Serum_Colorize(Frame, FWidth, FHeight, pal, rotations);
-			Copy_Colours_to_Palette(pal, palette);
-			Copy_Frame_to_Planes(Frame, planes, 6);
+			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
+			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations);
+			CopyColoursToPalette(pal, palette);
+			CopyFrameToPlanes(Frame, planes, 6);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
 		}
 		public void Convert(DMDFrame frame)
