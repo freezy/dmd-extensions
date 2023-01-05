@@ -18,7 +18,7 @@ namespace LibDmd.Output.ZeDMD
 	/// 2 64x32-LED-matrix display for 15$-20$ each. So for less than 50$ you get a full real DMD!
 	/// I am thinking about designing a shield for a 38-pin ESP32, I will give the PCB layout once done (for free, sure), then you can
 	/// </summary>
-	public class ZeDMD : IGray4Destination, IGray2Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IFixedSizeDestination 
+	public class ZeDMD : IGray2Destination, IGray4Destination, IGray6Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IResizableDestination
 	{
 		public string Name { get; } = "ZeDMD";
 		public bool IsAvailable { get; private set; }
@@ -33,10 +33,6 @@ namespace LibDmd.Output.ZeDMD
 
 		private static ZeDMD _instance;
 		private readonly byte[] _frameBufferRgb24;
-		/*private readonly byte[] _frameBufferGray4;
-		private readonly byte[] _frameBufferGray2;
-		private readonly byte[] _frameBufferColoredGray4;
-		private readonly byte[] _frameBufferColoredGray6;*/
 
 		private const byte RGB24 = 3;
 		private const byte ColGray6 = 11;
@@ -48,6 +44,9 @@ namespace LibDmd.Output.ZeDMD
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
+
+		private int RomWidth = 0; // The size of the frames in the rom
+		private int RomHeight = 0;
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
@@ -92,6 +91,19 @@ namespace LibDmd.Output.ZeDMD
 
 			ClearColor();
 		}
+
+		public void SetDimensions(int width, int height)
+		{
+			byte[] tdata= new byte[5];
+			RomHeight= height;
+			RomWidth= width;
+			tdata[0] = 2; // send dimension mode
+			tdata[1] = (byte)(width & 0xff);
+			tdata[2] = (byte)((width >> 8) & 0xff);
+			tdata[3] = (byte)(height & 0xff);
+			tdata[4] = (byte)((height >> 8) & 0xff);
+			RenderRaw(tdata);
+		}
 		public void Init()
 		{
 			int width = new int();
@@ -118,8 +130,8 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			byte[][] tpl = new byte[4][];
-			for (int i = 0; i < 4; i++) tpl[i] = new byte[DmdHeight * DmdWidth / 8];
-			for (int i = 0; i < DmdHeight * DmdWidth / 8; i++) 
+			for (int i = 0; i < 4; i++) tpl[i] = new byte[RomHeight * RomWidth / 8];
+			for (int i = 0; i < RomHeight * RomWidth / 8; i++) 
 			{
 				tpl[0][i] = frame.Planes[0][i];
 				tpl[1][i] = frame.Planes[1][i];
@@ -154,7 +166,14 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderGray4(byte[] frame)
 		{
 			// split to sub frames
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 4, frame);
+
+			for (int ti=0; ti<4; ti++)
+			{
+				_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f / 4.0f * (ti + 1));
+				_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f / 4.0f * (ti + 1));
+				_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f / 4.0f * (ti + 1));
+			}
 
 			// copy to frame buffer
 			//var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
@@ -163,7 +182,7 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBufferRgb24, Gray4, 1 + 48 + DmdWidth * DmdHeight / 2);
+				RenderRaw(_frameBufferRgb24, Gray4, 1 + 48 + RomWidth * RomHeight / 2);
 			}
 		}
 
@@ -178,7 +197,29 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + DmdWidth * DmdHeight/ 2);
+				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + RomWidth * RomHeight/ 2);
+			}
+		}
+		public void RenderGray6(byte[] frame)
+		{
+			//255,109,0
+			for (int ti=0;ti<64;ti++)
+			{
+				_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f / 63.0f * (float)ti);
+				_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f / 63.0f * (float)ti);
+				_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f / 63.0f * (float)ti);
+			}
+			// split to sub frames
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 6, frame);
+			// copy to frame buffer
+			//var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
+			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 193);
+
+			// send frame buffer to device
+			if (changed)
+			{
+				for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
+				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + RomWidth * RomHeight * 6 / 8 + 3 * 8);
 			}
 		}
 		public void RenderColoredGray6(ColoredFrame frame)
@@ -194,13 +235,13 @@ namespace LibDmd.Output.ZeDMD
 			{
 				if (frame.isRotation)
 				{
-					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti + 1 + 192 + DmdWidth * DmdHeight * 6 / 8] = frame.Rotations[ti];
+					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti + 1 + 192 + RomWidth * RomHeight * 6 / 8] = frame.Rotations[ti];
 				}
 				else
 				{
-					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + DmdWidth * DmdHeight * 6 / 8] = 255;
+					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
 				}
-				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + DmdWidth * DmdHeight * 6 / 8 + 3 * 8);
+				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + RomWidth * RomHeight * 6 / 8 + 3 * 8);
 			}
 		}
 		private bool CopyPalette(Color[] palette,byte[] framebuffer,int ncol)
@@ -226,7 +267,7 @@ namespace LibDmd.Output.ZeDMD
 				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 				if (changed)
 				{
-					pDMD.StreamBytes(_frameBufferRgb24, DmdWidth * DmdHeight * 3 + 1);
+					pDMD.StreamBytes(_frameBufferRgb24, RomWidth * RomHeight * 3 + 1);
 				}
 		}
 		public void RenderRaw(byte[] data, byte Mode, int length)
@@ -240,13 +281,6 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderRaw(byte[] data)
 		{
-
-
-
-			//return;
-			
-			
-			
 			if (pDMD.Opened)
 			{
 				pDMD.StreamBytes(data, data.Length);
