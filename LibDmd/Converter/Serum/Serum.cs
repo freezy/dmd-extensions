@@ -99,7 +99,7 @@ namespace LibDmd.Converter.Serum
 			{
 				_serumLoaded = false;
 			}
-			if (_noColors == 16) From = FrameFormat.Gray4;
+			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
 			_serumLoaded = true;
 		}
 
