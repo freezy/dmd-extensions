@@ -17,10 +17,6 @@ namespace LibDmd.Output.ZeDMD
 		public const int N_INTERMEDIATE_CTR_CHARS = 4;
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
-		private byte[] lastc4 = new byte[4];
-		private int[] lastlc4 = new int[4];
-		private byte aclc4 = 0;
-		private byte[] _frameBufferSaved = new byte[1 + 256 * 64 * 4];
 
 
 
@@ -83,28 +79,21 @@ namespace LibDmd.Output.ZeDMD
 		}
 		public bool StreamBytes(byte[] pBytes, int nBytes)
 		{
-			int step = 0;
 			if (_serialPort.IsOpen)
 			{
 				try
 				{
 					if (_serialPort.ReadByte() == 'R')
 					{
-						step++;
 						// first send
 						byte[] pBytes2 = new byte[MAX_SERIAL_WRITE_AT_ONCE];
 						for (int ti = 0; ti < N_CTRL_CHARS; ti++) pBytes2[ti] = CtrlCharacters[ti];
-						step++;
 						int tosend = (nBytes < MAX_SERIAL_WRITE_AT_ONCE - N_CTRL_CHARS) ? nBytes : (MAX_SERIAL_WRITE_AT_ONCE - N_CTRL_CHARS);
 						for (int ti = 0; ti < tosend; ti++) pBytes2[ti + N_CTRL_CHARS] = pBytes[ti];
-						step++;
 						_serialPort.Write(pBytes2, 0, tosend + N_CTRL_CHARS);
-						step++;
 						if (_serialPort.ReadByte() != 'A') return false;
 						// next ones
-						step++;
 						int bufferPosition = tosend;
-						step++;
 						while (bufferPosition < nBytes)
 						{
 							tosend = (nBytes - bufferPosition < MAX_SERIAL_WRITE_AT_ONCE) ? nBytes - bufferPosition : MAX_SERIAL_WRITE_AT_ONCE;
@@ -113,7 +102,6 @@ namespace LibDmd.Output.ZeDMD
 							{
 								// Received (A)cknowledge, ready to send the next chunk.
 								bufferPosition += tosend;
-								step++;
 							}
 							else
 							{
@@ -121,23 +109,6 @@ namespace LibDmd.Output.ZeDMD
 								return false;
 							}
 						}
-
-
-
-
-
-
-						lastc4[aclc4] = pBytes[0];
-						lastlc4[aclc4] = nBytes;
-						aclc4++;
-						if (aclc4 == 4) aclc4 = 0;
-						for (int ti = 0; ti < nBytes; ti++) _frameBufferSaved[ti] = pBytes[ti];
-
-
-
-
-
-
 						return true;
 					}
 					else
@@ -149,12 +120,6 @@ namespace LibDmd.Output.ZeDMD
 				{
 					return false;
 				}
-			}
-			int tcl = aclc4 - 1;
-			if (tcl < 0) tcl = 3;
-			using (BinaryWriter binWriter = new BinaryWriter(File.Open("d:\\dump.bin", FileMode.Create)))
-			{
-				for (int ti=0;ti< lastlc4[tcl];ti++) binWriter.Write(_frameBufferSaved[ti]);
 			}
 			return false;
 		}
