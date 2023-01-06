@@ -38,7 +38,7 @@ namespace LibDmd.Output.ZeDMD
 		private const byte ColGray6 = 11;
 		private const byte Gray4 = 7;
 		private const byte ColGray4 = 9;
-		//private const byte Gray2 = 8;
+		private const byte Gray2 = 8;
 
 		private Color[] _currentPalette = ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 4);
 
@@ -124,65 +124,52 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray2(byte[] frame)
 		{
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
-		}
-
-		public void RenderColoredGray2(ColoredFrame frame)
-		{
-			byte[][] tpl = new byte[4][];
-			for (int i = 0; i < 4; i++) tpl[i] = new byte[RomHeight * RomWidth / 8];
-			for (int i = 0; i < RomHeight * RomWidth / 8; i++) 
-			{
-				tpl[0][i] = frame.Planes[0][i];
-				tpl[1][i] = frame.Planes[1][i];
-				tpl[2][i] = tpl[3][i] = 0;
-			}
-			Color[] tpa = new Color[16]{ Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0),
-										 Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0),
-										 Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0),
-										 Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0), Color.FromRgb(0, 0, 0)};
-			for (int i = 0; i < 4; i++) tpa[i] = frame.Palette[i];
-			var tfr = new ColoredFrame(tpl, tpa);
-			RenderColoredGray4(tfr);
-			// copy palette
-			/*var paletteChanged = CopyPalette(frame.Palette, _frameBufferGray2, 4);
-
-			// copy frame
-			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 13);
-			Thread.Sleep(100);
-			// send frame buffer to device
-			if (frameChanged || paletteChanged)
-			{
-				RenderRaw(_frameBufferGray2);
-			}*/
-			/*SetPalette(frame.Palette, frame.PaletteIndex);
-
-			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
-
-			// send frame buffer to device
-			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));*/
-		}
-
-		public void RenderGray4(byte[] frame)
-		{
-			// split to sub frames
-			var planes = FrameUtil.Split(RomWidth, RomHeight, 4, frame);
-
-			for (int ti=0; ti<4; ti++)
-			{
-				_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f / 4.0f * (ti + 1));
-				_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f / 4.0f * (ti + 1));
-				_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f / 4.0f * (ti + 1));
-			}
-
-			// copy to frame buffer
-			//var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 2, frame);
 			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 13);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBufferRgb24, Gray4, 1 + 48 + RomWidth * RomHeight / 2);
+				RenderRaw(_frameBufferRgb24, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
+			}
+		}
+
+		public void RenderColoredGray2(ColoredFrame frame)
+		{
+			// copy palette
+			var paletteChanged = CopyPalette(frame.Palette, _frameBufferRgb24, 4);
+
+			// copy frame
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferRgb24, 13);
+
+			// send frame buffer to device
+			if (frameChanged || paletteChanged)
+			{
+				RenderRaw(_frameBufferRgb24, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
+			}
+
+		}
+
+		private float CalcBrightness(float x)
+		{
+			// function to improve the brightness with fx=ax²+bc+c, f(0)=0, f(1)=1, f'(1.1)=0
+			return (-x * x + 2.1f * x) / 1.1f;
+		}
+		public void RenderGray4(byte[] frame)
+		{
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 4, frame);
+			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 49);
+
+			// send frame buffer to device
+			if (changed)
+			{
+				for (int ti = 0; ti < 16; ti++)
+				{
+					_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f * CalcBrightness(ti / 15.0f));
+					_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f * CalcBrightness(ti / 15.0f));
+					_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f * CalcBrightness(ti / 15.0f));
+				}
+				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + RomWidth * RomHeight / 2);
 			}
 		}
 
@@ -202,26 +189,16 @@ namespace LibDmd.Output.ZeDMD
 		}
 		public void RenderGray6(byte[] frame)
 		{
-			//255,109,0
-			for (int ti=0;ti<64;ti++)
-			{
-				_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f / 63.0f * (float)ti);
-				_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f / 63.0f * (float)ti);
-				_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f / 63.0f * (float)ti);
-			}
-			// split to sub frames
 			var planes = FrameUtil.Split(RomWidth, RomHeight, 6, frame);
-			// copy to frame buffer
-			//var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
 			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 193);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
-				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + RomWidth * RomHeight * 6 / 8 + 3 * 8);
+				RenderRaw(_frameBufferRgb24, Gray2, 1 + 192 + 6 * RomWidth * RomHeight / 8);
 			}
 		}
+
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			// copy palette
@@ -241,7 +218,7 @@ namespace LibDmd.Output.ZeDMD
 				{
 					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
 				}
-				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + RomWidth * RomHeight * 6 / 8 + 3 * 8);
+				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + 6 * RomWidth * RomHeight / 8 + 3 * 8);
 			}
 		}
 		private bool CopyPalette(Color[] palette,byte[] framebuffer,int ncol)
@@ -313,7 +290,7 @@ namespace LibDmd.Output.ZeDMD
 		private void WritePalette(Color[] palette)
 		{
 			var pos = 1;
-			for (var i = 0; i < 4; i++)
+			for (var i = 0; i < palette.Length; i++)
 			{
 				_frameBufferRgb24[pos] = palette[i].R;
 				_frameBufferRgb24[pos + 1] = palette[i].G;
