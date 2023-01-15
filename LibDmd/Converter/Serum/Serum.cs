@@ -73,8 +73,8 @@ namespace LibDmd.Converter.Serum
 		/// <param name="palette">64*3 bytes: out: RGB palette description 64 colours with their R, G and B component</param>
 		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations)
-		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations);
+		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
+		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
 		
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
@@ -160,7 +160,20 @@ namespace LibDmd.Converter.Serum
 			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
 			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
 			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
-			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations);
+			uint triggerID = 0xFFFFFFFF;
+			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
+			/*if (triggerID!=0xFFFFFFFF)
+			{
+				// trigger any event according to the triggerID
+				switch(triggerID)
+				{
+					case 0: // event 0
+						break;
+					case 1: // event 1
+						break;
+					...
+				}
+			}*/
 			CopyColoursToPalette(pal, palette);
 			CopyFrameToPlanes(Frame, planes, 6);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
