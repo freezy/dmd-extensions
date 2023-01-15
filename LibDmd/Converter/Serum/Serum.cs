@@ -21,6 +21,7 @@ namespace LibDmd.Converter.Serum
 		public override string Name { get; } = "converter to ColorizedRom";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
 		public bool _serumLoaded = false;
+		public uint _nTriggersAvailable { get; } = 0;
 
 		// cROM components
 		/// <summary>
@@ -61,8 +62,8 @@ namespace LibDmd.Converter.Serum
 		/// <param name="nocolors">out: number of colours in the manufacturer rom</param>
 		/// <returns></returns>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors)
-		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors);
+		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
+		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors, ref uint triggernb );
 		
 		/// <summary>
 		/// Serum_Colorize: Function to call with a VpinMame frame to colorize it
@@ -95,10 +96,12 @@ namespace LibDmd.Converter.Serum
 			byte[] trom = new byte[lstr1 + 1];
 			for (int ti = 0; ti < lstr1; ti++) trom[ti] = tpstring1[ti];
 			trom[lstr1] = 0;
-			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors))
+			uint nTriggers=0;
+			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors, ref nTriggers))
 			{
 				_serumLoaded = false;
 			}
+			_nTriggersAvailable= nTriggers;
 			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
 			_serumLoaded = true;
 		}
@@ -162,18 +165,6 @@ namespace LibDmd.Converter.Serum
 			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
 			uint triggerID = 0xFFFFFFFF;
 			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			/*if (triggerID!=0xFFFFFFFF)
-			{
-				// trigger any event according to the triggerID
-				switch(triggerID)
-				{
-					case 0: // event 0
-						break;
-					case 1: // event 1
-						break;
-					...
-				}
-			}*/
 			CopyColoursToPalette(pal, palette);
 			CopyFrameToPlanes(Frame, planes, 6);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
