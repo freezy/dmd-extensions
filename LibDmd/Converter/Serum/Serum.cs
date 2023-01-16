@@ -136,7 +136,7 @@ namespace LibDmd.Converter.Serum
 			_isPUPdll = (_hPUPdll != IntPtr.Zero);
 			if (_isPUPdll)
 			{
-				IntPtr tpProc= GetProcAddress(_hPUPdll, "Render_RGB24");
+				IntPtr tpProc= GetProcAddress(_hPUPdll, "PuP_Trigger");
 				if (tpProc == IntPtr.Zero) _isPUPdll = false;
 				else _pPuP_Trigger=(SendTrigger)Marshal.GetDelegateForFunctionPointer(tpProc, typeof(SendTrigger));
 			}
