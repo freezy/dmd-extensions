@@ -89,7 +89,7 @@ namespace LibDmd.Output.ZeDMD
 			_frameBufferColoredGray6 = new byte[1 + 192 + DmdWidth * DmdHeight];// * 6 / 8];
 			_frameBufferColoredGray6[0] = ColGray6; // render compressed 1 pixel/6bit with 64 colors palette*/
 
-			ClearColor();
+			if (IsAvailable) ClearColor();
 		}
 
 		public void SetDimensions(int width, int height)
