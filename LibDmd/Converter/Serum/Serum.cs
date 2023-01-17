@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Configuration.Assemblies;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -14,6 +13,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
+using LibDmd.Output.PinUp;
 using NLog;
 using SharpGL;
 
@@ -40,15 +40,9 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		public uint _noColors;
 		/// <summary>
-		/// Handle to the Pinup DLL instance
+		/// =active instance of Pinup Player if available, =null if not
 		/// </summary>
-		private IntPtr _hPUPdll = IntPtr.Zero;
-		/// <summary>
-		/// true if the Pinup DLL is available in the VPinMame directory
-		/// </summary>
-		private bool _isPUPdll = false;
-		private delegate void SendTrigger(ushort trigID);
-		private SendTrigger _pPuP_Trigger;
+		private PinUpOutput _activePupOutput = null;
 
 		public IObservable<System.Reactive.Unit> OnResume { get; }
 		public IObservable<System.Reactive.Unit> OnPause { get; }
@@ -97,22 +91,6 @@ namespace LibDmd.Converter.Serum
 		// C format: void Serum_Dispose(void)
 		public static extern void Serum_Dispose();
 
-		/// <summary>
-		/// LoadLibrary: returns false if the DLL is not available, avoid error
-		/// </summary>
-		/// <param name="lpFileName">Name of the library to load</param>
-		/// <returns></returns>
-		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
-		static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
-		/// <summary>
-		/// GetProcAddress: returns the address of a function in a loaded DLL
-		/// </summary>
-		/// <param name="hModule"></param>
-		/// <param name="procName"></param>
-		/// <returns></returns>
-		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-		static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
 		public Serum(string altcolorpath,string romname)
 		{
 			byte[] tpstring1 = Encoding.ASCII.GetBytes(altcolorpath);
@@ -129,23 +107,26 @@ namespace LibDmd.Converter.Serum
 			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors, ref nTriggers))
 			{
 				_serumLoaded = false;
+				return;
 			}
 			_nTriggersAvailable= nTriggers;
 			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
-			_hPUPdll = LoadLibrary(Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath), "dmddevicePUP.dll"));
-			_isPUPdll = (_hPUPdll != IntPtr.Zero);
-			if (_isPUPdll)
-			{
-				IntPtr tpProc= GetProcAddress(_hPUPdll, "PuP_Trigger");
-				if (tpProc == IntPtr.Zero) _isPUPdll = false;
-				else _pPuP_Trigger=(SendTrigger)Marshal.GetDelegateForFunctionPointer(tpProc, typeof(SendTrigger));
-			}
 			_serumLoaded = true;
+		}
+
+		public void SetPinupInstance(PinUpOutput puo)
+		{
+			_activePupOutput = puo;
+			if ((puo != null) && (_nTriggersAvailable > 0)) 
+			{
+				puo.PuPFrameMatching = false;
+			}
 		}
 
 		public void Dispose()
 		{
 			Serum_Dispose();
+			_activePupOutput= null;
 			_serumLoaded = false;
 		}
 
@@ -202,7 +183,7 @@ namespace LibDmd.Converter.Serum
 			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
 			uint triggerID = 0xFFFFFFFF;
 			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			if ((_isPUPdll) && (triggerID != 0xFFFFFFFF)) _pPuP_Trigger((ushort)triggerID);
+			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
 			CopyColoursToPalette(pal, palette);
 			CopyFrameToPlanes(Frame, planes, 6);
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
