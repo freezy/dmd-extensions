@@ -14,9 +14,10 @@ namespace LibDmd.Output.PinUp
 	public class PinUpOutput : IBitmapDestination, IGray2Destination, IGray4Destination, IFixedSizeDestination
 	{
 		public string OutputFolder { get; set; }
-
 		public string Name { get; } = "PinUP Writer";
 		public bool IsAvailable { get; private set; }
+		public bool PuPFrameMatching { get; set; } = true;
+		public bool isPuPTrigger { get; } = true;
 
 		public int Width = 128;
 		public int Height = 32;
@@ -78,7 +79,16 @@ namespace LibDmd.Output.PinUp
 				}
 				SetGameName = (_dSetGameName)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dSetGameName));
 
-			} catch (Exception e) {
+				pAddress = NativeMethods.GetProcAddress(pDll, "PuP_Trigger");
+				if (pAddress == IntPtr.Zero)
+				{
+					isPuPTrigger = false;
+					Logger.Error("[PinUpOutput] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated");
+				}
+				else
+					PuPTrigger = (_SendTrigger)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_SendTrigger));
+			}
+			catch (Exception e) {
 				IsAvailable = false;
 				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
 				return;
@@ -99,6 +109,7 @@ namespace LibDmd.Output.PinUp
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
 		public void RenderBitmap(BitmapSource bmp)
 		{
+			if (PuPFrameMatching == false) return;
 			RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
 		}
 
@@ -121,6 +132,7 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderRgb24(byte[] frame)
 		{
+			if (PuPFrameMatching == false) return;
 			try {
 				// Copy the fram array to unmanaged memory.
 
@@ -137,7 +149,9 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderGray4(byte[] frame)
 		{
-			try {
+			if (PuPFrameMatching == false) return;
+			try
+			{
 				// Render as orange palette (same as default with no PAL loaded)
 				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
@@ -156,12 +170,15 @@ namespace LibDmd.Output.PinUp
 		public void RenderGray2(byte[] frame)
 		{
 			// 2-bit frames are rendered as 4-bit
+			if (PuPFrameMatching == false) return;
 			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
 		}
 
 		public void RenderRaw(byte[] data)
 		{
-			try {
+			if (PuPFrameMatching == false) return;
+			try
+			{
 				Marshal.Copy(data, 0, _pnt, Width * Height * 3);
 				Render_RGB24((ushort) Width, (ushort) Height, _pnt);
 			} catch (Exception e) {
@@ -190,6 +207,11 @@ namespace LibDmd.Output.PinUp
 			// ignore
 		}
 
+		public void SendTriggerID(ushort id)
+		{
+			if (isPuPTrigger) PuPTrigger(id);
+		}
+
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void _dRender_RGB24(ushort width, ushort height, IntPtr currbuffer);
 		static _dRender_RGB24 Render_RGB24;
@@ -209,6 +231,10 @@ namespace LibDmd.Output.PinUp
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void _dSetGameName(IntPtr cName, int len);
 		static _dSetGameName SetGameName;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate void _SendTrigger(ushort trigID);
+		private _SendTrigger PuPTrigger;
 	}
 
 	static class NativeMethods
