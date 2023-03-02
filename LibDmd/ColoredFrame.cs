@@ -21,12 +21,8 @@ namespace LibDmd
 		public int PaletteIndex { get; }
 
 		/// <summary>
-		/// Colour Rotation descriptions.
+		/// Rotation descriptions.
 		/// </summary>
-		/// <remarks>
-		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
-		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
-		/// <remarks>
 		public bool isRotation = false;
 		public byte[] Rotations { get; }
 

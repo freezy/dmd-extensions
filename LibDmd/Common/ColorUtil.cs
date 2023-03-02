@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using NLog.Config;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace LibDmd.Common
 {
@@ -337,5 +340,126 @@ namespace LibDmd.Common
 			}
 			return t1;
 		}
+
+		// for colour rotation
+		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
+		private static byte[] RotCols = new byte[64];
+		private static byte[] FirstCol = new byte[MAX_COLOR_ROTATIONS];
+		private static byte[] NCol = new byte[MAX_COLOR_ROTATIONS];
+		private static byte[] AcFirst = new byte[MAX_COLOR_ROTATIONS];
+		private static double[] Timespan = new double[MAX_COLOR_ROTATIONS];
+		private static DateTime[] StartTime = new DateTime[MAX_COLOR_ROTATIONS];
+		private static Color[] _nextFramePalette; // Palette of the frame
+		private static bool _isRotationPalette; // Is there any colour rotation
+		private static DateTime _lastRotationUpdate; // palette already updated
+
+
+		public static void setColorRotations(ColoredFrame frame)
+		{
+			_isRotationPalette = false;
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+			{
+				if (frame.Rotations[ti * 3] != 255)
+				{
+					_isRotationPalette = true;
+					break;
+				}
+			}
+			for (byte ti = 0; ti < 64; ti++) RotCols[ti] = ti;
+			if (_isRotationPalette)
+			{
+				DateTime actime = DateTime.UtcNow;
+				for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+				{
+					FirstCol[ti] = frame.Rotations[ti * 3];
+					NCol[ti] = frame.Rotations[ti * 3 + 1];
+					Timespan[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
+					StartTime[ti] = actime;
+					AcFirst[ti] = 0;
+				}
+				_nextFramePalette = frame.Palette;
+				_lastRotationUpdate = actime;
+			}
+		}
+
+		public static bool checkForNextColorRotations(ColoredFrame frame) {
+
+			if (!_isRotationPalette)
+				return false;
+
+			bool isPaletteRotated = false;
+			DateTime actime = DateTime.UtcNow;
+
+			if (actime.Subtract(_lastRotationUpdate).TotalMilliseconds < 5)
+				return true;
+
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+			{
+				if (FirstCol[ti] == 255) continue;
+				if (actime.Subtract(StartTime[ti]).TotalMilliseconds >= Timespan[ti])
+				{
+					StartTime[ti] = actime;
+					AcFirst[ti]++;
+					if (AcFirst[ti] == NCol[ti]) AcFirst[ti] = 0;
+					for (byte tj = 0; tj < NCol[ti]; tj++)
+					{
+						RotCols[tj + FirstCol[ti]] = (byte)(tj + FirstCol[ti] + AcFirst[ti]);
+						if (RotCols[tj + FirstCol[ti]] >= FirstCol[ti] + NCol[ti]) RotCols[tj + FirstCol[ti]] -= NCol[ti];
+					}
+					isPaletteRotated = true;
+				}
+			}
+			if (isPaletteRotated)
+			{
+				_nextFramePalette = new Color[64];
+				for (int tj = 0; tj < 64; tj++)
+				{
+					_nextFramePalette[tj] = frame.Palette[RotCols[tj]];
+				}
+				return true;
+			}
+			return false;
+		}
+		public static Color[] getNextRotationsPalette()
+		{
+			return _nextFramePalette;
+		}
+
+		private static byte[] _nextFrameData;
+
+		public static byte[] ColorizeFrame(int width, int height, ColoredFrame frame, byte[] colorizedFrame = null)
+		{
+			byte[] tframe = FrameUtil.Join(width, height, frame.Planes);
+			Color[] tpalette = frame.Palette;
+
+			if (frame.isRotation)
+			{
+				bool frameChanged = false;
+				if (_nextFrameData != null)
+				{
+					for (int ti = 0; ti < width * height; ti++)
+					{
+						if (tframe[ti] != _nextFrameData[ti])
+						{
+							frameChanged = true;
+							break;
+						}
+					}
+				}
+				else frameChanged = true;
+				if (frameChanged)
+				{
+					_nextFrameData = tframe;
+					ColorUtil.setColorRotations(frame);
+					return ColorizeFrame(width, height, FrameUtil.Join(width, height, frame.Planes), frame.Palette);
+				}
+				if (_isRotationPalette) {
+					ColorUtil.checkForNextColorRotations(frame);
+					return ColorizeFrame(width, height, FrameUtil.Join(width, height, frame.Planes), ColorUtil.getNextRotationsPalette());
+				}
+			}
+			return ColorizeFrame(width, height, FrameUtil.Join(width, height, frame.Planes), frame.Palette);
+		}
+
 	}
 }

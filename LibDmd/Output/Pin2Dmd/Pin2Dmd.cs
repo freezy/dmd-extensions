@@ -7,7 +7,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGrayDestination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGrayDestination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
@@ -16,8 +16,10 @@ namespace LibDmd.Output.Pin2Dmd
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private byte[] _frameBufferGray4;
+		private byte[] _frameBufferGray6;
 		private readonly byte[] _colorPalette;
 		private readonly byte[] _colorPalette16;
+		private readonly byte[] _colorPalette64;
 		private static Pin2Dmd _instance;
 
 		private Pin2Dmd()
@@ -40,6 +42,15 @@ namespace LibDmd.Output.Pin2Dmd
 			_colorPalette16[3] = 0xfe;
 			_colorPalette16[4] = 0xed;
 			_colorPalette16[5] = 0x10;
+
+			// New firmware color palette
+			_colorPalette64 = new byte[256];
+			_colorPalette64[0] = 0x01;
+			_colorPalette64[1] = 0xc3;
+			_colorPalette64[2] = 0xe7;
+			_colorPalette64[3] = 0xfe;
+			_colorPalette64[4] = 0xed;
+			_colorPalette64[5] = 0x40;
 		}
 		
 
@@ -68,6 +79,14 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferGray4[1] = 0xC3;
 			_frameBufferGray4[2] = 0xE7;
 			_frameBufferGray4[3] = 0x00;
+
+			// 6 bits per pixel plus 4 init bytes
+			size = (DmdWidth * DmdHeight * 6 / 8) + 4;
+			_frameBufferGray6 = new byte[size];
+			_frameBufferGray6[0] = 0x81; // frame sync bytes
+			_frameBufferGray6[1] = 0xC3;
+			_frameBufferGray6[2] = 0xE8;
+			_frameBufferGray6[3] = 0x06;
 		}
 
 		public void RenderGray2(byte[] frame)
@@ -110,6 +129,40 @@ namespace LibDmd.Output.Pin2Dmd
 			// send frame buffer to device
 			if (changed) {
 				RenderRaw(_frameBufferRgb24);
+			}
+		}
+
+		public void RenderColoredGray6(ColoredFrame frame)
+		{
+			// copy to buffer
+			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray6, 4);
+
+			if (frame.isRotation)
+			{	if (changed)
+				{
+					ColorUtil.setColorRotations(frame);
+					SetPalette(frame.Palette, frame.PaletteIndex);
+					// send frame buffer to device
+					RenderRaw(_frameBufferGray6);
+				}
+				else
+				{
+					if (ColorUtil.checkForNextColorRotations(frame))
+					{
+						SetPalette(ColorUtil.getNextRotationsPalette(), 0);
+						// send frame buffer to device
+						RenderRaw(_frameBufferGray6);
+					}
+				}
+			}
+			else
+			{
+				SetPalette(frame.Palette, frame.PaletteIndex);
+				// send frame buffer to device
+				if (changed)
+				{
+					RenderRaw(_frameBufferGray6);
+				}
 			}
 		}
 
@@ -205,7 +258,20 @@ namespace LibDmd.Output.Pin2Dmd
 				}
 				RenderRaw(_colorPalette16);
 			}
+			if (numOfColors == 64)
+			{
+				for (var i = 0; i < 64; i++)
+				{
+					var color = palette[i];
+					_colorPalette64[pos] = color.R;
+					_colorPalette64[pos + 1] = color.G;
+					_colorPalette64[pos + 2] = color.B;
+					pos += 3;
+				}
+				RenderRaw(_colorPalette64);
+			}
 		}
+
 	
 		public void ClearDisplay()
 		{
