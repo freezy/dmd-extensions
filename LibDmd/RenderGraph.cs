@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
+using LibDmd.Converter;
 using NLog;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
@@ -35,6 +36,10 @@ namespace LibDmd
 	/// way. It does also the conversion between non-matching source and
 	/// destination. 
 	/// 
+	/// A render graph can also contain an <see cref="IConverter"/>. These are
+	/// classes that for a defined input format produce different output 
+	/// formats. An example would be a 2-bit source that gets converted to
+	/// RGB24, or, to colored 2- and 4-bit.
 	/// </summary>
 	public class RenderGraph : IRenderer
 	{
@@ -58,6 +63,11 @@ namespace LibDmd
 		/// on the computer screen, PinDMD and PIN2DMD integrations.
 		/// </summary>
 		public List<IDestination> Destinations { get; set; }
+
+		/// <summary>
+		/// If set, convert the frame format.
+		/// </summary>
+		public IConverter Converter { get; set; }
 
 		/// <summary>
 		/// True of the graph is currently active, i.e. if the source is
@@ -91,8 +101,6 @@ namespace LibDmd
 		public string IdlePlay { get; set; }
 
 		public ScalerMode ScalerMode { get; set; }
-
-		public bool Colored { get; set; }
 
 		/// <summary>
 		/// The default color used if there is no palette defined
@@ -135,6 +143,12 @@ namespace LibDmd
 					Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim.Width, dim.Height));
 				}
 			});
+
+			// initialize converter
+			if (Converter is ISource converter) {
+				converter.Dimensions = Source.Dimensions;
+			}
+			Converter?.Init();
 
 			return this;
 		}
@@ -189,14 +203,128 @@ namespace LibDmd
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
 				var sourceGray6 = Source as IGray6Source;
-				var sourceColoredGray2 = Source as IColoredGray2Source;
-				var sourceColoredGray4 = Source as IColoredGray4Source;
-				var sourceColoredGray = Source as IColoredGraySource;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
+
+				// init converters
+				IColoredGray2Source coloredGray2SourceConverter = null;
+				IColoredGray4Source coloredGray4SourceConverter = null;
+				IColoredGray6Source coloredGray6SourceConverter = null;
+				IRgb24Source rgb24SourceConverter = null;
+
+				if (Converter != null && HasRgb24Destination()) {
+					coloredGray2SourceConverter = Converter as IColoredGray2Source;
+					coloredGray4SourceConverter = Converter as IColoredGray4Source;
+					coloredGray6SourceConverter = Converter as IColoredGray6Source;
+					// ReSharper disable once SuspiciousTypeConversion.Global
+					rgb24SourceConverter = Converter as IRgb24Source;
+					
+					// send frames to converter
+					switch (Converter.From) {
+						case FrameFormat.Gray2:
+							if (sourceGray2 == null) {
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {coloredGray2SourceConverter?.Name}.");
+							}
+							_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+							break;
+						case FrameFormat.Gray4:
+							if (sourceGray4 == null) {
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {coloredGray4SourceConverter?.Name}.");
+							}
+							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+							break;
+						case FrameFormat.Gray6:
+							if (sourceGray6 == null)
+							{
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 6-bit compatible which is mandatory for converter {coloredGray6SourceConverter?.Name}.");
+							}
+							_activeSources.Add(sourceGray6.GetGray6Frames().Do(Converter.Convert).Subscribe());
+							break;
+						default:
+							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
+					}
+				}
 
 				foreach (var dest in Destinations) {
 
+					var destColoredGray2 = dest as IColoredGray2Destination;
+					var destColoredGray4 = dest as IColoredGray4Destination;
+					var destColoredGray6 = dest as IColoredGray6Destination;
 					var destRgb24 = dest as IRgb24Destination;
+
+					// So here's how convertors work:
+					// They have one input type, given by IConvertor.From, but they can randomly 
+					// output frames in different formats. For example, the ColoredGray2Colorizer
+					// outputs in ColoredGray2 or ColoredGray4, depending if data is enhanced
+					// or not.
+					//
+					// So for the output, the converter acts as ISource, implementing the specific 
+					// interfaces supported. Currently the following output sources are supported:
+					//
+					//    IColoredGray2Source, IColoredGray4Source and IRgb24Source.
+					//
+					// Other types don't make much sense (i.e. you don't convert *down* to 
+					// IGray2Source).
+					//
+					// In the block below, those sources are linked to each destination. If a 
+					// destination doesn't support a colored gray source, it tries to convert
+					// it up to RGB24, otherwise fails. For example, PinDMD3 which only supports
+					// IColoredGray2Source but not IColoredGray4Source due to bad software design
+					// will get the IColoredGray4Source converted up to RGB24.
+					if (Converter != null && destRgb24 != null) {
+						
+						// if converter emits colored gray-2 frames..
+						if (coloredGray2SourceConverter != null) {
+							// if destination can render colored gray-2 frames...
+							if (destColoredGray2 != null) {
+								//Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
+								Connect(coloredGray2SourceConverter, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
+
+							// otherwise, try to convert to rgb24
+							} else {
+								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
+								Connect(coloredGray2SourceConverter, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
+							}
+						}
+
+						// if converter emits colored gray-4 frames..
+						if (coloredGray4SourceConverter != null) {
+							// if destination can render colored gray-4 frames...
+							if (destColoredGray4 != null) {
+								//Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
+								Connect(coloredGray4SourceConverter, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
+
+							// otherwise, convert to rgb24
+							} else {
+								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
+								Connect(coloredGray4SourceConverter, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
+							}
+						}
+
+						// if converter emits colored gray-6 frames..
+						if (coloredGray6SourceConverter != null)
+						{
+							// if destination can render colored gray-6 frames...
+							if (destColoredGray6 != null)
+							{
+								//Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", coloredGray6SourceConverter.Name, dest.Name);
+								Connect(coloredGray6SourceConverter, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
+
+								// otherwise, convert to rgb24
+							} else {
+								//Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray6SourceConverter.Name);
+								Connect(coloredGray6SourceConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
+							}
+						}
+
+						// if converter emits RGB24 frames..
+						if (rgb24SourceConverter != null) {
+							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", rgb24SourceConverter.Name, dest.Name);
+							Connect(rgb24SourceConverter, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
+						}
+
+						// render graph is already set up through converters, so we skip the rest below
+						continue;
+					}
 
 					// Now here we need to find the most efficient way of passing data from the source
 					// to each destination. 
@@ -216,28 +344,18 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
-					var destColoredGray2 = dest as IColoredGray2Destination;
-					var destColoredGray4 = dest as IColoredGray4Destination;
-					var destColoredGray = dest as IColoredGrayDestination;
+					var destGray6 = dest as IGray6Destination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
+					var sourceColoredGray2 = Source as IColoredGray2Source;
+					var sourceColoredGray4 = Source as IColoredGray4Source;
+					var sourceColoredGray6 = Source as IColoredGray6Source;
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
 					var sourceAlphaNumeric = Source as IAlphaNumericSource;
 
 					// first, check if we do without conversion
-					// coloredRgb24 -> coloredRgb24
-					if (sourceColoredGray != null && destColoredGray != null && Colored)
-					{
-						Connect(Source, dest, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
-						continue;
-					}
-					// if coloring is active and destination has destColoredRgb24 skip Gray2 and Gray4
-					if (Colored && destColoredGray != null && (Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray2Source") || Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray4Source")))
-					{
-						continue;
-					}
 					// gray2 -> gray2
 					if (sourceGray2 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Gray2);
@@ -248,6 +366,12 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray4);
 						continue;
 					}
+					// gray6 -> gray6
+					if (sourceGray6 != null && destGray6 != null)
+					{
+						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray6);
+						continue;
+					}
 					// colored gray2 -> colored gray2
 					if (sourceColoredGray2 != null && destColoredGray2 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
@@ -256,6 +380,12 @@ namespace LibDmd
 					// colored gray4 -> colored gray4
 					if (sourceColoredGray4 != null && destColoredGray4 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
+						continue;
+					}
+					// colored gray6 -> colored gray6
+					if (sourceColoredGray6 != null && destColoredGray6 != null)
+					{
+						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 						continue;
 					}
 					// rgb24 -> rgb24
@@ -306,27 +436,35 @@ namespace LibDmd
 						continue;
 					}
 					// colored gray2 -> rgb24
-					if (sourceColoredGray2 != null && destRgb24 != null)
-					{
+					if (sourceColoredGray2 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
 						continue;
 					}
 					// colored gray2 -> bitmap
-					if (sourceColoredGray2 != null && destBitmap != null)
-					{
+					if (sourceColoredGray2 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
 						continue;
 					}
 					// colored gray4 -> rgb24
-					if (sourceColoredGray4 != null && destRgb24 != null)
-					{
+					if (sourceColoredGray4 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
 						continue;
 					}
 					// colored gray4 -> bitmap
-					if (sourceColoredGray4 != null && destBitmap != null)
-					{
+					if (sourceColoredGray4 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
+						continue;
+					}
+					// colored gray6 -> rgb24
+					if (sourceColoredGray6 != null && destRgb24 != null)
+					{
+						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
+						continue;
+					}
+					// colored gray6 -> bitmap
+					if (sourceColoredGray6 != null && destBitmap != null)
+					{
+						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.Bitmap);
 						continue;
 					}
 
@@ -334,6 +472,11 @@ namespace LibDmd
 					// gray4 -> gray2
 					if (sourceGray4 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
+						continue;
+					}
+					// colored gray4 -> gray4
+					if (sourceColoredGray4 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray4);
 						continue;
 					}
 					// rgb24 -> gray4
@@ -344,6 +487,16 @@ namespace LibDmd
 					// bitmap -> gray4
 					if (sourceBitmap != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Gray4);
+						continue;
+					}
+					// colored gray2 -> gray2
+					if (sourceColoredGray2 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Gray2);
+						continue;
+					}
+					// colored gray4 -> gray2
+					if (sourceColoredGray4 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray2);
 						continue;
 					}
 					// rgb24 -> gray2
@@ -395,11 +548,12 @@ namespace LibDmd
 			var destFixedSize = dest as IFixedSizeDestination;
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
+			var destGray6 = dest as IGray6Destination;
 			var destRgb24 = dest as IRgb24Destination;
+			var destBitmap = dest as IBitmapDestination;
 			var destColoredGray2 = dest as IColoredGray2Destination;
 			var destColoredGray4 = dest as IColoredGray4Destination;
-			var destColoredGray = dest as IColoredGrayDestination;
-			var destBitmap = dest as IBitmapDestination;
+			var destColoredGray6 = dest as IColoredGray6Destination;
 			var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 			try {
@@ -428,6 +582,10 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							throw new NotImplementedException("Cannot convert from gray2 to gray4 (every gray4 destination should be able to do gray2 as well).");
 
+						// gray2 -> gray6
+						case FrameFormat.Gray6:
+							throw new NotImplementedException("Cannot convert from gray2 to gray6 (every gray6 destination should be able to do gray2 as well).");
+
 						// gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
@@ -451,6 +609,18 @@ namespace LibDmd
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
+
+						// gray2 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from gray2 to colored gray2 (doesn't make any sense, colored gray2 can also do gray2).");
+
+						// gray2 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from gray2 to colored gray2 (a colored gray4 destination should also be able to do gray2 directly).");
+
+						// gray2 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from gray2 to colored gray6 (a colored gray6 destination should also be able to do gray2 directly).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -478,6 +648,10 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
+						// gray4 -> gray6
+						case FrameFormat.Gray6:
+							throw new NotImplementedException("Cannot convert from gray4 to gray6 (every gray6 destination should be able to do gray4 as well).");
+
 						// gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
@@ -501,6 +675,88 @@ namespace LibDmd
 									.Select(bmp => Transform(bmp, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
+
+						// gray4 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
+
+						// gray4 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
+
+						// gray4 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
+
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+				// source is gray6:
+				case FrameFormat.Gray6:
+					var sourceGray6 = source as IGray6Source;
+					switch (to)
+					{
+						// gray6 -> gray2
+						case FrameFormat.Gray2:
+							AssertCompatibility(source, sourceGray6, dest, destGray2, from, to);
+							Subscribe(sourceGray6.GetGray6Frames()
+									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3}))
+									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray2.RenderGray2);
+							break;
+
+						// gray6 -> gray4
+						case FrameFormat.Gray4:
+							AssertCompatibility(source, sourceGray6, dest, destGray4, from, to);
+							Subscribe(sourceGray6.GetGray6Frames()
+									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7 }))
+									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray4.RenderGray4);
+							break;
+
+						// gray6 -> gray6
+						case FrameFormat.Gray6:
+							AssertCompatibility(source, sourceGray6, dest, destGray6, from, to);
+							Subscribe(sourceGray6.GetGray6Frames()
+									.Select(frame => TransformGray6(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize)),
+								destGray6.RenderGray6);
+							break;
+
+						// gray6 -> rgb24
+						case FrameFormat.Rgb24:
+							AssertCompatibility(source, sourceGray6, dest, destRgb24, from, to);
+							Subscribe(sourceGray6.GetGray6Frames()
+									.Select(frame => ColorizeGray6(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data))
+									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destRgb24.RenderRgb24);
+							break;
+
+						// gray6 -> bitmap
+						case FrameFormat.Bitmap:
+							AssertCompatibility(source, sourceGray6, dest, destBitmap, from, to);
+							Subscribe(sourceGray6.GetGray6Frames()
+									.Select(frame => ImageUtil.ConvertFromRgb24(
+										source.Dimensions.Value.Width,
+										source.Dimensions.Value.Height,
+										ColorizeGray6(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data)
+									))
+									.Select(bmp => Transform(bmp, destFixedSize)),
+								destBitmap.RenderBitmap);
+							break;
+
+						// gray6 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
+
+						// gray6 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
+
+						// gray6 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -529,6 +785,15 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
+						// rgb24 -> gray6
+						case FrameFormat.Gray6:
+							AssertCompatibility(source, sourceRgb24, dest, destGray6, from, to);
+							Subscribe(sourceRgb24.GetRgb24Frames()
+									.Select(frame => ImageUtil.ConvertToGray(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, 64))
+									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray6.RenderGray6);
+							break;
+
 						// rgb24 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceRgb24, dest, destRgb24, from, to);
@@ -546,23 +811,13 @@ namespace LibDmd
 								destBitmap.RenderBitmap);
 							break;
 
-						default:
-							throw new ArgumentOutOfRangeException(nameof(to), to, null);
-					}
-					break;
+						// rgb24 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from rgb24 to colored gray2 (colored gray2 only has 4 colors per frame).");
 
-				// source is ColoredGray:
-				case FrameFormat.ColoredGray:
-					var sourceColoredGray = source as IColoredGraySource;
-					switch (to)
-					{
-						// rgb24 -> rgb24
-						case FrameFormat.ColoredGray:
-							AssertCompatibility(source, sourceColoredGray, dest, destColoredGray, from, to);
-							Subscribe(sourceColoredGray.GetColoredGrayFrames()
-									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize)),
-								destColoredGray.RenderColoredGray);
-							break;
+						// rgb24 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from rgb24 to colored gray2 (colored gray4 only has 16 colors per frame).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -591,6 +846,15 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
+						// bitmap -> gray6
+						case FrameFormat.Gray6:
+							AssertCompatibility(source, sourceBitmap, dest, destGray6, from, to);
+							Subscribe(sourceBitmap.GetBitmapFrames()
+									.Select(bmp => ImageUtil.ConvertToGray6(bmp))
+									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray6.RenderGray6);
+							break;
+
 						// bitmap -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
@@ -608,6 +872,18 @@ namespace LibDmd
 								destBitmap.RenderBitmap);
 							break;
 
+						// bitmap -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from bitmap to colored gray2 (colored gray2 only has 4 colors per frame).");
+
+						// bitmap -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from bitmap to colored gray2 (colored gray4 only has 16 colors per frame).");
+
+						// bitmap -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from bitmap to colored gray6 (colored gray6 only has 64 colors per frame).");
+
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
 					}
@@ -616,8 +892,7 @@ namespace LibDmd
 				// source is colored gray2:
 				case FrameFormat.ColoredGray2:
 					var sourceColoredGray2 = source as IColoredGray2Source;
-					switch (to)
-					{
+					switch (to) {
 
 						// colored gray2 -> gray2
 						case FrameFormat.Gray2:
@@ -632,14 +907,18 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							throw new NotImplementedException("Cannot convert from colored gray2 to gray4 (it's not like we can extract luminosity from the colors...)");
 
+						// colored gray2 -> gray6
+						case FrameFormat.Gray6:
+							throw new NotImplementedException("Cannot convert from colored gray2 to gray6 (it's not like we can extract luminosity from the colors...)");
+
 						// colored gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray2, dest, destRgb24, from, to);
 							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
 									.Select(frame => ColorUtil.ColorizeFrame(
 										source.Dimensions.Value.Width,
-										source.Dimensions.Value.Height,
-										FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes),
+										source.Dimensions.Value.Height, 
+										FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes), 
 										frame.Palette)
 									)
 									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
@@ -672,6 +951,9 @@ namespace LibDmd
 						case FrameFormat.ColoredGray4:
 							throw new NotImplementedException("Cannot convert from colored gray2 to colored gray4 (if a destination can do colored gray4 it should be able to do colored gray2 directly).");
 
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from colored gray2 to colored gray6 (if a destination can do colored gray6 it should be able to do colored gray2 directly).");
+
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
 					}
@@ -680,8 +962,7 @@ namespace LibDmd
 				// source is colored gray4:
 				case FrameFormat.ColoredGray4:
 					var sourceColoredGray4 = source as IColoredGray4Source;
-					switch (to)
-					{
+					switch (to) {
 
 						// colored gray4 -> gray2
 						case FrameFormat.Gray2:
@@ -701,6 +982,10 @@ namespace LibDmd
 									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
+
+						// colored gray4 -> gray6
+						case FrameFormat.Gray6:
+							throw new NotImplementedException("Cannot convert from colored gray4 to gray6 (it's not like we can extract luminosity from the colors...)");
 
 						// colored gray4 -> rgb24
 						case FrameFormat.Rgb24:
@@ -742,6 +1027,96 @@ namespace LibDmd
 							Subscribe(sourceColoredGray4.GetColoredGray4Frames()
 									.Select(frame => TransformColoredGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destColoredGray4.RenderColoredGray4);
+							break;
+						
+						// colored gray4 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new NotImplementedException("Cannot convert from colored gray4 to colored gray6 (use rgb24 instead of down-coloring).");
+
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+				// source is colored gray6:
+				case FrameFormat.ColoredGray6:
+					var sourceColoredGray6 = source as IColoredGray6Source;
+					switch (to)
+					{
+
+						// colored gray6 -> gray2
+						case FrameFormat.Gray2:
+							AssertCompatibility(source, sourceColoredGray6, dest, destGray2, from, to);
+							Subscribe(sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes))
+									.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
+									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray2.RenderGray2);
+							break;
+
+						// colored gray6 -> gray4
+						case FrameFormat.Gray4:
+							AssertCompatibility(source, sourceColoredGray6, dest, destGray4, from, to);
+							Subscribe(sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes))
+									.Select(frame => FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
+									.Select(frame => TransformGray4(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray4.RenderGray4);
+							break;
+
+						// colored gray6 -> gray6
+						case FrameFormat.Gray6:
+							AssertCompatibility(source, sourceColoredGray6, dest, destGray6, from, to);
+							Subscribe(sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes))
+									.Select(frame => TransformGray6(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destGray6.RenderGray6);
+							break;
+
+						// colored gray6 -> rgb24
+						case FrameFormat.Rgb24:
+							AssertCompatibility(source, sourceColoredGray6, dest, destRgb24, from, to);
+							Subscribe(sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => ColorUtil.ColorizeFrame(
+										source.Dimensions.Value.Width,
+										source.Dimensions.Value.Height,
+										FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes),
+										frame.Palette)
+									)
+									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destRgb24.RenderRgb24);
+							break;
+
+						// colored gray6 -> bitmap
+						case FrameFormat.Bitmap:
+							AssertCompatibility(source, sourceColoredGray6, dest, destBitmap, from, to);
+							Subscribe(
+								sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => ColorUtil.ColorizeFrame(
+										source.Dimensions.Value.Width,
+										source.Dimensions.Value.Height,
+										FrameUtil.Join(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Planes),
+										frame.Palette)
+									)
+									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame))
+									.Select(bmp => Transform(bmp, destFixedSize)),
+								destBitmap.RenderBitmap);
+							break;
+
+						// colored gray6 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new NotImplementedException("Cannot convert from colored gray4 to colored gray2 (use rgb24 instead of down-coloring).");
+
+						// colored gray6 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new NotImplementedException("Cannot convert from colored gray6 to colored gray4 (use rgb24 instead of down-coloring).");
+
+						// colored gray6 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							AssertCompatibility(source, sourceColoredGray6, dest, destColoredGray6, from, to);
+							Subscribe(sourceColoredGray6.GetColoredGray6Frames()
+									.Select(frame => TransformColoredGray6(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
+								destColoredGray6.RenderColoredGray6);
 							break;
 
 						default:
@@ -1044,13 +1419,6 @@ namespace LibDmd
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if (height != 16 && frame.Length == 128 * 16)
-			{
-				var centeredFrame = new byte[128 * 32];
-				FrameUtil.Copy(frame, centeredFrame, 128 * 8);
-				frame = centeredFrame;
-			}
-
 			frame = TransformScaling(width, height, frame, dest);
 
 			if (dest == null)
@@ -1098,15 +1466,35 @@ namespace LibDmd
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
 			return transformedFrame;
 		}
-
-		private ColoredFrame TransformColoredGray2(int width, int height, ColoredFrame frame, IFixedSizeDestination dest)
+		private byte[] TransformGray6(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
+			frame = TransformScaling(width, height, frame, dest);
+
 			if (dest == null)
 			{
-				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+				return TransformationUtil.Flip(width, height, 1, frame, FlipHorizontally, FlipVertically);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically)
 			{
+				return frame;
+			}
+			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
+			{
+				return width * height == frame.Length ? FrameUtil.ScaleDownFrame(dest.DmdWidth, dest.DmdHeight, frame) : frame;
+			}
+
+			var bmp = ImageUtil.ConvertFromGray6(width, height, frame, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
+			return transformedFrame;
+		}
+
+		private ColoredFrame TransformColoredGray2(int width, int height, ColoredFrame frame, IFixedSizeDestination dest)
+		{
+			if (dest == null) {
+				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+			}
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
 				return frame;
 			}
 			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
@@ -1122,12 +1510,10 @@ namespace LibDmd
 
 		private ColoredFrame TransformColoredGray4(int width, int height, ColoredFrame frame, IFixedSizeDestination dest)
 		{
-			if (dest == null)
-			{
+			if (dest == null) {
 				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
 			}
-			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically)
-			{
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically) {
 				return frame;
 			}
 			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
@@ -1141,34 +1527,33 @@ namespace LibDmd
 			return new ColoredFrame(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 4, transformedFrame), frame.Palette, frame.PaletteIndex);
 		}
 
+		private ColoredFrame TransformColoredGray6(int width, int height, ColoredFrame frame, IFixedSizeDestination dest)
+		{
+			if (dest == null)
+			{
+				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
+			}
+			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically)
+			{
+				return frame;
+			}
+			if (width == dest.DmdWidth * 2 && height == dest.DmdHeight * 2 && !FlipHorizontally && !FlipVertically)
+			{
+				return new ColoredFrame(FrameUtil.ScaleDown(dest.DmdWidth, dest.DmdHeight, frame.Planes),frame.Palette, frame.PaletteIndex);
+			}
+
+			var bmp = ImageUtil.ConvertFromGray6(width, height, FrameUtil.Join(width, height, frame.Planes), 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
+			return new ColoredFrame(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 6, transformedFrame), frame.Palette, frame.PaletteIndex);
+		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				var flipframe = TransformationUtil.Flip(width, height, 3, frame, FlipHorizontally, FlipVertically);
-				if ((width * height * 3 != frame.Length)) { 
-					if (ScalerMode == ScalerMode.Doubler)
-					{
-						return FrameUtil.ScaleDoubleRGB(width, height, 4, flipframe);
-					}
-					if (ScalerMode == ScalerMode.Scale2x)
-					{
-						return FrameUtil.Scale2xRGB(width, height, flipframe);
-					}
-				}
-				return flipframe;
+				return TransformationUtil.Flip(width, height, 3, frame, FlipHorizontally, FlipVertically);
 			}
-
-			BitmapSource bmp;
-
-			if (frame.Length == width / 2 * height / 2 * 3)
-			{
-				bmp = ImageUtil.ConvertFromRgb24(width/2, height/2, frame);
-			}
-			else
-			{
-				bmp = ImageUtil.ConvertFromRgb24(width, height, frame);
-			}
+			var bmp = ImageUtil.ConvertFromRgb24(width, height, frame);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = new byte[dest.DmdWidth*dest.DmdHeight*3];
 			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
@@ -1251,14 +1636,14 @@ namespace LibDmd
 		Gray4,
 
 		/// <summary>
+		/// A 6-bit grayscale frame (64 shades)
+		/// </summary>
+		Gray6,
+
+		/// <summary>
 		/// An RGB24 frame
 		/// </summary>
 		Rgb24,
-
-		/// <summary>
-		/// An colored RGB24 frame
-		/// </summary>
-		ColoredGray,
 
 		/// <summary>
 		/// A bitmap
@@ -1274,6 +1659,11 @@ namespace LibDmd
 		/// A 4-bit grayscale frame bundled with a 16-color palette
 		/// </summary>
 		ColoredGray4,
+
+		/// <summary>
+		/// A 6-bit grayscale frame bundled with a 64-color palette
+		/// </summary>
+		ColoredGray6,
 
 		/// <summary>
 		/// An alphanumeric frame

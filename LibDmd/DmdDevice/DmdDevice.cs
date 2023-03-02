@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
+using LibDmd.Converter;
+using LibDmd.Converter.Colorize;
 using LibDmd.Input.PinMame;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -47,7 +49,6 @@ namespace LibDmd.DmdDevice
 		private readonly VpmGray2Source _vpmGray2Source;
 		private readonly VpmGray4Source _vpmGray4Source;
 		private readonly VpmRgb24Source _vpmRgb24Source;
-		private readonly VpmColoredGraySource _vpmColoredGraySource;
 		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
@@ -62,29 +63,20 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
-		private readonly DMDFrame _coloredDmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
 		private Color[] _palette;
+		DMDFrame _upsizedFrame;
+		private Gray2Colorizer _gray2Colorizer;
+		private Gray4Colorizer _gray4Colorizer;
+		private Coloring _coloring;
 		private bool _isOpen;
-
-		private bool _colorizerIsLoaded = false;
-		private bool _colorizerIsOpen;
-		private bool _isColored;
-		private enum ColorizerMode
-		{
-			None = -1,
-			SimplePalette = 0,
-			Advanced128x32 = 1,
-			Advanced192x64 = 3,
-			Advanced256x64 = 4,
-		}
-		private ColorizerMode _colorizerMode;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+		private static string _altcolorPath;
 		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
@@ -97,7 +89,6 @@ namespace LibDmd.DmdDevice
 			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
 			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
 			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
-			_vpmColoredGraySource = new VpmColoredGraySource(_currentFrameFormat);
 			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -122,6 +113,7 @@ namespace LibDmd.DmdDevice
 #endif
 			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
+			_altcolorPath = GetColorPath();
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
@@ -153,54 +145,6 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Assembly located at {0}", assembly.Location);
 		}
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeOpen();
-		static _dColorizeOpen ColorizeOpen;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_4_Colors(byte[] palette);
-		static _dColorizeSet_4_Colors ColorizeSet_4_Colors;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_16_Colors(byte[] palette);
-		static _dColorizeSet_16_Colors ColorizeSet_16_Colors;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize4Gray(ushort width, ushort height, byte[] currbuffer);
-		static _dColorize4Gray Colorize4Gray;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize2Gray(ushort width, ushort height, byte[] currbuffer);
-		static _dColorize2Gray Colorize2Gray;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize4GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer);
-		static _dColorize4GrayWithRaw Colorize4GrayWithRaw;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize2GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer);
-		static _dColorize2GrayWithRaw Colorize2GrayWithRaw;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeRGB24(ushort width, ushort height, byte[] currbuffer);
-		static _dColorizeRGB24 ColorizeRGB24;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorizeAlphaNumeric(NumericalLayout numericalLayout, ushort[] seg_data, ushort[] seg_data2);
-		static _dColorizeAlphaNumeric ColorizeAlphaNumeric;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate int _dColorizeInit(bool colorize, string gameName, byte red, byte green, byte blue);
-		static _dColorizeInit ColorizeInit;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeClose();
-		static _dColorizeClose ColorizeClose;
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeConsoleData(byte data);
-		static _dColorizeConsoleData ColorizeConsoleData;
-
 		/// <summary>
 		/// Wird uisgfiärt wemmr aui Parametr hend.
 		/// </summary>
@@ -214,14 +158,11 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			if(_colorizerIsOpen)
-			{
-				_colorizerMode = (ColorizerMode) ColorizeInit(_colorize, _gameName, _color.R, _color.G, _color.B);
-				if (_colorizerMode >= 0)
-					_isColored = true;
-				else
-					_isColored = false;
-			}
+			_gray2Colorizer = null;
+			_gray4Colorizer = null;
+			_coloring = null;
+
+			SetupColorizer();
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
 				if (_virtualDmd == null && _alphaNumericDest == null) {
@@ -243,6 +184,77 @@ namespace LibDmd.DmdDevice
 				SetupGraphs();
 			}
 			_isOpen = true;
+		}
+
+		/// <summary>
+		/// Wird uifgriäft wenn vom modifiziärtä ROM ibärä Sitäkanau ä Palettäwächsu
+		/// ah gä wird.
+		/// </summary>
+		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
+		public void LoadPalette(uint num)
+		{
+			_gray4Colorizer?.LoadPalette(num);
+		}
+
+		private void SetupColorizer()
+		{
+			// only setup if enabled and path is set
+			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize) {
+				return;
+			}
+
+			// abort if already setup
+			if (_gray2Colorizer != null || _gray4Colorizer != null) {
+				return;
+			}
+			var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
+			var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
+			var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
+			var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
+
+			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
+			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
+
+			if (File.Exists(palPath)) {
+				try {
+					Logger.Info("Loading palette file at {0}...", palPath);
+					_coloring = new Coloring(palPath);
+					VniAnimationSet vni = null;
+					if (File.Exists(vniPath)) {
+						Logger.Info("Loading virtual animation file at {0}...", vniPath);
+						vni = new VniAnimationSet(vniPath);
+						Logger.Info("Loaded animation set {0}", vni);
+						aniHeight = vni.MaxHeight;
+						aniWidth = vni.MaxWidth;
+						Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
+					} else
+					{
+						Logger.Info("No animation set found");
+						aniHeight = Height;
+						aniWidth = Width;
+					}
+
+					_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
+					_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
+
+					_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
+					_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
+
+				} catch (Exception e) {
+					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+				}
+			} else {
+				Logger.Info("No palette file found at {0}.", palPath);
+			}
+
+			if (_config.Global.ScaleToHd)
+			{
+				Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+			}
+			else
+			{
+				Logger.Info("ScaleToHd = False");
+			}
 		}
 
 		/// <summary>
@@ -459,28 +471,56 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
 			// 2-bit graph
-			_graphs.Add(new RenderGraph {
-				Name = "2-bit VPM Graph",
-				Source = _vpmGray2Source,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
-			});
-			
+			if (_colorize && _gray2Colorizer != null) {
+				_graphs.Add(new RenderGraph {
+					Name = "2-bit Colored VPM Graph",
+					Source = _vpmGray2Source,
+					Destinations = renderers,
+					Converter = _gray2Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+				ReportingTags.Add("Color:Gray2");
+
+			} else {
+				_graphs.Add(new RenderGraph {
+					Name = "2-bit VPM Graph",
+					Source = _vpmGray2Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+			}
+
 			// 4-bit graph
-			_graphs.Add(new RenderGraph {
-				Name = "4-bit VPM Graph",
-				Source = _vpmGray4Source,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
-			});
+			if (_colorize && _gray4Colorizer != null) {
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit Colored VPM Graph",
+					Source = _vpmGray4Source,
+					Destinations = renderers,
+					Converter = _gray4Colorizer,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+				ReportingTags.Add("Color:Gray4");
+
+			} else {
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit VPM Graph",
+					Source = _vpmGray4Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+			}
 
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
@@ -490,21 +530,7 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
-			});
-
-			// colored rgb24 graph
-			_graphs.Add(new RenderGraph
-			{
-				Name = "colored RGB24-bit VPM Graph",
-				Source = _vpmColoredGraySource,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
+				ScalerMode = _config.Global.ScalerMode
 			});
 
 			// alphanumeric graph
@@ -515,13 +541,22 @@ namespace LibDmd.DmdDevice
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
+				ScalerMode = _config.Global.ScalerMode
 			});
-			if (_colorize && _palette != null) {
+
+			if (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null)) {
+				Logger.Info("Just clearing palette, colorization is done by converter.");
+				_graphs.ClearColor();
+
+			} else if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-				_graphs.SetPalette(_palette, -1);
+				if (_coloring != null) {
+					_graphs.SetPalette(_palette, _coloring.DefaultPaletteIndex);
+
+				} else {
+					_graphs.SetPalette(_palette, -1);
+				}
 
 			} else {
 				Logger.Info("Applying default color to render graphs ({0}).", _color);
@@ -628,13 +663,10 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
+			_gray2Colorizer = null;
+			_gray4Colorizer = null;
+			_coloring = null;
 			_isOpen = false;
-
-			if (_colorizerIsOpen)
-			{
-				ColorizeClose();
-				_colorizerIsOpen = false;
-			}
 		}
 
 		public void SetGameName(string gameName)
@@ -652,135 +684,6 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
 			_colorize = colorize;
-
-			if (_config.Global.Colorize && !_colorizerIsLoaded)
-			{
-				var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-				var assemblyFolder = Path.GetDirectoryName(localPath);
-				string dllFileName = null;
-				if (IntPtr.Size == 4)
-					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
-				else if (IntPtr.Size == 8)
-					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
-
-				var pDll = NativeMethods.LoadLibrary(dllFileName);
-
-				if (pDll == IntPtr.Zero)
-				{
-					Logger.Error("No coloring " + dllFileName + " found");
-					return;
-				}
-
-				try
-				{
-					var pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeOpen");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeInit");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize2Gray");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize4Gray");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize2GrayWithRaw");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "Colorize4GrayWithRaw");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeRGB24");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeRGB24 = (_dColorizeRGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeRGB24));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeAlphaNumeric");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeAlphaNumeric = (_dColorizeAlphaNumeric)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAlphaNumeric));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeClose");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeConsoleData");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeSet_4_Colors");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeSet_4_Colors = (_dColorizeSet_4_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_4_Colors));
-
-					pAddress = NativeMethods.GetProcAddress(pDll, "ColorizeSet_16_Colors");
-					if (pAddress == IntPtr.Zero)
-					{
-						throw new Exception("Cannot map function in " + dllFileName);
-					}
-					ColorizeSet_16_Colors = (_dColorizeSet_16_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_16_Colors));
-				}
-				catch (Exception e)
-				{
-					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
-					return;
-				}
-
-				_colorizerIsLoaded = true;
-			} 
-
-			if (_colorizerIsLoaded)
-			{
-				if (!_colorizerIsOpen)
-					_colorizerIsOpen = ColorizeOpen();
-
-				if (_palette != null && _colorizerIsOpen)
-					SetPalette(_palette);
-			}
-
-		}
-
-		public void ConsoleData(byte data)
-		{
-			if (_colorizerIsOpen)
-				ColorizeConsoleData(data);
 		}
 
 		public void SetColor(Color color)
@@ -792,25 +695,6 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
-			if (_colorizerIsOpen)
-			{
-				var _pal = new byte[_palette.Length * 3];
-				for (int i = 0; i < _palette.Length; i++)
-				{
-					_pal[i*3] = colors[i].R;
-					_pal[(i*3)+1] = colors[i].G;
-					_pal[(i*3)+2] = colors[i].B;
-				}
-				if (_palette.Length == 4)
-				{
-					ColorizeSet_4_Colors(_pal);
-				}
-				else if (_palette.Length == 16)
-				{
-					ColorizeSet_16_Colors(_pal);
-				}
-
-			}
 		}
 		public int GetAniHeight()
 		{
@@ -825,196 +709,59 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_colorizerIsOpen && _colorizerMode >= 0)
+			if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation)
 			{
-				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
-				{
-					width = 128;
-					height = 32;
-				}
-				else if (_colorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64)
-				{
-					width = 192;
-					height = 64;
-				} 
-				else if (_colorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64)))
+				// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
+				// indicating this should be upsized and treated as a centered 128x32 DMD.
+
+				height = frame.height;
+				height *= 2;
+
+				if (_upsizedFrame == null)
+					_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+				else
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+
+				Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
+
+				if (_config.Global.ScaleToHd)
 				{
 					width = 256;
 					height = 64;
-				} else
-				{
-					_colorizerMode = ColorizerMode.SimplePalette;
+					_upsizedFrame.Update(width, height, _upsizedFrame.Data);
 				}
+
+				_gray2Colorizer.SetDimensions(width, height);
+				_vpmGray2Source.NextFrame(_upsizedFrame);
 			}
-
-			var frameSize = width * height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			if (_colorizerIsOpen)
+			else
 			{
-				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
-				{
-					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
-					for (int i = 0; i < vd.RawPlanes.Length; i++) {
-						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
-					}
-					var Rgb24Buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-					if (_colorizerMode != ColorizerMode.None) 
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-				}
-				else
-				{
-					var Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerMode != ColorizerMode.None)
-					{
-						if (_colorizerMode == ColorizerMode.SimplePalette && width == 128 && height == 16)
-						{
-							coloredFrame = new byte[frameSize * 2];
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize * 2);
-							height = 32;
-						}
-						else
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					}
-				}
-
-				if (_colorizerMode != ColorizerMode.None)
-				{
-					if (_config.Global.ScaleToHd)
-					{
-						if (width == 128 && height == 32)
-						{
-							width *= 2;
-							height *= 2;
-						}
-					}
-
-					_coloredDmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
-				}
-			}
-
-			if (_colorizerIsOpen && _colorizerMode != ColorizerMode.None && frame.width == 128 && frame.height == 16)
-			{
-				frame.Update(width, height, frame.Data);
-			} 
-			else {
 				if (_config.Global.ScaleToHd)
 				{
 					if (width == 128 && height == 32)
 					{
 						width *= 2;
 						height *= 2;
+						frame.Update(width, height, frame.Data);
 					}
 				}
 
-				frame.Update(width, height, frame.Data);
+				_gray2Colorizer?.SetDimensions(width, height);
+				_gray4Colorizer?.SetDimensions(width, height);
+				_vpmGray2Source.NextFrame(frame);
 			}
-			
-			_vpmGray2Source.NextFrame(frame);
 		}
 
 		public void RenderGray4(DMDFrame frame)
 		{
-			if (!_isOpen)
-			{
-				Init();
-			}
-
-			int width = frame.width;
-			int height = frame.height;
-
-			if (_colorizerIsOpen && _colorizerMode >= 0)
-			{
-				if (_colorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16)))
-				{
-					width = 128;
-					height = 32;
-				}
-				else if (_colorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64)
-				{
-					width = 192;
-					height = 64;
-				}
-				else if (_colorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64)))
-				{
-					width = 256;
-					height = 64;
-				}
-				else
-				{
-					_colorizerMode = ColorizerMode.SimplePalette;
-				}
-			}
-
-			var frameSize = width * height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			if (_colorizerIsOpen)
-			{
-				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
-				{
-					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
-					for (int i = 0; i < vd.RawPlanes.Length; i++)
-					{
-						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
-					}
-					var Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-					if (_colorizerMode != ColorizerMode.None)
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-				}
-				else
-				{
-					var Rgb24Buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
-					if (_colorizerMode != ColorizerMode.None)
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-				}
-
-				if (_colorizerMode != ColorizerMode.None)
-				{
-					if (_config.Global.ScaleToHd)
-					{
-						if (width == 128 && height == 32)
-						{
-							width *= 2;
-							height *= 2;
-						}
-					}
-					_coloredDmdFrame.Update(width, height, coloredFrame);
-					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
-				}
-			}
-
-			if (_config.Global.ScaleToHd)
-			{
-				if (width == 128 && height == 32)
-				{
-					width *= 2;
-					height *= 2;
-					
-				}
-			}
-			frame.Update(width, height, frame.Data);
-			_vpmGray4Source.NextFrame(frame);
-		}
-
-		public void RenderRgb24(DMDFrame frame)
-		{
 			if (!_isOpen) {
 				Init();
 			}
-
 			int width = frame.width;
 			int height = frame.height;
-
-			if (_colorizerIsOpen)
-			{
-				ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
-			}
 
 			if (_config.Global.ScaleToHd)
 			{
@@ -1024,6 +771,17 @@ namespace LibDmd.DmdDevice
 					height *= 2;
 					frame.Update(width, height, frame.Data);
 				}
+			}
+
+			_gray2Colorizer?.SetDimensions(frame.width, frame.height);
+			_gray4Colorizer?.SetDimensions(frame.width, frame.height);
+			_vpmGray4Source.NextFrame(frame);
+		}
+
+		public void RenderRgb24(DMDFrame frame)
+		{
+			if (!_isOpen) {
+				Init();
 			}
 			_vpmRgb24Source.NextFrame(frame);
 		}
@@ -1038,27 +796,9 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-
-			var frameSize = Width * Height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			if (_colorizerIsOpen)
-			{
-				var Rgb24Buffer = ColorizeAlphaNumeric(layout, segData, segDataExtended);
-				if (_colorizerMode != ColorizerMode.None)
-				{
-					Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					_coloredDmdFrame.Update(Width, Height, coloredFrame);
-					_vpmColoredGraySource.NextFrame(_coloredDmdFrame);
-				}
-			}
-
 			_vpmAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 			_dmdFrame.width = Width;
 			_dmdFrame.height = Height;
-
-			if (_gameName.StartsWith("rvrbt_")) layout = NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num;
-			if (_gameName.StartsWith("polic_")) layout = NumericalLayout.__1x7Num_1x16Alpha_1x16Num;
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
@@ -1105,12 +845,6 @@ namespace LibDmd.DmdDevice
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
 					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData)));
 					break;
-				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x7Num_1x16Alpha_1x16Num(segData)));
-					break;
-				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num_1x4Num(segData)));
-					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
 			}
@@ -1133,6 +867,29 @@ namespace LibDmd.DmdDevice
 				}
 			);
 #endif
+		}
+
+		private static string GetColorPath()
+		{
+			// first, try executing assembly.
+			var altcolor = Path.Combine(AssemblyPath, "altcolor");
+			if (Directory.Exists(altcolor)) {
+				Logger.Info("Determined color path from assembly path: {0}", altcolor);
+				return altcolor;
+			}
+
+			// then, try vpinmame location
+			var vpmPath = GetDllPath("VPinMAME.dll");
+			if (vpmPath == null) {
+				return null;
+			}
+			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
+			if (Directory.Exists(altcolor)) {
+				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
+				return altcolor;
+			}
+			Logger.Info("No altcolor folder found, ignoring palettes.");
+			return null;
 		}
 
 		private static string GetDllPath(string name)
