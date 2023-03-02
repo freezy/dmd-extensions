@@ -68,7 +68,11 @@ namespace LibDmd.Converter.Serum
 		/// <param name="height">out: colorized rom height in LEDs</param>
 		/// <param name="nocolors">out: number of colours in the manufacturer rom</param>
 		/// <returns></returns>
+#if PLATFORM_X64
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
 		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors, ref uint triggernb );
 		
@@ -80,14 +84,22 @@ namespace LibDmd.Converter.Serum
 		/// <param name="height">frame height in LEDs</param>
 		/// <param name="palette">64*3 bytes: out: RGB palette description 64 colours with their R, G and B component</param>
 		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
+#if PLATFORM_X64
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
 		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
 		
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
 		/// </summary>
+#if PLATFORM_X64
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: void Serum_Dispose(void)
 		public static extern void Serum_Dispose();
 
