@@ -183,10 +183,6 @@ namespace LibDmd.Converter.Serum
 			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
 			uint triggerID = 0xFFFFFFFF;
 			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-			{
-				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) rotations[ti] = 255;
-			}
 			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
 			CopyColoursToPalette(pal, palette);
 			CopyFrameToPlanes(Frame, planes, 6);
