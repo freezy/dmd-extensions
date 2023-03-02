@@ -390,6 +390,7 @@ namespace LibDmd.DmdDevice
 					if (pinupOutput.IsAvailable) {
 						if ((_serum != null) && (pinupOutput.isPuPTrigger)) _serum.SetPinupInstance(pinupOutput);
 						if (Pin2Color._colorizerIsOpen && (pinupOutput.isPuPTrigger)) Pin2Color.SetPinUpOutput(pinupOutput);
+						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
 					}
@@ -483,19 +484,20 @@ namespace LibDmd.DmdDevice
 					ScalerMode = _config.Global.ScalerMode,
 					Colored = _isColored
 				});
+
+				// 4-bit graph
+				_graphs.Add(new RenderGraph
+				{
+					Name = "4-bit VPM Graph",
+					Source = _vpmGray4Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
+				});
 			}
-			
-			// 4-bit graph
-			_graphs.Add(new RenderGraph {
-				Name = "4-bit VPM Graph",
-				Source = _vpmGray4Source,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
-			});
 
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
@@ -865,6 +867,7 @@ namespace LibDmd.DmdDevice
 
 			int width = frame.width;
 			int height = frame.height;
+
 			if (_serum != null)
 			{
 				if (_config.Global.ScaleToHd)
@@ -878,7 +881,7 @@ namespace LibDmd.DmdDevice
 				}
 				_serum.Colorize(frame);
 				_serum.SetDimensions(frame.width, frame.height);
-				_vpmGray2Source.NextFrame(frame);
+				_vpmGray4Source.NextFrame(frame);
 			}
 			else
 			{
