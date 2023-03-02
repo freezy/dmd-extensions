@@ -18,7 +18,7 @@ namespace LibDmd.Output.ZeDMD
 	/// 2 64x32-LED-matrix display for 15$-20$ each. So for less than 50$ you get a full real DMD!
 	/// I am thinking about designing a shield for a 38-pin ESP32, I will give the PCB layout once done (for free, sure), then you can
 	/// </summary>
-	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IResizableDestination
 	{
 		public string Name { get; } = "ZeDMD";
 		public bool IsAvailable { get; private set; }
@@ -187,18 +187,6 @@ namespace LibDmd.Output.ZeDMD
 				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + RomWidth * RomHeight/ 2);
 			}
 		}
-		public void RenderGray6(byte[] frame)
-		{
-			var planes = FrameUtil.Split(RomWidth, RomHeight, 6, frame);
-			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 193);
-
-			// send frame buffer to device
-			if (changed)
-			{
-				RenderRaw(_frameBufferRgb24, Gray2, 1 + 192 + 6 * RomWidth * RomHeight / 8);
-			}
-		}
-
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			// copy palette
