@@ -81,6 +81,8 @@ namespace LibDmd.DmdDevice
 				_iniPath = Path.Combine(assemblyPath, "DmdDevice.ini");
 			}
 			_parser = new FileIniDataParser();
+			_parser.Parser.Configuration.AllowDuplicateSections = true;
+			_parser.Parser.Configuration.AllowDuplicateKeys = true;
 
 			try {
 				if (File.Exists(_iniPath)) {
