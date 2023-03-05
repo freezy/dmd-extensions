@@ -240,6 +240,10 @@ namespace LibDmd.Converter.Serum
 					CopyFrameToPlanes(scaledData, planes, 6);
 					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
 				}
+			} 
+			else
+			{
+				CopyFrameToPlanes(Frame, planes, 6);
 			}
 			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
 		}
