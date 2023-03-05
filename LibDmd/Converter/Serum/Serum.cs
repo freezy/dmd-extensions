@@ -117,34 +117,23 @@ namespace LibDmd.Converter.Serum
 			if (_activePupOutput != null && triggerId != 0xFFFFFFFF) {
 				_activePupOutput.SendTriggerID((ushort)triggerId);
 			}
-			
-			ConvertPalette();
+
+			var width = Dimensions.Value.Width;
+			var height = Dimensions.Value.Height;
+			var planes = _planes;
 			
 			// convert to planes
-			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) == _planes[0].Length) {
-				
-				FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, _planes.Length, _frameData, _planes);
-				
-				// send the colored frame
-				_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_planes, _colorPalette, _rotations));
+			if ((width * height / 8) == _planes[0].Length) { // scale?
+				FrameUtil.Split(width, height, _planes.Length, _frameData, _planes);
 				
 			} else {
-				// We want to do the scaling after the animations get triggered.
-				if (ScalerMode == ScalerMode.Doubler) {
-					// Don't scale placeholder.
-					CopyFrameToPlanes(6);
-					var planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, _planes);
-					_coloredGray6AnimationFrames.OnNext(new ColoredFrame(planes, _colorPalette, _rotations));
-					
-				} else {
-					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					//var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
-					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, _frameData);
-					CopyFrameToPlanes(6);
-					FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, _planes.Length, scaledData, _planes);
-					_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_planes, _colorPalette, _rotations));
-				}
+				planes = ScalerMode == ScalerMode.Doubler 
+					? FrameUtil.Scale2(width, height, ConvertToPlanes(6)) 
+					: FrameUtil.Split(width, height, _planes.Length, FrameUtil.Scale2x(width, height, frame.Data));
 			}
+			
+			// send the colored frame
+			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(planes, ConvertPalette(), _rotations));
 		}
 		
 		public static string GetVersion()
@@ -161,7 +150,7 @@ namespace LibDmd.Converter.Serum
 			return Encoding.UTF8.GetString(version, 0, len);
 		}
 
-		private void CopyFrameToPlanes(byte colorBitDepth)
+		private byte[][] ConvertToPlanes(byte colorBitDepth)
 		{
 			byte bitMask = 1;
 			var tj = 0;
@@ -190,9 +179,11 @@ namespace LibDmd.Converter.Serum
 					bitMask <<= 1;
 				}
 			}
+
+			return _planes;
 		}
 
-		private void ConvertPalette()
+		private Color[] ConvertPalette()
 		{
 			for (int ti = 0; ti < 64; ti++) {
 				_colorPalette[ti].A = 255;
@@ -200,6 +191,8 @@ namespace LibDmd.Converter.Serum
 				_colorPalette[ti].G = _bytePalette[ti * 3 + 1];
 				_colorPalette[ti].B = _bytePalette[ti * 3 + 2];
 			}
+
+			return _colorPalette;
 		}
 		
 		#region Serum API
