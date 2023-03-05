@@ -158,7 +158,6 @@ namespace LibDmd.DmdDevice
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;
-			//_serum.Dispose();
 			_serum = null;
 
 			SetupColorizer();
@@ -210,6 +209,9 @@ namespace LibDmd.DmdDevice
 					Logger.Info("Loading color rom file at {0}...", serumPath);
 					_serum = new Serum(_altcolorPath,_gameName);
 					if (_serum._serumLoaded == false) _serum = null;
+					_serum.ScalerMode = _config.Global.ScalerMode;
+					aniWidth = _serum._fWidth;
+					aniHeight = _serum._fHeight;
 				}
 				catch (Exception e) {
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
@@ -361,6 +363,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
+					zeDmd.SetOriginalDimensions(aniWidth, aniHeight);
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
@@ -767,8 +770,8 @@ namespace LibDmd.DmdDevice
 						frame.Update(width, height, frame.Data);
 					}
 				}
-				_serum.Colorize(frame);
 				_serum.SetDimensions(frame.width, frame.height);
+				_serum.Convert(frame);
 				_vpmGray2Source.NextFrame(frame);
 			}
 			else {
@@ -827,8 +830,8 @@ namespace LibDmd.DmdDevice
 						frame.Update(width, height, frame.Data);
 					}
 				}
-				_serum.Colorize(frame);
 				_serum.SetDimensions(frame.width, frame.height);
+				_serum.Convert(frame);
 				_vpmGray2Source.NextFrame(frame);
 			}
 			else {
