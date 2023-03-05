@@ -80,7 +80,7 @@ namespace LibDmd.Common
 			catch (IndexOutOfRangeException e)
 			{
 				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", width, height, frame.Length, bitlen);
-				throw new IndexOutOfRangeException(e.Message);
+				throw new IndexOutOfRangeException(e.Message, e);
 			}
 
 			return planes;
