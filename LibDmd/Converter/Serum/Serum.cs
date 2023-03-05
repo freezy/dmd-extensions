@@ -1,55 +1,51 @@
 ﻿using System;
-using System.Configuration.Assemblies;
-using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Cryptography;
 using System.Text;
-using System.Web.UI.WebControls;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.Converter.Colorize;
 using LibDmd.Input;
 using LibDmd.Output.PinUp;
 using NLog;
-using SharpGL;
 
 namespace LibDmd.Converter.Serum
 {
 	public class Serum : AbstractSource, IConverter, IColoredGray6Source
 	{
-		public override string Name { get; } = "converter to ColorizedRom";
+		public override string Name => "Serum";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
-		public bool _serumLoaded = false;
-		public uint _nTriggersAvailable { get; } = 0;
+		public bool IsLoaded;
+		public uint NumTriggersAvailable { get; }
 
 		// cROM components
 		/// <summary>
 		/// Frame width in LEDs
 		/// </summary>
-		public int _fWidth;
+		public int FrameWidth;
+
 		/// <summary>
 		/// Frame height in LEDs
 		/// </summary>
-		public int _fHeight;
+		public int FrameHeight;
+
 		/// <summary>
 		/// Number of colours in the manufacturer's ROM
 		/// </summary>
-		public uint _noColors;
+		public uint NumColors;
+
 		/// <summary>
 		/// =active instance of Pinup Player if available, =null if not
 		/// </summary>
-		private PinUpOutput _activePupOutput = null;
+		private PinUpOutput _activePupOutput;
+		
+		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
 
 		public ScalerMode ScalerMode { get; set; }
 
-		public IObservable<System.Reactive.Unit> OnResume { get; }
-		public IObservable<System.Reactive.Unit> OnPause { get; }
-		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
+		public IObservable<Unit> OnResume { get; }
+		public IObservable<Unit> OnPause { get; }
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -69,11 +65,11 @@ namespace LibDmd.Converter.Serum
 		/// <param name="romname">rom name</param>
 		/// <param name="width">out: colorized rom width in LEDs</param>
 		/// <param name="height">out: colorized rom height in LEDs</param>
-		/// <param name="nocolors">out: number of colours in the manufacturer rom</param>
+		/// <param name="numColors">out: number of colours in the manufacturer rom</param>
 		/// <returns></returns>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
-		public static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint nocolors, ref uint triggernb );
+		private static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint numColors, ref uint triggernb);
 		
 		/// <summary>
 		/// Serum_Colorize: Function to call with a VpinMame frame to colorize it
@@ -85,43 +81,38 @@ namespace LibDmd.Converter.Serum
 		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
-		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
+		private static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
 		
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
 		/// </summary>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// C format: void Serum_Dispose(void)
-		public static extern void Serum_Dispose();
+		private static extern void Serum_Dispose();
+		
+		/// <summary>
+		/// Serum_Dispose: Function to call at table unload time to free allocated memory
+		/// </summary>
+		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		// C format: void Serum_Dispose(void)
+		private static extern void Serum_GetVersion(IntPtr version);
 
-		public Serum(string altcolorpath,string romname)
+		public Serum(string altcolorPath, string romName)
 		{
-			byte[] tpstring1 = Encoding.ASCII.GetBytes(altcolorpath);
-			int lstr1 = tpstring1.Length;
-			byte[] tpath = new byte[lstr1 + 1];
-			for (int ti = 0; ti < lstr1; ti++) tpath[ti] = tpstring1[ti];
-			tpath[lstr1] = 0;
-			tpstring1 = Encoding.ASCII.GetBytes(romname);
-			lstr1 = tpstring1.Length;
-			byte[] trom = new byte[lstr1 + 1];
-			for (int ti = 0; ti < lstr1; ti++) trom[ti] = tpstring1[ti];
-			trom[lstr1] = 0;
-			uint nTriggers=0;
-			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors, ref nTriggers))
-			{
-				_serumLoaded = false;
+			uint numTriggers = 0;
+			if (!Serum_Load(altcolorPath, romName, ref FrameWidth, ref FrameHeight, ref NumColors, ref numTriggers)) {
+				IsLoaded = false;
 				return;
 			}
-			_nTriggersAvailable = nTriggers;
-			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
-			_serumLoaded = true;
+			NumTriggersAvailable = numTriggers;
+			From = NumColors == 16 ? FrameFormat.Gray4 : FrameFormat.Gray2;
+			IsLoaded = true;
 		}
 
 		public void SetPinupInstance(PinUpOutput puo)
 		{
 			_activePupOutput = puo;
-			if ((puo != null) && (_nTriggersAvailable > 0)) 
-			{
+			if ((puo != null) && (NumTriggersAvailable > 0)) {
 				puo.PuPFrameMatching = false;
 			}
 		}
@@ -129,42 +120,112 @@ namespace LibDmd.Converter.Serum
 		public void Dispose()
 		{
 			Serum_Dispose();
-			_activePupOutput= null;
-			_serumLoaded = false;
+			_activePupOutput = null;
+			IsLoaded = false;
 		}
 
 		public void Init()
 		{
 
 		}
-
-		private void CopyFrameToPlanes(byte[] Frame, byte[][] planes, byte colorbitdepth)
+		
+		public static string GetVersion()
 		{
-			byte bitmsk = 1;
-			uint tj = 0;
-			for (uint tk = 0; tk < colorbitdepth; tk++) planes[tk][tj] = 0;
-			for (uint ti = 0; ti < _fWidth * _fHeight; ti++) 
-			{
+			byte[] version = new byte[16];
+			GCHandle pinnedArray = GCHandle.Alloc(version, GCHandleType.Pinned);
+			IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+			Serum_GetVersion(pointer);
+			pinnedArray.Free();
+			int len = 0;
+			while ((version[len] != 0) && (len < 16)) {
+				len++;
+			}
+			return Encoding.UTF8.GetString(version, 0, len);
+		}
+		
+		public void Convert(DMDFrame frame)
+		{
+			Color[] palette = new Color[64];
+			byte[] pal = new byte[64 * 3];
+			byte[] frameData = new byte[FrameWidth * FrameHeight];
+			byte[][] planes = new byte[6][];
+			for (uint ti = 0; ti < 6; ti++) {
+				planes[ti] = new byte[FrameWidth * FrameHeight / 8];
+			}
+			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
+			Buffer.BlockCopy(frame.Data, 0, frameData, 0, frame.Data.Length);
+			
+			uint triggerId = 0xFFFFFFFF;
+
+			Serum_Colorize(frameData, FrameWidth, FrameHeight, pal, rotations, ref triggerId);
+
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) {
+				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) {
+					rotations[ti * 3] = 255;
+				}
+			}
+			
+			if (_activePupOutput != null && triggerId != 0xFFFFFFFF) {
+				_activePupOutput.SendTriggerID((ushort)triggerId);
+			}
+			
+			CopyColorsToPalette(pal, palette);
+
+			// convert to planes
+			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) == planes[0].Length) {
+				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, frameData);
+				
+			} else {
+				// We want to do the scaling after the animations get triggered.
+				if (ScalerMode == ScalerMode.Doubler) {
+					// Don't scale placeholder.
+					CopyFrameToPlanes(frameData, planes, 6);
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				} else {
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					//var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, frameData);
+					CopyFrameToPlanes(scaledData, planes, 6);
+					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
+				}
+			}
+			
+			// send the colored frame
+			_coloredGray6AnimationFrames.OnNext(new  ColoredFrame(planes, palette, rotations));
+		}
+
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6AnimationFrames;
+
+		private void CopyFrameToPlanes(IReadOnlyList<byte> frame, IReadOnlyList<byte[]> planes, byte colorBitDepth)
+		{
+			byte bitMask = 1;
+			var tj = 0;
+			for (var tk = 0; tk < colorBitDepth; tk++) {
+				planes[tk][tj] = 0;
+			}
+
+			var len = FrameWidth * FrameHeight;
+			for (var ti = 0; ti < len; ti++) {
 				byte tl = 1;
-				for (uint tk = 0; tk < colorbitdepth; tk++)
-				{
-					if ((Frame[ti] & tl) > 0) planes[tk][tj] |= bitmsk;
+				for (var tk = 0; tk < colorBitDepth; tk++) {
+					if ((frame[ti] & tl) > 0) planes[tk][tj] |= bitMask;
 					tl <<= 1;
 				}
-				if (bitmsk == 0x80)
-				{
-					bitmsk = 1;
+				if (bitMask == 0x80) {
+					bitMask = 1;
 					tj++;
-					if (tj < _fWidth * _fHeight / 8)
-					{
-						for (uint tk = 0; tk < colorbitdepth; tk++) planes[tk][tj] = 0;
+					if (tj < len / 8) {
+						for (var tk = 0; tk < colorBitDepth; tk++) {
+							planes[tk][tj] = 0;
+						}
 					}
+				} else {
+					bitMask <<= 1;
 				}
-				else bitmsk <<= 1;
 			}
 		}
 
-		void CopyColoursToPalette(byte[] scols, Color[] dpal)
+		private void CopyColorsToPalette(byte[] scols, Color[] dpal)
 		{
 			for (int ti = 0; ti < 64; ti++)
 			{
@@ -173,68 +234,6 @@ namespace LibDmd.Converter.Serum
 				dpal[ti].G = scols[ti * 3 + 1];
 				dpal[ti].B = scols[ti * 3 + 2];
 			}
-		}
-
-		public void Colorize(DMDFrame frame)
-		{
-			Color[] palette = new Color[64];
-			byte[] pal = new byte[64 * 3];
-			byte[] Frame = new byte[_fWidth * _fHeight];
-			byte[][] planes = new byte[6][];
-			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
-			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
-			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
-			uint triggerID = 0xFFFFFFFF;
-			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-			{
-				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) rotations[ti * 3] = 255;
-			}
-			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
-			CopyColoursToPalette(pal, palette);
-			CopyFrameToPlanes(Frame, planes, 6);
-			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
-		}
-		public void Convert(DMDFrame frame)
-		{
-			Color[] palette = new Color[64];
-			byte[] pal = new byte[64 * 3];
-			byte[] Frame = new byte[_fWidth * _fHeight];
-			byte[][] planes = new byte[6][];
-			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
-			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
-			for (uint ti = 0; ti < _fWidth * _fHeight; ti++) Frame[ti] = frame.Data[ti];
-			uint triggerID = 0xFFFFFFFF;
-			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-			{
-				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) rotations[ti * 3] = 255;
-			}
-			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
-			CopyColoursToPalette(pal, palette);
-			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
-			{
-				// We want to do the scaling after the animations get triggered.
-				if (ScalerMode == ScalerMode.Doubler)
-				{
-					// Don't scale placeholder.
-					CopyFrameToPlanes(Frame, planes, 6);
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
-				}
-				else
-				{
-					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					//var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
-					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, Frame);
-					CopyFrameToPlanes(scaledData, planes, 6);
-					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
-				}
-			}
-			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
-		}
-		public IObservable<ColoredFrame> GetColoredGray6Frames()
-		{
-			return ColoredGray6AnimationFrames;
 		}
 	}
 }
