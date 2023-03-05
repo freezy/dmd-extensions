@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
-using SharpGL.SceneGraph.Feedback;
 using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Common
