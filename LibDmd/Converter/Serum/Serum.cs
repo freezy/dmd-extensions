@@ -12,6 +12,7 @@ using System.Text;
 using System.Web.UI.WebControls;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Converter.Colorize;
 using LibDmd.Input;
 using LibDmd.Output.PinUp;
 using NLog;
@@ -30,11 +31,11 @@ namespace LibDmd.Converter.Serum
 		/// <summary>
 		/// Frame width in LEDs
 		/// </summary>
-		private int _fWidth;
+		public int _fWidth;
 		/// <summary>
 		/// Frame height in LEDs
 		/// </summary>
-		private int _fHeight;
+		public int _fHeight;
 		/// <summary>
 		/// Number of colours in the manufacturer's ROM
 		/// </summary>
@@ -43,6 +44,8 @@ namespace LibDmd.Converter.Serum
 		/// =active instance of Pinup Player if available, =null if not
 		/// </summary>
 		private PinUpOutput _activePupOutput = null;
+
+		public ScalerMode ScalerMode { get; set; }
 
 		public IObservable<System.Reactive.Unit> OnResume { get; }
 		public IObservable<System.Reactive.Unit> OnPause { get; }
@@ -109,7 +112,7 @@ namespace LibDmd.Converter.Serum
 				_serumLoaded = false;
 				return;
 			}
-			_nTriggersAvailable= nTriggers;
+			_nTriggersAvailable = nTriggers;
 			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
 			_serumLoaded = true;
 		}
@@ -194,12 +197,40 @@ namespace LibDmd.Converter.Serum
 		}
 		public void Convert(DMDFrame frame)
 		{
-			byte[][] planes;
-			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
-				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
-			else
-				planes = FrameUtil.Split(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, 2, frame.Data);
-
+			Color[] palette = new Color[64];
+			byte[] pal = new byte[64 * 3];
+			byte[] Frame = new byte[_fWidth * _fHeight];
+			byte[][] planes = new byte[6][];
+			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
+			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
+			for (uint ti = 0; ti < _fWidth * _fHeight; ti++) Frame[ti] = frame.Data[ti];
+			uint triggerID = 0xFFFFFFFF;
+			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
+			{
+				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) rotations[ti * 3] = 255;
+			}
+			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
+			CopyColoursToPalette(pal, palette);
+			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
+			{
+				// We want to do the scaling after the animations get triggered.
+				if (ScalerMode == ScalerMode.Doubler)
+				{
+					// Don't scale placeholder.
+					CopyFrameToPlanes(Frame, planes, 6);
+					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+				}
+				else
+				{
+					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
+					//var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
+					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, Frame);
+					CopyFrameToPlanes(scaledData, planes, 6);
+					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
+				}
+			}
+			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
 		}
 		public IObservable<ColoredFrame> GetColoredGray6Frames()
 		{
