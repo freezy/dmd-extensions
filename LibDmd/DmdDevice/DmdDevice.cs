@@ -220,7 +220,7 @@ namespace LibDmd.DmdDevice
 						aniHeight = _serum.FrameHeight;
 
 					} else {
-						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load Serum.dll.");
+						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
 						_serum = null;
 					}
 

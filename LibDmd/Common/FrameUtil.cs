@@ -29,17 +29,19 @@ namespace LibDmd.Common
 		/// <param name="height">Heechi vom Biud</param>
 		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
 		/// <param name="frame">D datä vom Biud</param>
+		/// <param name="destPlanes">Bruich das bim zruggäh wenn definiärt.</param>
 		/// <returns>Än Ebini fir jedes Bit</returns>
-		public static byte[][] Split(int width, int height, int bitlen, byte[] frame)
+		public static byte[][] Split(int width, int height, int bitlen, byte[] frame, byte[][] destPlanes = null)
 		{
 			var planeSize = width * height / 8;
-			var planes = new byte[bitlen][];
+			var planes = destPlanes ?? new byte[bitlen][];
 
 			try
 			{
-				for (var i = 0; i < bitlen; i++)
-				{
-					planes[i] = new byte[planeSize];
+				for (var i = 0; i < bitlen; i++) {
+					if (planes[i] == null) { // recycle, if possible
+						planes[i] = new byte[planeSize];
+					}
 				}
 
 				var byteIdx = 0;
@@ -365,12 +367,12 @@ namespace LibDmd.Common
 			return plane;
 		}
 
-		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
+		public static byte[][] Scale2(int width, int height, byte[][] srcPlanes, byte[][] destPlanes = null)
 		{
-			var planes = new byte[srcplanes.Length][];
-			for (var l = 0; l < srcplanes.Length; l++)
+			var planes = destPlanes ?? new byte[srcPlanes.Length][];
+			for (var l = 0; l < srcPlanes.Length; l++)
 			{
-				planes[l] = Scale2(width, height, srcplanes[l]);
+				planes[l] = Scale2(width, height, srcPlanes[l]);
 			}
 			return planes;
 		}
