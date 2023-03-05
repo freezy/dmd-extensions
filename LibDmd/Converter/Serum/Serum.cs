@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Configuration.Assemblies;
 using System.IO;
 using System.Linq;
@@ -93,7 +94,7 @@ namespace LibDmd.Converter.Serum
 #endif
 		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
 		public static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
-		
+
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
 		/// </summary>
@@ -105,18 +106,15 @@ namespace LibDmd.Converter.Serum
 		// C format: void Serum_Dispose(void)
 		public static extern void Serum_Dispose();
 
+		/// <summary>
+		/// Serum_Dispose: Function to call at table unload time to free allocated memory
+		/// </summary>
+		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		// C format: void Serum_Dispose(void)
+		public static extern void Serum_GetVersion(IntPtr version);
+
 		public Serum(string altcolorpath,string romname)
 		{
-			byte[] tpstring1 = Encoding.ASCII.GetBytes(altcolorpath);
-			int lstr1 = tpstring1.Length;
-			byte[] tpath = new byte[lstr1 + 1];
-			for (int ti = 0; ti < lstr1; ti++) tpath[ti] = tpstring1[ti];
-			tpath[lstr1] = 0;
-			tpstring1 = Encoding.ASCII.GetBytes(romname);
-			lstr1 = tpstring1.Length;
-			byte[] trom = new byte[lstr1 + 1];
-			for (int ti = 0; ti < lstr1; ti++) trom[ti] = tpstring1[ti];
-			trom[lstr1] = 0;
 			uint nTriggers=0;
 			if (!Serum_Load(altcolorpath, romname, ref _fWidth, ref _fHeight, ref _noColors, ref nTriggers))
 			{
@@ -126,6 +124,18 @@ namespace LibDmd.Converter.Serum
 			_nTriggersAvailable = nTriggers;
 			if (_noColors == 16) From = FrameFormat.Gray4; else From= FrameFormat.Gray2;
 			_serumLoaded = true;
+		}
+
+		public string GetVersion()
+		{
+			byte[] bversion = new byte[16];
+			GCHandle pinnedArray = GCHandle.Alloc(bversion, GCHandleType.Pinned);
+			IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+			Serum_GetVersion(pointer);
+			pinnedArray.Free();
+			int bvlen = 0;
+			while ((bversion[bvlen] != 0) && (bvlen < 16)) bvlen++;
+			return System.Text.Encoding.UTF8.GetString(bversion, 0, bvlen);
 		}
 
 		public void SetPinupInstance(PinUpOutput puo)
@@ -186,26 +196,6 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		public void Colorize(DMDFrame frame)
-		{
-			Color[] palette = new Color[64];
-			byte[] pal = new byte[64 * 3];
-			byte[] Frame = new byte[_fWidth * _fHeight];
-			byte[][] planes = new byte[6][];
-			for (uint ti = 0; ti < 6; ti++) planes[ti] = new byte[_fWidth * _fHeight / 8];
-			byte[] rotations = new byte[MAX_COLOR_ROTATIONS * 3];
-			for (uint ti = 0;ti<_fWidth * _fHeight;ti++) Frame[ti] = frame.Data[ti];
-			uint triggerID = 0xFFFFFFFF;
-			Serum_Colorize(Frame, _fWidth, _fHeight, pal, rotations, ref triggerID);
-			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-			{
-				if ((rotations[ti * 3] >= 64) || (rotations[ti * 3] + rotations[ti * 3 + 1] > 64)) rotations[ti * 3] = 255;
-			}
-			if ((_activePupOutput != null) && (triggerID != 0xFFFFFFFF)) _activePupOutput.SendTriggerID((ushort)triggerID);
-			CopyColoursToPalette(pal, palette);
-			CopyFrameToPlanes(Frame, planes, 6);
-			ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, palette, rotations));
-		}
 		public void Convert(DMDFrame frame)
 		{
 			Color[] palette = new Color[64];
