@@ -6,6 +6,7 @@
         <Unmanaged64Assemblies>
             ProPinballBridge
             ftd2xx
+			serum
         </Unmanaged64Assemblies>
     </Costura>
 </Weavers>

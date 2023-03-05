@@ -72,6 +72,10 @@ content can also be scaled using the new modes as well. The new options are list
 <image src="https://user-images.githubusercontent.com/57115343/151870548-f0f61c1c-878a-4b24-8fbc-34a37fb0e120.jpg" width="350" />
 <image src="https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
 
+#### Version 2.0
+
+Thanks to ZeDrummer, we now have ZeDMD and Serum coloring support. Additionally, dmdext is now fully 64-bit compatible.
+
 ## Install Instructions
 
 [Download the installer](https://github.com/freezy/dmd-extensions/releases) and
