@@ -1401,20 +1401,13 @@ namespace LibDmd
 
 		private byte[] TransformScaling(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length))
-			{
+			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length)) {
 				return frame;
 			}
 
-			if (ScalerMode == ScalerMode.Doubler)
-			{
-				return FrameUtil.ScaleDouble(width, height, 4, frame);
-			}
-			else
-			{
-				return FrameUtil.Scale2x(width, height, frame);
-			}
-
+			return ScalerMode == ScalerMode.Doubler 
+				? FrameUtil.ScaleDouble(width, height, 4, frame) 
+				: FrameUtil.Scale2x(width, height, frame);
 		}
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
