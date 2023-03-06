@@ -197,25 +197,35 @@ namespace LibDmd.DmdDevice
 			_isOpen = true;
 		}
 
-		private bool SetupColorizer()
+		private void SetupColorizer()
 		{
 			// only setup if enabled and path is set
 			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize)
 			{
-				return false;
+				return;
 			}
 
-			var cromPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cRZ");
-			if (File.Exists(cromPath))
+			var serumPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cRZ");
+			if (File.Exists(serumPath))
 			{
 				try
 				{
-					Logger.Info("Loading color rom file at {0}...", cromPath);
 					_serum = new Serum(_altcolorPath, _gameName);
-					if (_serum._serumLoaded == false) _serum = null;
-					_serum.ScalerMode = _config.Global.ScalerMode;
-					aniWidth = _serum._fWidth;
-					aniHeight = _serum._fHeight;
+					if (_serum.IsLoaded)
+					{
+						Logger.Info($"Serum colorizer v{Serum.GetVersion()} initialized.");
+						Logger.Info($"Loading colorization at {serumPath}...");
+						_serum.ScalerMode = _config.Global.ScalerMode;
+						aniWidth = _serum.FrameWidth;
+						aniHeight = _serum.FrameHeight;
+
+					}
+					else
+					{
+						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
+						_serum = null;
+					}
+
 				}
 				catch (Exception e)
 				{
@@ -223,7 +233,15 @@ namespace LibDmd.DmdDevice
 					_serum = null;
 				}
 			}
-			return true;
+
+			if (_config.Global.ScaleToHd)
+			{
+				Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+			}
+			else
+			{
+				Logger.Info("ScaleToHd = False");
+			}
 		}
 
 
@@ -445,7 +463,7 @@ namespace LibDmd.DmdDevice
 
 			if (_serum != null)
 			{
-				if (_serum._noColors == 16)
+				if (_serum.NumColors == 16)
 				{
 					_graphs.Add(new RenderGraph
 					{

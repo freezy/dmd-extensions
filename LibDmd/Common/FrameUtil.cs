@@ -30,16 +30,34 @@ namespace LibDmd.Common
 		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
 		/// <param name="frame">D datä vom Biud</param>
 		/// <returns>Än Ebini fir jedes Bit</returns>
-		public static byte[][] Split(int width, int height, int bitlen, byte[] frame)
+		/// <summary>
+		/// Tuät es Biud i sini Bitahteiu uifteilä.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Ebänä fir
+		/// jedes Bit uisächemid
+		/// </remarks>
+		/// 
+		/// <param name="width">Bräiti vom Biud</param>
+		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
+		/// <param name="frame">D datä vom Biud</param>
+		/// <param name="destPlanes">Bruich das bim zruggäh wenn definiärt.</param>
+		/// <returns>Än Ebini fir jedes Bit</returns>
+		public static byte[][] Split(int width, int height, int bitlen, byte[] frame, byte[][] destPlanes = null)
 		{
 			var planeSize = width * height / 8;
-			var planes = new byte[bitlen][];
+			var planes = destPlanes ?? new byte[bitlen][];
 
 			try
 			{
 				for (var i = 0; i < bitlen; i++)
 				{
-					planes[i] = new byte[planeSize];
+					if (planes[i] == null)
+					{ // recycle, if possible
+						planes[i] = new byte[planeSize];
+					}
 				}
 
 				var byteIdx = 0;
@@ -78,7 +96,7 @@ namespace LibDmd.Common
 			catch (IndexOutOfRangeException e)
 			{
 				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", width, height, frame.Length, bitlen);
-				throw new IndexOutOfRangeException(e.Message);
+				throw new IndexOutOfRangeException(e.Message, e);
 			}
 
 			return planes;
