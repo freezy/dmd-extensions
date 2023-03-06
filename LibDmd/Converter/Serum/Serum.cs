@@ -129,7 +129,7 @@ namespace LibDmd.Converter.Serum
 			} else {
 				planes = ScalerMode == ScalerMode.Doubler 
 					? FrameUtil.Scale2(width, height, ConvertToPlanes(6)) 
-					: FrameUtil.Split(width, height, _planes.Length, FrameUtil.Scale2x(width, height, frame.Data));
+					: FrameUtil.Split(width, height, _planes.Length, FrameUtil.Scale2x(width, height, _frameData));
 			}
 			
 			// send the colored frame
