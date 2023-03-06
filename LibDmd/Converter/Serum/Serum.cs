@@ -138,7 +138,6 @@ namespace LibDmd.Converter.Serum
 		
 		public static string GetVersion()
 		{
-			byte[] version = new byte[16];
 			IntPtr pointer=Serum_GetMinorVersion();
 			string str = Marshal.PtrToStringAnsi(pointer);
 			return str;
