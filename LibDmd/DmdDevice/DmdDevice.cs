@@ -78,8 +78,7 @@ namespace LibDmd.DmdDevice
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static string _altcolorPath;
-		private static readonly MemoryTarget MemLogger = new MemoryTarget
-		{
+		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
@@ -179,8 +178,7 @@ namespace LibDmd.DmdDevice
 						Logger.Error(e, "Main thread seems already destroyed, aborting.");
 					}
 				}
-			}
-			else {
+			} else {
 				SetupGraphs();
 			}
 			_isOpen = true;
@@ -249,8 +247,8 @@ namespace LibDmd.DmdDevice
 							aniHeight = vni.MaxHeight;
 							aniWidth = vni.MaxWidth;
 							Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
-						}
-						else {
+						
+						} else {
 							Logger.Info("No animation set found");
 							aniHeight = Height;
 							aniWidth = Width;
@@ -262,19 +260,18 @@ namespace LibDmd.DmdDevice
 						_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
 						_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
 
-					}
-					catch (Exception e) {
+					} catch (Exception e) {
 						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 					}
-				}
-				else {
+				
+				} else {
 					Logger.Info("No palette file found at {0}.", palPath);
 				}
 
 				if (_config.Global.ScaleToHd) {
 					Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-				}
-				else {
+				
+				} else {
 					Logger.Info("ScaleToHd = False");
 				}
 			}
@@ -495,8 +492,7 @@ namespace LibDmd.DmdDevice
 			// 2-bit graph
 			if (_serum != null) {
 				if (_serum.NumColors == 16) {
-					_graphs.Add(new RenderGraph
-					{
+					_graphs.Add(new RenderGraph {
 						Name = "4-bit Colored VPM Graph",
 						Source = _vpmGray4Source,
 						Destinations = renderers,
@@ -508,8 +504,7 @@ namespace LibDmd.DmdDevice
 					});
 				}
 				else {
-					_graphs.Add(new RenderGraph
-					{
+					_graphs.Add(new RenderGraph {
 						Name = "2-bit Colored VPM Graph",
 						Source = _vpmGray2Source,
 						Destinations = renderers,
@@ -522,8 +517,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			else if (_colorize && _gray2Colorizer != null) {
-				_graphs.Add(new RenderGraph
-				{
+				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
 					Source = _vpmGray2Source,
 					Destinations = renderers,
@@ -536,8 +530,7 @@ namespace LibDmd.DmdDevice
 				ReportingTags.Add("Color:Gray2");
 			}
 			else {
-				_graphs.Add(new RenderGraph
-				{
+				_graphs.Add(new RenderGraph {
 					Name = "2-bit VPM Graph",
 					Source = _vpmGray2Source,
 					Destinations = renderers,
@@ -550,8 +543,7 @@ namespace LibDmd.DmdDevice
 
 			// 4-bit graph
 			if (_colorize && _gray4Colorizer != null) {
-				_graphs.Add(new RenderGraph
-				{
+				_graphs.Add(new RenderGraph {
 					Name = "4-bit Colored VPM Graph",
 					Source = _vpmGray4Source,
 					Destinations = renderers,
@@ -564,8 +556,7 @@ namespace LibDmd.DmdDevice
 				ReportingTags.Add("Color:Gray4");
 			}
 			else {
-				_graphs.Add(new RenderGraph
-				{
+				_graphs.Add(new RenderGraph {
 					Name = "4-bit VPM Graph",
 					Source = _vpmGray4Source,
 					Destinations = renderers,
@@ -577,8 +568,7 @@ namespace LibDmd.DmdDevice
 			}
 
 			// rgb24 graph
-			_graphs.Add(new RenderGraph
-			{
+			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
 				Source = _vpmRgb24Source,
 				Destinations = renderers,
@@ -589,8 +579,7 @@ namespace LibDmd.DmdDevice
 			});
 
 			// alphanumeric graph
-			_graphs.Add(new RenderGraph
-			{
+			_graphs.Add(new RenderGraph {
 				Name = "Alphanumeric VPM Graph",
 				Source = _vpmAlphaNumericSource,
 				Destinations = renderers,
@@ -603,19 +592,18 @@ namespace LibDmd.DmdDevice
 			if ((_serum!=null) || (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null))) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
-			}
-			else if (_colorize && _palette != null) {
+			
+			} else if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
 				if (_coloring != null) {
 					_graphs.SetPalette(_palette, _coloring.DefaultPaletteIndex);
-				}
-				else {
+				
+				} else {
 					_graphs.SetPalette(_palette, -1);
 				}
 
-			}
-			else {
+			} else {
 				Logger.Info("Applying default color to render graphs ({0}).", _color);
 				_graphs.ClearPalette();
 				_graphs.SetColor(_color);
@@ -716,15 +704,17 @@ namespace LibDmd.DmdDevice
 			try {
 				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
 				_virtualDmd = null;
-			}
-			catch (TaskCanceledException e) {
+			
+			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}
 
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			if (_serum != null) _serum.Dispose();
+			if (_serum != null) {
+				_serum.Dispose();
+			}
 			_serum = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
@@ -775,7 +765,7 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_serum!=null) {
+			if (_serum != null) {
 				if (_config.Global.ScaleToHd) {
 					if (width == 128 && height == 32) {
 						width *= 2;
@@ -786,8 +776,8 @@ namespace LibDmd.DmdDevice
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
 				_vpmGray2Source.NextFrame(frame);
-			}
-			else {
+			
+			} else {
 				if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
 					// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 					// indicating this should be upsized and treated as a centered 128x32 DMD.
@@ -810,8 +800,8 @@ namespace LibDmd.DmdDevice
 
 					_gray2Colorizer.SetDimensions(width, height);
 					_vpmGray2Source.NextFrame(_upsizedFrame);
-				}
-				else {
+				
+				} else {
 					if (_config.Global.ScaleToHd) {
 						if (width == 128 && height == 32) {
 							width *= 2;
@@ -846,8 +836,8 @@ namespace LibDmd.DmdDevice
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
 				_vpmGray2Source.NextFrame(frame);
-			}
-			else {
+			
+			} else {
 				if (_config.Global.ScaleToHd) {
 					if (width == 128 && height == 32) {
 						width *= 2;

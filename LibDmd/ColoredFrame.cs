@@ -27,23 +27,27 @@ namespace LibDmd
 		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
 		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
 		/// <remarks>
-		public bool isRotation = false;
 		public byte[] Rotations { get; }
+
+		/// <summary>
+		/// If set, colors defined in <see cref="Rotations" are rotated./>
+		/// </summary>
+		public bool RotateColors;
 
 		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex)
 		{
 			Planes = planes;
 			Palette = palette;
 			PaletteIndex = paletteIndex;
-			isRotation = false;
+			RotateColors = false;
 		}
 
-		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex,bool isrotation, byte[] rotations)
+		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex,bool rotateColors, byte[] rotations)
 		{
 			Planes = planes;
 			Palette = palette;
 			PaletteIndex = paletteIndex;
-			isRotation = isrotation;
+			RotateColors = rotateColors;
 			Rotations= rotations;
 		}
 
@@ -51,7 +55,7 @@ namespace LibDmd
 		{
 			Planes = planes;
 			Palette = palette;
-			isRotation= false;
+			RotateColors= false;
 			PaletteIndex = -1;
 		}
 
@@ -59,7 +63,7 @@ namespace LibDmd
 		{
 			Planes = planes;
 			Palette = palette;
-			isRotation= true;
+			RotateColors= true;
 			Rotations = rotations;
 			PaletteIndex = -1;
 		}
@@ -68,7 +72,7 @@ namespace LibDmd
 		{
 			Planes = FrameUtil.Split(width, height, 2, frame);
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
-			isRotation = false;
+			RotateColors = false;
 		}
 	}
 }

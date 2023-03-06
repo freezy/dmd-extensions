@@ -98,8 +98,8 @@ namespace LibDmd.Converter.Serum
 
 		public void Init()
 		{
-
 		}
+
 		public void Convert(DMDFrame frame)
 		{
 			Buffer.BlockCopy(frame.Data, 0, _frameData, 0, frame.Data.Length);

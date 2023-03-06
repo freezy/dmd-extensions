@@ -80,13 +80,13 @@ namespace LibDmd.Output.PinUp
 				SetGameName = (_dSetGameName)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dSetGameName));
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "PuP_Trigger");
-				if (pAddress == IntPtr.Zero)
-				{
+				if (pAddress == IntPtr.Zero) {
 					isPuPTrigger = false;
 					Logger.Error("[PinUpOutput] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated");
-				}
-				else
+				
+				} else { 
 					PuPTrigger = (_SendTrigger)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_SendTrigger));
+				}
 			}
 			catch (Exception e) {
 				IsAvailable = false;
@@ -109,7 +109,9 @@ namespace LibDmd.Output.PinUp
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
 		public void RenderBitmap(BitmapSource bmp)
 		{
-			if (PuPFrameMatching == false) return;
+			if (PuPFrameMatching == false) {
+				return;
+			}
 			RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
 		}
 
@@ -132,9 +134,12 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderRgb24(byte[] frame)
 		{
-			if (PuPFrameMatching == false) return;
+			if (PuPFrameMatching == false) {
+				return;
+			}
+
 			try {
-				// Copy the fram array to unmanaged memory.
+				// Copy the frame array to unmanaged memory.
 
 				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
 				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
@@ -149,9 +154,11 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderGray4(byte[] frame)
 		{
-			if (PuPFrameMatching == false) return;
-			try
-			{
+			if (PuPFrameMatching == false) {
+				return;
+			}
+
+			try {
 				// Render as orange palette (same as default with no PAL loaded)
 				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
 
@@ -176,9 +183,11 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderRaw(byte[] data)
 		{
-			if (PuPFrameMatching == false) return;
-			try
-			{
+			if (PuPFrameMatching == false) {
+				return;
+			}
+
+			try {
 				Marshal.Copy(data, 0, _pnt, Width * Height * 3);
 				Render_RGB24((ushort) Width, (ushort) Height, _pnt);
 			} catch (Exception e) {

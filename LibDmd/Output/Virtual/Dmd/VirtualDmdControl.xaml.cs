@@ -250,7 +250,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				_hasFrame = true;
 				_nextFrameType = FrameFormat.ColoredGray6;
 				for (byte ti = 0; ti < 64; ti++) _rotCols[ti] = ti;
-				if (frame.isRotation)
+				if (frame.RotateColors)
 				{
 					DateTime actime = DateTime.UtcNow;
 					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
