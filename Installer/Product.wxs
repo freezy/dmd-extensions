@@ -118,9 +118,9 @@
 		</Condition>
 
 		<!-- Check for .NET -->
-		<PropertyRef Id="WIX_IS_NETFRAMEWORK_452_OR_LATER_INSTALLED"/>
+		<PropertyRef Id="WIX_IS_NETFRAMEWORK_472_OR_LATER_INSTALLED"/>
 		<Condition Message="!(loc.DotNetErrorMessage)">
-			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_452_OR_LATER_INSTALLED]]>
+			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_472_OR_LATER_INSTALLED]]>
 		</Condition>
 
 	</Product>

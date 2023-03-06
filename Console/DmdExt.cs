@@ -248,9 +248,9 @@ namespace DmdExt
 		{
 			using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\")) {
 				var releaseKey = Convert.ToInt32(ndpKey?.GetValue("Release"));
-				if (releaseKey < 379893) {
+				if (releaseKey < 461808) {
 					System.Console.WriteLine("You need to install at least v4.7.2 of the .NET framework.");
-					System.Console.WriteLine("Download from here: https://www.microsoft.com/en-us/download/details.aspx?id=42642");
+					System.Console.WriteLine("Download from here: https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472");
 					Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 				}
 			}
