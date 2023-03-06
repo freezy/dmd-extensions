@@ -139,15 +139,9 @@ namespace LibDmd.Converter.Serum
 		public static string GetVersion()
 		{
 			byte[] version = new byte[16];
-			GCHandle pinnedArray = GCHandle.Alloc(version, GCHandleType.Pinned);
-			IntPtr pointer = pinnedArray.AddrOfPinnedObject();
-			Serum_GetVersion(pointer);
-			pinnedArray.Free();
-			int len = 0;
-			while ((version[len] != 0) && (len < 16)) {
-				len++;
-			}
-			return Encoding.UTF8.GetString(version, 0, len);
+			IntPtr pointer=Serum_GetMinorVersion();
+			string str = Marshal.PtrToStringAnsi(pointer);
+			return str;
 		}
 
 		private byte[][] ConvertToPlanes(byte colorBitDepth)
@@ -232,13 +226,13 @@ namespace LibDmd.Converter.Serum
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		// C format: void Serum_Dispose(void)
 		private static extern void Serum_Dispose();
-		
+
 		/// <summary>
-		/// Serum_Dispose: Function to call at table unload time to free allocated memory
+		/// Serum_GetMinorVersion: Function to get dll version
 		/// </summary>
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// C format: void Serum_Dispose(void)
-		private static extern void Serum_GetVersion(IntPtr version);
+		// C format: const char* Serum_GetMinorVersion();
+		private static extern IntPtr Serum_GetMinorVersion();
 
 		#endregion
 	}
