@@ -117,12 +117,6 @@
 			<![CDATA[Installed OR (VersionNT >= 600)]]>
 		</Condition>
 
-		<!-- Check for .NET -->
-		<PropertyRef Id="WIX_IS_NETFRAMEWORK_472_OR_LATER_INSTALLED"/>
-		<Condition Message="!(loc.DotNetErrorMessage)">
-			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_472_OR_LATER_INSTALLED]]>
-		</Condition>
-
 	</Product>
 
 </Wix>
