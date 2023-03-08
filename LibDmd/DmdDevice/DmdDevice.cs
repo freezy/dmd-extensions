@@ -147,6 +147,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
+			Logger.Info("Running in {0}", Directory.GetCurrentDirectory());
 		}
 
 		/// <summary>

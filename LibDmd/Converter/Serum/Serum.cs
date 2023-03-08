@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
@@ -63,6 +64,9 @@ namespace LibDmd.Converter.Serum
 		public Serum(string altcolorPath, string romName)
 		{
 			uint numTriggers = 0;
+			if (File.Exists("serum.dll"))			{
+				Logger.Info($"Found serum.dll at {Directory.GetCurrentDirectory()}.");
+			}
 			if (!Serum_Load(altcolorPath, romName, ref FrameWidth, ref FrameHeight, ref NumColors, ref numTriggers)) {
 				IsLoaded = false;
 				return;
