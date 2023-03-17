@@ -105,6 +105,13 @@ namespace LibDmd.Converter.Serum
 			Buffer.BlockCopy(frame.Data, 0, _frameData, 0, frame.Data.Length);
 			
 			uint triggerId = 0xFFFFFFFF;
+			if ((_activePupOutput != null) && ((_activePupOutput.isPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
+			{
+				if (NumColors == 16)
+					_activePupOutput.RenderGray4(_frameData);
+				else
+					_activePupOutput.RenderGray2(_frameData);
+			}
 
 			Serum_Colorize(_frameData, FrameWidth, FrameHeight, _bytePalette, _rotations, ref triggerId);
 
@@ -138,7 +145,7 @@ namespace LibDmd.Converter.Serum
 		
 		public static string GetVersion()
 		{
-			IntPtr pointer=Serum_GetMinorVersion();
+			IntPtr pointer = Serum_GetMinorVersion();
 			string str = Marshal.PtrToStringAnsi(pointer);
 			return str;
 		}
