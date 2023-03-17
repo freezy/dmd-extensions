@@ -16,7 +16,13 @@ namespace LibDmd.Output.PinUp
 		public string OutputFolder { get; set; }
 		public string Name { get; } = "PinUP Writer";
 		public bool IsAvailable { get; private set; }
+		/// <summary>
+		/// If Serum colorization, set to true if no triggers found in it => legacy mode detection
+		/// </summary>
 		public bool PuPFrameMatching { get; set; } = true;
+		/// <summary>
+		/// If an updated version of dmddevicepup.dll with PuP_Trigger() function found, set to true
+		/// </summary>
 		public bool isPuPTrigger { get; } = true;
 
 		public int Width = 128;
