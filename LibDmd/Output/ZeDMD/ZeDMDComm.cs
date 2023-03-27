@@ -12,14 +12,11 @@ namespace LibDmd.Output.ZeDMD
 		public const int BaudRate = 921600;
 		public bool Opened = false;
 		private SerialPort _serialPort;
-		private const int MAX_SERIAL_WRITE_AT_ONCE = 256;
+		private const int MAX_SERIAL_WRITE_AT_ONCE = 8192;
 		public const int N_CTRL_CHARS = 6;
 		public const int N_INTERMEDIATE_CTR_CHARS = 4;
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
-
-
-
 
 		private void SafeClose()
 		{
@@ -59,10 +56,23 @@ namespace LibDmd.Output.ZeDMD
 				}
 				width = result[N_INTERMEDIATE_CTR_CHARS] + result[N_INTERMEDIATE_CTR_CHARS + 1] * 256;
 				height = result[N_INTERMEDIATE_CTR_CHARS + 2] + result[N_INTERMEDIATE_CTR_CHARS + 3] * 256;
-				nCOM = port;
-				Opened = true;
-				return true;
 
+				if (_serialPort.ReadByte() == 'R')
+				{
+					// enable compression
+					_serialPort.Write(CtrlCharacters.Concat(new byte[] { 14 }).ToArray(), 0, CtrlCharacters.Length + 1);
+					if (_serialPort.ReadByte() == 'A' && _serialPort.ReadByte() == 'R')
+					{
+						// increase serial transfer chunk size
+						_serialPort.Write(CtrlCharacters.Concat(new byte[] { 13, MAX_SERIAL_WRITE_AT_ONCE / 256 }).ToArray(), 0, CtrlCharacters.Length + 1);
+						if (_serialPort.ReadByte() == 'A')
+						{
+							nCOM = port;
+							Opened = true;
+							return true;
+						}
+					}
+				}
 			}
 			catch
 			{
@@ -85,23 +95,28 @@ namespace LibDmd.Output.ZeDMD
 				{
 					if (_serialPort.ReadByte() == 'R')
 					{
-						// first send
-						byte[] pBytes2 = new byte[MAX_SERIAL_WRITE_AT_ONCE];
-						for (int ti = 0; ti < N_CTRL_CHARS; ti++) pBytes2[ti] = CtrlCharacters[ti];
-						int tosend = (nBytes < MAX_SERIAL_WRITE_AT_ONCE - N_CTRL_CHARS) ? nBytes : (MAX_SERIAL_WRITE_AT_ONCE - N_CTRL_CHARS);
-						for (int ti = 0; ti < tosend; ti++) pBytes2[ti + N_CTRL_CHARS] = pBytes[ti];
-						_serialPort.Write(pBytes2, 0, tosend + N_CTRL_CHARS);
-						if (_serialPort.ReadByte() != 'A') return false;
-						// next ones
-						int bufferPosition = tosend;
-						while (bufferPosition < nBytes)
-						{
-							tosend = (nBytes - bufferPosition < MAX_SERIAL_WRITE_AT_ONCE) ? nBytes - bufferPosition : MAX_SERIAL_WRITE_AT_ONCE;
-							_serialPort.Write(pBytes, bufferPosition, tosend);
-							if (_serialPort.ReadByte() == 'A')
-							{
+						// send control characters and command
+						_serialPort.Write(CtrlCharacters, 0, CtrlCharacters.Length);
+						_serialPort.Write(pBytes, 0, 1);
+
+						// remove the command fr0m the data and compress the data
+						byte[] pCompressedBytes = Compress(pBytes.Skip(1).ToArray());
+						int nCompressedBytes = pCompressedBytes.Length;
+
+						byte[] pCompressionHeader = new byte[2];
+						pCompressionHeader[0] = (byte)((nCompressedBytes >> 8) & 0xFF);
+						pCompressionHeader[1] = (byte)((nCompressedBytes & 0xFF));
+						// send coompression header
+						_serialPort.Write(pCompressionHeader, 0, 2);
+
+						int chunk = MAX_SERIAL_WRITE_AT_ONCE - 6 - 1 - 2;
+						int position = 0;
+						while (position < nCompressedBytes) {
+							_serialPort.Write(pCompressedBytes, position, ((nCompressedBytes - position) < chunk) ? (nCompressedBytes - position) : chunk);
+							if (_serialPort.ReadByte() == 'A') {
 								// Received (A)cknowledge, ready to send the next chunk.
-								bufferPosition += tosend;
+								position += chunk;
+								chunk = MAX_SERIAL_WRITE_AT_ONCE;
 							}
 							else
 							{
@@ -110,10 +125,6 @@ namespace LibDmd.Output.ZeDMD
 							}
 						}
 						return true;
-					}
-					else
-					{
-						uint trh = 12;
 					}
 				}
 				catch (Exception e)
@@ -162,6 +173,14 @@ namespace LibDmd.Output.ZeDMD
 			return true;
 		}
 
+		protected static byte[] Compress(byte[] inData)
+		{
+			using (var outStream = new MemoryStream())
+			using (var inStream = new MemoryStream(inData)) {
+				NetMiniZ.NetMiniZ.Compress(inStream, outStream, 9);
+				return outStream.ToArray();
+			}
+		}
 	}
 }
 
