@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Markup;
+using NLog;
 
 namespace LibDmd.Output.ZeDMD
 {
@@ -17,6 +21,30 @@ namespace LibDmd.Output.ZeDMD
 		public const int N_INTERMEDIATE_CTR_CHARS = 4;
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
+
+		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(128); // max queue size 128
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public ZeDMDComm()
+		{
+			Task.Run(() => {
+				Logger.Info("Starting ZeDMD frame thread.");
+				while (!_frames.IsCompleted) {
+
+					byte[] frame = null;
+					try {
+						frame = _frames.Take();
+
+					} catch (InvalidOperationException) { }
+
+					if (frame != null) {
+						StreamBytes(frame);
+					}
+				}
+				Logger.Info("ZeDMD frame thread finished.");
+			});
+		}
 
 		private void SafeClose()
 		{
@@ -49,6 +77,7 @@ namespace LibDmd.Output.ZeDMD
 				System.Threading.Thread.Sleep(200);
 				if (!result.Take(4).SequenceEqual(CtrlCharacters.Take(4)))
 				{
+					_frames.CompleteAdding();
 					SafeClose();
 					width = 0;
 					height = 0;
@@ -76,6 +105,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			catch
 			{
+				_frames.CompleteAdding();
 				if (_serialPort != null && _serialPort.IsOpen) SafeClose();
 			}
 			width = 0;
@@ -85,9 +115,16 @@ namespace LibDmd.Output.ZeDMD
 		private void Disconnect()
 		{
 			Opened = false;
+			_frames.CompleteAdding();
 			if (_serialPort != null) SafeClose();
 		}
-		public bool StreamBytes(byte[] pBytes, int nBytes)
+
+		public void QueueFrame(byte[] frames)
+		{
+			Task.Run(() => _frames.Add(frames));
+		}
+
+		private bool StreamBytes(byte[] pBytes)
 		{
 			if (_serialPort.IsOpen)
 			{
@@ -139,7 +176,7 @@ namespace LibDmd.Output.ZeDMD
 			// Reset ESP32 palette
 			byte[] tempbuf = new byte[1];
 			tempbuf[0] = 0x6;  // command byte 6 = reset palettes
-			StreamBytes(tempbuf, 1);
+			StreamBytes(tempbuf);
 		}
 		public int Open(out int width, out int height)
 		{
