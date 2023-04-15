@@ -510,7 +510,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _bitmapToRender.Width, _bitmapToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data.Scan0);
 						else
-							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data.Scan0);
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, _bitmapToRender.Width, _bitmapToRender.Height, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data.Scan0);
 						_bitmapToRender.UnlockBits(data);
 						break;
 				}
