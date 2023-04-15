@@ -29,7 +29,7 @@ namespace DmdExt.Mirror
 		{
 			// create graph with renderers
 			_graph = new RenderGraph {
-				Destinations = GetRenderers(_config, reportingTags, _options.Position),
+				Destinations = GetRenderers(_config, reportingTags),
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
