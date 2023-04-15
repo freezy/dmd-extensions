@@ -11,9 +11,9 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
-using LibDmd.Output.ZeDMD;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.ZeDMD;
 using NLog;
 using static System.Windows.Threading.Dispatcher;
 using static DmdExt.Common.BaseOptions.DestinationType;
@@ -38,7 +38,7 @@ namespace DmdExt.Common
 			return _graphs;
 		}
 
-		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags, int[] position = null)
+		protected List<IDestination> GetRenderers(IConfiguration config, HashSet<string> reportingTags)
 		{
 			var renderers = new List<IDestination>();
 			if (config.PinDmd1.Enabled) {
@@ -146,7 +146,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config, position));
+				renderers.Add(ShowVirtualDmd(config));
 				Logger.Info("Added virtual DMD renderer.");
 				reportingTags.Add("Out:VirtualDmd");
 			}
@@ -180,13 +180,14 @@ namespace DmdExt.Common
 			return renderers;
 		}
 
-		private static IDestination ShowVirtualDmd(IConfiguration config, int[] position)
+		private static IDestination ShowVirtualDmd(IConfiguration config)
 		{
 			var dmd = new VirtualDmd {
 				Left = config.VirtualDmd.Left,
 				Top = config.VirtualDmd.Top,
 				Width = config.VirtualDmd.Width,
-				Height = config.VirtualDmd.Height
+				Height = config.VirtualDmd.Height,
+				IgnoreAspectRatio = config.VirtualDmd.IgnoreAr
 			};
 			dmd.Setup(config as Configuration, config is Configuration iniConfig ? iniConfig.GameName : null);
 			var thread = new Thread(() => {
@@ -196,8 +197,6 @@ namespace DmdExt.Common
 
 				dmd.Dispatcher.Invoke(() => {
 					dmd.Dmd.Init();
-					if(position != null)
-						dmd.Dmd.SetDimensions(position[2]- position[0], position[3]-position[1]);
 					dmd.Show();
 				});
 
