@@ -14,60 +14,51 @@ namespace LibDmd.Converter
 	/// </summary>
 	public class SwitchingConverter : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
-		private IConverter converter;
-		private readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
+		private IConverter _converter;
+		private readonly Subject<ColoredFrame> _coloredGray2PassthroughFrames = new Subject<ColoredFrame>();
 
-		private readonly ReplaySubject<IObservable<ColoredFrame>> LatestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
-		private readonly ReplaySubject<IObservable<ColoredFrame>> LatestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
-		private readonly ReplaySubject<IObservable<ColoredFrame>> LatestColoredGray6 = new ReplaySubject<IObservable<ColoredFrame>>(1);
+		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
+		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
+		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray6 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public override string Name
 		{
 			get
 			{
-				return $"Switching Converter ({ConverterName(converter)})";
+				return $"Switching Converter ({ConverterName(_converter)})";
 			}
 		}
 
-		public FrameFormat From { get; } = FrameFormat.Gray2;
+		public FrameFormat From => FrameFormat.Gray2;
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
 		public SwitchingConverter()
 		{
-			LatestColoredGray2.OnNext(ColoredGray2AnimationFrames);
-			LatestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
-			LatestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
+			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
+			_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
+			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 		}
 
 		public void Convert(DMDFrame frame)
 		{
-			if (converter != null)
+			if (_converter != null)
 			{
-				converter?.Convert(frame);
+				_converter?.Convert(frame);
 			}
 			else
 			{
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+				_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
 			}
 		}
 
-		public IObservable<ColoredFrame> GetColoredGray2Frames()
-		{
-			return LatestColoredGray2.Switch();
-		}
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => _latestColoredGray2.Switch();
 
-		public IObservable<ColoredFrame> GetColoredGray4Frames()
-		{
-			return LatestColoredGray4.Switch();
-		}
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => _latestColoredGray4.Switch();
 
-		public IObservable<ColoredFrame> GetColoredGray6Frames()
-		{
-			return LatestColoredGray6.Switch();
-		}
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => _latestColoredGray6.Switch();
 
 		public void Init()
 		{
@@ -79,50 +70,44 @@ namespace LibDmd.Converter
 
 			if (converter == null)
 			{
-				LatestColoredGray2.OnNext(ColoredGray2AnimationFrames);
-				LatestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
-				LatestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
-				this.converter = null;
+				_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
+				_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
+				_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
+				_converter = null;
 				return;
 			}
 
 			converter.Init();
 
-			var source2 = converter as IColoredGray2Source;
-			if (source2 != null)
+			if (converter is IColoredGray2Source source2)
 			{
 				source2.Dimensions = Dimensions;
-				LatestColoredGray2.OnNext(source2.GetColoredGray2Frames());
+				_latestColoredGray2.OnNext(source2.GetColoredGray2Frames());
 			}
 
-			var source4 = converter as IColoredGray4Source;
-			if (source4 != null)
+			if (converter is IColoredGray4Source source4)
 			{
 				source4.Dimensions = Dimensions;
-				LatestColoredGray4.OnNext(source4.GetColoredGray4Frames());
+				_latestColoredGray4.OnNext(source4.GetColoredGray4Frames());
 			}
 
-			var source6 = converter as IColoredGray6Source;
-			if (source6 != null)
+			if (converter is IColoredGray6Source source6)
 			{
 				source6.Dimensions = Dimensions;
-				LatestColoredGray6.OnNext(source6.GetColoredGray6Frames());
+				_latestColoredGray6.OnNext(source6.GetColoredGray6Frames());
 			}
 
-			this.converter = converter;
+			_converter = converter;
 		}
 
 		private static string ConverterName(IConverter converter)
 		{
-			var source = converter as AbstractSource;
-			if (source != null)
+			if (converter is AbstractSource source)
 			{
 				return source.Name;
 			}
-			else
-			{
-				return "Passthrough";
-			}
+
+			return "Passthrough";
 		}
 	}
 }
