@@ -324,7 +324,7 @@
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
-    <Compile Include="Input\PinballFX\PinabllFX3MemoryGrabberBase.cs" />
+    <Compile Include="Input\PinballFX\PinballFX3MemoryGrabberBase.cs" />
     <Compile Include="Input\PinballFX\PinballFX3GameNameMemoryGrabber.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IGray6Destination.cs" />
