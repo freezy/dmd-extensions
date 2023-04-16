@@ -23,13 +23,7 @@ namespace LibDmd.Converter
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public override string Name
-		{
-			get
-			{
-				return $"Switching Converter ({ConverterName(_converter)})";
-			}
-		}
+		public override string Name => $"Switching Converter ({ConverterName(_converter)})";
 
 		public FrameFormat From => FrameFormat.Gray2;
 		public IObservable<Unit> OnResume { get; }
