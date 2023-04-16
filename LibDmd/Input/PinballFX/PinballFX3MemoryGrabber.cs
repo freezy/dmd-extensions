@@ -11,11 +11,11 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3MemoryGrabber : MemoryGrabber<ColoredFrame>, IColoredGray2Source
+	public class PinballFX3MemoryGrabber : PinabllFX3MemoryGrabberBase<DMDFrame>, IGray2Source
 	{
 		public override string Name { get; } = "Pinball FX3";
 
-		public IObservable<ColoredFrame> GetColoredGray2Frames()
+		public IObservable<DMDFrame> GetGray2Frames()
 		{
 			return GetFrames();
 		}
@@ -31,7 +31,7 @@ namespace LibDmd.Input.PinballFX
 		private static IntPtr _dmdAddress = IntPtr.Zero;
 		private static Color _dmdColor = Colors.OrangeRed;
 
-		protected override ColoredFrame CaptureDMD()
+		protected override DMDFrame CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
@@ -41,7 +41,7 @@ namespace LibDmd.Input.PinballFX
 
 			// ..if not, return an empty frame (blank DMD).
 			if (_dmdAddress == IntPtr.Zero) {
-				return new ColoredFrame(128, 32, frame, Color.FromRgb(0, 0, 0));
+				return new DMDFrame { width = 128, height = 32, Data = frame };
 			}
 
 			// Retrieve DMD color from memory.
@@ -95,16 +95,7 @@ namespace LibDmd.Input.PinballFX
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : new ColoredFrame(128, 32, frame, _dmdColor);
-		}
-
-		// try attaching to a process
-		protected override IntPtr AttachGameProcess(Process p)
-		{
-			if (p.ProcessName == "Pinball FX3") {
-				return GetPointerBaseAddress(p);
-			}
-			return IntPtr.Zero;
+			return identical ? null : new DMDFrame { width = 128, height = 32, Data = frame };
 		}
 
 		private static IntPtr GetDMDOffset(IntPtr hProcess)
@@ -125,7 +116,7 @@ namespace LibDmd.Input.PinballFX
 			ReadProcessMemory(hProcess, _pBaseAddress, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xF0, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x58, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, colorBytes, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, colorBytes, colorBytes.Length, IntPtr.Zero);
 			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
 			var colorCode = BitConverter.ToInt32(colorBytes, 0);
 
@@ -154,7 +145,7 @@ namespace LibDmd.Input.PinballFX
 
 		// Byte pattern we use to identify the DMD memory struct in the FX3 process
         private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0xA1 };
-        private static IntPtr GetPointerBaseAddress(Process gameProc)
+        protected override IntPtr GetPointerBaseAddress(Process gameProc)
 		{
 			// Open the process for wait and read operations
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);

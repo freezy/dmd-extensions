@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using DmdExt.Common;
 using LibDmd;
-using LibDmd.Common;
+using LibDmd.Converter;
 using LibDmd.DmdDevice;
 using LibDmd.Input.FutureDmd;
 using LibDmd.Input.PinballFX;
@@ -17,7 +17,9 @@ namespace DmdExt.Mirror
 	{
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
+		private ColorizationLoader _colorizationLoader;
 		private RenderGraph _graph;
+		private IDisposable _nameSubscription;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
 		{
@@ -53,6 +55,16 @@ namespace DmdExt.Mirror
 						reportingTags.Add("In:PinballFX3Legacy");
 					} else {
 						_graph.Source = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
+
+						var latest = new SwitchingConverter();
+						_graph.Converter = latest;
+
+						if (_config.Global.Colorize) {
+							_colorizationLoader = new ColorizationLoader();
+							var nameGrabber = new PinballFX3GameNameMemoryGrabber();
+							_nameSubscription = nameGrabber.GetFrames().Subscribe(name => { latest.Switch(LoadColorizer(name)); });
+						}
+
 						reportingTags.Add("In:PinballFX3");
 					}
 					break;
@@ -102,7 +114,22 @@ namespace DmdExt.Mirror
 					throw new ArgumentOutOfRangeException();
 			}
 			graphs.Add(_graph);
+
+			if (_colorizationLoader!= null) {
+				graphs.ClearColor();
+			}
 			graphs.SetDimensions(new LibDmd.Input.Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_nameSubscription?.Dispose();
+		}
+
+		private IConverter LoadColorizer(string gameName)
+		{
+			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
 		}
 	}
 }
