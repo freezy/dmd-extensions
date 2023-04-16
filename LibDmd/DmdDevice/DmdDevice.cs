@@ -66,6 +66,7 @@ namespace LibDmd.DmdDevice
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
+		private ColorizationLoader _colorizationLoader;
 		private Color[] _palette;
 		DMDFrame _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
@@ -77,7 +78,6 @@ namespace LibDmd.DmdDevice
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-		private static string _altcolorPath;
 		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
@@ -114,7 +114,7 @@ namespace LibDmd.DmdDevice
 #endif
 			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
-			_altcolorPath = GetColorPath();
+			_colorizationLoader = new ColorizationLoader();
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
@@ -198,7 +198,7 @@ namespace LibDmd.DmdDevice
 		private void SetupColorizer()
 		{
 			// only setup if enabled and path is set
-			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize) {
+			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
 				return;
 			}
 
@@ -207,73 +207,42 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			var serumPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cRZ");
-			if (File.Exists(serumPath)) {
-				try {
-					_serum = new Serum(_altcolorPath,_gameName);
-					if (_serum.IsLoaded) {
-						Logger.Info($"Serum colorizer v{Serum.GetVersion()} initialized.");
-						Logger.Info($"Loading colorization at {serumPath}...");
-						_serum.ScalerMode = _config.Global.ScalerMode;
-						aniWidth = _serum.FrameWidth;
-						aniHeight = _serum.FrameHeight;
-
-					} else {
-						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
-						_serum = null;
-					}
-
-				} catch (Exception e) {
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
-					_serum = null;
-				}
+			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
+			if (serum != null) {
+				_serum = serum;
+				aniWidth = serum.FrameWidth;
+				aniHeight = serum.FrameHeight;
 			}
+			else {
+				_serum = null;
+			}
+
 			if (_serum == null) {
-				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
-				var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
-				var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
-				var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
+				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
+				if (colorizerResult.HasValue) {
+					var colorizer = colorizerResult.Value;
 
-				var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-				var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-				if (File.Exists(palPath)) {
-					try {
-						Logger.Info("Loading palette file at {0}...", palPath);
-						_coloring = new Coloring(palPath);
-						VniAnimationSet vni = null;
-						if (File.Exists(vniPath)) {
-							Logger.Info("Loading virtual animation file at {0}...", vniPath);
-							vni = new VniAnimationSet(vniPath);
-							Logger.Info("Loaded animation set {0}", vni);
-							aniHeight = vni.MaxHeight;
-							aniWidth = vni.MaxWidth;
-							Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
-						
-						} else {
-							Logger.Info("No animation set found");
-							aniHeight = Height;
-							aniWidth = Width;
-						}
+					_coloring = colorizer.coloring;
 
-						_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
-						_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
-
-						_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
-						_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
-
-					} catch (Exception e) {
-						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					if (colorizer.vni != null) {
+						aniHeight = colorizer.vni.MaxHeight;
+						aniWidth = colorizer.vni.MaxWidth;
 					}
-				
-				} else {
-					Logger.Info("No palette file found at {0}.", palPath);
-				}
+					else {
+						aniHeight = Height;
+						aniWidth = Width;
+					}
 
-				if (_config.Global.ScaleToHd) {
-					Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-				
-				} else {
-					Logger.Info("ScaleToHd = False");
+					_gray2Colorizer = colorizer.gray2;
+					_gray4Colorizer = colorizer.gray4;
+
+					if (_config.Global.ScaleToHd) {
+						Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+
+					}
+					else {
+						Logger.Info("ScaleToHd = False");
+					}
 				}
 			}
 		}
@@ -945,52 +914,5 @@ namespace LibDmd.DmdDevice
 			);
 #endif
 		}
-
-		private static string GetColorPath()
-		{
-			// first, try executing assembly.
-			var altcolor = Path.Combine(AssemblyPath, "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from assembly path: {0}", altcolor);
-				return altcolor;
-			}
-
-			// then, try vpinmame location
-			var vpmPath = GetDllPath("VPinMAME.dll");
-			if (vpmPath == null) {
-				return null;
-			}
-			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
-				return altcolor;
-			}
-			Logger.Info("No altcolor folder found, ignoring palettes.");
-			return null;
-		}
-
-		private static string GetDllPath(string name)
-		{
-			const int maxPath = 260;
-			var builder = new StringBuilder(maxPath);
-			var hModule = GetModuleHandle(name);
-			if (hModule == IntPtr.Zero) {
-				return null;
-			}
-			var size = GetModuleFileName(hModule, builder, builder.Capacity);
-			return size <= 0 ? null : builder.ToString();
-		}
-
-		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-		public static extern IntPtr GetModuleHandle(string lpModuleName);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[PreserveSig]
-		public static extern uint GetModuleFileName
-		(
-			[In] IntPtr hModule,
-			[Out] StringBuilder lpFilename,
-			[In][MarshalAs(UnmanagedType.U4)] int nSize
-		);
 	}
 }
