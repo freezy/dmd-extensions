@@ -318,6 +318,7 @@
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
     <Compile Include="Input\IGray6Source.cs" />
+    <Compile Include="Input\IGameNameSource.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
     <Compile Include="Input\Network\WebsocketGray4Source .cs" />
