@@ -758,7 +758,7 @@ namespace LibDmd.DmdDevice
 					height *= 2;
 
 					if (_upsizedFrame == null)
-						_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+						_upsizedFrame = new DMDFrame { width = width, height = height, Data = new byte[width * height], BitLength = 2};
 					else
 						_upsizedFrame.Update(width, height, _upsizedFrame.Data,2);
 
