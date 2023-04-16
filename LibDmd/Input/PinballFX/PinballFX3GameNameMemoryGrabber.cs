@@ -16,7 +16,11 @@ namespace LibDmd.Input.PinballFX
 		private static IntPtr _nameAddress = IntPtr.Zero;
 		private string _lastName;
 
-		public override string Name { get; } = "Pinball FX3 Game Name";
+		public override string Name => "Pinball FX3 Game Name";
+
+		private const string Path = ":/meta_steam_pfx3/skin/";
+		private static readonly byte[] PathSig = Encoding.ASCII.GetBytes(Path);
+		private const string PrefixNulls = "\0\0\0";
 
 		public PinballFX3GameNameMemoryGrabber()
 		{
@@ -29,7 +33,7 @@ namespace LibDmd.Input.PinballFX
 			ReadProcessMemory(_hProcess, _nameAddress, buff, buff.Length, IntPtr.Zero);
 
 			var name = Encoding.ASCII.GetString(buff).Trim('\0');
-			if (!name.Contains(path)) {
+			if (!name.Contains(Path)) {
 				return null;
 			}
 
@@ -39,16 +43,12 @@ namespace LibDmd.Input.PinballFX
 			_lastName = name;
 
 			if (!identical) {
-				Console.WriteLine("Found name!: {0}", name);
+				Logger.Info($"Found Pinball FX3 game: {name}");
 				return name;
 			}
 
 			return null;
 		}
-
-		private static readonly string path = ":/meta_steam_pfx3/skin/";
-		private static readonly byte[] pathSig = Encoding.ASCII.GetBytes(path);
-		private static readonly string prefixNulls = "\0\0\0";
 
 		protected override IntPtr GetPointerBaseAddress(Process gameProc)
 		{
@@ -59,34 +59,34 @@ namespace LibDmd.Input.PinballFX
 			}
 
 			// Find game name pointer base address offset in memory with its signature pattern.
-			IntPtr offset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, pathSig, pathSig.Length);
+			IntPtr offset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, PathSig, PathSig.Length);
 
 			if (offset == IntPtr.Zero) {
 				return offset;
 			}
 
 			var buff = new byte[128];
-			var prefixPadding = 64;
+			const int prefixPadding = 64;
 
 			// Find the path signature in memory. It looks something like:
 			// "\0\0\0WMS_Getaway:/meta_steam_pfx3/skin/skin/n/in/team_pfx3/skin/
-			ReadProcessMemory(gameProc.Handle, offset - prefixPadding - pathSig.Length, buff, buff.Length, IntPtr.Zero);
+			ReadProcessMemory(gameProc.Handle, offset - prefixPadding - PathSig.Length, buff, buff.Length, IntPtr.Zero);
 
 			var buffStr = Encoding.ASCII.GetString(buff);
 
-			var pathIndex = buffStr.IndexOf(path);
+			var pathIndex = buffStr.IndexOf(Path, StringComparison.Ordinal);
 
 			if (pathIndex == -1) {
 				return IntPtr.Zero;
 			}
 
 			// Seek backwards to the start of the string
-			var startIndex = buffStr.LastIndexOf(prefixNulls, pathIndex);
+			var startIndex = buffStr.LastIndexOf(PrefixNulls, pathIndex, StringComparison.Ordinal);
 			if (startIndex == -1) {
 				return IntPtr.Zero;
 			}
 
-			_nameAddress = offset - prefixPadding + startIndex + prefixNulls.Length - pathSig.Length;
+			_nameAddress = offset - prefixPadding + startIndex + PrefixNulls.Length - PathSig.Length;
 
 			ReadProcessMemory(gameProc.Handle, _nameAddress, buff, buff.Length, IntPtr.Zero);
 
