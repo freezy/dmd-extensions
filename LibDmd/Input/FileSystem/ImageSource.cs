@@ -19,7 +19,7 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceGray2(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray2(bmp)));
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray2(bmp), 2));
 		}
 	}	
 	
@@ -34,7 +34,7 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceGray4(BitmapSource bmp)
 		{
 			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray4(bmp)));
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray4(bmp), 4));
 		}
 	}
 	

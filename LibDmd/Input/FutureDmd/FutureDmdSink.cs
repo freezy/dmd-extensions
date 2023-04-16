@@ -96,7 +96,7 @@ namespace LibDmd.Input.FutureDmd
 					UpdateFrame(messageChunk);
 
 					// publish frame data
-					_framesGray4.OnNext(gray2Frame.Update(_frame));
+					_framesGray4.OnNext(gray2Frame.Update(_frame, 2));
 
 					// disconnect as the pipe was consumed
 					server.Disconnect();

@@ -49,7 +49,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				sternInit = false; // Reset Stern DMD hack state.
-				return _dmdFrame.Update(frame);
+				return _dmdFrame.Update(frame, 4);
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -125,7 +125,7 @@ namespace LibDmd.Input.TPAGrabber
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : _dmdFrame.Update(frame);
+			return identical ? null : _dmdFrame.Update(frame, 4);
 		}
 
 		// try attaching to a process
