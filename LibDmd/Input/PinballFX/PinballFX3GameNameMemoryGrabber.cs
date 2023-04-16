@@ -11,7 +11,7 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending names until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3GameNameMemoryGrabber : PinabllFX3MemoryGrabberBase<String>
+	public class PinballFX3GameNameMemoryGrabber : PinballFX3MemoryGrabberBase<String>
 	{
 		private static IntPtr _nameAddress = IntPtr.Zero;
 		private string _lastName;

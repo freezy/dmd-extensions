@@ -11,7 +11,7 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3MemoryGrabber : PinabllFX3MemoryGrabberBase<DMDFrame>, IGray2Source
+	public class PinballFX3MemoryGrabber : PinballFX3MemoryGrabberBase<DMDFrame>, IGray2Source
 	{
 		public override string Name { get; } = "Pinball FX3";
 
