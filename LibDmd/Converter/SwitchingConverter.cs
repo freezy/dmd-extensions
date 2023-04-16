@@ -16,6 +16,7 @@ namespace LibDmd.Converter
 	{
 		private IConverter _converter;
 		private readonly Subject<ColoredFrame> _coloredGray2PassthroughFrames = new Subject<ColoredFrame>();
+		private readonly Subject<ColoredFrame> _coloredGray4PassthroughFrames = new Subject<ColoredFrame>();
 
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
@@ -32,7 +33,7 @@ namespace LibDmd.Converter
 		public SwitchingConverter()
 		{
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
-			_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
+			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 		}
 
@@ -44,7 +45,11 @@ namespace LibDmd.Converter
 			}
 			else
 			{
-				_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+				if (frame.BitLength == 4) {
+					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+				} else {
+					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+				}
 			}
 		}
 
