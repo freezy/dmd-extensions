@@ -129,6 +129,10 @@ namespace DmdExt.Mirror
 
 		private IConverter LoadColorizer(string gameName)
 		{
+			var serumColorizer = _colorizationLoader.LoadSerum(gameName, _config.Global.ScalerMode);
+			if (serumColorizer != null) {
+				return serumColorizer;
+			}
 			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
 		}
 	}

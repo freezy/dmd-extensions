@@ -52,12 +52,10 @@ namespace LibDmd.Converter
 						Logger.Info($"Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
 						Logger.Info($"Loading colorization at {serumPath}...");
 						serum.ScalerMode = scalerMode;
+						return serum;
+					}
 
-					}
-					else
-					{
-						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
-					}
+					Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
 
 				}
 				catch (Exception e)
