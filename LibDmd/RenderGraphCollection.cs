@@ -19,6 +19,7 @@ namespace LibDmd
 	/// </remarks>
 	public class RenderGraphCollection : IDisposable
 	{
+		public ICollection<RenderGraph> Graphs => _graphs;
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();

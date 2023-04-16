@@ -4,6 +4,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
 using LibDmd.DmdDevice;
+using LibDmd.Input;
 using LibDmd.Input.FutureDmd;
 using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
@@ -18,7 +19,6 @@ namespace DmdExt.Mirror
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
-		private RenderGraph _graph;
 		private IDisposable _nameSubscription;
 		private IDisposable _dmdColorSubscription;
 
@@ -28,10 +28,10 @@ namespace DmdExt.Mirror
 			_options = options;
 		}
 
-		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
+		private RenderGraph CreateGraph(ISource source, HashSet<string> reportingTags)
 		{
-			// create graph with renderers
-			_graph = new RenderGraph {
+			var graph = new RenderGraph {
+				Source = source,
 				Destinations = GetRenderers(_config, reportingTags),
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -39,27 +39,34 @@ namespace DmdExt.Mirror
 				IdleAfter = _options.IdleAfter,
 				IdlePlay = _options.IdlePlay
 			};
-			_graph.SetColor(_config.Global.DmdColor);
+			graph.SetColor(_config.Global.DmdColor);
 
+			return graph;
+		}
+
+		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
+		{
 			// setup source and additional processors
 			switch (_options.Source) {
 
 				case SourceType.PinballFX2: {
-					_graph.Source = new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond };
 					reportingTags.Add("In:PinballFX2");
+					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
 					break;
 				}
 
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
-						_graph.Source = new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond };
 						reportingTags.Add("In:PinballFX3Legacy");
+						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
+						
 					} else {
+						reportingTags.Add("In:PinballFX3");
 						var memoryGrabber = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
-						_graph.Source = memoryGrabber;
+						var graph = CreateGraph(memoryGrabber, reportingTags);
 
 						var latest = new SwitchingConverter();
-						_graph.Converter = latest;
+						graph.Converter = latest;
 
 						_dmdColorSubscription = memoryGrabber.DmdColor.Subscribe(color => { latest.DefaultColor = color; });
 
@@ -68,21 +75,20 @@ namespace DmdExt.Mirror
 							var nameGrabber = new PinballFX3GameNameMemoryGrabber();
 							_nameSubscription = nameGrabber.GetFrames().Subscribe(name => { latest.Switch(LoadColorizer(name)); });
 						}
-
-						reportingTags.Add("In:PinballFX3");
+						graphs.Add(graph);
 					}
 					break;
 				}
 
 				case SourceType.PinballArcade: {
-					_graph.Source = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
 					reportingTags.Add("In:PinballArcade");
+					graphs.Add(CreateGraph(new TPAGrabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
 					break;
 				}
 
 				case SourceType.ProPinball: {
-					_graph.Source = new ProPinballSlave(_options.ProPinballArgs);
 					reportingTags.Add("In:ProPinball");
+					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), reportingTags));
 					break;
 				}
 
@@ -105,20 +111,35 @@ namespace DmdExt.Mirror
 						});
 					}
 
-					_graph.Source = grabber;
 					reportingTags.Add("In:ScreenGrab");
+					graphs.Add(CreateGraph(grabber, reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
-					_graph.Source = new FutureDmdSink(_options.FramesPerSecond);
 					reportingTags.Add("In:FutureDmdSink");
+					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), reportingTags));
 					break;
 
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
-			graphs.Add(_graph);
 
+			foreach (var graph in graphs.Graphs)
+			{
+				if (!_config.Global.Colorize || !(graph.Source is IGameNameSource gameNameSource)) {
+					continue;
+				}
+
+				var latest = new SwitchingConverter();
+				graph.Converter = latest;
+				_colorizationLoader = new ColorizationLoader();
+				_nameSubscription = gameNameSource.GetGameName().Subscribe(name => {
+					if (name != null) {
+						latest.Switch(LoadColorizer(name));
+					}
+				});
+			}
+			
 			if (_colorizationLoader!= null) {
 				graphs.ClearColor();
 			}
