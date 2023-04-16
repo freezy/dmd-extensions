@@ -140,6 +140,20 @@ The DMD from Pinball FX3 is pulled directly from the memory.
 It doesn't matter whether Pinball FX3 is started before or after `dmdext`, and
 it works with or without cabinet mode.
 
+Like VPM, the FX3 memory grabber also supports colorization on a monitor or RGB display.
+This is setup in a similar way as VPM:
+
+1. Create an `altcolor` folder next to `dmdext.exe` (if you already have colorization
+   setup for VPM, you can use the same folder instead).
+2. In that folder, create another one named after the game. Each game name is
+   the same as that used for backglass images (e.g. `WMS_Monster_Bash`).
+3. Download Serum or `.pal`/`.vni` files from your favorite virtual pinball site,
+   and place them in that folder. 
+4. Enable colorization by passing `--colorize` when starting `dmdext.exe`
+   (or enable it in `DmdDevice.ini`).
+5. Start Pinball FX3 and play a game. Colorizations will be automatically loaded
+   when available.
+
 Note that while the current memory grabber code should also work for future 
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
 `dmdext`, you should still be able to fall back to the legacy screen grabber
@@ -329,7 +343,7 @@ The `mirror` command has the following additional parameters:
 
 | Parameter           | Description                                                                                                                                                                     | Default    |
 |---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ `pinballfx2`, `pinballfx3`, `pinballarcade`, `propinball`, `screen` ].                                       | *n/a*      |
+| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ `pinballfx2`, `pinballfx3`, `pinballarcade`, `propinball`, `futurepinball`, `screen` ].                      | *n/a*      |
 | `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25         |
 | `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0          |
 | `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*     |
@@ -338,6 +352,7 @@ The `mirror` command has the following additional parameters:
 | `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0          |
 | `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |            |
 | `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false      |
+| `--colorize`        | Enable or disable frame-by-frame colorization. Supported on `pinballfx3` (memory grabber), `pinballarcade`, and `futurepinball` only.                                           | false      |
 
 #### Play
 
