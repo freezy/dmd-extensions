@@ -20,6 +20,7 @@ namespace DmdExt.Mirror
 		private ColorizationLoader _colorizationLoader;
 		private RenderGraph _graph;
 		private IDisposable _nameSubscription;
+		private IDisposable _dmdColorSubscription;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
 		{
@@ -54,10 +55,13 @@ namespace DmdExt.Mirror
 						_graph.Source = new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond };
 						reportingTags.Add("In:PinballFX3Legacy");
 					} else {
-						_graph.Source = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
+						var memoryGrabber = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
+						_graph.Source = memoryGrabber;
 
 						var latest = new SwitchingConverter();
 						_graph.Converter = latest;
+
+						_dmdColorSubscription = memoryGrabber.DmdColor.Subscribe(color => { latest.DefaultColor = color; });
 
 						if (_config.Global.Colorize) {
 							_colorizationLoader = new ColorizationLoader();
@@ -124,6 +128,7 @@ namespace DmdExt.Mirror
 		public override void Dispose()
 		{
 			base.Dispose();
+			_dmdColorSubscription?.Dispose();
 			_nameSubscription?.Dispose();
 		}
 
