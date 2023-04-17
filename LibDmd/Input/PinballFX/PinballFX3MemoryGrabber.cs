@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows.Media;
 
 namespace LibDmd.Input.PinballFX
@@ -25,11 +27,13 @@ namespace LibDmd.Input.PinballFX
 		private const int DMDHeight = 32;
 		private static readonly byte[] RawDMD = new byte[DMDWidth * DMDHeight];
 		private byte[] _lastFrame;
+		private readonly BehaviorSubject<Color> _dmdColor = new BehaviorSubject<Color>(Colors.OrangeRed);
 
 		// adddresses in the target process
 		private static IntPtr _pBaseAddress = IntPtr.Zero;
 		private static IntPtr _dmdAddress = IntPtr.Zero;
-		private static Color _dmdColor = Colors.OrangeRed;
+
+		public IObservable<Color> DmdColor => _dmdColor.DistinctUntilChanged();
 
 		protected override DMDFrame CaptureDMD()
 		{
@@ -45,8 +49,7 @@ namespace LibDmd.Input.PinballFX
 			}
 
 			// Retrieve DMD color from memory.
-			_dmdColor = GetDMDColor(_hProcess);    // Return RGB hex color value of DMD (return null value if the color cannot be retrieved). 
-												   // TODO - APPLY COLOR TO THE DMD
+			_dmdColor.OnNext(GetDMDColor(_hProcess));
 
 			// Grab the whole raw DMD block from game's memory.
 			ReadProcessMemory(_hProcess, _dmdAddress, RawDMD, RawDMD.Length, IntPtr.Zero);
@@ -111,11 +114,14 @@ namespace LibDmd.Input.PinballFX
 		private static Color GetDMDColor(IntPtr hProcess)
 		{
 			// Retrieve DMD color in memory using pointers.
+			// A few examples of what this memory looks like:
+			// Yellow: 3C 7D D1 00 50 46 94 2F 00 33 33 FF 00 00 00 D0
+			// Aqua:   3C 7D D1 00 C8 9F 6F 29 33 33 00 FF 00 00 00 D0
 			var pAddress = new byte[4];
 			var colorBytes = new byte[4];
 			ReadProcessMemory(hProcess, _pBaseAddress, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0xF0, pAddress, pAddress.Length, IntPtr.Zero);
-			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x58, pAddress, pAddress.Length, IntPtr.Zero);
+			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x5C, pAddress, pAddress.Length, IntPtr.Zero);
 			ReadProcessMemory(hProcess, B4ToPointer(pAddress) + 0x8, colorBytes, colorBytes.Length, IntPtr.Zero);
 			if (BitConverter.IsLittleEndian) Array.Reverse(colorBytes);
 			var colorCode = BitConverter.ToInt32(colorBytes, 0);

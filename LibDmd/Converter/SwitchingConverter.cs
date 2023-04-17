@@ -30,6 +30,11 @@ namespace LibDmd.Converter
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
+		/// <summary>
+		/// Default color to use when no converter is set.
+		/// </summary>
+		public Color DefaultColor { get; set; } = Colors.OrangeRed;
+
 		public SwitchingConverter()
 		{
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
@@ -46,9 +51,9 @@ namespace LibDmd.Converter
 			else
 			{
 				if (frame.BitLength == 4) {
-					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, DefaultColor));
 				} else {
-					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, Color.FromRgb(0xff, 0x66, 0x00)));
+					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, DefaultColor));
 				}
 			}
 		}
