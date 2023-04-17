@@ -2,15 +2,15 @@
 using System.Reactive;
 using System.Reactive.Subjects;
 
-namespace LibDmd.Input.PinMame
+namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// Receives 4-bit frames from VPM and forwards them to the observable
 	/// after dropping duplicates.
 	/// </summary>
-	public class VpmGray4Source : AbstractSource, IGray4Source
+	public class PassthroughGray4Source : AbstractSource, IGray4Source, IGameNameSource
 	{
-		public override string Name { get; } = "VPM 4-bit Source";
+		public override string Name { get; }
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -19,11 +19,13 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<DMDFrame> _framesGray4 = new Subject<DMDFrame>();
+		private readonly ISubject<string> _gameName = new Subject<string>();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public VpmGray4Source(BehaviorSubject<FrameFormat> lastFrameFormat)
+		public PassthroughGray4Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
 		{
 			_lastFrameFormat = lastFrameFormat;
+			Name = name;
 		}
 
 		public void NextFrame(DMDFrame frame)
@@ -33,9 +35,10 @@ namespace LibDmd.Input.PinMame
 			_lastFrameFormat.OnNext(FrameFormat.Gray4);
 		}
 
-		public IObservable<DMDFrame> GetGray4Frames()
-		{
-			return _framesGray4;
-		}
+		public IObservable<DMDFrame> GetGray4Frames() => _framesGray4;
+
+		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
+
+		public IObservable<string> GetGameName() => _gameName;
 	}
 }

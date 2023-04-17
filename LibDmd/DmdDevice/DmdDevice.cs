@@ -14,7 +14,7 @@ using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
-using LibDmd.Input.PinMame;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
@@ -47,10 +47,10 @@ namespace LibDmd.DmdDevice
 		private int aniHeight = 32;
 
 		private readonly Configuration _config;
-		private readonly VpmGray2Source _vpmGray2Source;
-		private readonly VpmGray4Source _vpmGray4Source;
-		private readonly VpmRgb24Source _vpmRgb24Source;
-		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
+		private readonly PassthroughGray2Source _passthroughGray2Source;
+		private readonly PassthroughGray4Source _passthroughGray4Source;
+		private readonly PassthroughRgb24Source _passthroughRgb24Source;
+		private readonly PassthroughAlphaNumericSource _passthroughAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private static string _version = "";
@@ -88,10 +88,10 @@ namespace LibDmd.DmdDevice
 		public DmdDevice()
 		{
 			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
-			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
-			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
-			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
-			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
+			_passthroughGray2Source = new PassthroughGray2Source(_currentFrameFormat, "VPM 2-bit Source");
+			_passthroughGray4Source = new PassthroughGray4Source(_currentFrameFormat, "VPM 4-bit Source");
+			_passthroughRgb24Source = new PassthroughRgb24Source(_currentFrameFormat, "VPM RGB24 Source");
+			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -466,7 +466,7 @@ namespace LibDmd.DmdDevice
 				if (_serum.NumColors == 16) {
 					_graphs.Add(new RenderGraph {
 						Name = "4-bit Colored VPM Graph",
-						Source = _vpmGray4Source,
+						Source = _passthroughGray4Source,
 						Destinations = renderers,
 						Converter = _serum,
 						Resize = _config.Global.Resize,
@@ -478,7 +478,7 @@ namespace LibDmd.DmdDevice
 				else {
 					_graphs.Add(new RenderGraph {
 						Name = "2-bit Colored VPM Graph",
-						Source = _vpmGray2Source,
+						Source = _passthroughGray2Source,
 						Destinations = renderers,
 						Converter = _serum,
 						Resize = _config.Global.Resize,
@@ -491,7 +491,7 @@ namespace LibDmd.DmdDevice
 			else if (_colorize && _gray2Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
-					Source = _vpmGray2Source,
+					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Converter = _gray2Colorizer,
 					Resize = _config.Global.Resize,
@@ -504,7 +504,7 @@ namespace LibDmd.DmdDevice
 			else {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit VPM Graph",
-					Source = _vpmGray2Source,
+					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
@@ -517,7 +517,7 @@ namespace LibDmd.DmdDevice
 			if (_colorize && _gray4Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "4-bit Colored VPM Graph",
-					Source = _vpmGray4Source,
+					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Converter = _gray4Colorizer,
 					Resize = _config.Global.Resize,
@@ -530,7 +530,7 @@ namespace LibDmd.DmdDevice
 			else {
 				_graphs.Add(new RenderGraph {
 					Name = "4-bit VPM Graph",
-					Source = _vpmGray4Source,
+					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
@@ -542,7 +542,7 @@ namespace LibDmd.DmdDevice
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
-				Source = _vpmRgb24Source,
+				Source = _passthroughRgb24Source,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -553,7 +553,7 @@ namespace LibDmd.DmdDevice
 			// alphanumeric graph
 			_graphs.Add(new RenderGraph {
 				Name = "Alphanumeric VPM Graph",
-				Source = _vpmAlphaNumericSource,
+				Source = _passthroughAlphaNumericSource,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -747,7 +747,7 @@ namespace LibDmd.DmdDevice
 				}
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
-				_vpmGray2Source.NextFrame(frame);
+				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
 				if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
@@ -771,7 +771,7 @@ namespace LibDmd.DmdDevice
 					}
 
 					_gray2Colorizer.SetDimensions(width, height);
-					_vpmGray2Source.NextFrame(_upsizedFrame);
+					_passthroughGray2Source.NextFrame(_upsizedFrame);
 				
 				} else {
 					if (_config.Global.ScaleToHd) {
@@ -784,7 +784,7 @@ namespace LibDmd.DmdDevice
 
 					_gray2Colorizer?.SetDimensions(width, height);
 					_gray4Colorizer?.SetDimensions(width, height);
-					_vpmGray2Source.NextFrame(frame);
+					_passthroughGray2Source.NextFrame(frame);
 				}
 			}
 		}
@@ -807,7 +807,7 @@ namespace LibDmd.DmdDevice
 				}
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
-				_vpmGray2Source.NextFrame(frame);
+				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
 				if (_config.Global.ScaleToHd) {
@@ -820,7 +820,7 @@ namespace LibDmd.DmdDevice
 
 				_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 				_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-				_vpmGray4Source.NextFrame(frame);
+				_passthroughGray4Source.NextFrame(frame);
 			}
 		}
 
@@ -829,7 +829,7 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			_vpmRgb24Source.NextFrame(frame);
+			_passthroughRgb24Source.NextFrame(frame);
 		}
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
@@ -842,54 +842,54 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			_vpmAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
+			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 			_dmdFrame.width = Width;
 			_dmdFrame.height = Height;
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
 					break;
 				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__4x7Num10:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
 					break;
 				case NumericalLayout.__6x4Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);

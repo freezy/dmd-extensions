@@ -26,7 +26,7 @@ namespace LibDmd.Converter
 
 		public override string Name => $"Switching Converter ({ConverterName(_converter)})";
 
-		public FrameFormat From => FrameFormat.Gray2;
+		public FrameFormat From { get; }
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
@@ -35,8 +35,9 @@ namespace LibDmd.Converter
 		/// </summary>
 		public Color DefaultColor { get; set; } = Colors.OrangeRed;
 
-		public SwitchingConverter()
+		public SwitchingConverter(FrameFormat frameFormat)
 		{
+			From = frameFormat;
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
 			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
