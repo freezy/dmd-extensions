@@ -10,6 +10,7 @@ using LibDmd.Input.PinballFX;
 using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
+using LibDmd.Output;
 using LibDmd.Processor;
 
 namespace DmdExt.Mirror
@@ -21,6 +22,7 @@ namespace DmdExt.Mirror
 		private ColorizationLoader _colorizationLoader;
 		private IDisposable _nameSubscription;
 		private IDisposable _dmdColorSubscription;
+		private List<IDestination> _renderers;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
 		{
@@ -30,10 +32,13 @@ namespace DmdExt.Mirror
 
 		private RenderGraph CreateGraph(ISource source, string name, HashSet<string> reportingTags)
 		{
+			if (_renderers == null) {
+				_renderers = GetRenderers(_config, reportingTags);
+			}
 			var graph = new RenderGraph {
 				Name = name,
 				Source = source,
-				Destinations = GetRenderers(_config, reportingTags),
+				Destinations = _renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
 				FlipVertically = _config.Global.FlipVertically,
