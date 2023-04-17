@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.Input.Passthrough;
 
 namespace LibDmd.Input.TPAGrabber
 {
@@ -16,13 +17,14 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : MemoryGrabber<DMDFrame>, IGray2Source, IGray4Source, IGameNameSource
+	public class TPAGrabber : MemoryGrabber<DMDFrame>
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
+		
+		public readonly PassthroughGray2Source Gray2Source;
+		public readonly PassthroughGray4Source Gray4Source;
 
-		public IObservable<DMDFrame> GetGray2Frames() => _gray2Frames;
-		public IObservable<DMDFrame> GetGray4Frames() => _gray4Frames;
-		public IObservable<string> GetGameName() => _gameNameObservable;
+		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
 
 		// DMD Stuff
 		private const int DMDWidth = 128;
@@ -32,24 +34,22 @@ namespace LibDmd.Input.TPAGrabber
 		private static bool sternInit = false;
 		private readonly DMDFrame _dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
 		private string _gameName;
-		private readonly BehaviorSubject<string> _gameNameObservable = new BehaviorSubject<string>(null);
 		private int _bitLength = 4;
 		
 		private static readonly HashSet<double> Lums = new HashSet<double>();
 
-		private readonly Subject<DMDFrame> _gray2Frames = new Subject<DMDFrame>();
-		private readonly Subject<DMDFrame> _gray4Frames = new Subject<DMDFrame>();
-
 		public TPAGrabber()
 		{
+			Gray2Source = new PassthroughGray2Source(_currentFrameFormat, "Pinball Arcade DX11 (2-bit)");
+			Gray4Source = new PassthroughGray4Source(_currentFrameFormat, "Pinball Arcade DX11 (4-bit)");
 			GetFrames().Subscribe(frame => {
 				if (frame.Data == null) {
 					return;
 				}
 				if (_bitLength == 2) {
-					_gray2Frames.OnNext(frame);
+					Gray2Source.NextFrame(frame);
 				} else {
-					_gray4Frames.OnNext(frame);
+					Gray4Source.NextFrame(frame);
 				}
 			});
 		}
@@ -261,7 +261,8 @@ namespace LibDmd.Input.TPAGrabber
 				: rawTableName.Substring(1);
 			if (tableName != _gameName) {
 				_gameName = tableName;
-				_gameNameObservable.OnNext(_gameName);
+				Gray2Source.NextGameName(_gameName);
+				Gray4Source.NextGameName(_gameName);
 				Lums.Clear();
 			}
 

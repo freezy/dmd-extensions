@@ -390,10 +390,10 @@
     <Compile Include="Input\PinballFX\PinballFX3MemoryGrabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX3Grabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX2Grabber.cs" />
-    <Compile Include="Input\PinMame\VpmAlphaNumericSource.cs" />
-    <Compile Include="Input\PinMame\VpmRgb24Source.cs" />
-    <Compile Include="Input\PinMame\VpmGray4Source.cs" />
-    <Compile Include="Input\PinMame\VpmGray2Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughAlphaNumericSource.cs" />
+    <Compile Include="Input\Passthrough\PassthroughRgb24Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughGray4Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughGray2Source.cs" />
     <Compile Include="Input\FileSystem\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\GifOutput.cs" />

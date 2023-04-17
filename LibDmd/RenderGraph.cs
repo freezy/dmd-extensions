@@ -1662,11 +1662,6 @@ namespace LibDmd
 		/// An alphanumeric frame
 		/// </summary>
 		AlphaNumeric,
-
-		/// <summary>
-		/// A 6-bit grayscale frame bundled with a 64-color palette and a color rotation set
-		/// </summary>
-		Colored6Rotation,
 	}
 
 	/// <summary>

@@ -3,15 +3,15 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using LibDmd.Common;
 
-namespace LibDmd.Input.PinMame
+namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// Receives RGB24 frames from VPM and forwards them to the observable
 	/// after dropping duplicates.
 	/// </summary>
-	public class VpmRgb24Source : AbstractSource, IRgb24Source
+	public class PassthroughRgb24Source : AbstractSource, IRgb24Source, IGameNameSource
 	{
-		public override string Name { get; } = "VPM RGB24 Source";
+		public override string Name { get; }
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -20,12 +20,14 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly Subject<DMDFrame> _framesRgb24 = new Subject<DMDFrame>();
+		private readonly ISubject<string> _gameName = new Subject<string>();
 		private byte[] _lastFrame;
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public VpmRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat)
+		public PassthroughRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
 		{
 			_lastFrameFormat = lastFrameFormat;
+			Name = name;
 		}
 
 		public void NextFrame(DMDFrame frame)
@@ -43,9 +45,10 @@ namespace LibDmd.Input.PinMame
 			_lastFrameFormat.OnNext(FrameFormat.Rgb24);
 		}
 
-		public IObservable<DMDFrame> GetRgb24Frames()
-		{
-			return _framesRgb24;
-		}
+		public IObservable<DMDFrame> GetRgb24Frames() => _framesRgb24;
+
+		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
+
+		public IObservable<string> GetGameName() => _gameName;
 	}
 }

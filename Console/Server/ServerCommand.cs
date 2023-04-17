@@ -8,7 +8,7 @@ using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.Network;
-using LibDmd.Input.PinMame;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 
 namespace DmdExt.Server

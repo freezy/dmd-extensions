@@ -28,9 +28,10 @@ namespace DmdExt.Mirror
 			_options = options;
 		}
 
-		private RenderGraph CreateGraph(ISource source, HashSet<string> reportingTags)
+		private RenderGraph CreateGraph(ISource source, string name, HashSet<string> reportingTags)
 		{
 			var graph = new RenderGraph {
+				Name = name,
 				Source = source,
 				Destinations = GetRenderers(_config, reportingTags),
 				Resize = _config.Global.Resize,
@@ -51,21 +52,21 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					reportingTags.Add("In:PinballFX2");
-					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
+					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX2 Render Graph", reportingTags));
 					break;
 				}
 
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						reportingTags.Add("In:PinballFX3Legacy");
-						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
+						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 (legacy) Render Graph", reportingTags));
 						
 					} else {
 						reportingTags.Add("In:PinballFX3");
 						var memoryGrabber = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
-						var graph = CreateGraph(memoryGrabber, reportingTags);
+						var graph = CreateGraph(memoryGrabber, "Pinball FX3 Render Graph", reportingTags);
 
-						var latest = new SwitchingConverter();
+						var latest = new SwitchingConverter(FrameFormat.Gray2);
 						graph.Converter = latest;
 
 						_dmdColorSubscription = memoryGrabber.DmdColor.Subscribe(color => { latest.DefaultColor = color; });
@@ -82,13 +83,15 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballArcade: {
 					reportingTags.Add("In:PinballArcade");
-					graphs.Add(CreateGraph(new TPAGrabber { FramesPerSecond = _options.FramesPerSecond }, reportingTags));
+					var tpaGrabber = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
+					graphs.Add(CreateGraph(tpaGrabber.Gray2Source, "Pinball Arcade (2-bit) Render Graph", reportingTags));
+					graphs.Add(CreateGraph(tpaGrabber.Gray4Source, "Pinball Arcade (4-bit) Render Graph", reportingTags));
 					break;
 				}
 
 				case SourceType.ProPinball: {
 					reportingTags.Add("In:ProPinball");
-					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), reportingTags));
+					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), "Pro Pinball Render Graph", reportingTags));
 					break;
 				}
 
@@ -112,32 +115,34 @@ namespace DmdExt.Mirror
 					}
 
 					reportingTags.Add("In:ScreenGrab");
-					graphs.Add(CreateGraph(grabber, reportingTags));
+					graphs.Add(CreateGraph(grabber, "Screen Grabber Render Graph", reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
 					reportingTags.Add("In:FutureDmdSink");
-					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), reportingTags));
+					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), "Future Pinball Render Graph", reportingTags));
 					break;
 
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 
-			foreach (var graph in graphs.Graphs)
-			{
-				if (!_config.Global.Colorize || !(graph.Source is IGameNameSource gameNameSource)) {
-					continue;
-				}
-
-				var latest = new SwitchingConverter();
-				graph.Converter = latest;
-				_colorizationLoader = new ColorizationLoader();
-				_nameSubscription = gameNameSource.GetGameName().Subscribe(name => {
-					if (name != null) {
-						latest.Switch(LoadColorizer(name));
+			// if colorization enabled, subscribe to name changes to re-load colorizer.
+			if (_config.Global.Colorize) {
+				foreach (var graph in graphs.Graphs) {
+					if (!(graph.Source is IGameNameSource gameNameSource)) {
+						continue;
 					}
-				});
+					
+					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
+					graph.Converter = converter;
+					_colorizationLoader = new ColorizationLoader();
+					_nameSubscription = gameNameSource.GetGameName().Subscribe(name => {
+						if (name != null) {
+							converter.Switch(LoadColorizer(name));
+						}
+					});
+				}
 			}
 			
 			if (_colorizationLoader!= null) {
@@ -160,6 +165,22 @@ namespace DmdExt.Mirror
 				return serumColorizer;
 			}
 			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
+		}
+
+		private FrameFormat GetFrameFormat(ISource source)
+		{
+			switch (source) {
+				case IGray2Source _: return FrameFormat.Gray2;
+				case IGray4Source _: return FrameFormat.Gray4;
+				case IGray6Source _: return FrameFormat.Gray6;
+				case IRgb24Source _: return FrameFormat.Rgb24;
+				case IColoredGray2Source _: return FrameFormat.ColoredGray2;
+				case IColoredGray4Source _: return FrameFormat.ColoredGray4;
+				case IColoredGray6Source _: return FrameFormat.ColoredGray6;
+				case IAlphaNumericSource _: return FrameFormat.AlphaNumeric;
+				case IBitmapSource _: return FrameFormat.Bitmap;
+			}
+			throw new ArgumentException($"Unknown source type: {source.Name}");
 		}
 	}
 }
