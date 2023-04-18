@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
@@ -20,8 +21,8 @@ namespace DmdExt.Mirror
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
-		private IDisposable _nameSubscription;
-		private IDisposable _dmdColorSubscription;
+		private CompositeDisposable	_nameSubscriptions = new CompositeDisposable();
+		private CompositeDisposable _dmdColorSubscriptions = new CompositeDisposable();
 		private List<IDestination> _renderers;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
@@ -68,20 +69,7 @@ namespace DmdExt.Mirror
 						
 					} else {
 						reportingTags.Add("In:PinballFX3");
-						var memoryGrabber = new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond };
-						var graph = CreateGraph(memoryGrabber, "Pinball FX3 Render Graph", reportingTags);
-
-						var latest = new SwitchingConverter(FrameFormat.Gray2);
-						graph.Converter = latest;
-
-						_dmdColorSubscription = memoryGrabber.DmdColor.Subscribe(color => { latest.DefaultColor = color; });
-
-						if (_config.Global.Colorize) {
-							_colorizationLoader = new ColorizationLoader();
-							var nameGrabber = new PinballFX3GameNameMemoryGrabber();
-							_nameSubscription = nameGrabber.GetFrames().Subscribe(name => { latest.Switch(LoadColorizer(name)); });
-						}
-						graphs.Add(graph);
+						graphs.Add(CreateGraph(new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 Render Graph", reportingTags));
 					}
 					break;
 				}
@@ -138,37 +126,63 @@ namespace DmdExt.Mirror
 					if (!(graph.Source is IGameNameSource gameNameSource)) {
 						continue;
 					}
+
+					if (_colorizationLoader == null) {
+						_colorizationLoader = new ColorizationLoader();
+						graphs.ClearColor();
+					}
 					
 					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
 					graph.Converter = converter;
-					_colorizationLoader = new ColorizationLoader();
-					_nameSubscription = gameNameSource.GetGameName().Subscribe(name => {
-						if (name != null) {
-							converter.Switch(LoadColorizer(name));
-						}
-					});
+					
+					_nameSubscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
+						converter.Switch(LoadColorizer(name));
+					}));
+
+					if (graph.Source is IDmdColorSource dmdColorSource) {
+						dmdColorSource.GetDmdColor().Subscribe(color => {
+							converter.DefaultColor = color;
+						});
+					}
+				}
+			}
+			else {
+				// When not colorizing, subscribe to DMD color changes to inform the graph.
+				foreach (var graph in graphs.Graphs) {
+					if (!(graph.Source is IDmdColorSource dmdColorSource)) { 
+						continue;
+					}
+
+					_dmdColorSubscriptions.Add(dmdColorSource.GetDmdColor().Subscribe(color => {
+						graphs.SetColor(color);
+					}));
+
+					// Only one can win, so just pick the first one.
+					break;
 				}
 			}
 			
-			if (_colorizationLoader!= null) {
-				graphs.ClearColor();
-			}
 			graphs.SetDimensions(new LibDmd.Input.Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
 		}
 
 		public override void Dispose()
 		{
 			base.Dispose();
-			_dmdColorSubscription?.Dispose();
-			_nameSubscription?.Dispose();
+			_dmdColorSubscriptions.Dispose();
+			_nameSubscriptions.Dispose();
 		}
 
 		private IConverter LoadColorizer(string gameName)
 		{
+			if (gameName == null) {
+				return null;
+			}
+
 			var serumColorizer = _colorizationLoader.LoadSerum(gameName, _config.Global.ScalerMode);
 			if (serumColorizer != null) {
 				return serumColorizer;
 			}
+
 			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
 		}
 
