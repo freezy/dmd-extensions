@@ -141,7 +141,7 @@ namespace DmdExt.Mirror
 
 					if (graph.Source is IDmdColorSource dmdColorSource) {
 						dmdColorSource.GetDmdColor().Subscribe(color => {
-							converter.DefaultColor = color;
+							converter.SetColor(color);
 						});
 					}
 				}

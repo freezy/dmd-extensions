@@ -31,6 +31,7 @@ namespace LibDmd.Input.PinballFX
 		private readonly BehaviorSubject<Color> _dmdColor = new BehaviorSubject<Color>(Colors.OrangeRed);
 
 		// adddresses in the target process
+		private static Process _gameProc;
 		private static IntPtr _pBaseAddress = IntPtr.Zero;
 		private static IntPtr _dmdAddress = IntPtr.Zero;
 		private static IntPtr _gameNameAddress = IntPtr.Zero;
@@ -108,7 +109,7 @@ namespace LibDmd.Input.PinballFX
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : new DMDFrame { width = 128, height = 32, Data = frame, BitLength = 2};
+			return identical ? null : new DMDFrame { width = 128, height = 32, Data = frame, BitLength = 2 };
 		}
 
 		private static IntPtr GetDMDOffset(IntPtr hProcess)
@@ -161,6 +162,12 @@ namespace LibDmd.Input.PinballFX
 
 		private void ReadGameName(IntPtr hProcess)
 		{
+			if (_gameNameAddress == IntPtr.Zero && _gameProc != null) {
+				// Locating the game name didn't work before, try again now that the DMD is loaded.
+				_gameNameAddress = GetGameNameAddress(_gameProc);
+				_gameProc = null;
+			}
+
 			var buff = new byte[128];
 			ReadProcessMemory(hProcess, _gameNameAddress, buff, buff.Length, IntPtr.Zero);
 
@@ -182,21 +189,21 @@ namespace LibDmd.Input.PinballFX
 
 		protected override IntPtr AttachGameProcess(Process p)
 		{
-			if (p.ProcessName == "Pinball FX3")
-			{
+			if (p.ProcessName == "Pinball FX3") {
 				return GetPointerBaseAddress(p);
 			}
+
 			return IntPtr.Zero;
 		}
 
 		// Byte pattern we use to identify the DMD memory struct in the FX3 process
 		private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0xA1 };
-        private IntPtr GetPointerBaseAddress(Process gameProc)
+		private IntPtr GetPointerBaseAddress(Process gameProc)
 		{
 			// Open the process for wait and read operations
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
 			if (processHandle == IntPtr.Zero) {
-				return processHandle;
+				return IntPtr.Zero;
 			}
 
 			// Find DMD pointer base address offset in memory with its signature pattern.
@@ -206,6 +213,7 @@ namespace LibDmd.Input.PinballFX
 			_pBaseAddress = B4ToPointer(pointerBuf);
 
 			_gameNameAddress = GetGameNameAddress(gameProc);
+			_gameProc = gameProc;
 
 			// Return game's process handle.
 			return processHandle;
@@ -220,9 +228,8 @@ namespace LibDmd.Input.PinballFX
 			// Find game name pointer base address offset in memory with its signature pattern.
 			IntPtr offset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, PathSig, PathSig.Length);
 
-			if (offset == IntPtr.Zero)
-			{
-				return offset;
+			if (offset == IntPtr.Zero) {
+				return IntPtr.Zero;
 			}
 
 			var buff = new byte[128];
@@ -236,15 +243,13 @@ namespace LibDmd.Input.PinballFX
 
 			var pathIndex = buffStr.IndexOf(Path, StringComparison.Ordinal);
 
-			if (pathIndex == -1)
-			{
+			if (pathIndex == -1) {
 				return IntPtr.Zero;
 			}
 
 			// Seek backwards to the start of the string
 			var startIndex = buffStr.LastIndexOf(PrefixNulls, pathIndex, StringComparison.Ordinal);
-			if (startIndex == -1)
-			{
+			if (startIndex == -1) {
 				return IntPtr.Zero;
 			}
 
