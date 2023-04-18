@@ -317,6 +317,7 @@
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
+    <Compile Include="Input\IDmdColorSource.cs" />
     <Compile Include="Input\IGray6Source.cs" />
     <Compile Include="Input\IGameNameSource.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
@@ -325,8 +326,6 @@
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
-    <Compile Include="Input\PinballFX\PinballFX3MemoryGrabberBase.cs" />
-    <Compile Include="Input\PinballFX\PinballFX3GameNameMemoryGrabber.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IGray6Destination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />

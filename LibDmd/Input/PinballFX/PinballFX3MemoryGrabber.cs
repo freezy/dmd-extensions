@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
 using System.Windows.Media;
 
 namespace LibDmd.Input.PinballFX
@@ -13,7 +14,7 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3MemoryGrabber : PinballFX3MemoryGrabberBase<DMDFrame>, IGray2Source
+	public class PinballFX3MemoryGrabber : MemoryGrabber<DMDFrame>, IGray2Source, IDmdColorSource, IGameNameSource
 	{
 		public override string Name { get; } = "Pinball FX3";
 
@@ -32,8 +33,15 @@ namespace LibDmd.Input.PinballFX
 		// adddresses in the target process
 		private static IntPtr _pBaseAddress = IntPtr.Zero;
 		private static IntPtr _dmdAddress = IntPtr.Zero;
+		private static IntPtr _gameNameAddress = IntPtr.Zero;
 
-		public IObservable<Color> DmdColor => _dmdColor.DistinctUntilChanged();
+		// Game Name
+		private string _lastGameName;
+		private readonly Subject<string> _gameName = new Subject<string>();
+
+		public IObservable<Color> GetDmdColor() => _dmdColor.DistinctUntilChanged();
+
+		public IObservable<string> GetGameName() => _gameName;
 
 		protected override DMDFrame CaptureDMD()
 		{
@@ -50,6 +58,8 @@ namespace LibDmd.Input.PinballFX
 
 			// Retrieve DMD color from memory.
 			_dmdColor.OnNext(GetDMDColor(_hProcess));
+
+			ReadGameName(_hProcess);
 
 			// Grab the whole raw DMD block from game's memory.
 			ReadProcessMemory(_hProcess, _dmdAddress, RawDMD, RawDMD.Length, IntPtr.Zero);
@@ -149,9 +159,39 @@ namespace LibDmd.Input.PinballFX
 			}
 		}
 
+		private void ReadGameName(IntPtr hProcess)
+		{
+			var buff = new byte[128];
+			ReadProcessMemory(hProcess, _gameNameAddress, buff, buff.Length, IntPtr.Zero);
+
+			var name = Encoding.ASCII.GetString(buff).Trim('\0');
+			if (!name.Contains(Path)) {
+				return;
+			}
+
+			name = name.Split(':')[0];
+
+			var identical = name == _lastGameName;
+			_lastGameName = name;
+
+			if (!identical) {
+				Logger.Info($"Found Pinball FX3 game: {name}");
+				_gameName.OnNext(name);
+			}
+		}
+
+		protected override IntPtr AttachGameProcess(Process p)
+		{
+			if (p.ProcessName == "Pinball FX3")
+			{
+				return GetPointerBaseAddress(p);
+			}
+			return IntPtr.Zero;
+		}
+
 		// Byte pattern we use to identify the DMD memory struct in the FX3 process
-        private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0xA1 };
-        protected override IntPtr GetPointerBaseAddress(Process gameProc)
+		private static readonly byte[] DMDPointerSig = new byte[] { 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0x8B, 0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0x89, 0x45, 0xFF, 0xA1 };
+        private IntPtr GetPointerBaseAddress(Process gameProc)
 		{
 			// Open the process for wait and read operations
 			var processHandle = OpenProcess(SYNCHRONIZE | PROCESS_VM_READ, false, gameProc.Id);
@@ -165,8 +205,50 @@ namespace LibDmd.Input.PinballFX
 			ReadProcessMemory(gameProc.Handle, baseOffset, pointerBuf, pointerBuf.Length, IntPtr.Zero);
 			_pBaseAddress = B4ToPointer(pointerBuf);
 
+			_gameNameAddress = GetGameNameAddress(gameProc);
+
 			// Return game's process handle.
 			return processHandle;
+		}
+
+		// Byte pattern we use to identify the game name in the FX3 process
+		private const string Path = ":/meta_steam_pfx3/skin/";
+		private static readonly byte[] PathSig = Encoding.ASCII.GetBytes(Path);
+		private const string PrefixNulls = "\0\0\0";
+		private IntPtr GetGameNameAddress(Process gameProc)
+		{
+			// Find game name pointer base address offset in memory with its signature pattern.
+			IntPtr offset = FindPattern(gameProc, BaseAddress(gameProc), gameProc.MainModule.ModuleMemorySize, PathSig, PathSig.Length);
+
+			if (offset == IntPtr.Zero)
+			{
+				return offset;
+			}
+
+			var buff = new byte[128];
+			const int prefixPadding = 64;
+
+			// Find the path signature in memory. It looks something like:
+			// "\0\0\0WMS_Getaway:/meta_steam_pfx3/skin/skin/n/in/team_pfx3/skin/
+			ReadProcessMemory(gameProc.Handle, offset - prefixPadding - PathSig.Length, buff, buff.Length, IntPtr.Zero);
+
+			var buffStr = Encoding.ASCII.GetString(buff);
+
+			var pathIndex = buffStr.IndexOf(Path, StringComparison.Ordinal);
+
+			if (pathIndex == -1)
+			{
+				return IntPtr.Zero;
+			}
+
+			// Seek backwards to the start of the string
+			var startIndex = buffStr.LastIndexOf(PrefixNulls, pathIndex, StringComparison.Ordinal);
+			if (startIndex == -1)
+			{
+				return IntPtr.Zero;
+			}
+
+			return offset - prefixPadding + startIndex + PrefixNulls.Length - PathSig.Length;
 		}
 	}
 }
