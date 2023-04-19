@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using DmdExt.Common;
 using LibDmd;
@@ -21,8 +22,7 @@ namespace DmdExt.Mirror
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
-		private CompositeDisposable	_nameSubscriptions = new CompositeDisposable();
-		private CompositeDisposable _dmdColorSubscriptions = new CompositeDisposable();
+		private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 		private List<IDestination> _renderers;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
@@ -135,7 +135,7 @@ namespace DmdExt.Mirror
 					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
 					graph.Converter = converter;
 					
-					_nameSubscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
+					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
 						converter.Switch(LoadColorizer(name));
 					}));
 
@@ -147,18 +147,26 @@ namespace DmdExt.Mirror
 				}
 			}
 			else {
+
 				// When not colorizing, subscribe to DMD color changes to inform the graph.
-				foreach (var graph in graphs.Graphs) {
-					if (!(graph.Source is IDmdColorSource dmdColorSource)) { 
-						continue;
-					}
-
-					_dmdColorSubscriptions.Add(dmdColorSource.GetDmdColor().Subscribe(color => {
-						graphs.SetColor(color);
-					}));
-
-					// Only one can win, so just pick the first one.
-					break;
+				var colorSub = graphs.Graphs
+					.Select(g => g.Source as IDmdColorSource)
+					.FirstOrDefault(s => s != null)
+					?.GetDmdColor()
+					.Subscribe(graphs.SetColor);
+				if (colorSub != null) {
+					_subscriptions.Add(colorSub);
+				}
+				
+				// print game names
+				var nameSub = graphs.Graphs
+					.Select(g => g.Source as IGameNameSource)
+					.FirstOrDefault(s => s != null)
+					?.GetGameName()
+					.Subscribe(name => Logger.Info($"New game detected: {name}"));
+				
+				if (nameSub != null) {
+					_subscriptions.Add(nameSub);
 				}
 			}
 			
@@ -168,8 +176,7 @@ namespace DmdExt.Mirror
 		public override void Dispose()
 		{
 			base.Dispose();
-			_dmdColorSubscriptions.Dispose();
-			_nameSubscriptions.Dispose();
+			_subscriptions.Dispose();
 		}
 
 		private IConverter LoadColorizer(string gameName)
