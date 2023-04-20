@@ -2,9 +2,8 @@
 
 *A toolbox for digital pinball and dot matrix displays.*
 
-This project aims to link the digital pinball games with the physical DMDs that
-the community is using. It also comes with a nice monitor output, and can even
-stream over the network.
+This project aims to connect digital pinball games with the physical DMDs that are widespread in the community. It also
+comes with pretty monitor output, supports frame-by-frame colorization, and can even stream over the network.
 
 ## Table of Contents
 
@@ -64,7 +63,7 @@ Currently supported hardware displays:
 
 ### High Resolution DMD for Monitors
 
-DMD Extensions includes a complex shader with awesome effects for monitor users. Documentation can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
+DMD Extensions includes a complex shader with awesome effects for monitor users. For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
 <image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
@@ -78,7 +77,8 @@ Documentation how to enable and customize this feature can be found [here](https
 
 ### Frame Colorization
 
-DMD Extensions includes support for VNI/PAL colorizations, as well as the new Serum format. PAC support is intended, but needs some refactoring first.
+DMD Extensions includes support for VNI/PAL colorizations, as well as the new Serum format. PAC support is intended, but
+needs some refactoring first.
 
 Colorization is enabled for most games, including Pinball FX3, The Pinball Arcade, and Visual PinMAME.
 
@@ -86,9 +86,11 @@ Colorization is enabled for most games, including Pinball FX3, The Pinball Arcad
 
 ### Network Streaming
 
-DMD Extensions can also receive frames of the network and output them to any device. Likewise, it can stream frames from any source over the network. Documentation can be found [here](Console/Server).
+DMD Extensions can also receive frames from the network and output them to any device. Likewise, it can stream frames 
+from any source over the network. Documentation of this feature can be found [here](Console/Server).
 
-Additionally, DMD Extensions can act as a web server where any number of clients can connect to, and see the DMD in real time in the web browser.
+Additionally, DMD Extensions can act as a web server where any number of clients can connect to, and see the DMD in real
+time in the web browser.
 
 
 ## Install Instructions
@@ -346,7 +348,7 @@ The `play` command has the following additional parameters:
 
 ### Colorization
 
-If you are a PC monitor user or have a RGB display (PinDMDv3, PIN2DMD or ZeDMD), you can enable frame-by-frame colorization
+If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD or ZeDMD), you can enable frame-by-frame colorization
 for games that are supported by the creators of the virtual pinball community. This means that the DMD will be rendered 
 in color, with up to 64 colors per frame.
 
@@ -359,7 +361,7 @@ Depending on the source, the game folders and colorization files are named diffe
 - In VPM, the game folders are named after the ROM name (e.g. `cp_16` for Champion Pub).
 - VNI/PAL files are always named `pin2dmd.vni` and `pin2dmd.pal`.
 - Serum files are named after the game name, but with the `.cRZ` extension (e.g. `cp_16.cRZ`)
-- In Pinball Arcade and Pinball FX2, the games have different names. Scroll down for [a list of game names](#game-names)
+- In Pinball Arcade and Pinball FX3, the games have different names. Scroll down for [a list of game names](#game-names)
   at the time of writing.
 
 For example, a structure for Champion Pub for all games and all color formats, would look like this (note that if both 
@@ -383,7 +385,7 @@ altcolor
 Depending on the source, enabling colorization is different:
 
 - In VPM, enter setup, open the ROM's game options and enable *Use external DMD (dll)* as well as *Colorize DMD*.
-- In Pinball Arcade and Pinball FX2, use the `--colorize` option when running `dmdext.exe`.
+- In Pinball Arcade and Pinball FX3, use the `--colorize` option when running `dmdext.exe`.
 
 ## Breaking Changes
 
