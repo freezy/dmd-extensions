@@ -451,12 +451,18 @@ or complete off-screen rendering.
 
 *Thanks to outhere for the tip!*
 
-#### Unable to load DLL 'serum.dll'
+### Unable to load DLL 'serum.dll'
 
 This can happen if your system doesn't have the needed Visual C++ Redistributable installed. You can 
 download it [here](https://aka.ms/vs/17/release/vc_redist.x86.exe).
 
-*Thanks @Jewer76!*
+*Thanks Jewer76!*
+
+### Backglass covers segment displays
+
+Try unchecking "backglass bring to front" by right clicking the backglass ([source](https://github.com/freezy/dmd-extensions/issues/332)).
+
+*Thanks wiesshund!*
 
 ## Reporting Bugs
 
