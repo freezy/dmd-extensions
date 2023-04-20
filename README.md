@@ -451,6 +451,12 @@ or complete off-screen rendering.
 
 *Thanks to outhere for the tip!*
 
+#### Unable to load DLL 'serum.dll'
+
+This can happen if your system doesn't have the needed Visual C++ Redistributable installed. You can 
+download it [here](https://aka.ms/vs/17/release/vc_redist.x86.exe).
+
+*Thanks @Jewer76!*
 
 ## Reporting Bugs
 
