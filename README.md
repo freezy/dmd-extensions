@@ -77,8 +77,8 @@ Documentation how to enable and customize this feature can be found [here](https
 
 ### Frame Colorization
 
-DMD Extensions includes support for VNI/PAL colorizations, as well as the new Serum format. PAC support is intended, but
-needs some refactoring first.
+DMD Extensions includes support for Serum colorizations, as well as the VNI/PAL format, originally used on PIN2DMD devices.
+PAC support is intended, but needs some refactoring first.
 
 Colorization is enabled for most games, including Pinball FX3, The Pinball Arcade, and Visual PinMAME.
 
@@ -348,19 +348,19 @@ The `play` command has the following additional parameters:
 
 ### Colorization
 
-If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD or ZeDMD), you can enable frame-by-frame colorization
-for games that are supported by the creators of the virtual pinball community. This means that the DMD will be rendered 
-in color, with up to 64 colors per frame.
+If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcade or ZeDMD), you can enable frame-by-frame 
+colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will 
+be rendered in color, with up to 64 colors per frame.
 
-There are two supported formats: VNI/PAL (originally only available for PIN2DMD displays), and Serum. Both formats keep 
+There are two supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Both formats keep 
 their files in the `altcolor` folder, which is located in the same folder as VPM (usually `Visual Pinball\VPinMAME\altcolor`).
 In this folder, every game has its separate folder, which contains the colorization files.
 
 Depending on the source, the game folders and colorization files are named differently:
 
 - In VPM, the game folders are named after the ROM name (e.g. `cp_16` for Champion Pub).
-- VNI/PAL files are always named `pin2dmd.vni` and `pin2dmd.pal`.
 - Serum files are named after the game name, but with the `.cRZ` extension (e.g. `cp_16.cRZ`)
+- VNI/PAL files are always named `pin2dmd.vni` and `pin2dmd.pal`.
 - In Pinball Arcade and Pinball FX3, the games have different names. Scroll down for [a list of game names](#game-names)
   at the time of writing.
 
