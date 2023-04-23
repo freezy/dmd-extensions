@@ -4,8 +4,6 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Markup;
 using NLog;
 
 namespace LibDmd.Output.ZeDMD
@@ -14,6 +12,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public string nCOM;
 		public const int BaudRate = 921600;
+		private const int SERIAL_TIMEOUT = 8;
 		public bool Opened = false;
 		private SerialPort _serialPort;
 		private const int MAX_SERIAL_WRITE_AT_ONCE = 8192;
@@ -22,7 +21,7 @@ namespace LibDmd.Output.ZeDMD
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
 
-		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(128); // max queue size 128
+		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(32); // max queue size 128
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -30,7 +29,8 @@ namespace LibDmd.Output.ZeDMD
 		{
 			Task.Run(() => {
 				Logger.Info("Starting ZeDMD frame thread.");
-				while (!_frames.IsCompleted) {
+				//while (!_frames.IsCompleted) {
+				while (true) {
 
 					byte[] frame = null;
 					try {
@@ -40,9 +40,10 @@ namespace LibDmd.Output.ZeDMD
 
 					if (frame != null) {
 						StreamBytes(frame);
+						System.Threading.Thread.Sleep(10);
 					}
 				}
-				Logger.Info("ZeDMD frame thread finished.");
+				//Logger.Info("ZeDMD frame thread finished.");
 			});
 		}
 
@@ -58,6 +59,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			catch { };
 		}
+
 		private bool Connect(string port, out int width, out int height)
 		{
 			// Try to find an ESP32 on the COM port and check if it answers with the shake-hand bytes
@@ -65,9 +67,9 @@ namespace LibDmd.Output.ZeDMD
 			{
 				_serialPort = new SerialPort(port, BaudRate, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One)
 				{
-					ReadTimeout = 100,
+					ReadTimeout = SERIAL_TIMEOUT,
 					WriteBufferSize = MAX_SERIAL_WRITE_AT_ONCE,
-					WriteTimeout = 100//SerialPort.InfiniteTimeout
+					WriteTimeout = SERIAL_TIMEOUT
 				};
 				_serialPort.Open();
 				_serialPort.Write(CtrlCharacters.Concat(new byte[] { 12 }).ToArray(), 0, CtrlCharacters.Length + 1);
@@ -90,15 +92,27 @@ namespace LibDmd.Output.ZeDMD
 				{
 					// enable compression
 					_serialPort.Write(CtrlCharacters.Concat(new byte[] { 14 }).ToArray(), 0, CtrlCharacters.Length + 1);
+					System.Threading.Thread.Sleep(4);
+
 					if (_serialPort.ReadByte() == 'A' && _serialPort.ReadByte() == 'R')
 					{
-						// increase serial transfer chunk size
-						_serialPort.Write(CtrlCharacters.Concat(new byte[] { 13, MAX_SERIAL_WRITE_AT_ONCE / 256 }).ToArray(), 0, CtrlCharacters.Length + 1);
-						if (_serialPort.ReadByte() == 'A')
+						// enable debug mode
+						_serialPort.Write(CtrlCharacters.Concat(new byte[] { 99 }).ToArray(), 0, CtrlCharacters.Length + 1);
+						System.Threading.Thread.Sleep(4);
+
+						if (_serialPort.ReadByte() == 'A' && _serialPort.ReadByte() == 'R')
 						{
-							nCOM = port;
-							Opened = true;
-							return true;
+							// increase serial transfer chunk size
+
+							_serialPort.Write(CtrlCharacters.Concat(new byte[] { 13, MAX_SERIAL_WRITE_AT_ONCE / 256 }).ToArray(), 0, CtrlCharacters.Length + 2);
+							System.Threading.Thread.Sleep(4);
+
+							if (_serialPort.ReadByte() == 'A')
+							{
+								nCOM = port;
+								Opened = true;
+								return true;
+							}
 						}
 					}
 				}
@@ -112,6 +126,7 @@ namespace LibDmd.Output.ZeDMD
 			height = 0;
 			return false;
 		}
+
 		private void Disconnect()
 		{
 			Opened = false;
@@ -134,10 +149,11 @@ namespace LibDmd.Output.ZeDMD
 					{
 						// send control characters and command
 						_serialPort.Write(CtrlCharacters, 0, CtrlCharacters.Length);
-						_serialPort.Write(pBytes, 0, 1);
+						_serialPort.Write(pBytes.Take(1).ToArray(), 0, 1);
 
-						// remove the command fr0m the data and compress the data
-						byte[] pCompressedBytes = Compress(pBytes.Skip(1).ToArray());
+						byte[] pCompressedBytes;
+						NetMiniZ.NetMiniZ.MZCompress(pBytes.Skip(1).ToArray(), out pCompressedBytes);
+
 						int nCompressedBytes = pCompressedBytes.Length;
 
 						byte[] pCompressionHeader = new byte[2];
