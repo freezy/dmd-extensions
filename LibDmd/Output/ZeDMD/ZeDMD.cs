@@ -33,7 +33,7 @@ namespace LibDmd.Output.ZeDMD
 		private readonly ZeDMDComm pDMD = new ZeDMDComm();
 
 		private static ZeDMD _instance;
-		private readonly byte[] _frameBufferRgb24;
+		private readonly byte[] _frameBuffer;
 
 		private const byte RGB24 = 3;
 		private const byte ColGray6 = 11;
@@ -71,26 +71,8 @@ namespace LibDmd.Output.ZeDMD
 		private ZeDMD()
 		{
 			Init();
-			// Different buffers according to the type of colors we transfer
-			// 4 control bytes + 4 bytes per pixel (for RLE)
-			_frameBufferRgb24 = new byte[1 + DmdWidth * DmdHeight * 4];
-			//_frameBufferRgb24[0] = RGB24; // render RGB24
-
-			// 4 color (*3 bytes), 4 bits per pixel
-			/*_frameBufferGray4 = new byte[1 + 48 + DmdWidth * DmdHeight];/// 2];
-			_frameBufferGray4[0] = Gray4; // render compressed 4 pixels/byte with 4 colors palette
-
-			// 4 color (*3 bytes), 2 bits per pixel
-			_frameBufferGray2 = new byte[1 + 12 + DmdWidth * DmdHeight];/// 4];
-			_frameBufferGray2[0] = Gray2; // render compressed 2 pixels/byte with 4 colors palette
-
-			// 16 color (*3 bytes), 4 bits per pixel
-			_frameBufferColoredGray4 = new byte[1 + 48 + DmdWidth * DmdHeight];// / 2];
-			_frameBufferColoredGray4[0] = ColGray4; // render compressed 2 pixels/byte with 16 colors palette
-
-			// 64 color (*3 bytes), 6 bits per pixel
-			_frameBufferColoredGray6 = new byte[1 + 192 + DmdWidth * DmdHeight];// * 6 / 8];
-			_frameBufferColoredGray6[0] = ColGray6; // render compressed 1 pixel/6bit with 64 colors palette*/
+			// Different modes require different buffer sizes. This one should be safe for all.
+			_frameBuffer = new byte[1 + DmdWidth * DmdHeight * 4];
 
 			if (IsAvailable) ClearColor();
 		}
@@ -180,12 +162,12 @@ namespace LibDmd.Output.ZeDMD
 		{
 			byte[] nframe = CheckDimensions(frame);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 2, nframe);
-			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 13);
+			var changed = FrameUtil.Copy(planes, _frameBuffer, 13);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBufferRgb24, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
 			}
 		}
 
@@ -195,15 +177,15 @@ namespace LibDmd.Output.ZeDMD
 			byte[] nframe = CheckDimensions(tframe);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 2, nframe);
 			// copy palette
-			var paletteChanged = CopyPalette(frame.Palette, _frameBufferRgb24, 4);
+			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 4);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBufferRgb24, 13);
+			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 13);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBufferRgb24, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
 			}
 		}
 
@@ -216,18 +198,18 @@ namespace LibDmd.Output.ZeDMD
 		{
 			byte[] nframe = CheckDimensions(frame);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 4, nframe);
-			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 49);
+			var changed = FrameUtil.Copy(planes, _frameBuffer, 49);
 
 			// send frame buffer to device
 			if (changed)
 			{
 				for (int ti = 0; ti < 16; ti++)
 				{
-					_frameBufferRgb24[1 + ti * 3] = (byte)(255.0f * CalcBrightness(ti / 15.0f));
-					_frameBufferRgb24[1 + ti * 3 + 1] = (byte)(109.0f * CalcBrightness(ti / 15.0f));
-					_frameBufferRgb24[1 + ti * 3 + 2] = (byte)(0.0f * CalcBrightness(ti / 15.0f));
+					_frameBuffer[1 + ti * 3] = (byte)(255.0f * CalcBrightness(ti / 15.0f));
+					_frameBuffer[1 + ti * 3 + 1] = (byte)(109.0f * CalcBrightness(ti / 15.0f));
+					_frameBuffer[1 + ti * 3 + 2] = (byte)(0.0f * CalcBrightness(ti / 15.0f));
 				}
-				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + oRomWidth * oRomHeight / 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight / 2);
 			}
 		}
 
@@ -237,27 +219,27 @@ namespace LibDmd.Output.ZeDMD
 			byte[] nframe = CheckDimensions(tframe);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 4, nframe);
 			// copy palette
-			var paletteChanged = CopyPalette(frame.Palette, _frameBufferRgb24, 16);
+			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 16);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBufferRgb24, 49);
+			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 49);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBufferRgb24, ColGray4, 1 + 48 + oRomWidth * oRomHeight/ 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight/ 2);
 			}
 		}
 		public void RenderGray6(byte[] frame)
 		{
 			byte[] nframe = CheckDimensions(frame);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 6, nframe);
-			var changed = FrameUtil.Copy(planes, _frameBufferRgb24, 193);
+			var changed = FrameUtil.Copy(planes, _frameBuffer, 193);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBufferRgb24, Gray2, 1 + 192 + 6 * oRomWidth * oRomHeight / 8);
+				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * oRomWidth * oRomHeight / 8);
 			}
 		}
 
@@ -267,23 +249,23 @@ namespace LibDmd.Output.ZeDMD
 			byte[] nframe = CheckDimensions(tframe);
 			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 6, nframe);
 			// copy palette
-			var paletteChanged = CopyPalette(frame.Palette, _frameBufferRgb24, 64);
+			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 64);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBufferRgb24, 193);
+			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 193);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
 				if (frame.RotateColors)
 				{
-					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = frame.Rotations[ti];
+					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = frame.Rotations[ti];
 				}
 				else
 				{
-					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti * 3 + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = 255;
+					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti * 3 + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = 255;
 				}
-				RenderRaw(_frameBufferRgb24, ColGray6, 1 + 192 + 6 * oRomWidth * oRomHeight / 8 + 3 * 8);
+				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * oRomWidth * oRomHeight / 8 + 3 * 8);
 			}
 		}
 		private bool CopyPalette(Color[] palette,byte[] framebuffer,int ncol)
@@ -304,12 +286,12 @@ namespace LibDmd.Output.ZeDMD
 		{
 			bool changed;
 			// can directly be sent to the device.
-				_frameBufferRgb24[0] = RGB24;
+				_frameBuffer[0] = RGB24;
 				// copy data to frame buffer
-				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
+				changed = FrameUtil.Copy(frame, _frameBuffer, 1);
 				if (changed)
 				{
-					pDMD.QueueFrame(_frameBufferRgb24, _frameBufferRgb24.Length);
+					pDMD.QueueFrame(_frameBuffer, RomWidth * RomHeight * 3 + 1);
 				}
 		}
 		public void RenderRaw(byte[] data, byte Mode, int length)
@@ -331,9 +313,9 @@ namespace LibDmd.Output.ZeDMD
 
 		public void ClearDisplay()
 		{
-			for (var i = 1; i < _frameBufferRgb24.Length - 1; i++)
+			for (var i = 1; i < _frameBuffer.Length - 1; i++)
 			{
-				_frameBufferRgb24[i] = 0;
+				_frameBuffer[i] = 0;
 			}
 			byte[] tempbuf = new byte[1];
 			tempbuf[0] = 10; // clear screen
@@ -357,9 +339,9 @@ namespace LibDmd.Output.ZeDMD
 			var pos = 1;
 			for (var i = 0; i < palette.Length; i++)
 			{
-				_frameBufferRgb24[pos] = palette[i].R;
-				_frameBufferRgb24[pos + 1] = palette[i].G;
-				_frameBufferRgb24[pos + 2] = palette[i].B;
+				_frameBuffer[pos] = palette[i].R;
+				_frameBuffer[pos + 1] = palette[i].G;
+				_frameBuffer[pos + 2] = palette[i].B;
 				pos += 3;
 			}
 		}
