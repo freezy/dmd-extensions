@@ -50,6 +50,8 @@ namespace LibDmd.Input
 		// subject process handle
 		protected IntPtr _hProcess;
 
+		private IConnectableObservable<FrameType> _framesObservable = null;
+
 		/// <summary>
 		/// Search the system process list for the subject process.  Returns a Win32
 		/// HANDLE to the process on success, with the memory grabber addresses stored
@@ -98,8 +100,7 @@ namespace LibDmd.Input
 				});
 		}
 
-		protected IConnectableObservable<FrameType> _framesObservable = null;
-		public virtual IConnectableObservable<FrameType> GetFrames()
+		public IConnectableObservable<FrameType> GetFrames()
 		{
 			if (_framesObservable == null)
 			{

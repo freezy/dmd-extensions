@@ -1,16 +1,58 @@
 # DMD Extensions
 
-*Features for DMD owners\* that aren't officially supported*
+*A toolbox for digital pinball and dot matrix displays.*
 
-Real DMDs for virtual pinball cabinets are pretty cool but they need to be
-supported by the software running the games. This is an attempt to fill some
-gaps. 
+This project aims to connect digital pinball games with the physical DMDs that are widespread in the community. It also
+comes with pretty monitor output, supports frame-by-frame colorization, and can even stream over the network.
 
-\* And even if you don't have a real DMD, there's awesome stuff too!
+## Table of Contents
 
-## Supported Displays
+* [Features](#features)
+  * [Supported Games](#supported-games)
+  * [Supported Displays](#supported-displays)
+  * [High Resolution DMD for Monitors](#high-resolution-dmd-for-monitors)
+  * [Segment Display Rendering](#segment-display-rendering)
+  * [Frame Colorization](#frame-colorization)
+  * [Network Streaming](#network-streaming)
+* [Install Instructions](#install-instructions)
+* [Usage](#usage)
+  * [Pinball FX2](#pinball-fx2)
+  * [Pinball FX3](#pinball-fx3)
+  * [The Pinball Arcade](#the-pinball-arcade)
+  * [Pro Pinball Ultra](#pro-pinball-ultra)
+  * [Visual PinMAME](#visual-pinmame)
+  * [Future Pinball](#future-pinball)
+* [Configuration](#configuration)
+  * [Output Configuration](#output-configuration)
+  * [Command Line Configuration](#command-line-configuration)
+  * [Colorization](#colorization)
+* [Breaking Changes](#breaking-changes)
+* [Troubleshooting](#troubleshooting)
+* [Reporting Bugs](#reporting-bugs)
+* [Manual Installation](#manual-installation)
+* [Game Names](#game-names)
+* [Build Instructions](#build-instructions)
 
-Currently supported displays:
+## Features
+
+### Supported Games
+
+DMD Extensions adds real DMD support to the following games:
+
+- [**Pinball FX2**](#pinball-fx2) through frame grabbing from screen
+- [**Pinball FX3**](#pinball-fx3) by reading the DMD texture data from memory
+- [**The Pinball Arcade**](#the-pinball-arcade) by Farsight, through grabbing the DMD texture from memory
+- [**Pro Pinball Timeshock**](#pro-pinball-ultra) through their message queue
+- [**Visual PinMAME**](#visual-pinmame) through `DmdDevice.dll`
+- [**Future Pinball**](#future-pinball) through using Macro's FP Intercept that sends DMD frames through a pipe.
+
+The command line tool can also display image files on the DMD device and render
+frames to bitmap files. Many features like this are described in the command
+line options below, so have a close look at those as well.
+
+### Supported Displays
+
+Currently supported hardware displays:
 
 - **PinDMD v3**, full RGB support
 - **PinDMD v2**, 4 bit (16 shades) support
@@ -18,63 +60,38 @@ Currently supported displays:
 - **PIN2DMD**, full RGB support
 - **Pixelcade**, full RGB support
 - **ZeDMD**, full RGB support
-- **Virtual DMD** on a computer monitor, renders nice dots and is useful for 
-  debugging.
-- **Alphanumeric Virtual**, a high-resolution virtual segmented display for 
-  pre-DMD area games.
-- **Network**, use dmdext to send and receive data through the network.
-- You can also stream the DMD to a browser in your LAN, because, why not!
 
-## Features
+### High Resolution DMD for Monitors
 
-The primary goal of this project was to add support for real DMDs for games that
-don't provide support out of the box. Supported games are:
+DMD Extensions includes a complex shader with awesome effects for monitor users. For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
-- **Pinball FX2/3** through frame grabbing from screen 
-- Farsight's **The Pinball Arcade** through grabbing the DMD texture from memory
-- **Pro Pinball Timeshock** through their message queue
-- **Visual PinMAME** through `DmdDevice.dll` 
-- **Future Pinball** through using Macro's FP Intercept that sends DMD frames through a pipe.
+<image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
-The command line tool can also display image files on the DMD device and render
-frames to bitmap files. Many features like this are described in the command 
-line options below, so have a close look at those as well.
+### Segment Display Rendering
 
-
-#### Version 1.7
-DMD Extensions also support dynamic DMD coloring previously onlyavailable for 
-PIN2DMD displays (both side-channel and VNI).
-
-
-#### Version 1.8
 DMD Extensions supports high-resolution rendering of segmented alpha-numeric displays:
 
 <image src="https://user-images.githubusercontent.com/70426/50459439-5f81bf00-096b-11e9-9f75-f70387f2c9cc.png" width="350"/>
 
 Documentation how to enable and customize this feature can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/AlphaNumeric#readme).
 
-Since v1.8, DMD Extensions come with full network support. Documentation can be found [here](Console/Server)
+### Frame Colorization
 
+DMD Extensions includes support for Serum colorizations, as well as the VNI/PAL format, originally used on PIN2DMD devices.
+PAC support is intended, but needs some refactoring first.
 
-#### Version 1.9
-We've introduced a more complex shader with awesome effects for monitor users. Documentation can be found [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
+Colorization is enabled for most games, including Pinball FX3, The Pinball Arcade, and Visual PinMAME.
 
-<image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
-
-
-#### Version 1.10
-
-Thanks to Funkyman and Lucky1, we now have 64 color content support including all color 
-modes (LCM, CM, MR, etc). 256x64 content also works and uses new scaling options (scale2x, doubler). 
-All current PIN2DMD vin/pal content is now officially supported. Uncolorized and standard colorized 
-content can also be scaled using the new modes as well. The new options are listed [below](#output-configuration).
-
-<image src="https://user-images.githubusercontent.com/57115343/151870548-f0f61c1c-878a-4b24-8fbc-34a37fb0e120.jpg" width="350" />
 <image src="https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
 
-#### Version 2.0
+### Network Streaming
 
-Thanks to ZeDrummer, we now have ZeDMD and Serum coloring support. Additionally, dmdext is now fully 64-bit compatible.
+DMD Extensions can also receive frames from the network and output them to any device. Likewise, it can stream frames 
+from any source over the network. Documentation of this feature can be found [here](Console/Server).
+
+Additionally, DMD Extensions can act as a web server where any number of clients can connect to, and see the DMD in real
+time in the web browser.
+
 
 ## Install Instructions
 
@@ -87,25 +104,28 @@ run it. A few notes:
   versions. They can live happily next to each other.
 - The reason for installing both versions is that your VPM is probably 32-bit,
   so you'll need the 32-bit `DmdDevice.dll` and if you're using `dmdext.exe`
-  with the 64-bit version of Pro Pinball, it will only work with the 64-bit 
+  with the 64-bit version of Pro Pinball, it will only work with the 64-bit
   version.
 - However, if you don't have Pro Pinball, just 32-bit will do fine, and if don't
   use VPM then just 64-bit will do fine as well. And if you're on a 32-bit
   Windows, then just take the 32-bit version.
-- The installer will add the install folder of `dmdext.exe` to the `PATH` 
+- The installer will add the install folder of `dmdext.exe` to the `PATH`
   environment variable, but only if the platform is the same:
-   - DMD Extensions (64-bit) on Windows x64 is added to `PATH`
-   - DMD Extensions (32-bit) on Windows 32-bit is added to `PATH`
-   - All other combinations aren't added to `PATH`
+	- DMD Extensions (64-bit) on Windows x64 is added to `PATH`
+	- DMD Extensions (32-bit) on Windows 32-bit is added to `PATH`
+	- All other combinations aren't added to `PATH`
 - The installer will set the `DMDDEVICE_CONFIG` environment variable to the
-  location of your `DmdDevice.ini`. That means from wherever you launch 
-  `DmdDevice.dll` (or run `dmdext.exe` with `--use-ini`), the same 
+  location of your `DmdDevice.ini`. That means from wherever you launch
+  `DmdDevice.dll` (or run `dmdext.exe` with `--use-ini`), the same
   `DmdDevice.ini` will be used.
 - During installation, when a feature is deactivated, that means the installer
   couldn't find the host program. For VPM that means that you haven't registered
   `VPinMAME.dll`. For Pro Pinball it means it's not installed via Steam, and
   you'll need to select its installation folder manually.
 
+If you don't trust the installer and want to do it manually, [see below](#manual-installation).
+
+## Usage
 
 ### Test
 
@@ -118,12 +138,12 @@ You should see a test image on your DMD as well as on a virtual DMD.
 
 1. Enable cabinet options in Pinball FX2
 2. Resize the DMD to:
-   - Width: `520`
-   - Height: `136`
+	- Width: `520`
+	- Height: `136`
 3. Move the DMD to somewhere hidden like off-screen or behind the playfield
    (usually at `0`/`0`).
 4. Open a command prompt ([Windows]+[R], `cmd`, [enter])
-5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter] (or 
+5. Type `dmdext mirror --source=pinballfx2 --no-virtual` [enter] (or
    `pinballfx3` for FX3)
 6. Start Pinball FX2/3
 
@@ -140,14 +160,14 @@ The DMD from Pinball FX3 is pulled directly from the memory.
 It doesn't matter whether Pinball FX3 is started before or after `dmdext`, and
 it works with or without cabinet mode.
 
-Note that while the current memory grabber code should also work for future 
+Note that while the current memory grabber code should also work for future
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
 `dmdext`, you should still be able to fall back to the legacy screen grabber
 that is used by Pinball FX2 by using the `--fx3-legacy` flag.
 
 ### The Pinball Arcade
 
-For TPA we're pulling frames off the DMD texture from TPA's memory. 
+For TPA we're pulling frames off the DMD texture from TPA's memory.
 
 1. Open a command line prompt ([Windows], type `cmd`, [enter])
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
@@ -155,7 +175,7 @@ For TPA we're pulling frames off the DMD texture from TPA's memory.
 4. Select and **start** a game (*only then* it starts mirroring, during attract
    mode it doesn't, even though TPA does display the DMD).
 
-Currently re-running `dmdext` while TPA is running doesn't work and will be 
+Currently re-running `dmdext` while TPA is running doesn't work and will be
 addressed soon.
 
 Also note that currently only 128x32 DMD games are supported, that means no
@@ -171,67 +191,45 @@ In version 1.2.1, Barnstorm Games added support for external hardware through
 a message queue. To get it running, do the following:
 
 1. Make sure you have `dmdext.exe` in your `PATH`
-2. Copy `ProPinballSlave.bat` to the Pro Pinball installation folder 
+2. Copy `ProPinballSlave.bat` to the Pro Pinball installation folder
    (usually at `%PROGRAMFILES(X86)%\Steam\SteamLibrary\steamapps\common\Pro Pinball Ultra`)
 3. Add the following command line parameters when launching `ProPinball.exe`:
    `m3 dProPinballSlave`
 
 Note that this currently works only with the 64-bit version of Pro Pinball. 32
 bit binaries will be provided with a later release. If you want to change the
-options (e.g. show the virtual DMD), edit `ProPinballSlave.bat` and adopt 
+options (e.g. show the virtual DMD), edit `ProPinballSlave.bat` and adopt
 accordingly.
 
 ### Visual PinMAME
 
 VPM introduced the possibility of delegating DMD rendering to an external DLL.
 The main motivation is being able to ship a single build instead of having to
-release multiple binaries for multiple DMDs. 
+release multiple binaries for multiple DMDs.
 
-If you are a PC monitor user or have a RGB display (PinDMDv3 or PIN2DMD), the
-advantage of dmdext is that Lucky1's coloring features are fully supported. You
-can set this up as you would for a PIN2DMD:
-
-1. Create an `altcolor` folder where VPM is installed (usually `Visual Pinball\VPinMAME`)
-2. In that folder, create another one named after the ROM (e.g. `simpprty`)
-3. Download the `.pal` and `.vni` file from your favorite virtual pinball
-   site, put them into that folder and name them `pin2dmd.pal` and `pin2dmd.vni`
-4. Run VPM setup, open the ROM's game options and enable *Use external DMD (dll)*
-   as well as *Colorize DMD*.
-
-Lastly, be sure to use at least PinMAME v3.4. You can download the latest version [here](https://github.com/vpinball/pinmame/releases).
+Be sure to use at least PinMAME v3.4. You can download the latest version [here](https://github.com/vpinball/pinmame/releases).
 
 ### Future Pinball
 
-Copy `Future Pinball/OpenGL32.dll` to your Future Pinball folder, i.e. where 
+Copy `Future Pinball/OpenGL32.dll` to your Future Pinball folder, i.e. where
 `Future Pinball.exe` is located. Now, you can send frames to your DMD by running:
 
 ```bash
 dmdext mirror -s futurepinball
 ```
 
-Note that: 
-- The `-q` toggle works here, so instead of killing the process you could make it 
+Note that:
+- The `-q` toggle works here, so instead of killing the process you could make it
   exit automatically when the table closes.
 - With `-g <name>`, you can set the game's name, which will, when used along
   `--use-ini`, read the game-specific settings.
 
 For more details check out TerryRed's guide [here](https://vpuniverse.com/forums/topic/4928-dmdext-freezy-and-future-pinball-real-and-virtual-dmd-support/).
 
-## Build Instructions
-
-1. Download and install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
-2. The unmanaged exports library needs MS Build tools, which come with .NET 3.5. [Install Instructions](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows-10)
-4. *Optional:* If you want `DmdDevice.dll` copied to your VPM folder after build, point the `VPM_HOME` environment variable to your VPM installation folder.
-5. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
-3. Open the `.sln` file in Visual Studio and build the solution.
-
-If you want to build the installer, you'll need the [WiX Toolset v3](https://wixtoolset.org/docs/wix3/)
-and its [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=WixToolset.WixToolsetVisualStudio2022Extension).
-
 
 ## Configuration
 
-Since `DmdDevice.dll` is called by VPM, we can't pass any configuration 
+Since `DmdDevice.dll` is called by VPM, we can't pass any configuration
 parameters to it. Instead, we use `DmdDevice.ini` which must be located
 in the same folder as `VPinMAME.dll` or at the path where the `DMDDEVICE_CONFIG`
 environment variable is pointing to.
@@ -241,9 +239,8 @@ command line parameters (using the `--use-ini` parameter).
 
 ### Output Configuration
 
-Since v1.8 you can also tell `dmdext.exe` to read the output configuration from
-`DmdDevice.ini` instead of passing them as command line arguments. The options
-are described below.
+You can also tell `dmdext.exe` to read the output configuration from `DmdDevice.ini`
+instead of passing them as command line arguments. The options are described below.
 
 The output are described by block below.
 
@@ -273,7 +270,7 @@ The output are described by block below.
 | `--scaler-mode`                | [global]<br>scalermode                         | Scaler mode for standard content (vpm frames). <strong>Note:</strong> This is only active if you have 256x64 colorized content files <strong>OR</strong> have the scaletohd option enabled.<br><br>Can have two scaling modes:<ul>  <li>`doubler` - Doubles all pixels</li>  <li>`scale2x` - Using Scale2x algorithm for smooth 2x scaling.</li>                                                                                                         |
 | `--scale-to-hd`                | [global]<br>scaletohd                          | If true, always scale standard vpm frames to 256x64<ul>  <li>Only works on 128x32 vpm games</li>  <li>Virtual DMD output looks amazing with Scale2x!</li>  <li>Console mirror options work and can be scaled up</li>  <li>Also works with 128x32 output devices (pindmd3) using a down scale method to retain Scale2x look.</li>                                                                                                                         |
 
-You can also override all options per game by using the game's name as section 
+You can also override all options per game by using the game's name as section
 name and pre-fixing options with the name of the section (apart from `[global]`
 options, which aren't prefixed). For example if you have a PinDMD2 and don't
 want to use it for Baywatch which has a different resolution, you would create
@@ -290,11 +287,11 @@ virtualdmd height = 256
 ```
 
 This is also useful if you just want to fit the virtual DMD onto different
-backglasses which have slightly different positions. 
+backglasses which have slightly different positions.
 
-Also note that dmdext can retrieve the DMD's position from VPM's registry 
-setting. That means you can use VPM to position the DMD and dmdext will take 
-the same setting for each game. This behavior can be enabled using the 
+Also note that dmdext can retrieve the DMD's position from VPM's registry
+setting. That means you can use VPM to position the DMD and dmdext will take
+the same setting for each game. This behavior can be enabled using the
 `useregistry` option.
 
 ### Command Line Configuration
@@ -329,7 +326,7 @@ The `mirror` command has the following additional parameters:
 
 | Parameter           | Description                                                                                                                                                                     | Default    |
 |---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ `pinballfx2`, `pinballfx3`, `pinballarcade`, `propinball`, `screen` ].                                       | *n/a*      |
+| `-s, --source`      | Required. The source you want to retrieve DMD data from. One of: [ `pinballfx2`, `pinballfx3`, `pinballarcade`, `propinball`, `futurepinball`, `screen` ].                      | *n/a*      |
 | `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25         |
 | `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0          |
 | `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*     |
@@ -338,6 +335,7 @@ The `mirror` command has the following additional parameters:
 | `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0          |
 | `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |            |
 | `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false      |
+| `--colorize`        | Enable or disable frame-by-frame colorization. Supported on `pinballfx3` (memory grabber), `pinballarcade`, and `futurepinball` only.                                           | false      |
 
 #### Play
 
@@ -347,23 +345,59 @@ The `play` command has the following additional parameters:
 |---------------------|--------------------------------------------------------------------------------|---------|
 | `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*  |
 
-## Compatibility
 
-This application is based on .NET 4.5, which only runs on Windows 7 or later.
-Probably on Vista too, but who cares. If you're still running WinXP then you
-have my sincerest sympathy, but that's as far as I go. ;)
+### Colorization
+
+If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcade or ZeDMD), you can enable frame-by-frame 
+colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will 
+be rendered in color, with up to 64 colors per frame.
+
+There are two supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Both formats keep 
+their files in the `altcolor` folder, which is located in the same folder as VPM (usually `Visual Pinball\VPinMAME\altcolor`).
+In this folder, every game has its separate folder, which contains the colorization files.
+
+Depending on the source, the game folders and colorization files are named differently:
+
+- In VPM, the game folders are named after the ROM name (e.g. `cp_16` for Champion Pub).
+- Serum files are named after the game name, but with the `.cRZ` extension (e.g. `cp_16.cRZ`)
+- VNI/PAL files are always named `pin2dmd.vni` and `pin2dmd.pal`.
+- In Pinball Arcade and Pinball FX3, the games have different names. Scroll down for [a list of game names](#game-names)
+  at the time of writing.
+
+For example, a structure for Champion Pub for all games and all color formats, would look like this (note that if both 
+a `.cRZ` and VNI/PAL files are present in the same game folder, the `.cRZ` file will be used):
+```
+altcolor
+├── cp_16
+│   ├── cp_16.cRZ
+│   ├── pin2dmd.pal
+│   └── pin2dmd.vni
+├── ChampionPub
+│   ├── ChampionPub.cRZ
+│   ├── pin2dmd.pal
+│   └── pin2dmd.vni
+└── BALLY_Champion_Pub
+    ├── BALLY_Champion_Pub.cRZ
+    ├── pin2dmd.pal
+    └── pin2dmd.vni
+```
+
+Depending on the source, enabling colorization is different:
+
+- In VPM, enter setup, open the ROM's game options and enable *Use external DMD (dll)* as well as *Colorize DMD*.
+- In Pinball Arcade and Pinball FX3, use the `--colorize` option when running `dmdext.exe`.
 
 ## Breaking Changes
 
 ### v1.8.0
 
-- Data types in configuration files are now culture invariant. Meaning if you are running under a Windows UI Culture such as German 
-  which normally represents decimals with commas instead of periods you will need to change your configuration file (such as 
+- Data types in configuration files are now culture invariant. Meaning if you are running under a Windows UI Culture such as German
+  which normally represents decimals with commas instead of periods you will need to change your configuration file (such as
   DMDDevice.ini) to use periods for decimal data. The most common example would be those users who are using `dotsize` setting
   in your DMDDevice.ini. This was done to standardize the format of numeric data accross different languages.
-- Hardware DMDs aren't probed per default anymore, unless you specifically set the destination. For most people that means that 
+- Hardware DMDs aren't probed per default anymore, unless you specifically set the destination. For most people that means that
   you'll need to provide the `-d` option when running `dmdext.exe`.
-- If you are a PinDMD3 user and are using colored ROMs, you'll want to [upgrade your firmware](https://github.com/freezy/dmd-extensions/wiki/PinDMD3:-How-to-flash-a-new-firmware).
+- If you are a PinDMDv3 user and are using colored ROMs, you'll want to [upgrade your firmware](https://github.com/freezy/dmd-extensions/wiki/PinDMD3:-How-to-flash-a-new-firmware).
 
 
 ## Troubleshooting
@@ -376,7 +410,7 @@ is linked to the desktop settings. This seems to help:
 - Go to **My Computer**
 - Click on **Performance Information and Tools** on the bottom left
 - Click on **Adjust Visual Effects** at the top left.
-- When the Performance Window pops up, click on **Adjust for Best Appearance**. 
+- When the Performance Window pops up, click on **Adjust for Best Appearance**.
   All the boxes should automatically get check marked.
 - Click on **Apply**, and then OK to get out.
 
@@ -394,12 +428,13 @@ Default is 25, which seems too slow for some games.
 
 ### DmdDevice.ini Ignored?
 
-This project comes bundled in two versions: A library which is loaded by VPM
+DMD Extensions comes bundled in two versions: A library which is loaded by VPM
 called `DmdDevice.dll`, and an executable, `dmdext.exe` for all the other
 applications.
 
 The executable ignores `DmdDevice.ini` because it's configured through command
-line options.
+line options (that is, unless you specifically tell it to use a config file
+with the `--use-ini` option).
 
 ### Slow rendering on certain ROMs with VPM?
 
@@ -409,16 +444,29 @@ Use VPM 3.1. If you can't wait there's a beta build [here](http://vpuniverse.com
 
 ### Weird positioning or no DMD visible at all?
 
-When you override *High DPI scaling* in the host app (e.g. `vpinballx.exe`), 
-dmdext is put into a different coordinate system, so your `DmdDevice.ini`'s 
-position settings are applied differently. This can lead to wrong positioning 
+When you override *High DPI scaling* in the host app (e.g. `vpinballx.exe`),
+dmdext is put into a different coordinate system, so your `DmdDevice.ini`'s
+position settings are applied differently. This can lead to wrong positioning
 or complete off-screen rendering.
 
 *Thanks to outhere for the tip!*
 
+### Unable to load DLL 'serum.dll'
+
+This can happen if your system doesn't have the needed Visual C++ Redistributable installed. You can 
+download it [here](https://aka.ms/vs/17/release/vc_redist.x86.exe).
+
+*Thanks Jewer76!*
+
+### Backglass covers segment displays
+
+Try unchecking "backglass bring to front" by right clicking the backglass ([source](https://github.com/freezy/dmd-extensions/issues/332)).
+
+*Thanks wiesshund!*
+
 ## Reporting Bugs
 
-Make sure you include the application log. You can *usually* find it at the same 
+Make sure you include the application log. You can *usually* find it at the same
 place you copied your `DmdDevice.dll` or `dmdext.exe`. However, there are two
 premises for the log to be created:
 
@@ -431,7 +479,7 @@ premises for the log to be created:
    `Windows\SysWOW64` folder, you don't have write access. In this case you need
    to write the log elsewhere. You can do that by editing the log config file.
    The format of the log file is XML. To change the log file location, find this line:
-   
+
        <target xsi:type="File" name="file" fileName="DmdDevice.log"
 
    And change the `fileName` attribute to somewhere you can write, for example:
@@ -440,7 +488,7 @@ premises for the log to be created:
 
 For problems with DmdDevice.dll, specially with coloring, set the log level to
 `Trace` and reproduce the problem. You can do that by editing `DmdDevice.log.config`
-and changing: 
+and changing:
 
 ```xml
 <logger name="*" minlevel="Info" writeTo="file" />
@@ -454,7 +502,7 @@ If you have a crash, please also include which OS/bitness you're using. If it's
 about the DLL, let us know where you copied the DLL and which host application
 you're using (VPM's `setup.exe` or`vpinball.exe`, also which version).
 
-You can post bugs at [VPF](http://www.vpforums.org/index.php?showtopic=36915) or 
+You can post bugs at [VPF](http://www.vpforums.org/index.php?showtopic=36915) or
 [VPU](http://vpuniverse.com/forums/forums/topic/2728-sam-build-with-modular-dmd-drivers-for-pindmd123-and-pin2dmd/),
 but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 
@@ -468,7 +516,7 @@ but preferably [here](https://github.com/freezy/dmd-extensions/issues).
 
 If you want to use DMD Extensions with VisualPinMAME:
 
-1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your 
+1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your
    VPM folder (usually at `Visual Pinball\VPinMAME`).
 2. Run the VPM setup
 3. Click on *Test*, select the game and click on *Game Options*.
@@ -477,29 +525,89 @@ If you want to use DMD Extensions with VisualPinMAME:
 You can also set this as the default by selecting *Default Options* in the VPM
 setup, however note that games that you've already configured won't be affected.
 
+## Game Names
+
+| Title                                | Pinball Arcade      | Pinball FX3                            |
+|--------------------------------------|---------------------|----------------------------------------|
+| Attack From Mars                     | `AttackFromMars`    | `BALLY_Attack_from_Mars`               |
+| Big Buck Hunter PRO                  | `BuckHunter`        |                                        |
+| Big Hurt                             | `BigHurt`           |                                        |
+| Black Rose                           | `BlackRose`         | `BALLY_BlackRose`                      |
+| Bram Stoker's Dracula                | `Dracula`           |                                        |
+| Cactus Canyon                        | `CactusCanyon`      |                                        |
+| Champion Pub                         | `ChampionPub`       | `BALLY_Champion_Pub`                   |
+| Cirqus Voltaire                      | `Cirqus`            | `BALLY_Cirqus_Voltaire`                |
+| Creature of the Black Lagoon         | `Creature`          | `BALLY_Creature_from_the_Black_Lagoon` |
+| Cue Ball Wizard                      | `CueBallWizard`     |                                        |
+| Doctor Who                           | `DoctorWho`         |                                        |
+| Fish Tales                           | `FishTales`         | `WMS_Fish_Tales`                       |
+| Ghostbusters                         | `GhostBustersStern` |                                        |
+| Gladiators                           | `Gladiators`        |                                        |
+| Harley Davidson                      | `HarleyDavidson`    |                                        |
+| High Roller Casino                   | `HighRollerCasino`  |                                        |
+| Hurricane                            | `Hurricane`         |                                        |
+| Hurricane                            |                     | `WMS_Hurricane`                        |
+| Indiana Jones: The Pinball Adventure |                     | `WMS_Indiana_Jones`                    |
+| Indianapolis 500                     | `Indy500`           |                                        |
+| Judge Dredd                          | `JudgeDredd`        |                                        |
+| Junk Yard                            | `JunkYard`          | `WMS_Junkyard`                         |
+| Last Action Hero                     | `LastActionHero`    |                                        |
+| Mary Shelley's Frankenstein          | `Frankenstein`      |                                        |
+| Medieval Madness                     | `Mediev`            | `WMS_Medieval_Madness`                 |
+| Monster Bash                         | `Monster`           | `WMS_Monster_Bash`                     |
+| Mustang                              | `Mustang`           |                                        |
+| No Fear: Dangerous Sports            | `NoFear`            |                                        |
+| No Good Gofers                       | `Gofers`            | `WMS_No_Good_Gofers`                   |
+| Party Zone                           |                     | `BALLY_Party_Zone`                     |
+| Pistol Poker                         | `PistolPoker`       |                                        |
+| Red and Ted's Road Show              |                     | `WMS_Roadshow`                         |
+| Rescue 911                           | `Rescue911`         |                                        |
+| Ripley's Believe it Or Not           | `Ripleys`           |                                        |
+| Safe Cracker                         |                     | `BALLY_Safe_Cracker`                   |
+| Scared Stiff                         | `ScaredStiff`       |                                        |
+| Starship Troopers                    | `StarshipTroopers`  |                                        |
+| StarTrek                             | `StarTrek`          |                                        |
+| StarTrek: The Next Generation        | `StarTrekTNG`       |                                        |
+| Tales of the Arabian Nights          | `Totan`             | `WMS_Tales_of_the_Arabian_Nights`      |
+| Teed Off                             | `TeedOff`           |                                        |
+| Terminator 2: Judgment Day           | `Terminator2`       |                                        |
+| The Getaway: High Speed 2            | `HighSpeed2`        | `WMS_Getaway`                          |
+| Theatre of Magic                     | `TheaterOfMagic`    | `BALLY_TheatreOfMagic`                 |
+| Twilight Zone                        | `TwilightZone`      |                                        |
+| White Water                          | `WhiteWater`        | `WMS_White_Water`                      |
+| WHO dunnit                           | `WHODunnit`         |                                        |
+| Whoa Nellie! Big Juicy Melons        | `WhoaNellie`        |                                        |
+| Wipeout                              | `Wipeout`           |                                        |
+| World Tour                           | `WorldTour`         |                                        |
+
 ### x64 vs x86
 
-- For `dmdext.exe`, take the bitness of your OS. This is important for Pro 
+- For `dmdext.exe`, take the bitness of your OS. This is important for Pro
   Pinball, where the bitness of the binary must be the same as dmdext's.
 - For `dmddevice.dll` you probably want the 32-bit version unless you've set up
   VPM with `Setup64.exe` and you know what you're doing.
 
-## Developer Setup
 
-This project is built with Visual Studio 2022. Be sure to include .NET 4.7.2 when installing.
+## Build Instructions
 
-After cloning the repo, you'll need to restore the [DllExport](https://github.com/3F/DllExport)
-dependency. There is a script that does it for you. Go into the cloned repo and run:
+1. Download and install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
+2. The unmanaged exports library needs MS Build tools, which come with .NET 3.5. [Install Instructions](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows-10)
+3. *Recommended:* If you want `DmdDevice.dll` automatically copied to your VPM folder after build, point the `VPM_HOME` environment variable to your VPM installation folder.
+4. Clone the repo: `git clone https://github.com/freezy/dmd-extensions.git`
+5. After cloning the repo, you'll need to restore the [DllExport](https://github.com/3F/DllExport)
+   dependency. There is a script that does it for you. Go into the cloned repo and run:
+   ```cmd
+   DllExport -action Restore -sln-file DmdExtensions.sln
+   ```
+6. Open the `.sln` file in Visual Studio and build the solution.
 
-    DllExport -action Restore -sln-file DmdExtensions.sln
+If you want to build the installer, you'll need the [WiX Toolset v3](https://wixtoolset.org/docs/wix3/)
+and its [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=WixToolset.WixToolsetVisualStudio2022Extension).
 
-Then there is an issue with Fody third party addin that may give you an error 
-ith the $(IntermediateOutputPath).
+Then there is an issue with Fody third party addin that may give you an error
+ith the $(IntermediateOutputPath). If this occurs, simply close Visual Studio
+and re-launch the DMD Extensions project and the issue will go away. [Reference](https://github.com/Fody/Fody/issues/629)
 
-If this occurs, simply close Visual Studio and re-launch the DMD Extensions project
-and the issue will go away.
-
-[Reference](https://github.com/Fody/Fody/issues/629)
 
 ## Credits
 

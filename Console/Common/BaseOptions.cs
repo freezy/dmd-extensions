@@ -123,6 +123,9 @@ namespace DmdExt.Common
 		[Option("retry-interval", HelpText = "In seconds, interval between Websocket connection retry attempts. Default: 5 seconds")]
 		public int WebsocketRetryInterval { get; set; } = 5;
 
+		[Option("colorize", HelpText = "Enable frame-by-frame colorization")]
+		public bool Colorize { get; set; } = false;
+
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -201,7 +204,7 @@ namespace DmdExt.Common
 		public ResizeMode Resize => _options.Resize;
 		public bool FlipHorizontally => _options.FlipHorizontally;
 		public bool FlipVertically => _options.FlipVertically;
-		public bool Colorize => false;
+		public bool Colorize => _options.Colorize;
 		public bool QuitWhenDone => _options.QuitWhenDone;
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;

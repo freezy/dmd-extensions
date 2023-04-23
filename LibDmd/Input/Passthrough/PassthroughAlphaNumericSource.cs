@@ -2,13 +2,13 @@
 using System.Reactive;
 using System.Reactive.Subjects;
 
-namespace LibDmd.Input.PinMame
+namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// Receives alphanumeric frames from VPM and forwards them to the observable
 	/// after dropping duplicates.
 	/// </summary>
-	public class VpmAlphaNumericSource : AbstractSource, IAlphaNumericSource
+	public class PassthroughAlphaNumericSource : AbstractSource, IAlphaNumericSource, IGameNameSource
 	{
 		public override string Name { get; } = "VPM Alpha Numeric Source";
 
@@ -19,14 +19,15 @@ namespace LibDmd.Input.PinMame
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
 		private readonly ISubject<AlphaNumericFrame> _framesAlphaNumeric;
+		private readonly ISubject<string> _gameName = new Subject<string>();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public VpmAlphaNumericSource(AlphaNumericFrame initialFrame)
+		public PassthroughAlphaNumericSource(AlphaNumericFrame initialFrame)
 		{
 			_framesAlphaNumeric = new BehaviorSubject<AlphaNumericFrame>(initialFrame);
 		}
 
-		public VpmAlphaNumericSource(BehaviorSubject<FrameFormat> lastFrameFormat)
+		public PassthroughAlphaNumericSource(BehaviorSubject<FrameFormat> lastFrameFormat)
 		{
 			_framesAlphaNumeric =  new Subject<AlphaNumericFrame>();
 			_lastFrameFormat = lastFrameFormat;
@@ -38,9 +39,10 @@ namespace LibDmd.Input.PinMame
 			_lastFrameFormat.OnNext(FrameFormat.AlphaNumeric);
 		}
 
-		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames()
-		{
-			return _framesAlphaNumeric;
-		}
+		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
+
+		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _framesAlphaNumeric;
+
+		public IObservable<string> GetGameName() => _gameName;
 	}
 }

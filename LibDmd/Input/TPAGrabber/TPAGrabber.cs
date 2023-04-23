@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.Input.Passthrough;
 
 namespace LibDmd.Input.TPAGrabber
 {
@@ -15,14 +17,14 @@ namespace LibDmd.Input.TPAGrabber
 	/// Can be launched any time. Will wait with sending frames until Pinball Arcade DX11 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class TPAGrabber : MemoryGrabber<DMDFrame>, IGray4Source
+	public class TPAGrabber : MemoryGrabber<DMDFrame>
 	{
 		public override string Name { get; } = "Pinball Arcade DX11";
+		
+		public readonly PassthroughGray2Source Gray2Source;
+		public readonly PassthroughGray4Source Gray4Source;
 
-		public IObservable<DMDFrame> GetGray4Frames()
-		{
-			return GetFrames();
-		}
+		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
 
 		// DMD Stuff
 		private const int DMDWidth = 128;
@@ -30,9 +32,27 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
-		private DMDFrame _dmdFrame = new DMDFrame() { width = DMDWidth, height = DMDHeight };
+		private readonly DMDFrame _dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
+		private string _gameName;
+		private int _bitLength = 4;
+		
+		private static readonly HashSet<double> Lums = new HashSet<double>();
 
-		private static HashSet<double> lums = new HashSet<double>();
+		public TPAGrabber()
+		{
+			Gray2Source = new PassthroughGray2Source(_currentFrameFormat, "Pinball Arcade DX11 (2-bit)");
+			Gray4Source = new PassthroughGray4Source(_currentFrameFormat, "Pinball Arcade DX11 (4-bit)");
+			GetFrames().Subscribe(frame => {
+				if (frame.Data == null) {
+					return;
+				}
+				if (_bitLength == 2) {
+					Gray2Source.NextFrame(frame);
+				} else {
+					Gray4Source.NextFrame(frame);
+				}
+			});
+		}
 
 		protected override DMDFrame CaptureDMD()
 		{
@@ -49,7 +69,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				sternInit = false; // Reset Stern DMD hack state.
-				return _dmdFrame.Update(frame);
+				return _dmdFrame.Update(frame, _bitLength);
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -75,6 +95,9 @@ namespace LibDmd.Input.TPAGrabber
 
 			var identical = true;
 
+			// emits game name, and sets bit length.
+			ReadGameName(_hProcess);
+
 			// For each pixel on Y axis.
 			for (var dmdY = 0; dmdY < DMDHeight; dmdY++) {
 
@@ -86,24 +109,22 @@ namespace LibDmd.Input.TPAGrabber
 					ColorUtil.RgbToHsl(RawDMD[rawPixelIndex], RawDMD[rawPixelIndex + 1], RawDMD[rawPixelIndex + 2], out hue, out sat, out lum);
 
 					var pos = dmdY * DMDWidth + dmdX;
-
+				
 					byte pixel;
-					// NoEx: how to check if it's stern?
-					if (hasSpecialDMD(_hProcess)) {
+					if (_bitLength == 4) {
 						// from STERN, we get: [ 0, 0.0666666666666667, 0.135294117647059, 0.203921568627451, 0.272549019607843, 0.341176470588235, 0.409803921568627, 0.47843137254902 ]
-						pixel = (byte)(lum * 15 * 2);
+						pixel = (byte)(lum * 15 * 2); // make it 0-15
+						if (pixel > 0 && pixel < 15) { // but given we only get 8 values, it's 0,2,4,...,14, so add one if it's not 0
+							pixel++;
+						}
 					} else {
 						// from others, we get: [ 0, 0.366666666666667, 0.509803921568627, 0.605882352941176 ]
-						pixel = (byte)(lum * 15 * 1.6);
+						pixel = (byte)(lum * 3 * 1.7); // make it 0-3
 					}
 
-					if (pixel > 0 && pixel < 15) {
-						pixel++;
-					}
-
-					if (!lums.Contains(lum)) {
-						lums.Add(lum);
-						Logger.Trace(String.Join(" ", lums.ToArray().OrderBy(l => l)));
+					if (!Lums.Contains(lum)) {
+						Lums.Add(lum);
+						Logger.Trace(String.Join(" ", Lums.ToArray().OrderBy(l => l)));
 					}
 
 					// drop garbage frames
@@ -125,7 +146,7 @@ namespace LibDmd.Input.TPAGrabber
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : _dmdFrame.Update(frame);
+			return identical ? null : _dmdFrame.Update(frame, _bitLength);
 		}
 
 		// try attaching to a process
@@ -230,17 +251,23 @@ namespace LibDmd.Input.TPAGrabber
 			}
 		}
 
-		private static bool hasSpecialDMD(IntPtr procHandle)
+		private void ReadGameName(IntPtr procHandle)
 		{
 			var tableBuffer = new byte[20];
 			ReadProcessMemory(procHandle, _tableNameAddr, tableBuffer, tableBuffer.Length, IntPtr.Zero);
 			var rawTableName = Encoding.Default.GetString(tableBuffer);
-			if (rawTableName.IndexOf("_") < 0) {
-				return false;
+			var tableName = rawTableName.Contains("_")
+				? rawTableName.Substring(1, rawTableName.IndexOf("_", StringComparison.Ordinal) - 1)
+				: rawTableName.Substring(1);
+			if (tableName != _gameName) {
+				_gameName = tableName;
+				Gray2Source.NextGameName(_gameName);
+				Gray4Source.NextGameName(_gameName);
+				Lums.Clear();
 			}
-			var tableName = rawTableName.Substring(1, rawTableName.IndexOf("_") - 1);
-			var specialDMDTables = new string[] { "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
-			return specialDMDTables.Any(tableName.Contains) ? true : false;
+
+			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
+			_bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 		}
 
 		// byte patterns to find DMD structs in the target process
@@ -248,6 +275,7 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
 		private static readonly byte[] SternDMDSignature = new byte[] { 0x75, 0x0A, 0xBA, 0x3E, 0x01, 0x00, 0x00, 0xB9, 0x3E, 0x00, 0x00, 0x00, 0x8B, 0x86, 0xD8, 0x29, 0x06, 0x00 };
 		private static readonly byte[] TableNameSignature = new byte[] { 0x85, 0xC0, 0x74, 0x08, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x02, 0x33, 0xC0, 0x51, 0xBA, 0xFF, 0xFF, 0xFF, 0xFF, 0xB9 };
+
 
 		private static bool FindOffsets(Process gameProc)
 		{

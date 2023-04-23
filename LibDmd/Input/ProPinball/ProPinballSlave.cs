@@ -56,7 +56,7 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var arr = _dmdFrame.Update(Dimensions.Value.Width, Dimensions.Value.Height, new byte[len]);
+							var arr = _dmdFrame.Update(Dimensions.Value.Width, Dimensions.Value.Height, new byte[len], 4);
 							Marshal.Copy((IntPtr)frame, arr.Data, 0, len);
 							o.OnNext(arr);
 

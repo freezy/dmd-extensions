@@ -14,7 +14,7 @@ using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
-using LibDmd.Input.PinMame;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
@@ -47,10 +47,10 @@ namespace LibDmd.DmdDevice
 		private int aniHeight = 32;
 
 		private readonly Configuration _config;
-		private readonly VpmGray2Source _vpmGray2Source;
-		private readonly VpmGray4Source _vpmGray4Source;
-		private readonly VpmRgb24Source _vpmRgb24Source;
-		private readonly VpmAlphaNumericSource _vpmAlphaNumericSource;
+		private readonly PassthroughGray2Source _passthroughGray2Source;
+		private readonly PassthroughGray4Source _passthroughGray4Source;
+		private readonly PassthroughRgb24Source _passthroughRgb24Source;
+		private readonly PassthroughAlphaNumericSource _passthroughAlphaNumericSource;
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private static string _version = "";
@@ -66,6 +66,7 @@ namespace LibDmd.DmdDevice
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
 
 		// Iifärbigsziig
+		private ColorizationLoader _colorizationLoader;
 		private Color[] _palette;
 		DMDFrame _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
@@ -77,7 +78,6 @@ namespace LibDmd.DmdDevice
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-		private static string _altcolorPath;
 		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
@@ -88,10 +88,10 @@ namespace LibDmd.DmdDevice
 		public DmdDevice()
 		{
 			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
-			_vpmGray2Source = new VpmGray2Source(_currentFrameFormat);
-			_vpmGray4Source = new VpmGray4Source(_currentFrameFormat);
-			_vpmRgb24Source = new VpmRgb24Source(_currentFrameFormat);
-			_vpmAlphaNumericSource = new VpmAlphaNumericSource(_currentFrameFormat);
+			_passthroughGray2Source = new PassthroughGray2Source(_currentFrameFormat, "VPM 2-bit Source");
+			_passthroughGray4Source = new PassthroughGray4Source(_currentFrameFormat, "VPM 4-bit Source");
+			_passthroughRgb24Source = new PassthroughRgb24Source(_currentFrameFormat, "VPM RGB24 Source");
+			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(_currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -114,7 +114,7 @@ namespace LibDmd.DmdDevice
 #endif
 			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
-			_altcolorPath = GetColorPath();
+			_colorizationLoader = new ColorizationLoader();
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
@@ -198,7 +198,7 @@ namespace LibDmd.DmdDevice
 		private void SetupColorizer()
 		{
 			// only setup if enabled and path is set
-			if (!_config.Global.Colorize || _altcolorPath == null || _gameName == null || !_colorize) {
+			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
 				return;
 			}
 
@@ -207,73 +207,42 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			var serumPath = Path.Combine(_altcolorPath, _gameName, _gameName + ".cRZ");
-			if (File.Exists(serumPath)) {
-				try {
-					_serum = new Serum(_altcolorPath,_gameName);
-					if (_serum.IsLoaded) {
-						Logger.Info($"Serum colorizer v{Serum.GetVersion()} initialized.");
-						Logger.Info($"Loading colorization at {serumPath}...");
-						_serum.ScalerMode = _config.Global.ScalerMode;
-						aniWidth = _serum.FrameWidth;
-						aniHeight = _serum.FrameHeight;
-
-					} else {
-						Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
-						_serum = null;
-					}
-
-				} catch (Exception e) {
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
-					_serum = null;
-				}
+			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
+			if (serum != null) {
+				_serum = serum;
+				aniWidth = serum.FrameWidth;
+				aniHeight = serum.FrameHeight;
 			}
+			else {
+				_serum = null;
+			}
+
 			if (_serum == null) {
-				var palPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".pal");
-				var palPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.pal");
-				var vniPath1 = Path.Combine(_altcolorPath, _gameName, _gameName + ".vni");
-				var vniPath2 = Path.Combine(_altcolorPath, _gameName, "pin2dmd.vni");
+				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
+				if (colorizerResult.HasValue) {
+					var colorizer = colorizerResult.Value;
 
-				var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-				var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-				if (File.Exists(palPath)) {
-					try {
-						Logger.Info("Loading palette file at {0}...", palPath);
-						_coloring = new Coloring(palPath);
-						VniAnimationSet vni = null;
-						if (File.Exists(vniPath)) {
-							Logger.Info("Loading virtual animation file at {0}...", vniPath);
-							vni = new VniAnimationSet(vniPath);
-							Logger.Info("Loaded animation set {0}", vni);
-							aniHeight = vni.MaxHeight;
-							aniWidth = vni.MaxWidth;
-							Logger.Info("Animation Dimensions: {0}x{1}", aniWidth, aniHeight);
-						
-						} else {
-							Logger.Info("No animation set found");
-							aniHeight = Height;
-							aniWidth = Width;
-						}
+					_coloring = colorizer.coloring;
 
-						_gray2Colorizer = new Gray2Colorizer(_coloring, vni);
-						_gray4Colorizer = new Gray4Colorizer(_coloring, vni);
-
-						_gray2Colorizer.ScalerMode = _config.Global.ScalerMode;
-						_gray4Colorizer.ScalerMode = _config.Global.ScalerMode;
-
-					} catch (Exception e) {
-						Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					if (colorizer.vni != null) {
+						aniHeight = colorizer.vni.MaxHeight;
+						aniWidth = colorizer.vni.MaxWidth;
 					}
-				
-				} else {
-					Logger.Info("No palette file found at {0}.", palPath);
-				}
+					else {
+						aniHeight = Height;
+						aniWidth = Width;
+					}
 
-				if (_config.Global.ScaleToHd) {
-					Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-				
-				} else {
-					Logger.Info("ScaleToHd = False");
+					_gray2Colorizer = colorizer.gray2;
+					_gray4Colorizer = colorizer.gray4;
+
+					if (_config.Global.ScaleToHd) {
+						Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
+
+					}
+					else {
+						Logger.Info("ScaleToHd = False");
+					}
 				}
 			}
 		}
@@ -497,7 +466,7 @@ namespace LibDmd.DmdDevice
 				if (_serum.NumColors == 16) {
 					_graphs.Add(new RenderGraph {
 						Name = "4-bit Colored VPM Graph",
-						Source = _vpmGray4Source,
+						Source = _passthroughGray4Source,
 						Destinations = renderers,
 						Converter = _serum,
 						Resize = _config.Global.Resize,
@@ -509,7 +478,7 @@ namespace LibDmd.DmdDevice
 				else {
 					_graphs.Add(new RenderGraph {
 						Name = "2-bit Colored VPM Graph",
-						Source = _vpmGray2Source,
+						Source = _passthroughGray2Source,
 						Destinations = renderers,
 						Converter = _serum,
 						Resize = _config.Global.Resize,
@@ -522,7 +491,7 @@ namespace LibDmd.DmdDevice
 			else if (_colorize && _gray2Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
-					Source = _vpmGray2Source,
+					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Converter = _gray2Colorizer,
 					Resize = _config.Global.Resize,
@@ -535,7 +504,7 @@ namespace LibDmd.DmdDevice
 			else {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit VPM Graph",
-					Source = _vpmGray2Source,
+					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
@@ -548,7 +517,7 @@ namespace LibDmd.DmdDevice
 			if (_colorize && _gray4Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "4-bit Colored VPM Graph",
-					Source = _vpmGray4Source,
+					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Converter = _gray4Colorizer,
 					Resize = _config.Global.Resize,
@@ -561,7 +530,7 @@ namespace LibDmd.DmdDevice
 			else {
 				_graphs.Add(new RenderGraph {
 					Name = "4-bit VPM Graph",
-					Source = _vpmGray4Source,
+					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
@@ -573,7 +542,7 @@ namespace LibDmd.DmdDevice
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
-				Source = _vpmRgb24Source,
+				Source = _passthroughRgb24Source,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -584,7 +553,7 @@ namespace LibDmd.DmdDevice
 			// alphanumeric graph
 			_graphs.Add(new RenderGraph {
 				Name = "Alphanumeric VPM Graph",
-				Source = _vpmAlphaNumericSource,
+				Source = _passthroughAlphaNumericSource,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
 				FlipHorizontally = _config.Global.FlipHorizontally,
@@ -773,12 +742,12 @@ namespace LibDmd.DmdDevice
 					if (width == 128 && height == 32) {
 						width *= 2;
 						height *= 2;
-						frame.Update(width, height, frame.Data);
+						frame.Update(width, height, frame.Data, 2);
 					}
 				}
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
-				_vpmGray2Source.NextFrame(frame);
+				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
 				if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
@@ -789,33 +758,33 @@ namespace LibDmd.DmdDevice
 					height *= 2;
 
 					if (_upsizedFrame == null)
-						_upsizedFrame = new DMDFrame() { width = width, height = height, Data = new byte[width * height] };
+						_upsizedFrame = new DMDFrame { width = width, height = height, Data = new byte[width * height], BitLength = 2};
 					else
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+						_upsizedFrame.Update(width, height, _upsizedFrame.Data,2);
 
 					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
 
 					if (_config.Global.ScaleToHd) {
 						width = 256;
 						height = 64;
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data);
+						_upsizedFrame.Update(width, height, _upsizedFrame.Data, 2);
 					}
 
 					_gray2Colorizer.SetDimensions(width, height);
-					_vpmGray2Source.NextFrame(_upsizedFrame);
+					_passthroughGray2Source.NextFrame(_upsizedFrame);
 				
 				} else {
 					if (_config.Global.ScaleToHd) {
 						if (width == 128 && height == 32) {
 							width *= 2;
 							height *= 2;
-							frame.Update(width, height, frame.Data);
+							frame.Update(width, height, frame.Data, 2);
 						}
 					}
 
 					_gray2Colorizer?.SetDimensions(width, height);
 					_gray4Colorizer?.SetDimensions(width, height);
-					_vpmGray2Source.NextFrame(frame);
+					_passthroughGray2Source.NextFrame(frame);
 				}
 			}
 		}
@@ -833,25 +802,25 @@ namespace LibDmd.DmdDevice
 					if (width == 128 && height == 32) {
 						width *= 2;
 						height *= 2;
-						frame.Update(width, height, frame.Data);
+						frame.Update(width, height, frame.Data, 4);
 					}
 				}
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
-				_vpmGray2Source.NextFrame(frame);
+				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
 				if (_config.Global.ScaleToHd) {
 					if (width == 128 && height == 32) {
 						width *= 2;
 						height *= 2;
-						frame.Update(width, height, frame.Data);
+						frame.Update(width, height, frame.Data, 4);
 					}
 				}
 
 				_gray2Colorizer?.SetDimensions(frame.width, frame.height);
 				_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-				_vpmGray4Source.NextFrame(frame);
+				_passthroughGray4Source.NextFrame(frame);
 			}
 		}
 
@@ -860,7 +829,7 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			_vpmRgb24Source.NextFrame(frame);
+			_passthroughRgb24Source.NextFrame(frame);
 		}
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
@@ -873,54 +842,54 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			_vpmAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
+			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 			_dmdFrame.width = Width;
 			_dmdFrame.height = Height;
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
 					break;
 				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__4x7Num10:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
 					break;
 				case NumericalLayout.__6x4Num_4x1Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
 					break;
 				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
@@ -945,52 +914,5 @@ namespace LibDmd.DmdDevice
 			);
 #endif
 		}
-
-		private static string GetColorPath()
-		{
-			// first, try executing assembly.
-			var altcolor = Path.Combine(AssemblyPath, "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from assembly path: {0}", altcolor);
-				return altcolor;
-			}
-
-			// then, try vpinmame location
-			var vpmPath = GetDllPath("VPinMAME.dll");
-			if (vpmPath == null) {
-				return null;
-			}
-			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
-			if (Directory.Exists(altcolor)) {
-				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
-				return altcolor;
-			}
-			Logger.Info("No altcolor folder found, ignoring palettes.");
-			return null;
-		}
-
-		private static string GetDllPath(string name)
-		{
-			const int maxPath = 260;
-			var builder = new StringBuilder(maxPath);
-			var hModule = GetModuleHandle(name);
-			if (hModule == IntPtr.Zero) {
-				return null;
-			}
-			var size = GetModuleFileName(hModule, builder, builder.Capacity);
-			return size <= 0 ? null : builder.ToString();
-		}
-
-		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-		public static extern IntPtr GetModuleHandle(string lpModuleName);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[PreserveSig]
-		public static extern uint GetModuleFileName
-		(
-			[In] IntPtr hModule,
-			[Out] StringBuilder lpFilename,
-			[In][MarshalAs(UnmanagedType.U4)] int nSize
-		);
 	}
 }
