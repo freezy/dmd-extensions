@@ -21,7 +21,7 @@ namespace LibDmd.Output.ZeDMD
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
 
-		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(64); // max queue size 64
+		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(128); // max queue size 128
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
