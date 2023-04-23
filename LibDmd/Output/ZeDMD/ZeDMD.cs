@@ -309,7 +309,7 @@ namespace LibDmd.Output.ZeDMD
 				changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
 				if (changed)
 				{
-					pDMD.QueueFrame(_frameBufferRgb24);
+					pDMD.QueueFrame(_frameBufferRgb24, _frameBufferRgb24.Length);
 				}
 		}
 		public void RenderRaw(byte[] data, byte Mode, int length)
@@ -317,7 +317,7 @@ namespace LibDmd.Output.ZeDMD
 			data[0] = Mode;
 			if (pDMD.Opened)
 			{
-				pDMD.QueueFrame(data);
+				pDMD.QueueFrame(data, length);
 			}
 		}
 
@@ -325,7 +325,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.QueueFrame(data);
+				pDMD.QueueFrame(data, data.Length);
 			}
 		}
 
@@ -337,7 +337,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			byte[] tempbuf = new byte[1];
 			tempbuf[0] = 10; // clear screen
-			pDMD.QueueFrame(tempbuf);
+			pDMD.QueueFrame(tempbuf, tempbuf.Length);
 		}
 
 		public void SetColor(Color color)

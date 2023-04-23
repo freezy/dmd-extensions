@@ -21,7 +21,7 @@ namespace LibDmd.Output.ZeDMD
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 		private string _portName;
 
-		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(32); // max queue size 128
+		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(64); // max queue size 64
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -29,9 +29,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			Task.Run(() => {
 				Logger.Info("Starting ZeDMD frame thread.");
-				//while (!_frames.IsCompleted) {
-				while (true) {
-
+				while (!_frames.IsCompleted) {
 					byte[] frame = null;
 					try {
 						frame = _frames.Take();
@@ -43,7 +41,7 @@ namespace LibDmd.Output.ZeDMD
 						System.Threading.Thread.Sleep(10);
 					}
 				}
-				//Logger.Info("ZeDMD frame thread finished.");
+				Logger.Info("ZeDMD frame thread finished.");
 			});
 		}
 
@@ -96,23 +94,16 @@ namespace LibDmd.Output.ZeDMD
 
 					if (_serialPort.ReadByte() == 'A' && _serialPort.ReadByte() == 'R')
 					{
-						// enable debug mode
-						_serialPort.Write(CtrlCharacters.Concat(new byte[] { 99 }).ToArray(), 0, CtrlCharacters.Length + 1);
+						// increase serial transfer chunk size
+
+						_serialPort.Write(CtrlCharacters.Concat(new byte[] { 13, MAX_SERIAL_WRITE_AT_ONCE / 256 }).ToArray(), 0, CtrlCharacters.Length + 2);
 						System.Threading.Thread.Sleep(4);
 
-						if (_serialPort.ReadByte() == 'A' && _serialPort.ReadByte() == 'R')
+						if (_serialPort.ReadByte() == 'A')
 						{
-							// increase serial transfer chunk size
-
-							_serialPort.Write(CtrlCharacters.Concat(new byte[] { 13, MAX_SERIAL_WRITE_AT_ONCE / 256 }).ToArray(), 0, CtrlCharacters.Length + 2);
-							System.Threading.Thread.Sleep(4);
-
-							if (_serialPort.ReadByte() == 'A')
-							{
-								nCOM = port;
-								Opened = true;
-								return true;
-							}
+							nCOM = port;
+							Opened = true;
+							return true;
 						}
 					}
 				}
@@ -134,9 +125,9 @@ namespace LibDmd.Output.ZeDMD
 			if (_serialPort != null) SafeClose();
 		}
 
-		public void QueueFrame(byte[] frames)
+		public void QueueFrame(byte[] frames, int length)
 		{
-			Task.Run(() => _frames.Add(frames));
+			Task.Run(() => _frames.Add(frames.Take(length).ToArray()));
 		}
 
 		private bool StreamBytes(byte[] pBytes)
@@ -151,31 +142,34 @@ namespace LibDmd.Output.ZeDMD
 						_serialPort.Write(CtrlCharacters, 0, CtrlCharacters.Length);
 						_serialPort.Write(pBytes.Take(1).ToArray(), 0, 1);
 
-						byte[] pCompressedBytes;
-						NetMiniZ.NetMiniZ.MZCompress(pBytes.Skip(1).ToArray(), out pCompressedBytes);
+						byte[] pPayload = pBytes.Skip(1).ToArray();
+						if (pPayload.Length > 0) {
+							byte[] pCompressedBytes;
+							NetMiniZ.NetMiniZ.MZCompress(pPayload, out pCompressedBytes);
 
-						int nCompressedBytes = pCompressedBytes.Length;
+							int nCompressedBytes = pCompressedBytes.Length;
 
-						byte[] pCompressionHeader = new byte[2];
-						pCompressionHeader[0] = (byte)((nCompressedBytes >> 8) & 0xFF);
-						pCompressionHeader[1] = (byte)((nCompressedBytes & 0xFF));
-						// send coompression header
-						_serialPort.Write(pCompressionHeader, 0, 2);
+							byte[] pCompressionHeader = new byte[2];
+							pCompressionHeader[0] = (byte)((nCompressedBytes >> 8) & 0xFF);
+							pCompressionHeader[1] = (byte)((nCompressedBytes & 0xFF));
+							// send coompression header
+							_serialPort.Write(pCompressionHeader, 0, 2);
 
-						int chunk = MAX_SERIAL_WRITE_AT_ONCE - 6 - 1 - 2;
-						int position = 0;
-						while (position < nCompressedBytes) {
-							_serialPort.Write(pCompressedBytes, position, ((nCompressedBytes - position) < chunk) ? (nCompressedBytes - position) : chunk);
-							if (_serialPort.ReadByte() == 'A') {
-								// Received (A)cknowledge, ready to send the next chunk.
-								position += chunk;
-								chunk = MAX_SERIAL_WRITE_AT_ONCE;
+							int chunk = MAX_SERIAL_WRITE_AT_ONCE - 6 - 1 - 2;
+							int position = 0;
+							while (position < nCompressedBytes) {
+								_serialPort.Write(pCompressedBytes, position, ((nCompressedBytes - position) < chunk) ? (nCompressedBytes - position) : chunk);
+								if (_serialPort.ReadByte() == 'A') {
+									// Received (A)cknowledge, ready to send the next chunk.
+									position += chunk;
+									chunk = MAX_SERIAL_WRITE_AT_ONCE;
+								} else {
+									// Something went wrong. Terminate current transmission of the buffer and return.
+									return false;
+								}
 							}
-							else
-							{
-								// Something went wrong. Terminate current transmission of the buffer and return.
-								return false;
-							}
+						} else if (_serialPort.ReadByte() != 'A') {
+							return false;
 						}
 						return true;
 					}
@@ -187,6 +181,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			return false;
 		}
+
 		public void ResetPalettes()
 		{
 			// Reset ESP32 palette
@@ -194,6 +189,7 @@ namespace LibDmd.Output.ZeDMD
 			tempbuf[0] = 0x6;  // command byte 6 = reset palettes
 			StreamBytes(tempbuf);
 		}
+
 		public int Open(out int width, out int height)
 		{
 			// Try to find an ZeDMD on each COM port available
