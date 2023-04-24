@@ -19,7 +19,6 @@ namespace LibDmd.Output.ZeDMD
 		public const int N_CTRL_CHARS = 6;
 		public const int N_INTERMEDIATE_CTR_CHARS = 4;
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
-		private string _portName;
 
 		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(128); // max queue size 128
 
@@ -27,22 +26,27 @@ namespace LibDmd.Output.ZeDMD
 
 		public ZeDMDComm()
 		{
-			Task.Run(() => {
+			Task.Run(() =>
+			{
 				Logger.Info("Starting ZeDMD frame thread.");
-				while (!_frames.IsCompleted) {
+				while (true) {
 					byte[] frame = null;
 					try {
 						frame = _frames.Take();
-
-					} catch (InvalidOperationException) { }
+					}
+					catch (InvalidOperationException) { }
 
 					if (frame != null) {
 						StreamBytes(frame);
 						System.Threading.Thread.Sleep(10);
 					}
 				}
-				Logger.Info("ZeDMD frame thread finished.");
 			});
+		}
+
+		public void QueueFrame(byte[] frame)
+		{
+			Task.Run(() => _frames.Add(frame));
 		}
 
 		private void SafeClose()
@@ -77,7 +81,6 @@ namespace LibDmd.Output.ZeDMD
 				System.Threading.Thread.Sleep(200);
 				if (!result.Take(4).SequenceEqual(CtrlCharacters.Take(4)))
 				{
-					_frames.CompleteAdding();
 					SafeClose();
 					width = 0;
 					height = 0;
@@ -110,7 +113,6 @@ namespace LibDmd.Output.ZeDMD
 			}
 			catch
 			{
-				_frames.CompleteAdding();
 				if (_serialPort != null && _serialPort.IsOpen) SafeClose();
 			}
 			width = 0;
@@ -121,13 +123,7 @@ namespace LibDmd.Output.ZeDMD
 		private void Disconnect()
 		{
 			Opened = false;
-			_frames.CompleteAdding();
 			if (_serialPort != null) SafeClose();
-		}
-
-		public void QueueFrame(byte[] frames, int length)
-		{
-			Task.Run(() => _frames.Add(frames.Take(length).ToArray()));
 		}
 
 		private bool StreamBytes(byte[] pBytes)
@@ -176,6 +172,7 @@ namespace LibDmd.Output.ZeDMD
 				}
 				catch (Exception e)
 				{
+					Logger.ForExceptionEvent(e).Log();
 					return false;
 				}
 			}
@@ -200,7 +197,6 @@ namespace LibDmd.Output.ZeDMD
 			foreach (var portName in ports)
 			{
 				IsAvailable = Connect(portName, out width, out height);
-				_portName = portName;
 				if (IsAvailable) break;
 			}
 			if (!IsAvailable) return 0;

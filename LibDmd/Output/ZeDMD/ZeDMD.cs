@@ -1,7 +1,5 @@
-﻿//using System.Threading;
-using System.Web.UI.WebControls;
+﻿using System.Linq;
 using System.Windows.Media;
-//using System.Windows.Navigation;
 using LibDmd.Common;
 using NLog;
 
@@ -89,6 +87,7 @@ namespace LibDmd.Output.ZeDMD
 			tdata[4] = (byte)((height >> 8) & 0xff);
 			RenderRaw(tdata);*/
 		}
+
 		public void SetOriginalDimensions(int width, int height)
 		{
 			byte[] tdata = new byte[5];
@@ -101,6 +100,7 @@ namespace LibDmd.Output.ZeDMD
 			tdata[4] = (byte)((height >> 8) & 0xff);
 			RenderRaw(tdata);
 		}
+
 		public void Init()
 		{
 			int width = new int();
@@ -118,6 +118,7 @@ namespace LibDmd.Output.ZeDMD
 
 			Logger.Info(Name + " device found on port " + pDMD.nCOM + " with a resolution of " + DmdWidth + "x" + DmdHeight + " LEDs");
 		}
+
 		private byte[] CheckDimensions(byte[] iframe)
 		{
 			// We don't want to send hi res frames (=4 times the size of the buffer) when this is not needed (scaletohd/scale2x is done internally by the ZeDMD)
@@ -158,6 +159,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			else return iframe;
 		}
+
 		public void RenderGray2(byte[] frame)
 		{
 			byte[] nframe = CheckDimensions(frame);
@@ -194,6 +196,7 @@ namespace LibDmd.Output.ZeDMD
 			// function to improve the brightness with fx=ax²+bc+c, f(0)=0, f(1)=1, f'(1.1)=0
 			return (-x * x + 2.1f * x) / 1.1f;
 		}
+
 		public void RenderGray4(byte[] frame)
 		{
 			byte[] nframe = CheckDimensions(frame);
@@ -227,9 +230,10 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight/ 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight / 2);
 			}
 		}
+
 		public void RenderGray6(byte[] frame)
 		{
 			byte[] nframe = CheckDimensions(frame);
@@ -268,6 +272,7 @@ namespace LibDmd.Output.ZeDMD
 				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * oRomWidth * oRomHeight / 8 + 3 * 8);
 			}
 		}
+
 		private bool CopyPalette(Color[] palette,byte[] framebuffer,int ncol)
 		{
 			var paletteChanged = false;
@@ -282,24 +287,26 @@ namespace LibDmd.Output.ZeDMD
 			}
 			return paletteChanged;
 		}
+
 		public void RenderRgb24(byte[] frame)
 		{
 			bool changed;
 			// can directly be sent to the device.
-				_frameBuffer[0] = RGB24;
-				// copy data to frame buffer
-				changed = FrameUtil.Copy(frame, _frameBuffer, 1);
-				if (changed)
-				{
-					pDMD.QueueFrame(_frameBuffer, RomWidth * RomHeight * 3 + 1);
-				}
+			_frameBuffer[0] = RGB24;
+			// copy data to frame buffer
+			changed = FrameUtil.Copy(frame, _frameBuffer, 1);
+			if (changed)
+			{
+				pDMD.QueueFrame(_frameBuffer.Take(RomWidth * RomHeight * 3 + 1).ToArray());
+			}
 		}
+
 		public void RenderRaw(byte[] data, byte Mode, int length)
 		{
 			data[0] = Mode;
 			if (pDMD.Opened)
 			{
-				pDMD.QueueFrame(data, length);
+				pDMD.QueueFrame(data.Take(length).ToArray());
 			}
 		}
 
@@ -307,7 +314,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			if (pDMD.Opened)
 			{
-				pDMD.QueueFrame(data, data.Length);
+				pDMD.QueueFrame(data);
 			}
 		}
 
@@ -319,7 +326,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 			byte[] tempbuf = new byte[1];
 			tempbuf[0] = 10; // clear screen
-			pDMD.QueueFrame(tempbuf, tempbuf.Length);
+			pDMD.QueueFrame(tempbuf);
 		}
 
 		public void SetColor(Color color)
