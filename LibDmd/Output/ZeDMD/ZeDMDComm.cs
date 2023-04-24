@@ -12,7 +12,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public string nCOM;
 		public const int BaudRate = 921600;
-		private const int SERIAL_TIMEOUT = 8;
+		private const int SERIAL_TIMEOUT = 100;
 		public bool Opened = false;
 		private SerialPort _serialPort;
 		private const int MAX_SERIAL_WRITE_AT_ONCE = 8192;
