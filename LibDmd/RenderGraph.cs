@@ -20,6 +20,7 @@ using LibDmd.Output;
 using ResizeMode = LibDmd.Input.ResizeMode;
 using System.Reactive;
 using System.Threading.Tasks;
+using static System.Resources.ResXFileRef;
 
 namespace LibDmd
 {
@@ -36,6 +37,10 @@ namespace LibDmd
 	/// way. It does also the conversion between non-matching source and
 	/// destination. 
 	/// 
+	/// A render graph can also contain an <see cref="IConverter"/>. These are
+	/// classes that for a defined input format produce different output 
+	/// formats. An example would be a 2-bit source that gets converted to
+	/// RGB24, or, to colored 2- and 4-bit.
 	/// </summary>
 	public class RenderGraph : IRenderer
 	{
@@ -140,6 +145,12 @@ namespace LibDmd
 				}
 			});
 
+			// initialize converter
+			if (Converter is ISource converter) {
+				converter.Dimensions = Source.Dimensions;
+			}
+			Converter?.Init();
+
 			return this;
 		}
 
@@ -196,12 +207,16 @@ namespace LibDmd
 				var sourceColoredGray4 = Source as IColoredGray4Source;
 				var sourceColoredGray6 = Source as IColoredGray6Source;
 				var sourceColoredGray = Source as IColoredGraySource;
+				var sourceRgb24 = Source as IRgb24Source;
+				var sourceBitmap = Source as IBitmapSource;
+				var sourceAlphaNumeric = Source as IAlphaNumericSource;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 
 				// init converters
 				IColoredGray2Source coloredGray2SourceConverter = null;
 				IColoredGray4Source coloredGray4SourceConverter = null;
 				IColoredGray6Source coloredGray6SourceConverter = null;
+				IColoredGraySource coloredGraySourceConverter = null;
 				IRgb24Source rgb24SourceConverter = null;
 
 				if (Converter != null && HasRgb24Destination())
@@ -209,6 +224,7 @@ namespace LibDmd
 					coloredGray2SourceConverter = Converter as IColoredGray2Source;
 					coloredGray4SourceConverter = Converter as IColoredGray4Source;
 					coloredGray6SourceConverter = Converter as IColoredGray6Source;
+					coloredGraySourceConverter = Converter as IColoredGraySource;
 					// ReSharper disable once SuspiciousTypeConversion.Global
 					rgb24SourceConverter = Converter as IRgb24Source;
 
@@ -228,6 +244,14 @@ namespace LibDmd
 								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {coloredGray4SourceConverter?.Name}.");
 							}
 							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+							break;
+						case FrameFormat.ColoredGray:
+							if (sourceGray2 != null)
+								_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+							if (sourceGray4 != null)
+								_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+							if (sourceAlphaNumeric != null)
+								_activeSources.Add(sourceAlphaNumeric.GetAlphaNumericFrames().Do(Converter.Convert).Subscribe());
 							break;
 						default:
 							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
@@ -279,6 +303,16 @@ namespace LibDmd
 								Connect(coloredGray6SourceConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
 							}
 						}
+
+						if (Colored && coloredGraySourceConverter != null) {
+							// if destination can render colored gray frames...
+							if (destColoredGray != null) {
+								//Logger.Info("Hooking colored 24-bit source of {0} converter to {1}.", coloredGraySourceConverter.Name, dest.Name);
+								Connect(coloredGraySourceConverter, destColoredGray, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
+
+								// otherwise, convert to rgb24
+							}
+						}
 						// render graph is already set up through converters, so we skip the rest below
 						continue;
 					}
@@ -304,19 +338,8 @@ namespace LibDmd
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
-					var sourceRgb24 = Source as IRgb24Source;
-					var sourceBitmap = Source as IBitmapSource;
-					var sourceAlphaNumeric = Source as IAlphaNumericSource;
-
-					// first, check if we do without conversion
-					// coloredGray -> coloredGray
-					if (sourceColoredGray != null && destColoredGray != null && Colored)
-					{
-						Connect(Source, dest, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
-						continue;
-					}
 					// if coloring is active and destination has destColoredGray skip Gray2 and Gray4
-					if (Colored && destColoredGray != null && (Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray2Source") || Source.ToString().Equals("LibDmd.Input.PinMame.VpmGray4Source")))
+					if (Colored && destColoredGray != null && (Source.ToString().Equals("LibDmd.Input.Passthrough.PassthroughGray2Source") || Source.ToString().Equals("LibDmd.Input.Passthrough.PassthroughGray4Source") || Source.ToString().Equals("LibDmd.Input.Passthrough.PassthroughAlphaNumericSource")))
 					{
 						continue;
 					}
@@ -643,7 +666,7 @@ namespace LibDmd
 						case FrameFormat.ColoredGray:
 							AssertCompatibility(source, sourceColoredGray, dest, destColoredGray, from, to);
 							Subscribe(sourceColoredGray.GetColoredGrayFrames()
-									.Select(frame => TransformRgb24(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame.Data, destFixedSize)),
+									.Select(frame => TransformColoredGray(frame, destFixedSize)),
 								destColoredGray.RenderColoredGray);
 							break;
 
@@ -1177,13 +1200,20 @@ namespace LibDmd
 
 		private byte[] TransformScaling(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length)) {
+			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length))
+			{
 				return frame;
 			}
 
-			return ScalerMode == ScalerMode.Doubler 
-				? FrameUtil.ScaleDouble(width, height, 4, frame) 
-				: FrameUtil.Scale2x(width, height, frame);
+			if (ScalerMode == ScalerMode.Doubler)
+			{
+				return FrameUtil.ScaleDouble(width, height, 4, frame);
+			}
+			else
+			{
+				return FrameUtil.Scale2x(width, height, frame);
+			}
+
 		}
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
@@ -1304,6 +1334,28 @@ namespace LibDmd
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
 			return new ColoredFrame(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.RotateColors, frame.Rotations);
+		}
+
+		private ColoredFrame TransformColoredGray(ColoredFrame frame, IFixedSizeDestination dest)
+		{
+			if (dest == null) {
+				var flipframe = TransformationUtil.Flip(frame.Width, frame.Height, 3, frame.Data, FlipHorizontally, FlipVertically);
+				if ((frame.Width * frame.Height * 3 != frame.Data.Length)) {
+					if (ScalerMode == ScalerMode.Doubler) {
+						flipframe = FrameUtil.ScaleDoubleRGB(frame.Width, frame.Height, 4, flipframe);
+					}
+					if (ScalerMode == ScalerMode.Scale2x) {
+						flipframe = FrameUtil.Scale2xRGB(frame.Width, frame.Height, flipframe);
+					}
+				}
+				return new ColoredFrame(frame.Width, frame.Height, flipframe);
+			}
+
+			BitmapSource bmp	= ImageUtil.ConvertFromRgb24(frame.Width, frame.Height, frame.Data);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
+			var transformedFrame = new byte[dest.DmdWidth * dest.DmdHeight * 3];
+			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
+			return new ColoredFrame(dest.DmdWidth, dest.DmdHeight, transformedFrame);
 		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)

@@ -109,10 +109,10 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void RenderColoredGray(byte[] frame)
+		public void RenderColoredGray(ColoredFrame frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+			var changed = CreateRgb24(DmdWidth, DmdHeight, frame.Data, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
 
 			// send frame buffer to device
 			if (changed)
@@ -137,7 +137,7 @@ namespace LibDmd.Output.Pin2Dmd
 			// copy to buffer
 			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray6, 4);
 
-			if (frame.isRotation)
+			if (frame.RotateColors)
 			{	if (changed)
 				{
 					ColorUtil.setColorRotations(frame);

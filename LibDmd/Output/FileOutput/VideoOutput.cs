@@ -119,7 +119,7 @@ namespace LibDmd.Output.FileOutput
 			_stream = null;
 		}
 
-		public void RenderColoredGray(byte[] frame)
+		public void RenderColoredGray(ColoredFrame frame)
 		{
 			if (frame == null)
 			{
@@ -129,7 +129,7 @@ namespace LibDmd.Output.FileOutput
 			{
 				_frame = new byte[DmdWidth * DmdHeight * 4];
 			}
-			ImageUtil.ConvertRgb24ToBgr32(DmdWidth, DmdHeight, frame, _frame);
+			ImageUtil.ConvertRgb24ToBgr32(DmdWidth, DmdHeight, frame.Data, _frame);
 		}
 
 		public void RenderRgb24(byte[] frame)

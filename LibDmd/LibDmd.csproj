@@ -309,7 +309,6 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
-    <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Converter\Pin2Color\Pin2Color.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Serum\CRC32encode.cs" />
@@ -318,19 +317,14 @@
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
-    <Compile Include="Input\IColoredGray2Source.cs" />
-    <Compile Include="Input\IColoredGray4Source.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
     <Compile Include="Input\IColoredGraySource.cs" />
     <Compile Include="Input\IDmdColorSource.cs" />
     <Compile Include="Input\IGameNameSource.cs" />
-    <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
-    <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
     <Compile Include="Input\Network\WebsocketGray4Source .cs" />
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
-    <Compile Include="Input\PinMame\VpmColoredGraySource.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IColoredGrayDestination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
@@ -364,6 +358,7 @@
     <Compile Include="Common\VirtualDmd.xaml.cs">
       <DependentUpon>VirtualDmd.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converter\IConverter.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
     <Compile Include="DmdDevice\IDmdDevice.cs" />
@@ -371,6 +366,8 @@
     <Compile Include="Input\FileSystem\GifSource.cs" />
     <Compile Include="Input\FileSystem\ImageSource.cs" />
     <Compile Include="Input\IBitmapSource.cs" />
+    <Compile Include="Input\IColoredGray4Source.cs" />
+    <Compile Include="Input\IColoredGray2Source.cs" />
     <Compile Include="Input\IGray2Source.cs" />
     <Compile Include="Input\IAlphaNumericSource.cs" />
     <Compile Include="Input\IRgb24Source.cs" />

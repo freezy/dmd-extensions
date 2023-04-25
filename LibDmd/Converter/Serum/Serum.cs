@@ -153,7 +153,11 @@ namespace LibDmd.Converter.Serum
 			// send the colored frame
 			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(planes, ConvertPalette(), _rotations));
 		}
-		
+
+		public void Convert(AlphaNumericFrame frame)
+		{ 
+		}
+
 		public static string GetVersion()
 		{
 			IntPtr pointer = Serum_GetMinorVersion();

@@ -12,10 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
-using LibDmd.Converter;
-using LibDmd.Converter.Colorize;
 using LibDmd.Input.Passthrough;
->>>>>>> f8d067258a26c9ed0756869359efce6e2b550060
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
@@ -33,6 +30,8 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using LibDmd.Converter.Serum;
+using LibDmd.Converter.Pin2Color;
+using LibDmd.Converter;
 
 namespace LibDmd.DmdDevice
 {
@@ -48,7 +47,6 @@ namespace LibDmd.DmdDevice
 		private int aniHeight = 32;
 
 		private readonly Configuration _config;
-
 		private readonly PassthroughGray2Source _passthroughGray2Source;
 		private readonly PassthroughGray4Source _passthroughGray4Source;
 		private readonly PassthroughRgb24Source _passthroughRgb24Source;
@@ -87,6 +85,7 @@ namespace LibDmd.DmdDevice
 		};
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 		private Serum _serum;
+		private Pin2Color _pin2color;
 
 		public DmdDevice()
 		{
@@ -102,7 +101,8 @@ namespace LibDmd.DmdDevice
 			var assembly = Assembly.GetCallingAssembly();
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
-			if (File.Exists(logConfigPath)) {
+			if (File.Exists(logConfigPath))
+			{
 				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
 #if !DEBUG
 				LogManager.Configuration.AddTarget("memory", MemLogger);
@@ -117,24 +117,29 @@ namespace LibDmd.DmdDevice
 #endif
 			CultureUtil.NormalizeUICulture();
 			_config = new Configuration();
-			_colorizationLoader = new ColorizationLoader();
+			_colorizationLoader = new ColorizationLoader(); ;
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
 			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			_version = fvi.ProductVersion;
-			if (attr.Length > 0) {
+			if (attr.Length > 0)
+			{
 				var aca = (AssemblyConfigurationAttribute)attr[0];
 				_sha = aca.Configuration;
-				if (string.IsNullOrEmpty(_sha)) {
+				if (string.IsNullOrEmpty(_sha))
+				{
 					_fullVersion = _version;
+
 				}
-				else {
+				else
+				{
 					_fullVersion = $"{_version} ({_sha})";
 				}
 
 			}
-			else {
+			else
+			{
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
@@ -158,37 +163,24 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
 			_serum = null;
+			_pin2color = null;
 
 			SetupColorizer();
-
-			if (Pin2Color._colorizerIsOpen)
-			{
-				_pin2ColorizerMode = (Pin2Color.ColorizerMode) Pin2Color.Init(_colorize, _gameName, _color.R, _color.G, _color.B);
-				if (_pin2ColorizerMode >= 0)
-					_isColored = true;
-				else
-					_isColored = false;
-			}
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
 				if (_virtualDmd == null && _alphaNumericDest == null) {
 					Logger.Info("Opening virtual display...");
 					CreateVirtualDmd();
-				}
-				else if (_config.VirtualDmd.Enabled) {
+
+				} else if (_config.VirtualDmd.Enabled) {
 					try {
 						_virtualDmd?.Dispatcher.Invoke(() => {
 							SetupGraphs();
 							SetupVirtualDmd();
 						});
 
-					}
-					catch (TaskCanceledException e) {
+					} catch (TaskCanceledException e) {
 						Logger.Error(e, "Main thread seems already destroyed, aborting.");
 					}
 				}
@@ -202,52 +194,35 @@ namespace LibDmd.DmdDevice
 		{
 			// only setup if enabled and path is set
 
-			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
+			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize)
+			{
 				return;
 			}
 
-			// abort if already setup
-			if (_gray2Colorizer != null || _gray4Colorizer != null) {
-				return;
+			var pin2color = _colorizationLoader.LoadPin2Color(_colorize, _gameName, _color.R, _color.G, _color.B, _config.Global.ScalerMode, _config.Global.ScaleToHd);
+			if (pin2color != null) 
+			{
+				_pin2color = pin2color;
+				if (_palette != null && _pin2color.IsOpen)
+					SetPalette(_palette);
+				if (_pin2color.IsColored)
+					_isColored = true;
+			}
+			else 
+			{
+				_pin2color = null;
 			}
 
 			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
-			if (serum != null) {
+			if (serum != null)
+			{
 				_serum = serum;
 				aniWidth = serum.FrameWidth;
 				aniHeight = serum.FrameHeight;
 			}
-			else {
+			else
+			{
 				_serum = null;
-			}
-
-			if (_serum == null) {
-				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
-				if (colorizerResult.HasValue) {
-					var colorizer = colorizerResult.Value;
-
-					_coloring = colorizer.coloring;
-
-					if (colorizer.vni != null) {
-						aniHeight = colorizer.vni.MaxHeight;
-						aniWidth = colorizer.vni.MaxWidth;
-					}
-					else {
-						aniHeight = Height;
-						aniWidth = Width;
-					}
-
-					_gray2Colorizer = colorizer.gray2;
-					_gray4Colorizer = colorizer.gray4;
-
-					if (_config.Global.ScaleToHd) {
-						Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-
-					}
-					else {
-						Logger.Info("ScaleToHd = False");
-					}
-				}
 			}
 		}
 
@@ -332,17 +307,21 @@ namespace LibDmd.DmdDevice
 					ReportingTags.Add("Out:PinDMDv2");
 				}
 			}
-			if (_config.PinDmd3.Enabled) {
+			if (_config.PinDmd3.Enabled)
+			{
 				var pinDmd3 = PinDmd3.GetInstance(_config.PinDmd3.Port);
-				if (pinDmd3.IsAvailable) {
+				if (pinDmd3.IsAvailable)
+				{
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
 					ReportingTags.Add("Out:PinDMDv3");
 				}
 			}
-			if (_config.ZeDMD.Enabled) {
+			if (_config.ZeDMD.Enabled)
+			{
 				var zeDmd = ZeDMD.GetInstance();
-				if (zeDmd.IsAvailable) {
+				if (zeDmd.IsAvailable)
+				{
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
@@ -399,36 +378,33 @@ namespace LibDmd.DmdDevice
 					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-				}
-				else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
+
+				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
 					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd));
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-				}
-				else {
+
+				} else {
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
 				}
 			}
 			if (_config.PinUp.Enabled) {
 				try {
 					var pinupOutput = new PinUpOutput(_gameName);
-
-					if (pinupOutput.IsAvailable)
-					{
-						if (_serum != null)
-						{
-							_serum.SetPinupInstance(pinupOutput);
-						}
+					if (pinupOutput.IsAvailable) {
+						if ((_serum != null) && (pinupOutput.isPuPTrigger)) _serum.SetPinupInstance(pinupOutput);
+						if (_pin2color != null && (pinupOutput.isPuPTrigger)) Pin2Color.SetPinUpOutput(pinupOutput);
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
 					}
-				}
-				catch (Exception e) {
+
+				} catch (Exception e) {
 					Logger.Warn("Error opening PinUP output: {0}", e.Message);
 				}
 			}
 			if (_config.Gif.Enabled) {
+
 				var rootPath = "";
 				var dirPath = Path.GetDirectoryName(_config.Gif.Path);
 				if (string.IsNullOrEmpty(dirPath) || !Path.IsPathRooted(_config.Video.Path)) {
@@ -439,8 +415,8 @@ namespace LibDmd.DmdDevice
 					renderers.Add(new GifOutput(path));
 					Logger.Info("Added animated GIF renderer, saving to {0}", path);
 					ReportingTags.Add("Out:GIF");
-				}
-				else {
+
+				} else {
 					Logger.Warn("Ignoring animated GIF renderer for non-existing path \"{0}\"", Path.GetDirectoryName(path));
 				}
 			}
@@ -467,11 +443,12 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-
-			// 2-bit graph
-			if (_serum != null) {
-				if (_serum.NumColors == 16) {
-					_graphs.Add(new RenderGraph {
+			if (_serum != null)
+			{
+				if (_serum.NumColors == 16)
+				{
+					_graphs.Add(new RenderGraph
+					{
 						Name = "4-bit Colored VPM Graph",
 						Source = _passthroughGray4Source,
 						Destinations = renderers,
@@ -482,9 +459,10 @@ namespace LibDmd.DmdDevice
 						ScalerMode = _config.Global.ScalerMode
 					});
 				}
-
-				else {
-					_graphs.Add(new RenderGraph {
+				else
+				{
+					_graphs.Add(new RenderGraph
+					{
 						Name = "2-bit Colored VPM Graph",
 						Source = _passthroughGray2Source,
 						Destinations = renderers,
@@ -495,48 +473,53 @@ namespace LibDmd.DmdDevice
 						ScalerMode = _config.Global.ScalerMode
 					});
 				}
-			}
-			else if (_colorize && _gray2Colorizer != null) {
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit Colored VPM Graph",
+			} 
+			
+			if (_colorize && _pin2color != null) {
+				// 2-bit graph
+				_graphs.Add(new RenderGraph
+				{
+					Name = "2-bit VPM Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
-					Converter = _gray2Colorizer,
+					Converter = _pin2color,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
 				});
-				ReportingTags.Add("Color:Gray2");
-			}
-			else {
-				_graphs.Add(new RenderGraph {
+
+				_graphs.Add(new RenderGraph
+				{
 					Name = "2-bit VPM Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
 				});
 			}
 
 			// 4-bit graph
-			if (_colorize && _gray4Colorizer != null) {
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colored VPM Graph",
+			if (_colorize && _pin2color != null) {
+				_graphs.Add(new RenderGraph
+				{
+					Name = "4-bit VPM Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
-					Converter = _gray4Colorizer,
+					Converter = _pin2color,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
 				});
-				ReportingTags.Add("Color:Gray4");
-			}
-			else {
-				_graphs.Add(new RenderGraph {
+
+				_graphs.Add(new RenderGraph
+				{
 					Name = "4-bit VPM Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
@@ -560,19 +543,6 @@ namespace LibDmd.DmdDevice
 				Colored = _isColored
 			});
 
-			// colored rgb24 graph
-			_graphs.Add(new RenderGraph
-			{
-				Name = "colored RGB24-bit VPM Graph",
-				Source = _vpmColoredGraySource,
-				Destinations = renderers,
-				Resize = _config.Global.Resize,
-				FlipHorizontally = _config.Global.FlipHorizontally,
-				FlipVertically = _config.Global.FlipVertically,
-				ScalerMode = _config.Global.ScalerMode,
-				Colored = _isColored
-			});
-
 			// alphanumeric graph
 			_graphs.Add(new RenderGraph {
 				Name = "Alphanumeric VPM Graph",
@@ -585,19 +555,16 @@ namespace LibDmd.DmdDevice
 				Colored = _isColored
 			});
 
-			if ((_serum!=null) || (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null))) {
+			if (_serum != null)
+			{
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
-			
-			} else if (_colorize && _palette != null) {
+
+			}
+			else if (_colorize && _palette != null) {
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-				if (_coloring != null) {
-					_graphs.SetPalette(_palette, _coloring.DefaultPaletteIndex);
-				
-				} else {
-					_graphs.SetPalette(_palette, -1);
-				}
+				_graphs.SetPalette(_palette, -1);
 
 			} else {
 				Logger.Info("Applying default color to render graphs ({0}).", _color);
@@ -614,6 +581,7 @@ namespace LibDmd.DmdDevice
 		private void SetupVirtualDmd()
 		{
 			_virtualDmd.Setup(_config, _gameName);
+
 			if (_config.VirtualDmd.UseRegistryPosition) {
 				try {
 					var regPath = @"Software\Freeware\Visual PinMame\" + (_gameName.Length > 0 ? _gameName : "default");
@@ -625,6 +593,7 @@ namespace LibDmd.DmdDevice
 						key = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
 						key = key.OpenSubKey(regPath);
 					}
+
 					if (key != null) {
 						var values = key.GetValueNames();
 						if (!values.Contains("dmd_pos_x") && values.Contains("dmd_pos_y") && values.Contains("dmd_width") && values.Contains("dmd_height")) {
@@ -642,28 +611,24 @@ namespace LibDmd.DmdDevice
 							SetVirtualDmdDefaultPosition(
 								Convert.ToInt64(key.GetValue("dmd_pos_x").ToString()),
 								Convert.ToInt64(key.GetValue("dmd_pos_y").ToString()),
-								 Convert.ToInt64(key.GetValue("dmd_width").ToString()),
+								Convert.ToInt64(key.GetValue("dmd_width").ToString()),
 								Convert.ToInt64(key.GetValue("dmd_height").ToString())
 							);
-						}
-						else {
+						} else {
 							Logger.Warn("Ignoring VPM registry for DMD position because not all values were found at HKEY_CURRENT_USER\\{0}. Found keys: [ {1} ]", regPath, string.Join(", ", values));
 							SetVirtualDmdDefaultPosition();
 						}
-					}
-					else {
+					} else {
 						Logger.Warn("Ignoring VPM registry for DMD position because key was not found at HKEY_CURRENT_USER\\{0}", regPath);
 						SetVirtualDmdDefaultPosition();
 					}
 					key?.Dispose();
 
-				}
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					Logger.Warn(ex, "Could not retrieve registry values for DMD position for game \"" + _gameName + "\".");
 					SetVirtualDmdDefaultPosition();
 				}
-			}
-			else {
+			} else {
 				Logger.Debug("DMD position: No registry because it's ignored.");
 				SetVirtualDmdDefaultPosition();
 			}
@@ -683,8 +648,7 @@ namespace LibDmd.DmdDevice
 			_virtualDmd.Width = _config.VirtualDmd.HasGameOverride("width") || width < 0 ? _config.VirtualDmd.Width : width;
 			if (_config.VirtualDmd.IgnoreAr) {
 				_virtualDmd.Height = _config.VirtualDmd.HasGameOverride("height") || height < 0 ? _config.VirtualDmd.Height : height;
-			}
-			else {
+			} else {
 				_virtualDmd.Height = _virtualDmd.Width / aspectRatio;
 			}
 		}
@@ -700,7 +664,6 @@ namespace LibDmd.DmdDevice
 			try {
 				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
 				_virtualDmd = null;
-			
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}
@@ -708,20 +671,11 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			if (_serum != null) {
-				_serum.Dispose();
-			}
+			if (_serum != null) _serum.Dispose();
+			if (_pin2color != null) _pin2color.Dispose();
 			_serum = null;
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
+			_pin2color = null;
 			_isOpen = false;
-
-			if (Pin2Color._colorizerIsOpen)
-			{
-				Pin2Color.Close();
-				Pin2Color._colorizerIsOpen = false;
-			}
 		}
 
 		public void SetGameName(string gameName)
@@ -739,26 +693,11 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
 			_colorize = colorize;
-
-			if (_config.Global.Colorize && !Pin2Color._colorizerIsLoaded)
-			{
-				Pin2Color._colorizerIsLoaded = Pin2Color.SetColorize();
-			} 
-
-			if (Pin2Color._colorizerIsLoaded)
-			{
-				if (!Pin2Color._colorizerIsOpen)
-					Pin2Color._colorizerIsOpen = Pin2Color.Open();
-
-				if (_palette != null && Pin2Color._colorizerIsOpen)
-					SetPalette(_palette);
-			}
-
 		}
 
 		public void ConsoleData(byte data)
 		{
-			if (Pin2Color._colorizerIsOpen)
+			if (_pin2color != null)
 				Pin2Color.ConsoleData(data);
 		}
 
@@ -771,7 +710,7 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
-			if (Pin2Color._colorizerIsOpen)
+			if (_pin2color != null)
 			{
 				var _pal = new byte[_palette.Length * 3];
 				for (int i = 0; i < _palette.Length; i++)
@@ -808,56 +747,56 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_serum != null) {
-				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 2);
-					}
-				}
-				_serum.SetDimensions(frame.width, frame.height);
-				_serum.Convert(frame);
-				_passthroughGray2Source.NextFrame(frame);
-			
-			} else {
-				if (_gray2Colorizer != null && frame.width == 128 && frame.height == 16 && _gray2Colorizer.Has128x32Animation) {
-					// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
-					// indicating this should be upsized and treated as a centered 128x32 DMD.
+			if (_pin2color != null) {
+				_pin2color.Convert(frame);
+			}
 
-					height = frame.height;
+			if (_config.Global.ScaleToHd) {
+				if (width == 128 && height == 32) {
+					width *= 2;
 					height *= 2;
-
-					if (_upsizedFrame == null)
-						_upsizedFrame = new DMDFrame { width = width, height = height, Data = new byte[width * height], BitLength = 2};
-					else
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data,2);
-
-					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
-
-					if (_config.Global.ScaleToHd) {
-						width = 256;
-						height = 64;
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data, 2);
-					}
-
-					_gray2Colorizer.SetDimensions(width, height);
-					_passthroughGray2Source.NextFrame(_upsizedFrame);
-				
-				} else {
-					if (_config.Global.ScaleToHd) {
-						if (width == 128 && height == 32) {
-							width *= 2;
-							height *= 2;
-							frame.Update(width, height, frame.Data, 2);
-						}
-					}
-
-					_gray2Colorizer?.SetDimensions(width, height);
-					_gray4Colorizer?.SetDimensions(width, height);
-					_passthroughGray2Source.NextFrame(frame);
+					frame.Update(width, height, frame.Data, 2);
 				}
 			}
+
+			if (!_isColored && _serum != null)
+			{
+				_serum.SetDimensions(frame.width, frame.height);
+				_serum.Convert(frame);
+			}
+			
+			_passthroughGray2Source.NextFrame(frame);
+		}
+
+		public void RenderGray4(DMDFrame frame)
+		{
+			if (!_isOpen)
+			{
+				Init();
+			}
+
+			int width = frame.width;
+			int height = frame.height;
+
+			if (_pin2color != null) {
+				_pin2color.Convert(frame);
+			}
+
+			if (_config.Global.ScaleToHd) {
+				if (width == 128 && height == 32) {
+					width *= 2;
+					height *= 2;
+					frame.Update(width, height, frame.Data, 4);
+				}
+			}
+	
+			if (!_isColored && _serum != null)
+			{
+				_serum.SetDimensions(frame.width, frame.height);
+				_serum.Convert(frame);
+			}
+
+			_passthroughGray4Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DMDFrame frame)
@@ -869,37 +808,19 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_serum != null) {
-				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 4);
-					}
-				}
-				_serum.SetDimensions(frame.width, frame.height);
-				_serum.Convert(frame);
-				_passthroughGray2Source.NextFrame(frame);
-			
-			} else {
-				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 4);
-					}
-				}
-
-				_gray2Colorizer?.SetDimensions(frame.width, frame.height);
-				_gray4Colorizer?.SetDimensions(frame.width, frame.height);
-				_passthroughGray4Source.NextFrame(frame);
+			if (_pin2color != null)
+			{
+				_pin2color.Convert(frame); 
 			}
-		}
 
-		public void RenderRgb24(DMDFrame frame)
-		{
-			if (!_isOpen) {
-				Init();
+			if (_config.Global.ScaleToHd)
+			{
+				if (width == 128 && height == 32)
+				{
+					width *= 2;
+					height *= 2;
+					frame.Update(width, height, frame.Data, 24);
+				}
 			}
 			_passthroughRgb24Source.NextFrame(frame);
 		}
@@ -914,6 +835,12 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+
+			if (_pin2color != null)
+			{
+				_pin2color.Convert(new AlphaNumericFrame(layout, segData, segDataExtended));
+			}
+
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 			_dmdFrame.width = Width;
 			_dmdFrame.height = Height;
@@ -967,10 +894,10 @@ namespace LibDmd.DmdDevice
 					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
 					break;
 				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x7Num_1x16Alpha_1x16Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x7Num_1x16Alpha_1x16Num(segData), 0));
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
-					_vpmGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num_1x4Num(segData)));
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num_1x4Num(segData), 0));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
@@ -995,5 +922,55 @@ namespace LibDmd.DmdDevice
 			);
 #endif
 		}
+
+		private static string GetColorPath()
+		{
+			// first, try executing assembly.
+			var altcolor = Path.Combine(AssemblyPath, "altcolor");
+			if (Directory.Exists(altcolor))
+			{
+				Logger.Info("Determined color path from assembly path: {0}", altcolor);
+				return altcolor;
+			}
+
+			// then, try vpinmame location
+			var vpmPath = GetDllPath("VPinMAME.dll");
+			if (vpmPath == null)
+			{
+				return null;
+			}
+			altcolor = Path.Combine(Path.GetDirectoryName(vpmPath), "altcolor");
+			if (Directory.Exists(altcolor))
+			{
+				Logger.Info("Determined color path from VPinMAME.dll location: {0}", altcolor);
+				return altcolor;
+			}
+			Logger.Info("No altcolor folder found, ignoring palettes.");
+			return null;
+		}
+
+		private static string GetDllPath(string name)
+		{
+			const int maxPath = 260;
+			var builder = new StringBuilder(maxPath);
+			var hModule = GetModuleHandle(name);
+			if (hModule == IntPtr.Zero) {
+				return null;
+			}
+			var size = GetModuleFileName(hModule, builder, builder.Capacity);
+			return size <= 0 ? null : builder.ToString();
+		}
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[PreserveSig]
+		public static extern uint GetModuleFileName
+		(
+			[In] IntPtr hModule,
+			[Out] StringBuilder lpFilename,
+			[In][MarshalAs(UnmanagedType.U4)] int nSize
+		);
 	}
 }

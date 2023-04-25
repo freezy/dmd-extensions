@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
+using System.Windows.Media;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
@@ -22,7 +22,8 @@ namespace DmdExt.Mirror
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
-		private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
+		private CompositeDisposable	_nameSubscriptions = new CompositeDisposable();
+		private CompositeDisposable _dmdColorSubscriptions = new CompositeDisposable();
 		private List<IDestination> _renderers;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
@@ -33,7 +34,6 @@ namespace DmdExt.Mirror
 
 		private RenderGraph CreateGraph(ISource source, string name, HashSet<string> reportingTags)
 		{
-
 			if (_renderers == null) {
 				_renderers = GetRenderers(_config, reportingTags);
 			}
@@ -136,7 +136,7 @@ namespace DmdExt.Mirror
 					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
 					graph.Converter = converter;
 					
-					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
+					_nameSubscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
 						converter.Switch(LoadColorizer(name));
 					}));
 
@@ -148,26 +148,18 @@ namespace DmdExt.Mirror
 				}
 			}
 			else {
-
 				// When not colorizing, subscribe to DMD color changes to inform the graph.
-				var colorSub = graphs.Graphs
-					.Select(g => g.Source as IDmdColorSource)
-					.FirstOrDefault(s => s != null)
-					?.GetDmdColor()
-					.Subscribe(graphs.SetColor);
-				if (colorSub != null) {
-					_subscriptions.Add(colorSub);
-				}
-				
-				// print game names
-				var nameSub = graphs.Graphs
-					.Select(g => g.Source as IGameNameSource)
-					.FirstOrDefault(s => s != null)
-					?.GetGameName()
-					.Subscribe(name => Logger.Info($"New game detected: {name}"));
-				
-				if (nameSub != null) {
-					_subscriptions.Add(nameSub);
+				foreach (var graph in graphs.Graphs) {
+					if (!(graph.Source is IDmdColorSource dmdColorSource)) { 
+						continue;
+					}
+
+					_dmdColorSubscriptions.Add(dmdColorSource.GetDmdColor().Subscribe(color => {
+						graphs.SetColor(color);
+					}));
+
+					// Only one can win, so just pick the first one.
+					break;
 				}
 			}
 			
@@ -177,7 +169,8 @@ namespace DmdExt.Mirror
 		public override void Dispose()
 		{
 			base.Dispose();
-			_subscriptions.Dispose();
+			_dmdColorSubscriptions.Dispose();
+			_nameSubscriptions.Dispose();
 		}
 
 		private IConverter LoadColorizer(string gameName)
@@ -191,7 +184,12 @@ namespace DmdExt.Mirror
 				return serumColorizer;
 			}
 
-			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
+			var pin2colorColorizer = _colorizationLoader.LoadPin2Color(true, gameName, Colors.OrangeRed.R, Colors.OrangeRed.G, Colors.OrangeRed.B, _config.Global.ScalerMode, _config.Global.ScaleToHd);
+			if (pin2colorColorizer != null) {
+				return pin2colorColorizer;
+			}
+
+			return null;
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)
@@ -199,11 +197,11 @@ namespace DmdExt.Mirror
 			switch (source) {
 				case IGray2Source _: return FrameFormat.Gray2;
 				case IGray4Source _: return FrameFormat.Gray4;
-				case IGray6Source _: return FrameFormat.Gray6;
 				case IRgb24Source _: return FrameFormat.Rgb24;
 				case IColoredGray2Source _: return FrameFormat.ColoredGray2;
 				case IColoredGray4Source _: return FrameFormat.ColoredGray4;
 				case IColoredGray6Source _: return FrameFormat.ColoredGray6;
+				case IColoredGraySource _: return FrameFormat.ColoredGray;
 				case IAlphaNumericSource _: return FrameFormat.AlphaNumeric;
 				case IBitmapSource _: return FrameFormat.Bitmap;
 			}

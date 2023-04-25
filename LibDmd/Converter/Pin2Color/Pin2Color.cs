@@ -1,21 +1,40 @@
 ﻿using System;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media.Animation;
+using LibDmd.Common;
 using LibDmd.DmdDevice;
+using LibDmd.Input;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output.PinUp;
 using NLog;
 
 namespace LibDmd.Converter.Pin2Color
 {
 
-	public class Pin2Color 
+	public class Pin2Color : AbstractSource, IConverter, IColoredGraySource
 	{
+
+		public override string Name => "Pin2Color";
+		public FrameFormat From { get; } = FrameFormat.ColoredGray;
+
+		private readonly Subject<ColoredFrame> _coloredGrayAnimationFrames = new Subject<ColoredFrame>();
+
+		public bool ScaleToHd = false;
+		public ScalerMode ScalerMode { get; set; }
+
+		public IObservable<Unit> OnResume { get; }
+		public IObservable<Unit> OnPause { get; }
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static bool _colorizerIsOpen = false;
-		public static bool _colorizerIsLoaded = false;
+		public bool IsOpen = false;
+		public bool IsLoaded = false;
+		public bool IsColored = false ;
 
 		private static uint lastEventID = 0;
 
@@ -29,8 +48,51 @@ namespace LibDmd.Converter.Pin2Color
 			Advanced192x64 = 3,
 			Advanced256x64 = 4,
 		}
-		
-		public static bool SetColorize()
+
+		public IObservable<ColoredFrame> GetColoredGrayFrames() => _coloredGrayAnimationFrames;
+
+
+		public Pin2Color(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue, ScalerMode ScalerMode, bool ScaleToHd) {
+
+			this.ScalerMode = ScalerMode;
+			this.ScaleToHd = ScaleToHd;
+
+			if (!IsLoaded) {
+				if (!Pin2Color_Load()) {
+					IsLoaded = false;
+					return;
+				} else {
+					IsLoaded = true;
+				} 
+			}
+
+			if(!IsOpen) {
+				if (!Open()) {
+					IsOpen = false;
+					return;
+				} else {
+					IsOpen = true;
+				}
+			}
+
+			_pin2ColorizerMode = (ColorizerMode)Setup(colorize, gameName, red, green, blue);
+			if (_pin2ColorizerMode >= 0) {
+				IsColored = true;
+			} else {
+				IsColored = false;
+			}
+		}
+		public void Init()
+		{
+		}
+		public void Dispose()
+		{
+			if (IsOpen) Close();
+			IsOpen = false;
+		}
+
+
+		public static bool Pin2Color_Load()
 		{
 			var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 			var assemblyFolder = Path.GetDirectoryName(localPath);
@@ -148,6 +210,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			Logger.Info("Loading Pin2Color plugin ...");
+
 			return true;
 
 		}
@@ -204,6 +267,100 @@ namespace LibDmd.Converter.Pin2Color
 		private delegate uint _dColorizeGetEvent();
 		private static _dColorizeGetEvent ColorizeGetEvent;
 
+		private ColorizerMode _pin2ColorizerMode;
+		public void Convert(DMDFrame frame)
+		{
+			int width = frame.width;
+			int height = frame.height;
+
+			if (IsOpen && _pin2ColorizerMode >= 0) {
+				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16))) {
+					width = 128;
+					height = 32;
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64) {
+					width = 192;
+					height = 64;
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64))) {
+					width = 256;
+					height = 64;
+				} else {
+					_pin2ColorizerMode = ColorizerMode.SimplePalette;
+				}
+			}
+
+			var frameSize = width * height * 3;
+			var coloredFrame = new byte[frameSize];
+
+			if (IsOpen) {
+				
+				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
+					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
+					for (int i = 0; i < vd.RawPlanes.Length; i++) {
+						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
+					}
+					IntPtr Rgb24Buffer = IntPtr.Zero;
+					if (frame.BitLength == 4) 
+						Rgb24Buffer = Render4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+					else
+						Rgb24Buffer = Render2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+
+					if (_pin2ColorizerMode != ColorizerMode.None)
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+				} else {
+					IntPtr Rgb24Buffer = IntPtr.Zero;
+					if (frame.BitLength == 4) {
+						Rgb24Buffer = Render4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+					} else if (frame.BitLength == 2) {
+						Rgb24Buffer = Render2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+					} else {
+						RenderRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
+						return;
+					}
+
+					if (_pin2ColorizerMode != ColorizerMode.None)
+						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+				}
+
+				if (_pin2ColorizerMode != ColorizerMode.None) {
+					if (ScaleToHd) {
+						if (width == 128 && height == 32) {
+							width *= 2;
+							height *= 2;
+						}
+					}
+					// send the colored frame
+					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+				}
+			}
+		}
+
+		public void Convert(AlphaNumericFrame frame)
+		{
+			int Width = 128;
+			int Height = 32;
+
+			var frameSize = Width * Height * 3;
+			var coloredFrame = new byte[frameSize];
+
+			int width = Width;
+			int height = Height;
+
+			var Rgb24Buffer = Pin2Color.RenderAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
+			if (_pin2ColorizerMode != Pin2Color.ColorizerMode.None) {
+				Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+				if (_pin2ColorizerMode != ColorizerMode.None) {
+					if (ScaleToHd) {
+						if (width == 128 && height == 32) {
+							width *= 2;
+							height *= 2;
+						}
+					}
+					// send the colored frame
+					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+				}
+			}
+		}
+
 		public static bool Open() {
 			return ColorizeOpen();
 		}
@@ -253,7 +410,7 @@ namespace LibDmd.Converter.Pin2Color
 			return Rgb24Buffer;
 		}
 
-		public static int Init(bool colorize, string gameName, byte red, byte green, byte blue)
+		public int Setup(bool colorize, string gameName, byte red, byte green, byte blue)
 		{
 			return ColorizeInit(colorize, gameName, red, green, blue);
 		}

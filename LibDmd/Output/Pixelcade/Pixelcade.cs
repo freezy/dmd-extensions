@@ -159,10 +159,10 @@ namespace LibDmd.Output.Pixelcade
 			return false;
 		}
 
-		public void RenderColoredGray(byte[] frameRgb24)
+		public void RenderColoredGray(ColoredFrame frameRgb24)
 		{
 			// convert rgb24 to rgb565
-			var frame565 = ImageUtil.ConvertToRgb565(DmdWidth, DmdHeight, frameRgb24);
+			var frame565 = ImageUtil.ConvertToRgb565(DmdWidth, DmdHeight, frameRgb24.Data);
 
 			// split into planes to send over the wire
 			var newFrame = new byte[DmdHeight * DmdWidth * 3 / 2];

@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Converter
+﻿using LibDmd.DmdDevice;
+
+namespace LibDmd.Converter
 {
 	/// <summary>
 	/// Converts a frame from a given bit length to another bit length.
@@ -24,6 +26,7 @@
 		/// 
 		/// <param name="frame">Source frame, as top-left to bottom-right pixel array</param>
 		void Convert(DMDFrame frame);
+		void Convert(AlphaNumericFrame frame);
 
 		/// <summary>
 		/// Initializes the converter. Run before rendering is started and after

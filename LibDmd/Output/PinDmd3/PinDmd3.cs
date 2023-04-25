@@ -266,10 +266,10 @@ namespace LibDmd.Output.PinDmd3
 			}
 		}
 
-		public void RenderColoredGray(byte[] frame)
+		public void RenderColoredGray(ColoredFrame frame)
 		{
 			// copy data to frame buffer
-			var changed = FrameUtil.Copy(frame, _frameBufferRgb24, 1);
+			var changed = FrameUtil.Copy(frame.Data, _frameBufferRgb24, 1);
 
 			// can directly be sent to the device.
 			if (changed)

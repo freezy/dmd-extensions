@@ -1,10 +1,19 @@
-﻿using System.Windows.Media;
+﻿using System.Windows.Markup;
+using System.Windows.Media;
 using LibDmd.Common;
 
 namespace LibDmd
 {
 	public class ColoredFrame
 	{
+
+		/// <summary>
+		/// Frame data
+		/// </summary>
+		public byte[] Data { get; }
+		public int Width { get; }
+		public int Height { get; }
+
 		/// <summary>
 		/// Frame data, split into bit planes
 		/// </summary>
@@ -21,18 +30,10 @@ namespace LibDmd
 		public int PaletteIndex { get; }
 
 		/// <summary>
-		/// Colour Rotation descriptions.
+		/// Rotation descriptions.
 		/// </summary>
-		/// <remarks>
-		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
-		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
-		/// <remarks>
+		public bool RotateColors = false;
 		public byte[] Rotations { get; }
-
-		/// <summary>
-		/// If set, colors defined in <see cref="Rotations" are rotated./>
-		/// </summary>
-		public bool RotateColors;
 
 		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex)
 		{
@@ -42,12 +43,12 @@ namespace LibDmd
 			RotateColors = false;
 		}
 
-		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex,bool rotateColors, byte[] rotations)
+		public ColoredFrame(byte[][] planes, Color[] palette, int paletteIndex,bool isrotation, byte[] rotations)
 		{
 			Planes = planes;
 			Palette = palette;
 			PaletteIndex = paletteIndex;
-			RotateColors = rotateColors;
+			RotateColors = isrotation;
 			Rotations= rotations;
 		}
 
@@ -55,7 +56,7 @@ namespace LibDmd
 		{
 			Planes = planes;
 			Palette = palette;
-			RotateColors= false;
+			RotateColors = false;
 			PaletteIndex = -1;
 		}
 
@@ -63,7 +64,7 @@ namespace LibDmd
 		{
 			Planes = planes;
 			Palette = palette;
-			RotateColors= true;
+			RotateColors = true;
 			Rotations = rotations;
 			PaletteIndex = -1;
 		}
@@ -73,6 +74,13 @@ namespace LibDmd
 			Planes = FrameUtil.Split(width, height, 2, frame);
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
 			RotateColors = false;
+		}
+
+		public ColoredFrame(int width, int height, byte[] data)
+		{
+			Width = width;
+			Height = height;
+			Data = data;
 		}
 	}
 }

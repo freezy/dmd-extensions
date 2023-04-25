@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using LibDmd.Common;
-using LibDmd.Converter.Colorize;
 using Microsoft.Win32;
 using NLog;
 
@@ -16,15 +15,6 @@ namespace LibDmd.Converter
 {
 	public class ColorizationLoader
 	{
-		public struct ColorizerResult
-		{
-			public Coloring coloring;
-			public Gray2Colorizer gray2;
-			public Gray4Colorizer gray4;
-			public VniAnimationSet vni;
-
-		}
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private string _altcolorPath;
@@ -32,6 +22,20 @@ namespace LibDmd.Converter
 		public ColorizationLoader()
 		{
 			_altcolorPath = GetColorPath();
+		}
+
+		public Pin2Color.Pin2Color LoadPin2Color(bool colorize, string gameName, byte red, byte green, byte blue, ScalerMode ScalerMode, bool ScaleToHd)
+		{
+			if (_altcolorPath == null) {
+				return null;
+			}
+
+			var pin2color = new Pin2Color.Pin2Color(colorize, _altcolorPath, gameName, red, green, blue, ScalerMode, ScaleToHd);
+			if (pin2color.IsLoaded) {
+				return pin2color;
+			}
+
+			return null;
 		}
 
 		public Serum.Serum LoadSerum(string gameName, ScalerMode scalerMode)
@@ -62,68 +66,6 @@ namespace LibDmd.Converter
 				{
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 				}
-			}
-
-			return null;
-		}
-
-		public ColorizerResult? LoadColorizer(string gameName, ScalerMode scalerMode)
-		{
-			if (_altcolorPath == null)
-			{
-				return null;
-			}
-
-			var palPath1 = Path.Combine(_altcolorPath, gameName, gameName + ".pal");
-			var palPath2 = Path.Combine(_altcolorPath, gameName, "pin2dmd.pal");
-			var vniPath1 = Path.Combine(_altcolorPath, gameName, gameName + ".vni");
-			var vniPath2 = Path.Combine(_altcolorPath, gameName, "pin2dmd.vni");
-
-			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-			if (File.Exists(palPath))
-			{
-				try
-				{
-					Logger.Info("Loading palette file at {0}...", palPath);
-					var coloring = new Coloring(palPath);
-					VniAnimationSet vni = null;
-					if (File.Exists(vniPath))
-					{
-						Logger.Info("Loading virtual animation file at {0}...", vniPath);
-						vni = new VniAnimationSet(vniPath);
-						Logger.Info("Loaded animation set {0}", vni);
-						Logger.Info("Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
-
-					}
-					else
-					{
-						Logger.Info("No animation set found");
-					}
-
-					var gray2Colorizer = new Gray2Colorizer(coloring, vni);
-					var gray4Colorizer = new Gray4Colorizer(coloring, vni);
-
-					gray2Colorizer.ScalerMode = scalerMode;
-					gray4Colorizer.ScalerMode = scalerMode;
-
-					return new ColorizerResult
-					{
-						coloring = coloring,
-						gray2 = gray2Colorizer,
-						gray4 = gray4Colorizer,
-						vni = vni,
-					};
-				}
-				catch (Exception e)
-				{
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
-				}
-
-			}
-			else
-			{
-				Logger.Info("No palette file found at {0}.", palPath);
 			}
 
 			return null;

@@ -432,7 +432,7 @@ namespace LibDmd.Common
 			byte[] tframe = FrameUtil.Join(width, height, frame.Planes);
 			Color[] tpalette = frame.Palette;
 
-			if (frame.isRotation)
+			if (frame.RotateColors)
 			{
 				bool frameChanged = false;
 				if (_nextFrameData != null)
