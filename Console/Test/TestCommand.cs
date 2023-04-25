@@ -7,7 +7,7 @@ using LibDmd;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
-using LibDmd.Input.PinMame;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 
 namespace DmdExt.Test
@@ -44,7 +44,7 @@ namespace DmdExt.Test
 						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 					});
 				_graph = new RenderGraph {
-					Source = new VpmAlphaNumericSource(alphaNumericFrame),
+					Source = new PassthroughAlphaNumericSource(alphaNumericFrame),
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,

@@ -1177,20 +1177,13 @@ namespace LibDmd
 
 		private byte[] TransformScaling(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
-			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length))
-			{
+			if ((dest != null && !dest.DmdAllowHdScaling) || (width * height == frame.Length)) {
 				return frame;
 			}
 
-			if (ScalerMode == ScalerMode.Doubler)
-			{
-				return FrameUtil.ScaleDouble(width, height, 4, frame);
-			}
-			else
-			{
-				return FrameUtil.Scale2x(width, height, frame);
-			}
-
+			return ScalerMode == ScalerMode.Doubler 
+				? FrameUtil.ScaleDouble(width, height, 4, frame) 
+				: FrameUtil.Scale2x(width, height, frame);
 		}
 
 		private byte[] TransformGray2(int width, int height, byte[] frame, IFixedSizeDestination dest)
@@ -1296,7 +1289,7 @@ namespace LibDmd
 		{
 			if (dest == null)
 			{
-				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex, frame.isRotation, frame.Rotations);
+				return new ColoredFrame(TransformationUtil.Flip(width, height, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex, frame.RotateColors, frame.Rotations);
 			}
 			if (width == dest.DmdWidth && height == dest.DmdHeight && !FlipHorizontally && !FlipVertically)
 			{
@@ -1310,7 +1303,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray6(width, height, FrameUtil.Join(width, height, frame.Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.DmdWidth, dest.DmdHeight, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
-			return new ColoredFrame(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.isRotation, frame.Rotations);
+			return new ColoredFrame(FrameUtil.Split(dest.DmdWidth, dest.DmdHeight, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.RotateColors, frame.Rotations);
 		}
 
 		private byte[] TransformRgb24(int width, int height, byte[] frame, IFixedSizeDestination dest)

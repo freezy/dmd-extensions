@@ -220,7 +220,7 @@ namespace DmdExt.Common
 			GetRenderGraphs(reportingTags).Init().StartRendering(onCompleted, onError);
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			if (_config == null || !_config.Global.NoClear) {
 				_graphs?.ClearDisplay();

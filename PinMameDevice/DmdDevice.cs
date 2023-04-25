@@ -219,7 +219,7 @@ namespace PinMameDevice
 			var frameSize = width * height * 3;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderRgb24(device.DmdFrame.Update(width, height, frame));
+			device.DmdDevice.RenderRgb24(device.DmdFrame.Update(width, height, frame, 24));
 		}
 
 		private static void InternalRenderRaw4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
@@ -258,7 +258,7 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame));
+			device.DmdDevice.RenderGray4(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame, 4));
 		}
 
 		private static void InternalRenderGray2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)
@@ -267,9 +267,9 @@ namespace PinMameDevice
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
 			if (width == 128 && height == 16)
-				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width, height, frame));
+				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width, height, frame, 2));
 			else
-				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame));
+				device.DmdDevice.RenderGray2(device.DmdFrame.Update(width > aniWidth ? width : aniWidth, height > aniHeight ? height : aniHeight, frame, 2));
 		}
 
 		private static void InternalRenderAlphaNumDevice(DeviceInstance device, NumericalLayout numericalLayout, IntPtr seg_data, IntPtr seg_data2)

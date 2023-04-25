@@ -5,18 +5,21 @@
 		public int width;
 		public int height;
 		public byte[] Data;
+		public int BitLength;
 
-		public DMDFrame Update(byte[] Data)
+		public DMDFrame Update(byte[] data, int bitSize)
 		{
-			this.Data = Data;
+			Data = data;
+			BitLength = bitSize;
 			return this;
 		}
 
-		public DMDFrame Update(int width, int height, byte[] Data)
+		public DMDFrame Update(int width, int height, byte[] data, int bitSize)
 		{
 			this.width = width;
 			this.height = height;
-			this.Data = Data;
+			Data = data;
+			BitLength = bitSize;
 			return this;
 		}
 	}
@@ -25,10 +28,10 @@
 	{
 		public byte[][] RawPlanes;
 
-		public RawDMDFrame Update(int width, int height, byte[] Data, byte[][] RawPlanes)
+		public RawDMDFrame Update(int width, int height, byte[] data, byte[][] rawPlanes)
 		{
-			this.Update(width, height, Data);
-			this.RawPlanes = RawPlanes;
+			this.Update(width, height, data, rawPlanes.Length);
+			this.RawPlanes = rawPlanes;
 			return this;
 		}
 

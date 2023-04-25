@@ -132,20 +132,26 @@
     <Reference Include="SharpGL.WPF, Version=3.1.1.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpGL.WPF.3.1.1\lib\net45\SharpGL.WPF.dll</HintPath>
     </Reference>
-    <Reference Include="SkiaSharp, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\SkiaSharp.1.68.0-preview28\lib\net45\SkiaSharp.dll</HintPath>
+    <Reference Include="SkiaSharp, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.2.88.3\lib\net462\SkiaSharp.dll</HintPath>
     </Reference>
     <Reference Include="SkiaSharp.Extended.Svg, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\SkiaSharp.Svg.1.60.0\lib\portable-net45+win8+wp8+wpa81\SkiaSharp.Extended.Svg.dll</HintPath>
     </Reference>
-    <Reference Include="SkiaSharp.Views.Desktop, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\SkiaSharp.Views.1.68.0-preview28\lib\net45\SkiaSharp.Views.Desktop.dll</HintPath>
+    <Reference Include="SkiaSharp.Views.Desktop, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.2.88.3\lib\net462\SkiaSharp.Views.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="SkiaSharp.Views.Gtk, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\SkiaSharp.Views.1.68.0-preview28\lib\net45\SkiaSharp.Views.Gtk.dll</HintPath>
+    <Reference Include="SkiaSharp.Views.Desktop.Common, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.Desktop.Common.2.88.3\lib\net462\SkiaSharp.Views.Desktop.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SkiaSharp.Views.WPF, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\SkiaSharp.Views.1.68.0-preview28\lib\net45\SkiaSharp.Views.WPF.dll</HintPath>
+    <Reference Include="SkiaSharp.Views.Gtk, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.Gtk2.2.88.3\lib\net462\SkiaSharp.Views.Gtk.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.WindowsForms, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.WindowsForms.2.88.3\lib\net462\SkiaSharp.Views.WindowsForms.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.WPF, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.Views.WPF.2.88.3\lib\net462\SkiaSharp.Views.WPF.dll</HintPath>
     </Reference>
     <Reference Include="SocketIoClientDotNet, Version=0.9.13.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SocketIoClientDotNet.0.9.13\lib\net45\SocketIoClientDotNet.dll</HintPath>
@@ -305,8 +311,10 @@
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Converter\Pin2Color\Pin2Color.cs" />
+    <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Serum\CRC32encode.cs" />
     <Compile Include="Converter\Serum\Serum.cs" />
+    <Compile Include="Converter\SwitchingConverter.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
@@ -314,7 +322,10 @@
     <Compile Include="Input\IColoredGray4Source.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
     <Compile Include="Input\IColoredGraySource.cs" />
-    <Compile Include="Input\IGray6Source.cs" />
+    <Compile Include="Input\IDmdColorSource.cs" />
+    <Compile Include="Input\IGameNameSource.cs" />
+    <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
+    <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
     <Compile Include="Input\Network\WebsocketGray4Source .cs" />
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
@@ -369,10 +380,10 @@
     <Compile Include="Input\PinballFX\PinballFX3MemoryGrabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX3Grabber.cs" />
     <Compile Include="Input\PinballFX\PinballFX2Grabber.cs" />
-    <Compile Include="Input\PinMame\VpmAlphaNumericSource.cs" />
-    <Compile Include="Input\PinMame\VpmRgb24Source.cs" />
-    <Compile Include="Input\PinMame\VpmGray4Source.cs" />
-    <Compile Include="Input\PinMame\VpmGray2Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughAlphaNumericSource.cs" />
+    <Compile Include="Input\Passthrough\PassthroughRgb24Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughGray4Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughGray2Source.cs" />
     <Compile Include="Input\FileSystem\PassthroughSource.cs" />
     <Compile Include="Input\ProPinball\ProPinballSlave.cs" />
     <Compile Include="Output\FileOutput\GifOutput.cs" />
@@ -390,6 +401,7 @@
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
+    <None Include="OpenTK.dll.config" />
     <None Include="Output\Virtual\AlphaNumeric\README.md" />
     <Compile Include="Output\Virtual\AlphaNumeric\DisplaySetting.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\RasterizeDimensions.cs" />
@@ -456,7 +468,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Costura32\serum.dll" />
-    <EmbeddedResource Include="Costura64\serum.dll" />
+    <EmbeddedResource Include="Costura64\serum64.dll" />
     <Content Include="FTDI2XX.xml" />
     <Content Include="Output\Virtual\Dmd\README.md" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
@@ -631,9 +643,11 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets'))" />
+    <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets'))" />
+    <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets'))" />
   </Target>
-  <Import Project="..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.68.0-preview28\build\net45\SkiaSharp.targets')" />
+  <Import Project="..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets')" />
+  <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -275,7 +275,7 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				if (frame.isRotation)
+				if (frame.RotateColors)
 				{
 					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBufferRgb24[ti + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = frame.Rotations[ti];
 				}

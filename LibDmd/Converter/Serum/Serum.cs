@@ -64,8 +64,15 @@ namespace LibDmd.Converter.Serum
 		public Serum(string altcolorPath, string romName)
 		{
 			uint numTriggers = 0;
-			if (File.Exists("serum.dll"))			{
-				Logger.Info($"Found serum.dll at {Directory.GetCurrentDirectory()}.");
+			
+#if PLATFORM_X64
+			const string dllName = "serum64.dll";
+#else
+			const string dllName = "serum.dll";
+#endif
+			
+			if (File.Exists(dllName)) {
+				Logger.Info($"Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
 			if (!Serum_Load(altcolorPath, romName, ref FrameWidth, ref FrameHeight, ref NumColors, ref numTriggers)) {
 				IsLoaded = false;
@@ -102,13 +109,20 @@ namespace LibDmd.Converter.Serum
 
 		public void Init()
 		{
-
 		}
+
 		public void Convert(DMDFrame frame)
 		{
 			Buffer.BlockCopy(frame.Data, 0, _frameData, 0, frame.Data.Length);
 			
 			uint triggerId = 0xFFFFFFFF;
+			if ((_activePupOutput != null) && ((_activePupOutput.isPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
+			{
+				if (NumColors == 16)
+					_activePupOutput.RenderGray4(_frameData);
+				else
+					_activePupOutput.RenderGray2(_frameData);
+			}
 
 			Serum_Colorize(_frameData, FrameWidth, FrameHeight, _bytePalette, _rotations, ref triggerId);
 
@@ -142,16 +156,9 @@ namespace LibDmd.Converter.Serum
 		
 		public static string GetVersion()
 		{
-			byte[] version = new byte[16];
-			GCHandle pinnedArray = GCHandle.Alloc(version, GCHandleType.Pinned);
-			IntPtr pointer = pinnedArray.AddrOfPinnedObject();
-			Serum_GetVersion(pointer);
-			pinnedArray.Free();
-			int len = 0;
-			while ((version[len] != 0) && (len < 16)) {
-				len++;
-			}
-			return Encoding.UTF8.GetString(version, 0, len);
+			IntPtr pointer = Serum_GetMinorVersion();
+			string str = Marshal.PtrToStringAnsi(pointer);
+			return str;
 		}
 
 		private byte[][] ConvertToPlanes(byte colorBitDepth)
@@ -214,7 +221,11 @@ namespace LibDmd.Converter.Serum
 		/// <param name="height">out: colorized rom height in LEDs</param>
 		/// <param name="numColors">out: number of colours in the manufacturer rom</param>
 		/// <returns></returns>
+#if PLATFORM_X64
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
 		private static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint numColors, ref uint triggernb);
 		
@@ -226,23 +237,36 @@ namespace LibDmd.Converter.Serum
 		/// <param name="height">frame height in LEDs</param>
 		/// <param name="palette">64*3 bytes: out: RGB palette description 64 colours with their R, G and B component</param>
 		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
+#if PLATFORM_X64
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
 		private static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
 		
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
 		/// </summary>
+
+#if PLATFORM_X64 
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		// C format: void Serum_Dispose(void)
 		private static extern void Serum_Dispose();
-		
+
 		/// <summary>
-		/// Serum_Dispose: Function to call at table unload time to free allocated memory
+		/// Serum_GetMinorVersion: Function to get dll version
 		/// </summary>
+#if PLATFORM_X64 
+		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		// C format: void Serum_Dispose(void)
-		private static extern void Serum_GetVersion(IntPtr version);
+#endif
+		// C format: const char* Serum_GetMinorVersion();
+		private static extern IntPtr Serum_GetMinorVersion();
 
 		#endregion
 	}

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
-using SharpGL.SceneGraph.Feedback;
 using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Common
@@ -29,20 +28,6 @@ namespace LibDmd.Common
 		/// <param name="height">Heechi vom Biud</param>
 		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
 		/// <param name="frame">D datä vom Biud</param>
-		/// <returns>Än Ebini fir jedes Bit</returns>
-		/// <summary>
-		/// Tuät es Biud i sini Bitahteiu uifteilä.
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Ebänä fir
-		/// jedes Bit uisächemid
-		/// </remarks>
-		/// 
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
-		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
-		/// <param name="frame">D datä vom Biud</param>
 		/// <param name="destPlanes">Bruich das bim zruggäh wenn definiärt.</param>
 		/// <returns>Än Ebini fir jedes Bit</returns>
 		public static byte[][] Split(int width, int height, int bitlen, byte[] frame, byte[][] destPlanes = null)
@@ -52,10 +37,8 @@ namespace LibDmd.Common
 
 			try
 			{
-				for (var i = 0; i < bitlen; i++)
-				{
-					if (planes[i] == null)
-					{ // recycle, if possible
+				for (var i = 0; i < bitlen; i++) {
+					if (planes[i] == null) { // recycle, if possible
 						planes[i] = new byte[planeSize];
 					}
 				}
@@ -383,12 +366,12 @@ namespace LibDmd.Common
 			return plane;
 		}
 
-		public static byte[][] Scale2(int width, int height, byte[][] srcplanes)
+		public static byte[][] Scale2(int width, int height, byte[][] srcPlanes, byte[][] destPlanes = null)
 		{
-			var planes = new byte[srcplanes.Length][];
-			for (var l = 0; l < srcplanes.Length; l++)
+			var planes = destPlanes ?? new byte[srcPlanes.Length][];
+			for (var l = 0; l < srcPlanes.Length; l++)
 			{
-				planes[l] = Scale2(width, height, srcplanes[l]);
+				planes[l] = Scale2(width, height, srcPlanes[l]);
 			}
 			return planes;
 		}
