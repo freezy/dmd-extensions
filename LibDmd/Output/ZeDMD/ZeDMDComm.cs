@@ -12,15 +12,18 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public string nCOM;
 		public const int BaudRate = 921600;
-		private const int SERIAL_TIMEOUT = 100;
+		private const int SERIAL_TIMEOUT = 120;
 		public bool Opened = false;
 		private SerialPort _serialPort;
 		private const int MAX_SERIAL_WRITE_AT_ONCE = 8192;
+		private const int SLOW_FRAMES_THRESHOLD = 4096;
+		private const int FRAME_BUFFER_SIZE = 128;
+		private const int COMMAND_SIZE_LIMIT = 100; // any buffer shorter then 100 is considered to be command like "reset palette"
 		public const int N_CTRL_CHARS = 6;
 		public const int N_INTERMEDIATE_CTR_CHARS = 4;
 		public static readonly byte[] CtrlCharacters = { 0x5a, 0x65, 0x64, 0x72, 0x75, 0x6d };
 
-		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(128); // max queue size 128
+		private BlockingCollection<byte[]> _frames = new BlockingCollection<byte[]>(FRAME_BUFFER_SIZE);
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -29,16 +32,46 @@ namespace LibDmd.Output.ZeDMD
 			Task.Run(() =>
 			{
 				Logger.Info("Starting ZeDMD frame thread.");
+				byte[] frame = null;
+				bool sleep = false;
+				int bufferedFramesThreshold = FRAME_BUFFER_SIZE;
 				while (true) {
-					byte[] frame = null;
 					try {
 						frame = _frames.Take();
+						if (frame.Length < COMMAND_SIZE_LIMIT) {
+							// we might have a new mode, try to avoid sleeps until an error occurs
+							sleep = false;
+							bufferedFramesThreshold = FRAME_BUFFER_SIZE;
+						}
+						else if (frame.Length > SLOW_FRAMES_THRESHOLD) {
+							sleep = false;
+							bufferedFramesThreshold = 4;
+						}
+						else {
+							bufferedFramesThreshold = 32;
+						}
+
+						// in case of an error, activate sleeps to slow down
+						sleep = !StreamBytes(frame) || sleep;
+
+						// for some modes it is important to let ZeDMD perform its rendering, before sending the next frame
+						if (sleep) {
+							System.Threading.Thread.Sleep(8);
+						}
 					}
 					catch (InvalidOperationException) { }
 
-					if (frame != null) {
-						StreamBytes(frame);
-						System.Threading.Thread.Sleep(10);
+					// in case ZeDMD falls behind, drop some frames
+					while (_frames.Count >= bufferedFramesThreshold) {
+						// drop frame
+						frame = _frames.Take();
+						if (frame.Length < COMMAND_SIZE_LIMIT) {
+							// in case of a command, drop all frames and re-add the command
+							while (_frames.Count > 0) {
+								_frames.Take();
+							}
+							_frames.Add(frame);
+						}
 					}
 				}
 			});
@@ -46,7 +79,30 @@ namespace LibDmd.Output.ZeDMD
 
 		public void QueueFrame(byte[] frame)
 		{
-			Task.Run(() => _frames.Add(frame));
+			Task.Run(() =>
+			{
+				if (_frames.Count < FRAME_BUFFER_SIZE) {
+					byte[] buffer;
+
+					if (frame.Length > 1) {
+						byte[] pCompressedBytes;
+						NetMiniZ.NetMiniZ.MZCompress(frame.Skip(1).ToArray(), out pCompressedBytes);
+
+						buffer = new byte[CtrlCharacters.Length + 1 + 2 + pCompressedBytes.Length];
+						CtrlCharacters.CopyTo(buffer, 0);
+						buffer[CtrlCharacters.Length] = frame[0];
+						buffer[CtrlCharacters.Length + 1] = (byte)((pCompressedBytes.Length >> 8) & 0xFF);
+						buffer[CtrlCharacters.Length + 2] = (byte)(pCompressedBytes.Length & 0xFF);
+						pCompressedBytes.CopyTo(buffer, CtrlCharacters.Length + 3);
+					} else {
+						buffer = new byte[CtrlCharacters.Length + 1];
+						CtrlCharacters.CopyTo(buffer, 0);
+						frame.CopyTo(buffer, CtrlCharacters.Length);
+					}
+
+					_frames.Add(buffer);
+				}
+			});
 		}
 
 		private void SafeClose()
@@ -134,48 +190,28 @@ namespace LibDmd.Output.ZeDMD
 				{
 					if (_serialPort.ReadByte() == 'R')
 					{
-						// send control characters and command
-						_serialPort.Write(CtrlCharacters, 0, CtrlCharacters.Length);
-						_serialPort.Write(pBytes.Take(1).ToArray(), 0, 1);
-
-						byte[] pPayload = pBytes.Skip(1).ToArray();
-						if (pPayload.Length > 0) {
-							byte[] pCompressedBytes;
-							NetMiniZ.NetMiniZ.MZCompress(pPayload, out pCompressedBytes);
-
-							int nCompressedBytes = pCompressedBytes.Length;
-
-							byte[] pCompressionHeader = new byte[2];
-							pCompressionHeader[0] = (byte)((nCompressedBytes >> 8) & 0xFF);
-							pCompressionHeader[1] = (byte)((nCompressedBytes & 0xFF));
-							// send coompression header
-							_serialPort.Write(pCompressionHeader, 0, 2);
-
-							int chunk = MAX_SERIAL_WRITE_AT_ONCE - 6 - 1 - 2;
-							int position = 0;
-							while (position < nCompressedBytes) {
-								_serialPort.Write(pCompressedBytes, position, ((nCompressedBytes - position) < chunk) ? (nCompressedBytes - position) : chunk);
-								if (_serialPort.ReadByte() == 'A') {
-									// Received (A)cknowledge, ready to send the next chunk.
-									position += chunk;
-									chunk = MAX_SERIAL_WRITE_AT_ONCE;
-								} else {
-									// Something went wrong. Terminate current transmission of the buffer and return.
-									return false;
-								}
+						// send bytes
+						int position = 0;
+						while (position < pBytes.Length) {
+							_serialPort.Write(pBytes, position, ((pBytes.Length - position) < MAX_SERIAL_WRITE_AT_ONCE) ? (pBytes.Length - position) : MAX_SERIAL_WRITE_AT_ONCE);
+							if (_serialPort.ReadByte() == 'A') {
+								// Received (A)cknowledge, ready to send the next chunk.
+								position += MAX_SERIAL_WRITE_AT_ONCE;
+							} else {
+								// Something went wrong. Terminate current transmission of the buffer and return.
+								return false;
 							}
-						} else if (_serialPort.ReadByte() != 'A') {
-							return false;
 						}
+
 						return true;
 					}
 				}
 				catch (Exception e)
 				{
 					Logger.ForExceptionEvent(e).Log();
-					return false;
 				}
 			}
+
 			return false;
 		}
 
@@ -184,7 +220,7 @@ namespace LibDmd.Output.ZeDMD
 			// Reset ESP32 palette
 			byte[] tempbuf = new byte[1];
 			tempbuf[0] = 0x6;  // command byte 6 = reset palettes
-			StreamBytes(tempbuf);
+			QueueFrame(tempbuf);
 		}
 
 		public int Open(out int width, out int height)
