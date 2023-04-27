@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using LibDmd.Common;
 using Microsoft.Win32;
 using NLog;
@@ -24,13 +25,13 @@ namespace LibDmd.Converter
 			_altcolorPath = GetColorPath();
 		}
 
-		public Pin2Color.Pin2Color LoadPin2Color(bool colorize, string gameName, byte red, byte green, byte blue, ScalerMode ScalerMode, bool ScaleToHd)
+		public Pin2Color.Pin2Color LoadPin2Color(bool colorize, string gameName, byte red, byte green, byte blue, Color[] palette, ScalerMode ScalerMode, bool ScaleToHd)
 		{
 			if (_altcolorPath == null) {
 				return null;
 			}
 
-			var pin2color = new Pin2Color.Pin2Color(colorize, _altcolorPath, gameName, red, green, blue, ScalerMode, ScaleToHd);
+			var pin2color = new Pin2Color.Pin2Color(colorize, _altcolorPath, gameName, red, green, blue, palette, ScalerMode, ScaleToHd);
 			if (pin2color.IsLoaded) {
 				return pin2color;
 			}

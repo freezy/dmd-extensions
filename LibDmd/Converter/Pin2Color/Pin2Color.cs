@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
@@ -34,7 +35,7 @@ namespace LibDmd.Converter.Pin2Color
 
 		public bool IsOpen = false;
 		public bool IsLoaded = false;
-		public bool IsColored = false ;
+		public bool IsColored = false;
 
 		private static uint lastEventID = 0;
 
@@ -52,7 +53,7 @@ namespace LibDmd.Converter.Pin2Color
 		public IObservable<ColoredFrame> GetColoredGrayFrames() => _coloredGrayAnimationFrames;
 
 
-		public Pin2Color(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue, ScalerMode ScalerMode, bool ScaleToHd) {
+		public Pin2Color(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue, Color[] palette, ScalerMode ScalerMode, bool ScaleToHd) {
 
 			this.ScalerMode = ScalerMode;
 			this.ScaleToHd = ScaleToHd;
@@ -63,10 +64,10 @@ namespace LibDmd.Converter.Pin2Color
 					return;
 				} else {
 					IsLoaded = true;
-				} 
+				}
 			}
 
-			if(!IsOpen) {
+			if (!IsOpen) {
 				if (!Open()) {
 					IsOpen = false;
 					return;
@@ -81,6 +82,20 @@ namespace LibDmd.Converter.Pin2Color
 			} else {
 				IsColored = false;
 			}
+
+			if (palette != null && !IsColored) {
+				var _pal = new byte[palette.Length * 3];
+				for (int i = 0; i < palette.Length; i++) {
+					_pal[i * 3] = palette[i].R;
+					_pal[(i * 3) + 1] = palette[i].G;
+					_pal[(i * 3) + 2] = palette[i].B;
+				}
+				if (palette.Length == 4) {
+					Set_4_Colors(_pal);
+				} else if (palette.Length == 16) {
+					Set_16_Colors(_pal);
+				}
+			}
 		}
 		public void Init()
 		{
@@ -88,128 +103,115 @@ namespace LibDmd.Converter.Pin2Color
 		public void Dispose()
 		{
 			if (IsOpen) Close();
+			IsColored = false;
 			IsOpen = false;
 		}
 
 
-		public static bool Pin2Color_Load()
+		private bool Pin2Color_Load()
 		{
-			var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			var assemblyFolder = Path.GetDirectoryName(localPath);
-			string dllFileName = null;
-			if (IntPtr.Size == 4)
-				dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
-			else if (IntPtr.Size == 8)
-				dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
+			if (!IsLoaded) {
+				var localPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+				var assemblyFolder = Path.GetDirectoryName(localPath);
+				string dllFileName = null;
+				if (IntPtr.Size == 4)
+					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR.DLL");
+				else if (IntPtr.Size == 8)
+					dllFileName = Path.Combine(assemblyFolder, "PIN2COLOR64.DLL");
 
-			var pDll = NativeDllLoad.LoadLibrary(dllFileName);
+				var pDll = NativeDllLoad.LoadLibrary(dllFileName);
 
-			if (pDll == IntPtr.Zero)
-			{
-				Logger.Error("No coloring " + dllFileName + " found");
-				return false;
+				if (pDll == IntPtr.Zero) {
+					Logger.Error("No coloring " + dllFileName + " found");
+					return false;
+				}
+
+				try {
+					var pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeOpen");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeInit");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2Gray");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4Gray");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2GrayWithRaw");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4GrayWithRaw");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeRGB24");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeRGB24 = (_dColorizeRGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeRGB24));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeAlphaNumeric");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeAlphaNumeric = (_dColorizeAlphaNumeric)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAlphaNumeric));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeClose");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeConsoleData");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_4_Colors");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeSet_4_Colors = (_dColorizeSet_4_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_4_Colors));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_16_Colors");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeSet_16_Colors = (_dColorizeSet_16_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_16_Colors));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeGetEvent");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeGetEvent = (_dColorizeGetEvent)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetEvent));
+				}
+				catch (Exception e) {
+					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
+					return false;
+				}
+
+				Logger.Info("Loading Pin2Color plugin ...");
 			}
-
-			try
-			{
-				var pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeOpen");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeInit");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2Gray");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4Gray");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2GrayWithRaw");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4GrayWithRaw");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeRGB24");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeRGB24 = (_dColorizeRGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeRGB24));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeAlphaNumeric");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeAlphaNumeric = (_dColorizeAlphaNumeric)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAlphaNumeric));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeClose");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeConsoleData");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_4_Colors");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeSet_4_Colors = (_dColorizeSet_4_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_4_Colors));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_16_Colors");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeSet_16_Colors = (_dColorizeSet_16_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_16_Colors));
-
-				pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeGetEvent");
-				if (pAddress == IntPtr.Zero)
-				{
-					throw new Exception("Cannot map function in " + dllFileName);
-				}
-				ColorizeGetEvent = (_dColorizeGetEvent)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetEvent));
-			}
-			catch (Exception e)
-			{
-				Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
-				return false;
-			}
-
-			Logger.Info("Loading Pin2Color plugin ...");
 
 			return true;
 
@@ -292,14 +294,14 @@ namespace LibDmd.Converter.Pin2Color
 			var coloredFrame = new byte[frameSize];
 
 			if (IsOpen) {
-				
+
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
 					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
 					for (int i = 0; i < vd.RawPlanes.Length; i++) {
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
 					IntPtr Rgb24Buffer = IntPtr.Zero;
-					if (frame.BitLength == 4) 
+					if (frame.BitLength == 4)
 						Rgb24Buffer = Render4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 					else
 						Rgb24Buffer = Render2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
@@ -418,7 +420,9 @@ namespace LibDmd.Converter.Pin2Color
 		public static bool Close()
 		{
 			_activePinUpOutput = null;
-			return ColorizeClose();
+
+			ColorizeClose();
+			return true;
 		}
 
 		public static void ConsoleData(byte data)

@@ -184,7 +184,7 @@ namespace DmdExt.Mirror
 				return serumColorizer;
 			}
 
-			var pin2colorColorizer = _colorizationLoader.LoadPin2Color(true, gameName, Colors.OrangeRed.R, Colors.OrangeRed.G, Colors.OrangeRed.B, _config.Global.ScalerMode, _config.Global.ScaleToHd);
+			var pin2colorColorizer = _colorizationLoader.LoadPin2Color(true, gameName, Colors.OrangeRed.R, Colors.OrangeRed.G, Colors.OrangeRed.B, null, _config.Global.ScalerMode, _config.Global.ScaleToHd);
 			if (pin2colorColorizer != null) {
 				return pin2colorColorizer;
 			}
