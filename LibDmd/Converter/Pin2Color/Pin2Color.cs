@@ -56,8 +56,6 @@ namespace LibDmd.Converter.Pin2Color
 
 		public Pin2Color(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue, Color[] palette, ScalerMode ScalerMode, bool ScaleToHd) {
 
-			_hasEvents = false;
-
 			this.ScalerMode = ScalerMode;
 			this.ScaleToHd = ScaleToHd;
 
@@ -84,6 +82,10 @@ namespace LibDmd.Converter.Pin2Color
 				IsColored = true;
 			} else {
 				IsColored = false;
+			}
+
+			if (IsColored) {
+				_hasEvents = ColorizeHasEvents();
 			}
 
 			if (palette != null && !IsColored) {

@@ -444,7 +444,7 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-			if (_colorize && _pin2color != null) {
+			if (_pin2color != null) {
 				// 2-bit graph
 				_graphs.Add(new RenderGraph
 				{
