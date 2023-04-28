@@ -394,7 +394,7 @@ namespace LibDmd.DmdDevice
 					var pinupOutput = new PinUpOutput(_gameName);
 					if (pinupOutput.IsAvailable) {
 						if ((_serum != null) && (pinupOutput.isPuPTrigger)) _serum.SetPinupInstance(pinupOutput);
-						if (_pin2color != null && (pinupOutput.isPuPTrigger)) Pin2Color.SetPinUpOutput(pinupOutput);
+						if (_pin2color != null && _isColored && (pinupOutput.isPuPTrigger)) _pin2color.SetPinUpOutput(pinupOutput);
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
@@ -474,62 +474,58 @@ namespace LibDmd.DmdDevice
 				});
 			}
 
-			if (!_isColored && _serum != null)
-			{
-				if (_serum.NumColors == 16)
-				{
+			if (!_isColored) {
+				if (_colorize && _serum != null) {
+					if (_serum.NumColors == 16) {
+						_graphs.Add(new RenderGraph
+						{
+							Name = "4-bit Colored VPM Graph",
+							Source = _passthroughGray4Source,
+							Destinations = renderers,
+							Converter = _serum,
+							Resize = _config.Global.Resize,
+							FlipHorizontally = _config.Global.FlipHorizontally,
+							FlipVertically = _config.Global.FlipVertically,
+							ScalerMode = _config.Global.ScalerMode
+						});
+					} else {
+						_graphs.Add(new RenderGraph
+						{
+							Name = "2-bit Colored VPM Graph",
+							Source = _passthroughGray2Source,
+							Destinations = renderers,
+							Converter = _serum,
+							Resize = _config.Global.Resize,
+							FlipHorizontally = _config.Global.FlipHorizontally,
+							FlipVertically = _config.Global.FlipVertically,
+							ScalerMode = _config.Global.ScalerMode
+						});
+					}
+				} else {
 					_graphs.Add(new RenderGraph
 					{
-						Name = "4-bit Colored VPM Graph",
-						Source = _passthroughGray4Source,
-						Destinations = renderers,
-						Converter = _serum,
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
-					});
-				}
-				else
-				{
-					_graphs.Add(new RenderGraph
-					{
-						Name = "2-bit Colored VPM Graph",
+						Name = "2-bit VPM Graph",
 						Source = _passthroughGray2Source,
 						Destinations = renderers,
-						Converter = _serum,
 						Resize = _config.Global.Resize,
 						FlipHorizontally = _config.Global.FlipHorizontally,
 						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
+						ScalerMode = _config.Global.ScalerMode,
+						Colored = _isColored
+					});
+
+					_graphs.Add(new RenderGraph
+					{
+						Name = "4-bit VPM Graph",
+						Source = _passthroughGray4Source,
+						Destinations = renderers,
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode,
+						Colored = _isColored
 					});
 				}
-			} else {
-
-				_graphs.Add(new RenderGraph
-				{
-					Name = "2-bit VPM Graph",
-					Source = _passthroughGray2Source,
-					Destinations = renderers,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode,
-					Colored = _isColored
-				});
-
-				_graphs.Add(new RenderGraph
-				{
-					Name = "4-bit VPM Graph",
-					Source = _passthroughGray4Source,
-					Destinations = renderers,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode,
-					Colored = _isColored
-				});
-
 			}
 			
 			// rgb24 graph

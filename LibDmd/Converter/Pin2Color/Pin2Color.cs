@@ -40,6 +40,7 @@ namespace LibDmd.Converter.Pin2Color
 		private static uint lastEventID = 0;
 
 		private static PinUpOutput _activePinUpOutput = null;
+		private static bool _hasEvents { get; set; }
 
 		public enum ColorizerMode
 		{
@@ -54,6 +55,8 @@ namespace LibDmd.Converter.Pin2Color
 
 
 		public Pin2Color(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue, Color[] palette, ScalerMode ScalerMode, bool ScaleToHd) {
+
+			_hasEvents = false;
 
 			this.ScalerMode = ScalerMode;
 			this.ScaleToHd = ScaleToHd;
@@ -204,6 +207,12 @@ namespace LibDmd.Converter.Pin2Color
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeGetEvent = (_dColorizeGetEvent)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetEvent));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeHasEvents");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeHasEvents = (_dColorizeHasEvents)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeHasEvents));
 				}
 				catch (Exception e) {
 					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
@@ -268,6 +277,10 @@ namespace LibDmd.Converter.Pin2Color
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate uint _dColorizeGetEvent();
 		private static _dColorizeGetEvent ColorizeGetEvent;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate bool _dColorizeHasEvents();
+		private static _dColorizeHasEvents ColorizeHasEvents;
 
 		private ColorizerMode _pin2ColorizerMode;
 		public void Convert(DMDFrame frame)
@@ -420,7 +433,7 @@ namespace LibDmd.Converter.Pin2Color
 		public static bool Close()
 		{
 			_activePinUpOutput = null;
-
+			_hasEvents = false;
 			ColorizeClose();
 			return true;
 		}
@@ -430,18 +443,23 @@ namespace LibDmd.Converter.Pin2Color
 			ColorizeConsoleData(data);
 		}
 
-		public static void processEvent()
+		private static void processEvent()
 		{
-			uint eventID = ColorizeGetEvent();
-			if (eventID != lastEventID) {
-				lastEventID = eventID;
-				if (_activePinUpOutput != null) _activePinUpOutput.SendTriggerID((ushort)eventID);
+			if (_activePinUpOutput != null) {
+				uint eventID = ColorizeGetEvent();
+				if (eventID != lastEventID) {
+					lastEventID = eventID;
+					_activePinUpOutput.SendTriggerID((ushort)eventID);
+				}
 			}
 		}
 
-		public static void SetPinUpOutput(PinUpOutput puo)
+		public void SetPinUpOutput(PinUpOutput puo)
 		{
 			_activePinUpOutput = puo;
+			if ((puo != null) && _hasEvents) {
+				puo.PuPFrameMatching = false;
+			}
 		}
 
 	}
