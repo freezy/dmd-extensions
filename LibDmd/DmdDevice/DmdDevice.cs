@@ -501,35 +501,37 @@ namespace LibDmd.DmdDevice
 							ScalerMode = _config.Global.ScalerMode
 						});
 					}
-				} else {
-					_graphs.Add(new RenderGraph
-					{
-						Name = "2-bit VPM Graph",
-						Source = _passthroughGray2Source,
-						Destinations = renderers,
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode,
-						Colored = _isColored
-					});
-
-					_graphs.Add(new RenderGraph
-					{
-						Name = "4-bit VPM Graph",
-						Source = _passthroughGray4Source,
-						Destinations = renderers,
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode,
-						Colored = _isColored
-					});
-				}
+				} 
 			}
-			
-			// rgb24 graph
-			_graphs.Add(new RenderGraph {
+
+			if (_pin2color == null && _serum == null) {
+				_graphs.Add(new RenderGraph
+				{
+					Name = "2-bit VPM Graph",
+					Source = _passthroughGray2Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
+				});
+
+				_graphs.Add(new RenderGraph
+				{
+					Name = "4-bit VPM Graph",
+					Source = _passthroughGray4Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+					Colored = _isColored
+				});
+			}
+
+		// rgb24 graph
+		_graphs.Add(new RenderGraph {
 				Name = "RGB24-bit VPM Graph",
 				Source = _passthroughRgb24Source,
 				Destinations = renderers,

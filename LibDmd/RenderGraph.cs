@@ -302,6 +302,8 @@ namespace LibDmd
 								//Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray6SourceConverter.Name);
 								Connect(coloredGray6SourceConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
 							}
+							// render graph is already set up through converters, so we skip the rest below
+							continue;
 						}
 
 						if (Colored && coloredGraySourceConverter != null) {
@@ -309,12 +311,10 @@ namespace LibDmd
 							if (destColoredGray != null) {
 								//Logger.Info("Hooking colored 24-bit source of {0} converter to {1}.", coloredGraySourceConverter.Name, dest.Name);
 								Connect(coloredGraySourceConverter, destColoredGray, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
-
-								// otherwise, convert to rgb24
 							}
+							// render graph is already set up through converters, so we skip the rest below
+							continue;
 						}
-						// render graph is already set up through converters, so we skip the rest below
-						continue;
 					}
 
 					// Now here we need to find the most efficient way of passing data from the source
