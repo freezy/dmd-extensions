@@ -130,85 +130,85 @@ namespace LibDmd.Converter.Pin2Color
 				}
 
 				try {
-					var pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeOpen");
+					var pAddress = NativeDllLoad.GetProcAddress(pDll, "Open");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeInit");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Init");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2Gray");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_4_Shades");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4Gray");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_16_Shades");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize2GrayWithRaw");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_4_Shades_with_Raw");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "Colorize4GrayWithRaw");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_16_Shades_with_Raw");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeRGB24");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_RGB24");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeRGB24 = (_dColorizeRGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeRGB24));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeAlphaNumeric");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_PM_Alphanumeric_Frame");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeAlphaNumeric = (_dColorizeAlphaNumeric)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAlphaNumeric));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeClose");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Close");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeConsoleData");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Console_Data");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_4_Colors");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Set_4_Colors_Palette");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeSet_4_Colors = (_dColorizeSet_4_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_4_Colors));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeSet_16_Colors");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Set_16_Colors_Palette");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeSet_16_Colors = (_dColorizeSet_16_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_16_Colors));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeGetEvent");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Get_Event");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeGetEvent = (_dColorizeGetEvent)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetEvent));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "ColorizeHasEvents");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Has_Events");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
