@@ -286,6 +286,11 @@ namespace LibDmd
 					// will get the IColoredGray6Source converted up to RGB24.
 					if (Converter != null && destRgb24 != null)
 					{
+						if (coloredGraySourceConverter != null && coloredGraySourceConverter.Name.Equals("Switching Converter (Passthrough)")) {
+							if (destColoredGray != null) {
+								Connect(coloredGraySourceConverter, destColoredGray, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
+							}
+						}
 						// if converter emits colored gray-6 frames..
 						if (coloredGray6SourceConverter != null)
 						{
