@@ -159,14 +159,16 @@ namespace DmdExt.Mirror
 				}
 				
 				// print game names
-				var nameSub = graphs.Graphs
-					.Select(g => g.Source as IGameNameSource)
-					.FirstOrDefault(s => s != null)
-					?.GetGameName()
-					.Subscribe(name => Logger.Info($"New game detected: {name}"));
-				
-				if (nameSub != null) {
+				foreach (var g in graphs.Graphs) {
+					if (!(g.Source is IGameNameSource s)) {
+						continue;
+					}
+					var nameSub = s.GetGameName().Subscribe(name => {
+						Analytics.SourceActive(g.Source.Name, name);
+						Logger.Info($"New game detected at {g.Source.Name}: {name}");
+					});
 					_subscriptions.Add(nameSub);
+					break;
 				}
 			}
 			

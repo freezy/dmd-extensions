@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -14,6 +12,7 @@ using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
+using LibDmd.Converter.Serum;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -22,16 +21,15 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
-using LibDmd.Output.ZeDMD;
 using LibDmd.Output.PinUp;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
 using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using LibDmd.Converter.Serum;
 
 namespace LibDmd.DmdDevice
 {
@@ -135,6 +133,8 @@ namespace LibDmd.DmdDevice
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
+			
+			Analytics.Init(_fullVersion);
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
@@ -702,6 +702,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
+			Analytics.SourceActive(Process.GetCurrentProcess().ProcessName, gameName);
 		}
 
 		public void SetColorize(bool colorize)
