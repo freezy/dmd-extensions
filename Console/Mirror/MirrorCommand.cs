@@ -179,14 +179,15 @@ namespace DmdExt.Mirror
 				return null;
 			}
 
+			var pin2colorColorizer = _colorizationLoader.LoadPin2Color(true, gameName, Colors.OrangeRed.R, Colors.OrangeRed.G, Colors.OrangeRed.B, null, _config.Global.ScalerMode, _config.Global.ScaleToHd);
+			if (pin2colorColorizer != null) {
+				if (pin2colorColorizer.IsColored)
+					return pin2colorColorizer;
+			}
+
 			var serumColorizer = _colorizationLoader.LoadSerum(gameName, _config.Global.ScalerMode);
 			if (serumColorizer != null) {
 				return serumColorizer;
-			}
-
-			var pin2colorColorizer = _colorizationLoader.LoadPin2Color(true, gameName, Colors.OrangeRed.R, Colors.OrangeRed.G, Colors.OrangeRed.B, null, _config.Global.ScalerMode, _config.Global.ScaleToHd);
-			if (pin2colorColorizer != null) {
-				return pin2colorColorizer;
 			}
 
 			return null;
