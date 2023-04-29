@@ -287,10 +287,41 @@ namespace LibDmd
 					if (Converter != null && destRgb24 != null)
 					{
 						if (coloredGraySourceConverter != null && coloredGraySourceConverter.Name.Equals("Switching Converter (Passthrough)")) {
+							// if destination can render colored gray frames...
 							if (destColoredGray != null) {
+								//Logger.Info("Hooking colored 24-bit source of {0} converter to {1}.", coloredGraySourceConverter.Name, dest.Name);
 								Connect(coloredGraySourceConverter, destColoredGray, FrameFormat.ColoredGray, FrameFormat.ColoredGray);
 							}
 						}
+
+						// if converter emits colored gray-2 frames..
+						if (coloredGray2SourceConverter != null) {
+							// if destination can render colored gray-2 frames...
+							if (destColoredGray2 != null) {
+								//Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
+								Connect(coloredGray2SourceConverter, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
+
+								// otherwise, try to convert to rgb24
+							} else {
+								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
+								Connect(coloredGray2SourceConverter, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
+							}
+						}
+
+						// if converter emits colored gray-4 frames..
+						if (coloredGray4SourceConverter != null) {
+							// if destination can render colored gray-4 frames...
+							if (destColoredGray4 != null) {
+								//Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
+								Connect(coloredGray4SourceConverter, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
+
+								// otherwise, convert to rgb24
+							} else {
+								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
+								Connect(coloredGray4SourceConverter, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
+							}
+						}
+
 						// if converter emits colored gray-6 frames..
 						if (coloredGray6SourceConverter != null)
 						{
