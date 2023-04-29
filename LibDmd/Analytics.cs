@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Management;
+using System.Net;
 using Microsoft.Win32;
 using RudderStack;
 using NLog;
@@ -39,7 +40,9 @@ namespace LibDmd
 		public static void Init(string version)
 		{
 			_options = new RudderOptions().SetContext(CreateContext(version));
-			
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+			ServicePointManager.Expect100Continue = true;
+
 			RudderStack.Logger.Handlers += LoggingHandler;
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
