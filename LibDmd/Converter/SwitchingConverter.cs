@@ -12,13 +12,15 @@ namespace LibDmd.Converter
 	/// Converter that can swap in another child converter dynamically, without requiring upstream subscribers to re-subscribe.
 	/// Falls back to orange DMD colored frames when no child converter is available.
 	/// </summary>
-	public class SwitchingConverter : AbstractSource, IConverter, IColoredGray6Source, IColoredGraySource
+	public class SwitchingConverter : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IColoredGraySource
 	{
 		private IConverter _converter;
 		private readonly Subject<ColoredFrame> _coloredGray2PassthroughFrames = new Subject<ColoredFrame>();
 		private readonly Subject<ColoredFrame> _coloredGray4PassthroughFrames = new Subject<ColoredFrame>();
 		private Color _color = Colors.OrangeRed;
 
+		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
+		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray6 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray = new ReplaySubject<IObservable<ColoredFrame>>(1);
 
@@ -33,6 +35,8 @@ namespace LibDmd.Converter
 		public SwitchingConverter(FrameFormat frameFormat)
 		{
 			From = frameFormat;
+			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
+			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 			_latestColoredGray.OnNext(Observable.Empty<ColoredFrame>());
 		}
@@ -50,6 +54,9 @@ namespace LibDmd.Converter
 			}
 		}
 
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => _latestColoredGray2.Switch();
+
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => _latestColoredGray4.Switch();
 		public void Convert(AlphaNumericFrame frame)
 		{
 			
@@ -68,6 +75,8 @@ namespace LibDmd.Converter
 			Logger.Info($"{Name} switching to {ConverterName(converter)}");
 
 			if (converter == null) {
+				_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
+				_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
 				_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 				_latestColoredGray.OnNext(Observable.Empty<ColoredFrame>());
 				_converter = null;
@@ -75,6 +84,16 @@ namespace LibDmd.Converter
 			}
 
 			converter.Init();
+
+			if (converter is IColoredGray2Source source2) {
+				source2.Dimensions = Dimensions;
+				_latestColoredGray2.OnNext(source2.GetColoredGray2Frames());
+			}
+
+			if (converter is IColoredGray4Source source4) {
+				source4.Dimensions = Dimensions;
+				_latestColoredGray4.OnNext(source4.GetColoredGray4Frames());
+			}
 
 			if (converter is IColoredGray6Source source6) {
 				source6.Dimensions = Dimensions;
