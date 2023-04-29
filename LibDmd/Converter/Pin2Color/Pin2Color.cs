@@ -77,7 +77,7 @@ namespace LibDmd.Converter.Pin2Color
 				}
 			}
 
-			_pin2ColorizerMode = (ColorizerMode)Setup(colorize, gameName, red, green, blue);
+			_pin2ColorizerMode = (ColorizerMode)Setup(colorize, altcolorPath, gameName, red, green, blue);
 			if (_pin2ColorizerMode >= 0) {
 				IsColored = true;
 			} else {
@@ -265,7 +265,7 @@ namespace LibDmd.Converter.Pin2Color
 		private static _dColorizeAlphaNumeric ColorizeAlphaNumeric;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate int _dColorizeInit(bool colorize, string gameName, byte red, byte green, byte blue);
+		private delegate int _dColorizeInit(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue);
 		private static _dColorizeInit ColorizeInit;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -427,9 +427,9 @@ namespace LibDmd.Converter.Pin2Color
 			return Rgb24Buffer;
 		}
 
-		public int Setup(bool colorize, string gameName, byte red, byte green, byte blue)
+		public int Setup(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue)
 		{
-			return ColorizeInit(colorize, gameName, red, green, blue);
+			return ColorizeInit(colorize, altcolorPath, gameName, red, green, blue);
 		}
 
 		public static bool Close()
