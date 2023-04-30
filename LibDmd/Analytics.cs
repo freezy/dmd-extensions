@@ -55,6 +55,7 @@ namespace LibDmd
 
 		public void Send()
 		{
+			_data["Weight"] = 1 / _displays.Count;
 			foreach (var display in _displays) {
 				_data["Display"] = display;
 				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
