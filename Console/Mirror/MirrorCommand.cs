@@ -58,7 +58,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					reportingTags.Add("In:PinballFX2");
-					Analytics.Instance.SourceActive("Pinball FX2");
+					Analytics.Instance.SetSource("Pinball FX2");
 					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX2 Render Graph", reportingTags));
 					break;
 				}
@@ -66,17 +66,17 @@ namespace DmdExt.Mirror
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						reportingTags.Add("In:PinballFX3Legacy");
-						Analytics.Instance.SourceActive("Pinball FX3 (legacy)");
+						Analytics.Instance.SetSource("Pinball FX3 (legacy)");
 						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 (legacy) Render Graph", reportingTags));
 					} else {
-						reportingTags.Add("In:PinballFX3");
+						reportingTags.Add("In:PinballFX3"); // analytics done when game name is known
 						graphs.Add(CreateGraph(new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 Render Graph", reportingTags));
 					}
 					break;
 				}
 
 				case SourceType.PinballArcade: {
-					reportingTags.Add("In:PinballArcade");
+					reportingTags.Add("In:PinballArcade"); // analytics done when game name is known
 					var tpaGrabber = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
 					graphs.Add(CreateGraph(tpaGrabber.Gray2Source, "Pinball Arcade (2-bit) Render Graph", reportingTags));
 					graphs.Add(CreateGraph(tpaGrabber.Gray4Source, "Pinball Arcade (4-bit) Render Graph", reportingTags));
@@ -85,7 +85,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.ProPinball: {
 					reportingTags.Add("In:ProPinball");
-					Analytics.Instance.SourceActive("Pro Pinball", "Timeshock");
+					Analytics.Instance.SetSource("Pro Pinball", "Timeshock");
 					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), "Pro Pinball Render Graph", reportingTags));
 					break;
 				}
@@ -109,13 +109,13 @@ namespace DmdExt.Mirror
 					}
 
 					reportingTags.Add("In:ScreenGrab");
-					Analytics.Instance.SourceActive("Screen Grabber");
+					Analytics.Instance.SetSource("Screen Grabber");
 					graphs.Add(CreateGraph(grabber, "Screen Grabber Render Graph", reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
 					reportingTags.Add("In:FutureDmdSink");
-					Analytics.Instance.SourceActive("Future Pinball");
+					Analytics.Instance.SetSource("Future Pinball");
 					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), "Future Pinball Render Graph", reportingTags));
 					break;
 
@@ -127,6 +127,7 @@ namespace DmdExt.Mirror
 			if (_config.Global.Colorize) {
 				foreach (var graph in graphs.Graphs) {
 					if (!(graph.Source is IGameNameSource gameNameSource)) {
+						Analytics.Instance.Send(); // send now, since we won't get a game name
 						continue;
 					}
 
@@ -140,6 +141,9 @@ namespace DmdExt.Mirror
 					
 					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
 						converter.Switch(LoadColorizer(name));
+						// when coloring, set game name when it becomes available (and color prop is set)
+						Analytics.Instance.SetSource(graph.Source.Name, name);
+						Analytics.Instance.Send();
 					}));
 
 					if (graph.Source is IDmdColorSource dmdColorSource) {
@@ -163,11 +167,13 @@ namespace DmdExt.Mirror
 				// print game names
 				foreach (var g in graphs.Graphs) {
 					if (!(g.Source is IGameNameSource s)) {
+						Analytics.Instance.Send(); // send now, since we won't get a game name
 						continue;
 					}
 					var nameSub = s.GetGameName().Subscribe(name => {
-						Analytics.Instance.SourceActive(g.Source.Name, name);
 						Logger.Info($"New game detected at {g.Source.Name}: {name}");
+						Analytics.Instance.SetSource(g.Source.Name, name);
+						Analytics.Instance.Send();
 					});
 					_subscriptions.Add(nameSub);
 					break;

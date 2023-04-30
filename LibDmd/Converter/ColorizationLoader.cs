@@ -51,6 +51,7 @@ namespace LibDmd.Converter
 					{
 						Logger.Info($"Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
 						Logger.Info($"Loading colorization at {serumPath}...");
+						Analytics.Instance.SetColorizer("Serum");
 						serum.ScalerMode = scalerMode;
 						return serum;
 					}
@@ -61,7 +62,10 @@ namespace LibDmd.Converter
 				catch (Exception e)
 				{
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					Analytics.Instance.ClearColorizer();
 				}
+			} else {
+				Analytics.Instance.ClearColorizer();
 			}
 
 			return null;
@@ -71,6 +75,7 @@ namespace LibDmd.Converter
 		{
 			if (_altcolorPath == null)
 			{
+				Analytics.Instance.ClearColorizer();
 				return null;
 			}
 
@@ -94,11 +99,12 @@ namespace LibDmd.Converter
 						vni = new VniAnimationSet(vniPath);
 						Logger.Info("Loaded animation set {0}", vni);
 						Logger.Info("Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
-
+						Analytics.Instance.SetColorizer("VNI/PAL");
 					}
 					else
 					{
 						Logger.Info("No animation set found");
+						Analytics.Instance.SetColorizer("PAL");
 					}
 
 					var gray2Colorizer = new Gray2Colorizer(coloring, vni);
@@ -118,12 +124,14 @@ namespace LibDmd.Converter
 				catch (Exception e)
 				{
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					Analytics.Instance.ClearColorizer();
 				}
 
 			}
 			else
 			{
 				Logger.Info("No palette file found at {0}.", palPath);
+				Analytics.Instance.ClearColorizer();
 			}
 
 			return null;

@@ -134,7 +134,7 @@ namespace LibDmd.DmdDevice
 				_sha = "";
 			}
 			
-			Analytics.Instance.Init(_fullVersion);
+			Analytics.Instance.Init(_fullVersion, "DLL");
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
@@ -199,6 +199,7 @@ namespace LibDmd.DmdDevice
 		{
 			// only setup if enabled and path is set
 			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
+				Analytics.Instance.ClearColorizer();
 				return;
 			}
 
@@ -385,14 +386,12 @@ namespace LibDmd.DmdDevice
 				renderers.Add(_virtualDmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
 				ReportingTags.Add("Out:VirtualDMD");
-				Analytics.Instance.AddDestination(_virtualDmd.Dmd);
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				_alphaNumericDest = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
 				renderers.Add(_alphaNumericDest);
 				Logger.Info("Added virtual alphanumeric renderer.");
 				ReportingTags.Add("Out:VirtualAlphaNum");
-				Analytics.Instance.AddDestination(_alphaNumericDest);
 			}
 			if (_config.Video.Enabled) {
 				var rootPath = "";
@@ -718,6 +717,8 @@ namespace LibDmd.DmdDevice
 
 		public void SetGameName(string gameName)
 		{
+			AnalyticsClear();
+
 			if (_gameName != null) { // only reload if game name is set (i.e. we didn't just load because we just started)
 				_config.Reload();
 			}
@@ -725,7 +726,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
-			Analytics.Instance.SourceActive(Process.GetCurrentProcess().ProcessName, gameName);
+			Analytics.Instance.SetSource(Process.GetCurrentProcess().ProcessName, gameName);
 		}
 
 		public void SetColorize(bool colorize)
@@ -754,6 +755,7 @@ namespace LibDmd.DmdDevice
 		}
 		public void RenderGray2(DMDFrame frame)
 		{
+			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
@@ -814,6 +816,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderGray4(DMDFrame frame)
 		{
+			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
@@ -849,6 +852,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderRgb24(DMDFrame frame)
 		{
+			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
@@ -857,6 +861,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
+			AnalyticsSetSegmentDisplay();
 			if (_gameName.StartsWith("spagb_")) {
 				// ignore GB frames, looks like a bug from SPA side
 				return;
@@ -918,6 +923,39 @@ namespace LibDmd.DmdDevice
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
 			}
 		}
+		
+		#region Analytics
+
+		private bool _analyticsVirtualDmdEnabled;
+		
+		private void AnalyticsSetDmd()
+		{
+			if (!_config.VirtualDmd.Enabled || _analyticsVirtualDmdEnabled) {
+				return;
+			}
+			_analyticsVirtualDmdEnabled = true;
+			Analytics.Instance.ClearVirtualDestinations();
+			Analytics.Instance.AddDestination(_virtualDmd.Dmd);
+			Analytics.Instance.Send();
+		}
+		
+		private void AnalyticsSetSegmentDisplay()
+		{
+			if (!_config.VirtualAlphaNumericDisplay.Enabled || _analyticsVirtualDmdEnabled) {
+				return;
+			}
+			_analyticsVirtualDmdEnabled = true;
+			Analytics.Instance.ClearVirtualDestinations();
+			Analytics.Instance.AddDestination(_alphaNumericDest);
+			Analytics.Instance.Send();
+		}
+
+		private void AnalyticsClear()
+		{
+			_analyticsVirtualDmdEnabled = false;
+		}
+		
+		#endregion
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{

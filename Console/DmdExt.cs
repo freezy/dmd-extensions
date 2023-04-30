@@ -126,7 +126,7 @@ namespace DmdExt
 					? (IConfiguration)cmdLineOptions
 					: new Configuration(cmdLineOptions.DmdDeviceIni) { GameName = cmdLineOptions.GameName };
 
-				Analytics.Instance.Init(_fullVersion);
+				Analytics.Instance.Init(_fullVersion, "EXE");
 
 				//BaseOptions baseOptions;
 				switch (invokedVerb) {

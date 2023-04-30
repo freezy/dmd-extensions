@@ -340,11 +340,6 @@ namespace PinMameDevice
 
 		#endregion
 
-		private static bool IsOldWindows()
-		{
-			return Environment.OSVersion.Version.Major < 5;
-		}
-
 		private static Rgb24 GetColorAtPosition(IntPtr data, int pos, int size)
 		{
 			var p = new IntPtr(data.ToInt64() + pos*size);

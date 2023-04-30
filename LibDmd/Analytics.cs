@@ -43,9 +43,9 @@ namespace LibDmd
 		
 		public static Analytics Instance => _instance ?? (_instance = new Analytics());
 
-		public void Init(string version)
+		public void Init(string version, string runner)
 		{
-			_options = new RudderOptions().SetContext(CreateContext(version));
+			_options = new RudderOptions().SetContext(CreateContext(version, runner));
 			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 			ServicePointManager.Expect100Continue = true;
 
@@ -53,29 +53,30 @@ namespace LibDmd
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
-		public void SourceActive(string host, string gameId)
+		public void Send()
 		{
-			_data["Host"] = host;
-			_data["Game"] = gameId;
 			foreach (var display in _displays) {
 				_data["Display"] = display;
 				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
 			}
 		}
 
-		public void SourceActive(string host)
+		public void SetSource(string source, string gameId)
+		{
+			_data["Host"] = source;
+			_data["Game"] = gameId;
+
+		}
+
+		public void SetSource(string host)
 		{
 			_data["Host"] = host;
 			if (_data.ContainsKey("Game")) {
 				_data.Remove("Game");
 			}
-			foreach (var display in _displays) {
-				_data["Display"] = display;
-				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
-			}
 		}
 
-		public void SourceInactive()
+		public void ClearSource()
 		{
 			if (_data.ContainsKey("Game")) {
 				_data.Remove("Game");
@@ -90,18 +91,31 @@ namespace LibDmd
 			_displays.Add(dest.Name);
 		}
 
-		public void AddColorer()
+		public void ClearVirtualDestinations()
 		{
-			
+			_displays.RemoveWhere(d => d.Contains("Virtual"));
+		}
+		
+		public void SetColorizer(string name)
+		{
+			_data["Colorizer"] = name;
 		}
 
-		private RudderContext CreateContext(string version)
+		public void ClearColorizer()
+		{
+			if (_data.ContainsKey("Colorizer")) {
+				_data.Remove("Colorizer");
+			}
+		}
+
+		private RudderContext CreateContext(string version, string runner)
 		{
 			var sysInfo = GetSysInfo();
 			var osVer = OSVersion.GetOSVersion();
 			return new RudderContext { 
 				{ "app", new Dict {
 					{ "version", version },
+					{ "runner", runner },
 					{ "distributor", Distributor }
 				} },
 				{ "device", new Dict {
