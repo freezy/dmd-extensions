@@ -58,6 +58,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					reportingTags.Add("In:PinballFX2");
+					Analytics.SourceActive("Pinball FX2");
 					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX2 Render Graph", reportingTags));
 					break;
 				}
@@ -65,8 +66,8 @@ namespace DmdExt.Mirror
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						reportingTags.Add("In:PinballFX3Legacy");
+						Analytics.SourceActive("Pinball FX3 (legacy)");
 						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 (legacy) Render Graph", reportingTags));
-						
 					} else {
 						reportingTags.Add("In:PinballFX3");
 						graphs.Add(CreateGraph(new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 Render Graph", reportingTags));
@@ -84,12 +85,12 @@ namespace DmdExt.Mirror
 
 				case SourceType.ProPinball: {
 					reportingTags.Add("In:ProPinball");
+					Analytics.SourceActive("Pro Pinball", "Timeshock");
 					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), "Pro Pinball Render Graph", reportingTags));
 					break;
 				}
 
 				case SourceType.Screen:
-
 					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
@@ -108,11 +109,13 @@ namespace DmdExt.Mirror
 					}
 
 					reportingTags.Add("In:ScreenGrab");
+					Analytics.SourceActive("Screen Grabber");
 					graphs.Add(CreateGraph(grabber, "Screen Grabber Render Graph", reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
 					reportingTags.Add("In:FutureDmdSink");
+					Analytics.SourceActive("Future Pinball");
 					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), "Future Pinball Render Graph", reportingTags));
 					break;
 
@@ -145,8 +148,7 @@ namespace DmdExt.Mirror
 						});
 					}
 				}
-			}
-			else {
+			} else {
 
 				// When not colorizing, subscribe to DMD color changes to inform the graph.
 				var colorSub = graphs.Graphs

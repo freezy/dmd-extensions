@@ -16,9 +16,10 @@ namespace LibDmd
 {
 	public static class Analytics
 	{
-
 		private static string _id;
 		private static RudderOptions _options;
+		private static HashSet<string> _displays = new HashSet<string>();
+		private static readonly Dict Data = new Dict();
 		
 		private const string FieldDeviceName = "Device Name"; //Name
 		private const string FieldDeviceType = "System Type"; //SystemType
@@ -48,16 +49,47 @@ namespace LibDmd
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
-		public static void SourceActive(string source, string gameId)
+		public static void SourceActive(string host, string gameId)
 		{
-			RudderAnalytics.Client.Page(GetId(), source, new Dictionary<string, object> { {"Game", gameId} }, _options);
+			Data["Host"] = host;
+			Data["Game"] = gameId;
+			foreach (var display in _displays) {
+				Data["Display"] = display;
+				RudderAnalytics.Client.Track(GetId(), "Game Started", Data, _options);
+			}
 		}
 
-		public static void SourceActive(string source)
+		public static void SourceActive(string host)
 		{
-			RudderAnalytics.Client.Page(GetId(), source, _options);
+			Data["Host"] = host;
+			if (Data.ContainsKey("Game")) {
+				Data.Remove("Game");
+			}
+			foreach (var display in _displays) {
+				Data["Display"] = display;
+				RudderAnalytics.Client.Track(GetId(), "Game Started", Data, _options);
+			}
 		}
 
+		public static void SourceInactive()
+		{
+			if (Data.ContainsKey("Game")) {
+				Data.Remove("Game");
+			}
+			if (Data.ContainsKey("Host")) {
+				Data.Remove("Host");
+			}
+		}
+
+		public static void AddDestination(IDestination dest)
+		{
+			_displays.Add(dest.Name);
+		}
+
+		public static void AddColorer()
+		{
+			
+		}
 
 		private static RudderContext CreateContext(string version)
 		{
@@ -71,7 +103,7 @@ namespace LibDmd
 				{ "device", new Dict {
 					{ "name", sysInfo[FieldDeviceName] },
 					{ "type", sysInfo[FieldDeviceType] },
-					{ "memory_total", sysInfo[FieldDeviceMemory] },
+					{ "memory_total", $"{Math.Round(((UInt64)sysInfo[FieldDeviceMemory]) / 1073741824d)}GB" },
 					{ "cpu_model", sysInfo[FieldCpuName] },
 					{ "cpu_clock_speed", sysInfo[FieldCpuClockSpeed] },
 					{ "cpu_manufacturer", sysInfo[FieldCpuManufacturer] },

@@ -38,6 +38,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	// pin2dmd: IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IFixedSizeDestination
 	// pindmd3: IGray2Destination, IGray4Destination, IColoredGray2Destination, IFixedSizeDestination
 	{
+		public new string Name => "Virtual DMD";
 
 		public VirtualDisplay Host { set; get; }
 
