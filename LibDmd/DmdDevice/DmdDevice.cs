@@ -134,7 +134,7 @@ namespace LibDmd.DmdDevice
 				_sha = "";
 			}
 			
-			Analytics.Init(_fullVersion);
+			Analytics.Instance.Init(_fullVersion);
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
@@ -317,7 +317,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
 					ReportingTags.Add("Out:PinDMDv1");
-					Analytics.AddDestination(pinDmd1);
+					Analytics.Instance.AddDestination(pinDmd1);
 				}
 			}
 			if (_config.PinDmd2.Enabled) {
@@ -326,7 +326,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
 					ReportingTags.Add("Out:PinDMDv2");
-					Analytics.AddDestination(pinDmd2);
+					Analytics.Instance.AddDestination(pinDmd2);
 				}
 			}
 			if (_config.PinDmd3.Enabled) {
@@ -335,7 +335,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
 					ReportingTags.Add("Out:PinDMDv3");
-					Analytics.AddDestination(pinDmd3);
+					Analytics.Instance.AddDestination(pinDmd3);
 				}
 			}
 			if (_config.ZeDMD.Enabled) {
@@ -344,7 +344,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
-					Analytics.AddDestination(zeDmd);
+					Analytics.Instance.AddDestination(zeDmd);
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
@@ -353,7 +353,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
-					Analytics.AddDestination(pin2Dmd);
+					Analytics.Instance.AddDestination(pin2Dmd);
 				}
 
 				var pin2DmdXl = Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
@@ -361,7 +361,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2DmdXl);
 					Logger.Info("Added PIN2DMD XL renderer.");
 					ReportingTags.Add("Out:PIN2DMDXL");
-					Analytics.AddDestination(pin2DmdXl);
+					Analytics.Instance.AddDestination(pin2DmdXl);
 				}
 
 				var pin2DmdHd = Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
@@ -369,7 +369,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2DmdHd);
 					Logger.Info("Added PIN2DMD HD renderer.");
 					ReportingTags.Add("Out:PIN2DMDHD");
-					Analytics.AddDestination(pin2DmdHd);
+					Analytics.Instance.AddDestination(pin2DmdHd);
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
@@ -378,21 +378,21 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
 					ReportingTags.Add("Out:Pixelcade");
-					Analytics.AddDestination(pixelcade);
+					Analytics.Instance.AddDestination(pixelcade);
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {
 				renderers.Add(_virtualDmd.Dmd);
 				Logger.Info("Added VirtualDMD renderer.");
 				ReportingTags.Add("Out:VirtualDMD");
-				Analytics.AddDestination(_virtualDmd.Dmd);
+				Analytics.Instance.AddDestination(_virtualDmd.Dmd);
 			}
 			if (_config.VirtualAlphaNumericDisplay.Enabled) {
 				_alphaNumericDest = VirtualAlphanumericDestination.GetInstance(Dispatcher.CurrentDispatcher, _config.VirtualAlphaNumericDisplay.Style, _config);
 				renderers.Add(_alphaNumericDest);
 				Logger.Info("Added virtual alphanumeric renderer.");
 				ReportingTags.Add("Out:VirtualAlphaNum");
-				Analytics.AddDestination(_alphaNumericDest);
+				Analytics.Instance.AddDestination(_alphaNumericDest);
 			}
 			if (_config.Video.Enabled) {
 				var rootPath = "";
@@ -404,14 +404,14 @@ namespace LibDmd.DmdDevice
 					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-					Analytics.AddDestination(video);
+					Analytics.Instance.AddDestination(video);
 				}
 				else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
 					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd);
 					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-					Analytics.AddDestination(video);
+					Analytics.Instance.AddDestination(video);
 				}
 				else {
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
@@ -429,7 +429,7 @@ namespace LibDmd.DmdDevice
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
-						Analytics.AddDestination(pinupOutput);
+						Analytics.Instance.AddDestination(pinupOutput);
 					}
 				}
 				catch (Exception e) {
@@ -448,7 +448,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(gifOutput);
 					Logger.Info("Added animated GIF renderer, saving to {0}", path);
 					ReportingTags.Add("Out:GIF");
-					Analytics.AddDestination(gifOutput);
+					Analytics.Instance.AddDestination(gifOutput);
 				}
 				else {
 					Logger.Warn("Ignoring animated GIF renderer for non-existing path \"{0}\"", Path.GetDirectoryName(path));
@@ -459,21 +459,21 @@ namespace LibDmd.DmdDevice
 				renderers.Add(vpdbStream);
 				Logger.Info("Added VPDB stream renderer.");
 				ReportingTags.Add("Out:VpdbStream");
-				Analytics.AddDestination(vpdbStream);
+				Analytics.Instance.AddDestination(vpdbStream);
 			}
 			if (_config.BrowserStream.Enabled) {
 				var browserStream = new BrowserStream(_config.BrowserStream.Port, _gameName);
 				renderers.Add(browserStream);
 				Logger.Info("Added browser stream renderer.");
 				ReportingTags.Add("Out:BrowserStream");
-				Analytics.AddDestination(browserStream);
+				Analytics.Instance.AddDestination(browserStream);
 			}
 			if (_config.NetworkStream.Enabled) {
 				var networkStream = NetworkStream.GetInstance(_config.NetworkStream, _gameName);
 				renderers.Add(networkStream);
 				Logger.Info("Added network stream renderer.");
 				ReportingTags.Add("Out:NetworkStream");
-				Analytics.AddDestination(networkStream);
+				Analytics.Instance.AddDestination(networkStream);
 			}
 
 			if (renderers.Count == 0) {
@@ -725,7 +725,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
-			Analytics.SourceActive(Process.GetCurrentProcess().ProcessName, gameName);
+			Analytics.Instance.SourceActive(Process.GetCurrentProcess().ProcessName, gameName);
 		}
 
 		public void SetColorize(bool colorize)

@@ -147,6 +147,7 @@ namespace LibDmd.Input
 			Logger.Info($"Terminating DMD data capture from {Name}");
 			_capturer.Dispose();
 			_onPause.OnNext(Unit.Default);
+			Analytics.Instance.SourceInactive();
 			StartPolling();
 		}
 

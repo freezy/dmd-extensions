@@ -58,7 +58,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					reportingTags.Add("In:PinballFX2");
-					Analytics.SourceActive("Pinball FX2");
+					Analytics.Instance.SourceActive("Pinball FX2");
 					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX2 Render Graph", reportingTags));
 					break;
 				}
@@ -66,7 +66,7 @@ namespace DmdExt.Mirror
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						reportingTags.Add("In:PinballFX3Legacy");
-						Analytics.SourceActive("Pinball FX3 (legacy)");
+						Analytics.Instance.SourceActive("Pinball FX3 (legacy)");
 						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 (legacy) Render Graph", reportingTags));
 					} else {
 						reportingTags.Add("In:PinballFX3");
@@ -85,7 +85,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.ProPinball: {
 					reportingTags.Add("In:ProPinball");
-					Analytics.SourceActive("Pro Pinball", "Timeshock");
+					Analytics.Instance.SourceActive("Pro Pinball", "Timeshock");
 					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), "Pro Pinball Render Graph", reportingTags));
 					break;
 				}
@@ -109,13 +109,13 @@ namespace DmdExt.Mirror
 					}
 
 					reportingTags.Add("In:ScreenGrab");
-					Analytics.SourceActive("Screen Grabber");
+					Analytics.Instance.SourceActive("Screen Grabber");
 					graphs.Add(CreateGraph(grabber, "Screen Grabber Render Graph", reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
 					reportingTags.Add("In:FutureDmdSink");
-					Analytics.SourceActive("Future Pinball");
+					Analytics.Instance.SourceActive("Future Pinball");
 					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), "Future Pinball Render Graph", reportingTags));
 					break;
 
@@ -166,7 +166,7 @@ namespace DmdExt.Mirror
 						continue;
 					}
 					var nameSub = s.GetGameName().Subscribe(name => {
-						Analytics.SourceActive(g.Source.Name, name);
+						Analytics.Instance.SourceActive(g.Source.Name, name);
 						Logger.Info($"New game detected at {g.Source.Name}: {name}");
 					});
 					_subscriptions.Add(nameSub);

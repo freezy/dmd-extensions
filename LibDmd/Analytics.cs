@@ -14,16 +14,16 @@ using Logger = NLog.Logger;
 
 namespace LibDmd
 {
-	public static class Analytics
+	public class Analytics
 	{
-		private static string _id;
-		private static RudderOptions _options;
-		private static HashSet<string> _displays = new HashSet<string>();
-		private static readonly Dict Data = new Dict();
+		private string _id;
+		private RudderOptions _options;
+		private readonly Dict _data = new Dict();
+		private readonly HashSet<string> _displays = new HashSet<string>();
 		
-		private const string FieldDeviceName = "Device Name"; //Name
-		private const string FieldDeviceType = "System Type"; //SystemType
-		private const string FieldDeviceMemory = "Total Memory"; //TotalPhysicalMemory
+		private const string FieldDeviceName = "Device Name";
+		private const string FieldDeviceType = "System Type";
+		private const string FieldDeviceMemory = "Total Memory";
 		private const string FieldCpuName = "CPU Name";
 		private const string FieldCpuClockSpeed = "CPU Clock Speed"; 
 		private const string FieldCpuManufacturer = "CPU Manufacturer";
@@ -39,7 +39,11 @@ namespace LibDmd
 		
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static void Init(string version)
+		private static Analytics _instance;
+		
+		public static Analytics Instance => _instance ?? (_instance = new Analytics());
+
+		public void Init(string version)
 		{
 			_options = new RudderOptions().SetContext(CreateContext(version));
 			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -49,49 +53,49 @@ namespace LibDmd
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
-		public static void SourceActive(string host, string gameId)
+		public void SourceActive(string host, string gameId)
 		{
-			Data["Host"] = host;
-			Data["Game"] = gameId;
+			_data["Host"] = host;
+			_data["Game"] = gameId;
 			foreach (var display in _displays) {
-				Data["Display"] = display;
-				RudderAnalytics.Client.Track(GetId(), "Game Started", Data, _options);
+				_data["Display"] = display;
+				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
 			}
 		}
 
-		public static void SourceActive(string host)
+		public void SourceActive(string host)
 		{
-			Data["Host"] = host;
-			if (Data.ContainsKey("Game")) {
-				Data.Remove("Game");
+			_data["Host"] = host;
+			if (_data.ContainsKey("Game")) {
+				_data.Remove("Game");
 			}
 			foreach (var display in _displays) {
-				Data["Display"] = display;
-				RudderAnalytics.Client.Track(GetId(), "Game Started", Data, _options);
+				_data["Display"] = display;
+				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
 			}
 		}
 
-		public static void SourceInactive()
+		public void SourceInactive()
 		{
-			if (Data.ContainsKey("Game")) {
-				Data.Remove("Game");
+			if (_data.ContainsKey("Game")) {
+				_data.Remove("Game");
 			}
-			if (Data.ContainsKey("Host")) {
-				Data.Remove("Host");
+			if (_data.ContainsKey("Host")) {
+				_data.Remove("Host");
 			}
 		}
 
-		public static void AddDestination(IDestination dest)
+		public void AddDestination(IDestination dest)
 		{
 			_displays.Add(dest.Name);
 		}
 
-		public static void AddColorer()
+		public void AddColorer()
 		{
 			
 		}
 
-		private static RudderContext CreateContext(string version)
+		private RudderContext CreateContext(string version)
 		{
 			var sysInfo = GetSysInfo();
 			var osVer = OSVersion.GetOSVersion();
@@ -128,14 +132,16 @@ namespace LibDmd
 			};
 		}
 
-		private static Dictionary<string, object> GetSysInfo()
+		private Dictionary<string, object> GetSysInfo()
 		{
 			var info = new Dictionary<string, object>();
 			
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_Processor")) {
 	
-				foreach (ManagementObject mo in searcher.Get()) {
-					
+				foreach (var obj in searcher.Get()) {
+					if (!(obj is ManagementObject mo)) {
+						continue;
+					}
 					AddInfo("Name", FieldCpuName, mo, info);
 					AddInfo("CurrentClockSpeed", FieldCpuClockSpeed, mo, info);
 					AddInfo("Manufacturer", FieldCpuManufacturer, mo, info);
@@ -153,47 +159,41 @@ namespace LibDmd
 
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController")) {
 	
-				foreach (ManagementObject mo in searcher.Get()) {
+				foreach (var obj in searcher.Get()) {
+					if (!(obj is ManagementObject mo)) {
+						continue;
+					}
 					PropertyData currentBitsPerPixel = mo.Properties["CurrentBitsPerPixel"];
 					PropertyData maxRefreshRate = mo.Properties["MaxRefreshRate"];
 					PropertyData description = mo.Properties["Description"];
 					if (currentBitsPerPixel.Value == null || maxRefreshRate.Value == null || (UInt32)maxRefreshRate.Value == 0 || description.Value == null) {
 						continue;
 					}
-
 					AddInfo("Description", FieldGpuName, mo, info);
 					AddInfo("CurrentHorizontalResolution", FieldGpuResWidth, mo, info);
 					AddInfo("CurrentVerticalResolution", FieldGpuResHeight, mo, info);
 					AddInfo("AdapterCompatibility", FieldGpuManufacturer, mo, info);
 					AddInfo("DriverVersion", FieldGpuDriverVersion, mo, info);
 					AddInfo("DriverDate", FieldGpuDriverDate, mo, info);
-
-					// Console.WriteLine($"{mo.Path}\n==========================");
-					// foreach(var prop in mo.Properties) {
-					// 	Console.WriteLine($"{prop.Name} = {prop.Value} ({prop.Type})");
-					// }
 				}
 			}
 			
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_ComputerSystem")) {
 	
-				foreach (ManagementObject mo in searcher.Get()) {
-
+				foreach (var obj in searcher.Get()) {
+					if (!(obj is ManagementObject mo)) {
+						continue;
+					}
 					AddInfo("Name", FieldDeviceName, mo, info);
 					AddInfo("SystemType", FieldDeviceType, mo, info);
 					AddInfo("TotalPhysicalMemory", FieldDeviceMemory, mo, info);
-		
-					// Console.WriteLine($"{mo.Path}\n==========================");
-					// foreach(var prop in mo.Properties) {
-					// 	Console.WriteLine($"{prop.Name} = {prop.Value} ({prop.Type})");
-					// }
 				}
 			}
 
 			return info;
 		}
 		
-		private static void AddInfo(string srcKey, string destKey, ManagementObject mo, Dictionary<string, object> info)
+		private static void AddInfo(string srcKey, string destKey, ManagementBaseObject mo, IDictionary<string, object> info)
 		{
 			try {
 				PropertyData data = mo.Properties[srcKey];
@@ -203,7 +203,7 @@ namespace LibDmd
 				info.Add(destKey, data.Value);
 				
 			} catch (ManagementException e) {
-				
+				Logger.Warn($"Cannot get {srcKey} from WMI: {e.Message}", e);
 			}
 		}
 
@@ -216,7 +216,7 @@ namespace LibDmd
 			}
 		}
 
-		private static string GetId()
+		private string GetId()
 		{
 			if (_id != null) {
 				return _id;
@@ -244,7 +244,7 @@ namespace LibDmd
 			return _id;
 		}
 		
-		static void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
+		void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
 		{
 			if (args != null) {
 				message = args.Keys.Aggregate(message, (current, key) => current + $" {"" + key}: {"" + args[key]},");
