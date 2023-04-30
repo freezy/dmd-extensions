@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Management;
 using System.Net;
+using LibDmd.Output;
 using Microsoft.Win32;
 using RudderStack;
 using NLog;
@@ -64,7 +65,8 @@ namespace LibDmd
 			var osVer = OSVersion.GetOSVersion();
 			return new RudderContext { 
 				{ "app", new Dict {
-					{ "version", version }
+					{ "version", version },
+					{ "distributor", Distributor }
 				} },
 				{ "device", new Dict {
 					{ "name", sysInfo[FieldDeviceName] },
@@ -217,6 +219,18 @@ namespace LibDmd
 			}
 			Logger.Info($"[RudderAnalytics] [{level}] {message}");
 		}
+		
+#if SRC_GITHUB
+		private const string Distributor = "GitHub";
+#elif SRC_PIXELCADE
+		private const string Distributor = "Pixelcade";
+#elif SRC_BALLER
+		private const string Distributor = "Baller Installer";
+#elif SRC_VPINBALL
+		private const string Distributor = "VPX Installer";
+#else
+		private const string Distributor = "Homebrew";
+#endif
 
 	}
 }
