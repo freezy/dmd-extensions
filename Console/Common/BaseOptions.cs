@@ -123,8 +123,11 @@ namespace DmdExt.Common
 		[Option("retry-interval", HelpText = "In seconds, interval between Websocket connection retry attempts. Default: 5 seconds")]
 		public int WebsocketRetryInterval { get; set; } = 5;
 
-		[Option("colorize", HelpText = "Enable frame-by-frame colorization")]
+		[Option("colorize", HelpText = "Enable frame-by-frame colorization. Default: false.")]
 		public bool Colorize { get; set; } = false;
+				
+		[Option("skip-analytics", HelpText = "If set, don't send anonymous usage data to the developer. Default: false.")]
+		public bool SkipAnalytics { get; set; } = false;
 
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
@@ -211,6 +214,7 @@ namespace DmdExt.Common
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
 		public bool ScaleToHd => _options.ScalingToHD;
 		public ScalerMode ScalerMode => _options.ScalingMode;
+		public bool SkipAnalytics => _options.SkipAnalytics;
 	}
 
 	internal class VirtualDmdOptions : IVirtualDmdConfig

@@ -182,6 +182,7 @@ namespace LibDmd.DmdDevice
 		public Color DmdColor => RenderGraph.DefaultColor;
 		public bool ScaleToHd => GetBoolean("scaletohd", false);
 		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
+		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{

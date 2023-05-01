@@ -134,6 +134,9 @@ namespace LibDmd.DmdDevice
 				_sha = "";
 			}
 			
+			if (_config.Global.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 			Analytics.Instance.Init(_fullVersion, "DLL");
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,

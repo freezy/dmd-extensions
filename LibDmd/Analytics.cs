@@ -22,6 +22,7 @@ namespace LibDmd
 		private readonly HashSet<string> _displays = new HashSet<string>();
 		private DateTime _gameStartedAt;
 		private bool _hasGameStarted;
+		private bool _isDisabled;
 		
 		private const string FieldDeviceName = "Device Name";
 		private const string FieldDeviceType = "System Type";
@@ -45,18 +46,29 @@ namespace LibDmd
 		
 		public static Analytics Instance => _instance ?? (_instance = new Analytics());
 
+		public void Disable()
+		{
+			_isDisabled = true;
+		}
+
 		public void Init(string version, string runner)
 		{
 			_options = new RudderOptions().SetContext(CreateContext(version, runner));
 			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 			ServicePointManager.Expect100Continue = true;
 
+			if (_isDisabled) {
+				return;
+			}
 			RudderStack.Logger.Handlers += LoggingHandler;
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
 		public void StartGame()
 		{
+			if (_isDisabled) {
+				return;
+			}
 			_data["Weight"] = 1 / _displays.Count;
 			foreach (var display in _displays) {
 				_data["Display"] = display;
@@ -114,7 +126,7 @@ namespace LibDmd
 		
 		public void EndGame()
 		{
-			if (!_hasGameStarted) {
+			if (_isDisabled || !_hasGameStarted) {
 				return;
 			}
 			var duration = Math.Round((DateTime.Now - _gameStartedAt).TotalSeconds);

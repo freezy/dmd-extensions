@@ -29,6 +29,9 @@ namespace DmdExt.Mirror
 		{
 			_config = config;
 			_options = options;
+			if (_options.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 		}
 
 		private RenderGraph CreateGraph(ISource source, string name, HashSet<string> reportingTags)
