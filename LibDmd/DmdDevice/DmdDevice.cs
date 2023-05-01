@@ -698,7 +698,7 @@ namespace LibDmd.DmdDevice
 		public void ConsoleData(byte data)
 		{
 			if (_pin2color != null)
-				Pin2Color.ConsoleData(data);
+				_pin2color.ConsoleData(data);
 		}
 
 		public void SetColor(Color color)

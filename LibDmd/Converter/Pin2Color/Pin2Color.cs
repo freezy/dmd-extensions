@@ -4,22 +4,17 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Input;
-using LibDmd.Input.Passthrough;
 using LibDmd.Output.PinUp;
 using NLog;
 
 namespace LibDmd.Converter.Pin2Color
 {
-
 	public class Pin2Color : AbstractSource, IConverter, IColoredGraySource
 	{
-
 		public override string Name => "Pin2Color";
 		public FrameFormat From { get; } = FrameFormat.ColoredGray;
 
@@ -51,6 +46,18 @@ namespace LibDmd.Converter.Pin2Color
 			Advanced256x64 = 4,
 		}
 
+		[StructLayout(LayoutKind.Sequential)]
+		public struct PMoptions
+		{
+			public int Red, Green, Blue;
+			public int Perc66, Perc33, Perc0;
+			public int DmdOnly, Compact, Antialias;
+			public int Colorize;
+			public int Red66, Green66, Blue66;
+			public int Red33, Green33, Blue33;
+			public int Red0, Green0, Blue0;
+		}
+
 		public IObservable<ColoredFrame> GetColoredGrayFrames() => _coloredGrayAnimationFrames;
 
 
@@ -69,7 +76,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			if (!IsOpen) {
-				if (!Open()) {
+				if (!ColorizeOpen()) {
 					IsOpen = false;
 					return;
 				} else {
@@ -77,7 +84,12 @@ namespace LibDmd.Converter.Pin2Color
 				}
 			}
 
-			_pin2ColorizerMode = (ColorizerMode)Setup(colorize, altcolorPath, gameName, red, green, blue);
+			ColorizeAltColorPath(altcolorPath);
+
+			PMoptions options = new PMoptions { Red = red, Green = green, Blue = blue, Colorize = colorize ? 1 : 0 };
+			IntPtr opt = Marshal.AllocHGlobal(Marshal.SizeOf(options));
+			Marshal.StructureToPtr(options, opt, false);
+			_pin2ColorizerMode = (ColorizerMode)ColorizeGameSettings(gameName, 0, opt); ;
 			if (_pin2ColorizerMode >= 0) {
 				IsColored = true;
 			} else {
@@ -96,22 +108,26 @@ namespace LibDmd.Converter.Pin2Color
 					_pal[(i * 3) + 2] = palette[i].B;
 				}
 				if (palette.Length == 4) {
-					Set_4_Colors(_pal);
+					ColorizeSet_4_Colors(_pal);
 				} else if (palette.Length == 16) {
-					Set_16_Colors(_pal);
+					ColorizeSet_16_Colors(_pal);
 				}
 			}
 		}
 		public void Init()
 		{
 		}
+
 		public void Dispose()
 		{
-			if (IsOpen) Close();
+			if (IsOpen) {
+				_activePinUpOutput = null;
+				_hasEvents = false;
+				ColorizeClose();
+			}
 			IsColored = false;
 			IsOpen = false;
 		}
-
 
 		private bool Pin2Color_Load()
 		{
@@ -131,6 +147,9 @@ namespace LibDmd.Converter.Pin2Color
 					return false;
 				}
 
+				// Now load function calls using PinMame BSD-3 licensed DmdDevice.DLL API
+				// See README.MD in PinMameDevice folder.
+
 				try {
 					var pAddress = NativeDllLoad.GetProcAddress(pDll, "Open");
 					if (pAddress == IntPtr.Zero) {
@@ -138,11 +157,11 @@ namespace LibDmd.Converter.Pin2Color
 					}
 					ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
 
-					pAddress = NativeDllLoad.GetProcAddress(pDll, "Init");
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "PM_GameSettings");
 					if (pAddress == IntPtr.Zero) {
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
-					ColorizeInit = (_dColorizeInit)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeInit));
+					ColorizeGameSettings = (_dColorizeGameSettings)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGameSettings));
 
 					pAddress = NativeDllLoad.GetProcAddress(pDll, "Render_4_Shades");
 					if (pAddress == IntPtr.Zero) {
@@ -215,6 +234,12 @@ namespace LibDmd.Converter.Pin2Color
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeHasEvents = (_dColorizeHasEvents)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeHasEvents));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "PM_AltColorPath");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeAltColorPath = (_dColorizeAltColorPath)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAltColorPath));
 				}
 				catch (Exception e) {
 					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
@@ -265,8 +290,8 @@ namespace LibDmd.Converter.Pin2Color
 		private static _dColorizeAlphaNumeric ColorizeAlphaNumeric;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate int _dColorizeInit(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue);
-		private static _dColorizeInit ColorizeInit;
+		private delegate int _dColorizeGameSettings(string gameName, ulong hardwareGeneration, IntPtr options);
+		private static _dColorizeGameSettings ColorizeGameSettings;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate bool _dColorizeClose();
@@ -283,6 +308,10 @@ namespace LibDmd.Converter.Pin2Color
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate bool _dColorizeHasEvents();
 		private static _dColorizeHasEvents ColorizeHasEvents;
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate void _dColorizeAltColorPath(string Path);
+		private static _dColorizeAltColorPath ColorizeAltColorPath;
 
 		private ColorizerMode _pin2ColorizerMode;
 		public void Convert(DMDFrame frame)
@@ -316,21 +345,22 @@ namespace LibDmd.Converter.Pin2Color
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
 					IntPtr Rgb24Buffer = IntPtr.Zero;
-					if (frame.BitLength == 4)
-						Rgb24Buffer = Render4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-					else
-						Rgb24Buffer = Render2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+					if (frame.BitLength == 4) {
+						Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+					} else {
+						Rgb24Buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+					}
 
 					if (_pin2ColorizerMode != ColorizerMode.None)
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				} else {
 					IntPtr Rgb24Buffer = IntPtr.Zero;
 					if (frame.BitLength == 4) {
-						Rgb24Buffer = Render4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+						Rgb24Buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
 					} else if (frame.BitLength == 2) {
-						Rgb24Buffer = Render2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+						Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
 					} else {
-						RenderRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
+						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
 						return;
 					}
 
@@ -347,6 +377,7 @@ namespace LibDmd.Converter.Pin2Color
 					}
 					// send the colored frame
 					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+					processEvent();
 				}
 			}
 		}
@@ -362,7 +393,7 @@ namespace LibDmd.Converter.Pin2Color
 			int width = Width;
 			int height = Height;
 
-			var Rgb24Buffer = Pin2Color.RenderAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
+			var Rgb24Buffer = ColorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
 			if (_pin2ColorizerMode != Pin2Color.ColorizerMode.None) {
 				Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				if (_pin2ColorizerMode != ColorizerMode.None) {
@@ -374,73 +405,12 @@ namespace LibDmd.Converter.Pin2Color
 					}
 					// send the colored frame
 					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+					processEvent();
 				}
 			}
 		}
 
-		public static bool Open() {
-			return ColorizeOpen();
-		}
-
-		public static void Set_4_Colors(byte[] palette) {
-			ColorizeSet_4_Colors(palette);
-		}
-
-		public static void Set_16_Colors(byte[] palette) {
-			ColorizeSet_16_Colors(palette);
-		}
-
-		public static IntPtr Render4Gray(ushort width, ushort height, byte[] currbuffer) {
-			var Rgb24Buffer = Colorize4Gray(width, height, currbuffer);
-			processEvent();
-			return Rgb24Buffer;
-		}
-
-		public static IntPtr Render2Gray(ushort width, ushort height, byte[] currbuffer) {
-			var Rgb24Buffer = Colorize2Gray(width, height, currbuffer);
-			processEvent();
-			return Rgb24Buffer;
-		}
-		public static IntPtr Render4GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer)
-		{
-			var Rgb24Buffer = Colorize4GrayWithRaw(width, height, currbuffer, noOfRawFrames, currrawbuffer);
-			processEvent();
-			return Rgb24Buffer;
-		}
-
-		public static IntPtr Render2GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer)
-		{
-			var Rgb24Buffer = Colorize2GrayWithRaw(width, height, currbuffer, noOfRawFrames, currrawbuffer);
-			processEvent();
-			return Rgb24Buffer;
-		}
-
-		public static void RenderRGB24(ushort width, ushort height, byte[] currbuffer)
-		{
-			ColorizeRGB24(width, height, currbuffer);
-		}
-
-		public static IntPtr RenderAlphaNumeric(NumericalLayout numericalLayout, ushort[] seg_data, ushort[] seg_data2)
-		{
-			var Rgb24Buffer = ColorizeAlphaNumeric(numericalLayout, seg_data, seg_data2);
-			processEvent();
-			return Rgb24Buffer;
-		}
-
-		public int Setup(bool colorize, string altcolorPath, string gameName, byte red, byte green, byte blue)
-		{
-			return ColorizeInit(colorize, altcolorPath, gameName, red, green, blue);
-		}
-
-		public static bool Close()
-		{
-			_activePinUpOutput = null;
-			_hasEvents = false;
-			ColorizeClose();
-			return true;
-		}
-
-		public static void ConsoleData(byte data)
+		public void ConsoleData(byte data)
 		{
 			ColorizeConsoleData(data);
 		}
