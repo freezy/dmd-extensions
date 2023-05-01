@@ -20,6 +20,8 @@ namespace LibDmd
 		private RudderOptions _options;
 		private readonly Dict _data = new Dict();
 		private readonly HashSet<string> _displays = new HashSet<string>();
+		private DateTime _gameStartedAt;
+		private bool _hasGameStarted;
 		
 		private const string FieldDeviceName = "Device Name";
 		private const string FieldDeviceType = "System Type";
@@ -53,7 +55,7 @@ namespace LibDmd
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
-		public void Send()
+		public void StartGame()
 		{
 			_data["Weight"] = 1 / _displays.Count;
 			foreach (var display in _displays) {
@@ -64,13 +66,14 @@ namespace LibDmd
 
 		public void SetSource(string source, string gameId)
 		{
+			StartTimer();
 			_data["Host"] = source;
 			_data["Game"] = gameId;
-
 		}
 
 		public void SetSource(string host)
 		{
+			StartTimer();
 			_data["Host"] = host;
 			if (_data.ContainsKey("Game")) {
 				_data.Remove("Game");
@@ -108,8 +111,36 @@ namespace LibDmd
 				_data.Remove("Colorizer");
 			}
 		}
+		
+		public void EndGame()
+		{
+			if (!_hasGameStarted) {
+				return;
+			}
+			var duration = Math.Round((DateTime.Now - _gameStartedAt).TotalSeconds);
+			_data["Duration"] = duration;
+			_data["Weight"] = 1 / _displays.Count;
+			foreach (var display in _displays) {
+				_data["Display"] = display;
+				RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);
+			}
+			_hasGameStarted = false;
+			RudderAnalytics.Client.Flush();
+		}
+		
+		private void StartTimer()
+		{
+			if (_hasGameStarted) {
+				EndGame();
+			}
+			_hasGameStarted = true;
+			_gameStartedAt = DateTime.Now;
+			if (_data.ContainsKey("Duration")) {
+				_data.Remove("Duration");
+			}
+		}
 
-		private RudderContext CreateContext(string version, string runner)
+		private static RudderContext CreateContext(string version, string runner)
 		{
 			var sysInfo = GetSysInfo();
 			var osVer = OSVersion.GetOSVersion();
@@ -147,7 +178,7 @@ namespace LibDmd
 			};
 		}
 
-		private Dictionary<string, object> GetSysInfo()
+		private static Dictionary<string, object> GetSysInfo()
 		{
 			var info = new Dictionary<string, object>();
 			
@@ -215,7 +246,7 @@ namespace LibDmd
 				if (data.Value == null) {
 					return;
 				}
-				info.Add(destKey, data.Value);
+				info[destKey] = data.Value;
 				
 			} catch (ManagementException e) {
 				Logger.Warn($"Cannot get {srcKey} from WMI: {e.Message}", e);
@@ -258,8 +289,8 @@ namespace LibDmd
 			key.Close();
 			return _id;
 		}
-		
-		void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
+
+		static void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
 		{
 			if (args != null) {
 				message = args.Keys.Aggregate(message, (current, key) => current + $" {"" + key}: {"" + args[key]},");

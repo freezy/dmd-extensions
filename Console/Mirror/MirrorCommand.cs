@@ -127,7 +127,8 @@ namespace DmdExt.Mirror
 			if (_config.Global.Colorize) {
 				foreach (var graph in graphs.Graphs) {
 					if (!(graph.Source is IGameNameSource gameNameSource)) {
-						Analytics.Instance.Send(); // send now, since we won't get a game name
+						Analytics.Instance.SetSource(graph.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
 						continue;
 					}
 
@@ -138,12 +139,9 @@ namespace DmdExt.Mirror
 					
 					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
 					graph.Converter = converter;
-					
+
 					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
 						converter.Switch(LoadColorizer(name));
-						// when coloring, set game name when it becomes available (and color prop is set)
-						Analytics.Instance.SetSource(graph.Source.Name, name);
-						Analytics.Instance.Send();
 					}));
 
 					if (graph.Source is IDmdColorSource dmdColorSource) {
@@ -152,6 +150,22 @@ namespace DmdExt.Mirror
 						});
 					}
 				}
+				
+				// analytics
+				var g = graphs.Graphs.FirstOrDefault();
+				if (g != null) {
+					if (g.Source is IGameNameSource s) {
+						_subscriptions.Add(s.GetGameName().Subscribe(name => {
+							Analytics.Instance.SetSource(g.Source.Name, name);
+							Analytics.Instance.StartGame();
+						}));
+						
+					} else {
+						Analytics.Instance.SetSource(g.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
+					}
+				}
+				
 			} else {
 
 				// When not colorizing, subscribe to DMD color changes to inform the graph.
@@ -164,19 +178,20 @@ namespace DmdExt.Mirror
 					_subscriptions.Add(colorSub);
 				}
 				
-				// print game names
-				foreach (var g in graphs.Graphs) {
-					if (!(g.Source is IGameNameSource s)) {
-						Analytics.Instance.Send(); // send now, since we won't get a game name
-						continue;
+				// print game names & analytics
+				var graph = graphs.Graphs.FirstOrDefault();
+				if (graph != null) {
+					if (graph.Source is IGameNameSource s) {
+						var nameSub = s.GetGameName().Subscribe(name => {
+							Logger.Info($"New game detected at {graph.Source.Name}: {name}");
+							Analytics.Instance.SetSource(graph.Source.Name, name);
+							Analytics.Instance.StartGame();
+						});
+						_subscriptions.Add(nameSub);
+					} else {
+						Analytics.Instance.SetSource(graph.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
 					}
-					var nameSub = s.GetGameName().Subscribe(name => {
-						Logger.Info($"New game detected at {g.Source.Name}: {name}");
-						Analytics.Instance.SetSource(g.Source.Name, name);
-						Analytics.Instance.Send();
-					});
-					_subscriptions.Add(nameSub);
-					break;
 				}
 			}
 			

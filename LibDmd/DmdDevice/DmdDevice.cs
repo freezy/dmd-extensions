@@ -692,6 +692,7 @@ namespace LibDmd.DmdDevice
 		public void Close()
 		{
 			Logger.Info("Closing up.");
+			Analytics.Instance.EndGame();
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
@@ -936,7 +937,7 @@ namespace LibDmd.DmdDevice
 			_analyticsVirtualDmdEnabled = true;
 			Analytics.Instance.ClearVirtualDestinations();
 			Analytics.Instance.AddDestination(_virtualDmd.Dmd);
-			Analytics.Instance.Send();
+			Analytics.Instance.StartGame();
 		}
 		
 		private void AnalyticsSetSegmentDisplay()
@@ -947,7 +948,7 @@ namespace LibDmd.DmdDevice
 			_analyticsVirtualDmdEnabled = true;
 			Analytics.Instance.ClearVirtualDestinations();
 			Analytics.Instance.AddDestination(_alphaNumericDest);
-			Analytics.Instance.Send();
+			Analytics.Instance.StartGame();
 		}
 
 		private void AnalyticsClear()
