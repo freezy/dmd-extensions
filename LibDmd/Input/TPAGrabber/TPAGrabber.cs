@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reactive.Subjects;
 using System.Text;
 using LibDmd.Common;
@@ -20,20 +22,19 @@ namespace LibDmd.Input.TPAGrabber
 	/// </remarks>
 	public class TPAGrabber : MemoryGrabber<DmdFrame>
 	{
-		public override string Name { get; } = "Pinball Arcade DX11";
-		
+		public override string Name => "Pinball Arcade DX11";
+
 		public readonly PassthroughGray2Source Gray2Source;
 		public readonly PassthroughGray4Source Gray4Source;
 
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
 
 		// DMD Stuff
-		private const int DMDWidth = 128;
-		private const int DMDHeight = 32;
-		private static readonly byte[] RawDMD = new byte[MemBlockSize];
+		private Dimensions _dimensions = new Dimensions(128, 32);
+		private byte[] _rawDMD;
 		private byte[] _lastFrame;
-		private static bool sternInit = false;
-		private readonly DmdFrame _dmdFrame = new DmdFrame(DMDWidth, DMDHeight, 2);
+		private static bool _sternInit;
+		private readonly DmdFrame _dmdFrame = new DmdFrame(new Dimensions(128, 32), 2);
 		private string _gameName;
 		private int _bitLength = 4;
 		
@@ -57,8 +58,8 @@ namespace LibDmd.Input.TPAGrabber
 
 		protected override DmdFrame CaptureDMD()
 		{
-		// Initialize a new writeable bitmap to receive DMD pixels.
-			var frame = new byte[DMDWidth * DMDHeight];
+			// Initialize a new writeable bitmap to receive DMD pixels.
+			var frame = new byte[_dimensions.Surface];
 
 			// Init DMD hack for Stern tables.
 			InitSternDMD(_hProcess, false);
@@ -69,8 +70,8 @@ namespace LibDmd.Input.TPAGrabber
 
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
-				sternInit = false; // Reset Stern DMD hack state.
-				return _dmdFrame.Update(frame, _bitLength);
+				_sternInit = false; // Reset Stern DMD hack state.
+				return _dmdFrame.Update(_dimensions, frame, _bitLength);
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -81,35 +82,38 @@ namespace LibDmd.Input.TPAGrabber
 			ReadProcessMemory(_hProcess, _codeCave, eax, 4, IntPtr.Zero);
 
 			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			var dmdOffset = B4ToPointer(eax) - 0x1F406;
-
-			// Grab the whole raw DMD block from game's memory.
-			ReadProcessMemory(_hProcess, dmdOffset, RawDMD, MemBlockSize + 2, IntPtr.Zero);
-
-			// Check the DMD CRC flag, skip the frame if the value is incorrect.
-			if (RawDMD[0] != 0x02) {
-				return null;
-			}
-
-			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-			var rawPixelIndex = 2;
-
-			var identical = true;
+			var dmdOffset = B4ToPointer(eax) - (_dimensions.Width == 128 ? 0x1F408 : 0x7E60A);
 
 			// emits game name, and sets bit length.
 			ReadGameName(_hProcess);
 
+			// Grab the whole raw DMD block from game's memory.
+			var size = _dimensions.Width * 8 * (_dimensions.Width / 32) * _dimensions.Height;
+			ReadProcessMemory(_hProcess, dmdOffset, _rawDMD, size, IntPtr.Zero);
+
+			// Check the DMD CRC flag, skip the frame if the value is incorrect.
+			if (_rawDMD[0] != (_dimensions.Width == 128 ? 0x02 : 0x04)) {
+				return null;
+			}
+
+			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
+			var rawPixelIndex = (_dimensions.Width / 32);
+
+			var identical = true;
+
+			// emits game name, and sets bit length.
+			//ReadGameName(_hProcess);
+
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < DMDHeight; dmdY++) {
+			for (var dmdY = 0; dmdY < _dimensions.Height; dmdY++) {
 
 				// For each pixel on X axis.
-				for (var dmdX = 0; dmdX < DMDWidth; dmdX++) {
+				for (var dmdX = 0; dmdX < _dimensions.Width; dmdX++) {
 
 					// RGB to BGR
-					double hue, sat, lum;
-					ColorUtil.RgbToHsl(RawDMD[rawPixelIndex], RawDMD[rawPixelIndex + 1], RawDMD[rawPixelIndex + 2], out hue, out sat, out lum);
+					ColorUtil.RgbToHsl(_rawDMD[rawPixelIndex], _rawDMD[rawPixelIndex + 1], _rawDMD[rawPixelIndex + 2], out _, out _, out var lum);
 
-					var pos = dmdY * DMDWidth + dmdX;
+					var pos = dmdY * _dimensions.Width + dmdX;
 				
 					byte pixel;
 					if (_bitLength == 4) {
@@ -142,12 +146,12 @@ namespace LibDmd.Input.TPAGrabber
 					rawPixelIndex += 8;
 				}
 				// Jump to the next DMD line.
-				rawPixelIndex += LineJump * 2 + DMDWidth * 8;
+				rawPixelIndex += _dimensions.Width == 128 ? 0xC00 : 0x1A00;
 			}
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : _dmdFrame.Update(frame, _bitLength);
+			return identical ? null : _dmdFrame.Update(_dimensions, frame, _bitLength);
 		}
 
 		// try attaching to a process
@@ -165,10 +169,6 @@ namespace LibDmd.Input.TPAGrabber
 			// not our process
 			return IntPtr.Zero;
 		}
-
-		// Codecave parameters
-		private const int LineJump = 0x400;
-		private const int MemBlockSize = 0x1FC02;
 
 		// addresses in the target process
 		private static IntPtr _dmdPatchAddr = IntPtr.Zero;
@@ -239,7 +239,7 @@ namespace LibDmd.Input.TPAGrabber
 			// Stern DMD original code.
 			var sternOrig = new byte[] { 0x83, 0xF8, 0x4F, 0x74, 0x4B };
 			// If the hack has not been initialized yet..
-			if (!sternInit) {
+			if (!_sternInit) {
 				if (!reset)
 					// Write the hack into memory.
 					WriteProcessMemory(procHandle, _dmdSternAddr, sternPatch, sternPatch.Length, IntPtr.Zero);
@@ -247,7 +247,7 @@ namespace LibDmd.Input.TPAGrabber
 					// Reset the code to its initial state.
 					WriteProcessMemory(procHandle, _dmdSternAddr, sternOrig, sternOrig.Length, IntPtr.Zero);
 					// Ready!
-					sternInit = true;
+					_sternInit = true;
 				}
 			}
 		}
@@ -260,22 +260,35 @@ namespace LibDmd.Input.TPAGrabber
 			var tableName = rawTableName.Contains("_")
 				? rawTableName.Substring(1, rawTableName.IndexOf("_", StringComparison.Ordinal) - 1)
 				: rawTableName.Substring(1);
-			if (tableName != _gameName) {
-				_gameName = tableName;
-				Gray2Source.NextGameName(_gameName);
-				Gray4Source.NextGameName(_gameName);
-				Lums.Clear();
+			if (tableName == _gameName) {
+				return;
 			}
+
+			_gameName = tableName;
+			Gray2Source.NextGameName(_gameName);
+			Gray4Source.NextGameName(_gameName);
+			Lums.Clear();
+
+			var largeDMDGames = new[] { "Frankenstein" };
+			_dimensions = largeDMDGames.Any(_gameName.Contains)
+				? new Dimensions(192, 64)
+				: new Dimensions(128, 32);
+
+			_rawDMD = new byte[_dimensions.Width * 8 * (_dimensions.Width / 32) * _dimensions.Height];
 
 			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
 			_bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
+
+			if (_dmdFrame.Dimensions != _dimensions || _dmdFrame.BitLength != _bitLength) {
+				_dmdFrame.Update(_dimensions, new byte[_dimensions.Surface], _bitLength);
+			}
 		}
 
 		// byte patterns to find DMD structs in the target process
-		private static readonly byte[] DMDCreationSignature = new byte[] { 0x8B, 0x5D, 0x10, 0x8D, 0x40, 0x08, 0x83, 0xE2, 0x01, 0x83, 0xE7, 0x01, 0x03, 0xFA };
-		private static readonly byte[] GameStateSignature = new byte[] { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
-		private static readonly byte[] SternDMDSignature = new byte[] { 0x75, 0x0A, 0xBA, 0x3E, 0x01, 0x00, 0x00, 0xB9, 0x3E, 0x00, 0x00, 0x00, 0x8B, 0x86, 0xD8, 0x29, 0x06, 0x00 };
-		private static readonly byte[] TableNameSignature = new byte[] { 0x85, 0xC0, 0x74, 0x08, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x02, 0x33, 0xC0, 0x51, 0xBA, 0xFF, 0xFF, 0xFF, 0xFF, 0xB9 };
+		private static readonly byte[] DMDCreationSignature = { 0x8B, 0x5D, 0x10, 0x8D, 0x40, 0x08, 0x83, 0xE2, 0x01, 0x83, 0xE7, 0x01, 0x03, 0xFA };
+		private static readonly byte[] GameStateSignature = { 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xC7, 0x87, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x74, 0x14, 0xC7, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x05 };
+		private static readonly byte[] SternDMDSignature = { 0x75, 0x0A, 0xBA, 0x3E, 0x01, 0x00, 0x00, 0xB9, 0x3E, 0x00, 0x00, 0x00, 0x8B, 0x86, 0xD8, 0x29, 0x06, 0x00 };
+		private static readonly byte[] TableNameSignature = { 0x85, 0xC0, 0x74, 0x08, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x02, 0x33, 0xC0, 0x51, 0xBA, 0xFF, 0xFF, 0xFF, 0xFF, 0xB9 };
 
 
 		private static bool FindOffsets(Process gameProc)
