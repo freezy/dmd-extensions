@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reactive.Subjects;
 using System.Text;
 using LibDmd.Common;
@@ -27,12 +29,12 @@ namespace LibDmd.Input.TPAGrabber
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
 
 		// DMD Stuff
-		private const int DMDWidth = 128;
-		private const int DMDHeight = 32;
-		private static readonly byte[] RawDMD = new byte[MemBlockSize];
+		private static int DMDWidth = 128;
+		private static int DMDHeight = 32;
+		private static byte[] RawDMD = null;
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
-		private readonly DMDFrame _dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
+		private DMDFrame _dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
 		private string _gameName;
 		private int _bitLength = 4;
 		
@@ -56,7 +58,7 @@ namespace LibDmd.Input.TPAGrabber
 
 		protected override DMDFrame CaptureDMD()
 		{
-		// Initialize a new writeable bitmap to receive DMD pixels.
+			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
 
 			// Init DMD hack for Stern tables.
@@ -69,34 +71,38 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				sternInit = false; // Reset Stern DMD hack state.
-				return _dmdFrame.Update(frame, _bitLength);
+				return _dmdFrame.Update(DMDWidth, DMDHeight, frame, _bitLength);
 			}
 
 			// Table is loaded, reset Stern DMD hack.
-			InitSternDMD(_hProcess, true);
+			InitSternDMD(_hProcess, true); 
 
 			// Retrieve the DMD entrypoint from EAX registry (returned by our codecave).
 			var eax = new byte[4];
 			ReadProcessMemory(_hProcess, _codeCave, eax, 4, IntPtr.Zero);
 
 			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			var dmdOffset = B4ToPointer(eax) - 0x1F406;
+			var dmdOffset = B4ToPointer(eax) - (DMDWidth == 128 ? 0x1F408 : 0x7E60A);
+
+			// emits game name, and sets bit length.
+			ReadGameName(_hProcess);
 
 			// Grab the whole raw DMD block from game's memory.
-			ReadProcessMemory(_hProcess, dmdOffset, RawDMD, MemBlockSize + 2, IntPtr.Zero);
+			var size = DMDWidth * 8 * (DMDWidth / 32) * DMDHeight;
+			ReadProcessMemory(_hProcess, dmdOffset, RawDMD, size, IntPtr.Zero);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
-			if (RawDMD[0] != 0x02) {
+			if (RawDMD[0] != (DMDWidth == 128 ? 0x02 : 0x04)) {
 				return null;
 			}
 
 			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-			var rawPixelIndex = 2;
+			var rawPixelIndex = (DMDWidth / 32);
 
 			var identical = true;
 
 			// emits game name, and sets bit length.
-			ReadGameName(_hProcess);
+			//ReadGameName(_hProcess);
 
 			// For each pixel on Y axis.
 			for (var dmdY = 0; dmdY < DMDHeight; dmdY++) {
@@ -141,12 +147,12 @@ namespace LibDmd.Input.TPAGrabber
 					rawPixelIndex += 8;
 				}
 				// Jump to the next DMD line.
-				rawPixelIndex += LineJump * 2 + DMDWidth * 8;
+				rawPixelIndex += DMDWidth == 128 ? 0xC00:0x1A00;
 			}
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : _dmdFrame.Update(frame, _bitLength);
+			return identical ? null : _dmdFrame.Update(DMDWidth, DMDHeight, frame, _bitLength);
 		}
 
 		// try attaching to a process
@@ -164,10 +170,6 @@ namespace LibDmd.Input.TPAGrabber
 			// not our process
 			return IntPtr.Zero;
 		}
-
-		// Codecave parameters
-		private const int LineJump = 0x400;
-		private const int MemBlockSize = 0x1FC02;
 
 		// addresses in the target process
 		private static IntPtr _dmdPatchAddr = IntPtr.Zero;
@@ -264,6 +266,17 @@ namespace LibDmd.Input.TPAGrabber
 				Gray2Source.NextGameName(_gameName);
 				Gray4Source.NextGameName(_gameName);
 				Lums.Clear();
+				
+				var LargeDMDGames = new[] { "Frankenstein" };
+				if (LargeDMDGames.Any(_gameName.Contains)) {
+					DMDWidth = 192;
+					DMDHeight = 64;
+				} else {
+					DMDWidth = 128;
+					DMDHeight = 32;
+				}
+				RawDMD = new byte[DMDWidth * 8 * (DMDWidth / 32) * DMDHeight];
+				_dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
 			}
 
 			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
