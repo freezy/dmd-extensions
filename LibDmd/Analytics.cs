@@ -10,6 +10,7 @@ using RudderStack;
 using NLog;
 using OSVersionExtension;
 using RudderStack.Model;
+using WebSocketSharp;
 using Logger = NLog.Logger;
 
 namespace LibDmd
@@ -49,6 +50,7 @@ namespace LibDmd
 		public void Disable()
 		{
 			_isDisabled = true;
+			Logger.Info("Analytics disabled.");
 		}
 
 		public void Init(string version, string runner)
@@ -155,7 +157,20 @@ namespace LibDmd
 		private static RudderContext CreateContext(string version, string runner)
 		{
 			var sysInfo = GetSysInfo();
-			var osVer = OSVersion.GetOSVersion();
+			
+			var os = OSVersion.GetOSVersion();
+			var osVersion = string.Empty;
+			var osBuild = 0;
+			var buildFromRegistry = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "CurrentBuildNumber", null);
+			if (buildFromRegistry != null) {
+				if (Int32.TryParse(buildFromRegistry.ToString(), out osBuild) && osBuild >= 22000) {
+					osVersion = "Windows 11";
+				}
+			}
+			if (osVersion.IsNullOrEmpty()) {
+				osVersion = OSVersion.GetOperatingSystem().ToString();
+			}
+			
 			return new RudderContext { 
 				{ "app", new Dict {
 					{ "version", version },
@@ -180,8 +195,9 @@ namespace LibDmd
 				{ "locale", CultureInfo.InstalledUICulture.Name },
 				{ "timezone", TimeZoneConverter.TZConvert.WindowsToIana(TimeZone.CurrentTimeZone.StandardName) },
 				{ "os", new Dict {
-					{ "name", OSVersion.GetOperatingSystem().ToString() },
-					{ "version", $"{osVer.Version.Major}.{osVer.Version.Minor}.{osVer.Version.Build}" }
+					{ "name", osVersion },
+					{ "version", $"{os.Version.Major}.{os.Version.Minor}.{os.Version.Build}" },
+					{ "build", osBuild }
 				} },
 				{ "screen", new Dict {
 					{ "width", sysInfo[FieldGpuResWidth] },
@@ -195,7 +211,6 @@ namespace LibDmd
 			var info = new Dictionary<string, object>();
 			
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_Processor")) {
-	
 				foreach (var obj in searcher.Get()) {
 					if (!(obj is ManagementObject mo)) {
 						continue;
@@ -213,10 +228,7 @@ namespace LibDmd
 					// }
 				}
 			}
-			
-
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController")) {
-	
 				foreach (var obj in searcher.Get()) {
 					if (!(obj is ManagementObject mo)) {
 						continue;
@@ -235,9 +247,7 @@ namespace LibDmd
 					AddInfo("DriverDate", FieldGpuDriverDate, mo, info);
 				}
 			}
-			
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_ComputerSystem")) {
-	
 				foreach (var obj in searcher.Get()) {
 					if (!(obj is ManagementObject mo)) {
 						continue;
