@@ -76,6 +76,13 @@ namespace LibDmd
 			RotateColors = false;
 		}
 
+		public ColoredFrame(int width, int height, byte[] frame, Color color, int bitdepth)
+		{
+			Planes = FrameUtil.Split(width, height, bitdepth, frame);
+			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, (int)System.Math.Pow(bitdepth,2));
+			RotateColors = false;
+		}
+
 		public ColoredFrame(int width, int height, byte[] data)
 		{
 			Width = width;

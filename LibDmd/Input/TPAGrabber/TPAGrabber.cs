@@ -279,7 +279,7 @@ namespace LibDmd.Input.TPAGrabber
 				_dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
 			}
 
-			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
+			var fourBitGames = new[]{ "ACDC", "GhostBustersStern", "Mustang", "StarTrek" };
 			_bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 		}
 

@@ -47,9 +47,9 @@ namespace LibDmd.Converter
 				_converter?.Convert(frame);
 			} else {
 				if (frame.BitLength == 4) {
-					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, _color));
+					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, _color, 4));
 				} else {
-					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, _color));
+					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.width, frame.height, frame.Data, _color, 2));
 				}
 			}
 		}
@@ -76,7 +76,7 @@ namespace LibDmd.Converter
 
 			if (converter == null) {
 				_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
-				_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
+				_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 				_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 				_latestColoredGray.OnNext(Observable.Empty<ColoredFrame>());
 				_converter = null;
