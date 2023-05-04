@@ -338,12 +338,12 @@ namespace LibDmd.Converter.Pin2Color
 			var coloredFrame = new byte[frameSize];
 
 			if (IsOpen) {
+				IntPtr Rgb24Buffer = IntPtr.Zero;
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
 					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
 					for (int i = 0; i < vd.RawPlanes.Length; i++) {
 						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
 					}
-					IntPtr Rgb24Buffer = IntPtr.Zero;
 					if (frame.BitLength == 4) {
 						if(frame.Data.Length == 128 * 32)
 							Rgb24Buffer = Colorize4GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
@@ -351,6 +351,8 @@ namespace LibDmd.Converter.Pin2Color
 							Rgb24Buffer = Colorize4GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 						else if (frame.Data.Length == 256 * 64)
 							Rgb24Buffer = Colorize4GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 					} else {
 						if (frame.Data.Length == 128 * 32)
 							Rgb24Buffer = Colorize2GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
@@ -358,11 +360,10 @@ namespace LibDmd.Converter.Pin2Color
 							Rgb24Buffer = Colorize2GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 						else if (frame.Data.Length == 256 * 64)
 							Rgb24Buffer = Colorize2GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 					}
-					if (_pin2ColorizerMode != ColorizerMode.None)
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				} else {
-					IntPtr Rgb24Buffer = IntPtr.Zero;
 					if (frame.BitLength == 4) {
 						if (frame.Data.Length == 128 * 32)
 							Rgb24Buffer = Colorize4Gray(128, 32, frame.Data);
@@ -370,6 +371,8 @@ namespace LibDmd.Converter.Pin2Color
 							Rgb24Buffer = Colorize4Gray(192, 64, frame.Data);
 						else if (frame.Data.Length == 256 * 64)
 							Rgb24Buffer = Colorize4Gray(256, 64, frame.Data);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 					} else if (frame.BitLength == 2) {
 						if (frame.Data.Length == 128 * 16)
 							Rgb24Buffer = Colorize2Gray(128, 16, frame.Data);
@@ -379,13 +382,12 @@ namespace LibDmd.Converter.Pin2Color
 							Rgb24Buffer = Colorize2Gray(192, 64, frame.Data);
 						else if (frame.Data.Length == 256 * 64)
 							Rgb24Buffer = Colorize2Gray(256, 64, frame.Data);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 					} else {
 						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
 						return;
 					}
-
-					if (_pin2ColorizerMode != ColorizerMode.None)
-						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				}
 
 				if (_pin2ColorizerMode != ColorizerMode.None) {
