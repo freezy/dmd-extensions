@@ -495,9 +495,13 @@ namespace LibDmd.Output.Virtual.Dmd
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.Rgb24:
-						if (_nextFrameData.Length % 3 != 0)
-						{
-							LogErrors("RGB24 buffer must be divisible by 3, but " + _nextFrameData.Length + " isn't.");
+						try {
+							if (_nextFrameData.Length % 3 != 0) {
+								LogErrors("RGB24 buffer must be divisible by 3, but " + _nextFrameData.Length + " isn't.");
+								return;
+							}
+						}
+						catch (NullReferenceException) {
 							return;
 						}
 						if (createTexture)
