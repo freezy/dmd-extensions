@@ -320,13 +320,13 @@ namespace LibDmd.Converter.Pin2Color
 			int height = frame.height;
 
 			if (IsOpen && _pin2ColorizerMode >= 0) {
-				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16))) {
+				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16) || (frame.width == 256 && frame.height == 64))) {
 					width = 128;
 					height = 32;
 				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64) {
 					width = 192;
 					height = 64;
-				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 256 && frame.height == 64))) {
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16) || (frame.width == 256 && frame.height == 64))) {
 					width = 256;
 					height = 64;
 				} else {
@@ -338,7 +338,6 @@ namespace LibDmd.Converter.Pin2Color
 			var coloredFrame = new byte[frameSize];
 
 			if (IsOpen) {
-
 				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
 					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
 					for (int i = 0; i < vd.RawPlanes.Length; i++) {
@@ -346,19 +345,40 @@ namespace LibDmd.Converter.Pin2Color
 					}
 					IntPtr Rgb24Buffer = IntPtr.Zero;
 					if (frame.BitLength == 4) {
-						Rgb24Buffer = Colorize4GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if(frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize4GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize4GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize4GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 					} else {
-						Rgb24Buffer = Colorize2GrayWithRaw((ushort)frame.width, (ushort)frame.height, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize2GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize2GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize2GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
 					}
-
 					if (_pin2ColorizerMode != ColorizerMode.None)
 						Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
 				} else {
 					IntPtr Rgb24Buffer = IntPtr.Zero;
 					if (frame.BitLength == 4) {
-						Rgb24Buffer = Colorize4Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+						if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize4Gray(128, 32, frame.Data);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize4Gray(192, 64, frame.Data);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize4Gray(256, 64, frame.Data);
 					} else if (frame.BitLength == 2) {
-						Rgb24Buffer = Colorize2Gray((ushort)frame.width, (ushort)frame.height, frame.Data);
+						if (frame.Data.Length == 128 * 16)
+							Rgb24Buffer = Colorize2Gray(128, 16, frame.Data);
+						else if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize2Gray(128, 32, frame.Data);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize2Gray(192, 64, frame.Data);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize2Gray(256, 64, frame.Data);
 					} else {
 						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
 						return;

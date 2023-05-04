@@ -728,10 +728,6 @@ namespace LibDmd.DmdDevice
 			int width = frame.width;
 			int height = frame.height;
 
-			if (_pin2color != null) {
-				_pin2color.Convert(frame);
-			}
-
 			if (_config.Global.ScaleToHd) {
 				if (width == 128 && height == 32) {
 					width *= 2;
@@ -758,10 +754,6 @@ namespace LibDmd.DmdDevice
 
 			int width = frame.width;
 			int height = frame.height;
-
-			if (_pin2color != null) {
-				_pin2color.Convert(frame);
-			}
 
 			if (_config.Global.ScaleToHd) {
 				if (width == 128 && height == 32) {
