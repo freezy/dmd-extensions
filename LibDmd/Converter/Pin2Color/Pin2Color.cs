@@ -94,7 +94,7 @@ namespace LibDmd.Converter.Pin2Color
 			IntPtr opt = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, opt, false);
 			_pin2ColorizerMode = (ColorizerMode)ColorizeGameSettings(gameName, 0, opt); ;
-			if (_pin2ColorizerMode > 0) {
+			if (_pin2ColorizerMode >= 0) {
 				IsColored = true;
 			} else {
 				IsColored = false;
