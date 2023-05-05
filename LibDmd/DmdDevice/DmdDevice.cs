@@ -725,13 +725,17 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 
+			if (_pin2color != null && _isColored) {
+				frame.Update(_pin2color.GetWidth(frame.width),_pin2color.GetHeight(frame.height), frame.Data, frame.BitLength);
+			}
+
 			int width = frame.width;
 			int height = frame.height;
 
 			if (_config.Global.ScaleToHd) {
 				if (width == 128 && height == 32) {
-					width *= 2;
-					height *= 2;
+					width = 256;
+					height = 64;
 					frame.Update(width, height, frame.Data, 2);
 				}
 			}
@@ -741,7 +745,7 @@ namespace LibDmd.DmdDevice
 				_serum.SetDimensions(frame.width, frame.height);
 				_serum.Convert(frame);
 			}
-			
+
 			_passthroughGray2Source.NextFrame(frame);
 		}
 
@@ -752,13 +756,17 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 
+			if (_pin2color != null && _isColored) {
+				frame.Update(_pin2color.GetWidth(frame.width), _pin2color.GetHeight(frame.height), frame.Data, frame.BitLength);
+			}
+
 			int width = frame.width;
 			int height = frame.height;
 
 			if (_config.Global.ScaleToHd) {
 				if (width == 128 && height == 32) {
-					width *= 2;
-					height *= 2;
+					width = 256;
+					height = 64;
 					frame.Update(width, height, frame.Data, 4);
 				}
 			}

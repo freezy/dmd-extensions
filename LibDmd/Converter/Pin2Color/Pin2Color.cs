@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
@@ -31,6 +32,9 @@ namespace LibDmd.Converter.Pin2Color
 		public bool IsOpen = false;
 		public bool IsLoaded = false;
 		public bool IsColored = false;
+		
+		private static int width = 128;
+		private static int height = 32;
 
 		private static uint lastEventID = 0;
 
@@ -90,7 +94,7 @@ namespace LibDmd.Converter.Pin2Color
 			IntPtr opt = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, opt, false);
 			_pin2ColorizerMode = (ColorizerMode)ColorizeGameSettings(gameName, 0, opt); ;
-			if (_pin2ColorizerMode >= 0) {
+			if (_pin2ColorizerMode > 0) {
 				IsColored = true;
 			} else {
 				IsColored = false;
@@ -128,6 +132,33 @@ namespace LibDmd.Converter.Pin2Color
 			IsColored = false;
 			IsOpen = false;
 		}
+
+		public int GetWidth(int Width)
+		{
+			if (_pin2ColorizerMode == ColorizerMode.Advanced128x32) {
+				Width = 128;
+			} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64) {
+				Width = 192;
+			} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64) {
+				Width = 256;
+			}
+			width = Width;
+			return width;
+		}
+
+		public int GetHeight(int Height)
+		{
+			if (_pin2ColorizerMode == ColorizerMode.Advanced128x32) {
+				Height = 32;
+			} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64) {
+				Height = 64;
+			} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64) {
+				Height = 64;
+			}
+			height = Height;
+			return height;
+		}
+
 
 		private bool Pin2Color_Load()
 		{
@@ -316,17 +347,14 @@ namespace LibDmd.Converter.Pin2Color
 		private ColorizerMode _pin2ColorizerMode;
 		public void Convert(DMDFrame frame)
 		{
-			int width = frame.width;
-			int height = frame.height;
-
 			if (IsOpen && _pin2ColorizerMode >= 0) {
-				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16) || (frame.width == 256 && frame.height == 64))) {
+				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32) {
 					width = 128;
 					height = 32;
-				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64 && frame.width == 192 && frame.height == 64) {
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64) {
 					width = 192;
 					height = 64;
-				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64 && ((frame.width == 128 && frame.height == 32) || (frame.width == 128 && frame.height == 16) || (frame.width == 256 && frame.height == 64))) {
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64) {
 					width = 256;
 					height = 64;
 				} else {
@@ -393,8 +421,8 @@ namespace LibDmd.Converter.Pin2Color
 				if (_pin2ColorizerMode != ColorizerMode.None) {
 					if (ScaleToHd) {
 						if (width == 128 && height == 32) {
-							width *= 2;
-							height *= 2;
+							width = 256;
+							height = 64;
 						}
 					}
 					// send the colored frame
