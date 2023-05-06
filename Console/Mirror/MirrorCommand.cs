@@ -246,7 +246,7 @@ namespace DmdExt.Mirror
 			}
 
 			// 3. check for native pin2color
-			return _colorizationLoader.LoadVniColorizer(gameName, _config.Global.ScalerMode);
+			return _colorizationLoader.LoadVniColorizer(gameName, _config.Global.ScalerMode, _config.Global.VniKey);
 		}
 	}
 }

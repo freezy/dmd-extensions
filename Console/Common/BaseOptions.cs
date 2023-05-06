@@ -138,6 +138,9 @@ namespace DmdExt.Common
 		[Option("skip-analytics", HelpText = "If set, don't send anonymous usage data to the developer. Default: false.")]
 		public bool SkipAnalytics { get; set; } = false;
 
+		[Option("--pac-key", HelpText = "Key to decrypt PAC files, in hex.")]
+		public string PacKey { get; set; } = null;
+
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -243,6 +246,7 @@ namespace DmdExt.Common
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
 		public ScalerMode ScalerMode => _options.ScalingMode;
 		public ScalerMode VniScalerMode => _options.ScalingMode;
+		public string VniKey => _options.PacKey;
 		public bool SkipAnalytics => _options.SkipAnalytics;
 		public PluginConfig[] Plugins => _options.Plugin == null
 			? new PluginConfig[]{}

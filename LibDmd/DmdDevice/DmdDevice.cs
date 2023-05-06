@@ -918,7 +918,7 @@ namespace LibDmd.DmdDevice
 			}
 			_colorizer = (_colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode)
 				?? _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette))
-				??_colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode);
+				??_colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode, _config.Global.VniKey);
 		}
 
 		#region Analytics

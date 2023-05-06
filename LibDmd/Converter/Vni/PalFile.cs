@@ -14,18 +14,18 @@ namespace LibDmd.Converter.Vni
 	/// </summary>
 	public class PalFile
 	{
-		public readonly Palette[] Palettes;
-		public readonly Dictionary<uint, Mapping> Mappings;
-		public readonly byte[][] Masks;
-		public readonly Palette DefaultPalette;
-		public readonly ushort DefaultPaletteIndex;
+		public Palette[] Palettes;
+		public Dictionary<uint, Mapping> Mappings;
+		public byte[][] Masks;
+		public Palette DefaultPalette;
+		public ushort DefaultPaletteIndex;
 
-		private readonly string _filename;
+		private string _filename;
 
 		/// <summary>
 		/// File version. 1 = FSQ, 2 = VNI (but we don't really care, we fetch what we get)
 		/// </summary>
-		private readonly int _version;
+		private int _version;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -35,9 +35,22 @@ namespace LibDmd.Converter.Vni
 		/// <param name="filename">Path to the file</param>
 		public PalFile(string filename)
 		{
-			var fs = new FileStream(filename, FileMode.Open);
-			var reader = new BinaryReader(fs);
+			using (var fs = new FileStream(filename, FileMode.Open))
+			using (var reader = new BinaryReader(fs)) {
+				Load(reader, filename);
+			}
+		}
 
+		public PalFile(byte[] palData, string filename)
+		{
+			using (var memoryStream = new MemoryStream(palData))
+			using (var reader = new BinaryReader(memoryStream)) {
+				Load(reader, filename);
+			}
+		}
+
+		private void Load(BinaryReader reader, string filename)
+		{
 			Mappings = null;
 			Masks = null;
 			_filename = filename;

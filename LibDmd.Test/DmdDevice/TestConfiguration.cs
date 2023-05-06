@@ -57,6 +57,7 @@ namespace LibDmd.Test
 		public Color DmdColor { get; set; }
 		public ScalerMode ScalerMode { get; set; }
 		public ScalerMode VniScalerMode { get; set; }
+		public string VniKey { get; set; }
 		public bool SkipAnalytics => true;
 		public PluginConfig[] Plugins { get; set; }
 	}

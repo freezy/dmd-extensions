@@ -9,17 +9,28 @@ namespace LibDmd.Converter.Vni
 {
 	public class VniFile : AnimationSet
 	{
-
 		public VniFile(string filename)
 		{
-			var fs = new FileStream(filename, FileMode.Open);
-			var reader = new BinaryReader(fs);
+			using (var fs = new FileStream(filename, FileMode.Open))
+			using (var reader = new BinaryReader(fs)) {
+				Load(reader, filename);
+			}
+		}
 
+		public VniFile(byte[] palData, string filename)
+		{
+			using (var memoryStream = new MemoryStream(palData))
+			using (var reader = new BinaryReader(memoryStream)) {
+				Load(reader, filename);
+			}
+		}
+
+		private void Load(BinaryReader reader, string filename)
+		{
 			// name
 			var header = Encoding.UTF8.GetString(reader.ReadBytes(4));
 			if (header != "VPIN") {
 				reader.Close();
-				fs.Close();
 				throw new WrongFormatException("Not a VPIN file: " + filename);
 			}
 
@@ -51,8 +62,6 @@ namespace LibDmd.Converter.Vni
 					maxWidth = w;
 			}
 			reader.Close();
-			fs.Close();
-
 			Dimensions = new Dimensions(maxWidth, maxHeight);
 		}
 

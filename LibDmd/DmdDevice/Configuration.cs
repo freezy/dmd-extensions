@@ -213,7 +213,6 @@ namespace LibDmd.DmdDevice
 				return GetEnum("scalermode", ScalerMode.None);
 			}
 		}
-
 		public ScalerMode VniScalerMode
 		{
 			get
@@ -227,6 +226,8 @@ namespace LibDmd.DmdDevice
 				return scalerMode != ScalerMode.None ? scalerMode : ScalerMode.Doubler;
 			}
 		}
+
+		public string VniKey => GetString("vni.key", null);
 
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 		public PluginConfig[] Plugins {

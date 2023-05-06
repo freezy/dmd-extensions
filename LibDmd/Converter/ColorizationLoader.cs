@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -50,54 +50,29 @@ namespace LibDmd.Converter.Vni
 			return null;
 		}
 
-		public AbstractConverter LoadVniColorizer(string gameName, ScalerMode scalerMode)
+		public AbstractConverter LoadVniColorizer(string gameName, ScalerMode scalerMode, string vniKey)
 		{
-			if (_altcolorPath == null)
-			{
+			if (_altcolorPath == null) {
 				Analytics.Instance.ClearColorizer();
 				return null;
 			}
 
-			var palPath1 = Path.Combine(_altcolorPath, gameName, gameName + ".pal");
-			var palPath2 = Path.Combine(_altcolorPath, gameName, "pin2dmd.pal");
-			var vniPath1 = Path.Combine(_altcolorPath, gameName, gameName + ".vni");
-			var vniPath2 = Path.Combine(_altcolorPath, gameName, "pin2dmd.vni");
-
-			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
-			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-			if (File.Exists(palPath)) {
-				try {
-					Logger.Info("[vni] Loading palette file at {0}...", palPath);
-					var coloring = new PalFile(palPath);
-					VniFile vni = null;
-					if (File.Exists(vniPath))
-					{
-						Logger.Info("[vni] Loading animation file at {0}...", vniPath);
-						vni = new VniFile(vniPath);
-						Logger.Info("[vni] Loaded animation set {0}", vni);
-						Logger.Info("[vni] Animation Dimensions: {0}x{1}", vni.Dimensions.Width, vni.Dimensions.Height);
-						Analytics.Instance.SetColorizer("VNI/PAL");
-
-					} else {
-						Logger.Info("[vni] No animation set found");
-						Analytics.Instance.SetColorizer("PAL");
-					}
-
-					return new VniColorizer(coloring, vni) { ScalerMode = scalerMode };
-
-				} catch (Exception e) {
-					Logger.Warn(e, "[vni] Error initializing: {0}", e.Message);
-					Analytics.Instance.ClearColorizer();
-				}
-
-			} else {
-				Logger.Info("[vni] No palette file found at {0}.", palPath);
-				Analytics.Instance.ClearColorizer();
+			var loader = new VniLoader(_altcolorPath, gameName, vniKey);
+			if (!loader.FilesExist) {
+				Logger.Info("No palette file found at {0}.", Path.Combine(_altcolorPath, gameName));
+				return null;
 			}
 
-			return null;
+			try {
+				loader.Load(vniKey);
+				return new VniColorizer(loader.Pal, loader.Vni) { ScalerMode = scalerMode };
+
+			} catch (Exception e) {
+				Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+				return null;
+			}
 		}
-		
+
 		public AbstractConverter LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette)
 		{
 			if (_altcolorPath == null || pluginConfigs == null) {

@@ -418,6 +418,7 @@
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
     <Compile Include="Converter\Serum\Serum.cs" />
     <Compile Include="Converter\SwitchingConverter.cs" />
+    <Compile Include="Converter\Vni\VniLoader.cs" />
     <Compile Include="DmdDevice\PMOptions.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
     <Compile Include="Frame\BaseFrame.cs" />
