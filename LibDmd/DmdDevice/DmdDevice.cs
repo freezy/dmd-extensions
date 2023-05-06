@@ -456,7 +456,7 @@ namespace LibDmd.DmdDevice
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
 					ScalerMode = _config.Global.ScalerMode,
-					Colored = _isColored
+					Colored = _isColored || _serum != null
 				});
 
 				// 4-bit graph
@@ -470,7 +470,7 @@ namespace LibDmd.DmdDevice
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
 					ScalerMode = _config.Global.ScalerMode,
-					Colored = _isColored
+					Colored = _isColored || _serum != null
 				});
 			}
 
@@ -743,7 +743,7 @@ namespace LibDmd.DmdDevice
 			if (!_isColored && _serum != null)
 			{
 				_serum.SetDimensions(frame.width, frame.height);
-				_serum.Convert(frame);
+				//_serum.Convert(frame);
 			}
 
 			_passthroughGray2Source.NextFrame(frame);
@@ -774,7 +774,7 @@ namespace LibDmd.DmdDevice
 			if (!_isColored && _serum != null)
 			{
 				_serum.SetDimensions(frame.width, frame.height);
-				_serum.Convert(frame);
+				//_serum.Convert(frame);
 			}
 
 			_passthroughGray4Source.NextFrame(frame);
