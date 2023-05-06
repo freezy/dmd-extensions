@@ -33,6 +33,7 @@ namespace LibDmd.Converter
 
 			var pin2color = new Pin2Color.Pin2Color(colorize, _altcolorPath, gameName, red, green, blue, palette, ScalerMode, ScaleToHd);
 			if (pin2color.IsLoaded) {
+				Logger.Info($"[Pin2Color] Colorizer v{pin2color.GetVersion()} initialized.");
 				return pin2color;
 			}
 

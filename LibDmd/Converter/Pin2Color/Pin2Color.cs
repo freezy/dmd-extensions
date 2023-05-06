@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Web;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -89,14 +90,18 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			ColorizeAltColorPath(altcolorPath);
+			var colorizationPath = Path.Combine(altcolorPath, gameName);
+			Logger.Info($"[Pin2Color] Looking for colorization at {colorizationPath} ...");
 
 			PMoptions options = new PMoptions { Red = red, Green = green, Blue = blue, Colorize = colorize ? 1 : 0 };
 			IntPtr opt = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, opt, false);
 			_pin2ColorizerMode = (ColorizerMode)ColorizeGameSettings(gameName, 0, opt); ;
 			if (_pin2ColorizerMode >= 0) {
+				Logger.Info($"[Pin2Color] {_pin2ColorizerMode.ToString()} colorization loaded ...");
 				IsColored = true;
 			} else {
+				Logger.Info($"[Pin2Color] No colorization found. Switching tp Passthrough.");
 				IsColored = false;
 			}
 
@@ -159,6 +164,132 @@ namespace LibDmd.Converter.Pin2Color
 			return height;
 		}
 
+		public string GetVersion()
+		{
+			IntPtr pointer = ColorizeGetVersion();
+			string str = Marshal.PtrToStringAnsi(pointer);
+			return str;
+		}
+
+		public void Convert(DMDFrame frame)
+		{
+			if (IsOpen && _pin2ColorizerMode >= 0) {
+				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32) {
+					width = 128;
+					height = 32;
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64) {
+					width = 192;
+					height = 64;
+				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64) {
+					width = 256;
+					height = 64;
+				} else {
+					_pin2ColorizerMode = ColorizerMode.SimplePalette;
+				}
+			}
+
+			var frameSize = width * height * 3;
+			var coloredFrame = new byte[frameSize];
+
+			if (IsOpen) {
+				IntPtr Rgb24Buffer = IntPtr.Zero;
+				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
+					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
+					for (int i = 0; i < vd.RawPlanes.Length; i++) {
+						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
+					}
+					if (frame.BitLength == 4) {
+						if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize4GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize4GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize4GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					} else {
+						if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize2GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize2GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize2GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					}
+				} else {
+					if (frame.BitLength == 4) {
+						if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize4Gray(128, 32, frame.Data);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize4Gray(192, 64, frame.Data);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize4Gray(256, 64, frame.Data);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					} else if (frame.BitLength == 2) {
+						if (frame.Data.Length == 128 * 16)
+							Rgb24Buffer = Colorize2Gray(128, 16, frame.Data);
+						else if (frame.Data.Length == 128 * 32)
+							Rgb24Buffer = Colorize2Gray(128, 32, frame.Data);
+						else if (frame.Data.Length == 192 * 64)
+							Rgb24Buffer = Colorize2Gray(192, 64, frame.Data);
+						else if (frame.Data.Length == 256 * 64)
+							Rgb24Buffer = Colorize2Gray(256, 64, frame.Data);
+						if (_pin2ColorizerMode != ColorizerMode.None)
+							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+					} else {
+						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
+						return;
+					}
+				}
+
+				if (_pin2ColorizerMode != ColorizerMode.None) {
+					if (ScaleToHd) {
+						if (width == 128 && height == 32) {
+							width = 256;
+							height = 64;
+						}
+					}
+					// send the colored frame
+					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+					processEvent();
+				}
+			}
+		}
+
+		public void Convert(AlphaNumericFrame frame)
+		{
+			int Width = 128;
+			int Height = 32;
+
+			var frameSize = Width * Height * 3;
+			var coloredFrame = new byte[frameSize];
+
+			int width = Width;
+			int height = Height;
+
+			var Rgb24Buffer = ColorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
+			if (_pin2ColorizerMode != Pin2Color.ColorizerMode.None) {
+				Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
+				if (_pin2ColorizerMode != ColorizerMode.None) {
+					if (ScaleToHd) {
+						if (width == 128 && height == 32) {
+							width *= 2;
+							height *= 2;
+						}
+					}
+					// send the colored frame
+					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
+					processEvent();
+				}
+			}
+		}
+
+		public void ConsoleData(byte data)
+		{
+			ColorizeConsoleData(data);
+		}
 
 		private bool Pin2Color_Load()
 		{
@@ -271,13 +402,19 @@ namespace LibDmd.Converter.Pin2Color
 						throw new Exception("Cannot map function in " + dllFileName);
 					}
 					ColorizeAltColorPath = (_dColorizeAltColorPath)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAltColorPath));
+
+					pAddress = NativeDllLoad.GetProcAddress(pDll, "Get_Version");
+					if (pAddress == IntPtr.Zero) {
+						throw new Exception("Cannot map function in " + dllFileName);
+					}
+					ColorizeGetVersion = (_dColorizeGetVersion)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetVersion));
 				}
 				catch (Exception e) {
 					Logger.Error(e, "[Pin2Color] Error sending to " + dllFileName + " - disabling.");
 					return false;
 				}
 
-				Logger.Info("Loading Pin2Color plugin ...");
+				Logger.Info("[Pin2Color] Successfully loaded colorizer plugin ...");
 			}
 
 			return true;
@@ -344,126 +481,11 @@ namespace LibDmd.Converter.Pin2Color
 		private delegate void _dColorizeAltColorPath(string Path);
 		private static _dColorizeAltColorPath ColorizeAltColorPath;
 
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr _dColorizeGetVersion();
+		private static _dColorizeGetVersion ColorizeGetVersion;
+
 		private ColorizerMode _pin2ColorizerMode;
-		public void Convert(DMDFrame frame)
-		{
-			if (IsOpen && _pin2ColorizerMode >= 0) {
-				if (_pin2ColorizerMode == ColorizerMode.Advanced128x32) {
-					width = 128;
-					height = 32;
-				} else if (_pin2ColorizerMode == ColorizerMode.Advanced192x64) {
-					width = 192;
-					height = 64;
-				} else if (_pin2ColorizerMode == ColorizerMode.Advanced256x64) {
-					width = 256;
-					height = 64;
-				} else {
-					_pin2ColorizerMode = ColorizerMode.SimplePalette;
-				}
-			}
-
-			var frameSize = width * height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			if (IsOpen) {
-				IntPtr Rgb24Buffer = IntPtr.Zero;
-				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
-					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
-					for (int i = 0; i < vd.RawPlanes.Length; i++) {
-						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
-					}
-					if (frame.BitLength == 4) {
-						if(frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize4GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize4GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize4GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						if (_pin2ColorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else {
-						if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize2GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize2GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize2GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						if (_pin2ColorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					}
-				} else {
-					if (frame.BitLength == 4) {
-						if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize4Gray(128, 32, frame.Data);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize4Gray(192, 64, frame.Data);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize4Gray(256, 64, frame.Data);
-						if (_pin2ColorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else if (frame.BitLength == 2) {
-						if (frame.Data.Length == 128 * 16)
-							Rgb24Buffer = Colorize2Gray(128, 16, frame.Data);
-						else if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize2Gray(128, 32, frame.Data);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize2Gray(192, 64, frame.Data);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize2Gray(256, 64, frame.Data);
-						if (_pin2ColorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else {
-						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
-						return;
-					}
-				}
-
-				if (_pin2ColorizerMode != ColorizerMode.None) {
-					if (ScaleToHd) {
-						if (width == 128 && height == 32) {
-							width = 256;
-							height = 64;
-						}
-					}
-					// send the colored frame
-					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
-					processEvent();
-				}
-			}
-		}
-
-		public void Convert(AlphaNumericFrame frame)
-		{
-			int Width = 128;
-			int Height = 32;
-
-			var frameSize = Width * Height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			int width = Width;
-			int height = Height;
-
-			var Rgb24Buffer = ColorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
-			if (_pin2ColorizerMode != Pin2Color.ColorizerMode.None) {
-				Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-				if (_pin2ColorizerMode != ColorizerMode.None) {
-					if (ScaleToHd) {
-						if (width == 128 && height == 32) {
-							width *= 2;
-							height *= 2;
-						}
-					}
-					// send the colored frame
-					_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
-					processEvent();
-				}
-			}
-		}
-
-		public void ConsoleData(byte data)
-		{
-			ColorizeConsoleData(data);
-		}
 
 		private static void processEvent()
 		{
