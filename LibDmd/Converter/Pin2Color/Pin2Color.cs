@@ -4,8 +4,6 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Web;
-using System.Windows.Controls;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
@@ -40,6 +38,8 @@ namespace LibDmd.Converter.Pin2Color
 		private static uint lastEventID = 0;
 
 		private static PinUpOutput _activePinUpOutput = null;
+		private static ColorizerMode _pin2ColorizerMode;
+
 		private static bool _hasEvents { get; set; }
 
 		public enum ColorizerMode
@@ -82,9 +82,11 @@ namespace LibDmd.Converter.Pin2Color
 
 			if (!IsOpen) {
 				if (!ColorizeOpen()) {
+					Logger.Info($"[Pin2Color] Failed to open colorizer ...");
 					IsOpen = false;
 					return;
 				} else {
+					Logger.Info($"[Pin2Color] Successfully opened colorizer ...");
 					IsOpen = true;
 				}
 			}
@@ -484,8 +486,6 @@ namespace LibDmd.Converter.Pin2Color
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate IntPtr _dColorizeGetVersion();
 		private static _dColorizeGetVersion ColorizeGetVersion;
-
-		private ColorizerMode _pin2ColorizerMode;
 
 		private static void processEvent()
 		{
