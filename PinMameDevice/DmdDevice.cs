@@ -303,7 +303,7 @@ namespace PinMameDevice
 
 		private static void InternalSetGray2PaletteDevice(DeviceInstance device, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			Logger.Info("[vpm] Set_4_Colors_Palette({0},...)", device.Id);
+			Logger.Info($"[vpm] Set_4_Colors_Palette({device.Id}, {color0}, {color33}, {color66}, {color100})");
 			device.DmdDevice.SetPalette(new[] {
 				ConvertColor(color0),
 				ConvertColor(color33),
@@ -374,6 +374,8 @@ namespace PinMameDevice
 			public char Red;
 			public char Green;
 			public char Blue;
+
+			public override string ToString() => $"#{((byte)Red):X2}{((byte)Green):X2}{((byte)Blue):X2}";
 		}
 	}
 }
