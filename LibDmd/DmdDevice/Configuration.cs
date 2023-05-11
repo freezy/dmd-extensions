@@ -183,6 +183,21 @@ namespace LibDmd.DmdDevice
 		public bool ScaleToHd => GetBoolean("scaletohd", false);
 		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
+		public string[] Plugins {
+			get {
+				var plugins = new List<string>();
+				var suffix = IntPtr.Size == 8 ? "64" : "";
+				for (var i = 0; i < 10; i++) {
+					var plugin = GetString($"plugin{suffix}.{i}", null);
+					if (plugin != null) {
+						plugins.Add(plugin);
+					} else {
+						break;
+					}
+				}
+				return plugins.ToArray();
+			}
+		}
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{

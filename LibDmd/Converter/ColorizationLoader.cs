@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration.Assemblies;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Converter.Plugin;
 using Microsoft.Win32;
 using NLog;
 
@@ -134,6 +132,28 @@ namespace LibDmd.Converter
 				Analytics.Instance.ClearColorizer();
 			}
 
+			return null;
+		}
+		
+		public ColorizationPlugin LoadPlugin(string[] pluginPaths, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode, bool scaleToHd)
+		{
+			if (_altcolorPath == null) {
+				return null;
+			}
+
+			if (pluginPaths.Length == 0) {
+				Logger.Info("No colorization plugins configured.");
+			}
+
+			foreach (var pluginPath in pluginPaths) {
+				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scalerMode, scaleToHd);
+				if (!plugin.IsLoaded || !plugin.IsColored) {
+					continue;
+				}
+
+				Logger.Info($"Plugin v{plugin.GetVersion()} loaded.");
+				return plugin;
+			}
 			return null;
 		}
 

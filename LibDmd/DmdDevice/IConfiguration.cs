@@ -40,6 +40,7 @@ namespace LibDmd.DmdDevice
 		bool ScaleToHd { get; }
 		ScalerMode ScalerMode { get; }
 		bool SkipAnalytics { get; }
+		string[] Plugins { get; }
 	}
 
 	public interface IPinDmd1Config

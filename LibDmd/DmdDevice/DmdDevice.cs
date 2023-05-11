@@ -13,6 +13,8 @@ using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Colorize;
 using LibDmd.Converter.Serum;
+using LibDmd.Converter.Plugin;
+using LibDmd.Converter.Serum;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -83,6 +85,7 @@ namespace LibDmd.DmdDevice
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 		private Serum _serum;
+		private ColorizationPlugin _coloringPlugin;
 
 		public DmdDevice()
 		{
@@ -170,6 +173,7 @@ namespace LibDmd.DmdDevice
 			_gray4Colorizer = null;
 			_coloring = null;
 			_serum = null;
+			_coloringPlugin = null;
 
 			SetupColorizer();
 
@@ -219,17 +223,28 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
+			// 1. check for serum
 			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
 			if (serum != null) {
 				_serum = serum;
 				aniWidth = serum.FrameWidth;
 				aniHeight = serum.FrameHeight;
 			}
-			else {
-				_serum = null;
+
+
+			// 2. check for plugins
+			if (_serum == null) {
+				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode, _config.Global.ScaleToHd);;
+				if (plugin != null) {
+					_coloringPlugin = plugin;
+				
+					// if (_pin2color.IsColored)
+					// 	_isColored = true;
+				}
 			}
 
-			if (_serum == null) {
+			// 3. check for vni
+			if (_serum == null && _coloringPlugin == null) {
 				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
 				if (colorizerResult.HasValue) {
 					var colorizer = colorizerResult.Value;
@@ -519,8 +534,33 @@ namespace LibDmd.DmdDevice
 						ScalerMode = _config.Global.ScalerMode
 					});
 				}
-			}
-			else if (_colorize && _gray2Colorizer != null) {
+				
+			} else if (_coloringPlugin != null) {
+				// 2-bit graph
+				_graphs.Add(new RenderGraph {
+					Name = "2-bit Colored VPM Graph",
+					Source = _passthroughGray2Source,
+					Destinations = renderers,
+					Converter = _coloringPlugin,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+				});
+
+				// // 4-bit graph
+				// _graphs.Add(new RenderGraph {
+				// 	Name = "4-bit Colored VPM Graph",
+				// 	Source = _passthroughGray4Source,
+				// 	Destinations = renderers,
+				// 	Converter = _pin2color,
+				// 	Resize = _config.Global.Resize,
+				// 	FlipHorizontally = _config.Global.FlipHorizontally,
+				// 	FlipVertically = _config.Global.FlipVertically,
+				// 	ScalerMode = _config.Global.ScalerMode,
+				// });
+				
+			} else if (_colorize && _gray2Colorizer != null) {
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
 					Source = _passthroughGray2Source,
