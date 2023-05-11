@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -16,7 +15,7 @@ namespace LibDmd.Converter.Plugin
 {
 	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray6Source
 	{
-		public override string Name => "Coloring Plugin";
+		public override string Name => "Colorization Plugin";
 		public FrameFormat From => FrameFormat.Gray2;
 
 		public readonly bool ScaleToHd;
@@ -24,51 +23,30 @@ namespace LibDmd.Converter.Plugin
 
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
+
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 		
-		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
-
 		public bool IsOpen;
 		public bool IsLoaded;
 		public bool IsColored;
 		
-		private static int width = 128;
-		private static int height = 32;
+		private int _width = 128;
+		private int _height = 32;
 
-		private static uint lastEventID = 0;
+		private uint _lastEventId;
+		private PinUpOutput _activePinUpOutput;
+		private ColorizerMode _colorizerMode;
+		
+		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 
-		private static PinUpOutput _activePinUpOutput = null;
-		private static ColorizerMode _colorizerMode;
-
-		private static bool _hasEvents { get; set; }
+		private static bool HasEvents { get; set; }
 		
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public enum ColorizerMode
-		{
-			None = -1,
-			SimplePalette = 0,
-			Advanced128x32 = 1,
-			Advanced192x64 = 3,
-			Advanced256x64 = 4,
-		}
+		public ColorizationPlugin(string pluginPath, bool colorize, string altcolorPath, string gameName, Color defaultColor, IReadOnlyList<Color> palette, ScalerMode scalerMode, bool scaleToHd) {
 
-		[StructLayout(LayoutKind.Sequential)]
-		public struct PMoptions
-		{
-			public int Red, Green, Blue;
-			public int Perc66, Perc33, Perc0;
-			public int DmdOnly, Compact, Antialias;
-			public int Colorize;
-			public int Red66, Green66, Blue66;
-			public int Red33, Green33, Blue33;
-			public int Red0, Green0, Blue0;
-		}
-
-		public ColorizationPlugin(string pluginPath, bool colorize, string altcolorPath, string gameName, Color defaultColor, Color[] palette, ScalerMode ScalerMode, bool ScaleToHd) {
-
-			this.ScalerMode = ScalerMode;
-			this.ScaleToHd = ScaleToHd;
+			this.ScalerMode = scalerMode;
+			this.ScaleToHd = scaleToHd;
 
 			if (!IsLoaded) {
 				if (!LoadPlugin(pluginPath)) {
@@ -79,44 +57,44 @@ namespace LibDmd.Converter.Plugin
 			}
 
 			if (!IsOpen) {
-				if (!ColorizeOpen()) {
-					Logger.Info("Failed to open colorizer plugin.");
+				if (!_open()) {
+					Logger.Info("[plugin] Failed to open colorizer plugin.");
 					IsOpen = false;
 					return;
 				}
 
-				Logger.Info($"Successfully loaded colorizer plugin at {pluginPath}");
+				Logger.Info($"[plugin] Successfully opened colorizer plugin at {pluginPath}");
 				IsOpen = true;
 			}
 
-			ColorizeAltColorPath(altcolorPath);
+			_getAltColorPath(altcolorPath);
 			PMoptions options = new PMoptions { Red = defaultColor.R, Green = defaultColor.G, Blue = defaultColor.B, Colorize = colorize ? 1 : 0 };
 			IntPtr opt = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, opt, false);
-			_colorizerMode = (ColorizerMode)ColorizeGameSettings(gameName, 0, opt); ;
+			_colorizerMode = (ColorizerMode)_setGameSettings(gameName, 0, opt); ;
 			if (_colorizerMode >= 0) {
-				Logger.Info($"Plugin colorization mode {_colorizerMode.ToString()} enabled.");
+				Logger.Info($"[plugin] Colorization mode {_colorizerMode.ToString()} enabled.");
 				IsColored = true;
 			} else {
-				Logger.Info("Plugin has no colorization mode, disabling.");
+				Logger.Info("[plugin] No colorization mode detected, disabled.");
 				IsColored = false;
 			}
 
 			if (IsColored) {
-				_hasEvents = ColorizeHasEvents();
+				HasEvents = _hasEvents();
 			}
 
 			if (palette != null && !IsColored) {
-				var _pal = new byte[palette.Length * 3];
-				for (int i = 0; i < palette.Length; i++) {
+				var _pal = new byte[palette.Count * 3];
+				for (int i = 0; i < palette.Count; i++) {
 					_pal[i * 3] = palette[i].R;
 					_pal[(i * 3) + 1] = palette[i].G;
 					_pal[(i * 3) + 2] = palette[i].B;
 				}
-				if (palette.Length == 4) {
-					ColorizeSet_4_Colors(_pal);
-				} else if (palette.Length == 16) {
-					ColorizeSet_16_Colors(_pal);
+				if (palette.Count == 4) {
+					_set4Colors(_pal);
+				} else if (palette.Count == 16) {
+					_set16Colors(_pal);
 				}
 			}
 		}
@@ -128,216 +106,247 @@ namespace LibDmd.Converter.Plugin
 		{
 			if (IsOpen) {
 				_activePinUpOutput = null;
-				_hasEvents = false;
-				ColorizeClose();
+				HasEvents = false;
+				_close();
 			}
 			IsColored = false;
 			IsOpen = false;
 		}
 
-		public int GetWidth(int Width)
+		public int GetWidth(int width)
 		{
 			if (_colorizerMode == ColorizerMode.Advanced128x32) {
-				Width = 128;
+				width = 128;
 			} else if (_colorizerMode == ColorizerMode.Advanced192x64) {
-				Width = 192;
+				width = 192;
 			} else if (_colorizerMode == ColorizerMode.Advanced256x64) {
-				Width = 256;
+				width = 256;
 			}
-			width = Width;
-			return width;
+			_width = width;
+			return _width;
 		}
 
-		public int GetHeight(int Height)
+		public int GetHeight(int height)
 		{
 			if (_colorizerMode == ColorizerMode.Advanced128x32) {
-				Height = 32;
+				height = 32;
 			} else if (_colorizerMode == ColorizerMode.Advanced192x64) {
-				Height = 64;
+				height = 64;
 			} else if (_colorizerMode == ColorizerMode.Advanced256x64) {
-				Height = 64;
+				height = 64;
 			}
-			height = Height;
-			return height;
+			_height = height;
+			return _height;
 		}
 
-		public string GetVersion()
+		public static string GetVersion()
 		{
-			IntPtr pointer = ColorizeGetVersion();
+			IntPtr pointer = _getVersion();
+			string str = Marshal.PtrToStringAnsi(pointer);
+			return str;
+		}
+		
+		public static string GetName()
+		{
+			IntPtr pointer = _getName();
 			string str = Marshal.PtrToStringAnsi(pointer);
 			return str;
 		}
 
-		public void Convert(DMDFrame frame)
-		{
-			if (IsOpen && _colorizerMode >= 0) {
-				if (_colorizerMode == ColorizerMode.Advanced128x32) {
-					width = 128;
-					height = 32;
-				} else if (_colorizerMode == ColorizerMode.Advanced192x64) {
-					width = 192;
-					height = 64;
-				} else if (_colorizerMode == ColorizerMode.Advanced256x64) {
-					width = 256;
-					height = 64;
-				} else {
-					_colorizerMode = ColorizerMode.SimplePalette;
-				}
-			}
-
-			var frameSize = width * height * 3;
-			var coloredFrame = new byte[frameSize];
-
-			if (IsOpen) {
-				IntPtr Rgb24Buffer = IntPtr.Zero;
-				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0) {
-					var RawBuffer = new byte[vd.RawPlanes.Length * vd.RawPlanes[0].Length];
-					for (int i = 0; i < vd.RawPlanes.Length; i++) {
-						vd.RawPlanes[i].CopyTo(RawBuffer, i * vd.RawPlanes[0].Length);
-					}
-					if (frame.BitLength == 4) {
-						if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize4GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize4GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize4GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						if (_colorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else {
-						if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize2GrayWithRaw(128, 32, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize2GrayWithRaw(192, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize2GrayWithRaw(256, 64, frame.Data, (ushort)vd.RawPlanes.Length, RawBuffer);
-						if (_colorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					}
-				} else {
-					if (frame.BitLength == 4) {
-						if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize4Gray(128, 32, frame.Data);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize4Gray(192, 64, frame.Data);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize4Gray(256, 64, frame.Data);
-						if (_colorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else if (frame.BitLength == 2) {
-						if (frame.Data.Length == 128 * 16)
-							Rgb24Buffer = Colorize2Gray(128, 16, frame.Data);
-						else if (frame.Data.Length == 128 * 32)
-							Rgb24Buffer = Colorize2Gray(128, 32, frame.Data);
-						else if (frame.Data.Length == 192 * 64)
-							Rgb24Buffer = Colorize2Gray(192, 64, frame.Data);
-						else if (frame.Data.Length == 256 * 64)
-							Rgb24Buffer = Colorize2Gray(256, 64, frame.Data);
-						if (_colorizerMode != ColorizerMode.None)
-							Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-					} else {
-						ColorizeRGB24((ushort)frame.width, (ushort)frame.height, frame.Data);
-						return;
-					}
-				}
-
-				if (_colorizerMode != ColorizerMode.None) {
-					if (ScaleToHd) {
-						if (width == 128 && height == 32) {
-							width = 256;
-							height = 64;
-						}
-					}
-					// send the colored frame
-					
-					_coloredGray6Frames.OnNext(NextFrame(width, height, coloredFrame));
-					ProcessEvent();
-				}
-			}
-		}
-
-		private ColoredFrame NextFrame(int w, int h, IReadOnlyList<byte> rgb24Frame)
-		{
-			var frame = new byte[w * h];
-			var palette = new Color[64];
-			var dict = new Dictionary<int, int>();
-			var len = w * h * 3;
-			var index = -1;
-			var j = 0;
-			for (var i = 0; i < len; i += 3) {
-				var color = rgb24Frame[i] << 16 | rgb24Frame[i + 1] << 8 | rgb24Frame[i + 2];
-				if (!dict.ContainsKey(color)) {
-					index++;
-					dict[color] = index;
-					palette[index] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
-				} else {
-					index = dict[color];
-				}
-
-				frame[j] = (byte)index;
-
-				j++;
-			}
-
-			var planes = FrameUtil.Split(w, h, 6, frame);
-			return new ColoredFrame(planes, palette);
-		}
-
-		// public void Convert(AlphaNumericFrame frame)
-		// {
-		// 	int Width = 128;
-		// 	int Height = 32;
-		//
-		// 	var frameSize = Width * Height * 3;
-		// 	var coloredFrame = new byte[frameSize];
-		//
-		// 	int width = Width;
-		// 	int height = Height;
-		//
-		// 	var Rgb24Buffer = ColorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
-		// 	if (_colorizerMode != ColorizerMode.None) {
-		// 		Marshal.Copy(Rgb24Buffer, coloredFrame, 0, frameSize);
-		// 		if (_colorizerMode != ColorizerMode.None) {
-		// 			if (ScaleToHd) {
-		// 				if (width == 128 && height == 32) {
-		// 					width *= 2;
-		// 					height *= 2;
-		// 				}
-		// 			}
-		// 			// send the colored frame
-		// 			_coloredGrayAnimationFrames.OnNext(new ColoredFrame(width, height, coloredFrame));
-		// 			processEvent();
-		// 		}
-		// 	}
-		// }
-
 		public void ConsoleData(byte data)
 		{
-			ColorizeConsoleData(data);
+			_onConsoleData(data);
 		}
 		
-		private static void ProcessEvent()
+		private void ProcessEvent()
 		{
 			if (_activePinUpOutput == null) {
 				return;
 			}
 
-			uint eventId = ColorizeGetEvent();
-			if (eventId == lastEventID) {
+			uint eventId = _getEvent();
+			if (eventId == _lastEventId) {
 				return;
 			}
 
-			lastEventID = eventId;
+			_lastEventId = eventId;
 			_activePinUpOutput.SendTriggerID((ushort)eventId);
 		}
 
 		public void SetPinUpOutput(PinUpOutput puo)
 		{
 			_activePinUpOutput = puo;
-			if ((puo != null) && _hasEvents) {
+			if ((puo != null) && HasEvents) {
 				puo.PuPFrameMatching = false;
 			}
 		}
+		
+		public enum ColorizerMode
+		{
+			None = -1,
+			SimplePalette = 0,
+			Advanced128x32 = 1,
+			Advanced192x64 = 3,
+			Advanced256x64 = 4,
+		}
+		
+		#region Conversion
+		
+		private byte[] _frame;
+		private readonly Dictionary<int, int> _colorIndex = new Dictionary<int, int>();
+		private readonly Color[] _palette = new Color[64];
+		
+		public void Convert(DMDFrame frame)
+		{
+			if (IsOpen && _colorizerMode >= 0) {
+				if (_colorizerMode == ColorizerMode.Advanced128x32) {
+					_width = 128;
+					_height = 32;
+				} else if (_colorizerMode == ColorizerMode.Advanced192x64) {
+					_width = 192;
+					_height = 64;
+				} else if (_colorizerMode == ColorizerMode.Advanced256x64) {
+					_width = 256;
+					_height = 64;
+				} else {
+					_colorizerMode = ColorizerMode.SimplePalette;
+				}
+			}
+
+			var frameSize = _width * _height * 3;
+			var coloredFrame = new byte[frameSize];
+
+			if (!IsOpen) {
+				return;
+			}
+
+			IntPtr rgb24FramePtr = IntPtr.Zero;
+			if (frame is RawDMDFrame rawFrame && rawFrame.RawPlanes.Length > 0) {
+				var rawBuffer = new byte[rawFrame.RawPlanes.Length * rawFrame.RawPlanes[0].Length];
+				for (int i = 0; i < rawFrame.RawPlanes.Length; i++) {
+					rawFrame.RawPlanes[i].CopyTo(rawBuffer, i * rawFrame.RawPlanes[0].Length);
+				}
+				if (frame.BitLength == 4) {
+					if (frame.Data.Length == 128 * 32)
+						rgb24FramePtr = _colorizeGray4Raw(128, 32, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					else if (frame.Data.Length == 192 * 64)
+						rgb24FramePtr = _colorizeGray4Raw(192, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					else if (frame.Data.Length == 256 * 64)
+						rgb24FramePtr = _colorizeGray4Raw(256, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					if (_colorizerMode != ColorizerMode.None)
+						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+				} else {
+					if (frame.Data.Length == 128 * 32)
+						rgb24FramePtr = _colorizeGray2Raw(128, 32, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					else if (frame.Data.Length == 192 * 64)
+						rgb24FramePtr = _colorizeGray2Raw(192, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					else if (frame.Data.Length == 256 * 64)
+						rgb24FramePtr = _colorizeGray2Raw(256, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
+					if (_colorizerMode != ColorizerMode.None)
+						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+				}
+			} else {
+				if (frame.BitLength == 4) {
+					if (frame.Data.Length == 128 * 32)
+						rgb24FramePtr = _colorizeGray4(128, 32, frame.Data);
+					else if (frame.Data.Length == 192 * 64)
+						rgb24FramePtr = _colorizeGray4(192, 64, frame.Data);
+					else if (frame.Data.Length == 256 * 64)
+						rgb24FramePtr = _colorizeGray4(256, 64, frame.Data);
+					if (_colorizerMode != ColorizerMode.None)
+						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+				} else if (frame.BitLength == 2) {
+					if (frame.Data.Length == 128 * 16)
+						rgb24FramePtr = _colorizeGray2(128, 16, frame.Data);
+					else if (frame.Data.Length == 128 * 32)
+						rgb24FramePtr = _colorizeGray2(128, 32, frame.Data);
+					else if (frame.Data.Length == 192 * 64)
+						rgb24FramePtr = _colorizeGray2(192, 64, frame.Data);
+					else if (frame.Data.Length == 256 * 64)
+						rgb24FramePtr = _colorizeGray2(256, 64, frame.Data);
+					if (_colorizerMode != ColorizerMode.None)
+						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+				} else {
+					_colorizeRgb24((ushort)frame.width, (ushort)frame.height, frame.Data);
+					return;
+				}
+			}
+
+			if (_colorizerMode == ColorizerMode.None) {
+				return;
+			}
+
+			if (ScaleToHd) {
+				if (_width == 128 && _height == 32) {
+					_width = 256;
+					_height = 64;
+				}
+			}
+					
+			EmitFrame(_width, _height, coloredFrame);
+			ProcessEvent();
+		}
+
+		public void Convert(AlphaNumericFrame frame)
+		{
+			int Width = 128;
+			int Height = 32;
+		
+			var frameSize = Width * Height * 3;
+			var coloredFrame = new byte[frameSize];
+		
+			int width = Width;
+			int height = Height;
+		
+			var rgb24Buffer = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
+			if (_colorizerMode != ColorizerMode.None) {
+				Marshal.Copy(rgb24Buffer, coloredFrame, 0, frameSize);
+				if (_colorizerMode != ColorizerMode.None) {
+					if (ScaleToHd) {
+						if (width == 128 && height == 32) {
+							width *= 2;
+							height *= 2;
+						}
+					}
+					
+					EmitFrame(_width, _height, coloredFrame);
+					ProcessEvent();
+				}
+			}
+		}
+
+		private void EmitFrame(int width, int height, IReadOnlyList<byte> rgb24Frame)
+		{
+			if (_frame == null || _frame.Length != width * height) {
+				_frame = new byte[width * height];
+			}
+			_colorIndex.Clear();
+			for (var i = 0; i < 64; i++) {
+				_palette[i] = Colors.Black;
+			}
+
+			var len = width * height * 3;
+			var index = -1;
+			var j = 0;
+			for (var i = 0; i < len; i += 3) {
+				var color = rgb24Frame[i] << 16 | rgb24Frame[i + 1] << 8 | rgb24Frame[i + 2];
+				if (!_colorIndex.ContainsKey(color)) {
+					index++;
+					_colorIndex[color] = ++index;
+					_palette[index] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
+				} else {
+					index = _colorIndex[color];
+				}
+
+				_frame[j++] = (byte)index;
+			}
+
+			// split and send
+			var planes = FrameUtil.Split(width, height, 6, _frame);
+			_coloredGray6Frames.OnNext(new ColoredFrame(planes, _palette));
+		}
+
+		#endregion
 
 		#region Plugin API
 
@@ -348,187 +357,196 @@ namespace LibDmd.Converter.Plugin
 			}
 
 			if (!File.Exists(dllPath)) {
-				Logger.Error("Ignoring plugin at " + dllPath + ", file does not exist.");
+				Logger.Error("[plugin] Ignoring plugin defined at " + dllPath + ", file does not exist.");
 				return false;
 			}
 
 			var dll = NativeDllLoad.LoadLibrary(dllPath);
 
 			if (dll == IntPtr.Zero) {
-				Logger.Error("Error loading plugin at " + dllPath + ".");
+				Logger.Error("[plugin] Error loading plugin at " + dllPath + ".");
 				return false;
 			}
 
 			// Now load function calls using PinMame BSD-3 licensed DmdDevice.DLL API
 			// See README.MD in PinMameDevice folder.
 			try {
-				var pAddress = NativeDllLoad.GetProcAddress(dll, "Open");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				var addr = NativeDllLoad.GetProcAddress(dll, "Open");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Open in " + dllPath);
 				}
-				ColorizeOpen = (_dColorizeOpen)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeOpen));
+				_open = (OpenPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(OpenPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "PM_GameSettings");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "PM_GameSettings");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function PM_GameSettings in " + dllPath);
 				}
-				ColorizeGameSettings = (_dColorizeGameSettings)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGameSettings));
+				_setGameSettings = (SetGameSettingsPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(SetGameSettingsPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_4_Shades");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_4_Shades");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_4_Shades in " + dllPath);
 				}
-				Colorize2Gray = (_dColorize2Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2Gray));
+				_colorizeGray2 = (ColorizeGray2Ptr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeGray2Ptr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_16_Shades");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_16_Shades");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_16_Shades in " + dllPath);
 				}
-				Colorize4Gray = (_dColorize4Gray)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4Gray));
+				_colorizeGray4 = (ColorizeGray4Ptr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeGray4Ptr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_4_Shades_with_Raw");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_4_Shades_with_Raw");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_4_Shades_with_Raw in " + dllPath);
 				}
-				Colorize2GrayWithRaw = (_dColorize2GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize2GrayWithRaw));
+				_colorizeGray2Raw = (ColorizeGray2RawPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeGray2RawPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_16_Shades_with_Raw");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_16_Shades_with_Raw");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_16_Shades_with_Raw in " + dllPath);
 				}
-				Colorize4GrayWithRaw = (_dColorize4GrayWithRaw)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorize4GrayWithRaw));
+				_colorizeGray4Raw = (ColorizeGray4RawPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeGray4RawPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_RGB24");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_RGB24");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_RGB24 in " + dllPath);
 				}
-				ColorizeRGB24 = (_dColorizeRGB24)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeRGB24));
+				_colorizeRgb24 = (ColorizeRgb24Ptr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeRgb24Ptr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Render_PM_Alphanumeric_Frame");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Render_PM_Alphanumeric_Frame");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Render_PM_Alphanumeric_Frame in " + dllPath);
 				}
-				ColorizeAlphaNumeric = (_dColorizeAlphaNumeric)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAlphaNumeric));
+				_colorizeAlphaNumeric = (ColorizeAlphaNumericPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ColorizeAlphaNumericPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Close");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Close");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Close in " + dllPath);
 				}
-				ColorizeClose = (_dColorizeClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeClose));
+				_close = (ClosePtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(ClosePtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Console_Data");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Console_Data");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Console_Data in " + dllPath);
 				}
-				ColorizeConsoleData = (_dColorizeConsoleData)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeConsoleData));
+				_onConsoleData = (OnConsoleDataPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(OnConsoleDataPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Set_4_Colors_Palette");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Set_4_Colors_Palette");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Set_4_Colors_Palette in " + dllPath);
 				}
-				ColorizeSet_4_Colors = (_dColorizeSet_4_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_4_Colors));
+				_set4Colors = (Set4ColorsPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(Set4ColorsPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Set_16_Colors_Palette");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Set_16_Colors_Palette");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Set_16_Colors_Palette in " + dllPath);
 				}
-				ColorizeSet_16_Colors = (_dColorizeSet_16_Colors)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeSet_16_Colors));
+				_set16Colors = (Set16ColorsPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(Set16ColorsPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Get_Event");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Get_Event");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Get_Event in " + dllPath);
 				}
-				ColorizeGetEvent = (_dColorizeGetEvent)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetEvent));
+				_getEvent = (GetEventPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(GetEventPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Has_Events");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Has_Events");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Has_Events in " + dllPath);
 				}
-				ColorizeHasEvents = (_dColorizeHasEvents)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeHasEvents));
+				_hasEvents = (HasEventsPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(HasEventsPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "PM_AltColorPath");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "PM_AltColorPath");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function PM_AltColorPath in " + dllPath);
 				}
-				ColorizeAltColorPath = (_dColorizeAltColorPath)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeAltColorPath));
+				_getAltColorPath = (SetAltColorPathPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(SetAltColorPathPtr));
 
-				pAddress = NativeDllLoad.GetProcAddress(dll, "Get_Version");
-				if (pAddress == IntPtr.Zero) {
-					throw new Exception("Cannot map function in " + dllPath);
+				addr = NativeDllLoad.GetProcAddress(dll, "Get_Version");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Get_Version in " + dllPath);
 				}
-				ColorizeGetVersion = (_dColorizeGetVersion)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dColorizeGetVersion));
+				_getVersion = (GetVersionPtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(GetVersionPtr));
+
+				addr = NativeDllLoad.GetProcAddress(dll, "Get_Name");
+				if (addr == IntPtr.Zero) {
+					throw new Exception("Cannot map function Get_Name in " + dllPath);
+				}
+				_getName = (GetNamePtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(GetNamePtr));
 				
 			} catch (Exception e) {
 				Logger.Error($"Error loading plugin, disabling: {e.Message}");
 				return false;
 			}
 			return true;
-
 		}
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeOpen();
-		private static _dColorizeOpen ColorizeOpen;
+		private delegate bool OpenPtr();
+		private static OpenPtr _open;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_4_Colors(byte[] palette);
-		private static _dColorizeSet_4_Colors ColorizeSet_4_Colors;
+		private delegate void Set4ColorsPtr(byte[] palette);
+		private static Set4ColorsPtr _set4Colors;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeSet_16_Colors(byte[] palette);
-		private static _dColorizeSet_16_Colors ColorizeSet_16_Colors;
+		private delegate void Set16ColorsPtr(byte[] palette);
+		private static Set16ColorsPtr _set16Colors;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize4Gray(ushort width, ushort height, byte[] currbuffer);
-		private static _dColorize4Gray Colorize4Gray;
+		private delegate IntPtr ColorizeGray4Ptr(ushort width, ushort height, byte[] currBuffer);
+		private static ColorizeGray4Ptr _colorizeGray4;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize2Gray(ushort width, ushort height, byte[] currbuffer);
-		private static _dColorize2Gray Colorize2Gray;
+		private delegate IntPtr ColorizeGray2Ptr(ushort width, ushort height, byte[] currBuffer);
+		private static ColorizeGray2Ptr _colorizeGray2;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize4GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer);
-		private static _dColorize4GrayWithRaw Colorize4GrayWithRaw;
+		private delegate IntPtr ColorizeGray4RawPtr(ushort width, ushort height, byte[] currBuffer, ushort numRawFrames, byte[] currRawBuffer);
+		private static ColorizeGray4RawPtr _colorizeGray4Raw;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorize2GrayWithRaw(ushort width, ushort height, byte[] currbuffer, ushort noOfRawFrames, byte[] currrawbuffer);
-		private static _dColorize2GrayWithRaw Colorize2GrayWithRaw;
+		private delegate IntPtr ColorizeGray2RawPtr(ushort width, ushort height, byte[] currBuffer, ushort numRawFrames, byte[] currRawBuffer);
+		private static ColorizeGray2RawPtr _colorizeGray2Raw;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeRGB24(ushort width, ushort height, byte[] currbuffer);
-		private static _dColorizeRGB24 ColorizeRGB24;
+		private delegate void ColorizeRgb24Ptr(ushort width, ushort height, byte[] currBuffer);
+		private static ColorizeRgb24Ptr _colorizeRgb24;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorizeAlphaNumeric(NumericalLayout numericalLayout, ushort[] seg_data, ushort[] seg_data2);
-		private static _dColorizeAlphaNumeric ColorizeAlphaNumeric;
+		private delegate IntPtr ColorizeAlphaNumericPtr(NumericalLayout numericalLayout, ushort[] segData, ushort[] segData2);
+		private static ColorizeAlphaNumericPtr _colorizeAlphaNumeric;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate int _dColorizeGameSettings(string gameName, ulong hardwareGeneration, IntPtr options);
-		private static _dColorizeGameSettings ColorizeGameSettings;
+		private delegate int SetGameSettingsPtr(string gameName, ulong hardwareGeneration, IntPtr options);
+		private static SetGameSettingsPtr _setGameSettings;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeClose();
-		private static _dColorizeClose ColorizeClose;
+		private delegate bool ClosePtr();
+		private static ClosePtr _close;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeConsoleData(byte data);
-		private static _dColorizeConsoleData ColorizeConsoleData;
+		private delegate void OnConsoleDataPtr(byte data);
+		private static OnConsoleDataPtr _onConsoleData;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate uint _dColorizeGetEvent();
-		private static _dColorizeGetEvent ColorizeGetEvent;
+		private delegate uint GetEventPtr();
+		private static GetEventPtr _getEvent;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeHasEvents();
-		private static _dColorizeHasEvents ColorizeHasEvents;
+		private delegate bool HasEventsPtr();
+		private static HasEventsPtr _hasEvents;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void _dColorizeAltColorPath(string Path);
-		private static _dColorizeAltColorPath ColorizeAltColorPath;
+		private delegate void SetAltColorPathPtr(string path);
+		private static SetAltColorPathPtr _getAltColorPath;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr _dColorizeGetVersion();
-		private static _dColorizeGetVersion ColorizeGetVersion;
+		private delegate IntPtr GetVersionPtr();
+		private static GetVersionPtr _getVersion;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr GetNamePtr();
+		private static GetNamePtr _getName;
 		
 		#endregion
 	}
