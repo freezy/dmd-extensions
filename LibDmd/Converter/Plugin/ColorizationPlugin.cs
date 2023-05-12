@@ -23,7 +23,6 @@ namespace LibDmd.Converter.Plugin
 
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
-
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 		
 		public bool IsOpen;
@@ -321,26 +320,27 @@ namespace LibDmd.Converter.Plugin
 				_frame = new byte[width * height];
 			}
 			_colorIndex.Clear();
-			for (var i = 0; i < 64; i++) {
-				_palette[i] = Colors.Black;
+			for (var k = 0; k < 64; k++) {
+				_palette[k] = Colors.Black;
 			}
-
+			
 			var len = width * height * 3;
-			var index = -1;
+			var lastIndex = -1;
 			var j = 0;
 			for (var i = 0; i < len; i += 3) {
 				var color = rgb24Frame[i] << 16 | rgb24Frame[i + 1] << 8 | rgb24Frame[i + 2];
+				int index;
 				if (!_colorIndex.ContainsKey(color)) {
-					index++;
-					_colorIndex[color] = ++index;
-					_palette[index] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
+					lastIndex++;
+					_colorIndex[color] = lastIndex;
+					_palette[lastIndex] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
+					index = lastIndex;
 				} else {
 					index = _colorIndex[color];
 				}
-
 				_frame[j++] = (byte)index;
 			}
-
+			
 			// split and send
 			var planes = FrameUtil.Split(width, height, 6, _frame);
 			_coloredGray6Frames.OnNext(new ColoredFrame(planes, _palette));
