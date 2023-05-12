@@ -151,7 +151,7 @@ namespace LibDmd.Converter
 					continue;
 				}
 
-				Logger.Info($"Plugin v{plugin.GetVersion()} loaded.");
+				Logger.Info($"Plugin {ColorizationPlugin.GetName()} v{ColorizationPlugin.GetVersion()} loaded.");
 				return plugin;
 			}
 			return null;
