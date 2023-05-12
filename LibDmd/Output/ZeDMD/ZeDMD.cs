@@ -46,8 +46,6 @@ namespace LibDmd.Output.ZeDMD
 
 		private int RomWidth = 0; // The size of the frames in the rom
 		private int RomHeight = 0;
-		private int oRomWidth = 0; // the original size of the rom (not taking into account the sclaetohd)
-		private int oRomHeight = 0;
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
@@ -80,19 +78,6 @@ namespace LibDmd.Output.ZeDMD
 			byte[] tdata = new byte[5];
 			RomHeight = height;
 			RomWidth = width;
-			/*tdata[0] = 2; // send dimension mode
-			tdata[1] = (byte)(width & 0xff);
-			tdata[2] = (byte)((width >> 8) & 0xff);
-			tdata[3] = (byte)(height & 0xff);
-			tdata[4] = (byte)((height >> 8) & 0xff);
-			RenderRaw(tdata);*/
-		}
-
-		public void SetOriginalDimensions(int width, int height)
-		{
-			byte[] tdata = new byte[5];
-			oRomHeight = height;
-			oRomWidth = width;
 			tdata[0] = 2; // send dimension mode
 			tdata[1] = (byte)(width & 0xff);
 			tdata[2] = (byte)((width >> 8) & 0xff);
@@ -119,75 +104,30 @@ namespace LibDmd.Output.ZeDMD
 			Logger.Info(Name + " device found on port " + pDMD.nCOM + " with a resolution of " + DmdWidth + "x" + DmdHeight + " LEDs");
 		}
 
-		private byte[] CheckDimensions(byte[] iframe)
-		{
-			// We don't want to send hi res frames (=4 times the size of the buffer) when this is not needed (scaletohd/scale2x is done internally by the ZeDMD)
-			if ((oRomHeight < RomHeight) || (oRomHeight < RomHeight))
-			{
-				byte[] bytes = new byte[oRomHeight * oRomWidth];
-				byte n1, n2, c1, c2;
-				for (uint ti = 0; ti < oRomHeight; ti++)
-				{
-					for (uint tj = 0; tj < oRomWidth; tj++)
-					{
-						n1 = 1;
-						n2 = 0;
-						c1 = iframe[ti * 2 * RomWidth + tj * 2];
-						c2 = 0;
-						if (iframe[ti * 2 * RomWidth + tj * 2 + 1] == c1) n1++;
-						else
-						{
-							n2 = 1;
-							c2 = iframe[ti * 2 * RomWidth + tj * 2 + 1];
-						}
-						if (iframe[(ti * 2 + 1) * RomWidth + tj * 2] == c1) n1++;
-						else
-						{
-							n2++;
-							c2 = iframe[(ti * 2 + 1) * RomWidth + tj * 2];
-						}
-						if (iframe[(ti * 2 + 1) * RomWidth + tj * 2 + 1] == c1) n1++;
-						else
-						{
-							n2++;
-							c2 = iframe[(ti * 2 + 1) * RomWidth + tj * 2 + 1];
-						}
-						if (n1 >= n2) bytes[ti * oRomWidth + tj] = c1; else bytes[ti * oRomWidth + tj] = c2;
-					}
-				}
-				return bytes;
-			}
-			else return iframe;
-		}
-
 		public void RenderGray2(byte[] frame)
 		{
-			byte[] nframe = CheckDimensions(frame);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 2, nframe);
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 2, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 13);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
 			}
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			byte[] tframe = FrameUtil.Join(RomWidth, RomHeight, frame.Planes);
-			byte[] nframe = CheckDimensions(tframe);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 2, nframe);
 			// copy palette
 			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 4);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 13);
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBuffer, 13);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 12 + oRomWidth * oRomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
 			}
 		}
 
@@ -199,8 +139,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray4(byte[] frame)
 		{
-			byte[] nframe = CheckDimensions(frame);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 4, nframe);
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 4, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 49);
 
 			// send frame buffer to device
@@ -212,64 +151,57 @@ namespace LibDmd.Output.ZeDMD
 					_frameBuffer[1 + ti * 3 + 1] = (byte)(109.0f * CalcBrightness(ti / 15.0f));
 					_frameBuffer[1 + ti * 3 + 2] = (byte)(0.0f * CalcBrightness(ti / 15.0f));
 				}
-				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight / 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomWidth * RomHeight / 2);
 			}
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			byte[] tframe = FrameUtil.Join(RomWidth, RomHeight, frame.Planes);
-			byte[] nframe = CheckDimensions(tframe);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 4, nframe);
 			// copy palette
 			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 16);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 49);
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBuffer, 49);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + oRomWidth * oRomHeight / 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomWidth * RomHeight / 2);
 			}
 		}
 
 		public void RenderGray6(byte[] frame)
 		{
-			byte[] nframe = CheckDimensions(frame);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 6, nframe);
+			var planes = FrameUtil.Split(RomWidth, RomHeight, 6, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 193);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * oRomWidth * oRomHeight / 8);
+				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * RomWidth * RomHeight / 8);
 			}
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
-			byte[] tframe = FrameUtil.Join(RomWidth, RomHeight, frame.Planes);
-			byte[] nframe = CheckDimensions(tframe);
-			var planes = FrameUtil.Split(oRomWidth, oRomHeight, 6, nframe);
 			// copy palette
 			var paletteChanged = CopyPalette(frame.Palette, _frameBuffer, 64);
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(planes, _frameBuffer, 193);
+			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBuffer, 193);
 
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
 				if (frame.RotateColors)
 				{
-					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = frame.Rotations[ti];
+					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti + 1 + 192 + RomWidth * RomHeight * 6 / 8] = frame.Rotations[ti];
 				}
 				else
 				{
-					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti * 3 + 1 + 192 + oRomWidth * oRomHeight * 6 / 8] = 255;
+					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
 				}
-				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * oRomWidth * oRomHeight / 8 + 3 * 8);
+				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * RomWidth * RomHeight / 8 + 3 * 8);
 			}
 		}
 
