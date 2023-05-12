@@ -85,7 +85,7 @@ namespace LibDmd.DmdDevice
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 		private Serum _serum;
-		private ColorizationPlugin _coloringPlugin;
+		private ColorizationPlugin _colorizationPlugin;
 
 		public DmdDevice()
 		{
@@ -173,7 +173,7 @@ namespace LibDmd.DmdDevice
 			_gray4Colorizer = null;
 			_coloring = null;
 			_serum = null;
-			_coloringPlugin = null;
+			_colorizationPlugin = null;
 
 			SetupColorizer();
 
@@ -236,7 +236,7 @@ namespace LibDmd.DmdDevice
 			if (_serum == null) {
 				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode, _config.Global.ScaleToHd);;
 				if (plugin != null) {
-					_coloringPlugin = plugin;
+					_colorizationPlugin = plugin;
 				
 					// if (_pin2color.IsColored)
 					// 	_isColored = true;
@@ -244,7 +244,7 @@ namespace LibDmd.DmdDevice
 			}
 
 			// 3. check for vni
-			if (_serum == null && _coloringPlugin == null) {
+			if (_serum == null && _colorizationPlugin == null) {
 				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
 				if (colorizerResult.HasValue) {
 					var colorizer = colorizerResult.Value;
@@ -535,13 +535,13 @@ namespace LibDmd.DmdDevice
 					});
 				}
 				
-			} else if (_coloringPlugin != null) {
+			} else if (_colorizationPlugin != null) {
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
-					Converter = _coloringPlugin,
+					Converter = _colorizationPlugin,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
@@ -761,10 +761,10 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			if (_serum != null) {
-				_serum.Dispose();
-			}
+			_serum?.Dispose();
 			_serum = null;
+			_colorizationPlugin?.Dispose();
+			_colorizationPlugin = null;
 			_gray2Colorizer = null;
 			_gray4Colorizer = null;
 			_coloring = null;

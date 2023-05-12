@@ -147,11 +147,11 @@ namespace LibDmd.Converter
 
 			foreach (var pluginPath in pluginPaths) {
 				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scalerMode, scaleToHd);
-				if (!plugin.IsLoaded || !plugin.IsColored) {
+				if (!plugin.ReceiveFrames) {
 					continue;
 				}
 
-				Logger.Info($"Plugin {ColorizationPlugin.GetName()} v{ColorizationPlugin.GetVersion()} loaded.");
+				Logger.Info($"Plugin {plugin.GetName()} v{plugin.GetVersion()} loaded.");
 				return plugin;
 			}
 			return null;
