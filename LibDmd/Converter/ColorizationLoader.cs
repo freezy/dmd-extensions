@@ -146,7 +146,7 @@ namespace LibDmd.Converter
 			}
 
 			foreach (var pluginPath in pluginPaths) {
-				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scalerMode, scaleToHd);
+				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scaleToHd);
 				if (!plugin.ReceiveFrames) {
 					continue;
 				}

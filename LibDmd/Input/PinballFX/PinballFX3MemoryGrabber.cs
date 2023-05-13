@@ -54,7 +54,7 @@ namespace LibDmd.Input.PinballFX
 
 			// ..if not, return an empty frame (blank DMD).
 			if (_dmdAddress == IntPtr.Zero) {
-				return new DMDFrame { width = 128, height = 32, Data = frame, BitLength = 2 };
+				return new DMDFrame { Width = 128, Height = 32, Data = frame, BitLength = 2 };
 			}
 
 			// Retrieve DMD color from memory.
@@ -109,7 +109,7 @@ namespace LibDmd.Input.PinballFX
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : new DMDFrame { width = 128, height = 32, Data = frame, BitLength = 2 };
+			return identical ? null : new DMDFrame { Width = 128, Height = 32, Data = frame, BitLength = 2 };
 		}
 
 		private static IntPtr GetDMDOffset(IntPtr hProcess)

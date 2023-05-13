@@ -2,8 +2,8 @@
 {
 	public class DMDFrame
 	{
-		public int width;
-		public int height;
+		public int Width;
+		public int Height;
 		public byte[] Data;
 		public int BitLength;
 
@@ -16,8 +16,8 @@
 
 		public DMDFrame Update(int width, int height, byte[] data, int bitSize)
 		{
-			this.width = width;
-			this.height = height;
+			Width = width;
+			Height = height;
 			Data = data;
 			BitLength = bitSize;
 			return this;

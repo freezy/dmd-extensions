@@ -32,7 +32,7 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
-		private readonly DMDFrame _dmdFrame = new DMDFrame { width = DMDWidth, height = DMDHeight };
+		private readonly DMDFrame _dmdFrame = new DMDFrame { Width = DMDWidth, Height = DMDHeight };
 		private string _gameName;
 		private int _bitLength = 4;
 		
