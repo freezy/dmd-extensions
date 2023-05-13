@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
-using NLog;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
-using ResizeMode = LibDmd.Input.ResizeMode;
-using System.Reactive;
-using System.Threading.Tasks;
+using NLog;
 
 namespace LibDmd
 {
@@ -43,6 +41,8 @@ namespace LibDmd
 	/// </summary>
 	public class RenderGraph : IRenderer
 	{
+		#region Configuration
+		
 		/// <summary>
 		/// The render graph's name, mainly for logging purpose.
 		/// </summary>
@@ -70,12 +70,6 @@ namespace LibDmd
 		public IConverter Converter { get; set; }
 
 		/// <summary>
-		/// True of the graph is currently active, i.e. if the source is
-		/// producing frames.
-		/// </summary>
-		public bool IsRendering { get; set; }
-
-		/// <summary>
 		/// If set, flips the image vertically (top/down).
 		/// </summary>
 		public bool FlipVertically { get; set; }
@@ -93,7 +87,7 @@ namespace LibDmd
 		/// <summary>
 		/// If >0, add a timer to each pipeline that clears the screen after n milliseconds.
 		/// </summary>
-		public int IdleAfter { get; set; } = 0;
+		public int IdleAfter { get; set; }
 
 		/// <summary>
 		/// When IdleAfter is enabled, play this (blank screen if null)
@@ -101,14 +95,21 @@ namespace LibDmd
 		public string IdlePlay { get; set; }
 
 		public ScalerMode ScalerMode { get; set; }
+		
+		#endregion
+
+		#region Constants
 
 		/// <summary>
 		/// The default color used if there is no palette defined
 		/// </summary>
 		public static readonly Color DefaultColor = Colors.OrangeRed;
 
-		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		#endregion
+
+		#region Members
 
 		private Color[] _gray2Colors; 
 		private Color[] _gray4Colors;
@@ -120,6 +121,12 @@ namespace LibDmd
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
 		private RenderGraph _idleRenderGraph;
+		
+		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
+		
+		#endregion
+
+		#region Lifecycle
 
 		public RenderGraph()
 		{
@@ -180,6 +187,83 @@ namespace LibDmd
 		{
 			return StartRendering(null, onError);
 		}
+		
+		/// <summary>
+		/// Sets the color with which a grayscale source is rendered on the RGB display.
+		/// </summary>
+		/// <param name="color">Rendered color</param>
+		public void SetColor(Color color)
+		{
+			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
+			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+			_gray6Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 64);
+		}
+
+		/// <summary>
+		/// Sets the palette for rendering grayscale images.
+		/// </summary>
+		/// <param name="colors">Palette to set</param>
+		/// <param name="index">Palette index</param>
+		public void SetPalette(Color[] colors, int index = -1)
+		{
+			_gray2Palette = ColorUtil.GetPalette(colors, 4);
+			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+			_gray6Palette = ColorUtil.GetPalette(colors, 64);
+		}
+
+		/// <summary>
+		/// Removes a previously set palette
+		/// </summary>
+		public void ClearPalette()
+		{
+			_gray2Palette = null;
+			_gray4Palette = null;
+			_gray6Palette = null;
+		}
+
+		/// <summary>
+		/// Resets the color
+		/// </summary>
+		public void ClearColor()
+		{
+			SetColor(DefaultColor);
+		}
+
+		/// <summary>
+		/// Clears the display on all destinations.
+		/// </summary>
+		public void ClearDisplay()
+		{
+			Destinations.ForEach(dest => dest.ClearDisplay());
+		}
+
+		/// <summary>
+		/// Disposes the graph and all elements.
+		/// </summary>
+		/// <remarks>
+		/// Run this before exiting the application.
+		/// </remarks>
+		public void Dispose()
+		{
+			Logger.Debug("Disposing {0}...", Name);
+			if (_activeRenderer != null) {
+				_activeRenderer.Dispose();
+				_activeRenderer = null;
+			}
+			if (Destinations == null) {
+				return;
+			}
+			foreach (var dest in Destinations) {
+				dest.Dispose();
+			}
+			foreach (var source in _activeSources) {
+				source.Dispose();
+			}
+		}
+		
+		#endregion
+
+		#region Graph Connections
 
 		/// <summary>
 		/// Subscribes to the source and hence starts receiving and processing frames
@@ -197,7 +281,6 @@ namespace LibDmd
 			if (_activeSources.Count > 0) {
 				throw new RendersAlreadyActiveException("Renders already active, please stop before re-launching.");
 			}
-			IsRendering = true;
 
 			try {
 				var sourceGray2 = Source as IGray2Source;
@@ -206,41 +289,39 @@ namespace LibDmd
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 
 				// init converters
-				IColoredGray2Source coloredGray2SourceConverter = null;
-				IColoredGray4Source coloredGray4SourceConverter = null;
-				IColoredGray6Source coloredGray6SourceConverter = null;
-				IRgb24Source rgb24SourceConverter = null;
+				IColoredGray2Source sourceConverterColoredGray2 = null;
+				IColoredGray4Source sourceConverterColoredGray4 = null;
+				IColoredGray6Source sourceConverterColoredGray6 = null;
+				IRgb24Source sourceConverterRgb24 = null;
 
 				if (Converter != null && HasRgb24Destination()) {
-					coloredGray2SourceConverter = Converter as IColoredGray2Source;
-					coloredGray4SourceConverter = Converter as IColoredGray4Source;
-					coloredGray6SourceConverter = Converter as IColoredGray6Source;
-					// ReSharper disable once SuspiciousTypeConversion.Global
-					rgb24SourceConverter = Converter as IRgb24Source;
+					sourceConverterColoredGray2 = Converter as IColoredGray2Source;
+					sourceConverterColoredGray4 = Converter as IColoredGray4Source;
+					sourceConverterColoredGray6 = Converter as IColoredGray6Source;
+					sourceConverterRgb24 = Converter as IRgb24Source;
 					
 					// send frames to converter
 					switch (Converter.From) {
 						case FrameFormat.Gray2:
 							if (sourceGray2 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {coloredGray2SourceConverter?.Name}.");
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {sourceConverterColoredGray2?.Name}.");
 							}
 							_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
 							break;
 						case FrameFormat.Gray4:
 							if (sourceGray4 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {coloredGray4SourceConverter?.Name}.");
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {sourceConverterColoredGray4?.Name}.");
 							}
 							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
 							break;
 						case FrameFormat.Gray6:
-							if (sourceGray6 == null)
-							{
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 6-bit compatible which is mandatory for converter {coloredGray6SourceConverter?.Name}.");
+							if (sourceGray6 == null) {
+								throw new IncompatibleSourceException($"Source {Source.Name} is not 6-bit compatible which is mandatory for converter {sourceConverterColoredGray6?.Name}.");
 							}
 							_activeSources.Add(sourceGray6.GetGray6Frames().Do(Converter.Convert).Subscribe());
 							break;
 						default:
-							throw new NotImplementedException($"Frame convertion from ${Converter.From} is not implemented.");
+							throw new IncompatibleGraphException($"Frame convertion from ${Converter.From} is not implemented.");
 					}
 				}
 
@@ -253,14 +334,14 @@ namespace LibDmd
 
 					// So here's how convertors work:
 					// They have one input type, given by IConvertor.From, but they can randomly 
-					// output frames in different formats. For example, the ColoredGray2Colorizer
-					// outputs in ColoredGray2 or ColoredGray4, depending if data is enhanced
-					// or not.
+					// output frames in different formats (both dimensions and bit depth).
+					// For example, the ColoredGray2Colorizer outputs in ColoredGray2 or
+					// ColoredGray4, depending if data is enhanced or not.
 					//
-					// So for the output, the converter acts as ISource, implementing the specific 
+					// So, for the output, the converter acts as ISource, implementing the specific 
 					// interfaces supported. Currently the following output sources are supported:
 					//
-					//    IColoredGray2Source, IColoredGray4Source and IRgb24Source.
+					//    IColoredGray2Source, IColoredGray4Source, IColoredGray6Source and IRgb24Source.
 					//
 					// Other types don't make much sense (i.e. you don't convert *down* to 
 					// IGray2Source).
@@ -273,53 +354,51 @@ namespace LibDmd
 					if (Converter != null && destRgb24 != null) {
 						
 						// if converter emits colored gray-2 frames..
-						if (coloredGray2SourceConverter != null) {
+						if (sourceConverterColoredGray2 != null) {
 							// if destination can render colored gray-2 frames...
 							if (destColoredGray2 != null) {
-								//Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", coloredGray2SourceConverter.Name, dest.Name);
-								Connect(coloredGray2SourceConverter, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
+								Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", sourceConverterColoredGray2.Name, dest.Name);
+								Connect(sourceConverterColoredGray2, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
 
 							// otherwise, try to convert to rgb24
 							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray2SourceConverter.Name);
-								Connect(coloredGray2SourceConverter, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
+								Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
+								Connect(sourceConverterColoredGray2, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
 							}
 						}
 
 						// if converter emits colored gray-4 frames..
-						if (coloredGray4SourceConverter != null) {
+						if (sourceConverterColoredGray4 != null) {
 							// if destination can render colored gray-4 frames...
 							if (destColoredGray4 != null) {
-								//Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", coloredGray4SourceConverter.Name, dest.Name);
-								Connect(coloredGray4SourceConverter, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
+								Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", sourceConverterColoredGray4.Name, dest.Name);
+								Connect(sourceConverterColoredGray4, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
 
 							// otherwise, convert to rgb24
 							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray4SourceConverter.Name);
-								Connect(coloredGray4SourceConverter, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
+								Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray4.Name);
+								Connect(sourceConverterColoredGray4, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
 							}
 						}
 
 						// if converter emits colored gray-6 frames..
-						if (coloredGray6SourceConverter != null)
-						{
+						if (sourceConverterColoredGray6 != null) {
 							// if destination can render colored gray-6 frames...
-							if (destColoredGray6 != null)
-							{
-								//Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", coloredGray6SourceConverter.Name, dest.Name);
-								Connect(coloredGray6SourceConverter, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
+							if (destColoredGray6 != null) {
+								Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", sourceConverterColoredGray6.Name, dest.Name);
+								Connect(sourceConverterColoredGray6, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 
-								// otherwise, convert to rgb24
+							// otherwise, convert to rgb24
 							} else {
-								//Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, coloredGray6SourceConverter.Name);
-								Connect(coloredGray6SourceConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
+								Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray6.Name);
+								Connect(sourceConverterColoredGray6, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
 							}
 						}
 
 						// if converter emits RGB24 frames..
-						if (rgb24SourceConverter != null) {
-							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", rgb24SourceConverter.Name, dest.Name);
-							Connect(rgb24SourceConverter, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
+						if (sourceConverterRgb24 != null) {
+							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", sourceConverterRgb24.Name, dest.Name);
+							Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
 						}
 
 						// render graph is already set up through converters, so we skip the rest below
@@ -518,7 +597,6 @@ namespace LibDmd
 				});
 
 			} catch (DebugPrivilegeException ex) {
-				IsRendering = false;
 				if (onError != null) {
 					onError.Invoke(ex);
 				} else {
@@ -528,21 +606,25 @@ namespace LibDmd
 			_activeRenderer = new RenderDisposable(this, _activeSources);
 			return _activeRenderer;
 		}
+		
+		#endregion
+
+		#region Pipeline Setup
 
 		/// <summary>
 		/// Connects a source with a destination and defines in which mode data is
 		/// sent and received.
 		/// </summary>
 		/// <remarks>
-		/// Note that render bitlength is enforced, i.e. even if the destination 
-		/// supports the "from" bitlength, it will be converted to the given "to"
-		/// bitlength.
+		/// Note that render bit length is enforced, i.e. even if the destination 
+		/// supports the "from" bit length, it will be converted to the given "to"
+		/// bit length.
 		/// </remarks>
 		/// <param name="source">Source to subscribe to</param>
 		/// <param name="dest">Destination to send the data to</param>
 		/// <param name="from">Data format to read from source (incompatible source will throw exception)</param>
-		/// <param name="to">Data forma to send to destination (incompatible destination will throw exception)</param>
-		[SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+		/// <param name="to">Data format to send to destination (incompatible destination will throw exception)</param>
+		//[SuppressMessage("ReSharper", "PossibleNullReferenceException")]
 		private void Connect(ISource source, IDestination dest, FrameFormat from, FrameFormat to)
 		{
 			var destFixedSize = dest as IFixedSizeDestination;
@@ -580,11 +662,11 @@ namespace LibDmd
 
 						// gray2 -> gray4
 						case FrameFormat.Gray4:
-							throw new NotImplementedException("Cannot convert from gray2 to gray4 (every gray4 destination should be able to do gray2 as well).");
+							throw new IncompatibleGraphException("Cannot convert from gray2 to gray4 (every gray4 destination should be able to do gray2 as well).");
 
 						// gray2 -> gray6
 						case FrameFormat.Gray6:
-							throw new NotImplementedException("Cannot convert from gray2 to gray6 (every gray6 destination should be able to do gray2 as well).");
+							throw new IncompatibleGraphException("Cannot convert from gray2 to gray6 (every gray6 destination should be able to do gray2 as well).");
 
 						// gray2 -> rgb24
 						case FrameFormat.Rgb24:
@@ -612,15 +694,15 @@ namespace LibDmd
 
 						// gray2 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from gray2 to colored gray2 (doesn't make any sense, colored gray2 can also do gray2).");
+							throw new IncompatibleGraphException("Cannot convert from gray2 to colored gray2 (doesn't make any sense, colored gray2 can also do gray2).");
 
 						// gray2 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from gray2 to colored gray2 (a colored gray4 destination should also be able to do gray2 directly).");
+							throw new IncompatibleGraphException("Cannot convert from gray2 to colored gray2 (a colored gray4 destination should also be able to do gray2 directly).");
 
 						// gray2 -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from gray2 to colored gray6 (a colored gray6 destination should also be able to do gray2 directly).");
+							throw new IncompatibleGraphException("Cannot convert from gray2 to colored gray6 (a colored gray6 destination should also be able to do gray2 directly).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -650,7 +732,7 @@ namespace LibDmd
 
 						// gray4 -> gray6
 						case FrameFormat.Gray6:
-							throw new NotImplementedException("Cannot convert from gray4 to gray6 (every gray6 destination should be able to do gray4 as well).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to gray6 (every gray6 destination should be able to do gray4 as well).");
 
 						// gray4 -> rgb24
 						case FrameFormat.Rgb24:
@@ -678,15 +760,15 @@ namespace LibDmd
 
 						// gray4 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
 
 						// gray4 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
 
 						// gray4 -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -748,15 +830,15 @@ namespace LibDmd
 
 						// gray6 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
 
 						// gray6 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
 
 						// gray6 -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
+							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -813,11 +895,11 @@ namespace LibDmd
 
 						// rgb24 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from rgb24 to colored gray2 (colored gray2 only has 4 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray2 only has 4 colors per frame).");
 
 						// rgb24 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from rgb24 to colored gray2 (colored gray4 only has 16 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray4 only has 16 colors per frame).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -832,7 +914,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceBitmap, dest, destGray2, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToGray2(bmp))
+									.Select(ImageUtil.ConvertToGray2)
 									.Select(frame => TransformGray2(source.Dimensions.Value.Width, source.Dimensions.Value.Height, frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
@@ -874,15 +956,15 @@ namespace LibDmd
 
 						// bitmap -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from bitmap to colored gray2 (colored gray2 only has 4 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from bitmap to colored gray2 (colored gray2 only has 4 colors per frame).");
 
 						// bitmap -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from bitmap to colored gray2 (colored gray4 only has 16 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from bitmap to colored gray2 (colored gray4 only has 16 colors per frame).");
 
 						// bitmap -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from bitmap to colored gray6 (colored gray6 only has 64 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from bitmap to colored gray6 (colored gray6 only has 64 colors per frame).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -905,11 +987,11 @@ namespace LibDmd
 
 						// colored gray2 -> gray4
 						case FrameFormat.Gray4:
-							throw new NotImplementedException("Cannot convert from colored gray2 to gray4 (it's not like we can extract luminosity from the colors...)");
+							throw new IncompatibleGraphException("Cannot convert from colored gray2 to gray4 (it's not like we can extract luminosity from the colors...)");
 
 						// colored gray2 -> gray6
 						case FrameFormat.Gray6:
-							throw new NotImplementedException("Cannot convert from colored gray2 to gray6 (it's not like we can extract luminosity from the colors...)");
+							throw new IncompatibleGraphException("Cannot convert from colored gray2 to gray6 (it's not like we can extract luminosity from the colors...)");
 
 						// colored gray2 -> rgb24
 						case FrameFormat.Rgb24:
@@ -949,10 +1031,10 @@ namespace LibDmd
 
 						// colored gray2 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from colored gray2 to colored gray4 (if a destination can do colored gray4 it should be able to do colored gray2 directly).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray2 to colored gray4 (if a destination can do colored gray4 it should be able to do colored gray2 directly).");
 
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from colored gray2 to colored gray6 (if a destination can do colored gray6 it should be able to do colored gray2 directly).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray2 to colored gray6 (if a destination can do colored gray6 it should be able to do colored gray2 directly).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -985,7 +1067,7 @@ namespace LibDmd
 
 						// colored gray4 -> gray6
 						case FrameFormat.Gray6:
-							throw new NotImplementedException("Cannot convert from colored gray4 to gray6 (it's not like we can extract luminosity from the colors...)");
+							throw new IncompatibleGraphException("Cannot convert from colored gray4 to gray6 (it's not like we can extract luminosity from the colors...)");
 
 						// colored gray4 -> rgb24
 						case FrameFormat.Rgb24:
@@ -1019,7 +1101,7 @@ namespace LibDmd
 
 						// colored gray4 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from colored gray4 to colored gray2 (use rgb24 instead of down-coloring).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray4 to colored gray2 (use rgb24 instead of down-coloring).");
 
 						// colored gray4 -> colored gray4
 						case FrameFormat.ColoredGray4:
@@ -1031,7 +1113,7 @@ namespace LibDmd
 						
 						// colored gray4 -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new NotImplementedException("Cannot convert from colored gray4 to colored gray6 (use rgb24 instead of down-coloring).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray4 to colored gray6 (use rgb24 instead of down-coloring).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -1105,11 +1187,11 @@ namespace LibDmd
 
 						// colored gray6 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new NotImplementedException("Cannot convert from colored gray4 to colored gray2 (use rgb24 instead of down-coloring).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray4 to colored gray2 (use rgb24 instead of down-coloring).");
 
 						// colored gray6 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new NotImplementedException("Cannot convert from colored gray6 to colored gray4 (use rgb24 instead of down-coloring).");
+							throw new IncompatibleGraphException("Cannot convert from colored gray6 to colored gray4 (use rgb24 instead of down-coloring).");
 
 						// colored gray6 -> colored gray6
 						case FrameFormat.ColoredGray6:
@@ -1143,6 +1225,10 @@ namespace LibDmd
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+		
+		#endregion
+
+		#region Utils
 
 		/// <summary>
 		/// Similar method to ObserveOn but only keeping the latest notification
@@ -1301,7 +1387,7 @@ namespace LibDmd
 				_idleRenderGraph = null;
 			}
 		}
-
+		
 		private byte[] ColorizeGray2(int width, int height, byte[] frame)
 		{
 			return ColorUtil.ColorizeFrame(width, height, frame, _gray2Palette ?? _gray2Colors);
@@ -1325,79 +1411,53 @@ namespace LibDmd
 		{
 			return Destinations.OfType<IRgb24Destination>().Any();
 		}
-
-		/// <summary>
-		/// Sets the color with which a grayscale source is rendered on the RGB display.
+		
+				/// <summary>
+		/// Makes sure that a given source is compatible with a given destination or throws an exception.
 		/// </summary>
-		/// <param name="color">Rendered color</param>
-		public void SetColor(Color color)
+		/// <param name="src">Original source</param>
+		/// <param name="castedSource">Casted source, will be checked against null</param>
+		/// <param name="dest">Original destination</param>
+		/// <param name="castedDest">Casted source, will be checked against null</param>
+		/// <param name="whatFrom">Name of the source</param>
+		/// <param name="whatDest">Name of destination</param>
+		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, string whatFrom, string whatDest = null)
 		{
-			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
-			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
-			_gray6Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 64);
-		}
-
-		/// <summary>
-		/// Sets the palette for rendering grayscale images.
-		/// </summary>
-		/// <param name="colors">Pallette to set</param>
-		/// <param name="index">Palette index</param>
-		public void SetPalette(Color[] colors, int index = -1)
-		{
-			_gray2Palette = ColorUtil.GetPalette(colors, 4);
-			_gray4Palette = ColorUtil.GetPalette(colors, 16);
-			_gray6Palette = ColorUtil.GetPalette(colors, 64);
-		}
-
-		/// <summary>
-		/// Removes a previously set palette
-		/// </summary>
-		public void ClearPalette()
-		{
-			_gray2Palette = null;
-			_gray4Palette = null;
-			_gray6Palette = null;
-		}
-
-		/// <summary>
-		/// Resets the color
-		/// </summary>
-		public void ClearColor()
-		{
-			SetColor(DefaultColor);
-		}
-
-		/// <summary>
-		/// Clears the display on all destinations.
-		/// </summary>
-		public void ClearDisplay()
-		{
-			Destinations.ForEach(dest => dest.ClearDisplay());
-		}
-
-		/// <summary>
-		/// Disposes the graph and all elements.
-		/// </summary>
-		/// <remarks>
-		/// Run this before exiting the application.
-		/// </remarks>
-		public void Dispose()
-		{
-			Logger.Debug("Disposing {0}...", Name);
-			if (_activeRenderer != null) {
-				_activeRenderer.Dispose();
-				_activeRenderer = null;
+			if (castedSource == null && castedDest == null) {
+				if (whatDest != null) {
+					throw new IncompatibleRenderer($"Source \"${src.Name}\" is not ${whatFrom} compatible and destination \"${dest.Name}\" is not ${whatDest} compatible.");
+				}
+				throw new IncompatibleRenderer($"Neither source \"${src.Name}\" nor destination \"${dest.Name}\" are ${whatFrom} compatible.");
 			}
-			if (Destinations == null) {
-				return;
+			if (castedSource == null) {
+				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + whatFrom + " compatible.");
 			}
-			foreach (var dest in Destinations) {
-				dest.Dispose();
-			}
-			foreach (var source in _activeSources) {
-				source.Dispose();
+			AssertCompatibility(dest, castedDest, whatFrom, whatDest);
+		}
+
+		/// <summary>
+		/// Makes sure that a given source is compatible with a given destination or throws an exception.
+		/// </summary>
+		/// <param name="dest">Original destination</param>
+		/// <param name="castedDest">Casted source, will be checked against null</param>
+		/// <param name="whatFrom">Name of the source</param>
+		/// <param name="whatDest">Name of destination</param>
+		// ReSharper disable once UnusedParameter.Local
+		private static void AssertCompatibility(IDestination dest, object castedDest, string whatFrom, string whatDest)
+		{
+			if (castedDest == null) {
+				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + whatDest + " compatible (" + whatFrom + ").");
 			}
 		}
+
+		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, FrameFormat from, FrameFormat to)
+		{
+			AssertCompatibility(src, castedSource, dest, castedDest, from.ToString(), to.ToString());
+		}
+		
+		#endregion
+
+		#region Transformations
 
 		private byte[] TransformScaling(int width, int height, byte[] frame, IFixedSizeDestination dest)
 		{
@@ -1569,48 +1629,7 @@ namespace LibDmd
 			return TransformationUtil.Transform(bmp, width, height, Resize, FlipHorizontally, FlipVertically);
 		}
 
-		/// <summary>
-		/// Makes sure that a given source is compatible with a given destination or throws an exception.
-		/// </summary>
-		/// <param name="src">Original source</param>
-		/// <param name="castedSource">Casted source, will be checked against null</param>
-		/// <param name="dest">Original destination</param>
-		/// <param name="castedDest">Casted source, will be checked against null</param>
-		/// <param name="whatFrom">Name of the source</param>
-		/// <param name="whatDest">Name of destination</param>
-		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, string whatFrom, string whatDest = null)
-		{
-			if (castedSource == null && castedDest == null) {
-				if (whatDest != null) {
-					throw new IncompatibleRenderer($"Source \"${src.Name}\" is not ${whatFrom} compatible and destination \"${dest.Name}\" is not ${whatDest} compatible.");
-				}
-				throw new IncompatibleRenderer($"Neither source \"${src.Name}\" nor destination \"${dest.Name}\" are ${whatFrom} compatible.");
-			}
-			if (castedSource == null) {
-				throw new IncompatibleRenderer("Source \"" + src.Name + "\" is not " + whatFrom + " compatible.");
-			}
-			AssertCompatibility(dest, castedDest, whatFrom, whatDest);
-		}
-
-		/// <summary>
-		/// Makes sure that a given source is compatible with a given destination or throws an exception.
-		/// </summary>
-		/// <param name="dest">Original destination</param>
-		/// <param name="castedDest">Casted source, will be checked against null</param>
-		/// <param name="whatFrom">Name of the source</param>
-		/// <param name="whatDest">Name of destination</param>
-		// ReSharper disable once UnusedParameter.Local
-		private static void AssertCompatibility(IDestination dest, object castedDest, string whatFrom, string whatDest)
-		{
-			if (castedDest == null) {
-				throw new IncompatibleRenderer("Destination \"" + dest.Name + "\" is not " + whatDest + " compatible (" + whatFrom + ").");
-			}
-		}
-
-		private static void AssertCompatibility(ISource src, object castedSource, IDestination dest, object castedDest, FrameFormat from, FrameFormat to)
-		{
-			AssertCompatibility(src, castedSource, dest, castedDest, from.ToString(), to.ToString());
-		}
+		#endregion
 	}
 
 	/// <summary>
@@ -1691,9 +1710,10 @@ namespace LibDmd
 			}
 			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
 			_activeSources.Clear();
-			_graph.IsRendering = false;
 		}
 	}
+
+	#region Exceptions
 
 	/// <summary>
 	/// Thrown when trying to start rendering when it's already started.
@@ -1724,6 +1744,16 @@ namespace LibDmd
 		{
 		}
 	}
+	
+	/// <summary>
+	/// Thrown when trying to connect a source to a destination that are incompatible.
+	/// </summary>
+	public class IncompatibleGraphException : Exception
+	{
+		public IncompatibleGraphException(string message) : base(message)
+		{
+		}
+	}
 
 	/// <summary>
 	/// Thrown when DmdDevice.ini was explicitly specified but not found.
@@ -1734,4 +1764,6 @@ namespace LibDmd
 		{
 		}
 	}
+	
+	#endregion
 }
