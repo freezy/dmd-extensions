@@ -1,4 +1,6 @@
-﻿namespace LibDmd
+﻿using System.Text;
+
+namespace LibDmd
 {
 	public class DMDFrame
 	{
@@ -22,6 +24,19 @@
 			BitLength = bitSize;
 			return this;
 		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine($"DMDFrame {Width}x{Height}@{BitLength} ({Data.Length} bytes):");
+			for (var y = 0; y < Height; y++) {
+				for (var x = 0; x < Width; x++) {
+					sb.Append(Data[y * Width + x].ToString("X"));
+				}
+				sb.AppendLine();
+			}
+			return sb.ToString();
+		}
 	}
 
 	public class RawDMDFrame : DMDFrame
@@ -34,8 +49,5 @@
 			this.RawPlanes = rawPlanes;
 			return this;
 		}
-
-
-
 	}
 }
