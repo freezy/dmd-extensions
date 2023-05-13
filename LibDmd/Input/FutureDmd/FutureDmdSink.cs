@@ -63,7 +63,7 @@ namespace LibDmd.Input.FutureDmd
 
 				var isGameRunning = true; 
 				var chunkSize = 0;
-				var gray2Frame = new DMDFrame { width = 132, height = 32 };
+				var gray2Frame = new DMDFrame { Width = 132, Height = 32 };
 				var messageChunk = new byte[4096];
 
 				// for each frame
