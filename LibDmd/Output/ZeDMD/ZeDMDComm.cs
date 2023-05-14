@@ -215,14 +215,6 @@ namespace LibDmd.Output.ZeDMD
 			return false;
 		}
 
-		public void ResetPalettes()
-		{
-			// Reset ESP32 palette
-			byte[] tempbuf = new byte[1];
-			tempbuf[0] = 0x6;  // command byte 6 = reset palettes
-			QueueFrame(tempbuf);
-		}
-
 		public int Open(out int width, out int height)
 		{
 			// Try to find an ZeDMD on each COM port available
@@ -237,7 +229,6 @@ namespace LibDmd.Output.ZeDMD
 			}
 			if (!IsAvailable) return 0;
 
-			ResetPalettes();
 			Opened = true;
 			return 1;
 		}
@@ -247,7 +238,6 @@ namespace LibDmd.Output.ZeDMD
 			if (Opened)
 			{
 				Disconnect();
-				ResetPalettes();
 			}
 
 			Opened = false;

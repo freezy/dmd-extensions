@@ -6,16 +6,10 @@ using NLog;
 namespace LibDmd.Output.ZeDMD
 {
 	/// <summary>
-	/// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32
-	/// Uses the library for ESP32 from mrfaptastic "ESP32-HUB75-MatrixPanel-I2S-DMA" (https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA)
-	/// so you need 2 64x32 pannels compatible (check the Readme.md in the link above), but for my tests I had 2 different pannels and it worked, the main constraint
-	/// is to have a 1/16 scan
-	/// you can check a video of a colorized rom here https://www.youtube.com/watch?v=IQQb7Jl1QW8
-	/// The aim for this new real DMD is to propose a really cheap device with open source full code (this code for Freezy dmd-extensions + the arduino IDE
-	/// C code to inject in the ESP32)
-	/// On Aliexpress, you can get a µC ESP32 for around 5$ (I suggest a 38-pin to be sure to have enough I/O, but check in the Arduino code for the number of pins needed),
-	/// 2 64x32-LED-matrix display for 15$-20$ each. So for less than 50$ you get a full real DMD!
-	/// I am thinking about designing a shield for a 38-pin ESP32, I will give the PCB layout once done (for free, sure), then you can
+	/// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32.
+	/// So you need 2 64x32 pannels compatible (check the Readme.md in the link above), the main constraint is to have a 1/16 scan.
+	/// To build the ZeDMD HD version you either need 2 128x64 or 4 64x54 panels.
+	/// Check "ZeDMD Project Page" (https://github.com/zesinger/ZeDMD_ESP32) for details.
 	/// </summary>
 	public class ZeDMD : IGray2Destination, IGray4Destination, IGray6Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IResizableDestination
 	{
@@ -35,7 +29,7 @@ namespace LibDmd.Output.ZeDMD
 
 		private const byte RGB24 = 3;
 		private const byte ColGray6 = 11;
-		private const byte Gray4 = 7;
+		//private const byte Gray4 = 7;
 		private const byte ColGray4 = 9;
 		private const byte Gray2 = 8;
 
