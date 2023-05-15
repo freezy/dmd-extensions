@@ -341,7 +341,6 @@ namespace LibDmd.DmdDevice
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
-					zeDmd.SetOriginalDimensions(aniWidth, aniHeight);
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {

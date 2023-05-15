@@ -60,7 +60,6 @@ namespace LibDmd.DmdDevice
 	public interface IZeDMDConfig
 	{
 		bool Enabled { get; }
-		string Port { get; }
 	}
 
 	public interface IPin2DmdConfig

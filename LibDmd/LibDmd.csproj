@@ -106,6 +106,9 @@
     <Reference Include="Mindscape.Raygun4Net4, Version=5.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Mindscape.Raygun4Net.5.5.0\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
     </Reference>
+    <Reference Include="NetMiniZ, Version=1.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetMiniZ.1.6.1-preview.3\lib\netstandard2.0\NetMiniZ.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -481,6 +484,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Costura32\serum.dll" />
     <EmbeddedResource Include="Costura64\serum64.dll" />
+    <EmbeddedResource Include="Costura32\libminiz-3.0.2.dll" />
+    <EmbeddedResource Include="Costura64\libminiz-3.0.2.dll" />
     <Content Include="FTDI2XX.xml" />
     <Content Include="Output\Virtual\Dmd\README.md" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
@@ -657,9 +662,13 @@
     <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets'))" />
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets'))" />
+    <Error Condition="!Exists('..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets'))" />
+    <Error Condition="!Exists('..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets'))" />
   </Target>
   <Import Project="..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.3\build\net462\SkiaSharp.NativeAssets.macOS.targets')" />
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
+  <Import Project="..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets" Condition="Exists('..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets')" />
+  <Import Project="..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets" Condition="Exists('..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
