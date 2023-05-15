@@ -221,7 +221,7 @@ namespace LibDmd.DmdDevice
 
 	public class ZeDMDConfig : AbstractConfiguration, IZeDMDConfig
 	{
-		public override string Name { get; } = "ZeDMD";
+		public override string Name { get; } = "zedmd";
 		public bool Enabled => GetBoolean("enabled", false);
 		public string Port => GetString("port", null);
 		public bool AllowHdScaling => GetBoolean("scaletohd", true);
