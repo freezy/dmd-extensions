@@ -62,7 +62,9 @@ namespace LibDmd
 			if (_isDisabled) {
 				return;
 			}
+#if DEBUG			
 			RudderStack.Logger.Handlers += LoggingHandler;
+#endif
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
 
@@ -312,6 +314,7 @@ namespace LibDmd
 			return _id;
 		}
 
+#if DEBUG			
 		static void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
 		{
 			if (args != null) {
@@ -319,6 +322,7 @@ namespace LibDmd
 			}
 			Logger.Info($"[RudderAnalytics] [{level}] {message}");
 		}
+#endif
 		
 #if SRC_GITHUB
 		private const string Distributor = "GitHub";
