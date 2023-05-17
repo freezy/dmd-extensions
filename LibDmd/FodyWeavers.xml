@@ -7,6 +7,7 @@
             ProPinballBridge
             ftd2xx
             serum64
+			libminiz-3.0.2
         </Unmanaged64Assemblies>
     </Costura>
 </Weavers>
