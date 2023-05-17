@@ -389,6 +389,10 @@ Depending on the source, enabling colorization is different:
 
 ## Breaking Changes
 
+### v2.1.1
+
+- In DmdDevice.ini, the `[ZeDMD]` has changed to `[zedmd]`.
+
 ### v1.8.0
 
 - Data types in configuration files are now culture invariant. Meaning if you are running under a Windows UI Culture such as German
