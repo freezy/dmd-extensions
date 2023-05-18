@@ -223,7 +223,6 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "zedmd";
 		public bool Enabled => GetBoolean("enabled", false);
-		public string Port => GetString("port", null);
 		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
 		{
