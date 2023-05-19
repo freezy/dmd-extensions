@@ -137,7 +137,13 @@ namespace LibDmd.DmdDevice
 			if (_config.Global.SkipAnalytics) {
 				Analytics.Instance.Disable();
 			}
-			Analytics.Instance.Init(_fullVersion, "DLL");
+
+			try {
+				Analytics.Instance.Init(_fullVersion, "DLL");
+				
+			} catch (Exception e) {
+				Logger.Warn($"Error setting up analytics: {e.Message}");
+			}
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);

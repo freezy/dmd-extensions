@@ -172,6 +172,13 @@ namespace LibDmd
 			if (osVersion.IsNullOrEmpty()) {
 				osVersion = OSVersion.GetOperatingSystem().ToString();
 			}
+
+			string timezone = null;
+			try {
+				timezone = TimeZoneConverter.TZConvert.WindowsToIana(TimeZone.CurrentTimeZone.StandardName);
+			} catch {
+				Logger.Warn($"Could not parse time zone {TimeZone.CurrentTimeZone.StandardName}.");
+			}
 			
 			return new RudderContext { 
 				{ "app", new Dict {
@@ -195,7 +202,7 @@ namespace LibDmd
 					{ "gpu_driver_date", ParseDate(sysInfo[FieldGpuDriverDate].ToString()) },
 				} },
 				{ "locale", CultureInfo.InstalledUICulture.Name },
-				{ "timezone", TimeZoneConverter.TZConvert.WindowsToIana(TimeZone.CurrentTimeZone.StandardName) },
+				{ "timezone", timezone },
 				{ "os", new Dict {
 					{ "name", osVersion },
 					{ "version", $"{os.Version.Major}.{os.Version.Minor}.{os.Version.Build}" },
