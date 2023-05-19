@@ -186,7 +186,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
-			_nextFrameData = frame;
+			SetRgb24Frame(frame);
 			Dmd.RequestRender();
 		}
 
