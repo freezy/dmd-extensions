@@ -82,14 +82,22 @@ namespace LibDmd
 
 		public void SetSource(string source, string gameId)
 		{
-			StartTimer();
+			try {
+				StartTimer();
+			} catch (Exception e) {
+				Logger.Warn(e, "Failed to start timer.");
+			}
 			_data["Host"] = source;
 			_data["Game"] = gameId;
 		}
 
 		public void SetSource(string host)
 		{
-			StartTimer();
+			try {
+				StartTimer();
+			} catch (Exception e) {
+				Logger.Warn(e, "Failed to start timer.");
+			}
 			_data["Host"] = host;
 			if (_data.ContainsKey("Game")) {
 				_data.Remove("Game");
@@ -135,7 +143,7 @@ namespace LibDmd
 			}
 			var duration = Math.Round((DateTime.Now - _gameStartedAt).TotalSeconds);
 			_data["Duration"] = duration;
-			_data["Weight"] = 1 / _displays.Count;
+			_data["Weight"] = 1 / (_displays.Count == 0 ? 1 : _displays.Count);
 			foreach (var display in _displays) {
 				_data["Display"] = display;
 				RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);

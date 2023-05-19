@@ -147,8 +147,12 @@ namespace LibDmd.Input
 			Logger.Info($"Terminating DMD data capture from {Name}");
 			_capturer.Dispose();
 			_onPause.OnNext(Unit.Default);
-			Analytics.Instance.EndGame();
-			Analytics.Instance.ClearSource();
+			try {
+				Analytics.Instance.EndGame();
+				Analytics.Instance.ClearSource();
+			} catch (Exception e) {
+				Logger.Warn(e, "Error while ending game");
+			}
 			StartPolling();
 		}
 

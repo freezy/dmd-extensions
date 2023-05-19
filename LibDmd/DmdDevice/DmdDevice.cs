@@ -701,7 +701,11 @@ namespace LibDmd.DmdDevice
 		public void Close()
 		{
 			Logger.Info("Closing up.");
-			Analytics.Instance.EndGame();
+			try {
+				Analytics.Instance.EndGame();
+			} catch (Exception e) {
+				Logger.Warn(e, "Could not end game.");
+			}
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
