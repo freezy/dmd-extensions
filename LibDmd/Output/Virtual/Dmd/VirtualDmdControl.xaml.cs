@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Markup;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using NLog;
-using NLog.Time;
 using SharpGL;
 using SharpGL.Shaders;
 using SharpGL.VertexBuffers;
 using SharpGL.WPF;
-using Xceed.Wpf.Toolkit;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
+using Color = System.Windows.Media.Color;
 
 // This used to be standard WPF code with ShaderEffect, the problem is that WPF will always resize the provided ImageBrush
 // (see https://docs.microsoft.com/en-us/archive/blogs/greg_schechter/introducing-multi-input-shader-effects) and therefore
@@ -69,7 +67,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _fboInvalid = true; // Flag set to true when the FBOs (Framebuffer object) need to be rebuilt (for example at startup or when DMD size changes)
 		private bool _lutInvalid = true; // Flag set to true when the LUT (look up table) of the palette has changed and needs to be updated on the GPU
 		private bool _dmdShaderInvalid = true; // Flag set to true when the DMD shader needs to be rebuilt (for example at startup or when the DMD style change)
-		private System.Drawing.Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
+		private Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
 		private FrameFormat _nextFrameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
 		private BitmapSource _nextFrameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
@@ -96,6 +94,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		private byte[] _acFirst = new byte[MAX_COLOR_ROTATIONS]; // current first colour in the rotation 
 		private double[] _timespan = new double[MAX_COLOR_ROTATIONS];  // time interval between 2 rotations in ms
 		private DateTime[] _startTime = new DateTime[MAX_COLOR_ROTATIONS]; // last rotation start time
+		
+		// padding object pool
+		private Bitmap _padBitmap;
+		private BitmapData _padBitmapData;
 
 		private const ushort FboErrorMax = 30;
 
@@ -119,7 +121,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			try {
 				_glassToRender = string.IsNullOrEmpty(glassTexturePath)
 					? null
-					: new System.Drawing.Bitmap(glassTexturePath);
+					: new Bitmap(glassTexturePath);
 
 			} catch (Exception e) {
 				Logger.Warn(e, $"Could not load glass texture at \"{glassTexturePath}\".");
@@ -280,6 +282,31 @@ namespace LibDmd.Output.Virtual.Dmd
 				OnSizeChanged(null, null);
 			}
 		}
+		
+		private void SetRgb24Frame(byte[] frame)
+		{
+			// do we need padding anyway?
+			if (DmdWidth % 4 == 0) {
+				_nextFrameData = frame;
+				return;
+			}
+			
+			if (_padBitmap == null || _padBitmap.Width != DmdWidth || _padBitmap.Height != DmdHeight) {
+				_padBitmap = new Bitmap(DmdWidth, DmdHeight, PixelFormat.Format24bppRgb);
+				_padBitmapData = _padBitmap.LockBits(new Rectangle(0, 0, DmdWidth, DmdHeight), ImageLockMode.WriteOnly, _padBitmap.PixelFormat);
+			}
+			
+			// add back dummy bytes between lines, make each line be a multiple of 4 bytes
+			int skipBytesPerLine = _padBitmapData.Stride - DmdWidth * 3;
+			var newFrameSize = frame.Length + skipBytesPerLine * DmdHeight;
+			if (_nextFrameData == null || _nextFrameData.Length != newFrameSize) {
+				_nextFrameData = new byte[newFrameSize];
+			}
+			
+			for (int j = 0; j < DmdHeight; j++) {
+				Buffer.BlockCopy(frame, j * DmdWidth * 3, _nextFrameData, j * (DmdWidth * 3 + skipBytesPerLine), DmdWidth * 3);
+			}
+		}
 
 		private void LogErrors(string message)
 		{
@@ -369,7 +396,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					if (_style.HasGlass) code.Append("#define GLASS\n");
 					if (_style.HasGamma) code.Append("#define GAMMA\n");
 					if (_style.DotSize > 0.5) code.Append("#define DOT_OVERLAP\n");
-					var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
+					var nfi = NumberFormatInfo.InvariantInfo;
 					code.AppendFormat(nfi, "const float dotSize = {0:0.00000};\n", _style.DotSize);
 					code.AppendFormat(nfi, "const float dotRounding = {0:0.00000};\n", _style.DotRounding);
 					code.AppendFormat(nfi, "const float sharpMax = {0:0.00000};\n", 0.01 + _style.DotSize * (1.0 - _style.DotSharpness));
@@ -451,7 +478,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			{
 				// Upload glass bitmap to GPU, generate mipmaps, then release bitmap
 				gl.ActiveTexture(OpenGL.GL_TEXTURE0);
-				var data = _glassToRender.LockBits(new System.Drawing.Rectangle(0, 0, _glassToRender.Width, _glassToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb).Scan0;
+				var data = _glassToRender.LockBits(new Rectangle(0, 0, _glassToRender.Width, _glassToRender.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb).Scan0;
 				gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _glassToRender.Width, _glassToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data);
 				gl.GenerateMipmapEXT(OpenGL.GL_TEXTURE_2D);
 				gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_EDGE);
@@ -535,7 +562,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						code.Append(_convertShaderType.ToString().ToUpperInvariant());
 						code.Append("\n");
 						if (_style.HasGamma) code.Append("#define GAMMA\n");
-						var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
+						var nfi = NumberFormatInfo.InvariantInfo;
 						code.AppendFormat(nfi, "const float gamma = {0:0.00000};\n", _style.Gamma);
 						code.AppendFormat(nfi, "const int dmdWidth = {0};\n", DmdWidth);
 						code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Convert.frag"));
@@ -601,8 +628,8 @@ namespace LibDmd.Output.Virtual.Dmd
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.Bitmap:
-						var _bitmapToRender = ImageUtil.ConvertToImage(_nextFrameBitmap) as System.Drawing.Bitmap;
-						var data = _bitmapToRender.LockBits(new System.Drawing.Rectangle(0, 0, _bitmapToRender.Width, _bitmapToRender.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+						var _bitmapToRender = ImageUtil.ConvertToImage(_nextFrameBitmap) as Bitmap;
+						var data = _bitmapToRender.LockBits(new Rectangle(0, 0, _bitmapToRender.Width, _bitmapToRender.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _bitmapToRender.Width, _bitmapToRender.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, data.Scan0);
 						else
