@@ -26,10 +26,8 @@ using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
-using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
-using NLog.Targets;
 
 namespace LibDmd.DmdDevice
 {
@@ -74,12 +72,15 @@ namespace LibDmd.DmdDevice
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-		private static readonly MemoryTarget MemLogger = new MemoryTarget {
+#if !DEBUG
+		static readonly Mindscape.Raygun4Net.RaygunClient Raygun = new Mindscape.Raygun4Net.RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly NLog.Targets.MemoryTarget MemLogger = new NLog.Targets.MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
+#endif
+
+		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 		private Serum _serum;
 
@@ -142,7 +143,8 @@ namespace LibDmd.DmdDevice
 				Analytics.Instance.Init(_fullVersion, "DLL");
 				
 			} catch (Exception e) {
-				Logger.Warn($"Error setting up analytics: {e.Message}");
+				ReportError(e);
+				Analytics.Instance.Disable(false);
 			}
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
@@ -973,15 +975,20 @@ namespace LibDmd.DmdDevice
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
-			var ex = e.ExceptionObject as Exception;
-			if (ex != null) {
-				Logger.Error(ex.ToString());
+			if (!(e.ExceptionObject is Exception ex)) {
+				return;
 			}
 
+			Logger.Error(ex.ToString());
+			ReportError(ex);
+		}
+
+		private static void ReportError(Exception ex)
+		{
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
 			Raygun.Send(ex,
-				ReportingTags.ToList(), // tags
+				System.Linq.Enumerable.ToList(ReportingTags), 
 				new Dictionary<string, string> {
 					{ "log", string.Join("\n", MemLogger.Logs) },
 					{ "sha", _sha }

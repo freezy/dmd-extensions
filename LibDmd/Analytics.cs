@@ -47,10 +47,12 @@ namespace LibDmd
 		
 		public static Analytics Instance => _instance ?? (_instance = new Analytics());
 
-		public void Disable()
+		public void Disable(bool log = true)
 		{
 			_isDisabled = true;
-			Logger.Info("Analytics disabled.");
+			if (log) {
+				Logger.Info("Analytics disabled.");
+			}
 		}
 
 		public void Init(string version, string runner)
@@ -76,7 +78,11 @@ namespace LibDmd
 			_data["Weight"] = 1 / _displays.Count;
 			foreach (var display in _displays) {
 				_data["Display"] = display;
-				RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
+				try {
+					RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
+				} catch (Exception _) {
+					// do nothing
+				}
 			}
 		}
 
@@ -144,12 +150,17 @@ namespace LibDmd
 			var duration = Math.Round((DateTime.Now - _gameStartedAt).TotalSeconds);
 			_data["Duration"] = duration;
 			_data["Weight"] = 1 / (_displays.Count == 0 ? 1 : _displays.Count);
-			foreach (var display in _displays) {
-				_data["Display"] = display;
-				RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);
+			try {
+				foreach (var display in _displays) {
+					_data["Display"] = display;
+					RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);
+				}
+				_hasGameStarted = false;
+				RudderAnalytics.Client.Flush();
+				
+			} catch (Exception _) {
+				// do nothing
 			}
-			_hasGameStarted = false;
-			RudderAnalytics.Client.Flush();
 		}
 		
 		private void StartTimer()
@@ -180,45 +191,42 @@ namespace LibDmd
 			if (osVersion.IsNullOrEmpty()) {
 				osVersion = OSVersion.GetOperatingSystem().ToString();
 			}
-
-			string timezone = null;
-			try {
-				timezone = TimeZoneConverter.TZConvert.WindowsToIana(TimeZone.CurrentTimeZone.StandardName);
-			} catch {
-				Logger.Warn($"Could not parse time zone {TimeZone.CurrentTimeZone.StandardName}.");
-			}
 			
-			return new RudderContext { 
+			return new RudderContext {
 				{ "app", new Dict {
 					{ "version", version },
 					{ "runner", runner },
 					{ "distributor", Distributor }
 				} },
 				{ "device", new Dict {
-					{ "type", sysInfo[FieldDeviceType] },
-					{ "memory_total", $"{Math.Round(((UInt64)sysInfo[FieldDeviceMemory]) / 1073741824d)}GB" },
-					{ "cpu_model", sysInfo[FieldCpuName] },
-					{ "cpu_clock_speed", sysInfo[FieldCpuClockSpeed] },
-					{ "cpu_manufacturer", sysInfo[FieldCpuManufacturer] },
-					{ "cpu_num_cores", sysInfo[FieldCpuNumCores] },
-					{ "cpu_num_processors", sysInfo[FieldCpuNumProcessors] },
-					{ "gpu_model", sysInfo[FieldGpuName] },
-					{ "gpu_manufacturer", sysInfo[FieldGpuManufacturer] },
-					{ "gpu_driver_version", sysInfo[FieldGpuDriverVersion] },
-					{ "gpu_driver_date", ParseDate(sysInfo[FieldGpuDriverDate].ToString()) },
+					{ "type", SysInfo(sysInfo, FieldDeviceType) },
+					{ "memory_total", $"{Math.Round(((UInt64)SysInfo(sysInfo, FieldDeviceMemory)) / 1073741824d)}GB" },
+					{ "cpu_model", SysInfo(sysInfo, FieldCpuName) },
+					{ "cpu_clock_speed", SysInfo(sysInfo, FieldCpuClockSpeed) },
+					{ "cpu_manufacturer", SysInfo(sysInfo, FieldCpuManufacturer) },
+					{ "cpu_num_cores", SysInfo(sysInfo, FieldCpuNumCores) },
+					{ "cpu_num_processors", SysInfo(sysInfo, FieldCpuNumProcessors) },
+					{ "gpu_model", SysInfo(sysInfo, FieldGpuName) },
+					{ "gpu_manufacturer", SysInfo(sysInfo, FieldGpuManufacturer) },
+					{ "gpu_driver_version", SysInfo(sysInfo, FieldGpuDriverVersion) },
+					{ "gpu_driver_date", ParseDate(SysInfo(sysInfo, FieldGpuDriverDate)?.ToString()) },
 				} },
 				{ "locale", CultureInfo.InstalledUICulture.Name },
-				{ "timezone", timezone },
 				{ "os", new Dict {
 					{ "name", osVersion },
 					{ "version", $"{os.Version.Major}.{os.Version.Minor}.{os.Version.Build}" },
 					{ "build", osBuild }
 				} },
 				{ "screen", new Dict {
-					{ "width", sysInfo[FieldGpuResWidth] },
-					{ "height", sysInfo[FieldGpuResHeight] }
+					{ "width", SysInfo(sysInfo, FieldGpuResWidth) },
+					{ "height", SysInfo(sysInfo, FieldGpuResHeight) }
 				} }
 			};
+		}
+
+		private static object SysInfo(IReadOnlyDictionary<string, object> sysInfo, string key)
+		{
+			return sysInfo.TryGetValue(key, out var value) ? value : null;
 		}
 
 		private static Dictionary<string, object> GetSysInfo()
