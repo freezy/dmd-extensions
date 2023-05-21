@@ -195,7 +195,6 @@ namespace LibDmd
 					{ "distributor", Distributor }
 				} },
 				{ "device", new Dict {
-					{ "name", sysInfo[FieldDeviceName] },
 					{ "type", sysInfo[FieldDeviceType] },
 					{ "memory_total", $"{Math.Round(((UInt64)sysInfo[FieldDeviceMemory]) / 1073741824d)}GB" },
 					{ "cpu_model", sysInfo[FieldCpuName] },
@@ -203,7 +202,6 @@ namespace LibDmd
 					{ "cpu_manufacturer", sysInfo[FieldCpuManufacturer] },
 					{ "cpu_num_cores", sysInfo[FieldCpuNumCores] },
 					{ "cpu_num_processors", sysInfo[FieldCpuNumProcessors] },
-					{ "cpu_id", sysInfo[FieldCpuId] },
 					{ "gpu_model", sysInfo[FieldGpuName] },
 					{ "gpu_manufacturer", sysInfo[FieldGpuManufacturer] },
 					{ "gpu_driver_version", sysInfo[FieldGpuDriverVersion] },
