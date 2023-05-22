@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Converter;
+using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Output;
 
@@ -60,7 +61,7 @@ namespace LibDmd
 				_renderer.Init();
 				return this;
 			}
-			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dim => dest.SetDimensions(dim.Width, dim.Height)));
+			_resizableDestinations.ForEach(dest => _dimensions.Subscribe(dest.SetDimensions));
 			
 			foreach (var renderGraph in _graphs)
 			{

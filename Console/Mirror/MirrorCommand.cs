@@ -6,6 +6,7 @@ using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
 using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Input.FutureDmd;
 using LibDmd.Input.PinballFX;
@@ -198,7 +199,7 @@ namespace DmdExt.Mirror
 				}
 			}
 			
-			graphs.SetDimensions(new LibDmd.Input.Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
+			graphs.SetDimensions(new Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
 		}
 
 		public override void Dispose()

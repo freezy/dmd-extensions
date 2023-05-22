@@ -4,6 +4,7 @@ using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using NLog;
 using System.Runtime.InteropServices;
+using LibDmd.Frame;
 
 namespace LibDmd.Output.Pin2Dmd
 {
@@ -15,8 +16,7 @@ namespace LibDmd.Output.Pin2Dmd
 		/// How long to wait after sending data, in milliseconds
 		/// </summary>
 		public int Delay { get; set; } = 25;
-		public abstract int DmdWidth { get; }
-		public abstract int DmdHeight { get; }
+		public abstract Dimensions FixedSize { get; }
 
 		protected abstract string ProductString { get; }
 
@@ -45,7 +45,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		protected virtual void InitFrameBuffers() {
 			// 18 bits per pixel plus 4 init bytes
-			var size = (DmdWidth * DmdHeight / 2 * 6) + 4;
+			var size = (FixedSize.Surface / 2 * 6) + 4;
 			_frameBufferRgb24 = new byte[size];
 			_frameBufferRgb24[0] = 0x81; // frame sync bytes
 			_frameBufferRgb24[1] = 0xC3;
@@ -142,10 +142,10 @@ namespace LibDmd.Output.Pin2Dmd
 			45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
 			55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
 
-		protected static bool CreateRgb24(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
+		protected static bool CreateRgb24(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
 		{
 			var identical = true;
-			int elements = width * height / 2;
+			int elements = dim.Surface / 2;
 			int pixel_r, pixel_g, pixel_b, pixel_rl, pixel_gl, pixel_bl;
 			for (int l = 0; l < elements; l++)
 			{

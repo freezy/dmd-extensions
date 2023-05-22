@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using LibDmd.Frame;
 using LibDmd.Output;
 using NLog;
 
@@ -69,13 +70,13 @@ namespace LibDmd.Common
 			ForceOnTop();
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dim)
 		{
 			if (_ignoreAr) {
 				return;
 			}
 			Dispatcher.Invoke(() => {
-				_aspectRatio = (double)width / height;
+				_aspectRatio = dim.AspectRatio;
 				if (LockHeight) {
 					Width = Height * _aspectRatio;
 				} else {

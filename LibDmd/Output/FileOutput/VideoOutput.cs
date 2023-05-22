@@ -3,6 +3,7 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 using SharpAvi;
 using SharpAvi.Codecs;
@@ -14,8 +15,7 @@ namespace LibDmd.Output.FileOutput
 	{
 		public string VideoPath { get; set; }
 
-		public int DmdWidth { get; private set; } = 128;
-		public int DmdHeight { get; private set; } = 32;
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		public readonly uint Fps;
@@ -49,8 +49,7 @@ namespace LibDmd.Output.FileOutput
 
 			if (scaleToHd)
 			{
-				DmdWidth = 256;
-				DmdHeight = 64;
+				FixedSize = new Dimensions(256, 64);
 			}
 
 			Init();
@@ -64,7 +63,7 @@ namespace LibDmd.Output.FileOutput
 			};
 
 			try {
-				_stream = _writer.AddUncompressedVideoStream(DmdWidth, DmdHeight);
+				_stream = _writer.AddUncompressedVideoStream(FixedSize.Width, FixedSize.Height);
 				Logger.Info("Uncompressed encoder found.");
 
 			} catch (InvalidOperationException e) {
@@ -74,7 +73,7 @@ namespace LibDmd.Output.FileOutput
 			try {
 				if (_stream == null) {
 					_stream = _writer.AddMpeg4VcmVideoStream(
-						DmdWidth, DmdHeight, Fps,
+						FixedSize.Width, FixedSize.Height, Fps,
 						quality: 100,
 						codec: CodecIds.X264,
 						forceSingleThreadedAccess: true
@@ -88,9 +87,7 @@ namespace LibDmd.Output.FileOutput
 
 			try {
 				if (_stream == null) {
-					_stream = _writer.AddMJpegWpfVideoStream(DmdWidth, DmdHeight,
-						quality: 100
-					);
+					_stream = _writer.AddMJpegWpfVideoStream(FixedSize.Width, FixedSize.Height, quality: 100);
 				}
 				Logger.Info("MJPEG encoder found.");
 
@@ -125,9 +122,9 @@ namespace LibDmd.Output.FileOutput
 				return;
 			}
 			if (_frame == null) {
-				_frame = new byte[DmdWidth * DmdHeight * 4];
+				_frame = new byte[FixedSize.Surface * 4];
 			}
-			ImageUtil.ConvertRgb24ToBgr32(DmdWidth, DmdHeight, frame, _frame);
+			ImageUtil.ConvertRgb24ToBgr32(FixedSize, frame, _frame);
 		}
 
 		public void SetColor(Color color)

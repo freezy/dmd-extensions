@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Output.Pin2Dmd
+﻿using LibDmd.Frame;
+
+namespace LibDmd.Output.Pin2Dmd
 {
 	/// <summary>
 	/// Output target for PIN2DMD devices.
@@ -8,8 +10,8 @@
 	{
 		public string Name { get; } = "PIN2DMD HD";
 		protected override string ProductString => "PIN2DMD HD";
-		public override int DmdWidth { get; } = 256;
-		public override int DmdHeight { get; } = 64;
+		
+		public override Dimensions FixedSize { get; } = new Dimensions(256, 64);
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private static Pin2DmdHd _instance;
@@ -32,11 +34,11 @@
 			return _instance;
 		}
 
-		private static bool CreateRgb24HD(int width, int height, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence, int buffermode)
+		private static bool CreateRgb24HD(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence, int buffermode)
 		{
 			var tmp = new byte[frameBuffer.Length];
 			var identical = true;
-			CreateRgb24(width, height, frame, tmp, offset, rgbSequence);
+			CreateRgb24(dim, frame, tmp, offset, rgbSequence);
 			var dest_idx = offset;
 			var tmp_idx = offset;
 
@@ -44,13 +46,13 @@
 			{
 				for (int l = 0; l < (frameBuffer.Length - 4) / 2; l++)
 				{
-					identical = identical && frameBuffer[dest_idx] == tmp[tmp_idx] && frameBuffer[dest_idx + 1] == tmp[tmp_idx + (width / 2)];
-					frameBuffer[dest_idx] = tmp[tmp_idx + (width / 2)];
+					identical = identical && frameBuffer[dest_idx] == tmp[tmp_idx] && frameBuffer[dest_idx + 1] == tmp[tmp_idx + (dim.Width / 2)];
+					frameBuffer[dest_idx] = tmp[tmp_idx + (dim.Width / 2)];
 					frameBuffer[dest_idx + 1] = (byte)(tmp[tmp_idx] << 1);
 					dest_idx += 2;
 					tmp_idx++;
-					if ((dest_idx - offset) % width == 0)
-						tmp_idx += width / 2;
+					if ((dest_idx - offset) % dim.Width == 0)
+						tmp_idx += dim.Width / 2;
 				}
 			}
 			else
@@ -65,10 +67,10 @@
 							for (int l = 5; l >= 0; l--)
 							{
 								tmp_idx = k * 16 + j + i * 256 + offset;
-								val = tmp[tmp_idx + (width / 2) + (width * height / 2 * l)];
+								val = tmp[tmp_idx + (dim.Width / 2) + (dim.Surface / 2 * l)];
 								identical = identical && frameBuffer[dest_idx] == val;
 								frameBuffer[dest_idx++] = val;
-								val = (byte)(tmp[tmp_idx + (width * height / 2 * l)] << 1);
+								val = (byte)(tmp[tmp_idx + (dim.Surface / 2 * l)] << 1);
 								identical = identical && frameBuffer[dest_idx] == val;
 								frameBuffer[dest_idx++] = val;
 							}
@@ -82,7 +84,7 @@
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24HD(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq, pin2dmdConfig.buffermode);
+			var changed = CreateRgb24HD(FixedSize, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq, pin2dmdConfig.buffermode);
 
 			// send frame buffer to device
 			if (changed) {

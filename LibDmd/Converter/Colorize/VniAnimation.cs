@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 
 namespace LibDmd.Converter.Colorize
 {
@@ -38,8 +39,7 @@ namespace LibDmd.Converter.Colorize
 				EditMode = (AnimationEditMode)reader.ReadByte();
 			}
 			if (fileVersion >= 4) {
-				Width = reader.ReadInt16BE();
-				Height = reader.ReadInt16BE();
+				Size = new Dimensions(reader.ReadInt16BE(), reader.ReadInt16BE());
 			}
 			if (fileVersion >= 5)
 			{

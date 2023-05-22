@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.PinUp
@@ -25,12 +26,11 @@ namespace LibDmd.Output.PinUp
 		/// </summary>
 		public bool isPuPTrigger { get; } = true;
 
-		public int Width = 128;
-		public int Height = 32;
+		private readonly Dimensions _size = new Dimensions(128, 32);
 		public uint Fps;
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		
 		public bool DmdAllowHdScaling { get; } = false;
 
 		private readonly IntPtr _pnt;
@@ -103,7 +103,7 @@ namespace LibDmd.Output.PinUp
 			Logger.Info("PinUP DLL starting " + romName + "...");
 			Open();
 
-			_pnt = Marshal.AllocHGlobal(Width * Height * 3); // make a global memory pnt for DLL call
+			_pnt = Marshal.AllocHGlobal(_size.Surface * 3); // make a global memory pnt for DLL call
 			_gameName = romName;
 
 			Marshal.Copy(Encoding.ASCII.GetBytes(_gameName), 0, _pnt, _gameName.Length); // convert to bytes to make DLL call work?
@@ -149,8 +149,8 @@ namespace LibDmd.Output.PinUp
 
 				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
 				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-				Marshal.Copy(frame, 0, _pnt, DmdWidth * DmdHeight * 3);
-				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+				Marshal.Copy(frame, 0, _pnt, FixedSize.Surface * 3);
+				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
 				IsAvailable = false;
@@ -166,13 +166,13 @@ namespace LibDmd.Output.PinUp
 
 			try {
 				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+				var planes = FrameUtil.Split(FixedSize, 4, frame);
 
-				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(DmdWidth, DmdHeight, planes,
+				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(FixedSize, planes,
 					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
 
-				Marshal.Copy(orangeframe, 0, _pnt, DmdWidth * DmdHeight * 3);
-				Render_RGB24((ushort) DmdWidth, (ushort) DmdHeight, _pnt);
+				Marshal.Copy(orangeframe, 0, _pnt, FixedSize.Surface * 3);
+				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
 				IsAvailable = false;
@@ -194,8 +194,8 @@ namespace LibDmd.Output.PinUp
 			}
 
 			try {
-				Marshal.Copy(data, 0, _pnt, Width * Height * 3);
-				Render_RGB24((ushort) Width, (ushort) Height, _pnt);
+				Marshal.Copy(data, 0, _pnt, _size.Surface * 3);
+				Render_RGB24((ushort) _size.Width, (ushort) _size.Height, _pnt);
 			} catch (Exception e) {
 				IsAvailable = false;
 				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");

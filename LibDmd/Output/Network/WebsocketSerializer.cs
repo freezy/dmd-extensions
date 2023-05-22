@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.Network
@@ -14,7 +15,7 @@ namespace LibDmd.Output.Network
 		void OnPalette(Color[] palette);
 		void OnClearColor();
 		void OnClearPalette();
-		void OnDimensions(int width, int height);
+		void OnDimensions(Dimensions dim);
 		void OnGameName(string gameName);
 		void OnRgb24(uint timestamp, byte[] frame);
 		void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes);
@@ -25,8 +26,7 @@ namespace LibDmd.Output.Network
 
 	internal class WebsocketSerializer
 	{
-		public int Width = 128;
-		public int Height = 32;
+		public Dimensions Dimensions = new Dimensions(128, 32);
 
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -64,9 +64,8 @@ namespace LibDmd.Output.Network
 						break;
 					}
 					case "dimensions": {
-						Width = reader.ReadInt32();
-						Height = reader.ReadInt32();
-						action.OnDimensions(Width, Height);
+						Dimensions = new Dimensions(reader.ReadInt32(), reader.ReadInt32());
+						action.OnDimensions(Dimensions);
 						break;
 					}
 					case "gameName": {
@@ -120,7 +119,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 4; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnGray4(timestamp, FrameUtil.Join(Width, Height, planes));
+						action.OnGray4(timestamp, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "gray2Planes": {
@@ -130,21 +129,21 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 2; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnGray2(timestamp, FrameUtil.Join(Width, Height, planes));
+						action.OnGray2(timestamp, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 				}
 			}
 		}
 
-		public byte[] SerializeGray(byte[] frame, int bitlength)
+		public byte[] SerializeGray(byte[] frame, int bitLength)
 		{
 			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var data = Encoding.ASCII
-				.GetBytes("gray" + bitlength + "Planes")
+				.GetBytes("gray" + bitLength + "Planes")
 				.Concat(new byte[] { 0x0 })
 				.Concat(BitConverter.GetBytes((uint)(timestamp - _startedAt)))
-				.Concat(FrameUtil.Split(Width, Height, bitlength, frame).SelectMany(p => p));
+				.Concat(FrameUtil.Split(Dimensions, bitLength, frame).SelectMany(p => p));
 
 			return data.ToArray();
 		}
@@ -193,16 +192,15 @@ namespace LibDmd.Output.Network
 			return data.ToArray();
 		}
 
-		public byte[] SerializeDimensions(int width, int height)
+		public byte[] SerializeDimensions(Dimensions dim)
 		{
-			Width = width;
-			Height = height;
+			Dimensions = dim;
 			var data = Encoding.ASCII
 				.GetBytes("dimensions")
 				.Concat(new byte[] { 0x0 })
-				.Concat(BitConverter.GetBytes(width))
-				.Concat(BitConverter.GetBytes(height));
-			Logger.Info("Sent dimensions to socket {0}x{1}.", width, height);
+				.Concat(BitConverter.GetBytes(Dimensions.Width))
+				.Concat(BitConverter.GetBytes(Dimensions.Height));
+			Logger.Info($"Sent dimensions to socket {Dimensions}.");
 			return data.ToArray();
 		}
 

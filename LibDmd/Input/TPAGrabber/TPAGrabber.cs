@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input.Passthrough;
 
 namespace LibDmd.Input.TPAGrabber
@@ -32,7 +33,7 @@ namespace LibDmd.Input.TPAGrabber
 		private static readonly byte[] RawDMD = new byte[MemBlockSize];
 		private byte[] _lastFrame;
 		private static bool sternInit = false;
-		private readonly DMDFrame _dmdFrame = new DMDFrame { Width = DMDWidth, Height = DMDHeight };
+		private readonly DMDFrame _dmdFrame = new DMDFrame { Dimensions = new Dimensions(DMDWidth, DMDHeight) };
 		private string _gameName;
 		private int _bitLength = 4;
 		

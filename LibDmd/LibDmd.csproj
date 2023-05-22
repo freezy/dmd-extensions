@@ -396,6 +396,7 @@
     <Compile Include="Converter\SwitchingConverter.cs" />
     <Compile Include="DmdDevice\PMOptions.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
+    <Compile Include="Frame\Dimensions.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />

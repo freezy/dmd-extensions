@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Output.PinUp;
 using NLog;
@@ -23,9 +24,7 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 
-		public int Width { get; private set; } = 128;
-
-		public int Height { get; private set; } = 32;
+		public Dimensions Dimensions { get; private set; } = new Dimensions(128, 32);
 
 		/// <summary>
 		/// Whether frames should be sent to the plugin.
@@ -90,12 +89,10 @@ namespace LibDmd.Converter.Plugin
 				// dmd frames might return upscaled, so adapt size accordingly
 				switch (_colorizerMode) {
 					case ColorizerMode.Advanced192x64:
-						Width = 192;
-						Height = 64;
+						Dimensions = new Dimensions(192, 64);
 						break;
 					case ColorizerMode.Advanced256x64:
-						Width = 256;
-						Height = 64;
+						Dimensions = new Dimensions(256, 64);
 						break;
 					case ColorizerMode.Advanced128x32:
 					case ColorizerMode.None:
@@ -197,7 +194,7 @@ namespace LibDmd.Converter.Plugin
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
 		public void Convert(DMDFrame frame)
 		{
-			var frameSize = Width * Height * 3;
+			var frameSize = Dimensions.Surface * 3;
 			var coloredFrame = new byte[frameSize];
 
 			if (!_isOpen) {
@@ -289,7 +286,7 @@ namespace LibDmd.Converter.Plugin
 				}
 				// rgb24 data
 				else {
-					_colorizeRgb24((ushort)frame.Width, (ushort)frame.Height, frame.Data);
+					_colorizeRgb24((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
 					return;
 				}
 			}
@@ -305,7 +302,7 @@ namespace LibDmd.Converter.Plugin
 			//	height = 64;
 			//}
 					
-			EmitFrame(Width, Height, coloredFrame);
+			EmitFrame(Dimensions, coloredFrame);
 			ProcessEvent();
 		}
 
@@ -328,21 +325,21 @@ namespace LibDmd.Converter.Plugin
 				height *= 2;
 			}
 					
-			EmitFrame(width, height, coloredFrame);
+			EmitFrame(new Dimensions(width, height), coloredFrame);
 			ProcessEvent();
 		}
 
-		private void EmitFrame(int width, int height, IReadOnlyList<byte> rgb24Frame)
+		private void EmitFrame(Dimensions dim, IReadOnlyList<byte> rgb24Frame)
 		{
-			if (_frame == null || _frame.Length != width * height) {
-				_frame = new byte[width * height];
+			if (_frame == null || _frame.Length != dim.Surface) {
+				_frame = new byte[dim.Surface];
 			}
 			_colorIndex.Clear();
 			for (var k = 0; k < 64; k++) {
 				_palette[k] = Colors.Black;
 			}
 			
-			var len = width * height * 3;
+			var len = dim.Surface * 3;
 			var lastIndex = -1;
 			var j = 0;
 			for (var i = 0; i < len; i += 3) {
@@ -360,7 +357,7 @@ namespace LibDmd.Converter.Plugin
 			}
 			
 			// split and send
-			var planes = FrameUtil.Split(width, height, 6, _frame);
+			var planes = FrameUtil.Split(dim, 6, _frame);
 			_coloredGray6Frames.OnNext(new ColoredFrame(planes, _palette));
 		}
 

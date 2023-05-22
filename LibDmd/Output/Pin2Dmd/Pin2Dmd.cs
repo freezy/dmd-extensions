@@ -1,5 +1,6 @@
 ﻿using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 
 namespace LibDmd.Output.Pin2Dmd
 {
@@ -11,8 +12,7 @@ namespace LibDmd.Output.Pin2Dmd
 	{
 		public string Name { get; } = "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
-		public override int DmdWidth { get; } = 128;
-		public override int DmdHeight { get; } = 32;
+		public override Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private byte[] _frameBufferGray4;
@@ -73,7 +73,7 @@ namespace LibDmd.Output.Pin2Dmd
 			base.InitFrameBuffers();
 
 			// 4 bits per pixel plus 4 init bytes
-			var size = (DmdWidth * DmdHeight * 4 / 8) + 4;
+			var size = (FixedSize.Surface * 4 / 8) + 4;
 			_frameBufferGray4 = new byte[size];
 			_frameBufferGray4[0] = 0x81; // frame sync bytes
 			_frameBufferGray4[1] = 0xC3;
@@ -81,7 +81,7 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferGray4[3] = 0x00;
 
 			// 6 bits per pixel plus 4 init bytes
-			size = (DmdWidth * DmdHeight * 6 / 8) + 4;
+			size = (FixedSize.Surface * 6 / 8) + 4;
 			_frameBufferGray6 = new byte[size];
 			_frameBufferGray6[0] = 0x81; // frame sync bytes
 			_frameBufferGray6[1] = 0xC3;
@@ -98,7 +98,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderGray4(byte[] frame)
 		{
 			// convert to bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame);
 
 			// copy to buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
@@ -112,7 +112,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+			var changed = CreateRgb24(FixedSize, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
 
 			// send frame buffer to device
 			if (changed) {
@@ -151,7 +151,7 @@ namespace LibDmd.Output.Pin2Dmd
 		{
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
-			var joinedFrame = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
+			var joinedFrame = FrameUtil.Join(FixedSize, frame.Planes);
 
 			// send frame buffer to device
 			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));

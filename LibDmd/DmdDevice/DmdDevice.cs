@@ -15,6 +15,7 @@ using LibDmd.Converter.Colorize;
 using LibDmd.Converter.Serum;
 using LibDmd.Converter.Plugin;
 using LibDmd.Converter.Serum;
+using LibDmd.Frame;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
 using LibDmd.Output.FileOutput;
@@ -815,59 +816,53 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			int width = frame.Width;
-			int height = frame.Height;
 			
 			if (_colorizationPlugin != null) {
-				frame.Update(_colorizationPlugin.Width, _colorizationPlugin.Height, frame.Data, frame.BitLength);
+				frame.Update(_colorizationPlugin.Dimensions, frame.Data, frame.BitLength);
 			}
 
 			if (_serum != null) {
 				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 2);
+					if (frame.Dimensions.Is(128, 32)) {
+						frame.Update(frame.Dimensions * 2, frame.Data, 2);
 					}
 				}
-				_serum.SetDimensions(frame.Width, frame.Height);
+				_serum.SetDimensions(frame.Dimensions);
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
-				if (_gray2Colorizer != null && frame.Width == 128 && frame.Height == 16 && _gray2Colorizer.Has128x32Animation) {
+				if (_gray2Colorizer != null && frame.Dimensions.Is(128, 16) && _gray2Colorizer.Has128x32Animation) {
 					// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 					// indicating this should be upsized and treated as a centered 128x32 DMD.
 
-					height = frame.Height;
-					height *= 2;
+					var newDimensions = new Dimensions(frame.Dimensions.Width, frame.Dimensions.Width * 2);
 
 					if (_upsizedFrame == null)
-						_upsizedFrame = new DMDFrame { Width = width, Height = height, Data = new byte[width * height], BitLength = 2};
+						_upsizedFrame = new DMDFrame { Dimensions = newDimensions, Data = new byte[newDimensions.Surface], BitLength = 2};
 					else
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data,2);
+						_upsizedFrame.Update(newDimensions, _upsizedFrame.Data,2);
 
-					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * width, frame.Data.Length);
+					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * newDimensions.Width, frame.Data.Length);
 
 					if (_config.Global.ScaleToHd) {
-						width = 256;
-						height = 64;
-						_upsizedFrame.Update(width, height, _upsizedFrame.Data, 2);
+						newDimensions = new Dimensions(256, 64);
+						_upsizedFrame.Update(newDimensions, _upsizedFrame.Data, 2);
 					}
 
-					_gray2Colorizer.SetDimensions(width, height);
+					_gray2Colorizer.SetDimensions(newDimensions);
 					_passthroughGray2Source.NextFrame(_upsizedFrame);
 				
 				} else {
+					var newDimensions = frame.Dimensions;
 					if (_config.Global.ScaleToHd) {
-						if (width == 128 && height == 32) {
-							width *= 2;
-							height *= 2;
-							frame.Update(width, height, frame.Data, 2);
+						if (frame.Dimensions.Is(128, 32)) {
+							newDimensions = frame.Dimensions * 2;
+							frame.Update(newDimensions, frame.Data, 2);
 						}
 					}
 
-					_gray2Colorizer?.SetDimensions(width, height);
-					_gray4Colorizer?.SetDimensions(width, height);
+					_gray2Colorizer?.SetDimensions(newDimensions);
+					_gray4Colorizer?.SetDimensions(newDimensions);
 					_passthroughGray2Source.NextFrame(frame);
 				}
 			}
@@ -879,32 +874,26 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-			int width = frame.Width;
-			int height = frame.Height;
 
 			if (_serum != null) {
 				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 4);
+					if (frame.Dimensions.Is(128, 32)) {
+						frame.Update(frame.Dimensions * 2, frame.Data, 4);
 					}
 				}
-				_serum.SetDimensions(frame.Width, frame.Height);
+				_serum.SetDimensions(frame.Dimensions);
 				_serum.Convert(frame);
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
 				if (_config.Global.ScaleToHd) {
-					if (width == 128 && height == 32) {
-						width *= 2;
-						height *= 2;
-						frame.Update(width, height, frame.Data, 4);
+					if (frame.Dimensions.Is(128, 32)) {
+						frame.Update(frame.Dimensions * 2, frame.Data, 4);
 					}
 				}
 
-				_gray2Colorizer?.SetDimensions(frame.Width, frame.Height);
-				_gray4Colorizer?.SetDimensions(frame.Width, frame.Height);
+				_gray2Colorizer?.SetDimensions(frame.Dimensions);
+				_gray4Colorizer?.SetDimensions(frame.Dimensions);
 				_passthroughGray4Source.NextFrame(frame);
 			}
 		}
@@ -930,8 +919,7 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
-			_dmdFrame.Width = Width;
-			_dmdFrame.Height = Height;
+			_dmdFrame.Dimensions = new Dimensions(Width, Height);
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {

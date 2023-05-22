@@ -2,6 +2,7 @@
 using System.Windows.Media;
 using System.Collections.Generic;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Converter.Colorize
@@ -58,8 +59,7 @@ namespace LibDmd.Converter.Colorize
 
 		#endregion
 
-		public int Width { get; protected set; }
-		public int Height { get; protected set; }
+		public Dimensions Size { get; protected set; }
 
 		public ScalerMode ScalerMode { get; set; }
 
@@ -190,11 +190,11 @@ namespace LibDmd.Converter.Colorize
 				{
 					if (ScalerMode == ScalerMode.Doubler)
 					{
-						vpmFrame = FrameUtil.Scale2(Width, Height, vpmFrame);
+						vpmFrame = FrameUtil.Scale2(Size, vpmFrame);
 					}
 					else
 					{
-						vpmFrame = FrameUtil.Scale2x(Width, Height, vpmFrame);
+						vpmFrame = FrameUtil.Scale2x(Size, vpmFrame);
 					}
 				}
 
@@ -239,7 +239,7 @@ namespace LibDmd.Converter.Colorize
 		public bool DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse, bool clear)
 		{
 			uint checksum = NoMaskCRC;
-			var maskSize = Width * Height / 8;
+			var maskSize = Size.Surface / 8;
 			var maskedPlane = new byte[maskSize];
 
 			for (int k = -1; k < Masks.Length; k++)
@@ -278,11 +278,11 @@ namespace LibDmd.Converter.Colorize
 			_currentRender = render;
 			LCMBufferPlanes.Clear();
 			for (int i = 0; i < Frames[0].Planes.Count; i++)
-				LCMBufferPlanes.Add(LibDmd.Common.FrameUtil.NewPlane(Width, Height));
+				LCMBufferPlanes.Add(FrameUtil.NewPlane(Size));
 
 			ClearLCMBuffer();
 			if (SwitchMode == SwitchMode.MaskedReplace)
-				ReplaceMask = new byte[(Width * Height) / 8];
+				ReplaceMask = new byte[Size.Surface / 8];
 
 			Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
 		}

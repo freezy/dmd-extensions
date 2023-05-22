@@ -136,18 +136,16 @@ namespace LibDmd.Converter.Serum
 				_activePupOutput.SendTriggerID((ushort)triggerId);
 			}
 
-			var width = Dimensions.Value.Width;
-			var height = Dimensions.Value.Height;
 			var planes = _planes;
 			
 			// convert to planes
-			if ((width * height / 8) == _planes[0].Length) { // scale?
-				FrameUtil.Split(width, height, _planes.Length, _frameData, _planes);
+			if ((Dimensions.Value.Surface / 8) == _planes[0].Length) { // scale?
+				FrameUtil.Split(Dimensions.Value, _planes.Length, _frameData, _planes);
 				
 			} else {
 				planes = ScalerMode == ScalerMode.Doubler 
-					? FrameUtil.Scale2(width, height, ConvertToPlanes(6)) 
-					: FrameUtil.Split(width, height, _planes.Length, FrameUtil.Scale2x(width, height, _frameData));
+					? FrameUtil.Scale2(Dimensions.Value, ConvertToPlanes(6)) 
+					: FrameUtil.Split(Dimensions.Value, _planes.Length, FrameUtil.Scale2x(Dimensions.Value, _frameData));
 			}
 			
 			// send the colored frame
@@ -227,7 +225,7 @@ namespace LibDmd.Converter.Serum
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
-		private static extern bool Serum_Load(string altcolorpath, string romname,ref int width, ref int height, ref uint numColors, ref uint triggernb);
+		private static extern bool Serum_Load(string altcolorpath, string romname, ref int width, ref int height, ref uint numColors, ref uint triggernb);
 		
 		/// <summary>
 		/// Serum_Colorize: Function to call with a VpinMame frame to colorize it

@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Output;
 using LibDmd.Test.Stubs;
 using NUnit.Framework;
@@ -69,7 +70,7 @@ namespace LibDmd.Test
 			source.AddFrame(frameIn);
 			var destFrame = await dest.LastFrame;
 			
-			Print(new DMDFrame { Width = 16, Height = 8, Data = destFrame, BitLength = 2});
+			Print(new DMDFrame { Dimensions = new Dimensions(16, 8), Data = destFrame, BitLength = 2});
 			
 			destFrame.Should().BeEquivalentTo(frameOut.Data);
 		}

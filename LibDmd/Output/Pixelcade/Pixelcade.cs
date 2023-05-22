@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.Pixelcade
@@ -17,8 +18,9 @@ namespace LibDmd.Output.Pixelcade
 		public string Name { get; } = "Pixelcade";
 		public bool IsAvailable { get; private set; }
 		public int Delay { get; set; } = 100;
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private const int ReadTimeoutMs = 100;
@@ -86,7 +88,7 @@ namespace LibDmd.Output.Pixelcade
 		/// </summary>
 		private Pixelcade()
 		{
-			_frameBuffer = new byte[DmdHeight * DmdWidth * 3 / 2 + 1];
+			_frameBuffer = new byte[FixedSize.Surface * 3 / 2 + 1];
 			_frameBuffer[0] = RgbLedMatrixFrameCommandByte;
 		}
 
@@ -162,11 +164,11 @@ namespace LibDmd.Output.Pixelcade
 		public void RenderRgb24(byte[] frameRgb24)
 		{
 			// convert rgb24 to rgb565
-			var frame565 = ImageUtil.ConvertToRgb565(DmdWidth, DmdHeight, frameRgb24);
+			var frame565 = ImageUtil.ConvertToRgb565(FixedSize, frameRgb24);
 
 			// split into planes to send over the wire
-			var newFrame = new byte[DmdHeight * DmdWidth * 3 / 2];
-			FrameUtil.SplitIntoRgbPlanes(frame565, DmdWidth, 16, newFrame, ColorMatrix);
+			var newFrame = new byte[FixedSize.Surface * 3 / 2];
+			FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);

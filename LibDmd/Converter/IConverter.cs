@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Converter
+﻿using LibDmd.Frame;
+
+namespace LibDmd.Converter
 {
 	/// <summary>
 	/// Converts a frame from a given bit length to another bit length.
@@ -35,8 +37,7 @@
 		/// <summary>
 		/// Must be run when dimensions of the source change.
 		/// </summary>
-		/// <param name="width">New width of the source</param>
-		/// <param name="height">New height of the source</param>
-		void SetDimensions(int width, int height);
+		/// <param name="dim">New dimensions of the source</param>
+		void SetDimensions(Dimensions dim);
 	}
 }

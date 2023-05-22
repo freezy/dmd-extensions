@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 
 namespace LibDmd.Input.FileSystem
 {
@@ -18,8 +19,9 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceGray2(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray2(bmp), 2));
+			var pixelDim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(pixelDim);
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(pixelDim, ImageUtil.ConvertToGray2(bmp), 2));
 		}
 	}	
 	
@@ -33,8 +35,9 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceGray4(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
-			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(bmp.PixelWidth, bmp.PixelHeight, ImageUtil.ConvertToGray4(bmp), 4));
+			var pixelDim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(pixelDim);
+			_frames = new BehaviorSubject<DMDFrame>(_dmdFrame.Update(pixelDim, ImageUtil.ConvertToGray4(bmp), 4));
 		}
 	}
 	
@@ -46,9 +49,10 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray2(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var pixelDim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
-				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, ImageUtil.ConvertToGray2(bmp)),
+				FrameUtil.Split(pixelDim, 2, ImageUtil.ConvertToGray2(bmp)),
 				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
 			);
 			_frames = new BehaviorSubject<ColoredFrame>(frame);
@@ -63,9 +67,10 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray4(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var pixelDim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
-				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 4, ImageUtil.ConvertToGray4(bmp)),
+				FrameUtil.Split(pixelDim, 4, ImageUtil.ConvertToGray4(bmp)),
 				new[] {
 					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
 					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray, 
@@ -85,9 +90,10 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray6(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			var pixelDim = new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
-				FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 6, ImageUtil.ConvertToGray6(bmp)),
+				FrameUtil.Split(pixelDim, 6, ImageUtil.ConvertToGray6(bmp)),
 				new[] {
 					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
 					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray,
@@ -107,7 +113,7 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceBitmap(BitmapSource bmp)
 		{
-			SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+			SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
 			_frames = new BehaviorSubject<BitmapSource>(bmp);
 		}
 
@@ -123,7 +129,7 @@ namespace LibDmd.Input.FileSystem
 				bmp.UriSource = new Uri(Path.IsPathRooted(fileName) ? fileName : Path.Combine(Directory.GetCurrentDirectory(), fileName));
 				bmp.EndInit();
 
-				SetDimensions(bmp.PixelWidth, bmp.PixelHeight);
+				SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
 				_frames = new BehaviorSubject<BitmapSource>(bmp);
 
 			} catch (UriFormatException) {

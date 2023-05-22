@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Media;
+using LibDmd.Frame;
 using MimeTypes;
 using NLog;
 using WebSocketSharp;
@@ -24,8 +25,7 @@ namespace LibDmd.Output.Network
 		private readonly List<DmdSocket>  _sockets = new List<DmdSocket>();
 		private readonly string _gameName;
 
-		private int _width;
-		private int _height;
+		private Dimensions _dimensions;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
 
@@ -83,7 +83,7 @@ namespace LibDmd.Output.Network
 			{
 				socket.SendGameName(_gameName);
 			}
-			socket.SendDimensions(_width, _height);
+			socket.SendDimensions(_dimensions);
 			socket.SendColor(_color);
 			if (_palette != null) {
 				socket.SendPalette(_palette);
@@ -115,11 +115,10 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendRgb24(frame));
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dim)
 		{
-			_width = width;
-			_height = height;
-			_sockets.ForEach(s => s.SendDimensions(width, height));
+			_dimensions = dim;
+			_sockets.ForEach(s => s.SendDimensions(dim));
 		}
 
 		public void SetColor(Color color)
@@ -193,8 +192,8 @@ namespace LibDmd.Output.Network
 
 		public void SendGray(byte[] frame, int bitlength)
 		{
-			if (frame.Length < _serializer.Width * _serializer.Height) {
-				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _serializer.Width, _serializer.Height);
+			if (frame.Length < _serializer.Dimensions.Surface) {
+				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} dim={2}", frame.Length, bitlength, _serializer.Dimensions);
 				return;
 			}
 			Send(_serializer.SerializeGray(frame, bitlength));
@@ -220,7 +219,7 @@ namespace LibDmd.Output.Network
 
 		public void SendGameName(string gameName) => Send(_serializer.SerializeGameName(gameName));
 
-		public void SendDimensions(int width, int height) => Send(_serializer.SerializeDimensions(width, height));
+		public void SendDimensions(Dimensions dim) => Send(_serializer.SerializeDimensions(dim));
 
 		public void SendColor(Color color) => Send(_serializer.SerializeColor(color));
 

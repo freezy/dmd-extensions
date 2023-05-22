@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
+using LibDmd.Frame;
 
 namespace LibDmd.Input
 {
@@ -38,20 +39,6 @@ namespace LibDmd.Input
 		/// An observable that triggers when the source is interrupted, e.g. a game is stopped.
 		/// </summary>
 		IObservable<Unit> OnPause { get; }
-	}
-
-	/// <summary>
-	/// A set of dimensions, in pixel.
-	/// </summary>
-	public struct Dimensions
-	{
-		public int Width { get; set; }
-		public int Height { get; set; }
-
-		public Dimensions(int width, int height) {
-			Width = width;
-			Height = height;
-		}
 	}
 
 	public enum ResizeMode
