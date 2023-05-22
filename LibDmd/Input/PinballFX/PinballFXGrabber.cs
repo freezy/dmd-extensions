@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Processor;
 using NLog;
@@ -114,7 +115,7 @@ namespace LibDmd.Input.PinballFX
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Select(bmp => TransformationUtil.Transform(bmp, 128, 32, ResizeMode.Stretch, false, false))
+					.Select(bmp => TransformationUtil.Transform(bmp, new Dimensions(128, 32), ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;
 						var frame = ImageUtil.ConvertToGray2(bmp, 0.025, 0.3, out hue);
@@ -125,7 +126,7 @@ namespace LibDmd.Input.PinballFX
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;
 						}
-						return new ColoredFrame(FrameUtil.Split(bmp.PixelWidth, bmp.PixelHeight, 2, frame), palette, index);
+						return new ColoredFrame(FrameUtil.Split(new Dimensions(bmp.PixelWidth, bmp.PixelHeight), 2, frame), palette, index);
 					})
 					.Publish();
 

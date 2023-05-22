@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.FileOutput
@@ -157,11 +158,11 @@ namespace LibDmd.Output.FileOutput
 
 					// Steal the global color table info
 					if (_firstFrame) {
-						InitHeader(gifStream, _writer, image.Width, image.Height);
+						InitHeader(gifStream, _writer, new Dimensions(image.Width, image.Height));
 					}
 
 					WriteGraphicControlBlock(gifStream, _writer, delay == 0 ? DefaultFrameDelay : delay);
-					WriteImageBlock(gifStream, _writer, !_firstFrame, 0, 0, image.Width, image.Height);
+					WriteImageBlock(gifStream, _writer, !_firstFrame, 0, 0, new Dimensions(image.Width, image.Height));
 				}
 			}
 			if (_firstFrame) {
@@ -170,14 +171,14 @@ namespace LibDmd.Output.FileOutput
 		}
 
 		#region Write
-		private void InitHeader(Stream sourceGif, BinaryWriter writer, int width, int height)
+		private void InitHeader(Stream sourceGif, BinaryWriter writer, Dimensions dim)
 		{
 			// File Header
 			writer.Write("GIF".ToCharArray()); // File type
 			writer.Write("89a".ToCharArray()); // File Version
 
-			writer.Write((short)(DefaultWidth == 0 ? width : DefaultWidth));    // Initial Logical Width
-			writer.Write((short)(DefaultHeight == 0 ? height : DefaultHeight)); // Initial Logical Height
+			writer.Write((short)(DefaultWidth == 0 ? dim.Width : DefaultWidth));    // Initial Logical Width
+			writer.Write((short)(DefaultHeight == 0 ? dim.Height : DefaultHeight)); // Initial Logical Height
 
 			sourceGif.Position = SourceGlobalColorInfoPosition;
 			writer.Write((byte)sourceGif.ReadByte()); // Global Color Table Info
@@ -222,7 +223,7 @@ namespace LibDmd.Output.FileOutput
 			writer.Write((byte)0);                            // Terminator
 		}
 
-		static void WriteImageBlock(Stream sourceGif, BinaryWriter writer, bool includeColorTable, int x, int y, int width, int height)
+		static void WriteImageBlock(Stream sourceGif, BinaryWriter writer, bool includeColorTable, int x, int y, Dimensions dim)
 		{
 			sourceGif.Position = SourceImageBlockPosition; // Locating the image block
 			var header = new byte[11];
@@ -230,8 +231,8 @@ namespace LibDmd.Output.FileOutput
 			writer.Write(header[0]);     // Separator
 			writer.Write((short)x);      // Position X
 			writer.Write((short)y);      // Position Y
-			writer.Write((short)width);  // Width
-			writer.Write((short)height); // Height
+			writer.Write((short)dim.Width);  // Width
+			writer.Write((short)dim.Height); // Height
 
 			// If first frame, use global color table - else use local
 			if (includeColorTable) {

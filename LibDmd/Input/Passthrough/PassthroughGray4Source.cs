@@ -30,7 +30,7 @@ namespace LibDmd.Input.Passthrough
 
 		public void NextFrame(DMDFrame frame)
 		{
-			SetDimensions(frame.Width, frame.Height);
+			SetDimensions(frame.Dimensions);
 			_framesGray4.OnNext(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Gray4);
 		}

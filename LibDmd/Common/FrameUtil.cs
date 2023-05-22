@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using LibDmd.Frame;
 using NLog;
 using Color = System.Windows.Media.Color;
 
@@ -24,15 +25,14 @@ namespace LibDmd.Common
 		/// jedes Bit uisächemid
 		/// </remarks>
 		/// 
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="dim">Dimensionä vom Biud</param>
 		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
 		/// <param name="frame">D datä vom Biud</param>
 		/// <param name="destPlanes">Bruich das bim zruggäh wenn definiärt.</param>
 		/// <returns>Än Ebini fir jedes Bit</returns>
-		public static byte[][] Split(int width, int height, int bitlen, byte[] frame, byte[][] destPlanes = null)
+		public static byte[][] Split(Dimensions dim, int bitlen, byte[] frame, byte[][] destPlanes = null)
 		{
-			var planeSize = width * height / 8;
+			var planeSize = dim.Surface / 8;
 			var planes = destPlanes ?? new byte[bitlen][];
 
 			try
@@ -45,9 +45,9 @@ namespace LibDmd.Common
 
 				var byteIdx = 0;
 				var bd = new byte[bitlen];
-				for (var y = 0; y < height; y++)
+				for (var y = 0; y < dim.Height; y++)
 				{
-					for (var x = 0; x < width; x += 8)
+					for (var x = 0; x < dim.Width; x += 8)
 					{
 						for (var i = 0; i < bitlen; i++)
 						{
@@ -56,7 +56,7 @@ namespace LibDmd.Common
 
 						for (var v = 7; v >= 0; v--)
 						{
-							var pixel = frame[(y * width) + (x + v)];
+							var pixel = frame[(y * dim.Width) + (x + v)];
 							for (var i = 0; i < bitlen; i++)
 							{
 								bd[i] <<= 1;
@@ -78,7 +78,7 @@ namespace LibDmd.Common
 			}
 			catch (IndexOutOfRangeException e)
 			{
-				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", width, height, frame.Length, bitlen);
+				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", dim.Width, dim.Height, frame.Length, bitlen);
 				throw new IndexOutOfRangeException(e.Message, e);
 			}
 
@@ -88,13 +88,12 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Puts an sequence of flat/concatenated bitplanes into an array.
 		/// </summary>
-		/// <param name="width">Width of the frame</param>
-		/// <param name="height">Height of the frame</param>
+		/// <param name="dim">Dimensions of the frame</param>
 		/// <param name="src">Concatenated bitplanes</param>
 		/// <returns></returns>
-		public static byte[][] SplitBitplanes(int width, int height, byte[] src)
+		public static byte[][] SplitBitplanes(Dimensions dim, byte[] src)
 		{
-			var size = width * height / 8;
+			var size = dim.Surface / 8;
 			var bitlen = src.Length / size;
 			var planes = new byte[bitlen][];
 			for (var i = 0; i < bitlen; i++) {
@@ -107,13 +106,12 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="dim">Dimensionä vom Biud</param>
 		/// <param name="bitPlanes">Ä Lischtä vo Ebänä zum zämäfiägä</param>
 		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
-		public static byte[] Join(int width, int height, byte[][] bitPlanes)
+		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)
 		{
-			var frame = new byte[width * height];
+			var frame = new byte[dim.Surface];
 
 			if (bitPlanes.Length == 2) {
 				unsafe
@@ -195,7 +193,7 @@ namespace LibDmd.Common
 							var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
 							frame[f] |= (byte)(bit << p);
 						} catch (ArgumentOutOfRangeException) {
-							Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, width, height, planes[p].Length);
+							Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes[p].Length);
 							throw;
 						}
 					}
@@ -302,11 +300,11 @@ namespace LibDmd.Common
 			return !identical;
 		}
 
-		public static byte[][] Copy(int width, int height, byte[] planes, int bitlength, int offset)
+		public static byte[][] Copy(Dimensions dim, byte[] planes, int bitLength, int offset)
 		{
-			var copy = new byte[bitlength][];
-			var planeSize = width * height / 8;
-			for (var i = 0; i < bitlength; i++) {
+			var copy = new byte[bitLength][];
+			var planeSize = dim.Surface / 8;
+			for (var i = 0; i < bitLength; i++) {
 				copy[i] = new byte[planeSize];
 				Buffer.BlockCopy(planes, offset + i * planeSize, copy[i], 0, planeSize);
 			}
@@ -348,30 +346,29 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[] Scale2(int width, int height, byte[] srcplane)
+		public static byte[] Scale2(Dimensions dim, byte[] srcPlane)
 		{
-			var planeSize = width * height / 8;
-			byte[] plane;
+			var planeSize = dim.Surface / 8;
 			ushort[] scaledPlane = new ushort[planeSize / 2];
-			for (var i = 0; i < height; i++)
+			for (var i = 0; i < dim.Height; i++)
 			{
-				for (var k = 0; k < (width / 2 / 8); k++)
+				for (var k = 0; k < (dim.Width / 2 / 8); k++)
 				{
-					scaledPlane[(i * (width / 2 / 8)) + k] = scaledPlane[((i + 1) * (width / 2 / 8)) + k] = doublePixel[srcplane[((i / 2) * (width / 2 / 8)) + k]];
+					scaledPlane[(i * (dim.Width / 2 / 8)) + k] = scaledPlane[((i + 1) * (dim.Width / 2 / 8)) + k] = doublePixel[srcPlane[((i / 2) * (dim.Width / 2 / 8)) + k]];
 				}
 				i++;
 			}
-			plane = new byte[planeSize];
+			var plane = new byte[planeSize];
 			Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
 			return plane;
 		}
 
-		public static byte[][] Scale2(int width, int height, byte[][] srcPlanes, byte[][] destPlanes = null)
+		public static byte[][] Scale2(Dimensions dim, byte[][] srcPlanes, byte[][] destPlanes = null)
 		{
 			var planes = destPlanes ?? new byte[srcPlanes.Length][];
 			for (var l = 0; l < srcPlanes.Length; l++)
 			{
-				planes[l] = Scale2(width, height, srcPlanes[l]);
+				planes[l] = Scale2(dim, srcPlanes[l]);
 			}
 			return planes;
 		}
@@ -379,22 +376,21 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Double the pixels coming from the frame data.
 		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
+		/// <param name="dim"></param>
 		/// <param name="bitlen"></param>
 		/// <param name="frame"></param>
 		/// <returns></returns>
-		public static byte[] ScaleDouble(int width, int height, int bitlen, byte[] frame)
+		public static byte[] ScaleDouble(Dimensions dim, int bitlen, byte[] frame)
 		{
-			byte[] scaledData = new byte[width * height];
-			var origwidth = width / 2;
+			byte[] scaledData = new byte[dim.Surface];
+			var origwidth = dim.Width / 2;
 			var scale = 2;
 
 			int targetIdx = 0;
-			for (var i = 0; i < height; ++i)
+			for (var i = 0; i < dim.Height; ++i)
 			{
 				var iUnscaled = i / scale;
-				for (var j = 0; j < width; ++j)
+				for (var j = 0; j < dim.Width; ++j)
 				{
 					var jUnscaled = j / scale;
 					scaledData[targetIdx++] = frame[iUnscaled * origwidth + jUnscaled];
@@ -407,16 +403,15 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Implementation of Scale2 for frame data.
 		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
+		/// <param name="dim"></param>
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[] Scale2x(int width, int height, byte[] data)
+		public static byte[] Scale2x(Dimensions dim, byte[] data)
 		{
-			byte[] scaledData = new byte[width * height];
+			byte[] scaledData = new byte[dim.Surface];
 
-			var inputWidth = width / 2;
-			var inputHeight = height / 2;
+			var inputWidth = dim.Width / 2;
+			var inputHeight = dim.Height / 2;
 
 			for (var y = 0; y < inputHeight; y++)
 			{
@@ -431,17 +426,17 @@ namespace LibDmd.Common
 
 					if ((colorB != colorH) && (colorD != colorF))
 					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, dim.Width, scaledData);
 					}
 					else
 					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y, colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, dim.Width, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, dim.Width, scaledData);
 					}
 				}
 			}
@@ -452,44 +447,43 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Join 
 		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
+		/// <param name="dim"></param>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static byte[][] Scale2x(int width, int height, byte[][] data)
+		public static byte[][] Scale2x(Dimensions dim, byte[][] data)
 		{
-			var joinData = Join(width, height, data);
-			var frameData = Scale2x(width, height, joinData);
-			return Split(width, height, data.Length, frameData);
+			var joinData = Join(dim, data);
+			var frameData = Scale2x(dim, joinData);
+			return Split(dim, data.Length, frameData);
 		}
 
 		//Scale down planes by displaying every second pixel
-		public static byte[] ScaleDown(int width, int height, byte[] srcplane)
+		public static byte[] ScaleDown(Dimensions dim, byte[] srcPlane)
 		{
-			var planeSize = width * height / 8;
+			var planeSize = dim.Surface / 8;
 			byte[] scaledPlane = new byte[planeSize];
 			ushort[] plane = new ushort[planeSize * 2];
-			Buffer.BlockCopy(srcplane, 0, plane, 0, planeSize * 4);
+			Buffer.BlockCopy(srcPlane, 0, plane, 0, planeSize * 4);
 
-			for (var i = 0; i < height*2; i++)
+			for (var i = 0; i < dim.Height*2; i++)
 			{
-				for (var k = 0; k < (width / 8); k++)
+				for (var k = 0; k < (dim.Width / 8); k++)
 				{
-					ushort srcVal = plane[(i * (width / 8)) + k];
+					ushort srcVal = plane[(i * (dim.Width / 8)) + k];
 					byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
-					scaledPlane[((i / 2) * (width / 8)) + k] = destVal;
+					scaledPlane[((i / 2) * (dim.Width / 8)) + k] = destVal;
 				}
 				i++;
 			}
 			return scaledPlane;
 		}
 
-		public static byte[][] ScaleDown(int width, int height, byte[][] srcplanes)
+		public static byte[][] ScaleDown(Dimensions dim, byte[][] srcPlanes)
 		{
-			var planes = new byte[srcplanes.Length][];
-			for (var l = 0; l < srcplanes.Length; l++)
+			var planes = new byte[srcPlanes.Length][];
+			for (var l = 0; l < srcPlanes.Length; l++)
 			{
-				planes[l] = ScaleDown(width, height, srcplanes[l]);
+				planes[l] = ScaleDown(dim, srcPlanes[l]);
 			}
 			return planes;
 		}
@@ -497,22 +491,21 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Scane down frame data by taking every second pixel.
 		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
+		/// <param name="dim"></param>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static byte[] ScaleDownFrame(int width, int height, byte[] data)
+		public static byte[] ScaleDownFrame(Dimensions dim, byte[] data)
 		{
-			byte[] scaledData = new byte[width * height];
-			var origWidth = width * 2;
-			var origHeight = height * 2;
+			byte[] scaledData = new byte[dim.Surface];
+			var origWidth = dim.Width * 2;
+			var origHeight = dim.Height * 2;
 
 			for (var y = 0; y < origHeight; y++)
 			{
 				for (var x = 0; x < origWidth; x++)
 				{
 					var color = ImageUtil.GetPixel(x, y, origWidth, origHeight, data);
-					ImageUtil.SetPixel(x/2, y/2, color, width, scaledData);
+					ImageUtil.SetPixel(x/2, y/2, color, dim.Width, scaledData);
 				}
 				y++;
 			}
@@ -534,41 +527,41 @@ namespace LibDmd.Common
 			return destFrame;
 		}
 
-		public static byte[] ConvertToRgb24(int width, int height, byte[][] planes, Color[] palette)
+		public static byte[] ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)
 		{
-			var frame = Join(width, height, planes);
-			return ColorUtil.ColorizeFrame(width, height, frame, palette);
+			var frame = Join(dim, planes);
+			return ColorUtil.ColorizeFrame(dim, frame, palette);
 		}
 
-		public static byte[] NewPlane(int width, int height)
+		public static byte[] NewPlane(Dimensions dim)
 		{
-			var count = width / 8 * height;
+			var count = dim.Width / 8 * dim.Height;
 			var destFrame = new byte[count];
 			return destFrame;
 		}
 
 
-		public static void ClearPlane(byte[] Plane)
+		public static void ClearPlane(byte[] plane)
 		{
 			unsafe
 			{
-				fixed (byte* b1 = Plane)
+				fixed (byte* b1 = plane)
 				{
-					memset(b1, 0, Plane.Length);
+					memset(b1, 0, plane.Length);
 				}
 			}
 		}
 
-		public static void OrPlane(byte[] Plane, byte[] Target)
+		public static void OrPlane(byte[] plane, byte[] target)
 		{
 			unsafe
 			{
-				fixed (void* b1 = Plane, b2 = Target)
+				fixed (void* b1 = plane, b2 = target)
 				{
 					int* p = (int *)b1;
 					int* t = (int *)b2;
 
-					int count = Plane.Length / 4;
+					int count = plane.Length / 4;
 
 					while(count-- > 0)
 					{
@@ -584,40 +577,39 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Combine Plane A and Plane B using a mask.   Masked parts from A will be used.
 		/// </summary>
-		/// <param name="PlaneA">Plane A</param>
-		/// <param name="PlaneB">Plane B</param>
-		/// <param name="Mask">Mask</param>
+		/// <param name="planeA">Plane A</param>
+		/// <param name="planeB">Plane B</param>
+		/// <param name="mask">Mask</param>
 		/// <returns>Combined plane</returns>
 
-		public static byte[] CombinePlaneWithMask(byte[] PlaneA, byte[] PlaneB, byte[] Mask)
+		public static byte[] CombinePlaneWithMask(byte[] planeA, byte[] planeB, byte[] mask)
 		{
-			var length = PlaneA.Length;
-			System.Diagnostics.Debug.Assert(length == PlaneB.Length && length == Mask.Length);
-			byte[] outplane = new byte[length];
+			var length = planeA.Length;
+			System.Diagnostics.Debug.Assert(length == planeB.Length && length == mask.Length);
+			byte[] outPlane = new byte[length];
 
 			unchecked
 			{
 				for (int i = 0; i < length; i++)
 				{
-					var maskbits = Mask[i];
-					outplane[i] = (byte)((PlaneA[i] & maskbits) | (PlaneB[i] & ~maskbits));
+					var maskBits = mask[i];
+					outPlane[i] = (byte)((planeA[i] & maskBits) | (planeB[i] & ~maskBits));
 				}
 			}
-			return outplane;
+			return outPlane;
 		}
 
 		/// <summary>
 		/// Tuät ä Bit-Ebini uifd Konsolä uisä druckä
 		/// </summary>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="dim">Dimensionä vom Biud</param>
 		/// <param name="frame">D Bit-Ebini</param>
-		public static void DumpHex(int width, int height, byte[] frame)
+		public static void DumpHex(Dimensions dim, byte[] frame)
 		{
 			var i = 0;
-			for (var y = 0; y < height; y++) {
-				var sb = new StringBuilder(width);
-				for (var x = 0; x < width; x++) {
+			for (var y = 0; y < dim.Height; y++) {
+				var sb = new StringBuilder(dim.Width);
+				for (var x = 0; x < dim.Width; x++) {
 					sb.Append(frame[i++].ToString("X"));
 				}
 				Logger.Debug(sb);
@@ -627,16 +619,15 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Tuät äs Biud uifd Konsolä uisä druckä
 		/// </summary>
-		/// <param name="width">Bräiti vom Biud</param>
-		/// <param name="height">Heechi vom Biud</param>
+		/// <param name="dim">Dimensionä vom Biud</param>
 		/// <param name="plane">S Biud</param>
-		public static void DumpBinary(int width, int height, byte[] plane)
+		public static void DumpBinary(Dimensions dim, byte[] plane)
 		{
 			var i = 0;
 			var planeBits = new BitArray(plane);
-			for (var y = 0; y < height; y++) {
-				var sb = new StringBuilder(width);
-				for (var x = 0; x < width; x++) {
+			for (var y = 0; y < dim.Height; y++) {
+				var sb = new StringBuilder(dim.Width);
+				for (var x = 0; x < dim.Width; x++) {
 					sb.Append(planeBits.Get(i++) ? "1" : "0");
 				}
 				Logger.Debug(sb);

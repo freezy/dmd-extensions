@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 using SkiaSharp;
 
@@ -63,7 +64,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			Res.Loaded[DisplaySetting.SegmentType][DisplaySetting.StyleDefinition.SegmentWeight].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
-					Host.SetDimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight);
+					Host.SetDimensions(new Dimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight));
 					_aspectRatioSet = true;
 				} else {
 					Res.Rasterize(DisplaySetting);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 using static System.Text.Encoding;
 
@@ -19,8 +20,8 @@ namespace LibDmd.Output.PinDmd3
 		public bool IsAvailable { get; private set; }
 
 		public int Delay { get; set; } = 100;
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private const int ReadTimeoutMs = 100;
@@ -98,22 +99,22 @@ namespace LibDmd.Output.PinDmd3
 		private PinDmd3()
 		{
 			// 3 bytes per pixel, 2 control bytes
-			_frameBufferRgb24 = new byte[DmdWidth * DmdHeight * 3 + 2];
+			_frameBufferRgb24 = new byte[FixedSize.Surface * 3 + 2];
 			_frameBufferRgb24[0] = Rgb24CommandByte;
-			_frameBufferRgb24[DmdWidth * DmdHeight * 3 + 1] = Rgb24CommandByte;
+			_frameBufferRgb24[FixedSize.Surface * 3 + 1] = Rgb24CommandByte;
 
 			// 4 bits per pixel, 14 control bytes
-			_frameBufferGray4 = new byte[DmdWidth * DmdHeight / 2 + 14];     
+			_frameBufferGray4 = new byte[FixedSize.Surface / 2 + 14];     
 			_frameBufferGray4[0] = Gray4CommandByte;
-			_frameBufferGray4[DmdWidth * DmdHeight / 2 + 13] = Gray4CommandByte;
+			_frameBufferGray4[FixedSize.Surface / 2 + 13] = Gray4CommandByte;
 			
 			// 2 bits per pixel, 14 control bytes
-			_frameBufferGray2 = new byte[DmdWidth * DmdHeight / 4 + 14];     
+			_frameBufferGray2 = new byte[FixedSize.Surface / 4 + 14];     
 			_frameBufferGray2[0] = Gray2CommandByte;
-			_frameBufferGray2[DmdWidth * DmdHeight / 4 + 13] = Gray2CommandByte;
+			_frameBufferGray2[FixedSize.Surface / 4 + 13] = Gray2CommandByte;
 
 			// 16 colors, 4 bytes of pixel, 2 control bytes
-			_frameBufferColoredGray4 = new byte[1 + 48 + DmdWidth * DmdHeight / 2 + 1];
+			_frameBufferColoredGray4 = new byte[1 + 48 + FixedSize.Surface / 2 + 1];
 			_frameBufferColoredGray4[0] = ColoredGray4CommandByte;
 			_frameBufferColoredGray4[_frameBufferColoredGray4.Length - 1] = ColoredGray4CommandByte;
 
@@ -196,7 +197,7 @@ namespace LibDmd.Output.PinDmd3
 		public void RenderGray2(byte[] frame)
 		{
 			// split to sub frames
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
+			var planes = FrameUtil.Split(FixedSize, 2, frame);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
@@ -225,7 +226,7 @@ namespace LibDmd.Output.PinDmd3
 		public void RenderGray4(byte[] frame)
 		{
 			// split to sub frames
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame);
 
 			// copy to frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
@@ -240,8 +241,7 @@ namespace LibDmd.Output.PinDmd3
 		{
 			// fall back if firmware doesn't support colored gray 4
 			if (!_supportsColoredGray4) {
-				var rgb24Frame = ColorUtil.ColorizeFrame(DmdWidth, DmdHeight,
-					FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes), frame.Palette);
+				var rgb24Frame = ColorUtil.ColorizeFrame(FixedSize, FrameUtil.Join(FixedSize, frame.Planes), frame.Palette);
 				RenderRgb24(rgb24Frame);
 				return;
 			}

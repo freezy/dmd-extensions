@@ -1,11 +1,11 @@
 ﻿using System.Text;
+using LibDmd.Frame;
 
 namespace LibDmd
 {
 	public class DMDFrame
 	{
-		public int Width;
-		public int Height;
+		public Dimensions Dimensions;
 		public byte[] Data;
 		public int BitLength;
 
@@ -16,10 +16,9 @@ namespace LibDmd
 			return this;
 		}
 
-		public DMDFrame Update(int width, int height, byte[] data, int bitSize)
+		public DMDFrame Update(Dimensions dim, byte[] data, int bitSize)
 		{
-			Width = width;
-			Height = height;
+			Dimensions = dim;
 			Data = data;
 			BitLength = bitSize;
 			return this;
@@ -28,10 +27,10 @@ namespace LibDmd
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
-			sb.AppendLine($"DMDFrame {Width}x{Height}@{BitLength} ({Data.Length} bytes):");
-			for (var y = 0; y < Height; y++) {
-				for (var x = 0; x < Width; x++) {
-					sb.Append(Data[y * Width + x].ToString("X"));
+			sb.AppendLine($"DMDFrame {Dimensions}@{BitLength} ({Data.Length} bytes):");
+			for (var y = 0; y < Dimensions.Height; y++) {
+				for (var x = 0; x < Dimensions.Width; x++) {
+					sb.Append(Data[y * Dimensions.Width + x].ToString("X"));
 				}
 				sb.AppendLine();
 			}
@@ -43,9 +42,9 @@ namespace LibDmd
 	{
 		public byte[][] RawPlanes;
 
-		public RawDMDFrame Update(int width, int height, byte[] data, byte[][] rawPlanes)
+		public RawDMDFrame Update(Dimensions dim, byte[] data, byte[][] rawPlanes)
 		{
-			this.Update(width, height, data, rawPlanes.Length);
+			this.Update(dim, data, rawPlanes.Length);
 			this.RawPlanes = rawPlanes;
 			return this;
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using LibDmd.Frame;
 
 namespace LibDmd.Test
 {
@@ -29,7 +30,7 @@ namespace LibDmd.Test
 				}
 			}
 
-			return new DMDFrame{ Width = width, Height = height, Data = data };
+			return new DMDFrame{ Dimensions = new Dimensions(width, height), Data = data };
 		}
 	}
 }

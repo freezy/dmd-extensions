@@ -1,6 +1,7 @@
 ﻿using System;
 using FTD2XX_NET;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.PinDmd1
@@ -14,8 +15,7 @@ namespace LibDmd.Output.PinDmd1
 		public string Name { get; } = "PinDMD v1";
 		public bool IsAvailable { get; private set; }
 
-		public int DmdWidth { get; } = 128;
-		public int DmdHeight { get; } = 32;
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
@@ -40,7 +40,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 
 			// 2 bits per pixel + 4 init pixels
-			var size = (DmdWidth * DmdHeight / 4) + 4;
+			var size = (FixedSize.Surface / 4) + 4;
 			_frameBuffer = new byte[size];
 			_frameBuffer[0] = 0x81;    // frame sync bytes
 			_frameBuffer[1] = 0xC3;
@@ -145,7 +145,7 @@ namespace LibDmd.Output.PinDmd1
 		public void RenderGray2(byte[] frame)
 		{
 			// split frame into 2-bit planes
-			var planes = FrameUtil.Split(DmdWidth, DmdHeight, 2, frame);
+			var planes = FrameUtil.Split(FixedSize, 2, frame);
 
 			// copy planes into frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
@@ -171,7 +171,7 @@ namespace LibDmd.Output.PinDmd1
 
 		public void ClearDisplay()
 		{
-			RenderGray2(new byte[DmdWidth * DmdHeight]);
+			RenderGray2(new byte[FixedSize.Surface]);
 		}
 
 		public void Dispose()

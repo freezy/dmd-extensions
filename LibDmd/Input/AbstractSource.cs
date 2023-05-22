@@ -2,6 +2,7 @@
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Input
@@ -14,15 +15,15 @@ namespace LibDmd.Input
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dim)
 		{
 			if (Dimensions == null) {
 				return;
 			}
 
-			if (width != Dimensions.Value.Width || height != Dimensions.Value.Height) {
-				Logger.Info("{4} received new dimensions: {0}x{1} => {2}x{3}.", Dimensions.Value.Width, Dimensions.Value.Height, width, height, Name);
-				Dimensions.OnNext(new Dimensions { Width = width, Height = height });
+			if (dim != Dimensions.Value) {
+				Logger.Info($"{Name} received new dimensions: {Dimensions} => {dim}.");
+				Dimensions.OnNext(dim);
 			}
 		}
 

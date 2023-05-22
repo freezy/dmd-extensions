@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Output.Pin2Dmd
+﻿using LibDmd.Frame;
+
+namespace LibDmd.Output.Pin2Dmd
 {
 	/// <summary>
 	/// Output target for PIN2DMD devices.
@@ -9,9 +11,9 @@
 		public string Name { get; } = "PIN2DMD XL";
 
 		protected override string ProductString => "PIN2DMD XL";
-
-		public override int DmdWidth { get; } = 192;
-		public override int DmdHeight { get; } = 64;
+		
+		public override Dimensions FixedSize { get; } = new Dimensions(192, 64);
+		
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private static Pin2DmdXl _instance;
@@ -37,7 +39,7 @@
 		public void RenderRgb24(byte[] frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24(DmdWidth, DmdHeight, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+			var changed = CreateRgb24(FixedSize, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
 
 			// send frame buffer to device
 			if (changed) {

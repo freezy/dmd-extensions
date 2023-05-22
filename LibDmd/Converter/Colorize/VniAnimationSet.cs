@@ -44,8 +44,8 @@ namespace LibDmd.Converter.Colorize
 			MaxHeight = 0;
 			for (var i = 0; i < numAnimations; i++) {
 				Animations.Add(new VniAnimation(reader, Version));
-				int h = Animations[i].Height;
-				int w = Animations[i].Width;
+				int h = Animations[i].Size.Height;
+				int w = Animations[i].Size.Width;
 				if (h > MaxHeight)
 					MaxHeight = h;
 				if (w > MaxWidth)

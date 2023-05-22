@@ -2,6 +2,7 @@
 using System.Timers;
 using System.Windows.Media;
 using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using NLog;
 using WebSocketSharp;
 
@@ -70,7 +71,7 @@ namespace LibDmd.Output.Network
 			if (_gameName != null) {
 				_client.Send(_serializer.SerializeGameName(_gameName));
 			}
-			_client.Send(_serializer.SerializeDimensions(_serializer.Width, _serializer.Height));
+			_client.Send(_serializer.SerializeDimensions(_serializer.Dimensions));
 			_client.Send(_serializer.SerializeColor(_color));
 			if (_palette != null) {
 				_client.Send(_serializer.SerializePalette(_palette));
@@ -105,14 +106,14 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		private void SendGray(byte[] frame, int bitlength)
+		private void SendGray(byte[] frame, int bitLength)
 		{
-			if (frame.Length < _serializer.Width * _serializer.Height) {
-				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} width={2} height={3}", frame.Length, bitlength, _serializer.Width, _serializer.Height);
+			if (frame.Length < _serializer.Dimensions.Surface) {
+				Logger.Info("SendGray: invalid frame received frame.length={0} bitlength={1} dim={2}", frame.Length, bitLength, _serializer.Dimensions);
 				return;
 			}
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeGray(frame, bitlength));
+				_client.Send(_serializer.SerializeGray(frame, bitLength));
 			}
 
 		}
@@ -148,10 +149,10 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dim)
 		{
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeDimensions(width, height));
+				_client.Send(_serializer.SerializeDimensions(dim));
 			}
 		}
 

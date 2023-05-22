@@ -82,9 +82,9 @@ namespace LibDmd.Converter
 		{
 			byte[][] planes;
 			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
-				planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, 2, frame.Data);
+				planes = FrameUtil.Split(Dimensions.Value, 2, frame.Data);
 			else
-				planes = FrameUtil.Split(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, 2, frame.Data);
+				planes = FrameUtil.Split(Dimensions.Value / 2, 2, frame.Data);
 
 			if (_coloring.Mappings != null)
 			{
@@ -271,14 +271,14 @@ namespace LibDmd.Converter
 				if (ScalerMode == ScalerMode.Doubler)
 				{
 					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(Dimensions.Value.Width, Dimensions.Value.Height, planes);
+					planes = FrameUtil.Scale2(Dimensions.Value, planes);
 				}
 				else
 				{
 					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					var colorData = FrameUtil.Join(Dimensions.Value.Width / 2, Dimensions.Value.Height / 2, planes);
-					var scaledData = FrameUtil.Scale2x(Dimensions.Value.Width, Dimensions.Value.Height, colorData);
-					planes = FrameUtil.Split(Dimensions.Value.Width, Dimensions.Value.Height, planes.Length, scaledData);
+					var colorData = FrameUtil.Join(Dimensions.Value / 2, planes);
+					var scaledData = FrameUtil.Scale2x(Dimensions.Value, colorData);
+					planes = FrameUtil.Split(Dimensions.Value, planes.Length, scaledData);
 				}
 			}
 

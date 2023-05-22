@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using LibDmd.Frame;
 using Point = System.Drawing.Point;
 
 namespace LibDmd.Input.ScreenGrabber
@@ -136,7 +137,7 @@ namespace LibDmd.Input.ScreenGrabber
 		/// at the specified coordinates</returns>
 		internal static BitmapSource GetDesktopBitmap(Rectangle rectangle)
 		{
-			return GetDesktopBitmap(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+			return GetDesktopBitmap(rectangle.X, rectangle.Y, new Dimensions(rectangle.Width, rectangle.Height));
 		}
 
 		/// <summary>
@@ -144,14 +145,13 @@ namespace LibDmd.Input.ScreenGrabber
 		/// </summary>
 		/// <param name="x">The X coordinate of the requested area</param> 
 		/// <param name="y">The Y coordinate of the requested area</param> 
-		/// <param name="width">The width of the requested area</param> 
-		/// <param name="height">The height of the requested area</param> 
+		/// <param name="dim">The dimensions of the requested area</param> 
 		/// <returns>A <see cref="System.Drawing.Image"/> of the desktop at 
 		/// the specified coordinates.</returns> 
-		internal static BitmapSource GetDesktopBitmap(int x, int y, int width, int height)
+		internal static BitmapSource GetDesktopBitmap(int x, int y, Dimensions dim)
 		{
 			//Create the image and graphics to capture the portion of the desktop.
-			using (var destinationImage = new Bitmap(width, height)) 
+			using (var destinationImage = new Bitmap(dim.Width, dim.Height)) 
 			{
 				using (var destinationGraphics = Graphics.FromImage(destinationImage)) 
 				{
@@ -165,7 +165,7 @@ namespace LibDmd.Input.ScreenGrabber
 
 						//Get the screencapture
 						var dwRop = SRCCOPY;
-						BitBlt(destinationGraphicsHandle, 0, 0, width, height, windowDC, x, y, dwRop);
+						BitBlt(destinationGraphicsHandle, 0, 0, dim.Width, dim.Height, windowDC, x, y, dwRop);
 
 					} finally {
 						destinationGraphics.ReleaseHdc(destinationGraphicsHandle);

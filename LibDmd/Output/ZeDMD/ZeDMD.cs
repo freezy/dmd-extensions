@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.ZeDMD
@@ -13,12 +14,13 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public class ZeDMD : IGray2Destination, IGray4Destination, IGray6Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IResizableDestination
 	{
-		public string Name { get; } = "ZeDMD";
+		public string Name => "ZeDMD";
 		public bool IsAvailable { get; private set; }
 
 		public int Delay { get; set; } = 100;
-		public int DmdWidth { get; private set; }
-		public int DmdHeight { get; private set; }
+		
+		public Dimensions FixedSize { get; private set; } = new Dimensions(128, 32);
+		
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		// We get a DMD_ESP32 instance to communicate with ESP32
@@ -38,8 +40,7 @@ namespace LibDmd.Output.ZeDMD
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
 
-		private int RomWidth = 0; // The size of the frames in the rom
-		private int RomHeight = 0;
+		private Dimensions RomDimensions = new Dimensions(128, 32); // The size of the frames in the rom
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.
@@ -62,51 +63,46 @@ namespace LibDmd.Output.ZeDMD
 		{
 			Init();
 			// Different modes require different buffer sizes. This one should be safe for all.
-			_frameBuffer = new byte[1 + DmdWidth * DmdHeight * 4];
+			_frameBuffer = new byte[1 + FixedSize.Surface * 4];
 
 			if (IsAvailable) ClearColor();
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions newDim)
 		{
 			byte[] tdata = new byte[5];
-			RomHeight = height;
-			RomWidth = width;
+			RomDimensions = newDim;
 			tdata[0] = 2; // send dimension mode
-			tdata[1] = (byte)(width & 0xff);
-			tdata[2] = (byte)((width >> 8) & 0xff);
-			tdata[3] = (byte)(height & 0xff);
-			tdata[4] = (byte)((height >> 8) & 0xff);
+			tdata[1] = (byte)(newDim.Width & 0xff);
+			tdata[2] = (byte)((newDim.Width >> 8) & 0xff);
+			tdata[3] = (byte)(newDim.Height & 0xff);
+			tdata[4] = (byte)((newDim.Height >> 8) & 0xff);
 			RenderRaw(tdata);
 		}
 
 		public void Init()
 		{
-			int width = new int();
-			int height = new int();
-			IsAvailable = (pDMD.Open(out width,out height) == 1);
+			IsAvailable = (pDMD.Open(out var width, out var height) == 1);
 
-			if (!IsAvailable)
-			{
+			if (!IsAvailable) {
 				Logger.Info(Name + " device not found");
 				return;
 			}
 
-			DmdWidth = width;
-			DmdHeight = height;
+			FixedSize = new Dimensions(width, height);
 
-			Logger.Info(Name + " device found on port " + pDMD.nCOM + " with a resolution of " + DmdWidth + "x" + DmdHeight + " LEDs");
+			Logger.Info($"{Name} device found on port {pDMD.nCOM} with a resolution of {FixedSize} LEDs");
 		}
 
 		public void RenderGray2(byte[] frame)
 		{
-			var planes = FrameUtil.Split(RomWidth, RomHeight, 2, frame);
+			var planes = FrameUtil.Split(RomDimensions, 2, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 13);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomDimensions.Surface / 4);
 			}
 		}
 
@@ -121,7 +117,7 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomWidth * RomHeight / 4);
+				RenderRaw(_frameBuffer, Gray2, 1 + 12 + RomDimensions.Surface / 4);
 			}
 		}
 
@@ -133,7 +129,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray4(byte[] frame)
 		{
-			var planes = FrameUtil.Split(RomWidth, RomHeight, 4, frame);
+			var planes = FrameUtil.Split(RomDimensions, 4, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 49);
 
 			// send frame buffer to device
@@ -145,7 +141,7 @@ namespace LibDmd.Output.ZeDMD
 					_frameBuffer[1 + ti * 3 + 1] = (byte)(109.0f * CalcBrightness(ti / 15.0f));
 					_frameBuffer[1 + ti * 3 + 2] = (byte)(0.0f * CalcBrightness(ti / 15.0f));
 				}
-				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomWidth * RomHeight / 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomDimensions.Surface / 2);
 			}
 		}
 
@@ -160,19 +156,19 @@ namespace LibDmd.Output.ZeDMD
 			// send frame buffer to device
 			if (frameChanged || paletteChanged)
 			{
-				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomWidth * RomHeight / 2);
+				RenderRaw(_frameBuffer, ColGray4, 1 + 48 + RomDimensions.Surface / 2);
 			}
 		}
 
 		public void RenderGray6(byte[] frame)
 		{
-			var planes = FrameUtil.Split(RomWidth, RomHeight, 6, frame);
+			var planes = FrameUtil.Split(RomDimensions, 6, frame);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 193);
 
 			// send frame buffer to device
 			if (changed)
 			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * RomWidth * RomHeight / 8);
+				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * RomDimensions.Surface / 8);
 			}
 		}
 
@@ -189,13 +185,13 @@ namespace LibDmd.Output.ZeDMD
 			{
 				if (frame.RotateColors)
 				{
-					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti + 1 + 192 + RomWidth * RomHeight * 6 / 8] = frame.Rotations[ti];
+					for (int ti = 0; ti < 3 * MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti + 1 + 192 + RomDimensions.Surface * 6 / 8] = frame.Rotations[ti];
 				}
 				else
 				{
-					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti * 3 + 1 + 192 + RomWidth * RomHeight * 6 / 8] = 255;
+					for (int ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) _frameBuffer[ti * 3 + 1 + 192 + RomDimensions.Surface * 6 / 8] = 255;
 				}
-				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * RomWidth * RomHeight / 8 + 3 * 8);
+				RenderRaw(_frameBuffer, ColGray6, 1 + 192 + 6 * RomDimensions.Surface / 8 + 3 * 8);
 			}
 		}
 
@@ -223,7 +219,7 @@ namespace LibDmd.Output.ZeDMD
 			changed = FrameUtil.Copy(frame, _frameBuffer, 1);
 			if (changed)
 			{
-				pDMD.QueueFrame(_frameBuffer.Take(RomWidth * RomHeight * 3 + 1).ToArray());
+				pDMD.QueueFrame(_frameBuffer.Take(RomDimensions.Surface * 3 + 1).ToArray());
 			}
 		}
 

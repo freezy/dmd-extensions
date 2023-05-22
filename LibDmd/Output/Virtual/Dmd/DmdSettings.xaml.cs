@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.Virtual.Dmd
@@ -24,7 +25,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private readonly DmdStyle _originalStyle;
 		private BitmapImage _preview;
 		private DmdStyle _previewStyle;
-		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames();
+		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames(); 
 		public string NewStyleName { get; set; }
 
 		public ISubject<DmdStyle> OnConfigUpdated { get; } = new Subject<DmdStyle>();
@@ -196,7 +197,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void UpdatePreview()
 		{
-			DmdPreview.SetDimensions(_preview.PixelWidth, _preview.PixelHeight);
+			DmdPreview.SetDimensions(new Dimensions(_preview.PixelWidth, _preview.PixelHeight));
 			DmdPreview.SetStyle(_previewStyle, _config.DataPath);
 			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
 				DmdPreview.RenderBitmap(_preview);

@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Threading;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Input.FutureDmd
@@ -63,7 +64,7 @@ namespace LibDmd.Input.FutureDmd
 
 				var isGameRunning = true; 
 				var chunkSize = 0;
-				var gray2Frame = new DMDFrame { Width = 132, Height = 32 };
+				var gray2Frame = new DMDFrame { Dimensions = new Dimensions(128, 32) };
 				var messageChunk = new byte[4096];
 
 				// for each frame

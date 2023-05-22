@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Windows.Media;
+using LibDmd.Frame;
 using LibDmd.Output;
 using LibDmd.Output.Network;
 using NLog;
@@ -103,7 +104,7 @@ namespace LibDmd.Input.Network
 
 		public void OnClearPalette() => _graphs.ClearPalette();
 
-		public void OnDimensions(int width, int height) => Gray2Source.Dimensions.OnNext(new Dimensions(width, height));
+		public void OnDimensions(Dimensions dim) => Gray2Source.Dimensions.OnNext(dim);
 
 		public void OnGameName(string gameName)
 		{

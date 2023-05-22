@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using LibDmd.Frame;
 using LibDmd.Output;
 
 namespace LibDmd.Test.Stubs
@@ -8,8 +9,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Test Destination (Fixed Gray2)";
 		public bool IsAvailable => true;
-		public int DmdWidth { get; }
-		public int DmdHeight { get; }
+		public Dimensions FixedSize { get; }
 		public bool DmdAllowHdScaling { get; }
 
 		public readonly IConnectableObservable<byte[]> LastFrame;
@@ -17,8 +17,7 @@ namespace LibDmd.Test.Stubs
 
 		public TestGray2Destination(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true)
 		{
-			DmdWidth = dmdWidth;
-			DmdHeight = dmdHeight;
+			FixedSize = new Dimensions(dmdWidth, dmdHeight);
 			DmdAllowHdScaling = dmdAllowHdScaling;
 			LastFrame = _lastFrame.FirstAsync().PublishLast();
 			LastFrame.Connect();

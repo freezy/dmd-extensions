@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using NLog;
 using SharpGL;
 using SharpGL.Shaders;
@@ -42,9 +43,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public bool IsAvailable { get; } = true;
 
-		public int DmdWidth { get; private set; } = 128;
-
-		public int DmdHeight { get; private set; } = 32;
+		public Dimensions Size { get; private set; } = new Dimensions(128, 32);
 
 		public double AspectRatio { get; private set; } = 1.0;
 
@@ -193,13 +192,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray2(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
+			RenderGray2(FrameUtil.Join(Size, frame.Planes));
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray4(FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes));
+			RenderGray4(FrameUtil.Join(Size, frame.Planes));
 		}
 
 		private void UpdateRotations(ColoredFrame frame)
@@ -232,11 +231,11 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
-			byte[] tframe = FrameUtil.Join(DmdWidth, DmdHeight, frame.Planes);
+			byte[] tframe = FrameUtil.Join(Size, frame.Planes);
 			bool frameChanged = false;
 			if (_nextFrameData != null)
 			{
-				for (int ti = 0; ti < DmdHeight * DmdWidth; ti++)
+				for (int ti = 0; ti < Size.Surface; ti++)
 				{
 					if (tframe[ti] != _nextFrameData[ti])
 					{
@@ -271,13 +270,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			UpdateRotations(frame);
 		}
 
-		public void SetDimensions(int width, int height)
+		public void SetDimensions(Dimensions dim)
 		{
-			if (DmdWidth != width || DmdHeight != height)
-			{
-				Logger.Info("Resizing virtual DMD to {0}x{1}", width, height);
-				DmdWidth = width;
-				DmdHeight = height;
+			if (dim != Size) {
+				Logger.Info($"Resizing virtual DMD to {dim}");
+				Size = dim;
 				_fboInvalid = true;
 				OnSizeChanged(null, null);
 			}
@@ -286,25 +283,25 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void SetRgb24Frame(byte[] frame)
 		{
 			// do we need padding anyway?
-			if (DmdWidth % 4 == 0) {
+			if (Size.Width % 4 == 0) {
 				_nextFrameData = frame;
 				return;
 			}
 			
-			if (_padBitmap == null || _padBitmap.Width != DmdWidth || _padBitmap.Height != DmdHeight) {
-				_padBitmap = new Bitmap(DmdWidth, DmdHeight, PixelFormat.Format24bppRgb);
-				_padBitmapData = _padBitmap.LockBits(new Rectangle(0, 0, DmdWidth, DmdHeight), ImageLockMode.WriteOnly, _padBitmap.PixelFormat);
+			if (_padBitmap == null || _padBitmap.Width != Size.Width || _padBitmap.Height != Size.Height) {
+				_padBitmap = new Bitmap(Size.Width, Size.Height, PixelFormat.Format24bppRgb);
+				_padBitmapData = _padBitmap.LockBits(new Rectangle(0, 0, Size.Width, Size.Height), ImageLockMode.WriteOnly, _padBitmap.PixelFormat);
 			}
 			
 			// add back dummy bytes between lines, make each line be a multiple of 4 bytes
-			int skipBytesPerLine = _padBitmapData.Stride - DmdWidth * 3;
-			var newFrameSize = frame.Length + skipBytesPerLine * DmdHeight;
+			int skipBytesPerLine = _padBitmapData.Stride - Size.Width * 3;
+			var newFrameSize = frame.Length + skipBytesPerLine * Size.Height;
 			if (_nextFrameData == null || _nextFrameData.Length != newFrameSize) {
 				_nextFrameData = new byte[newFrameSize];
 			}
 			
-			for (int j = 0; j < DmdHeight; j++) {
-				Buffer.BlockCopy(frame, j * DmdWidth * 3, _nextFrameData, j * (DmdWidth * 3 + skipBytesPerLine), DmdWidth * 3);
+			for (int j = 0; j < Size.Height; j++) {
+				Buffer.BlockCopy(frame, j * Size.Width * 3, _nextFrameData, j * (Size.Width * 3 + skipBytesPerLine), Size.Width * 3);
 			}
 		}
 
@@ -432,7 +429,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				uint[] texs = new uint[5] { _textures[3], _textures[4], _textures[5], _textures[6], _textures[7] };
 				gl.DeleteTextures(5, texs);
 				gl.DeleteFramebuffersEXT(5, _fbos);
-				Logger.Info("Creating FBOs for {0}x{1}", DmdWidth, DmdHeight);
+				Logger.Info($"Creating FBOs for {Size}");
 				gl.GenTextures(5, texs);
 				gl.GenFramebuffersEXT(5, _fbos);
 				_textures[3] = texs[0];
@@ -449,7 +446,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
-					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, DmdWidth, DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
+					gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, Size.Width, Size.Height, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, IntPtr.Zero);
 					gl.FramebufferTexture2DEXT(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_COLOR_ATTACHMENT0_EXT, OpenGL.GL_TEXTURE_2D, _textures[i + 3], 0);
 					uint status = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT);
 					switch (status)
@@ -564,7 +561,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						if (_style.HasGamma) code.Append("#define GAMMA\n");
 						var nfi = NumberFormatInfo.InvariantInfo;
 						code.AppendFormat(nfi, "const float gamma = {0:0.00000};\n", _style.Gamma);
-						code.AppendFormat(nfi, "const int dmdWidth = {0};\n", DmdWidth);
+						code.AppendFormat(nfi, "const int dmdWidth = {0};\n", Size.Width);
 						code.Append(ReadResource(@"LibDmd.Output.Virtual.Dmd.Convert.frag"));
 						_convertShader.Create(gl, ReadResource(@"LibDmd.Output.Virtual.Dmd.Convert.vert"), code.ToString(), _attributeLocations);
 						_csTexture = _convertShader.GetUniformLocation(gl, "dmdData");
@@ -584,37 +581,37 @@ namespace LibDmd.Output.Virtual.Dmd
 				switch (_nextFrameType)
 				{
 					case FrameFormat.Gray2:
-						if (_nextFrameData.Length != DmdWidth * DmdHeight)
+						if (_nextFrameData.Length != Size.Surface)
 						{
-							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + Size.Width + " x " + Size.Height + "]");
 							return;
 						}
 						if (createTexture)
-							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, Size.Width, Size.Height, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						else
-							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, Size.Width, Size.Height, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.Gray4:
-						if (_nextFrameData.Length != DmdWidth * DmdHeight)
+						if (_nextFrameData.Length != Size.Surface)
 						{
-							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + Size.Width + " x " + Size.Height + "]");
 							return;
 						}
 						if (createTexture)
-							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, Size.Width, Size.Height, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						else
-							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, Size.Width, Size.Height, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.ColoredGray6:
-						if (_nextFrameData.Length != DmdWidth * DmdHeight)
+						if (_nextFrameData.Length != Size.Surface)
 						{
-							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + DmdWidth + " x " + DmdHeight + "]");
+							LogErrors("Invalid frame buffer size of [" + _nextFrameData.Length + "] bytes for a frame size of [" + Size.Width + " x " + Size.Height + "]");
 							return;
 						}
 						if (createTexture)
-							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, DmdWidth, DmdHeight, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_LUMINANCE8, Size.Width, Size.Height, 0, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						else
-							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, Size.Width, Size.Height, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.Rgb24:
 						if (_nextFrameData.Length % 3 != 0)
@@ -623,9 +620,9 @@ namespace LibDmd.Output.Virtual.Dmd
 							return;
 						}
 						if (createTexture)
-							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, DmdWidth, DmdHeight, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, Size.Width, Size.Height, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						else
-							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, DmdWidth, DmdHeight, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
+							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, Size.Width, Size.Height, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _nextFrameData);
 						break;
 					case FrameFormat.Bitmap:
 						var _bitmapToRender = ImageUtil.ConvertToImage(_nextFrameBitmap) as Bitmap;
@@ -648,7 +645,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				// Apply palette, tinting and gamma
 				_convertShader.Bind(gl);
 				gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[0]);
-				gl.Viewport(0, 0, DmdWidth, DmdHeight);
+				gl.Viewport(0, 0, Size.Width, Size.Height);
 				gl.Uniform1(_csPalette, 1); // Color palette
 				gl.Uniform1(_csTexture, 2); // DMD texture
 				gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
@@ -659,38 +656,38 @@ namespace LibDmd.Output.Virtual.Dmd
 				{
 					_blurShader1.Bind(gl);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs1Texture, 3); // DMD texture
-					gl.Uniform2(_bs1Direction, 1.0f / DmdWidth, 0.0f);
+					gl.Uniform2(_bs1Direction, 1.0f / Size.Width, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[1]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs1Texture, 7);
-					gl.Uniform2(_bs1Direction, 0.0f, 1.0f / DmdHeight);
+					gl.Uniform2(_bs1Direction, 0.0f, 1.0f / Size.Height);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					_blurShader1.Unbind(gl);
 
 					_blurShader2.Bind(gl);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs2Texture, 4); // Previous Blur
-					gl.Uniform2(_bs2Direction, 1.0f / DmdWidth, 0.0f);
+					gl.Uniform2(_bs2Direction, 1.0f / Size.Width, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[2]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs2Texture, 7);
-					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / DmdHeight);
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / Size.Height);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[4]); // Horizontal pass (from last blur level, to temp FBO (Tex #7))
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs2Texture, 5); // Previous Blur
-					gl.Uniform2(_bs2Direction, 1.0f / DmdWidth, 0.0f);
+					gl.Uniform2(_bs2Direction, 1.0f / Size.Width, 0.0f);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[3]); // Vertical pass (from temp to destination FBO)
-					gl.Viewport(0, 0, DmdWidth, DmdHeight);
+					gl.Viewport(0, 0, Size.Width, Size.Height);
 					gl.Uniform1(_bs2Texture, 7);
-					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / DmdHeight);
+					gl.Uniform2(_bs2Direction, 0.0f, 1.0f / Size.Height);
 					gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 					_blurShader2.Unbind(gl);
 				}
@@ -704,10 +701,10 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_dsDmdTexture != -1) gl.Uniform1(_dsDmdTexture, 3);
 			if (_dsDmdDotGlow != -1) gl.Uniform1(_dsDmdDotGlow, 4);
 			if (_dsDmdBackGlow != -1) gl.Uniform1(_dsDmdBackGlow, 6);
-			if (_dsDmdSize != -1) gl.Uniform2(_dsDmdSize, (float)DmdWidth, DmdHeight);
+			if (_dsDmdSize != -1) gl.Uniform2(_dsDmdSize, (float)Size.Width, Size.Height);
 			if (_dsUnlitDot != -1) gl.Uniform3(_dsUnlitDot, (float)(_style.UnlitDot.ScR / _style.Brightness), (float)(_style.UnlitDot.ScG / _style.Brightness), (float)(_style.UnlitDot.ScB / _style.Brightness));
-			if (_dsGlassTexOffset != -1) gl.Uniform2(_dsGlassTexOffset, (float)(_style.GlassPadding.Left / DmdWidth), (float)(_style.GlassPadding.Top / DmdHeight));
-			if (_dsGlassTexScale != -1) gl.Uniform2(_dsGlassTexScale, (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / DmdWidth), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / DmdHeight));
+			if (_dsGlassTexOffset != -1) gl.Uniform2(_dsGlassTexOffset, (float)(_style.GlassPadding.Left / Size.Width), (float)(_style.GlassPadding.Top / Size.Height));
+			if (_dsGlassTexScale != -1) gl.Uniform2(_dsGlassTexScale, (float)(1f + (_style.GlassPadding.Left + _style.GlassPadding.Right) / Size.Width), (float)(1f + (_style.GlassPadding.Top + _style.GlassPadding.Bottom) / Size.Height));
 			if (_dsGlassColor != -1) gl.Uniform4(_dsGlassColor, _style.GlassColor.ScR, _style.GlassColor.ScG, _style.GlassColor.ScB, (float)_style.GlassLighting);
 			gl.DrawArrays(OpenGL.GL_TRIANGLE_FAN, 0, 4);
 			_dmdShader.Unbind(gl);
@@ -725,8 +722,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (!Dispatcher.HasShutdownFinished || !Dispatcher.HasShutdownStarted) {
 				try {
 					Dispatcher.Invoke(() => {
-						var glassWidth = DmdWidth + _style.GlassPadding.Left + _style.GlassPadding.Right;
-						var glassHeight = DmdHeight + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
+						var glassWidth = Size.Width + _style.GlassPadding.Left + _style.GlassPadding.Right;
+						var glassHeight = Size.Height + _style.GlassPadding.Top + _style.GlassPadding.Bottom;
 
 						var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
 						var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
@@ -752,7 +749,7 @@ namespace LibDmd.Output.Virtual.Dmd
 						Dmd.Height = glassHeight * alphaH;
 						Dmd.Margin = new Thickness(hpad + _style.FramePadding.Left * alphaW, vpad + _style.FramePadding.Top * alphaH, hpad + _style.FramePadding.Right * alphaW, vpad + _style.FramePadding.Bottom * alphaH);
 
-						Host?.SetDimensions((int)frameWidth, (int)frameHeight);
+						Host?.SetDimensions(new Dimensions((int)frameWidth, (int)frameHeight));
 					});
 				
 				} catch (TaskCanceledException ex) {
@@ -794,13 +791,13 @@ namespace LibDmd.Output.Virtual.Dmd
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (this is IFixedSizeDestination)
 			{
-				SetDimensions(DmdWidth, DmdHeight);
+				SetDimensions(Size);
 			}
 		}
 
-			public void ClearDisplay()
+		public void ClearDisplay()
 		{
-			RenderGray4(new byte[DmdWidth * DmdHeight]);
+			RenderGray4(new byte[Size.Surface]);
 		}
 
 		private static string ReadResource(string name)

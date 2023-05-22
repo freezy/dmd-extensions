@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Output
+﻿using LibDmd.Frame;
+
+namespace LibDmd.Output
 {
 	/// <summary>
 	/// Indicates that the output device can adapt its pixel size in real time.
@@ -14,8 +16,7 @@
 		/// <summary>
 		/// The next frame will come with new dimensions.
 		/// </summary>
-		/// <param name="width">Width in pixels</param>
-		/// <param name="height">Height in pixels</param>
-		void SetDimensions(int width, int height);
+		/// <param name="newDimensions">New dimension in pixels</param>
+		void SetDimensions(Dimensions newDimensions);
 	}
 }

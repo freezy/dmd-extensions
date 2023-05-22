@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
+using LibDmd.Frame;
 using LibDmd.Input;
 
 namespace LibDmd.Test.Stubs
@@ -21,7 +22,7 @@ namespace LibDmd.Test.Stubs
 
 		public void AddFrame(DMDFrame frame)
 		{
-			Dimensions.OnNext(new Dimensions(frame.Width, frame.Height));
+			Dimensions.OnNext(frame.Dimensions);
 			_frames.OnNext(frame);
 		}
 	}

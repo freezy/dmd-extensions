@@ -1,4 +1,6 @@
-﻿namespace LibDmd.Output
+﻿using LibDmd.Frame;
+
+namespace LibDmd.Output
 {
 	/// <summary>
 	/// Indicates that an output device's pixel dimensions are constant.
@@ -11,14 +13,9 @@
 	public interface IFixedSizeDestination
 	{
 		/// <summary>
-		/// Width of the output device in pixels.
+		/// Size of the output device in pixels.
 		/// </summary>
-		int DmdWidth { get; }
-
-		/// <summary>
-		/// Height of the output device in pixels.
-		/// </summary>
-		int DmdHeight { get; }
+		Dimensions FixedSize { get; }
 
 		/// <summary>
 		/// Allow scaling to HD for this destination.

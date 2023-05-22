@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Processor;
 
 namespace LibDmd.Input.ScreenGrabber
@@ -30,22 +31,21 @@ namespace LibDmd.Input.ScreenGrabber
 		public int Height = 32;
 		public int DestinationWidth
 		{
-			get { return _destWidth; }
+			get { return _destDim.Width; }
 			set {
-				_destWidth = value;
-				SetDimensions(_destWidth, _destHeight);
+				_destDim = new Dimensions(value, _destDim.Height);
+				SetDimensions(_destDim);
 			}
 		}
 		public int DestinationHeight {
-			get { return _destHeight; }
+			get { return _destDim.Height; }
 			set {
-				_destHeight = value;
-				SetDimensions(_destWidth, _destHeight);
+				_destDim = new Dimensions(_destDim.Width, value);
+				SetDimensions(_destDim);
 			}
 		}
 
-		private int _destWidth = 128;
-		private int _destHeight = 32;
+		private Dimensions _destDim = new Dimensions(128, 32);
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
@@ -62,7 +62,7 @@ namespace LibDmd.Input.ScreenGrabber
 					.Select(bmp => enabledProcessors.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp)))
 					.Select(bmp => {
 						if (DestinationHeight > 0 && DestinationWidth > 0) {
-							return TransformationUtil.Transform(bmp, DestinationWidth, DestinationHeight, ResizeMode.Stretch, false, false);
+							return TransformationUtil.Transform(bmp, _destDim, ResizeMode.Stretch, false, false);
 						}
 						return bmp;
 					})
@@ -77,12 +77,12 @@ namespace LibDmd.Input.ScreenGrabber
 			Top = rect.Y;
 			Width = rect.Width;
 			Height = rect.Height;
-			SetDimensions(rect.Width, rect.Height);
+			SetDimensions(new Dimensions(rect.Width, rect.Height));
 		}
 
 		private BitmapSource CaptureImage()
 		{
-			return NativeCapture.GetDesktopBitmap(Left, Top, Width, Height);
+			return NativeCapture.GetDesktopBitmap(Left, Top, new Dimensions(Width, Height));
 		}
 	}
 }
