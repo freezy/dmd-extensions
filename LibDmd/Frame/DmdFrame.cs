@@ -37,6 +37,13 @@ namespace LibDmd.Frame
 			Data = data;
 			BitLength = bitLength;
 		}
+		
+		public DmdFrame(int width, int height, byte[] data, int bitLength)
+		{
+			Dimensions = new Dimensions(width, height);
+			Data = data;
+			BitLength = bitLength;
+		}
 
 		public DmdFrame Update(DmdFrame frame)
 		{
@@ -45,9 +52,10 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame Update(byte[] data)
+		public DmdFrame Update(byte[] data, int bitLength)
 		{
 			Data = data;
+			BitLength = bitLength;
 			return this;
 		}
 
@@ -57,10 +65,11 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame Update(Dimensions dim, byte[] data)
+		public DmdFrame Update(Dimensions dim, byte[] data, int bitLength)
 		{
 			Dimensions = dim;
 			Data = data;
+			BitLength = bitLength;
 			return this;
 		}
 
@@ -147,12 +156,12 @@ namespace LibDmd.Frame
 
 				// copy whole block if only vertical padding
 				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
-					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel));
+					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel), bitLen);
 				}
 
 				// copy line by line if centering image
 				if (Dimensions < targetDim) {
-					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel));
+					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), bitLen);
 				}
 			}
 
@@ -161,7 +170,7 @@ namespace LibDmd.Frame
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
 
-			return Update(targetDim, transformedFrame);
+			return Update(targetDim, transformedFrame, bitLen);
 		}
 
 		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)

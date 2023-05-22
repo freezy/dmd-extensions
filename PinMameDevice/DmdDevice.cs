@@ -34,8 +34,8 @@ namespace PinMameDevice
 		{
 			public int Id;
 			public IDmdDevice DmdDevice { get; } = new LibDmd.DmdDevice.DmdDevice();
-			public DMDFrame DmdFrame { get; } = new DMDFrame();
-			public RawDMDFrame RawDmdFrame { get; } = new RawDMDFrame();
+			public DmdFrame DmdFrame { get; } = new DmdFrame();
+			public RawFrame RawDmdFrame { get; } = new RawFrame();
 			public LinkedList<char> CData { get; } = new LinkedList<char>();
 		}
 

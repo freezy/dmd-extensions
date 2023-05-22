@@ -70,7 +70,7 @@ namespace LibDmd.Test
 			source.AddFrame(frameIn);
 			var destFrame = await dest.LastFrame;
 			
-			Print(new DMDFrame { Dimensions = new Dimensions(16, 8), Data = destFrame, BitLength = 2});
+			Print(new DmdFrame(new Dimensions(16, 8), destFrame, 2));
 			
 			destFrame.Should().BeEquivalentTo(frameOut.Data);
 		}

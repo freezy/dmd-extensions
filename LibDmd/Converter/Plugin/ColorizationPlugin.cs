@@ -192,7 +192,7 @@ namespace LibDmd.Converter.Plugin
 		/// The public API to convert a frame and output it to the pubs.
 		/// </summary>
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
-		public void Convert(DMDFrame frame)
+		public void Convert(DmdFrame frame)
 		{
 			var frameSize = Dimensions.Surface * 3;
 			var coloredFrame = new byte[frameSize];
@@ -204,7 +204,7 @@ namespace LibDmd.Converter.Plugin
 			IntPtr rgb24FramePtr = IntPtr.Zero;
 			
 			// raw (bit plane) conversion
-			if (frame is RawDMDFrame rawFrame && rawFrame.RawPlanes.Length > 0) {
+			if (frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0) {
 				var rawBuffer = new byte[rawFrame.RawPlanes.Length * rawFrame.RawPlanes[0].Length];
 				for (int i = 0; i < rawFrame.RawPlanes.Length; i++) {
 					rawFrame.RawPlanes[i].CopyTo(rawBuffer, i * rawFrame.RawPlanes[0].Length);

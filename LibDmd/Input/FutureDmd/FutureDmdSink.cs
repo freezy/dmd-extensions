@@ -30,7 +30,7 @@ namespace LibDmd.Input.FutureDmd
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private readonly Subject<DMDFrame> _framesGray4 = new Subject<DMDFrame>();
+		private readonly Subject<DmdFrame> _framesGray4 = new Subject<DmdFrame>();
 		private byte[] _frame;
 		private bool _isPaused;
 
@@ -51,7 +51,7 @@ namespace LibDmd.Input.FutureDmd
 			Thread.Sleep(250);
 		}
 
-		public IObservable<DMDFrame> GetGray4Frames()
+		public IObservable<DmdFrame> GetGray4Frames()
 		{
 			return _framesGray4;
 		}
@@ -64,7 +64,7 @@ namespace LibDmd.Input.FutureDmd
 
 				var isGameRunning = true; 
 				var chunkSize = 0;
-				var gray2Frame = new DMDFrame { Dimensions = new Dimensions(128, 32) };
+				var gray2Frame = new DmdFrame(128, 32, 4);
 				var messageChunk = new byte[4096];
 
 				// for each frame
