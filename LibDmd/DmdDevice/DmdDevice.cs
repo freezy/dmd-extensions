@@ -823,7 +823,7 @@ namespace LibDmd.DmdDevice
 
 			if (_serum != null) {
 				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Is(128, 32)) {
+					if (frame.Dimensions.Equals(128, 32)) {
 						frame.Update(frame.Dimensions * 2, frame.Data, 2);
 					}
 				}
@@ -831,7 +831,7 @@ namespace LibDmd.DmdDevice
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
-				if (_gray2Colorizer != null && frame.Dimensions.Is(128, 16) && _gray2Colorizer.Has128x32Animation) {
+				if (_gray2Colorizer != null && frame.Dimensions.Equals(128, 16) && _gray2Colorizer.Has128x32Animation) {
 					// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
 					// indicating this should be upsized and treated as a centered 128x32 DMD.
 
@@ -855,7 +855,7 @@ namespace LibDmd.DmdDevice
 				} else {
 					var newDimensions = frame.Dimensions;
 					if (_config.Global.ScaleToHd) {
-						if (frame.Dimensions.Is(128, 32)) {
+						if (frame.Dimensions.Equals(128, 32)) {
 							newDimensions = frame.Dimensions * 2;
 							frame.Update(newDimensions, frame.Data, 2);
 						}
@@ -877,7 +877,7 @@ namespace LibDmd.DmdDevice
 
 			if (_serum != null) {
 				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Is(128, 32)) {
+					if (frame.Dimensions.Equals(128, 32)) {
 						frame.Update(frame.Dimensions * 2, frame.Data, 4);
 					}
 				}
@@ -887,7 +887,7 @@ namespace LibDmd.DmdDevice
 			
 			} else {
 				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Is(128, 32)) {
+					if (frame.Dimensions.Equals(128, 32)) {
 						frame.Update(frame.Dimensions * 2, frame.Data, 4);
 					}
 				}

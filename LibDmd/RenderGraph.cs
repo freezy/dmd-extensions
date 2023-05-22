@@ -145,7 +145,7 @@ namespace LibDmd
 		public IRenderer Init()
 		{
 			// set up the dimension change producer
-			Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions { Width = 128, Height = 32 });
+			Source.Dimensions = new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
 			Destinations.ForEach(dest => {
 				if (dest is IResizableDestination destResizable) {
 					Source.Dimensions.Subscribe(dim => destResizable.SetDimensions(dim));

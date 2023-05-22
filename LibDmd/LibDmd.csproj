@@ -396,7 +396,13 @@
     <Compile Include="Converter\SwitchingConverter.cs" />
     <Compile Include="DmdDevice\PMOptions.cs" />
     <Compile Include="DmdDevice\IConfiguration.cs" />
+    <Compile Include="Frame\BaseFrame.cs" />
+    <Compile Include="Frame\BmpFrame.cs" />
+    <Compile Include="Frame\ColoredFrame.cs" />
     <Compile Include="Frame\Dimensions.cs" />
+    <Compile Include="Frame\DmdFrame.cs" />
+    <Compile Include="Frame\FrameExtensions.cs" />
+    <Compile Include="Frame\RawFrame.cs" />
     <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
@@ -411,6 +417,7 @@
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IGray6Destination.cs" />
+    <Compile Include="Output\IMultiSizeDestination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2DmdBase.cs" />
