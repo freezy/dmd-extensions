@@ -12,9 +12,9 @@ using Point = System.Drawing.Point;
 
 namespace LibDmd.Common
 {
-	public class ImageUtil
+	public static class ImageUtil
 	{
-		private static readonly Dictionary<int, Frame> FrameDatas = new Dictionary<int,Frame>();
+		private static readonly Dictionary<int, FrameData> FrameDataObjectPool = new Dictionary<int, FrameData>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
@@ -25,13 +25,52 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="dim">Frame dimensions</param>
 		/// <returns></returns>
-		private static Frame FrameData(Dimensions dim)
+		private static FrameData GetFrameDataFromPool(Dimensions dim)
 		{
 			var key = dim.Surface;
-			if (!FrameDatas.ContainsKey(key)) {
-				FrameDatas.Add(key, new Frame());
+			if (!FrameDataObjectPool.ContainsKey(key)) {
+				FrameDataObjectPool.Add(key, new FrameData());
 			}
-			return FrameDatas[key];
+			return FrameDataObjectPool[key];
+		}
+		
+		/// <summary>
+		/// Converts a bitmap to a 2- or 4-bit grayscale or rgb24 array.
+		/// </summary>
+		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
+		/// <param name="bmp">Source bitmap</param>
+		/// <param name="lum">Multiply luminosity</param>
+		/// <returns>Array with value for every pixel between 0 and 15</returns>
+		public static byte[] ConvertTo(int bitLength, BitmapSource bmp, double lum = 1)
+		{
+			switch (bitLength) {
+				case 2: return ConvertToGray2(bmp, 0, lum, out _);
+				case 4: return ConvertToGray4(bmp, lum);
+				case 24: return ConvertToRgb24(bmp, lum);
+				default: throw new ArgumentException("Bit length must be either 2, 4 or 24.");
+			}
+		}
+		
+		/// <summary>
+		/// Converts an 2- or 4-bit grayscale or rgb24 array to a bitmap.
+		/// </summary>
+		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
+		/// <param name="dim">Image dimensions</param>
+		/// <param name="frame">4-bit grayscale array</param>
+		/// <param name="hue">Hue in which the bitmap will be created (for gray only)</param>
+		/// <param name="saturation">Saturation in which the bitmap will be created (for gray only)</param>
+		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created (for gray only)</param>
+		/// <returns>Bitmap</returns>
+		public static BitmapSource ConvertFrom(int bitLength, Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
+		{
+			lock (FrameDataObjectPool) {
+				switch (bitLength) {
+					case 2: return ConvertFromGray2(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
+					case 4: return ConvertFromGray4(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
+					case 24: return ConvertFromRgb24(dim, GetFrameDataFromPool(dim).With(frame));
+					default: throw new ArgumentException("Bit length must be either 2, 4 or 24.");
+				}
+			}
 		}
 
 		public static byte[] ConvertToGray2(BitmapSource bmp)
@@ -63,10 +102,7 @@ namespace LibDmd.Common
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 					// convert to HSL
-					double h;
-					double saturation;
-					double luminosity;
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out h, out saturation, out luminosity);
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out var h, out _, out var luminosity);
 
 					var pixelBrightness = (luminosity - minLum) / (maxLum - minLum);
 					byte frameVal = (byte)Math.Min(Math.Max(Math.Round(pixelBrightness * 3d), 0), 3);
@@ -98,10 +134,7 @@ namespace LibDmd.Common
 					var rgbPos = y * dim.Width * 3 + x;
 
 					// convert to HSL
-					double hue;
-					double saturation;
-					double luminosity;
-					ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out hue, out saturation, out luminosity);
+					ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out _, out _, out var luminosity);
 					frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
 				}
 			}
@@ -128,10 +161,7 @@ namespace LibDmd.Common
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 					// convert to HSL
-					double hue;
-					double saturation;
-					double luminosity;
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
 					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
 				}
@@ -294,15 +324,15 @@ namespace LibDmd.Common
 		/// Converts an 2-bit grayscale array to a bitmap.
 		/// </summary>
 		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">2-bit grayscale array</param>
+		/// <param name="frameData">2-bit grayscale array</param>
 		/// <param name="hue">Hue in which the bitmap will be created</param>
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromGray2(Dimensions dim, Frame frame, double hue, double saturation, double luminosity)
+		private static BitmapSource ConvertFromGray2(Dimensions dim, FrameData frameData, double hue, double saturation, double luminosity)
 		{
-			if (frame.Size > 0 && frame.Size != dim.Surface) {
-				throw new ArgumentException($"Must convert to {dim.Width}x{dim.Height} but frame buffer is {frame.Size} bytes");
+			if (frameData.Size > 0 && frameData.Size != dim.Surface) {
+				throw new ArgumentException($"Must convert to {dim.Width}x{dim.Height} but frame buffer is {frameData.Size} bytes");
 			}
 
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
@@ -315,7 +345,7 @@ namespace LibDmd.Common
 				for (var x = 0; x < dim.Width; x++) {
 
 					try {
-						var pixelLum = frame.Get(y * dim.Width + x); // 0 - 3
+						var pixelLum = frameData.Get(y * dim.Width + x); // 0 - 3
 						var lum = luminosity * pixelLum / 3;
 						byte red, green, blue;
 						ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
@@ -326,7 +356,7 @@ namespace LibDmd.Common
 						index += 4;
 
 					} catch (IndexOutOfRangeException e) {
-						Logger.Error(e, $"Converting {dim.Width}x{dim.Height} with {frame.Size} bytes: Trying to get pixel at position {y * dim.Width + x}");
+						Logger.Error(e, $"Converting {dim.Width}x{dim.Height} with {frameData.Size} bytes: Trying to get pixel at position {y * dim.Width + x}");
 						throw;
 					}
 				}
@@ -341,12 +371,12 @@ namespace LibDmd.Common
 		/// Converts an 4-bit grayscale array to a bitmap.
 		/// </summary>
 		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">4-bit grayscale array</param>
+		/// <param name="frameData">4-bit grayscale array</param>
 		/// <param name="hue">Hue in which the bitmap will be created</param>
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromGray4(Dimensions dim, Frame frame, double hue, double saturation, double luminosity)
+		private static BitmapSource ConvertFromGray4(Dimensions dim, FrameData frameData, double hue, double saturation, double luminosity)
 		{
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
@@ -357,7 +387,7 @@ namespace LibDmd.Common
 			for (var y = 0; y < dim.Height; y++) {
 				for (var x = 0; x < dim.Width; x++) {
 
-					var pixelLum = frame.Get(y * dim.Width + x);
+					var pixelLum = frameData.Get(y * dim.Width + x);
 					var lum = luminosity * pixelLum / 15;
 					byte red, green, blue;
 					ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
@@ -378,12 +408,12 @@ namespace LibDmd.Common
 		/// Converts an 6-bit grayscale array to a bitmap.
 		/// </summary>
 		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">6-bit grayscale array</param>
+		/// <param name="frameData">6-bit grayscale array</param>
 		/// <param name="hue">Hue in which the bitmap will be created</param>
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromGray6(Dimensions dim, Frame frame, double hue, double saturation, double luminosity)
+		private static BitmapSource ConvertFromGray6(Dimensions dim, FrameData frameData, double hue, double saturation, double luminosity)
 		{
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
@@ -396,7 +426,7 @@ namespace LibDmd.Common
 				for (var x = 0; x < dim.Width; x++)
 				{
 
-					var pixelLum = frame.Get(y * dim.Width + x);
+					var pixelLum = frameData.Get(y * dim.Width + x);
 					var lum = luminosity * pixelLum / 63;
 					byte red, green, blue;
 					ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
@@ -417,9 +447,9 @@ namespace LibDmd.Common
 		/// Converts an RGB24 array to a bitmap.
 		/// </summary>
 		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">RGB values for each pixel between 0 and 255</param>
+		/// <param name="frameData">RGB values for each pixel between 0 and 255</param>
 		/// <returns>Bitmap</returns>
-		private static BitmapSource ConvertFromRgb24(Dimensions dim, Frame frame)
+		private static BitmapSource ConvertFromRgb24(Dimensions dim, FrameData frameData)
 		{
 			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
@@ -427,9 +457,9 @@ namespace LibDmd.Common
 
 			unsafe
 			{
-				fixed (byte* pFrameArray = frame.ArraySrc, pDestArray = frameBuffer)
+				fixed (byte* pFrameArray = frameData.ArraySrc, pDestArray = frameBuffer)
 				{
-					byte* srcPtr = (frame.IsPointer) ? frame.PointerSrc : pFrameArray;
+					byte* srcPtr = (frameData.IsPointer) ? frameData.PointerSrc : pFrameArray;
 					byte* srcEnd = srcPtr + dim.Surface * 3;
 					byte* dstPtr = pDestArray;
 
@@ -458,8 +488,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray2(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas) {
-				return ConvertFromGray2(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+			lock (FrameDataObjectPool) {
+				return ConvertFromGray2(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -474,8 +504,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray2(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas) {
-				return ConvertFromGray2(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+			lock (FrameDataObjectPool) {
+				return ConvertFromGray2(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -490,8 +520,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray4(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas) {
-				return ConvertFromGray4(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+			lock (FrameDataObjectPool) {
+				return ConvertFromGray4(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -506,8 +536,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray4(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas) {
-				return ConvertFromGray4(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+			lock (FrameDataObjectPool) {
+				return ConvertFromGray4(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -522,9 +552,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromGray6(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas)
+			lock (FrameDataObjectPool)
 			{
-				return ConvertFromGray6(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray6(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -539,9 +569,9 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray6(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
-			lock (FrameDatas)
+			lock (FrameDataObjectPool)
 			{
-				return ConvertFromGray6(dim, FrameData(dim).With(frame), hue, saturation, luminosity);
+				return ConvertFromGray6(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -553,8 +583,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static unsafe BitmapSource ConvertFromRgb24(Dimensions dim, byte* frame)
 		{
-			lock (FrameDatas) {
-				return ConvertFromRgb24(dim, FrameData(dim).With(frame));
+			lock (FrameDataObjectPool) {
+				return ConvertFromRgb24(dim, GetFrameDataFromPool(dim).With(frame));
 			}
 		}
 
@@ -566,8 +596,8 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromRgb24(Dimensions dim, byte[] frame)
 		{
-			lock (FrameDatas) {
-				return ConvertFromRgb24(dim, FrameData(dim).With(frame));
+			lock (FrameDataObjectPool) {
+				return ConvertFromRgb24(dim, GetFrameDataFromPool(dim).With(frame));
 			}
 		}
 
@@ -636,7 +666,7 @@ namespace LibDmd.Common
 		/// Sometimes we have a pointer, sometimes an array, but we don't want to implement
 		/// everything twice, so this is a wrapper that supports both.
 		/// </summary>
-		private unsafe class Frame
+		private unsafe class FrameData
 		{
 			public int Size => IsPointer ? -1 : ArraySrc.Length;
 
@@ -644,14 +674,14 @@ namespace LibDmd.Common
 			public byte[] ArraySrc;
 			public bool IsPointer;
 
-			public Frame With(byte* src)
+			public FrameData With(byte* src)
 			{
 				PointerSrc = src;
 				IsPointer = true;
 				return this;
 			}
 
-			public Frame With(byte[] src)
+			public FrameData With(byte[] src)
 			{
 				ArraySrc = src;
 				IsPointer = false;
