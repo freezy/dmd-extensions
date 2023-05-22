@@ -15,11 +15,11 @@ namespace LibDmd.Input.PinballFX
 	/// Can be launched any time. Will wait with sending frames until Pinball FX3 is
 	/// launched and stop sending when it exits.
 	/// </remarks>
-	public class PinballFX3MemoryGrabber : MemoryGrabber<DMDFrame>, IGray2Source, IDmdColorSource, IGameNameSource
+	public class PinballFX3MemoryGrabber : MemoryGrabber<DmdFrame>, IGray2Source, IDmdColorSource, IGameNameSource
 	{
 		public override string Name { get; } = "Pinball FX3";
 
-		public IObservable<DMDFrame> GetGray2Frames()
+		public IObservable<DmdFrame> GetGray2Frames()
 		{
 			return GetFrames();
 		}
@@ -45,7 +45,7 @@ namespace LibDmd.Input.PinballFX
 
 		public IObservable<string> GetGameName() => _gameName;
 
-		protected override DMDFrame CaptureDMD()
+		protected override DmdFrame CaptureDMD()
 		{
 			// Initialize a new writeable bitmap to receive DMD pixels.
 			var frame = new byte[DMDWidth * DMDHeight];
@@ -55,7 +55,7 @@ namespace LibDmd.Input.PinballFX
 
 			// ..if not, return an empty frame (blank DMD).
 			if (_dmdAddress == IntPtr.Zero) {
-				return new DMDFrame { Dimensions = new Dimensions(128, 32), Data = frame, BitLength = 2 };
+				return new DmdFrame(128, 32, frame, 2);
 			}
 
 			// Retrieve DMD color from memory.
@@ -110,7 +110,7 @@ namespace LibDmd.Input.PinballFX
 			_lastFrame = frame;
 
 			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : new DMDFrame { Dimensions = new Dimensions(128, 32), Data = frame, BitLength = 2 };
+			return identical ? null : new DmdFrame(128, 32, frame, 2);
 		}
 
 		private static IntPtr GetDMDOffset(IntPtr hProcess)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
+using LibDmd.Frame;
 
 namespace LibDmd.Input.Network
 {
@@ -14,9 +15,9 @@ namespace LibDmd.Input.Network
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		public readonly Subject<DMDFrame> FramesRgb24 = new Subject<DMDFrame>();
+		public readonly Subject<DmdFrame> FramesRgb24 = new Subject<DmdFrame>();
 
-		public IObservable<DMDFrame> GetRgb24Frames()
+		public IObservable<DmdFrame> GetRgb24Frames()
 		{
 			return FramesRgb24;
 		}

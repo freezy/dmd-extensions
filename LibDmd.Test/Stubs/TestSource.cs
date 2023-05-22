@@ -16,11 +16,11 @@ namespace LibDmd.Test.Stubs
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
-		private readonly Subject<DMDFrame> _frames = new Subject<DMDFrame>();
+		private readonly Subject<DmdFrame> _frames = new Subject<DmdFrame>();
 
-		public IObservable<DMDFrame> GetGray2Frames() => _frames;
+		public IObservable<DmdFrame> GetGray2Frames() => _frames;
 
-		public void AddFrame(DMDFrame frame)
+		public void AddFrame(DmdFrame frame)
 		{
 			Dimensions.OnNext(frame.Dimensions);
 			_frames.OnNext(frame);

@@ -62,12 +62,12 @@ namespace LibDmd.DmdDevice
 		private string _gameName;
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
-		private readonly DMDFrame _dmdFrame = new DMDFrame();
+		private readonly DmdFrame _dmdFrame = new DmdFrame();
 
 		// Iifärbigsziig
 		private ColorizationLoader _colorizationLoader;
 		private Color[] _palette;
-		DMDFrame _upsizedFrame;
+		DmdFrame _upsizedFrame;
 		private Gray2Colorizer _gray2Colorizer;
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
@@ -810,7 +810,7 @@ namespace LibDmd.DmdDevice
 		{
 			return aniWidth;
 		}
-		public void RenderGray2(DMDFrame frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			AnalyticsSetDmd();
 			if (!_isOpen) {
@@ -838,7 +838,7 @@ namespace LibDmd.DmdDevice
 					var newDimensions = new Dimensions(frame.Dimensions.Width, frame.Dimensions.Width * 2);
 
 					if (_upsizedFrame == null)
-						_upsizedFrame = new DMDFrame { Dimensions = newDimensions, Data = new byte[newDimensions.Surface], BitLength = 2};
+						_upsizedFrame = new DmdFrame(newDimensions, new byte[newDimensions.Surface], 2);
 					else
 						_upsizedFrame.Update(newDimensions, _upsizedFrame.Data,2);
 
@@ -868,7 +868,7 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		public void RenderGray4(DMDFrame frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			AnalyticsSetDmd();
 			if (!_isOpen) {
@@ -898,7 +898,7 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		public void RenderRgb24(DMDFrame frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			AnalyticsSetDmd();
 			if (!_isOpen) {
@@ -919,7 +919,7 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
-			_dmdFrame.Dimensions = new Dimensions(Width, Height);
+			_dmdFrame.Update(new Dimensions(Width, Height));
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {

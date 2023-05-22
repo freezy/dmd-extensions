@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Output.PinUp;
 using NLog;
@@ -111,7 +112,7 @@ namespace LibDmd.Converter.Serum
 		{
 		}
 
-		public void Convert(DMDFrame frame)
+		public void Convert(DmdFrame frame)
 		{
 			Buffer.BlockCopy(frame.Data, 0, _frameData, 0, frame.Data.Length);
 			

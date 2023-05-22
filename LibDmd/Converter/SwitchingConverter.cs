@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
@@ -39,7 +40,7 @@ namespace LibDmd.Converter
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 		}
 
-		public void Convert(DMDFrame frame)
+		public void Convert(DmdFrame frame)
 		{
 			if (_converter != null) {
 				_converter?.Convert(frame);

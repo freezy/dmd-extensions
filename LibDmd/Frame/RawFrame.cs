@@ -6,7 +6,7 @@
 
 		public RawFrame Update(Dimensions dim, byte[] data, byte[][]rawPlanes)
 		{
-			Update(dim, data);
+			Update(dim, data, rawPlanes.Length);
 			RawPlanes = rawPlanes;
 			return this;
 		}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LibDmd.Frame;
 
@@ -6,7 +7,7 @@ namespace LibDmd.Test
 {
 	public static class FrameGenerator
 	{
-		public static DMDFrame FromString(string frame)
+		public static DmdFrame FromString(string frame)
 		{
 			var lines = frame
 				.Split('\n')
@@ -18,6 +19,7 @@ namespace LibDmd.Test
 			var height = lines.Length;
 			
 			var data = new byte[width * height];
+			var colors = new HashSet<int>();
 			for (var y = 0; y < height; y++) {
 				var line = lines[y];
 				for (var x = 0; x < width; x++) {
@@ -27,10 +29,11 @@ namespace LibDmd.Test
 					} else {
 						data[y * width + x] = 0;
 					}
+					colors.Add(data[y * width + x]);
 				}
 			}
 
-			return new DMDFrame{ Dimensions = new Dimensions(width, height), Data = data };
+			return new DmdFrame(new Dimensions(width, height), data, colors.Count.GetBitLength());
 		}
 	}
 }

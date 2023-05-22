@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Common;
 using LibDmd.Converter.Colorize;
+using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
@@ -78,7 +79,7 @@ namespace LibDmd.Converter
 		{
 		}
 
-		public void Convert(DMDFrame frame)
+		public void Convert(DmdFrame frame)
 		{
 			byte[][] planes;
 			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
@@ -88,7 +89,7 @@ namespace LibDmd.Converter
 
 			if (_coloring.Mappings != null)
 			{
-				if (frame is RawDMDFrame vd && vd.RawPlanes.Length > 0)
+				if (frame is RawFrame vd && vd.RawPlanes.Length > 0)
 				{
 					TriggerAnimation(vd.RawPlanes, false);
 				}

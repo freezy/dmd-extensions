@@ -25,7 +25,7 @@ namespace LibDmd.Converter
 		/// </remarks>
 		/// 
 		/// <param name="frame">Source frame, as top-left to bottom-right pixel array</param>
-		void Convert(DMDFrame frame);
+		void Convert(DmdFrame frame);
 
 		/// <summary>
 		/// Initializes the converter. Run before rendering is started and after

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
+using LibDmd.Frame;
 
 namespace LibDmd.Input.Passthrough
 {
@@ -18,7 +19,7 @@ namespace LibDmd.Input.Passthrough
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private readonly Subject<DMDFrame> _framesGray2 = new Subject<DMDFrame>();
+		private readonly Subject<DmdFrame> _framesGray2 = new Subject<DmdFrame>();
 		private readonly ISubject<string> _gameName = new Subject<string>();
 
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
@@ -29,14 +30,14 @@ namespace LibDmd.Input.Passthrough
 			Name = name;
 		}
 
-		public void NextFrame(DMDFrame frame)
+		public void NextFrame(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
 			_framesGray2.OnNext(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Gray2);
 		}
 
-		public IObservable<DMDFrame> GetGray2Frames() => _framesGray2;
+		public IObservable<DmdFrame> GetGray2Frames() => _framesGray2;
 
 		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
 

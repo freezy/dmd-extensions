@@ -24,7 +24,7 @@ namespace LibDmd.Input.Network
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 		private RenderGraphCollection _graphs;
-		private DMDFrame _dmdFrame = new DMDFrame();
+		private DmdFrame _dmdFrame = new DmdFrame();
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 

@@ -3,20 +3,20 @@ using LibDmd.Frame;
 
 namespace LibDmd
 {
-	public class DMDFrame
+	public class DMDFrame_old
 	{
 		public Dimensions Dimensions;
 		public byte[] Data;
 		public int BitLength;
 
-		public DMDFrame Update(byte[] data, int bitSize)
+		public DMDFrame_old Update(byte[] data, int bitSize)
 		{
 			Data = data;
 			BitLength = bitSize;
 			return this;
 		}
 
-		public DMDFrame Update(Dimensions dim, byte[] data, int bitSize)
+		public DMDFrame_old Update(Dimensions dim, byte[] data, int bitSize)
 		{
 			Dimensions = dim;
 			Data = data;
@@ -38,7 +38,7 @@ namespace LibDmd
 		}
 	}
 
-	public class RawDMDFrame : DMDFrame
+	public class RawDMDFrame : DMDFrame_old
 	{
 		public byte[][] RawPlanes;
 
