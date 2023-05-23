@@ -202,6 +202,36 @@ namespace LibDmd.Test
 
 			await AssertFrame(_source, dest, frame1, upscaledFrame1);
 		}
+			
+		[TestCase]
+		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Same_Width()
+		{
+			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
+			
+			_graph.Source = _source;
+			_graph.ScalerMode = ScalerMode.Doubler;
+			_graph.Resize = ResizeMode.Fit;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame1 = FrameGenerator.FromString(@"
+				1111111111111111
+				0321100330013210
+				3210100330010123
+				1111111111111111");
+			
+			var upscaledFrame1 = FrameGenerator.FromString(@"
+				0000000000000000
+				0000000000000000
+				1111111111111111
+				0321100330013210
+				3210100330010123
+				1111111111111111
+				0000000000000000
+				0000000000000000");
+
+			await AssertFrame(_source, dest, frame1, upscaledFrame1);
+		}
 		
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fit()
