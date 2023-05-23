@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.Output;
+using LibDmd.Frame;
 
-namespace LibDmd.Frame
+namespace LibDmd
 {
 	public class ColoredFrame : BaseFrame, ICloneable
 	{
@@ -22,6 +22,20 @@ namespace LibDmd.Frame
 		/// </summary>
 		public int PaletteIndex { get; }
 
+		/// <summary>
+		/// Colour Rotation descriptions.
+		/// </summary>
+		/// <remarks>
+		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
+		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
+		/// <remarks>
+		public byte[] Rotations { get; }
+
+		/// <summary>
+		/// If set, colors defined in <see cref="Rotations" are rotated./>
+		/// </summary>
+		public readonly bool RotateColors;
+		
 		public ColoredFrame()
 		{
 		}
@@ -34,37 +48,54 @@ namespace LibDmd.Frame
 			PaletteIndex = paletteIndex;
 		}
 
+		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, int paletteIndex,bool rotateColors, byte[] rotations)
+		{
+			Dimensions = dim;
+			Planes = planes;
+			Palette = palette;
+			PaletteIndex = paletteIndex;
+			RotateColors = rotateColors;
+			Rotations= rotations;
+		}
+
 		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette)
 		{
 			Dimensions = dim;
 			Planes = planes;
 			Palette = palette;
+			RotateColors= false;
+			PaletteIndex = -1;
+		}
+
+		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, byte[] rotations)
+		{
+			Dimensions = dim;
+			Planes = planes;
+			Palette = palette;
+			RotateColors= true;
+			Rotations = rotations;
 			PaletteIndex = -1;
 		}
 
 		public ColoredFrame(Dimensions dim, byte[] frame, Color color)
 		{
+			Dimensions = dim;
 			Planes = FrameUtil.Split(dim, 2, frame);
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
+			RotateColors = false;
 		}
 
-		public ColoredFrame Update(Dimensions dimensions)
+		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
+		
+		public DmdFrame ConvertToGray()
 		{
-			Dimensions = dimensions;
-			return this;
+			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
 		}
-
-		public ColoredFrame Update(Dimensions dimensions, byte[][] planes)
+		
+		public DmdFrame ConvertToGray(params byte[] mapping)
 		{
-			Dimensions = dimensions;
-			Planes = planes;
-			return this;
-		}
-
-		public ColoredFrame Update(byte[][] planes)
-		{
-			Planes = planes;
-			return this;
+			var data = FrameUtil.Join(Dimensions, Planes);
+			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping), mapping.Length.GetBitLength());
 		}
 
 		public ColoredFrame Update(byte[][] planes, Color[] palette)
@@ -73,92 +104,5 @@ namespace LibDmd.Frame
 			Palette = palette;
 			return this;
 		}
-
-		public ColoredFrame Flip(bool flipHorizontally, bool flipVertically)
-		{
-			Planes = TransformationUtil.Flip(Dimensions, Planes, flipHorizontally, flipVertically);
-			return this;
-		}
-
-		public DmdFrame ConvertToGray(params byte[] mapping)
-		{
-			var data = FrameUtil.Join(Dimensions, Planes);
-			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping), mapping.Length.GetBitLength());
-		}
-
-		public DmdFrame ConvertToGray()
-		{
-			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
-		}
-
-		public DmdFrame ConvertToRgb24()
-		{
-			return new DmdFrame(Dimensions, ColorUtil.ColorizeFrame(
-				Dimensions,
-				FrameUtil.Join(Dimensions, Planes),
-				Palette
-			), Planes.Length);
-		}
-
-		public ColoredFrame TransformColoredGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			return TransformColoredGray(2, renderGraph, fixedDest, multiDest);
-		}
-
-		public ColoredFrame TransformColoredGray4(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			return TransformColoredGray(4, renderGraph, fixedDest, multiDest);
-		}
-
-		private ColoredFrame TransformColoredGray(int bitLen, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
-				// no resizing, we're done here.
-				return Flip(renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-
-			// perf: if no flipping these cases can easily done on the byte array directly
-			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-
-				// copy whole block if only vertical padding
-				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
-					var centeredData = CenterVertically(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
-					return Update(targetDim, FrameUtil.Split(targetDim, bitLen, centeredData));
-				}
-
-				// copy line by line if centering image
-				if (Dimensions < targetDim) {
-					var centeredData = CenterFrame(targetDim, FrameUtil.Join(Dimensions, Planes), 1);
-					return Update(targetDim, FrameUtil.Split(targetDim, bitLen, centeredData));
-				}
-			}
-
-			// otherwise, convert to bitmap, resize, convert back.
-			var bmp = ImageUtil.ConvertFrom(bitLen, Dimensions, FrameUtil.Join(Dimensions, Planes), 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
-
-			return Update(targetDim, FrameUtil.Split(targetDim, bitLen, transformedFrame));
-		}
-
-		public BmpFrame ConvertToBmp()
-		{
-			return new BmpFrame(
-				ImageUtil.ConvertFromRgb24(Dimensions,
-					ColorUtil.ColorizeFrame(
-						Dimensions,
-						FrameUtil.Join(Dimensions, Planes),
-						Palette
-					)
-				)
-			);
-		}
-
-		public object Clone()
-		{
-			return new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
-		}
-
 	}
 }

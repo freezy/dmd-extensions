@@ -118,14 +118,14 @@ namespace LibDmd.Output.Network
 
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
-			SendGray(frame, 2);
+			SendGray(frame.Data, 2);
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
-			SendGray(frame, 4);
+			SendGray(frame.Data, 4);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -142,10 +142,10 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeRgb24(frame));
+				_client.Send(_serializer.SerializeRgb24(frame.Data));
 			}
 		}
 

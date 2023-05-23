@@ -100,14 +100,14 @@ namespace LibDmd.Output.Network
 			EmitObject("dimensions", new JObject { { "width", dim.Width }, { "height", dim.Height } });
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
-			EmitTimestampedData("gray2planes", frame.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 2, frame), data, offset));
+			EmitTimestampedData("gray2planes", frame.Data.Length / 4, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 2, frame.Data), data, offset));
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
-			EmitTimestampedData("gray4planes", frame.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 4, frame), data, offset));
+			EmitTimestampedData("gray4planes", frame.Data.Length / 2, (data, offset) => FrameUtil.Copy(FrameUtil.Split(_dimensions, 4, frame.Data), data, offset));
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -138,9 +138,9 @@ namespace LibDmd.Output.Network
 			});
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
-			EmitTimestampedData("rgb24frame", frame.Length, (data, offset) => Buffer.BlockCopy(frame, 0, data, offset, frame.Length));
+			EmitTimestampedData("rgb24frame", frame.Data.Length, (data, offset) => Buffer.BlockCopy(frame.Data, 0, data, offset, frame.Data.Length));
 		}
 
 		public void SetColor(Color color)

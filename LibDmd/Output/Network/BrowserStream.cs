@@ -90,14 +90,14 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
-			_sockets.ForEach(s => s.SendGray(frame, 2));
+			_sockets.ForEach(s => s.SendGray(frame.Data, 2));
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
-			_sockets.ForEach(s => s.SendGray(frame, 4));
+			_sockets.ForEach(s => s.SendGray(frame.Data, 4));
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -110,9 +110,9 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendColoredGray4(frame.Planes, frame.Palette));
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
-			_sockets.ForEach(s => s.SendRgb24(frame));
+			_sockets.ForEach(s => s.SendRgb24(frame.Data));
 		}
 
 		public void SetDimensions(Dimensions dim)

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Media;
+using LibDmd.Frame;
 
 namespace LibDmd.Output
 {
@@ -13,7 +14,7 @@ namespace LibDmd.Output
 		/// Renders a frame in 24 bit RGB.
 		/// </summary>
 		/// <param name="frame">Array containing Width * Height * 3 bytes, with RGB values between 0 and 255 for every pixel.</param>
-		void RenderRgb24(byte[] frame);
+		void RenderRgb24(DmdFrame frame);
 
 		/// <summary>
 		/// Sets the color with which a grayscale source is rendered on the RGB display.

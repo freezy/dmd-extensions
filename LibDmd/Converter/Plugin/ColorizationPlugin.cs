@@ -358,7 +358,7 @@ namespace LibDmd.Converter.Plugin
 			
 			// split and send
 			var planes = FrameUtil.Split(dim, 6, _frame);
-			_coloredGray6Frames.OnNext(new ColoredFrame(planes, _palette));
+			_coloredGray6Frames.OnNext(new ColoredFrame(dim, planes, _palette));
 		}
 
 		#endregion

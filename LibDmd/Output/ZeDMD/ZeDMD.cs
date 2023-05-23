@@ -94,9 +94,9 @@ namespace LibDmd.Output.ZeDMD
 			Logger.Info($"{Name} device found on port {pDMD.nCOM} with a resolution of {FixedSize} LEDs");
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
-			var planes = FrameUtil.Split(RomDimensions, 2, frame);
+			var planes = FrameUtil.Split(RomDimensions, 2, frame.Data);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 13);
 
 			// send frame buffer to device
@@ -127,9 +127,9 @@ namespace LibDmd.Output.ZeDMD
 			return (-x * x + 2.1f * x) / 1.1f;
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
-			var planes = FrameUtil.Split(RomDimensions, 4, frame);
+			var planes = FrameUtil.Split(RomDimensions, 4, frame.Data);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 49);
 
 			// send frame buffer to device
@@ -160,9 +160,9 @@ namespace LibDmd.Output.ZeDMD
 			}
 		}
 
-		public void RenderGray6(byte[] frame)
+		public void RenderGray6(DmdFrame frame)
 		{
-			var planes = FrameUtil.Split(RomDimensions, 6, frame);
+			var planes = FrameUtil.Split(RomDimensions, 6, frame.Data);
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 193);
 
 			// send frame buffer to device
@@ -210,13 +210,13 @@ namespace LibDmd.Output.ZeDMD
 			return paletteChanged;
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			bool changed;
 			// can directly be sent to the device.
 			_frameBuffer[0] = RGB24;
 			// copy data to frame buffer
-			changed = FrameUtil.Copy(frame, _frameBuffer, 1);
+			changed = FrameUtil.Copy(frame.Data, _frameBuffer, 1);
 			if (changed)
 			{
 				pDMD.QueueFrame(_frameBuffer.Take(RomDimensions.Surface * 3 + 1).ToArray());

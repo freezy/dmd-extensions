@@ -387,7 +387,6 @@
     </Compile>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="Analytics.cs" />
-    <Compile Include="ColoredFrame.cs" />
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
@@ -399,6 +398,7 @@
     <Compile Include="Frame\BaseFrame.cs" />
     <Compile Include="Frame\BmpFrame.cs" />
     <Compile Include="Frame\ColoredFrame.cs" />
+    <Compile Include="Frame\ColoredFrame_to_migrate.cs" />
     <Compile Include="Frame\Dimensions.cs" />
     <Compile Include="Frame\DmdFrame.cs" />
     <Compile Include="Frame\FrameExtensions.cs" />

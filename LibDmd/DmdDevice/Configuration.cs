@@ -180,7 +180,6 @@ namespace LibDmd.DmdDevice
 		public int QuitAfter => -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
-		public bool ScaleToHd => GetBoolean("scaletohd", false);
 		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 		public string[] Plugins {

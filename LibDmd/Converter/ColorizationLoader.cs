@@ -135,7 +135,7 @@ namespace LibDmd.Converter
 			return null;
 		}
 		
-		public ColorizationPlugin LoadPlugin(string[] pluginPaths, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode, bool scaleToHd)
+		public ColorizationPlugin LoadPlugin(string[] pluginPaths, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null) {
 				return null;
@@ -146,7 +146,7 @@ namespace LibDmd.Converter
 			}
 
 			foreach (var pluginPath in pluginPaths) {
-				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scaleToHd);
+				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scalerMode != ScalerMode.None);
 				if (!plugin.ReceiveFrames) {
 					continue;
 				}

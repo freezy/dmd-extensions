@@ -91,7 +91,7 @@ namespace LibDmd.Converter.Colorize
 		public byte[] ReplaceMask { get; private set; }
 
 		private IObservable<AnimationFrame> _frames;
-		private Action<byte[][]> _currentRender;
+		private Action<Dimensions, byte[][]> _currentRender;
 		private int _lastTick;
 		private int _timer;
 
@@ -132,7 +132,7 @@ namespace LibDmd.Converter.Colorize
 		/// <param name="mode">Dr Modus i welem d Animazion laift (chunnt uifs Mappind druif ah)</param>
 		/// <param name="render">Ä Funktion wo tuät s Buid uisgäh</param>
 		/// <param name="completed">Wird uisgfiärt wenn fertig</param>
-		public void Start(SwitchMode mode, Action<byte[][]> render, Action completed = null)
+		public void Start(SwitchMode mode, Action<Dimensions, byte[][]> render, Action completed = null)
 		{
 			IsRunning = true;
 			SwitchMode = mode;
@@ -155,7 +155,7 @@ namespace LibDmd.Converter.Colorize
 			}
 		}
 
-		private void StartEnhance(Action<byte[][]> render)
+		private void StartEnhance(Action<Dimensions, byte[][]> render)
 		{
 			_lastTick = Environment.TickCount;
 			_timer = 0;
@@ -273,7 +273,7 @@ namespace LibDmd.Converter.Colorize
 			return clear;
 		}
 
-		private void StartLCM(Action<byte[][]> render)
+		private void StartLCM(Action<Dimensions, byte[][]> render)
 		{
 			_currentRender = render;
 			LCMBufferPlanes.Clear();
@@ -287,7 +287,7 @@ namespace LibDmd.Converter.Colorize
 			Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
 		}
 
-		private void StartReplace(Action<byte[][]> render, Action completed = null)
+		private void StartReplace(Action<Dimensions, byte[][]> render, Action completed = null)
 		{
 			Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_lastTick = Environment.TickCount;
@@ -295,7 +295,7 @@ namespace LibDmd.Converter.Colorize
 			_currentRender = render;
 		}
 
-		private void RenderAnimation(byte[][] vpmFrame, Action completed = null)
+		private void RenderAnimation(Dimensions dim, byte[][] vpmFrame, Action completed = null)
 		{
 			if (SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.Replace)
 			{
@@ -307,7 +307,7 @@ namespace LibDmd.Converter.Colorize
 				if (_timer > 0)
 				{
 					_frameIndex--;
-					OutputFrame(vpmFrame);
+					OutputFrame(dim, vpmFrame);
 					_frameIndex++;
 					return;
 				}
@@ -317,23 +317,23 @@ namespace LibDmd.Converter.Colorize
 			{
 				if (SwitchMode == SwitchMode.LayeredColorMask || SwitchMode == SwitchMode.MaskedReplace || SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.FollowReplace)
 				{
-					OutputFrame(vpmFrame);
+					OutputFrame(dim, vpmFrame);
 					return;
 				}
 				
 				InitializeFrame();
-				OutputFrame(vpmFrame);
+				OutputFrame(dim, vpmFrame);
 				_frameIndex++;
 				return;
 			}
 			
 			completed?.Invoke();
 			SwitchMode = SwitchMode.Palette;
-			OutputFrame(vpmFrame);
+			OutputFrame(dim, vpmFrame);
 			Stop("finished");
 		}
 
-		private void OutputFrame(byte[][] vpmFrame)
+		private void OutputFrame(Dimensions dim, byte[][] vpmFrame)
 		{
 			byte[][] outplanes;
 
@@ -358,7 +358,7 @@ namespace LibDmd.Converter.Colorize
 					break;
 			}
 
-			_currentRender?.Invoke(outplanes);
+			_currentRender?.Invoke(dim, outplanes);
 		}
 
 		private byte[][] RenderColorMask(byte[][] vpmFrame)
@@ -405,9 +405,9 @@ namespace LibDmd.Converter.Colorize
 			_timer += (int)Frames[_frameIndex].Delay;
 		}
 
-		public void NextFrame(byte[][] planes, Action completed = null)
+		public void NextFrame(Dimensions dim, byte[][] planes, Action completed = null)
 		{
-			RenderAnimation(planes, completed);
+			RenderAnimation(dim, planes, completed);
 		}
 
 		public void Stop(string what = "stopped")

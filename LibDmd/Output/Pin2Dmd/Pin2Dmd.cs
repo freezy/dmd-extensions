@@ -89,16 +89,16 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferGray6[3] = 0x06;
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(frame.ConvertGrayToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			// convert to bit planes
-			var planes = FrameUtil.Split(FixedSize, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
 
 			// copy to buffer
 			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
@@ -109,10 +109,10 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24(FixedSize, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+			var changed = CreateRgb24(FixedSize, frame.Data, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
 
 			// send frame buffer to device
 			if (changed) {
@@ -152,9 +152,9 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
 			var joinedFrame = FrameUtil.Join(FixedSize, frame.Planes);
-
+			
 			// send frame buffer to device
-			RenderGray4(FrameUtil.ConvertGrayToGray(joinedFrame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
 

@@ -109,16 +109,16 @@ namespace LibDmd.Output.PinDmd2
 			}
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(frame.ConvertGrayToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			// convert to bit planes
-			var planes = FrameUtil.Split(FixedSize, 4, frame);
+			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
 
 			// copy to buffer
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
@@ -154,7 +154,7 @@ namespace LibDmd.Output.PinDmd2
 
 		public void ClearDisplay()
 		{
-			RenderGray2(new byte[FixedSize.Surface]);
+			RenderGray2(new DmdFrame(FixedSize, 2));
 		}
 
 		public void Dispose()

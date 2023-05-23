@@ -29,7 +29,7 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VideoOutput(string path, bool scaleToHd = false, uint fps = 30)
+		public VideoOutput(string path, uint fps = 30)
 		{
 			Fps = fps;
 			VideoPath = Path.GetFullPath(path);
@@ -45,11 +45,6 @@ namespace LibDmd.Output.FileOutput
 					count++;
 					VideoPath = oldVideoPath.Replace(".avi", $" ({count}).avi");
 				}
-			}
-
-			if (scaleToHd)
-			{
-				FixedSize = new Dimensions(256, 64);
 			}
 
 			Init();
@@ -116,7 +111,7 @@ namespace LibDmd.Output.FileOutput
 			_stream = null;
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			if (frame == null) {
 				return;
@@ -124,7 +119,7 @@ namespace LibDmd.Output.FileOutput
 			if (_frame == null) {
 				_frame = new byte[FixedSize.Surface * 4];
 			}
-			ImageUtil.ConvertRgb24ToBgr32(FixedSize, frame, _frame);
+			ImageUtil.ConvertRgb24ToBgr32(FixedSize, frame.Data, _frame);
 		}
 
 		public void SetColor(Color color)

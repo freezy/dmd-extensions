@@ -84,7 +84,7 @@ namespace LibDmd.Common
 		/// <returns>New transformed image or the same image if new dimensions are identical and no flipping taking place</returns>
 		public static BitmapSource Transform(BitmapSource bmp, Dimensions destDim, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{
-			if (bmp.PixelWidth == destDim.Width && bmp.PixelHeight == destDim.Height && !flipHorizontally && !flipVertically) {
+			if (bmp.Dimensions() == destDim && !flipHorizontally && !flipVertically) {
 				return bmp;
 			}
 
@@ -104,11 +104,10 @@ namespace LibDmd.Common
 
 			// image fits into dest, don't upscale, just adjust margins.
 			if (destDim.Width > bmp.PixelWidth && destDim.Height > bmp.PixelHeight) {
-				switch (resize)
-				{
+				switch (resize) {
 					case ResizeMode.Stretch:
 						width = destDim.Width;
-						height = (double) bmp.PixelHeight * ((double) destDim.Width / (double) bmp.PixelWidth);
+						height = bmp.PixelHeight * (destDim.Width / (double) bmp.PixelWidth);
 						marginY = (destDim.Height - (int) height) / 2;
 						break;
 					case ResizeMode.Fill:
@@ -124,9 +123,9 @@ namespace LibDmd.Common
 					default:
 						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
 				}
-
-				// width fits into dest, only scale y-axis
 			}
+			
+			// width fits into dest, only scale y-axis
 			else if (destDim.Width > bmp.PixelWidth) {
 				marginX = (destDim.Width - bmp.PixelWidth) / 2;
 				width = bmp.PixelWidth;
@@ -146,9 +145,10 @@ namespace LibDmd.Common
 					default:
 						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
 				}
-
+			}
+			
 			// height fits into dest, only scale x-axis
-			} else if (destDim.Height > bmp.PixelHeight) {
+			else if (destDim.Height > bmp.PixelHeight) {
 				marginY = (destDim.Height - bmp.PixelHeight) / 2;
 				height = bmp.PixelHeight;
 				switch (resize) {
@@ -167,14 +167,16 @@ namespace LibDmd.Common
 					default:
 						throw new ArgumentOutOfRangeException(nameof(resize), resize, null);
 				}
-
+			}
+			
 			// now the most common case: do nothing.
-			} else if (destDim.Width == bmp.PixelWidth && destDim.Height == bmp.PixelHeight) { 
+			else if (destDim.Width == bmp.PixelWidth && destDim.Height == bmp.PixelHeight) { 
 				width = bmp.PixelWidth;
 				height = bmp.PixelHeight;
-
+			}
+			
 			// downscale: resize to fill
-			} else if (!sameAr && resize == ResizeMode.Fill) {
+			else if (!sameAr && resize == ResizeMode.Fill) {
 				if (destAr > srcAr) {
 					width = destDim.Width;
 					height = destDim.Width / srcAr;
@@ -184,9 +186,10 @@ namespace LibDmd.Common
 					height = destDim.Height;
 					cropX = (int)((width - destDim.Width) / 2);
 				}
-
+			} 
+			
 			// downscale: resize to fit
-			} else if (!sameAr && resize == ResizeMode.Fit) {
+			else if (!sameAr && resize == ResizeMode.Fit) {
 				if (destAr > srcAr) {
 					width = destDim.Height * srcAr;
 					height = destDim.Height;
@@ -196,12 +199,14 @@ namespace LibDmd.Common
 					height = destDim.Width / srcAr;
 					marginY = (int)Math.Round((destDim.Height - height) / 2);
 				}
-
+			} 
+			
 			// otherwise, stretch.
-			} else {
+			else {
 				width = destDim.Width;
 				height = destDim.Height;
 			}
+			
 			//Console.WriteLine("[{6}]: size: {0}x{1}, crop: {2}/{3}, margins: {4}/{5}", width, height, cropX, cropY, marginX, marginY, resize);
 
 			BitmapSource processedBmp;
