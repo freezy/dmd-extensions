@@ -885,7 +885,7 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
-			_dmdFrame.Update(new Dimensions(Width, Height));
+			//_dmdFrame.Update(new Dimensions(Width, Height));
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
