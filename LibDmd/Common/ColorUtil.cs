@@ -253,13 +253,12 @@ namespace LibDmd.Common
 		/// <param name="dim">Dimensions of the frame to color</param>
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
-		/// <param name="colorizedFrame">If set, write data into this array</param>
 		/// <returns>Colorized frame</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		[Obsolete("Use the ColorizeFrame instead")]
-		public static DmdFrame ColorizeFrame(Dimensions dim, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
+		public static DmdFrame ColorizeFrame(Dimensions dim, byte[] frame, Color[] palette)
 		{
-			return new DmdFrame(dim, Colorize(dim, frame, palette, colorizedFrame), 24);
+			return new DmdFrame(dim, Colorize(dim, frame, palette), 24);
 		}
 		
 		/// <summary>
@@ -272,23 +271,17 @@ namespace LibDmd.Common
 		/// <param name="dim">Dimensions of the frame to color</param>
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
-		/// <param name="colorizedFrame">If set, write data into this array</param>
 		/// <returns>Colorized frame</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
-		public static byte[] Colorize(Dimensions dim, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
+		public static byte[] Colorize(Dimensions dim, byte[] frame, Color[] palette)
 		{
-			var frameLength = dim.Surface * 3;
-
-			if (colorizedFrame == null) {
-				colorizedFrame = new byte[frameLength];
-			} else if (colorizedFrame.Length != frameLength) {
-				throw new ArgumentException("Provided destination array must be of size " + (dim.Surface * 3) + " but is of size " + colorizedFrame.Length + ".");
-			}
-
-			// If our frame length doesn't match, just return an empty frame.
+			// todo remove in the future
 			if (dim.Surface != frame.Length) {
-				return colorizedFrame;
+				throw new ArgumentException("Data and dimensions do not match.");
 			}
+			
+			var frameLength = dim.Surface * 3;
+			var colorizedFrame = new byte[frameLength];
 
 			var rpalvalues = new byte[palette.Length];
 			var gpalvalues = new byte[palette.Length];

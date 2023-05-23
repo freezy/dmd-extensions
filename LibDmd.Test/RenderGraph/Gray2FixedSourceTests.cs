@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output;
@@ -551,6 +552,135 @@ namespace LibDmd.Test
 				00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00");
 			
 			await AssertFrame(_source, dest, frame, rgbFrame);
+		}
+		
+		[TestCase]
+		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fit()
+		{
+			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			
+			_graph.Source = _source;
+			_graph.SetColor(Colors.White);
+			_graph.Resize = ResizeMode.Fit;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			
+			var frame1 = FrameGenerator.FromString(@"
+				3333333333
+				3000000003
+				3000000003
+				3001111003
+				3001111003
+				3001111003
+				3001111003
+				3000000003
+				3000000003
+				3333333333");
+			
+			var frame2 = FrameGenerator.FromString(@"
+				30000003333330000003
+				30000001111110000003
+				30000001111110000003
+				30000003333330000003");
+
+			const string rgb1 = @"
+				00 00 00 A3 66 66 A3 00 00 00 
+				00 00 00 66 45 3D 66 00 00 00 
+				00 00 00 66 3D 36 66 00 00 00 
+				00 00 00 A3 66 66 A3 00 00 00 ";
+			
+			const string rgb2 = @"
+				00 00 00 00 00 00 00 00 00 00 
+				80 00 00 55 AA AA 55 00 00 80 
+				80 00 00 55 AA AA 55 00 00 80 
+				00 00 00 00 00 00 00 00 00 00";
+							
+			var rgbFrame1 = FrameGenerator.FromString(rgb1, rgb1, rgb1);
+			var rgbFrame2 = FrameGenerator.FromString(rgb2, rgb2, rgb2);
+			
+			await AssertFrame(_source, dest, frame1, rgbFrame1);
+			await AssertFrame(_source, dest, frame2, rgbFrame2);
+		}
+		
+		[TestCase]
+		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fill()
+		{
+			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			
+			_graph.Source = _source;
+			_graph.SetColor(Colors.White);
+			_graph.Resize = ResizeMode.Fill;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			
+			var frame1 = FrameGenerator.FromString(@"
+				3333333333
+				3000000003
+				3000000003
+				3001111003
+				3001111003
+				3001111003
+				3001111003
+				3000000003
+				3000000003
+				3333333333");
+			
+			var frame2 = FrameGenerator.FromString(@"
+				3333333333333333
+				3000011111100003
+				3000011111100003
+				3333333333333333");
+
+			const string rgb1 = @"
+				FF 00 00 55 55 55 55 00 00 FF 
+				FF 00 00 55 55 55 55 00 00 FF 
+				FF 00 00 55 55 55 55 00 00 FF 
+				FF 00 00 55 55 55 55 00 00 FF";
+			
+			const string rgb2 = @"
+				FF FF FF FF FF FF FF FF FF FF 
+				00 00 55 55 55 55 55 55 00 00 
+				00 00 55 55 55 55 55 55 00 00 
+				FF FF FF FF FF FF FF FF FF FF";
+							
+			var rgbFrame1 = FrameGenerator.FromString(rgb1, rgb1, rgb1);
+			var rgbFrame2 = FrameGenerator.FromString(rgb2, rgb2, rgb2);
+			
+			await AssertFrame(_source, dest, frame1, rgbFrame1);
+			await AssertFrame(_source, dest, frame2, rgbFrame2);
+		}
+		
+		[TestCase]
+		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Stretch()
+		{
+			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			
+			_graph.Source = _source;
+			_graph.SetColor(Colors.White);
+			_graph.Resize = ResizeMode.Stretch;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			
+			var frame = FrameGenerator.FromString(@"
+				3333333333
+				3000000003
+				3000000003
+				3001111003
+				3001111003
+				3001111003
+				3001111003
+				3000000003
+				3000000003
+				3333333333");
+
+			const string rgb = @"
+				FF 66 66 66 66 66 66 66 66 FF 
+				FF 00 00 4D 4D 4D 4D 00 00 FF 
+				FF 00 00 44 44 44 44 00 00 FF 
+				FF 66 66 66 66 66 66 66 66 FF";
+							
+			var rgbFrame1 = FrameGenerator.FromString(rgb, rgb, rgb);
+			await AssertFrame(_source, dest, frame, rgbFrame1);
 		}
 	}
 }

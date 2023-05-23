@@ -37,6 +37,9 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
+			
+			// todo remove when coverage done and all tested
+			AssertData();
 		}
 		
 		public DmdFrame(int width, int height, byte[] data, int bitLength)
@@ -44,12 +47,17 @@ namespace LibDmd.Frame
 			Dimensions = new Dimensions(width, height);
 			Data = data;
 			BitLength = bitLength;
+			
+			// todo remove when coverage done and all tested
+			AssertData();
 		}
 
 		public DmdFrame Update(DmdFrame frame)
 		{
 			Dimensions = frame.Dimensions;
 			Data = frame.Data;
+			BitLength = frame.BitLength;
+			
 			return this;
 		}
 
@@ -57,12 +65,9 @@ namespace LibDmd.Frame
 		{
 			Data = data;
 			BitLength = bitLength;
-			return this;
-		}
-
-		public DmdFrame Update(Dimensions dim)
-		{
-			Dimensions = dim;
+			
+			// todo remove when coverage done and all tested
+			AssertData();
 			return this;
 		}
 
@@ -71,6 +76,9 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
+			
+			// todo remove when coverage done and all tested
+			AssertData();
 			return this;
 		}
 
@@ -130,25 +138,24 @@ namespace LibDmd.Frame
 			return Transform(24, 3, renderGraph, fixedDest, multiDest);
 		}
 		
-		public DmdFrame TransformRgb24(IFixedSizeDestination dest, ResizeMode resize, bool flipHorizontally, bool flipVertically)
+		public DmdFrame TransformRgb24(IFixedSizeDestination fixedDest, ResizeMode resize, bool flipHorizontally, bool flipVertically)
 		{
 			// do anything at all?
-			if (dest == null && !flipHorizontally && !flipVertically) {
+			if (fixedDest == null && !flipHorizontally && !flipVertically) {
 				return this;
 			}
 
 			// just flip?
-			if (dest == null || dest.FixedSize == Dimensions) {
+			if (fixedDest == null || fixedDest.FixedSize == Dimensions) {
 				Data = TransformationUtil.Flip(Dimensions, 3, Data, flipHorizontally, flipVertically);
 				return this;
 			}
 			
 			// resize
 			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, resize, flipHorizontally, flipVertically);
-			var transformedFrame = new DmdFrame(Dimensions, new byte[dest.FixedSize.Surface * 3], 24);
-			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
-			return transformedFrame;
+			var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, resize, flipHorizontally, flipVertically);
+			var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
+			return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
 		}
 
 		public DmdFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
@@ -230,7 +237,7 @@ namespace LibDmd.Frame
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
 
-			return Update(targetDim, transformedFrame.Data, bitLen);
+			return Update(targetDim, transformedFrame, bitLen);
 		}
 
 		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
@@ -283,6 +290,15 @@ namespace LibDmd.Frame
 				case 1: return "GREEN";
 				case 2: return "BLUE";
 				default: return "PLANE " + p;
+			}
+		}
+		
+		
+		private void AssertData()
+		{
+			// todo remove when coverage done and all tested
+			if (Dimensions.Surface * BytesPerPixel != Data.Length) {
+				throw new ArgumentException($"Data length does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
 			}
 		}
 	}

@@ -921,7 +921,7 @@ namespace LibDmd
 							AssertCompatibility(source, sourceBitmap, dest, destGray4, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => ImageUtil.ConvertToGray4(bmp.Bitmap))
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame.Data, destFixedSize)),
+									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
 								frame => destGray4.RenderGray4(frame));
 							break;
 
@@ -939,7 +939,7 @@ namespace LibDmd
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => ImageUtil.ConvertToRgb24(bmp.Bitmap))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame.Data, destFixedSize)),
+									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
 
@@ -1533,7 +1533,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray4(dim, frame, 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new DmdFrame(dim, transformedFrame.Data, 4);
+			return new DmdFrame(dim, transformedFrame, 4);
 		}
 		
 		private DmdFrame TransformGray6(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
@@ -1591,7 +1591,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray4(dim, FrameUtil.Join(dim, frame.Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new ColoredFrame(dim, FrameUtil.Split(dest.FixedSize, 4, transformedFrame.Data), frame.Palette, frame.PaletteIndex);
+			return new ColoredFrame(dim, FrameUtil.Split(dest.FixedSize, 4, transformedFrame), frame.Palette, frame.PaletteIndex);
 		}
 
 		private ColoredFrame TransformColoredGray6(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
@@ -1620,9 +1620,8 @@ namespace LibDmd
 			}
 			var bmp = ImageUtil.ConvertFromRgb24(dim, frame);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = new DmdFrame(dim, new byte[dest.FixedSize.Surface * 3], 24);
-			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
-			return transformedFrame;
+			var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
+			return new DmdFrame(dest.FixedSize, transformedFrame, 24);
 		}
 
 		private BitmapSource Transform(BitmapSource bmp, IFixedSizeDestination dest)

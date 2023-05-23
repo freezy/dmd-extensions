@@ -107,7 +107,7 @@ namespace LibDmd.Input.Network
 
 		public void OnDimensions(Dimensions dim)
 		{
-			_dmdFrame.Update(dim);
+			//_dmdFrame.Update(dim);
 			//_coloredFrame.Update(dim); todo?
 			Gray2Source.Dimensions.OnNext(dim);
 		}

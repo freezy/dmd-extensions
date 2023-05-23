@@ -32,11 +32,11 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame ConvertToGray2() => ImageUtil.ConvertToGray2(Bitmap);
-
-		public DmdFrame ConvertToGray4() => ImageUtil.ConvertToGray4(Bitmap);
-
-		public DmdFrame ConvertToRgb24() => ImageUtil.ConvertToRgb24(Bitmap);
+		// public DmdFrame ConvertToGray2() => ImageUtil.ConvertToGray2(Bitmap);
+		//
+		// public DmdFrame ConvertToGray4() => ImageUtil.ConvertToGray4(Bitmap);
+		//
+		// public DmdFrame ConvertToRgb24() => new DmdFrame(Bitmap.Dimensions(), ImageUtil.ConvertToRgb24(Bitmap), 24);
 
 		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{

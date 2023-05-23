@@ -118,7 +118,7 @@ namespace LibDmd.Output.PinUp
 			if (PuPFrameMatching == false) {
 				return;
 			}
-			RenderRgb24(ImageUtil.ConvertToRgb24(bmp));
+			RenderRgb24(new DmdFrame(bmp.Dimensions(), ImageUtil.ConvertToRgb24(bmp), 24));
 		}
 
 		public void Dispose()
