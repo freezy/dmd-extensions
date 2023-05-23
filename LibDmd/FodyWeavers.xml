@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers>
-    <Costura>
+    <Costura IncludeDebugSymbols="false" >
         <Unmanaged32Assemblies>
         </Unmanaged32Assemblies>
         <Unmanaged64Assemblies>
             ProPinballBridge
             ftd2xx
             serum64
+			libminiz-3.0.2
         </Unmanaged64Assemblies>
     </Costura>
 </Weavers>

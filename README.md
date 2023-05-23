@@ -86,7 +86,7 @@ Colorization is enabled for most games, including Pinball FX3, The Pinball Arcad
 
 ### Network Streaming
 
-DMD Extensions can also receive frames from the network and output them to any device. Likewise, it can stream frames 
+DMD Extensions can also receive frames from the network and output them to any device. Likewise, it can stream frames
 from any source over the network. Documentation of this feature can be found [here](Console/Server).
 
 Additionally, DMD Extensions can act as a web server where any number of clients can connect to, and see the DMD in real
@@ -273,6 +273,7 @@ The output are described by block below.
 | `--pinup`                      | [pinup]<br>enable                              | Enables output to PinUP.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--scaler-mode`                | [global]<br>scalermode                         | Scaler mode for standard content (vpm frames). <strong>Note:</strong> This is only active if you have 256x64 colorized content files <strong>OR</strong> have the scaletohd option enabled.<br><br>Can have two scaling modes:<ul>  <li>`doubler` - Doubles all pixels</li>  <li>`scale2x` - Using Scale2x algorithm for smooth 2x scaling.</li>                                                                                                         |
 | `--scale-to-hd`                | [global]<br>scaletohd                          | If true, always scale standard vpm frames to 256x64<ul>  <li>Only works on 128x32 vpm games</li>  <li>Virtual DMD output looks amazing with Scale2x!</li>  <li>Console mirror options work and can be scaled up</li>  <li>Also works with 128x32 output devices (pindmd3) using a down scale method to retain Scale2x look.</li>                                                                                                                         |
+| `--skip-analytics`             | [global]<br>skipanalytics                      | If true, Don't send anonymous usage statistics to the developer. More info [here](https://github.com/freezy/dmd-extensions/wiki/Analytics).                                                                                                                                                                                                                                                                                                              |
 
 You can also override all options per game by using the game's name as section
 name and pre-fixing options with the name of the section (apart from `[global]`
@@ -352,11 +353,11 @@ The `play` command has the following additional parameters:
 
 ### Colorization
 
-If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcade or ZeDMD), you can enable frame-by-frame 
-colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will 
+If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcade or ZeDMD), you can enable frame-by-frame
+colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will
 be rendered in color, with up to 64 colors per frame.
 
-There are two supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Both formats keep 
+There are two supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Both formats keep
 their files in the `altcolor` folder, which is located in the same folder as VPM (usually `Visual Pinball\VPinMAME\altcolor`).
 In this folder, every game has its separate folder, which contains the colorization files.
 
@@ -368,7 +369,7 @@ Depending on the source, the game folders and colorization files are named diffe
 - In Pinball Arcade and Pinball FX3, the games have different names. Scroll down for [a list of game names](#game-names)
   at the time of writing.
 
-For example, a structure for Champion Pub for all games and all color formats, would look like this (note that if both 
+For example, a structure for Champion Pub for all games and all color formats, would look like this (note that if both
 a `.cRZ` and VNI/PAL files are present in the same game folder, the `.cRZ` file will be used):
 ```
 altcolor
@@ -392,6 +393,11 @@ Depending on the source, enabling colorization is different:
 - In Pinball Arcade and Pinball FX3, use the `--colorize` option when running `dmdext.exe`.
 
 ## Breaking Changes
+
+### v2.1.1
+
+- In DmdDevice.ini, the `[ZeDMD]` has changed to `[zedmd]`.
+- ZeDMD firmware versions before 3.2.0 aren't supported anymore.
 
 ### v1.8.0
 
@@ -457,7 +463,7 @@ or complete off-screen rendering.
 
 ### Unable to load DLL 'serum.dll'
 
-This can happen if your system doesn't have the needed Visual C++ Redistributable installed. You can 
+This can happen if your system doesn't have the needed Visual C++ Redistributable installed. You can
 download it [here](https://aka.ms/vs/17/release/vc_redist.x86.exe).
 
 *Thanks Jewer76!*

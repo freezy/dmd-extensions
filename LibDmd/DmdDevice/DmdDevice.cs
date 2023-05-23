@@ -20,15 +20,13 @@ using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
 using LibDmd.Output.PinDmd2;
 using LibDmd.Output.PinDmd3;
-using LibDmd.Output.ZeDMD;
 using LibDmd.Output.PinUp;
 using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
+using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
-using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
-using NLog.Targets;
 using LibDmd.Converter.Serum;
 using LibDmd.Converter.Pin2Color;
 using LibDmd.Converter;
@@ -77,12 +75,15 @@ namespace LibDmd.DmdDevice
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-		private static readonly MemoryTarget MemLogger = new MemoryTarget {
+#if !DEBUG
+		static readonly Mindscape.Raygun4Net.RaygunClient Raygun = new Mindscape.Raygun4Net.RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly NLog.Targets.MemoryTarget MemLogger = new NLog.Targets.MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
+#endif
+
+		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 		private Serum _serum;
 		private Pin2Color _pin2color;
@@ -143,6 +144,18 @@ namespace LibDmd.DmdDevice
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
+			
+			if (_config.Global.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
+
+			try {
+				Analytics.Instance.Init(_fullVersion, "DLL");
+				
+			} catch (Exception e) {
+				ReportError(e);
+				Analytics.Instance.Disable(false);
+			}
 
 			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
 				Process.GetCurrentProcess().ProcessName);
@@ -196,6 +209,7 @@ namespace LibDmd.DmdDevice
 
 			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null )
 			{
+				Analytics.Instance.ClearColorizer();
 				return;
 			}
 
@@ -298,6 +312,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
 					ReportingTags.Add("Out:PinDMDv1");
+					Analytics.Instance.AddDestination(pinDmd1);
 				}
 			}
 			if (_config.PinDmd2.Enabled) {
@@ -306,6 +321,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
 					ReportingTags.Add("Out:PinDMDv2");
+					Analytics.Instance.AddDestination(pinDmd2);
 				}
 			}
 			if (_config.PinDmd3.Enabled)
@@ -316,6 +332,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
 					ReportingTags.Add("Out:PinDMDv3");
+					Analytics.Instance.AddDestination(pinDmd3);
 				}
 			}
 			if (_config.ZeDMD.Enabled)
@@ -326,7 +343,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
-					zeDmd.SetOriginalDimensions(aniWidth, aniHeight);
+					Analytics.Instance.AddDestination(zeDmd);
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {
@@ -335,6 +352,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
 					ReportingTags.Add("Out:PIN2DMD");
+					Analytics.Instance.AddDestination(pin2Dmd);
 				}
 
 				var pin2DmdXl = Pin2DmdXl.GetInstance(_config.Pin2Dmd.Delay);
@@ -342,6 +360,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2DmdXl);
 					Logger.Info("Added PIN2DMD XL renderer.");
 					ReportingTags.Add("Out:PIN2DMDXL");
+					Analytics.Instance.AddDestination(pin2DmdXl);
 				}
 
 				var pin2DmdHd = Pin2DmdHd.GetInstance(_config.Pin2Dmd.Delay);
@@ -349,6 +368,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pin2DmdHd);
 					Logger.Info("Added PIN2DMD HD renderer.");
 					ReportingTags.Add("Out:PIN2DMDHD");
+					Analytics.Instance.AddDestination(pin2DmdHd);
 				}
 			}
 			if (_config.Pixelcade.Enabled) {
@@ -357,6 +377,7 @@ namespace LibDmd.DmdDevice
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
 					ReportingTags.Add("Out:Pixelcade");
+					Analytics.Instance.AddDestination(pixelcade);
 				}
 			}
 			if (_config.VirtualDmd.Enabled) {
@@ -376,16 +397,20 @@ namespace LibDmd.DmdDevice
 					rootPath = AssemblyPath;
 				}
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd));
+					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd);
+					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-
-				} else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-					renderers.Add(new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd));
+					Analytics.Instance.AddDestination(video);
+				}
+				else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
+					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd);
+					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
-
-				} else {
+					Analytics.Instance.AddDestination(video);
+				}
+				else {
 					Logger.Warn("Ignoring video renderer for non-existing path \"{0}\"", _config.Video.Path);
 				}
 			}
@@ -398,6 +423,7 @@ namespace LibDmd.DmdDevice
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
+						Analytics.Instance.AddDestination(pinupOutput);
 					}
 
 				} catch (Exception e) {
@@ -413,28 +439,36 @@ namespace LibDmd.DmdDevice
 				}
 				var path = Path.Combine(rootPath, _config.Gif.Path);
 				if (Directory.Exists(Path.GetDirectoryName(path))) {
-					renderers.Add(new GifOutput(path));
+					var gifOutput = new GifOutput(path);
+					renderers.Add(gifOutput);
 					Logger.Info("Added animated GIF renderer, saving to {0}", path);
 					ReportingTags.Add("Out:GIF");
-
-				} else {
+					Analytics.Instance.AddDestination(gifOutput);
+				}
+				else {
 					Logger.Warn("Ignoring animated GIF renderer for non-existing path \"{0}\"", Path.GetDirectoryName(path));
 				}
 			}
 			if (_config.VpdbStream.Enabled) {
-				renderers.Add(new VpdbStream { EndPoint = _config.VpdbStream.EndPoint });
+				var vpdbStream = new VpdbStream { EndPoint = _config.VpdbStream.EndPoint };
+				renderers.Add(vpdbStream);
 				Logger.Info("Added VPDB stream renderer.");
 				ReportingTags.Add("Out:VpdbStream");
+				Analytics.Instance.AddDestination(vpdbStream);
 			}
 			if (_config.BrowserStream.Enabled) {
-				renderers.Add(new BrowserStream(_config.BrowserStream.Port, _gameName));
+				var browserStream = new BrowserStream(_config.BrowserStream.Port, _gameName);
+				renderers.Add(browserStream);
 				Logger.Info("Added browser stream renderer.");
 				ReportingTags.Add("Out:BrowserStream");
+				Analytics.Instance.AddDestination(browserStream);
 			}
 			if (_config.NetworkStream.Enabled) {
-				renderers.Add(NetworkStream.GetInstance(_config.NetworkStream, _gameName));
+				var networkStream = NetworkStream.GetInstance(_config.NetworkStream, _gameName);
+				renderers.Add(networkStream);
 				Logger.Info("Added network stream renderer.");
 				ReportingTags.Add("Out:NetworkStream");
+				Analytics.Instance.AddDestination(networkStream);
 			}
 
 			if (renderers.Count == 0) {
@@ -658,6 +692,11 @@ namespace LibDmd.DmdDevice
 		public void Close()
 		{
 			Logger.Info("Closing up.");
+			try {
+				Analytics.Instance.EndGame();
+			} catch (Exception e) {
+				Logger.Warn(e, "Could not end game.");
+			}
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
 			try {
@@ -680,6 +719,8 @@ namespace LibDmd.DmdDevice
 
 		public void SetGameName(string gameName)
 		{
+			AnalyticsClear();
+
 			if (_gameName != null) { // only reload if game name is set (i.e. we didn't just load because we just started)
 				_config.Reload();
 			}
@@ -687,6 +728,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
 			_config.GameName = gameName;
+			Analytics.Instance.SetSource(Process.GetCurrentProcess().ProcessName, gameName);
 		}
 
 		public void SetColorize(bool colorize)
@@ -721,6 +763,7 @@ namespace LibDmd.DmdDevice
 		}
 		public void RenderGray2(DMDFrame frame)
 		{
+			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
@@ -751,8 +794,8 @@ namespace LibDmd.DmdDevice
 
 		public void RenderGray4(DMDFrame frame)
 		{
-			if (!_isOpen)
-			{
+			AnalyticsSetDmd();
+			if (!_isOpen) {
 				Init();
 			}
 
@@ -782,6 +825,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderRgb24(DMDFrame frame)
 		{
+			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
@@ -808,6 +852,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
+			AnalyticsSetSegmentDisplay();
 			if (_gameName.StartsWith("spagb_")) {
 				// ignore GB frames, looks like a bug from SPA side
 				return;
@@ -884,18 +929,56 @@ namespace LibDmd.DmdDevice
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
 			}
 		}
+		
+		#region Analytics
+
+		private bool _analyticsVirtualDmdEnabled;
+		
+		private void AnalyticsSetDmd()
+		{
+			if (!_config.VirtualDmd.Enabled || _analyticsVirtualDmdEnabled) {
+				return;
+			}
+			_analyticsVirtualDmdEnabled = true;
+			Analytics.Instance.ClearVirtualDestinations();
+			Analytics.Instance.AddDestination(_virtualDmd.Dmd);
+			Analytics.Instance.StartGame();
+		}
+		
+		private void AnalyticsSetSegmentDisplay()
+		{
+			if (!_config.VirtualAlphaNumericDisplay.Enabled || _analyticsVirtualDmdEnabled) {
+				return;
+			}
+			_analyticsVirtualDmdEnabled = true;
+			Analytics.Instance.ClearVirtualDestinations();
+			Analytics.Instance.AddDestination(_alphaNumericDest);
+			Analytics.Instance.StartGame();
+		}
+
+		private void AnalyticsClear()
+		{
+			_analyticsVirtualDmdEnabled = false;
+		}
+		
+		#endregion
 
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
-			var ex = e.ExceptionObject as Exception;
-			if (ex != null) {
-				Logger.Error(ex.ToString());
+			if (!(e.ExceptionObject is Exception ex)) {
+				return;
 			}
 
+			Logger.Error(ex.ToString());
+			ReportError(ex);
+		}
+
+		private static void ReportError(Exception ex)
+		{
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
 			Raygun.Send(ex,
-				ReportingTags.ToList(), // tags
+				System.Linq.Enumerable.ToList(ReportingTags), 
 				new Dictionary<string, string> {
 					{ "log", string.Join("\n", MemLogger.Logs) },
 					{ "sha", _sha }

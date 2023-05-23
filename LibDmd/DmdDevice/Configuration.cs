@@ -184,6 +184,7 @@ namespace LibDmd.DmdDevice
 		public Color DmdColor => RenderGraph.DefaultColor;
 		public bool ScaleToHd => GetBoolean("scaletohd", false);
 		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
+		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
@@ -223,9 +224,8 @@ namespace LibDmd.DmdDevice
 
 	public class ZeDMDConfig : AbstractConfiguration, IZeDMDConfig
 	{
-		public override string Name { get; } = "ZeDMD";
+		public override string Name { get; } = "zedmd";
 		public bool Enabled => GetBoolean("enabled", false);
-		public string Port => GetString("port", null);
 		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
 		{

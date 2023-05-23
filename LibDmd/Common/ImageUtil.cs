@@ -227,7 +227,7 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Converts an image to a BitmapSouce
+		/// Converts an image to a BitmapSource
 		/// </summary>
 		/// <param name="img">Image to convert</param>
 		/// <returns>Converted bitmap</returns>

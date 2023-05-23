@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Windows.Media;
 using DmdExt.Common;
@@ -22,7 +23,7 @@ namespace DmdExt.Mirror
 		private readonly MirrorOptions _options;
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
-		private CompositeDisposable	_nameSubscriptions = new CompositeDisposable();
+		private CompositeDisposable	_subscriptions = new CompositeDisposable();
 		private CompositeDisposable _dmdColorSubscriptions = new CompositeDisposable();
 		private List<IDestination> _renderers;
 
@@ -30,6 +31,9 @@ namespace DmdExt.Mirror
 		{
 			_config = config;
 			_options = options;
+			if (_options.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 		}
 
 		private RenderGraph CreateGraph(ISource source, string name, HashSet<string> reportingTags)
@@ -59,6 +63,7 @@ namespace DmdExt.Mirror
 
 				case SourceType.PinballFX2: {
 					reportingTags.Add("In:PinballFX2");
+					Analytics.Instance.SetSource("Pinball FX2");
 					graphs.Add(CreateGraph(new PinballFX2Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX2 Render Graph", reportingTags));
 					break;
 				}
@@ -66,17 +71,17 @@ namespace DmdExt.Mirror
 				case SourceType.PinballFX3: {
 					if (_options.Fx3GrabScreen) {
 						reportingTags.Add("In:PinballFX3Legacy");
+						Analytics.Instance.SetSource("Pinball FX3 (legacy)");
 						graphs.Add(CreateGraph(new PinballFX3Grabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 (legacy) Render Graph", reportingTags));
-						
 					} else {
-						reportingTags.Add("In:PinballFX3");
+						reportingTags.Add("In:PinballFX3"); // analytics done when game name is known
 						graphs.Add(CreateGraph(new PinballFX3MemoryGrabber { FramesPerSecond = _options.FramesPerSecond }, "Pinball FX3 Render Graph", reportingTags));
 					}
 					break;
 				}
 
 				case SourceType.PinballArcade: {
-					reportingTags.Add("In:PinballArcade");
+					reportingTags.Add("In:PinballArcade"); // analytics done when game name is known
 					var tpaGrabber = new TPAGrabber { FramesPerSecond = _options.FramesPerSecond };
 					graphs.Add(CreateGraph(tpaGrabber.Gray2Source, "Pinball Arcade (2-bit) Render Graph", reportingTags));
 					graphs.Add(CreateGraph(tpaGrabber.Gray4Source, "Pinball Arcade (4-bit) Render Graph", reportingTags));
@@ -85,12 +90,12 @@ namespace DmdExt.Mirror
 
 				case SourceType.ProPinball: {
 					reportingTags.Add("In:ProPinball");
+					Analytics.Instance.SetSource("Pro Pinball", "Timeshock");
 					graphs.Add(CreateGraph(new ProPinballSlave(_options.ProPinballArgs), "Pro Pinball Render Graph", reportingTags));
 					break;
 				}
 
 				case SourceType.Screen:
-
 					var grabber = new ScreenGrabber {
 						FramesPerSecond = _options.FramesPerSecond,
 						Left = _options.Position[0],
@@ -109,11 +114,13 @@ namespace DmdExt.Mirror
 					}
 
 					reportingTags.Add("In:ScreenGrab");
+					Analytics.Instance.SetSource("Screen Grabber");
 					graphs.Add(CreateGraph(grabber, "Screen Grabber Render Graph", reportingTags));
 					break;
 
 				case SourceType.FuturePinball:
 					reportingTags.Add("In:FutureDmdSink");
+					Analytics.Instance.SetSource("Future Pinball");
 					graphs.Add(CreateGraph(new FutureDmdSink(_options.FramesPerSecond), "Future Pinball Render Graph", reportingTags));
 					break;
 
@@ -125,6 +132,8 @@ namespace DmdExt.Mirror
 			if (_config.Global.Colorize) {
 				foreach (var graph in graphs.Graphs) {
 					if (!(graph.Source is IGameNameSource gameNameSource)) {
+						Analytics.Instance.SetSource(graph.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
 						continue;
 					}
 
@@ -135,8 +144,8 @@ namespace DmdExt.Mirror
 					
 					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
 					graph.Converter = converter;
-					
-					_nameSubscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
+
+					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
 						converter.Switch(LoadColorizer(name));
 					}));
 
@@ -146,20 +155,48 @@ namespace DmdExt.Mirror
 						});
 					}
 				}
-			}
-			else {
-				// When not colorizing, subscribe to DMD color changes to inform the graph.
-				foreach (var graph in graphs.Graphs) {
-					if (!(graph.Source is IDmdColorSource dmdColorSource)) { 
-						continue;
+				
+				// analytics
+				var g = graphs.Graphs.FirstOrDefault();
+				if (g != null) {
+					if (g.Source is IGameNameSource s) {
+						_subscriptions.Add(s.GetGameName().Subscribe(name => {
+							Analytics.Instance.SetSource(g.Source.Name, name);
+							Analytics.Instance.StartGame();
+						}));
+						
+					} else {
+						Analytics.Instance.SetSource(g.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
 					}
+				}
+				
+			} else {
 
-					_dmdColorSubscriptions.Add(dmdColorSource.GetDmdColor().Subscribe(color => {
-						graphs.SetColor(color);
-					}));
-
-					// Only one can win, so just pick the first one.
-					break;
+				// When not colorizing, subscribe to DMD color changes to inform the graph.
+				var colorSub = graphs.Graphs
+					.Select(g => g.Source as IDmdColorSource)
+					.FirstOrDefault(s => s != null)
+					?.GetDmdColor()
+					.Subscribe(graphs.SetColor);
+				if (colorSub != null) {
+					_subscriptions.Add(colorSub);
+				}
+				
+				// print game names & analytics
+				var graph = graphs.Graphs.FirstOrDefault();
+				if (graph != null) {
+					if (graph.Source is IGameNameSource s) {
+						var nameSub = s.GetGameName().Subscribe(name => {
+							Logger.Info($"New game detected at {graph.Source.Name}: {name}");
+							Analytics.Instance.SetSource(graph.Source.Name, name);
+							Analytics.Instance.StartGame();
+						});
+						_subscriptions.Add(nameSub);
+					} else {
+						Analytics.Instance.SetSource(graph.Source.Name);
+						Analytics.Instance.StartGame(); // send now, since we won't get a game name
+					}
 				}
 			}
 			
@@ -170,7 +207,7 @@ namespace DmdExt.Mirror
 		{
 			base.Dispose();
 			_dmdColorSubscriptions.Dispose();
-			_nameSubscriptions.Dispose();
+			_subscriptions.Dispose();
 		}
 
 		private IConverter LoadColorizer(string gameName)

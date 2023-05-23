@@ -98,6 +98,7 @@ namespace LibDmd.Input.PinballFX
 			// TODO send blank frame
 			_capturer.Dispose();
 			_onPause.OnNext(Unit.Default);
+			Analytics.Instance.ClearSource();
 			StartPolling();
 		}
 

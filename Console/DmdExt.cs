@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
+using CommandLine;
 using DmdExt.Common;
 using DmdExt.Mirror;
 using DmdExt.Play;
@@ -22,13 +23,8 @@ using LibDmd.Output;
 using LibDmd.Output.FileOutput;
 using LibDmd.Output.PinUp;
 using Microsoft.Win32;
-#if !DEBUG
-using Mindscape.Raygun4Net;
-using NLog.Targets;
-#endif
 using NLog;
 using NLog.Config;
-using System.Linq;
 
 namespace DmdExt
 {
@@ -37,8 +33,8 @@ namespace DmdExt
 		public static Application WinApp { get; } = new Application();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 #if !DEBUG
-		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static readonly MemoryTarget MemLogger = new MemoryTarget {
+		static readonly Mindscape.Raygun4Net.RaygunClient Raygun = new Mindscape.Raygun4Net.RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly NLog.Targets.MemoryTarget MemLogger = new NLog.Targets.MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
@@ -107,14 +103,14 @@ namespace DmdExt
 			var invokedVerb = "";
 			object invokedVerbInstance = null;
 			var options = new Options();
-			if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options, (verb, subOptions) => {
+			if (!Parser.Default.ParseArgumentsStrict(args, options, (verb, subOptions) => {
 
 				// if parsing succeeds the verb name and correct instance
 				// will be passed to onVerbCommand delegate (string,object)
 				invokedVerb = verb;
 				invokedVerbInstance = subOptions;
 			})) {
-				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+				Environment.Exit(Parser.DefaultExitCodeFail);
 			}
 
 			try {
@@ -125,6 +121,13 @@ namespace DmdExt
 				var config = cmdLineOptions.DmdDeviceIni == null
 					? (IConfiguration)cmdLineOptions
 					: new Configuration(cmdLineOptions.DmdDeviceIni) { GameName = cmdLineOptions.GameName };
+
+				try {
+					Analytics.Instance.Init(_fullVersion, "EXE");
+				} catch (Exception e) {
+					ReportError(e);
+					Analytics.Instance.Disable(false);
+				}
 
 				//BaseOptions baseOptions;
 				switch (invokedVerb) {
@@ -250,9 +253,9 @@ namespace DmdExt
 				var releaseKey = Convert.ToInt32(ndpKey?.GetValue("Release"));
 
 				if (releaseKey < 461808) {
-					System.Console.WriteLine("You need to install at least v4.7.2 of the .NET framework.");
-					System.Console.WriteLine("Download from here: https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472");
-					Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+					Console.WriteLine("You need to install at least v4.7.2 of the .NET framework.");
+					Console.WriteLine("Download from here: https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472");
+					Environment.Exit(Parser.DefaultExitCodeFail);
 				}
 			}
 		}
@@ -264,9 +267,15 @@ namespace DmdExt
 				Logger.Error(ex.Message);
 				Logger.Error(ex.ToString());
 			}
+
+			ReportError(ex);
+		}
+
+		private static void ReportError(Exception ex)
+		{
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
-			Raygun.Send(ex, ReportingTags.ToList(), new Dictionary<string, string> {
+			Raygun.Send(ex, System.Linq.Enumerable.ToList(ReportingTags), new Dictionary<string, string> {
 				{ "args", string.Join(" ", _commandLineArgs) },
 				{ "log", string.Join("\n", MemLogger.Logs) },
 				{ "sha", _sha }

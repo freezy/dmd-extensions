@@ -47,6 +47,7 @@ namespace DmdExt.Common
 					renderers.Add(pinDmd1);
 					Logger.Info("Added PinDMDv1 renderer.");
 					reportingTags.Add("Out:PinDMDv1");
+					Analytics.Instance.AddDestination(pinDmd1);
 				} else {
 					Logger.Warn("Device {0} is not available.", PinDMDv1);
 				}
@@ -58,6 +59,7 @@ namespace DmdExt.Common
 					renderers.Add(pinDmd2);
 					Logger.Info("Added PinDMDv2 renderer.");
 					reportingTags.Add("Out:PinDMDv2");
+					Analytics.Instance.AddDestination(pinDmd2);
 				} else {
 					Logger.Warn("Device {0} is not available.", PinDMDv2);
 				}
@@ -71,6 +73,7 @@ namespace DmdExt.Common
 					renderers.Add(pinDmd3);
 					Logger.Info("Added PinDMDv3 renderer.");
 					reportingTags.Add("Out:PinDMDv3");
+					Analytics.Instance.AddDestination(pinDmd3);
 				}
 				else
 				{
@@ -86,6 +89,7 @@ namespace DmdExt.Common
 					renderers.Add(zeDMD);
 					Logger.Info("Added ZeDMD renderer.");
 					reportingTags.Add("Out:ZeDMD");
+					Analytics.Instance.AddDestination(zeDMD);
 				}
 				else
 				{
@@ -99,6 +103,7 @@ namespace DmdExt.Common
 					renderers.Add(pin2Dmd);
 					Logger.Info("Added PIN2DMD renderer.");
 					reportingTags.Add("Out:PIN2DMD");
+					Analytics.Instance.AddDestination(pin2Dmd);
 				} else {
 					Logger.Warn("Device {0} is not available.", PIN2DMD);
 				}
@@ -112,6 +117,7 @@ namespace DmdExt.Common
 					renderers.Add(pin2DmdXl);
 					Logger.Info("Added PIN2DMD XL renderer.");
 					reportingTags.Add("Out:PIN2DMDXL");
+					Analytics.Instance.AddDestination(pin2DmdXl);
 				}
 				else
 				{
@@ -127,6 +133,7 @@ namespace DmdExt.Common
 					renderers.Add(pin2DmdHd);
 					Logger.Info("Added PIN2DMD HD renderer.");
 					reportingTags.Add("Out:PIN2DMDHD");
+					Analytics.Instance.AddDestination(pin2DmdHd);
 				}
 				else
 				{
@@ -140,28 +147,36 @@ namespace DmdExt.Common
 					renderers.Add(pixelcade);
 					Logger.Info("Added Pixelcade renderer.");
 					reportingTags.Add("Out:Pixelcade");
+					Analytics.Instance.AddDestination(pixelcade);
 				} else {
 					Logger.Warn("Device Pixelcade is not available.");
 				}
 			}
 
 			if (config.VirtualDmd.Enabled) {
-				renderers.Add(ShowVirtualDmd(config));
+				var virtualDmd = ShowVirtualDmd(config);
+				renderers.Add(virtualDmd);
 				Logger.Info("Added virtual DMD renderer.");
 				reportingTags.Add("Out:VirtualDmd");
+				Analytics.Instance.AddDestination(virtualDmd);
 			}
 
 			if (config.VirtualAlphaNumericDisplay.Enabled) {
-				renderers.Add(VirtualAlphanumericDestination.GetInstance(CurrentDispatcher, config.VirtualAlphaNumericDisplay.Style, config as Configuration));
+				var virtualAlphaNum = VirtualAlphanumericDestination.GetInstance(CurrentDispatcher,
+					config.VirtualAlphaNumericDisplay.Style, config as Configuration);
+				renderers.Add(virtualAlphaNum);
 				Logger.Info("Added virtual Alphanumeric renderer.");
 				reportingTags.Add("Out:VirtualAlphaNum");
+				Analytics.Instance.AddDestination(virtualAlphaNum);
 			}
 
 			if (config.NetworkStream.Enabled) {
 				try {
-					renderers.Add(NetworkStream.GetInstance(config.NetworkStream));
+					var networkStream = NetworkStream.GetInstance(config.NetworkStream);
+					renderers.Add(networkStream);
 					Logger.Info("Added websocket client renderer.");
 					reportingTags.Add("Out:NetworkStream");
+					Analytics.Instance.AddDestination(networkStream);
 
 				} catch (Exception e) {
 					Logger.Warn("Network stream disabled: {0}", e.Message);

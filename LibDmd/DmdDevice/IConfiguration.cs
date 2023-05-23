@@ -39,6 +39,7 @@ namespace LibDmd.DmdDevice
 		Color DmdColor { get; }
 		bool ScaleToHd { get; }
 		ScalerMode ScalerMode { get; }
+		bool SkipAnalytics { get; }
 	}
 
 	public interface IPinDmd1Config
@@ -60,7 +61,6 @@ namespace LibDmd.DmdDevice
 	public interface IZeDMDConfig
 	{
 		bool Enabled { get; }
-		string Port { get; }
 	}
 
 	public interface IPin2DmdConfig

@@ -13,7 +13,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 {
 	public class VirtualAlphanumericDestination : IAlphaNumericDestination
 	{
-		public string Name => "Virtual Alphanumeric Renderer";
+		public string Name => "Virtual Alphanumeric Display";
 		public bool IsAvailable => true;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
