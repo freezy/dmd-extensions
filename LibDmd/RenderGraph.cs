@@ -171,7 +171,7 @@ namespace LibDmd
 			var source = new PassthroughSource("Bitmap Source");
 			Source = source;
 			_activeRenderer = Init().StartRendering(onCompleted);
-			source.FramesBitmap.OnNext(bmp);
+			source.FramesBitmap.OnNext(new BmpFrame(bmp));
 		}
 
 		/// <summary>
@@ -903,7 +903,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceBitmap, dest, destGray2, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(ImageUtil.ConvertToGray2)
+									.Select(bmp => ImageUtil.ConvertToGray2(bmp.Bitmap))
 									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
 								destGray2.RenderGray2);
 							break;
@@ -912,7 +912,7 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceBitmap, dest, destGray4, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToGray4(bmp))
+									.Select(bmp => ImageUtil.ConvertToGray4(bmp.Bitmap))
 									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
 								destGray4.RenderGray4);
 							break;
@@ -921,7 +921,7 @@ namespace LibDmd
 						case FrameFormat.Gray6:
 							AssertCompatibility(source, sourceBitmap, dest, destGray6, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToGray6(bmp))
+									.Select(bmp => ImageUtil.ConvertToGray6(bmp.Bitmap))
 									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
 								destGray6.RenderGray6);
 							break;
@@ -930,7 +930,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => ImageUtil.ConvertToRgb24(bmp))
+									.Select(bmp => ImageUtil.ConvertToRgb24(bmp.Bitmap))
 									.Select(frame => TransformRgb24(source.Dimensions.Value, frame, destFixedSize)),
 								destRgb24.RenderRgb24);
 							break;
@@ -939,7 +939,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(Source, sourceBitmap, dest, destBitmap, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
-									.Select(bmp => Transform(bmp, destFixedSize)),
+									.Select(bmp => Transform(bmp.Bitmap, destFixedSize)),
 								destBitmap.RenderBitmap);
 							break;
 

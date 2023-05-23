@@ -734,9 +734,6 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-	<PropertyGroup>
-		<PostBuildEvent>del "$(TargetDir)\*.pdb"</PostBuildEvent>
-	</PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

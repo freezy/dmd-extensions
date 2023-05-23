@@ -50,9 +50,10 @@ namespace LibDmd.Input.ScreenGrabber
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private IObservable<BitmapSource> _frames;
+		private readonly BmpFrame _frame = new BmpFrame();
+		private IObservable<BmpFrame> _frames;
 
-		public IObservable<BitmapSource> GetBitmapFrames()
+		public IObservable<BmpFrame> GetBitmapFrames()
 		{
 			var enabledProcessors = Processors.Where(processor => processor.Enabled);
 			return _frames ?? (
@@ -60,12 +61,8 @@ namespace LibDmd.Input.ScreenGrabber
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
 					.Select(x => CaptureImage())
 					.Select(bmp => enabledProcessors.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp)))
-					.Select(bmp => {
-						if (DestinationHeight > 0 && DestinationWidth > 0) {
-							return TransformationUtil.Transform(bmp, _destDim, ResizeMode.Stretch, false, false);
-						}
-						return bmp;
-					})
+					.Select(bmp => !_destDim.IsFlat ? TransformationUtil.Transform(bmp, _destDim, ResizeMode.Stretch, false, false) : bmp)
+					.Select(bmp => _frame.Update(bmp))
 					.Publish()
 					.RefCount()
 			);
