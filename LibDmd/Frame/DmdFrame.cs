@@ -21,7 +21,7 @@ namespace LibDmd.Frame
 		public DmdFrame(int width, int height, int bitLength)
 		{
 			Dimensions = new Dimensions(width, height);
-			bitLength = bitLength;
+			BitLength = bitLength;
 		}
 
 		public DmdFrame(Dimensions dim, int bitLength)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Media.Imaging;
+using LibDmd.Frame;
 
 namespace LibDmd.Input
 {
@@ -12,6 +13,6 @@ namespace LibDmd.Input
 		/// Returns an observable that produces a sequence of frames.
 		/// </summary>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<BitmapSource> GetBitmapFrames();
+		IObservable<BmpFrame> GetBitmapFrames();
 	}
 }

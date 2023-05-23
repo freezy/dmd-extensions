@@ -24,7 +24,7 @@ namespace LibDmd.Input.FileSystem
 		public readonly Subject<DmdFrame> FramesRgb24 = new Subject<DmdFrame>();
 		public readonly Subject<ColoredFrame> FramesColoredGray2 = new Subject<ColoredFrame>();
 		public readonly Subject<ColoredFrame> FramesColoredGray4 = new Subject<ColoredFrame>();
-		public readonly Subject<BitmapSource> FramesBitmap = new Subject<BitmapSource>();
+		public readonly Subject<BmpFrame> FramesBitmap = new Subject<BmpFrame>();
 
 		public PassthroughSource(string name)
 		{
@@ -56,7 +56,7 @@ namespace LibDmd.Input.FileSystem
 			return FramesRgb24;
 		}
 
-		public IObservable<BitmapSource> GetBitmapFrames()
+		public IObservable<BmpFrame> GetBitmapFrames()
 		{
 			return FramesBitmap;
 		}

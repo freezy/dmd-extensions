@@ -107,14 +107,14 @@ namespace LibDmd.Input.FileSystem
 
 	public class ImageSourceBitmap : ImageSource, IBitmapSource
 	{
-		public IObservable<BitmapSource> GetBitmapFrames() => _frames;
+		public IObservable<BmpFrame> GetBitmapFrames() => _frames;
 
-		private readonly BehaviorSubject<BitmapSource> _frames;
+		private readonly BehaviorSubject<BmpFrame> _frames;
 
 		public ImageSourceBitmap(BitmapSource bmp)
 		{
 			SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
-			_frames = new BehaviorSubject<BitmapSource>(bmp);
+			_frames = new BehaviorSubject<BmpFrame>(new BmpFrame(bmp));
 		}
 
 		public ImageSourceBitmap(string fileName)
@@ -130,7 +130,7 @@ namespace LibDmd.Input.FileSystem
 				bmp.EndInit();
 
 				SetDimensions(new Dimensions(bmp.PixelWidth, bmp.PixelHeight));
-				_frames = new BehaviorSubject<BitmapSource>(bmp);
+				_frames = new BehaviorSubject<BmpFrame>(new BmpFrame(bmp));
 
 			} catch (UriFormatException) {
 				throw new WrongFormatException($"Error parsing file name \"{fileName}\". Is this a path on the file system?");
