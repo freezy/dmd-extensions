@@ -5,14 +5,10 @@ using LibDmd.Output;
 
 namespace LibDmd.Test.Stubs
 {
-	public class Rgb24TestDestination : FixedTestDestination<DmdFrame>, IRgb24Destination
+	public class Rgb24DynamicTestDestination : DynamicTestDestination<DmdFrame>, IRgb24Destination
 	{
-		public string Name => "Test Destination (Fixed RGB24)";
+		public string Name => "Test Destination (Dynamic RGB24)";
 		public bool IsAvailable => true;
-
-		public Rgb24TestDestination(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)
-		{
-		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{

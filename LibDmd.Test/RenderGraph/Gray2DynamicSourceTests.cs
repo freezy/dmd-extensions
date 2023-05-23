@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using FluentAssertions;
 using LibDmd.Common;
-using LibDmd.Input;
 using LibDmd.Output;
 using LibDmd.Test.Stubs;
 using NUnit.Framework;
@@ -10,7 +8,7 @@ using NUnit.Framework;
 namespace LibDmd.Test
 {
 	[TestFixture]
-	public class Gray2SourceTests : TestBase
+	public class Gray2DynamicSourceTests : TestBase
 	{
 		private Gray2TestSource _source;
 		private RenderGraph _graph;
@@ -25,7 +23,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new Gray2DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -39,180 +37,88 @@ namespace LibDmd.Test
 
 			await AssertFrame(_source, dest, frame, frame);
 		}
-		
+
+				
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Destination_NoHdScaling()
+		public async Task Should_Passthrough_Gray2_Frame_Flipped_Horizontally()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = false };
+			var dest = new Gray2DynamicTestDestination();
 			
 			_graph.Source = _source;
-			_graph.ScalerMode = ScalerMode.Scale2x;
+			_graph.FlipHorizontally = true;
 			_graph.Destinations = new List<IDestination> { dest };
 			_graph.StartRendering();
 			
 			var frame = FrameGenerator.FromString(@"
-				11133111
-				10333301
-				10333301
-				11133111");
-			
-			var scaledFrame = FrameGenerator.FromString(@"
-				0000000000000000
-				0000000000000000
-				0000111331110000
-				0000103333010000
-				0000103333010000
-				0000111331110000
-				0000000000000000
-				0000000000000000");
-			
-			await AssertFrame(_source, dest, frame, scaledFrame);
-		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Graph_NoHdScaling()
-		{
-			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
-			
-			_graph.Source = _source;
-			_graph.ScalerMode = ScalerMode.None;
-			_graph.Resize = ResizeMode.Fit;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-
-			var frame1 = FrameGenerator.FromString(@"
-				11111111
-				10033001
-				10033001
-				11111111");
-			
-			
-			var upscaledFrame1 = FrameGenerator.FromString(@"
-				0000000000000000
-				0000000000000000
-				0000111111110000
-				0000100330010000
-				0000100330010000
-				0000111111110000
-				0000000000000000
-				0000000000000000");
-
-			await AssertFrame(_source, dest, frame1, upscaledFrame1);
-		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fit()
-		{
-			var dest = new Gray2FixedTestDestination(8, 4);
-			
-			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Fit;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-
-			var frame1 = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
-
-			var frame2 = FrameGenerator.FromString(@"
 				33333333
-				21032101
-				10123210
-				02321012
-				10123210
-				21012321
-				12321012
-				33333333");
-			
-			var scaledFrame1 = FrameGenerator.FromString(@"
-				00000000
-				33331101
-				10113333
+				02020202
+				10101010
 				00000000");
 			
-			var scaledFrame2 = FrameGenerator.FromString(@"
-				00222200
-				00122100
-				00112100
-				00232200");
-
-			await AssertFrame(_source, dest, frame1, scaledFrame1);
-			await AssertFrame(_source, dest, frame2, scaledFrame2);
-		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fill()
-		{
-			var dest = new Gray2FixedTestDestination(8, 4);
-			
-			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Fill;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-			
-			var frame1 = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
-			
-			var frame2 = FrameGenerator.FromString(@"
+			var frameFlipped = FrameGenerator.FromString(@"
 				33333333
-				21032101
-				10123210
-				02321012
-				10123210
-				21012321
-				12321012
-				33333333");
-			
-			var scaledFrame1 = FrameGenerator.FromString(@"
-				23232132
-				33330000
-				00003333
-				23123232");
-			
-			var scaledFrame2 = FrameGenerator.FromString(@"
-				10123210
-				02321012
-				10123210
-				21012321");
-			
-			await AssertFrame(_source, dest, frame1, scaledFrame1);
-			await AssertFrame(_source, dest, frame2, scaledFrame2);
+				20202020
+				01010101
+				00000000");
+
+			await AssertFrame(_source, dest, frame, frameFlipped);
 		}
-		
+				
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Stretch()
+		public async Task Should_Passthrough_Gray2_Frame_Flipped_Vertically()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new Gray2DynamicTestDestination();
 			
 			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Stretch;
+			_graph.FlipVertically = true;
 			_graph.Destinations = new List<IDestination> { dest };
 			_graph.StartRendering();
 			
 			var frame = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
+				33333333
+				02020202
+				10101010
+				00000000");
 			
-			var scaledFrame = FrameGenerator.FromString(@"
-				33222202
-				33330000
-				00003333
-				20222233");
+			var frameFlipped = FrameGenerator.FromString(@"
+				00000000
+				10101010
+				02020202
+				33333333");
+
+			await AssertFrame(_source, dest, frame, frameFlipped);
+		}
+		
+		[TestCase]
+		public async Task Should_Passthrough_Gray2_Frame_Flipped()
+		{
+			var dest = new Gray2DynamicTestDestination();
 			
-			await AssertFrame(_source, dest, frame, scaledFrame);
+			_graph.Source = _source;
+			_graph.FlipVertically = true;
+			_graph.FlipHorizontally = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+			
+			var frameFlipped = FrameGenerator.FromString(@"
+				00000000
+				01010101
+				20202020
+				33333333");
+
+			await AssertFrame(_source, dest, frame, frameFlipped);
 		}
 
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8);
+			var dest = new Gray2DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -241,7 +147,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Scale2X()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8);
+			var dest = new Gray2DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -263,14 +169,14 @@ namespace LibDmd.Test
 				0000033322300000
 				0000000000000000
 				0000000000000000");
-			
+
 			await AssertFrame(_source, dest, frame, scaledFrame);
 		}
-
+		
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame()
 		{
-			var dest = new Rgb24TestDestination(8, 4);
+			var dest = new Rgb24DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -295,14 +201,14 @@ namespace LibDmd.Test
 				00 00 00 00 00 00 00 00 
 				00 00 00 00 00 00 00 00 
 				00 00 00 00 00 00 00 00");
-
+		
 			await AssertFrame(_source, dest, frame, rgbFrame);
 		}
 		
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_Double()
 		{
-			var dest = new Rgb24TestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new Rgb24DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -347,7 +253,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_2X()
 		{
-			var dest = new Rgb24TestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new Rgb24DynamicTestDestination();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;

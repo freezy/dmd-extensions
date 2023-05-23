@@ -104,7 +104,8 @@ scaling comes into play.
    using scaling algorithm defined by the `resize` option (*stretch*, *fill*, and *fit*). If the resolution is lower, the 
    frames will be centered on the DMD, with black borders around it.
 2. You're using a high-resolution DMD, like a PIN2DMD XL or ZeDMD HD, running at 256x64. In this case, frames can be
-   be **scaled up**, using either a "doubler" or "scale2x" algorithm.
+   be **scaled up**, using either a "doubler" or "scale2x" algorithm. Note that your physical display must be at least
+   double the size of the source frame size.
 
 The above mainly applies to hardware displays, which are limited to a fixed resolution. However, it's also possible to
 upscale frames to the virtual DMD. In order to do that, enable the `scaletohd` option and set the appropriate `scalermode`. 

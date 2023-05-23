@@ -151,7 +151,7 @@ namespace LibDmd.Frame
 			return transformedFrame;
 		}
 
-		public DmdFrame TransformHdScaling(IFixedSizeDestination dest, ScalerMode scalerMode)
+		public DmdFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
 		{
 			if (BitLength > 8) {
 				throw new ArgumentException("Cannot double-scale a frame with more than 8 bits per pixel.");
@@ -163,17 +163,12 @@ namespace LibDmd.Frame
 			}
 			
 			// if destination doesn't allow scaling (pup), return
-			if (dest != null && !dest.DmdAllowHdScaling) {
-				return this;
-			}
-
-			// if destination is not fixed size, return
-			if (dest == null) {
+			if (fixedDest != null && !fixedDest.DmdAllowHdScaling) {
 				return this;
 			}
 
 			// if double of frame size doesn't fit into destination, return
-			if (!(Dimensions * 2).FitInto(dest.FixedSize)) {
+			if (fixedDest != null && !(Dimensions * 2).FitInto(fixedDest.FixedSize)) {
 				return this;
 			}
 			
