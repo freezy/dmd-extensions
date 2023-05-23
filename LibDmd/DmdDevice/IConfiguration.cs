@@ -37,7 +37,6 @@ namespace LibDmd.DmdDevice
 		int QuitAfter { get; }
 		bool NoClear { get; }
 		Color DmdColor { get; }
-		bool ScaleToHd { get; }
 		ScalerMode ScalerMode { get; }
 		bool SkipAnalytics { get; }
 		string[] Plugins { get; }

@@ -244,7 +244,7 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Returns an RGB24 array with colors from the palette applied to the frame.
+		/// Returns an RGB24 frame with colors from the palette applied to the frame.
 		/// 
 		/// Note that the size of the palette must be as large as the largest integer of 
 		/// the frame to color, or in other words, the bit length is given by the size of
@@ -256,7 +256,26 @@ namespace LibDmd.Common
 		/// <param name="colorizedFrame">If set, write data into this array</param>
 		/// <returns>Colorized frame</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
-		public static byte[] ColorizeFrame(Dimensions dim, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
+		[Obsolete("Use the ColorizeFrame instead")]
+		public static DmdFrame ColorizeFrame(Dimensions dim, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
+		{
+			return new DmdFrame(dim, Colorize(dim, frame, palette, colorizedFrame), 24);
+		}
+		
+		/// <summary>
+		/// Returns an RGB24 frame with colors from the palette applied to the frame.
+		/// 
+		/// Note that the size of the palette must be as large as the largest integer of 
+		/// the frame to color, or in other words, the bit length is given by the size of
+		/// the palette and the values of the frame.
+		/// </summary>
+		/// <param name="dim">Dimensions of the frame to color</param>
+		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
+		/// <param name="palette">Colors to use for coloring</param>
+		/// <param name="colorizedFrame">If set, write data into this array</param>
+		/// <returns>Colorized frame</returns>
+		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
+		public static byte[] Colorize(Dimensions dim, byte[] frame, Color[] palette, byte[] colorizedFrame = null)
 		{
 			var frameLength = dim.Surface * 3;
 
@@ -267,8 +286,7 @@ namespace LibDmd.Common
 			}
 
 			// If our frame length doesn't match, just return an empty frame.
-			if (dim.Surface != frame.Length)
-			{
+			if (dim.Surface != frame.Length) {
 				return colorizedFrame;
 			}
 

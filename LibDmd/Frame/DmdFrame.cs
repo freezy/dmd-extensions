@@ -1,8 +1,9 @@
 using System;
+using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Input;
 using LibDmd.Output;
-using NLog;
 
 namespace LibDmd.Frame
 {
@@ -13,22 +14,22 @@ namespace LibDmd.Frame
 	{
 		public byte[] Data { get; private set; }
 		public int BitLength;
+		
+		private int BytesPerPixel => BitLength < 8 ? 1 : BitLength / 8;
 
 		public DmdFrame()
 		{
 		}
 
-		public DmdFrame(int width, int height, int bitLength)
+		public DmdFrame(int width, int height, int bitLength) : this(new Dimensions(width, height), bitLength)
 		{
-			Dimensions = new Dimensions(width, height);
-			BitLength = bitLength;
 		}
 
 		public DmdFrame(Dimensions dim, int bitLength)
 		{
 			Dimensions = dim;
 			BitLength = bitLength;
-			Data = new byte[dim.Surface];
+			Data = new byte[dim.Surface * BytesPerPixel];
 		}
 
 		public DmdFrame(Dimensions dim, byte[] data, int bitLength)
@@ -75,7 +76,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame ConvertToRgb24(Color[] palette)
 		{
-			Data = ColorUtil.ColorizeFrame(Dimensions, Data, palette);
+			Data = ColorUtil.ColorizeFrame(Dimensions, Data, palette).Data;
 			return this;
 		}
 
@@ -128,6 +129,70 @@ namespace LibDmd.Frame
 		{
 			return Transform(24, 3, renderGraph, fixedDest, multiDest);
 		}
+		
+		public DmdFrame TransformRgb24(IFixedSizeDestination dest, ResizeMode resize, bool flipHorizontally, bool flipVertically)
+		{
+			// do anything at all?
+			if (dest == null && !flipHorizontally && !flipVertically) {
+				return this;
+			}
+
+			// just flip?
+			if (dest == null || dest.FixedSize == Dimensions) {
+				Data = TransformationUtil.Flip(Dimensions, 3, Data, flipHorizontally, flipVertically);
+				return this;
+			}
+			
+			// resize
+			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
+			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, resize, flipHorizontally, flipVertically);
+			var transformedFrame = new DmdFrame(Dimensions, new byte[dest.FixedSize.Surface * 3], 24);
+			ImageUtil.ConvertToRgb24(transformedBmp, transformedFrame);
+			return transformedFrame;
+		}
+
+		public DmdFrame TransformHdScaling(IFixedSizeDestination dest, ScalerMode scalerMode)
+		{
+			if (BitLength > 8) {
+				throw new ArgumentException("Cannot double-scale a frame with more than 8 bits per pixel.");
+			}
+
+			// skip if disabled
+			if (scalerMode == ScalerMode.None) {
+				return this;
+			}
+			
+			// if destination doesn't allow scaling (pup), return
+			if (dest != null && !dest.DmdAllowHdScaling) {
+				return this;
+			}
+
+			// if destination is not fixed size, return
+			if (dest == null) {
+				return this;
+			}
+
+			// if double of frame size doesn't fit into destination, return
+			if (!(Dimensions * 2).FitInto(dest.FixedSize)) {
+				return this;
+			}
+			
+			// resize
+			Data = scalerMode == ScalerMode.Doubler 
+				? FrameUtil.ScaleDouble(Dimensions, Data) 
+				: FrameUtil.Scale2X(Dimensions, Data);
+			Dimensions *= 2;
+
+			return this;
+		}
+		
+		public DmdFrame ColorizeGrayRgb24(Color[] palette)
+		{
+			Data = ColorUtil.Colorize(Dimensions, Data, palette);
+			BitLength = 24;
+			
+			return this;
+		}
 
 		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
@@ -160,7 +225,7 @@ namespace LibDmd.Frame
 				}
 
 				// copy line by line if centering image
-				if (Dimensions < targetDim) {
+				if (Dimensions.FitInto(targetDim)) {
 					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), bitLen);
 				}
 			}
@@ -170,7 +235,7 @@ namespace LibDmd.Frame
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
 
-			return Update(targetDim, transformedFrame, bitLen);
+			return Update(targetDim, transformedFrame.Data, bitLen);
 		}
 
 		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
@@ -187,6 +252,43 @@ namespace LibDmd.Frame
 		public object Clone()
 		{
 			return new DmdFrame(Dimensions, Data, BitLength);
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine($"DMDFrame {Dimensions}@{BitLength} ({Data.Length} bytes):");
+			if (BitLength <= 8) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width + x].ToString("X"));
+					}
+					sb.AppendLine();
+				}
+			} else if (BitLength == 24) {
+				for (var p = 0; p < 3; p++) {
+					sb.AppendLine($"::{PlaneName(p)}::");
+					for (var y = 0; y < Dimensions.Height; y++) {
+						for (var x = 0; x < Dimensions.Width; x++) {
+							sb.Append(Data[y * Dimensions.Width * 3 + x * 3 + p].ToString("X2") + " ");
+						}
+						sb.AppendLine();
+					}
+				}
+			} else {
+				throw new ArgumentException("Cannot print frame with bit length " + BitLength);
+			}
+			return sb.ToString();
+		}
+
+		private static string PlaneName(int p)
+		{
+			switch (p) {
+				case 0: return "RED";
+				case 1: return "GREEN";
+				case 2: return "BLUE";
+				default: return "PLANE " + p;
+			}
 		}
 	}
 }

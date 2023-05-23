@@ -376,11 +376,11 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Double the pixels coming from the frame data.
 		/// </summary>
-		/// <param name="dim"></param>
-		/// <param name="bitlen"></param>
-		/// <param name="frame"></param>
+		/// <param name="dim">New size</param>
+		/// <param name="frame">Frame data to be resized</param>
 		/// <returns></returns>
-		public static byte[] ScaleDouble(Dimensions dim, int bitlen, byte[] frame)
+		[Obsolete("Use ScaleDouble that uses more obvious parameters.")]
+		public static byte[] ScaleDoubleUgh(Dimensions dim, byte[] frame)
 		{
 			byte[] scaledData = new byte[dim.Surface];
 			var origwidth = dim.Width / 2;
@@ -399,6 +399,31 @@ namespace LibDmd.Common
 
 			return scaledData;
 		}
+		
+		/// <summary>
+		/// Double the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="dim">Size of the original data</param>
+		/// <param name="frame">Frame data to be resized</param>
+		/// <returns></returns>
+		public static byte[] ScaleDouble(Dimensions dim, byte[] frame)
+		{
+			byte[] scaledData = new byte[dim.Surface * 4];
+			var outputWidth = dim.Width * 2;
+			var outputHeight = dim.Height * 2;
+			const int scale = 2;
+
+			int targetIdx = 0;
+			for (var i = 0; i < outputHeight; ++i) {
+				var iUnscaled = i / scale;
+				for (var j = 0; j < outputWidth; ++j) {
+					var jUnscaled = j / scale;
+					scaledData[targetIdx++] = frame[iUnscaled * dim.Width + jUnscaled];
+				}
+			}
+			
+			return scaledData;
+		}
 
 		/// <summary>
 		/// Implementation of Scale2 for frame data.
@@ -406,7 +431,8 @@ namespace LibDmd.Common
 		/// <param name="dim"></param>
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[] Scale2x(Dimensions dim, byte[] data)
+		[Obsolete("Use Scale2x which uses more obvious parameters.")]
+		public static byte[] Scale2xUgh(Dimensions dim, byte[] data)
 		{
 			byte[] scaledData = new byte[dim.Surface];
 
@@ -443,6 +469,48 @@ namespace LibDmd.Common
 
 			return scaledData;
 		}
+		
+		/// <summary>
+		/// Implementation of Scale2 for frame data.
+		/// </summary>
+		/// <param name="dim">Original dimensions</param>
+		/// <param name="data">Original frame data</param>
+		/// <returns>Doubled frame data</returns>
+		public static byte[] Scale2X(Dimensions dim, byte[] data)
+		{
+			byte[] scaledData = new byte[dim.Surface * 4];
+			var outputWidth = dim.Width * 2;
+
+			for (var y = 0; y < dim.Height; y++)
+			{
+				for (var x = 0; x < dim.Width; x++)
+				{
+					var colorB = ImageUtil.GetPixel(x, y - 1, dim.Width, dim.Height, data);
+					var colorH = ImageUtil.GetPixel(x, y + 1, dim.Width, dim.Height, data);
+					var colorD = ImageUtil.GetPixel(x - 1, y, dim.Width, dim.Height, data);
+					var colorF = ImageUtil.GetPixel(x + 1, y, dim.Width, dim.Height, data);
+
+					var colorE = ImageUtil.GetPixel(x, y, dim.Width, dim.Height, data);
+
+					if ((colorB != colorH) && (colorD != colorF))
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, outputWidth, scaledData);
+					}
+					else
+					{
+						ImageUtil.SetPixel(2 * x, 2 * y, colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, outputWidth, scaledData);
+						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, outputWidth, scaledData);
+					}
+				}
+			}
+
+			return scaledData;
+		}
 
 		/// <summary>
 		/// Join 
@@ -453,7 +521,7 @@ namespace LibDmd.Common
 		public static byte[][] Scale2x(Dimensions dim, byte[][] data)
 		{
 			var joinData = Join(dim, data);
-			var frameData = Scale2x(dim, joinData);
+			var frameData = Scale2xUgh(dim, joinData);
 			return Split(dim, data.Length, frameData);
 		}
 
@@ -527,7 +595,7 @@ namespace LibDmd.Common
 			return destFrame;
 		}
 
-		public static byte[] ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)
+		public static DmdFrame ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)
 		{
 			var frame = Join(dim, planes);
 			return ColorUtil.ColorizeFrame(dim, frame, palette);

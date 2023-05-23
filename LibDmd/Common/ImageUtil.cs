@@ -40,8 +40,8 @@ namespace LibDmd.Common
 		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="lum">Multiply luminosity</param>
-		/// <returns>Array with value for every pixel between 0 and 15</returns>
-		public static byte[] ConvertTo(int bitLength, BitmapSource bmp, double lum = 1)
+		/// <returns>Frame with value for every pixel between 0 and 15</returns>
+		public static DmdFrame ConvertTo(int bitLength, BitmapSource bmp, double lum = 1)
 		{
 			switch (bitLength) {
 				case 2: return ConvertToGray2(bmp, 0, lum, out _);
@@ -73,10 +73,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		public static byte[] ConvertToGray2(BitmapSource bmp)
-		{
-			return ConvertToGray2(bmp, 0, 1, out _);
-		}
+		public static DmdFrame ConvertToGray2(BitmapSource bmp) => ConvertToGray2(bmp, 0, 1, out _);
 
 		/// <summary>
 		/// Converts a bitmap to a 2-bit grayscale array by using the luminosity of the pixels and
@@ -87,7 +84,7 @@ namespace LibDmd.Common
 		/// <param name="maxLum">Max threshold for luminosity histogram stretching</param>
 		/// <param name="hue">Detected hue</param>
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
-		public static byte[] ConvertToGray2(BitmapSource bmp, double minLum, double maxLum, out double hue)
+		public static DmdFrame ConvertToGray2(BitmapSource bmp, double minLum, double maxLum, out double hue)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
@@ -115,7 +112,7 @@ namespace LibDmd.Common
 				}
 			}
 			hue = imageHue;
-			return frame;
+			return new DmdFrame(bmp.Dimensions(), frame, 2);
 		}
 
 		/// <summary>
@@ -147,7 +144,7 @@ namespace LibDmd.Common
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array with value for every pixel between 0 and 15</returns>
-		public static byte[] ConvertToGray4(BitmapSource bmp, double lum = 1)
+		public static DmdFrame ConvertToGray4(BitmapSource bmp, double lum = 1)
 		{
 			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
 			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
@@ -166,7 +163,7 @@ namespace LibDmd.Common
 					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
 				}
 			}
-			return frame;
+			return new DmdFrame(bmp.Dimensions(), frame, 4);
 		}
 
 		/// <summary>
@@ -207,10 +204,10 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
 		/// <param name="lum">Multiply luminosity</param>
-		/// <returns>Array filled with RGB values for each pixel between 0 and 255.</returns>
-		public static byte[] ConvertToRgb24(BitmapSource bmp, double lum = 1)
+		/// <returns>Frame filled with RGB values for each pixel between 0 and 255.</returns>
+		public static DmdFrame ConvertToRgb24(BitmapSource bmp, double lum = 1)
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
+			var frame = new DmdFrame(bmp.Dimensions(), new byte[bmp.Dimensions().Surface * 3], 24);
 			ConvertToRgb24(bmp, frame, 0, lum);
 			return frame;
 		}
@@ -219,10 +216,10 @@ namespace LibDmd.Common
 		/// Converts a bitmap to an RGB24 array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
-		/// <param name="buffer">Destination buffer. Will be filled with RGB values for each pixel between 0 and 255.</param>
+		/// <param name="dest">Destination buffer. Will be filled with RGB values for each pixel between 0 and 255.</param>
 		/// <param name="offset">Offset in destination array</param>
 		/// <param name="lum">Multiply luminosity</param>
-		public static void ConvertToRgb24(BitmapSource bmp, byte[] buffer, int offset = 0, double lum = 1)
+		public static void ConvertToRgb24(BitmapSource bmp, DmdFrame dest, int offset = 0, double lum = 1)
 		{
 			var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
 
@@ -235,14 +232,14 @@ namespace LibDmd.Common
 					byte r, g, b;
 					ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out hue, out saturation, out luminosity);
 					ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
-					buffer[i] = r;
-					buffer[i + 1] = g;
-					buffer[i + 2] = b;
+					dest.Data[i] = r;
+					dest.Data[i + 1] = g;
+					dest.Data[i + 2] = b;
 				}
 			} else {
 				unsafe
 				{
-					fixed (byte* pBuffer = buffer, pBytes = bytes)
+					fixed (byte* pBuffer = dest.Data, pBytes = bytes)
 					{
 						byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
 						for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
@@ -738,8 +735,16 @@ namespace LibDmd.Common
 	}
 
 
+	/// <summary>
+	/// Scaler mode determines whether "HD up-scaling" is enabled.
+	/// </summary>
 	public enum ScalerMode
 	{
+		/// <summary>
+		/// Don't upscale
+		/// </summary>
+		None,
+		
 		/// <summary>
 		/// Double the pixels
 		/// </summary>

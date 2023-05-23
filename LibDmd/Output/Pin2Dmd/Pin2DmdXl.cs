@@ -36,10 +36,10 @@ namespace LibDmd.Output.Pin2Dmd
 			return _instance;
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			// split into sub frames
-			var changed = CreateRgb24(FixedSize, frame, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
+			var changed = CreateRgb24(FixedSize, frame.Data, _frameBufferRgb24, 4, pin2dmdConfig.rgbseq);
 
 			// send frame buffer to device
 			if (changed) {

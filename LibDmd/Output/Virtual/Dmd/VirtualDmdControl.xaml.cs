@@ -165,40 +165,40 @@ namespace LibDmd.Output.Virtual.Dmd
 			Dmd.RequestRender();
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
-			_nextFrameData = frame;
+			_nextFrameData = frame.Data;
 			Dmd.RequestRender();
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
-			_nextFrameData = frame;
+			_nextFrameData = frame.Data;
 			Dmd.RequestRender();
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
-			SetRgb24Frame(frame);
+			SetRgb24Frame(frame.Data);
 			Dmd.RequestRender();
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray2(FrameUtil.Join(Size, frame.Planes));
+			RenderGray2(frame.ConvertToGray());
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
-			RenderGray4(FrameUtil.Join(Size, frame.Planes));
+			RenderGray4(frame.ConvertToGray());
 		}
 
 		private void UpdateRotations(ColoredFrame frame)
@@ -797,7 +797,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void ClearDisplay()
 		{
-			RenderGray4(new byte[Size.Surface]);
+			RenderGray4(new DmdFrame(Size, 4));
 		}
 
 		private static string ReadResource(string name)

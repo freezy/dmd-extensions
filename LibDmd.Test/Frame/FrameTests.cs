@@ -26,5 +26,15 @@ namespace LibDmd.Test
 			16.GetBitLength().Should().Be(4);
 			64.GetBitLength().Should().Be(6);
 		}
+
+		[TestCase]
+		public void Should_Correctly_Determine_FrameSize()
+		{
+			new DmdFrame(128, 32, 2).Data.Length.Should().Be(4096);
+			new DmdFrame(128, 32, 4).Data.Length.Should().Be(4096);
+			new DmdFrame(128, 32, 6).Data.Length.Should().Be(4096);
+			new DmdFrame(128, 32, 8).Data.Length.Should().Be(4096);
+			new DmdFrame(128, 32, 24).Data.Length.Should().Be(4096 * 3);
+		}
 	}
 }

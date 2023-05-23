@@ -6,12 +6,11 @@ using LibDmd.Input;
 
 namespace LibDmd.Test.Stubs
 {
-	public class TestSource : IGray2Source
+	public class Gray2TestSource : IGray2Source, ITestSource
 	{
-		public string Name => "Test Source";
+		public string Name => "Gray2 Test Source";
 
-		public BehaviorSubject<Dimensions> Dimensions { get; set; } =
-			new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
+		public BehaviorSubject<Dimensions> Dimensions { get; set; } = new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;

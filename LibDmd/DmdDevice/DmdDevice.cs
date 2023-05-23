@@ -235,7 +235,7 @@ namespace LibDmd.DmdDevice
 
 			// 2. check for plugins
 			if (_serum == null) {
-				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode, _config.Global.ScaleToHd);;
+				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
 				if (plugin != null) {
 					_colorizationPlugin = plugin;
 				
@@ -263,14 +263,6 @@ namespace LibDmd.DmdDevice
 
 					_gray2Colorizer = colorizer.gray2;
 					_gray4Colorizer = colorizer.gray4;
-
-					if (_config.Global.ScaleToHd) {
-						Logger.Info("ScaleToHd = True, ScalerMode = " + _config.Global.ScalerMode.ToString());
-
-					}
-					else {
-						Logger.Info("ScaleToHd = False");
-					}
 				}
 			}
 		}
@@ -426,14 +418,14 @@ namespace LibDmd.DmdDevice
 					rootPath = AssemblyPath;
 				}
 				if (Directory.Exists(Path.Combine(rootPath, _config.Video.Path))) {
-					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"), _config.Global.ScaleToHd);
+					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path, _gameName + ".avi"));
 					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
 					Analytics.Instance.AddDestination(video);
 				}
 				else if (Directory.Exists(Path.GetDirectoryName(Path.Combine(rootPath, _config.Video.Path))) && _config.Video.Path.Length > 4 && _config.Video.Path.EndsWith(".avi")) {
-					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path), _config.Global.ScaleToHd);
+					var video = new VideoOutput(Path.Combine(rootPath, _config.Video.Path));
 					renderers.Add(video);
 					Logger.Info("Added video renderer.");
 					ReportingTags.Add("Out:Video");
@@ -822,11 +814,6 @@ namespace LibDmd.DmdDevice
 			}
 
 			if (_serum != null) {
-				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Equals(128, 32)) {
-						frame.Update(frame.Dimensions * 2, frame.Data, 2);
-					}
-				}
 				_serum.SetDimensions(frame.Dimensions);
 				_passthroughGray2Source.NextFrame(frame);
 			
@@ -844,22 +831,11 @@ namespace LibDmd.DmdDevice
 
 					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * newDimensions.Width, frame.Data.Length);
 
-					if (_config.Global.ScaleToHd) {
-						newDimensions = new Dimensions(256, 64);
-						_upsizedFrame.Update(newDimensions, _upsizedFrame.Data, 2);
-					}
-
 					_gray2Colorizer.SetDimensions(newDimensions);
 					_passthroughGray2Source.NextFrame(_upsizedFrame);
 				
 				} else {
 					var newDimensions = frame.Dimensions;
-					if (_config.Global.ScaleToHd) {
-						if (frame.Dimensions.Equals(128, 32)) {
-							newDimensions = frame.Dimensions * 2;
-							frame.Update(newDimensions, frame.Data, 2);
-						}
-					}
 
 					_gray2Colorizer?.SetDimensions(newDimensions);
 					_gray4Colorizer?.SetDimensions(newDimensions);
@@ -876,21 +852,11 @@ namespace LibDmd.DmdDevice
 			}
 
 			if (_serum != null) {
-				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Equals(128, 32)) {
-						frame.Update(frame.Dimensions * 2, frame.Data, 4);
-					}
-				}
 				_serum.SetDimensions(frame.Dimensions);
 				_serum.Convert(frame);
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
-				if (_config.Global.ScaleToHd) {
-					if (frame.Dimensions.Equals(128, 32)) {
-						frame.Update(frame.Dimensions * 2, frame.Data, 4);
-					}
-				}
 
 				_gray2Colorizer?.SetDimensions(frame.Dimensions);
 				_gray4Colorizer?.SetDimensions(frame.Dimensions);

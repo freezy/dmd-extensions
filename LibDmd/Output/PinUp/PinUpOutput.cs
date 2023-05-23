@@ -138,7 +138,7 @@ namespace LibDmd.Output.PinUp
 			// no, we don't write a blank image.
 		}
 
-		public void RenderRgb24(byte[] frame)
+		public void RenderRgb24(DmdFrame frame)
 		{
 			if (PuPFrameMatching == false) {
 				return;
@@ -149,7 +149,7 @@ namespace LibDmd.Output.PinUp
 
 				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
 				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-				Marshal.Copy(frame, 0, _pnt, FixedSize.Surface * 3);
+				Marshal.Copy(frame.Data, 0, _pnt, FixedSize.Surface * 3);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
@@ -158,7 +158,7 @@ namespace LibDmd.Output.PinUp
 			}
 		}
 
-		public void RenderGray4(byte[] frame)
+		public void RenderGray4(DmdFrame frame)
 		{
 			if (PuPFrameMatching == false) {
 				return;
@@ -166,12 +166,12 @@ namespace LibDmd.Output.PinUp
 
 			try {
 				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(FixedSize, 4, frame);
+				var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
 
-				var orangeframe = LibDmd.Common.FrameUtil.ConvertToRgb24(FixedSize, planes,
+				var orangeframe = FrameUtil.ConvertToRgb24(FixedSize, planes,
 					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
 
-				Marshal.Copy(orangeframe, 0, _pnt, FixedSize.Surface * 3);
+				Marshal.Copy(orangeframe.Data, 0, _pnt, FixedSize.Surface * 3);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {
@@ -180,11 +180,11 @@ namespace LibDmd.Output.PinUp
 			}
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
 			if (PuPFrameMatching == false) return;
-			RenderGray4(FrameUtil.ConvertGrayToGray(frame, new byte[] { 0x0, 0x1, 0x4, 0xf }));
+			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 2));
 		}
 
 		public void RenderRaw(byte[] data)

@@ -3,7 +3,6 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Frame;
@@ -43,7 +42,7 @@ namespace LibDmd.Converter.Serum
 		
 		private readonly Color[] _colorPalette = new Color[64];
 		private readonly byte[] _bytePalette = new byte[64 * 3];
-		private readonly byte[] _frameData;
+		private readonly DmdFrame _frame;
 		private readonly byte[][] _planes;
 		private readonly byte[] _rotations;
 		
@@ -82,7 +81,7 @@ namespace LibDmd.Converter.Serum
 			NumTriggersAvailable = numTriggers;
 			From = NumColors == 16 ? FrameFormat.Gray4 : FrameFormat.Gray2;
 			IsLoaded = true;
-			_frameData = new byte[FrameWidth * FrameHeight];
+			_frame = new DmdFrame(new Dimensions(FrameWidth, FrameHeight), From == FrameFormat.Gray4 ? 4 : 2);
 			
 			_planes = new byte[6][];
 			for (uint ti = 0; ti < 6; ti++) {
@@ -114,18 +113,18 @@ namespace LibDmd.Converter.Serum
 
 		public void Convert(DmdFrame frame)
 		{
-			Buffer.BlockCopy(frame.Data, 0, _frameData, 0, frame.Data.Length);
+			Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
 			
 			uint triggerId = 0xFFFFFFFF;
 			if ((_activePupOutput != null) && ((_activePupOutput.isPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
 			{
 				if (NumColors == 16)
-					_activePupOutput.RenderGray4(_frameData);
+					_activePupOutput.RenderGray4(_frame);
 				else
-					_activePupOutput.RenderGray2(_frameData);
+					_activePupOutput.RenderGray2(_frame);
 			}
 
-			Serum_Colorize(_frameData, FrameWidth, FrameHeight, _bytePalette, _rotations, ref triggerId);
+			Serum_Colorize(_frame.Data, FrameWidth, FrameHeight, _bytePalette, _rotations, ref triggerId);
 
 			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) {
 				if ((_rotations[ti * 3] >= 64) || (_rotations[ti * 3] + _rotations[ti * 3 + 1] > 64)) {
@@ -141,16 +140,16 @@ namespace LibDmd.Converter.Serum
 			
 			// convert to planes
 			if ((Dimensions.Value.Surface / 8) == _planes[0].Length) { // scale?
-				FrameUtil.Split(Dimensions.Value, _planes.Length, _frameData, _planes);
+				FrameUtil.Split(Dimensions.Value, _planes.Length, _frame.Data, _planes);
 				
 			} else {
 				planes = ScalerMode == ScalerMode.Doubler 
 					? FrameUtil.Scale2(Dimensions.Value, ConvertToPlanes(6)) 
-					: FrameUtil.Split(Dimensions.Value, _planes.Length, FrameUtil.Scale2x(Dimensions.Value, _frameData));
+					: FrameUtil.Split(Dimensions.Value, _planes.Length, FrameUtil.Scale2xUgh(Dimensions.Value, _frame.Data));
 			}
 			
 			// send the colored frame
-			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(planes, ConvertPalette(), _rotations));
+			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(new Dimensions(FrameWidth, FrameHeight), planes, ConvertPalette(), _rotations));
 		}
 		
 		public static string GetVersion()
@@ -172,7 +171,7 @@ namespace LibDmd.Converter.Serum
 			for (var ti = 0; ti < len; ti++) {
 				byte tl = 1;
 				for (var tk = 0; tk < colorBitDepth; tk++) {
-					if ((_frameData[ti] & tl) > 0) {
+					if ((_frame.Data[ti] & tl) > 0) {
 						_planes[tk][tj] |= bitMask;
 					}
 					tl <<= 1;

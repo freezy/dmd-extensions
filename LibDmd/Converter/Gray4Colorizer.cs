@@ -127,12 +127,12 @@ namespace LibDmd.Converter
 			if (_activeAnimation != null)
 			{
 				_activeAnimation.ScalerMode = ScalerMode;
-				_activeAnimation.NextFrame(planes, AnimationFinished);
+				_activeAnimation.NextFrame(frame.Dimensions, planes, AnimationFinished);
 				return;
 			}
 
 			// Sisch diräkt uisgäh
-			Render(planes);
+			Render(frame.Dimensions, planes);
 		}
 
 		public void LoadPalette(uint newpal)
@@ -301,8 +301,9 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Tuäts Biud uif diä entschprächändä Sourcä uisgäh.
 		/// </summary>
+		/// <param name="dim">Dimensionä vom Biud</param>
 		/// <param name="planes">S Biud zum uisgäh</param>
-		private void Render(byte[][] planes)
+		private void Render(Dimensions dim, byte[][] planes)
 		{
 			if ((Dimensions.Value.Surface / 8) != planes[0].Length)
 			{
@@ -316,7 +317,7 @@ namespace LibDmd.Converter
 				{
 					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
 					var colorData = FrameUtil.Join(Dimensions.Value / 2, planes);
-					var scaledData = FrameUtil.Scale2x(Dimensions.Value, colorData);
+					var scaledData = FrameUtil.Scale2xUgh(Dimensions.Value, colorData);
 					planes = FrameUtil.Split(Dimensions.Value, planes.Length, scaledData);
 				}
 			}
@@ -324,18 +325,18 @@ namespace LibDmd.Converter
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2)
 			{
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4)
 			{
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			if (planes.Length == 6)
 			{
-				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 		}
 

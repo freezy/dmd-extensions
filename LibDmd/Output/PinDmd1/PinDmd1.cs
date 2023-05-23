@@ -142,10 +142,10 @@ namespace LibDmd.Output.PinDmd1
 			return _instance;
 		}
 
-		public void RenderGray2(byte[] frame)
+		public void RenderGray2(DmdFrame frame)
 		{
 			// split frame into 2-bit planes
-			var planes = FrameUtil.Split(FixedSize, 2, frame);
+			var planes = FrameUtil.Split(FixedSize, 2, frame.Data);
 
 			// copy planes into frame buffer
 			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
@@ -171,7 +171,7 @@ namespace LibDmd.Output.PinDmd1
 
 		public void ClearDisplay()
 		{
-			RenderGray2(new byte[FixedSize.Surface]);
+			RenderGray2(new DmdFrame(FixedSize, 2));
 		}
 
 		public void Dispose()
