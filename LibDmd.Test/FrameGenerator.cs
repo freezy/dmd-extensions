@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Media;
 using LibDmd.Frame;
 
@@ -10,7 +10,10 @@ namespace LibDmd.Test
 	{
 		public static DmdFrame FromString(string frame)
 		{
-			var (data, dim, bitLength) = Parse(frame);
+			var match = Regex.Match(frame, @"\d{2} \d{2}", RegexOptions.IgnoreCase);
+			var parse = match.Success ? (Func<string,  (byte[], Dimensions, int)>)Parse2CharsPerPixel : Parse;
+
+			var (data, dim, bitLength) = parse(frame);
 			return new DmdFrame(dim, data, bitLength);
 		}
 
@@ -18,9 +21,9 @@ namespace LibDmd.Test
 
 		public static DmdFrame FromString(string red, string green, string blue)
 		{
-			var (r, redDim) = Parse2CharsPerColor(red);
-			var (g, greenDim) = Parse2CharsPerColor(green);
-			var (b, blueDim) = Parse2CharsPerColor(blue);
+			var (r, redDim, _) = Parse2CharsPerPixel(red);
+			var (g, greenDim, _) = Parse2CharsPerPixel(green);
+			var (b, blueDim, _) = Parse2CharsPerPixel(blue);
 
 			if (redDim != greenDim || greenDim != blueDim) {
 				throw new ArgumentException("Dimensions must match.");
@@ -41,7 +44,7 @@ namespace LibDmd.Test
 			var (data, dim, bitLength) = Parse(frame);
 			return new ColoredFrame(new DmdFrame(dim, data, bitLength), palette);
 		}
-		
+
 		private static (byte[], Dimensions, int) Parse(string frame)
 		{
 			var lines = frame
@@ -55,25 +58,26 @@ namespace LibDmd.Test
 			var height = lines.Length;
 			
 			var data = new byte[width * height];
-			var colors = new HashSet<int>();
+			var max = 0;
 			for (var y = 0; y < height; y++) {
 				var line = lines[y];
 				for (var x = 0; x < width; x++) {
 					if (x < line.Length) {
 						var c = line[x];
-						data[y * width + x] = Convert.ToByte(c.ToString(), 16);
+						var v = Convert.ToByte(c.ToString(), 16);
+						data[y * width + x] = v;
+						max = Math.Max(max, v);
 					} else {
 						data[y * width + x] = 0;
 					}
-					colors.Add(data[y * width + x]);
 				}
 			}
 
-			var bitLength = (colors.OrderBy(c => -c).First() + 1).GetBitLength();
+			var bitLength = (max + 1).GetBitLength();
 			return (data, new Dimensions(width, height), bitLength);
 		}
 		
-		private static (byte[], Dimensions) Parse2CharsPerColor(string frame)
+		private static (byte[], Dimensions, int) Parse2CharsPerPixel(string frame)
 		{
 			var lines = frame
 				.Trim()
@@ -85,6 +89,7 @@ namespace LibDmd.Test
 
 			var width = lines.OrderBy(l => -l.Length).First().Length;
 			var height = lines.Length;
+			var max = 0;
 			
 			var data = new byte[width * height];
 			for (var y = 0; y < height; y++) {
@@ -92,14 +97,16 @@ namespace LibDmd.Test
 				for (var x = 0; x < width; x++) {
 					if (x < line.Length) {
 						var c = line[x];
-						data[y * width + x] = Convert.ToByte(c, 16);
+						var v = Convert.ToByte(c, 16);
+						data[y * width + x] = v;
+						max = Math.Max(max, v);
 					} else {
 						data[y * width + x] = 0;
 					}
 				}
 			}
-
-			return (data, new Dimensions(width, height));
+			var bitLength = (max + 1).GetBitLength();
+			return (data, new Dimensions(width, height), bitLength);
 		}
 	}
 }
