@@ -661,7 +661,7 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(), 
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.TransformGray2(this, destFixedSize, destMultiSize),
+									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray2.RenderGray2
 							);
 							break;
@@ -682,7 +682,7 @@ namespace LibDmd
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
-									.TransformRgb24(destFixedSize, Resize, FlipHorizontally, FlipVertically),
+									.TransformRgb24(this, destFixedSize),
 								destRgb24.RenderRgb24
 							);
 							break;
@@ -695,7 +695,7 @@ namespace LibDmd
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
-									.TransformRgb24(destFixedSize, Resize, FlipHorizontally, FlipVertically)
+									.TransformRgb24(this, destFixedSize)
 									.ConvertToBmp(),
 								destBitmap.RenderBitmap
 							);
@@ -725,18 +725,31 @@ namespace LibDmd
 						// gray4 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
-							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
-								frame => destGray2.RenderGray2(frame));
+							Subscribe(
+								sourceGray4.GetGray4Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToGray2()
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray2.RenderGray2
+							);
+
+							// Subscribe(sourceGray4.GetGray4Frames()
+							// 		.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
+							// 		.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
+							// 	frame => destGray2.RenderGray2(frame));
 							break;
 
 						// gray4 -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
-							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame.Data, destFixedSize)),
-								frame => destGray4.RenderGray4(frame));
+							Subscribe(
+								sourceGray4.GetGray4Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray4.RenderGray4
+							);
 							break;
 
 						// gray4 -> gray6
