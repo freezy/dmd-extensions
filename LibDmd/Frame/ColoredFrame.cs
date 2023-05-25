@@ -100,24 +100,64 @@ namespace LibDmd
 		{
 			Planes = planes;
 			Palette = palette;
+
+			#if DEBUG
+			if (planes.Length != Palette.Length.GetBitLength()) {
+				throw new ArgumentException("Number of planes must match palette size");
+			}
+			#endif
 			return this;
 		}
 
-		public ColoredFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination destMultiSize)
+		private ColoredFrame Update(byte[][] planes)
 		{
-			var targetDim = GetTargetDimensions(fixedDest, destMultiSize);
+			Planes = planes;
+
+			#if DEBUG
+			if (planes.Length != Palette.Length.GetBitLength()) {
+				throw new ArgumentException("Number of planes must match palette size");
+			}
+			#endif
+			return this;
+		}
+
+		private ColoredFrame Update(Dimensions dim, byte[][] planes)
+		{
+			Dimensions = dim;
+			Planes = planes;
+
+			#if DEBUG
+			if (planes.Length != Palette.Length.GetBitLength()) {
+				throw new ArgumentException("Number of planes must match palette size");
+			}
+			#endif
+			return this;
+		}
+
+		/// <summary>
+		/// Up- or downscales image, and flips if necessary.
+		/// </summary>
+		///
+		/// <remarks>
+		/// Images are actually never upscaled, if the source image is smaller than destination frame, it gets centered.
+		/// Downscaling is done depending on the render graph's `Resize` setting.
+		/// </remarks>
+		/// <param name="renderGraph">Render graph reference to retrieve flipping and resizing config</param>
+		/// <param name="fixedDest">If not null, the fixed destination we're transforming for.</param>
+		/// <param name="multiDest">If not null, the multi-res destination we're transforming for.</param>
+		/// <returns>This frame, transformed.</returns>
+		public ColoredFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+		{
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
 
 			// for dynamic or equal target dimensions, just flip
 			if (targetDim == Dimensions.Dynamic || targetDim == Dimensions) {
-				Planes = TransformationUtil.Flip(Dimensions, Planes, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-				return this;
+				return Update(TransformationUtil.Flip(Dimensions, Planes, renderGraph.FlipHorizontally, renderGraph.FlipVertically));
 			}
 
 			// if we need to scale down by factor 2, do it here more efficiently
 			if (Dimensions.IsDoubleSizeOf(targetDim) && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				Planes = FrameUtil.ScaleDown(targetDim, Planes);
-				Dimensions = targetDim;
-				return this;
+				return Update(targetDim, FrameUtil.ScaleDown(targetDim, Planes));
 			}
 
 			// otherwise, convert to grayscale bitmap, transform, convert back.
@@ -125,9 +165,7 @@ namespace LibDmd
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedData = ConvertFromBitmap(transformedBmp);
 
-			Planes = FrameUtil.Split(targetDim, BitLength, transformedData);
-			Dimensions = targetDim;
-			return this;
+			return Update(targetDim, FrameUtil.Split(targetDim, BitLength, transformedData));
 		}
 
 		/// <summary>
@@ -159,10 +197,8 @@ namespace LibDmd
 			var data = scalerMode == ScalerMode.Doubler
 				? FrameUtil.ScaleDouble(Dimensions, FrameUtil.Join(Dimensions, Planes))
 				: FrameUtil.Scale2X(Dimensions, FrameUtil.Join(Dimensions, Planes));
-			Dimensions *= 2;
-			Planes = FrameUtil.Split(Dimensions, BitLength, data);
 
-			return this;
+			return Update(Dimensions * 2, FrameUtil.Split(Dimensions * 2, BitLength, data));
 		}
 
 		public override string ToString()

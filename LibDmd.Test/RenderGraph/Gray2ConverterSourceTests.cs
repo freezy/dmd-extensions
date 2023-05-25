@@ -112,5 +112,130 @@ namespace LibDmd.Test
 			_graph.StartRendering();
 			await AssertFrame(_source, dest, frame, coloredFrame);
 		}
+
+		[TestCase]
+		public async Task Should_Downscale()
+		{
+			var dest = new DestinationFixedGray2Colored(8, 4);
+			var palette = new[] { Colors.White, Colors.Tomato, Colors.SpringGreen, Colors.Navy };
+
+			_convert = dmdFrame => new ColoredFrame(FrameGenerator.FromString(@"
+				333333333333333333333333
+				222222222222222222222222
+				111111111111111111111111
+				000000000000000000000000"), palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				33333333
+				22222222
+				11111111
+				00000000",
+				palette);
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Downscale_And_Flip_Both()
+		{
+			var dest = new DestinationFixedGray2Colored(8, 4);
+			var palette = new[] { Colors.White, Colors.Tomato, Colors.SpringGreen, Colors.Navy };
+
+			_convert = dmdFrame => new ColoredFrame(FrameGenerator.FromString(@"
+				000000000000333333333333
+				222222222222111111111111
+				333333333333111111111111
+				111111111111000000000000"), palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				00001111
+				11113333
+				11112222
+				33330000",
+				palette);
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.FlipHorizontally = true;
+			_graph.FlipVertically = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Flip_Vertically()
+		{
+			var dest = new DestinationFixedGray2Colored(8, 4);
+			var palette = new[] { Colors.White, Colors.Tomato, Colors.SpringGreen, Colors.Navy };
+
+			_convert = dmdFrame => new ColoredFrame(dmdFrame, palette);
+
+			var frame = FrameGenerator.FromString(@"
+				00000000
+				01010101
+				20202020
+				33333333");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				33333333
+				20202020
+				01010101
+				00000000",
+				palette);
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.FlipVertically = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Flip_Horizontally()
+		{
+			var dest = new DestinationFixedGray2Colored(8, 4);
+			var palette = new[] { Colors.White, Colors.Tomato, Colors.SpringGreen, Colors.Navy };
+
+			_convert = dmdFrame => new ColoredFrame(dmdFrame, palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				33333333
+				20202020
+				01010101
+				00000000",
+				palette);
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.FlipHorizontally = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
 	}
 }
