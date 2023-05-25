@@ -694,9 +694,8 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
-									.TransformRgb24(this, destFixedSize)
-									.ConvertToBmp(),
+									.ConvertToBmp(_gray2Palette ?? _gray2Colors)
+									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap
 							);
 							break;
@@ -754,21 +753,27 @@ namespace LibDmd
 						// gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
-							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => TransformScaling(source.Dimensions.Value, frame.Data, destFixedSize))
-									.Select(frame => ColorizeGray4(source.Dimensions.Value, frame))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame.Data, destFixedSize)),
-								destRgb24.RenderRgb24);
+							Subscribe(
+								sourceGray4.GetGray4Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb24(_gray4Palette ?? _gray4Colors)
+									.TransformRgb24(this, destFixedSize),
+								destRgb24.RenderRgb24
+							);
 							break;
 
 						// gray4 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray4, dest, destBitmap, from, to);
-							Subscribe(sourceGray4.GetGray4Frames()
-									.Select(frame => TransformScaling(source.Dimensions.Value, frame.Data, destFixedSize))
-									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, ColorizeGray4(source.Dimensions.Value, frame).Data))
-									.Select(bmp => Transform(bmp, destFixedSize)),
-								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
+							Subscribe(
+								sourceGray4.GetGray4Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToBmp(_gray4Palette ?? _gray4Colors)
+									.Transform(this, destFixedSize, destMultiSize),
+								destBitmap.RenderBitmap
+							);
 							break;
 
 						// gray4 -> colored gray2

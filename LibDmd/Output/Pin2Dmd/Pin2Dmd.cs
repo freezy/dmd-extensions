@@ -92,7 +92,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public void RenderGray2(DmdFrame frame)
 		{
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(frame.ConvertGrayToGray(0x0, 0x1, 0x4, 0xf));
+			RenderGray4(frame.ConvertToGray4());
 		}
 
 		public void RenderGray4(DmdFrame frame)

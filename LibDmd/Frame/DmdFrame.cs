@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.Input;
 using LibDmd.Output;
 
 namespace LibDmd.Frame
@@ -19,7 +18,6 @@ namespace LibDmd.Frame
 		public bool IsRgb24 => BitLength == 24;
 
 		private int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
-
 
 		public DmdFrame()
 		{
@@ -90,20 +88,18 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		[Obsolete]
-		public DmdFrame ConvertToRgb24Legacy(Color[] palette)
-		{
-			Data = ColorUtil.ColorizeObsolete(Dimensions, Data, palette).Data;
-			return this;
-		}
-
+		/// <summary>
+		/// Converts this frame to gray2.
+		/// </summary>
+		/// <returns>This frame, converted to gray2.</returns>
+		/// <exception cref="ArgumentException">If frame is already gray2</exception>
 		public DmdFrame ConvertToGray2()
 		{
 			switch (BitLength) {
 				case 2:
 					throw new ArgumentException("Frame is already gray2.");
 				case 4:
-					Data = FrameUtil.ConvertGrayToGray(Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 });
+					Data = FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3);
 					BitLength = 2;
 					break;
 				case 24:
@@ -112,18 +108,38 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame ConvertGrayToGray(params byte[] mapping)
+		/// <summary>
+		/// Converts this frame to gray4.
+		/// </summary>
+		/// <returns>This frame, converted to gray4.</returns>
+		/// <exception cref="ArgumentException">If frame is already gray4</exception>
+		public DmdFrame ConvertToGray4()
 		{
-			Data = FrameUtil.ConvertGrayToGray(Data, mapping);
+			switch (BitLength) {
+				case 2:
+					Data = FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf);
+					BitLength = 4;
+					break;
+				case 4:
+					throw new ArgumentException("Frame is already gray4.");
+				case 24:
+					throw new NotImplementedException();
+			}
 			return this;
 		}
 
-		public DmdFrame ConvertToGray(int numColors)
-		{
-			Data = ImageUtil.ConvertToGray(Dimensions, Data, numColors);
-			return this;
-		}
+		/// <summary>
+		/// Converts this gray frame to Bitmap.
+		/// </summary>
+		/// <param name="palette">Palette to use for conversion</param>
+		/// <returns>New bitmap frame</returns>
+		public BmpFrame ConvertToBmp(Color[] palette) => ConvertToRgb24(palette).ConvertToBmp();
 
+		/// <summary>
+		/// Converts this RGB frame to Bitmap.
+		/// </summary>
+		/// <returns>New bitmap frame</returns>
+		/// <exception cref="ArgumentException">Thrown if executed on a grayscale frame</exception>
 		public BmpFrame ConvertToBmp()
 		{
 			#if DEBUG
@@ -133,25 +149,6 @@ namespace LibDmd.Frame
 			#endif
 			return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
 		}
-
-		public BmpFrame ConvertFromGray2(double hue, double sat, double lum)
-		{
-			return new BmpFrame(ImageUtil.ConvertFromGray2(Dimensions, Data, hue, sat, lum));
-		}
-
-		public BmpFrame ConvertFromGray4(double hue, double sat, double lum)
-		{
-			return new BmpFrame(ImageUtil.ConvertFromGray4(Dimensions, Data, hue, sat, lum));
-		}
-
-		public BmpFrame ConvertFromRgb24(Color[] palette)
-		{
-			return new BmpFrame(ImageUtil.ConvertFromRgb24(
-				Dimensions,
-				ConvertToRgb24Legacy(palette).Data
-			));
-		}
-
 
 		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
@@ -198,6 +195,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest)
 		{
+			// todo merge with TransformGray
 			// do anything at all?
 			if (fixedDest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;

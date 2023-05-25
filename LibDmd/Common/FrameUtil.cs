@@ -586,7 +586,7 @@ namespace LibDmd.Common
 		/// <param name="srcFrame">Top left bottom right pixels with values between 0 and 3</param>
 		/// <param name="mapping">A list of values assigned to each of the pixels.</param>
 		/// <returns>Top left bottom right pixels with values between 0 and 15</returns>
-		public static byte[] ConvertGrayToGray(byte[] srcFrame, byte[] mapping)
+		public static byte[] ConvertGrayToGray(byte[] srcFrame, params byte[] mapping)
 		{
 			var destFrame = new byte[srcFrame.Length];
 			for (var i = 0; i < destFrame.Length; i++) {
