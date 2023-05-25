@@ -215,10 +215,8 @@ namespace LibDmd.Common
 
 			if (Math.Abs(lum - 1) > 0.01) {
 				for (var i = 0; i < bytes.Length; i += 3) {
-					double hue, saturation, luminosity;
-					byte r, g, b;
-					ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out hue, out saturation, out luminosity);
-					ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out r, out g, out b);
+					ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
+					ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
 					frame[i] = r;
 					frame[i + 1] = g;
 					frame[i + 2] = b;

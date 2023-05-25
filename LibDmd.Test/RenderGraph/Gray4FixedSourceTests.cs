@@ -354,7 +354,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Bitmap()
 		{
-			var dest = new DestinationBitmapFixed(8, 4);
+			var dest = new DestinationFixedBitmap(8, 4);
 
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };

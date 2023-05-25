@@ -85,6 +85,10 @@ namespace LibDmd
 
 		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
 		
+		/// <summary>
+		/// Creates a new grayscale frame with the only the grayscale data and no color conversion.
+		/// </summary>
+		/// <returns>New DMD frame</returns>
 		public DmdFrame ConvertToGray()
 		{
 			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
@@ -135,6 +139,18 @@ namespace LibDmd
 		}
 
 		/// <summary>
+		/// Converts this colored frame to a bitmap frame.
+		/// </summary>
+		/// <returns>Converted bitmap frame</returns>
+		public BmpFrame ConvertToBitmap() => new BmpFrame(ConvertToBitmapWithColors());
+
+		/// <summary>
+		/// Converts this colored frame to a RGB24 frame.
+		/// </summary>
+		/// <returns>Converted RGB24 frame</returns>
+		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette), 24);
+
+		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
 		/// </summary>
 		///
@@ -161,9 +177,9 @@ namespace LibDmd
 			}
 
 			// otherwise, convert to grayscale bitmap, transform, convert back.
-			var bmp = ConvertToBitmap();
+			var bmp = ConvertToBitmapWithoutColors();
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedData = ConvertFromBitmap(transformedBmp);
+			var transformedData = ConvertFromBitmapWithoutColors(transformedBmp);
 
 			return Update(targetDim, FrameUtil.Split(targetDim, BitLength, transformedData));
 		}
@@ -225,7 +241,17 @@ namespace LibDmd
 			return sb.ToString();
 		}
 
-		private BitmapSource ConvertToBitmap()
+		private BitmapSource ConvertToBitmapWithColors()
+		{
+			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette);
+			return ImageUtil.ConvertFromRgb24(Dimensions, rgb24);
+		}
+
+		/// <summary>
+		/// Converts the frame with a linear color palette, for resizing purpose.
+		/// </summary>
+		/// <returns>Bitmap</returns>
+		private BitmapSource ConvertToBitmapWithoutColors()
 		{
 			switch (BitLength) {
 				case 2: return ImageUtil.ConvertFromGray2(Dimensions, Data, 0, 1, 1);
@@ -236,7 +262,12 @@ namespace LibDmd
 			}
 		}
 
-		private byte[] ConvertFromBitmap(BitmapSource bmp)
+		/// <summary>
+		/// Converts a bitmap with a linear color palette back to gray, after resizing.
+		/// </summary>
+		/// <param name="bmp"></param>
+		/// <returns>Gray array</returns>
+		private byte[] ConvertFromBitmapWithoutColors(BitmapSource bmp)
 		{
 			switch (BitLength) {
 				case 2: return ImageUtil.ConvertToGray2(bmp, 0, 1, out _);

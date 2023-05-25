@@ -243,7 +243,7 @@ namespace LibDmd.Common
 			return arr;
 		}
 
-		[Obsolete("Use the ColorizeFrame instead")]
+		[Obsolete("Use the ColorizeRgb24 instead")]
 		public static DmdFrame ColorizeObsolete(Dimensions dim, byte[] frame, Color[] palette)
 		{
 			return new DmdFrame(dim, ColorizeRgb24(dim, frame, palette), 24);

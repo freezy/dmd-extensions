@@ -237,5 +237,134 @@ namespace LibDmd.Test
 			await AssertFrame(_source, dest, frame, coloredFrame);
 		}
 
+		[TestCase]
+		public async Task Should_Ignore_Colored_Frame_For_Gray2()
+		{
+			var dest = new DestinationFixedGray2(8, 4);
+			var palette = new[] { Colors.White, Colors.Tomato, Colors.SpringGreen, Colors.Navy };
+
+			_convert = dmdFrame => new ColoredFrame(FrameGenerator.FromString(@"
+				00000000
+				00000000
+				00000000
+				00000000"), palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				33333333
+				20202020
+				01010101
+				00000000");
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.FlipHorizontally = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Passthrough_Gray2_Data()
+		{
+			var source = new SourceColoredGray2();
+			var dest = new DestinationFixedGray2(8, 4);
+			var palette = new[] { Colors.Gray, Colors.Red, Color.FromRgb(0x0, 0xff, 0x0), Colors.Blue };
+
+			_convert = dmdFrame => new ColoredFrame(dmdFrame, palette);
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000", palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			_graph.Source = source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(source, dest, coloredFrame, frame);
+		}
+
+		[TestCase]
+		public async Task Should_Color_Frame_And_Convert_To_Rgb24()
+		{
+			var dest = new DestinationFixedRgb24(8, 4);
+			var palette = new[] { Colors.Gray, Colors.Red, Color.FromRgb(0x0, 0xff, 0x0), Colors.Blue };
+
+			_convert = dmdFrame => new ColoredFrame(dmdFrame, palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				00 00 00 00 00 00 00 00 
+				80 00 80 00 80 00 80 00 
+				FF 80 FF 80 FF 80 FF 80 
+				80 80 80 80 80 80 80 80", @"
+				00 00 00 00 00 00 00 00 
+				80 FF 80 FF 80 FF 80 FF 
+				00 80 00 80 00 80 00 80 
+				80 80 80 80 80 80 80 80", @"
+				FF FF FF FF FF FF FF FF 
+				80 00 80 00 80 00 80 00 
+				00 80 00 80 00 80 00 80 
+				80 80 80 80 80 80 80 80");
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Color_Frame_And_Convert_To_Bitmap()
+		{
+			var dest = new DestinationFixedBitmap(8, 4);
+			var palette = new[] { Colors.Gray, Colors.Red, Color.FromRgb(0x0, 0xff, 0x0), Colors.Blue };
+
+			_convert = dmdFrame => new ColoredFrame(dmdFrame, palette);
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var coloredFrame = FrameGenerator.FromString(@"
+				00 00 00 00 00 00 00 00 
+				80 00 80 00 80 00 80 00 
+				FF 80 FF 80 FF 80 FF 80 
+				80 80 80 80 80 80 80 80", @"
+				00 00 00 00 00 00 00 00 
+				80 FF 80 FF 80 FF 80 FF 
+				00 80 00 80 00 80 00 80 
+				80 80 80 80 80 80 80 80", @"
+				FF FF FF FF FF FF FF FF 
+				80 00 80 00 80 00 80 00 
+				00 80 00 80 00 80 00 80 
+				80 80 80 80 80 80 80 80");
+
+			_graph.Source = _source;
+			_graph.Converter = new ConverterGray2(_convert);
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			await AssertFrame(_source, dest, frame, coloredFrame);
+		}
+
 	}
 }

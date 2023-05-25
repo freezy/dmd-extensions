@@ -2,8 +2,8 @@
 
 namespace LibDmd.Test.Stubs
 {
-	public interface ITestSource
+	public interface ITestSource<in TFrame>
 	{
-		void AddFrame(DmdFrame frame);
+		void AddFrame(TFrame frame);
 	}
 }
