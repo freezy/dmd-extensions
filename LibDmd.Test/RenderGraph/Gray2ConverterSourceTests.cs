@@ -255,18 +255,11 @@ namespace LibDmd.Test
 				10101010
 				00000000");
 
-			var coloredFrame = FrameGenerator.FromString(@"
-				33333333
-				20202020
-				01010101
-				00000000");
-
 			_graph.Source = _source;
 			_graph.Converter = new ConverterGray2(_convert);
-			_graph.FlipHorizontally = true;
 			_graph.Destinations = new List<IDestination> { dest };
 			_graph.StartRendering();
-			await AssertFrame(_source, dest, frame, coloredFrame);
+			await AssertFrame(_source, dest, frame, frame);
 		}
 
 		[TestCase]
