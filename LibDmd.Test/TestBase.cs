@@ -55,5 +55,23 @@ namespace LibDmd.Test
 			receivedFrame.BitLength.Should().Be(expectedFrame.BitLength);
 			receivedFrame.Dimensions.Should().Be(expectedFrame.Dimensions);
 		}
+
+		protected static async Task AssertFrame(ITestSource source, ITestDestination<ColoredFrame> dest, DmdFrame srcFrame, ColoredFrame expectedFrame)
+		{
+			Print(srcFrame);
+
+			dest.Reset();
+			source.AddFrame(srcFrame);
+			var receivedFrame = await dest.Frame;
+
+			Print(receivedFrame);
+
+			receivedFrame.Planes.Length.Should().Be(expectedFrame.Planes.Length);
+			for (var i = 0; i < receivedFrame.Planes.Length; i++) {
+				receivedFrame.Planes[i].Should().BeEquivalentTo(expectedFrame.Planes[i]);
+			}
+			receivedFrame.Palette.Should().BeEquivalentTo(expectedFrame.Palette);
+			receivedFrame.Dimensions.Should().Be(expectedFrame.Dimensions);
+		}
 	}
 }

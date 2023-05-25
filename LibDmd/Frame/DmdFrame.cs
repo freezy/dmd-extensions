@@ -167,8 +167,9 @@ namespace LibDmd.Frame
 			var bytesPerPixel = BytesPerPixel;
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);
 			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
-				// no resizing, we're done here.
-				return Flip(bytesPerPixel, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+				// just flip
+				Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+				return this;
 			}
 
 			// perf: if no flipping these cases can easily done on the byte array directly
@@ -278,12 +279,6 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
-		{
-			Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, flipHorizontally, flipVertically);
-			return this;
-		}
-
 		/// <summary>
 		/// Flat-clones the frame (i.e. the data is still the same, but now you
 		/// can replace it without affecting other references of the frame).
@@ -297,7 +292,7 @@ namespace LibDmd.Frame
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
-			sb.AppendLine($"DMDFrame {Dimensions}@{BitLength} ({Data.Length} bytes):");
+			sb.AppendLine($"DMD Frame {Dimensions}@{BitLength} ({Data.Length} bytes):");
 			if (BitLength <= 8) {
 				for (var y = 0; y < Dimensions.Height; y++) {
 					for (var x = 0; x < Dimensions.Width; x++) {

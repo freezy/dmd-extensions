@@ -333,8 +333,7 @@ namespace LibDmd.Common
 					try {
 						var pixelLum = frameData.Get(y * dim.Width + x); // 0 - 3
 						var lum = luminosity * pixelLum / 3;
-						byte red, green, blue;
-						ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
+						ColorUtil.HslToRgb(hue, saturation, lum, out var red, out var green, out var blue);
 
 						frameBuffer[index] = blue;
 						frameBuffer[index + 1] = green;
@@ -414,8 +413,7 @@ namespace LibDmd.Common
 
 					var pixelLum = frameData.Get(y * dim.Width + x);
 					var lum = luminosity * pixelLum / 63;
-					byte red, green, blue;
-					ColorUtil.HslToRgb(hue, saturation, lum, out red, out green, out blue);
+					ColorUtil.HslToRgb(hue, saturation, lum, out var red, out var green, out var blue);
 
 					frameBuffer[index] = blue;
 					frameBuffer[index + 1] = green;

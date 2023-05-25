@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Frame;
 using LibDmd.Output;
@@ -15,18 +16,21 @@ namespace LibDmd.Test.Stubs
 		
 		protected Subject<TFrame> LastFrame = new Subject<TFrame>();
 
+		private IDisposable _disposable;
+
 		protected DestinationFixed(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true)
 		{
 			FixedSize = new Dimensions(dmdWidth, dmdHeight);
 			DmdAllowHdScaling = dmdAllowHdScaling;
 			Frame = LastFrame.FirstAsync().PublishLast();
-			Frame.Connect();
+			_disposable = Frame.Connect();
 		}
 
 		public void Reset()
 		{
+			_disposable?.Dispose();
 			Frame = LastFrame.FirstAsync().PublishLast();
-			Frame.Connect();
+			_disposable = Frame.Connect();
 		}
 
 		public void ClearDisplay()
