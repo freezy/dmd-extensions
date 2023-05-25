@@ -6,7 +6,7 @@ using LibDmd.Input;
 
 namespace LibDmd.Test.Stubs
 {
-	public class Gray2TestSource : IGray2Source, ITestSource
+	public class SourceGray2 : IGray2Source, ITestSource
 	{
 		public string Name => "Gray2 Test Source";
 

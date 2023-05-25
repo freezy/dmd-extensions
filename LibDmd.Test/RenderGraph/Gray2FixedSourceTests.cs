@@ -12,20 +12,20 @@ namespace LibDmd.Test
 	[TestFixture]
 	public class Gray2FixedSourceTests : TestBase
 	{
-		private Gray2TestSource _source;
+		private SourceGray2 _source;
 		private RenderGraph _graph;
 
 		[SetUp]
 		public void Setup()
 		{
 			_graph = new RenderGraph();
-			_source = new Gray2TestSource();
+			_source = new SourceGray2();
 		}
 
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -43,7 +43,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped_Horizontally()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.FlipHorizontally = true;
@@ -68,7 +68,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped_Vertically()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.FlipVertically = true;
@@ -93,7 +93,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.FlipVertically = true;
@@ -119,7 +119,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Destination_NoHdScaling()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = false };
+			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = false };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -148,7 +148,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Graph_NoHdScaling()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.None;
@@ -179,7 +179,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Dest_Too_Small()
 		{
-			var dest = new Gray2FixedTestDestination(14, 6) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedGray2(14, 6) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -207,7 +207,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Same_Width()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -237,7 +237,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fit()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Resize = ResizeMode.Fit;
@@ -279,7 +279,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fill()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Resize = ResizeMode.Fill;
@@ -321,7 +321,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Stretch()
 		{
-			var dest = new Gray2FixedTestDestination(8, 4);
+			var dest = new DestinationFixedGray2(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Resize = ResizeMode.Stretch;
@@ -346,7 +346,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8);
+			var dest = new DestinationFixedGray2(16, 8);
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -375,7 +375,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double_With_Padding()
 		{
-			var dest = new Gray2FixedTestDestination(18, 10);
+			var dest = new DestinationFixedGray2(18, 10);
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -406,7 +406,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Scale2X()
 		{
-			var dest = new Gray2FixedTestDestination(16, 8);
+			var dest = new DestinationFixedGray2(16, 8);
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -435,7 +435,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame()
 		{
-			var dest = new Rgb24FixedTestDestination(8, 4);
+			var dest = new DestinationFixedRgb24(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -467,7 +467,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_Flipped()
 		{
-			var dest = new Rgb24FixedTestDestination(8, 4);
+			var dest = new DestinationFixedRgb24(8, 4);
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -494,7 +494,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_Double()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -539,7 +539,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_2X()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 8) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -584,7 +584,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fit()
 		{
-			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -632,7 +632,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fill()
 		{
-			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -680,7 +680,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Stretch()
 		{
-			var dest = new Rgb24FixedTestDestination(10, 4) { DmdAllowHdScaling = true };
+			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -712,7 +712,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 8);
+			var dest = new DestinationFixedRgb24(16, 8);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -743,7 +743,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 8);
+			var dest = new DestinationFixedRgb24(16, 8);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -774,7 +774,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 8);
+			var dest = new DestinationFixedRgb24(16, 8);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -805,7 +805,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill_Y()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 4);
+			var dest = new DestinationFixedRgb24(16, 4);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -834,7 +834,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit_Y()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 4);
+			var dest = new DestinationFixedRgb24(16, 4);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -863,7 +863,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch_Y()
 		{
-			var dest = new Rgb24FixedTestDestination(16, 4);
+			var dest = new DestinationFixedRgb24(16, 4);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -892,7 +892,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill_X()
 		{
-			var dest = new Rgb24FixedTestDestination(8, 6);
+			var dest = new DestinationFixedRgb24(8, 6);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -921,7 +921,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit_X()
 		{
-			var dest = new Rgb24FixedTestDestination(8, 6);
+			var dest = new DestinationFixedRgb24(8, 6);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -950,7 +950,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch_X()
 		{
-			var dest = new Rgb24FixedTestDestination(8, 6);
+			var dest = new DestinationFixedRgb24(8, 6);
 			
 			_graph.Source = _source;
 			_graph.SetColor(Colors.White);
@@ -979,7 +979,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Bitmap_Frame()
 		{
-			var dest = new BitmapFixedTestDestination(8, 4);
+			var dest = new DestinationBitmapFixed(8, 4);
 
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };

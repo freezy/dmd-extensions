@@ -5,12 +5,12 @@ using LibDmd.Output;
 
 namespace LibDmd.Test.Stubs
 {
-	public class Rgb24FixedTestDestination : FixedTestDestination<DmdFrame>, IRgb24Destination
+	public class DestinationFixedRgb24 : DestinationFixed<DmdFrame>, IRgb24Destination
 	{
-		public string Name => "Test Destination (Fixed RGB24)";
+		public string Name => "Fixed RGB24";
 		public bool IsAvailable => true;
 
-		public Rgb24FixedTestDestination(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)
+		public DestinationFixedRgb24(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)
 		{
 		}
 

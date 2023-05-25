@@ -10,20 +10,20 @@ namespace LibDmd.Test
 	[TestFixture]
 	public class Gray2DynamicSourceTests : TestBase
 	{
-		private Gray2TestSource _source;
+		private SourceGray2 _source;
 		private RenderGraph _graph;
 
 		[SetUp]
 		public void Setup()
 		{
 			_graph = new RenderGraph();
-			_source = new Gray2TestSource();
+			_source = new SourceGray2();
 		}
 
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -38,11 +38,10 @@ namespace LibDmd.Test
 			await AssertFrame(_source, dest, frame, frame);
 		}
 
-				
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped_Horizontally()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.FlipHorizontally = true;
@@ -67,7 +66,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped_Vertically()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.FlipVertically = true;
@@ -92,7 +91,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Passthrough_Gray2_Frame_Flipped()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.FlipVertically = true;
@@ -118,7 +117,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -147,7 +146,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Scale2X()
 		{
-			var dest = new Gray2DynamicTestDestination();
+			var dest = new DestinationDynamicGray2();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -176,7 +175,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame()
 		{
-			var dest = new Rgb24DynamicTestDestination();
+			var dest = new DestinationDynamicRgb24();
 			
 			_graph.Source = _source;
 			_graph.Destinations = new List<IDestination> { dest };
@@ -208,7 +207,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_Double()
 		{
-			var dest = new Rgb24DynamicTestDestination();
+			var dest = new DestinationDynamicRgb24();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Doubler;
@@ -253,7 +252,7 @@ namespace LibDmd.Test
 		[TestCase]
 		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_2X()
 		{
-			var dest = new Rgb24DynamicTestDestination();
+			var dest = new DestinationDynamicRgb24();
 			
 			_graph.Source = _source;
 			_graph.ScalerMode = ScalerMode.Scale2x;
@@ -292,6 +291,38 @@ namespace LibDmd.Test
 				00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 				00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00");
 			
+			await AssertFrame(_source, dest, frame, rgbFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Bitmap_Frame()
+		{
+			var dest = new DestinationDynamicBitmap();
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				FF FF FF FF FF FF FF FF 
+				00 AA 00 AA 00 AA 00 AA 
+				55 00 55 00 55 00 55 00 
+				00 00 00 00 00 00 00 00", @"
+				45 45 45 45 45 45 45 45 
+				00 2E 00 2E 00 2E 00 2E 
+				17 00 17 00 17 00 17 00 
+				00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00");
+
 			await AssertFrame(_source, dest, frame, rgbFrame);
 		}
 	}

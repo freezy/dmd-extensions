@@ -20,12 +20,6 @@ namespace LibDmd.Frame
 			Dimensions = bitmap.Dimensions();
 		}
 
-		public BmpFrame(BitmapSource bitmap, Dimensions dim)
-		{
-			Bitmap = bitmap;
-			Dimensions = dim;
-		}
-
 		public BmpFrame Update(BitmapSource bmp)
 		{
 			Bitmap = bmp;
@@ -62,7 +56,7 @@ namespace LibDmd.Frame
 
 		public object Clone()
 		{
-			return new BmpFrame(Bitmap, Dimensions);
+			return new BmpFrame(Bitmap);
 		}
 	}
 }

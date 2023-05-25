@@ -241,7 +241,7 @@ namespace LibDmd.Output.PinDmd3
 		{
 			// fall back if firmware doesn't support colored gray 4
 			if (!_supportsColoredGray4) {
-				var rgb24Frame = ColorUtil.ColorizeFrame(FixedSize, FrameUtil.Join(FixedSize, frame.Planes), frame.Palette);
+				var rgb24Frame = ColorUtil.ColorizeObsolete(FixedSize, FrameUtil.Join(FixedSize, frame.Planes), frame.Palette);
 				RenderRgb24(rgb24Frame);
 				return;
 			}

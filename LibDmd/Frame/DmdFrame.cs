@@ -16,6 +16,8 @@ namespace LibDmd.Frame
 		public int BitLength;
 
 		public bool IsGray => BitLength <= 8;
+		public bool IsRgb24 => BitLength == 24;
+
 		private int BytesPerPixel => BitLength < 8 ? 1 : BitLength / 8;
 
 
@@ -91,7 +93,7 @@ namespace LibDmd.Frame
 		[Obsolete]
 		public DmdFrame ConvertToRgb24Legacy(Color[] palette)
 		{
-			Data = ColorUtil.ColorizeFrame(Dimensions, Data, palette).Data;
+			Data = ColorUtil.ColorizeObsolete(Dimensions, Data, palette).Data;
 			return this;
 		}
 
@@ -109,6 +111,11 @@ namespace LibDmd.Frame
 
 		public BmpFrame ConvertToBmp()
 		{
+			#if DEBUG
+			if (!IsRgb24) {
+				throw new ArgumentException("Cannot convert from gray to bitmap. Convert to RGB24 first.");
+			}
+			#endif
 			return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
 		}
 
@@ -223,7 +230,7 @@ namespace LibDmd.Frame
 			}
 			#endif
 
-			Data = ColorUtil.Colorize(Dimensions, Data, palette);
+			Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
 			BitLength = 24;
 
 			return this;
