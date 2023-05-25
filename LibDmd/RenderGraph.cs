@@ -1029,8 +1029,13 @@ namespace LibDmd
 						// colored gray2 -> colored gray2
 						case FrameFormat.ColoredGray2:
 							AssertCompatibility(source, sourceColoredGray2, dest, destColoredGray2, from, to);
-							Subscribe(sourceColoredGray2.GetColoredGray2Frames()
-									.Select(frame => TransformColoredGray2(source.Dimensions.Value, frame, destFixedSize)), destColoredGray2.RenderColoredGray2);
+							Subscribe(
+								sourceColoredGray2.GetColoredGray2Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.Transform(this, destFixedSize, destMultiSize),
+								destColoredGray2.RenderColoredGray2
+							);
 							break;
 
 						// colored gray2 -> colored gray4
@@ -1576,7 +1581,8 @@ namespace LibDmd
 			return new DmdFrame(dim, transformedFrame, 6);
 		}
 
-		private ColoredFrame TransformColoredGray2(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
+		[Obsolete]
+		private ColoredFrame TransformColoredGray2Obsolete(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
 				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex);
@@ -1615,7 +1621,7 @@ namespace LibDmd
 		private ColoredFrame TransformColoredGray6(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
 		{
 			if (dest == null) {
-				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex, frame.RotateColors, frame.Rotations);
+				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex, frame.Rotations, frame.RotateColors);
 			}
 			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
 				return frame;
@@ -1627,7 +1633,7 @@ namespace LibDmd
 			var bmp = ImageUtil.ConvertFromGray6(dim, FrameUtil.Join(dim, frame.Planes), 0, 1, 1);
 			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
-			return new ColoredFrame(dim, FrameUtil.Split(dest.FixedSize, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.RotateColors, frame.Rotations);
+			return new ColoredFrame(dim, FrameUtil.Split(dest.FixedSize, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.Rotations, frame.RotateColors);
 		}
 
 		[Obsolete("Use frame method")]

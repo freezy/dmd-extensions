@@ -46,9 +46,9 @@ namespace LibDmd.Converter
 				_converter?.Convert(frame);
 			} else {
 				if (frame.BitLength == 4) {
-					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame.Dimensions, frame.Data, _color));
+					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame, _color));
 				} else {
-					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame.Dimensions, frame.Data, _color));
+					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame, _color));
 				}
 			}
 		}

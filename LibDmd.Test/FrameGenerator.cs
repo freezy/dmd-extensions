@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Media;
 using LibDmd.Frame;
 
 namespace LibDmd.Test
@@ -33,6 +34,12 @@ namespace LibDmd.Test
 			}
 
 			return rgb24Frame;
+		}
+
+		public static ColoredFrame FromString(string frame, params Color[] palette)
+		{
+			var (data, dim, bitLength) = Parse(frame);
+			return new ColoredFrame(new DmdFrame(dim, data, bitLength), palette);
 		}
 		
 		private static (byte[], Dimensions, int) Parse(string frame)
