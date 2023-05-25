@@ -88,6 +88,17 @@ namespace LibDmd.Frame
 			return this;
 		}
 
+		public DmdFrame Update(Dimensions dim, byte[] data)
+		{
+			Dimensions = dim;
+			Data = data;
+
+			#if DEBUG
+			AssertData();
+			#endif
+			return this;
+		}
+
 		/// <summary>
 		/// Converts this frame to gray2.
 		/// </summary>
@@ -181,7 +192,7 @@ namespace LibDmd.Frame
 				}
 
 				// copy line by line if centering image
-				if (Dimensions.FitInto(targetDim)) {
+				if (Dimensions.FitsInto(targetDim)) {
 					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), BitLength);
 				}
 			}
@@ -241,17 +252,28 @@ namespace LibDmd.Frame
 			}
 
 			// if double of frame size doesn't fit into destination, return
-			if (fixedDest != null && !(Dimensions * 2).FitInto(fixedDest.FixedSize)) {
+			if (fixedDest != null && !(Dimensions * 2).FitsInto(fixedDest.FixedSize)) {
 				return this;
 			}
-			
-			// resize
-			Data = scalerMode == ScalerMode.Doubler 
-				? FrameUtil.ScaleDouble(Dimensions, Data) 
-				: FrameUtil.Scale2X(Dimensions, Data);
-			Dimensions *= 2;
 
-			return this;
+			return TransformHdScaling(scalerMode);
+		}
+
+		public DmdFrame TransformHdScaling(ScalerMode scalerMode)
+		{
+			switch (scalerMode) {
+				case ScalerMode.None:
+					return this;
+
+				case ScalerMode.Doubler:
+					return Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
+
+				case ScalerMode.Scale2x:
+					return Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);
+			}
 		}
 		
 		/// <summary>

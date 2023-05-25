@@ -116,6 +116,7 @@ namespace LibDmd
 			// if we need to scale down by factor 2, do it here more efficiently
 			if (Dimensions.IsDoubleSizeOf(targetDim) && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				Planes = FrameUtil.ScaleDown(targetDim, Planes);
+				Dimensions = targetDim;
 				return this;
 			}
 
@@ -150,7 +151,7 @@ namespace LibDmd
 			}
 
 			// if double of frame size doesn't fit into destination, return
-			if (fixedDest != null && !(Dimensions * 2).FitInto(fixedDest.FixedSize)) {
+			if (fixedDest != null && !(Dimensions * 2).FitsInto(fixedDest.FixedSize)) {
 				return this;
 			}
 
@@ -159,7 +160,7 @@ namespace LibDmd
 				? FrameUtil.ScaleDouble(Dimensions, FrameUtil.Join(Dimensions, Planes))
 				: FrameUtil.Scale2X(Dimensions, FrameUtil.Join(Dimensions, Planes));
 			Dimensions *= 2;
-			FrameUtil.Split(Dimensions, BitLength, data, Planes);
+			Planes = FrameUtil.Split(Dimensions, BitLength, data);
 
 			return this;
 		}
@@ -177,16 +178,6 @@ namespace LibDmd
 					}
 					sb.AppendLine();
 				}
-			} else if (bitLength == 24) {
-				for (var p = 0; p < 3; p++) {
-					sb.AppendLine($"::{PlaneName(p)}::");
-					for (var y = 0; y < Dimensions.Height; y++) {
-						for (var x = 0; x < Dimensions.Width; x++) {
-							sb.Append(data[y * Dimensions.Width * 3 + x * 3 + p].ToString("X2") + " ");
-						}
-						sb.AppendLine();
-					}
-				}
 			} else {
 				throw new ArgumentException("Cannot print frame with bit length " + bitLength);
 			}
@@ -196,16 +187,6 @@ namespace LibDmd
 			sb.AppendLine("]");
 
 			return sb.ToString();
-		}
-
-		private static string PlaneName(int p)
-		{
-			switch (p) {
-				case 0: return "RED";
-				case 1: return "GREEN";
-				case 2: return "BLUE";
-				default: return "PLANE " + p;
-			}
 		}
 
 		private BitmapSource ConvertToBitmap()
