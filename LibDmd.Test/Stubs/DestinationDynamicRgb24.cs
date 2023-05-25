@@ -5,9 +5,9 @@ using LibDmd.Output;
 
 namespace LibDmd.Test.Stubs
 {
-	public class Rgb24DynamicTestDestination : DynamicTestDestination<DmdFrame>, IRgb24Destination
+	public class DestinationDynamicRgb24 : DestinationDynamic<DmdFrame>, IRgb24Destination
 	{
-		public string Name => "Test Destination (Dynamic RGB24)";
+		public string Name => "Dynamic RGB24";
 		public bool IsAvailable => true;
 
 		public void RenderRgb24(DmdFrame frame)

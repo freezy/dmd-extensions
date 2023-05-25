@@ -93,7 +93,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame ConvertToRgb24()
 		{
-			return ColorUtil.ColorizeFrame(
+			return ColorUtil.ColorizeObsolete(
 				Dimensions,
 				FrameUtil.Join(Dimensions, Planes),
 				Palette
@@ -146,7 +146,7 @@ namespace LibDmd.Frame
 		{
 			return new BmpFrame(
 				ImageUtil.ConvertFromRgb24(Dimensions,
-					ColorUtil.ColorizeFrame(
+					ColorUtil.ColorizeObsolete(
 						Dimensions,
 						FrameUtil.Join(Dimensions, Planes),
 						Palette

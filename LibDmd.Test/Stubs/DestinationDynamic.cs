@@ -5,20 +5,19 @@ using LibDmd.Output;
 
 namespace LibDmd.Test.Stubs
 {
-	public abstract class FixedTestDestination<TFrame> : IFixedSizeDestination, ITestDestination<TFrame>
+	public abstract class DestinationDynamic<TFrame> : IResizableDestination, ITestDestination<TFrame>
 	{
 		public IConnectableObservable<TFrame> Frame { get; private set; }
 		
-		public Dimensions FixedSize { get; }
-		
-		public bool DmdAllowHdScaling { get; set; }
-		
 		protected Subject<TFrame> LastFrame = new Subject<TFrame>();
-
-		protected FixedTestDestination(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true)
+		
+		public void SetDimensions(Dimensions newDimensions)
 		{
-			FixedSize = new Dimensions(dmdWidth, dmdHeight);
-			DmdAllowHdScaling = dmdAllowHdScaling;
+			throw new System.NotImplementedException();
+		}
+
+		protected DestinationDynamic()
+		{
 			Frame = LastFrame.FirstAsync().PublishLast();
 			Frame.Connect();
 		}

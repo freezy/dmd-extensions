@@ -598,7 +598,7 @@ namespace LibDmd.Common
 		public static DmdFrame ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)
 		{
 			var frame = Join(dim, planes);
-			return ColorUtil.ColorizeFrame(dim, frame, palette);
+			return ColorUtil.ColorizeObsolete(dim, frame, palette);
 		}
 
 		public static byte[] NewPlane(Dimensions dim)
