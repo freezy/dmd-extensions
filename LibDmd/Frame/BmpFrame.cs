@@ -38,6 +38,24 @@ namespace LibDmd.Frame
 		/// <returns>RGB24 frame</returns>
 		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap), 24);
 
+		/// <summary>
+		/// Converts this bitmap frame to a gray2 frame.
+		/// </summary>
+		/// <returns>Gray2 frame</returns>
+		public DmdFrame ConvertToGray2() => new DmdFrame(Dimensions, ImageUtil.ConvertToGray2(Bitmap, 0, 1, out _), 2);
+
+		/// <summary>
+		/// Converts this bitmap frame to a gray4 frame.
+		/// </summary>
+		/// <returns>Gray4 frame</returns>
+		public DmdFrame ConvertToGray4() => new DmdFrame(Dimensions, ImageUtil.ConvertToGray4(Bitmap), 4);
+
+		/// <summary>
+		/// Converts this bitmap frame to a gray6 frame.
+		/// </summary>
+		/// <returns>Gray6 frame</returns>
+		public DmdFrame ConvertToGray6() => new DmdFrame(Dimensions, ImageUtil.ConvertToGray6(Bitmap), 6);
+
 		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);
@@ -58,5 +76,7 @@ namespace LibDmd.Frame
 		{
 			return new BmpFrame(Bitmap);
 		}
+
+		public override string ToString() => ConvertToRgb24().ToString();
 	}
 }

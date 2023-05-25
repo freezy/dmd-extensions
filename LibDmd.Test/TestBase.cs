@@ -41,6 +41,21 @@ namespace LibDmd.Test
 			receivedFrameRgb.Dimensions.Should().Be(expectedFrame.Dimensions);
 		}
 
+		protected static async Task AssertFrame<TFrame>(ITestSource<TFrame> source, ITestDestination<BmpFrame> dest, TFrame srcFrame, BmpFrame expectedFrame)
+		{
+			Print(srcFrame, "In: ");
+
+			dest.Reset();
+			source.AddFrame(srcFrame);
+			var receivedFrame = await dest.Frame;
+			var receivedFrameRgb = receivedFrame.ConvertToRgb24();
+
+			Print(receivedFrameRgb, "Out: ");
+
+			receivedFrameRgb.Data.Should().BeEquivalentTo(expectedFrame.ConvertToRgb24().Data);
+			receivedFrameRgb.Dimensions.Should().Be(expectedFrame.Dimensions);
+		}
+
 		protected static async Task AssertFrame<TFrame>(ITestSource<TFrame> source, ITestDestination<DmdFrame> dest, TFrame srcFrame, DmdFrame expectedFrame)
 		{
 			Print(srcFrame, "In: ");
