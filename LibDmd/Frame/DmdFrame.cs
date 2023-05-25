@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Input;
 using LibDmd.Output;
 
 namespace LibDmd.Frame
