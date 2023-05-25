@@ -40,7 +40,6 @@ namespace LibDmd.Test
 			await AssertFrame(_source, dest, frame, frame);
 		}
 
-
 		[TestCase]
 		public async Task Should_Convert_To_Gray2()
 		{

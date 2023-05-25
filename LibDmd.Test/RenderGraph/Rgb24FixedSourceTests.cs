@@ -1,0 +1,298 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Windows.Media;
+using LibDmd.Common;
+using LibDmd.Input;
+using LibDmd.Output;
+using LibDmd.Test.Stubs;
+using NUnit.Framework;
+
+namespace LibDmd.Test
+{
+	[TestFixture]
+	public class Rgb24FixedSourceTests : TestBase
+	{
+		private SourceRgb24 _source;
+		private RenderGraph _graph;
+
+		[SetUp]
+		public void Setup()
+		{
+			_graph = new RenderGraph();
+			_source = new SourceRgb24();
+		}
+
+		[TestCase]
+		public async Task Should_Passthrough_Frame()
+		{
+			var dest = new DestinationFixedRgb24(8, 4);
+			
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+			
+			var rgbFrame = FrameGenerator.FromString(@"
+				96 b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				95 49 b8 5d 90 0d b9 ea", @"
+				23 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				78 a4 43 44 eb c9 28 57", @"
+				c9 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 ea");
+
+			await AssertFrame(_source, dest, rgbFrame, rgbFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Gray2()
+		{
+			var dest = new DestinationFixedGray2(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var expectedFrame = FrameGenerator.FromString(@"
+				31221122
+				11212111
+				12220212
+				21122110");
+
+			await AssertFrame(_source, dest, rgbFrame, expectedFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Gray4()
+		{
+			var dest = new DestinationFixedGray4(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var expectedFrame = FrameGenerator.FromString(@"
+				F68A74AB
+				47C59477
+				4B8A2C79
+				8778B660");
+
+			await AssertFrame(_source, dest, rgbFrame, expectedFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Gray6()
+		{
+			var dest = new DestinationFixedGray6(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var expectedFrame = FrameGenerator.FromString(@"
+				3F 19 21 2C 1D 11 28 2C 
+				12 1E 31 13 25 12 1F 1C 
+				10 2E 22 2C 0A 32 1E 25 
+				22 1D 1F 24 2F 1A 19 00");
+
+			await AssertFrame(_source, dest, rgbFrame, expectedFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Bitmap()
+		{
+			var dest = new DestinationFixedBitmap(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			await AssertFrame(_source, dest, rgbFrame, rgbFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Flip_Horizontally()
+		{
+			var dest = new DestinationFixedRgb24(8, 4);
+
+			_graph.Source = _source;
+			_graph.FlipHorizontally = true;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var flippedFrame = FrameGenerator.FromString(@"
+				FC 74 36 EA FB CA B0 FF 
+				A6 0A 08 33 54 B0 49 74 
+				92 18 9A 30 80 28 BD 0A 
+				00 B9 0D 90 5D B8 49 78", @"
+				C5 65 57 04 F5 CE 18 FF 
+				3A F1 88 68 6C E6 A6 1C 
+				9C 4E F8 20 9D E8 E1 61 
+				00 28 C9 EB 44 43 A4 34", @"
+				6A DF 4B 86 6A 3B 76 FF 
+				49 31 6C F8 31 AA 9F 1F 
+				92 D7 C5 1D E3 AE 95 77 
+				00 15 95 DE DC 9D 9F E0");
+
+			await AssertFrame(_source, dest, rgbFrame, flippedFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Upscale_With_Centering_Graph_NoHdScaling()
+		{
+			var dest = new DestinationFixedRgb24(10, 6) { DmdAllowHdScaling = true };
+
+			_graph.Source = _source;
+			_graph.ScalerMode = ScalerMode.None;
+			_graph.Resize = ResizeMode.Fit;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var upscaledFrame = FrameGenerator.FromString(@"
+				00 00 00 00 00 00 00 00 00 00 
+				00 FF B0 CA FB EA 36 74 FC 00 
+				00 74 49 B0 54 33 08 0A A6 00 
+				00 0A BD 28 80 30 9A 18 92 00 
+				00 78 49 B8 5D 90 0D B9 00 00 
+				00 00 00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 00 00 
+				00 FF 18 CE F5 04 57 65 C5 00 
+				00 1C A6 E6 6C 68 88 F1 3A 00 
+				00 61 E1 E8 9D 20 F8 4E 9C 00 
+				00 34 A4 43 44 EB C9 28 00 00 
+				00 00 00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 00 00 
+				00 FF 76 3B 6A 86 4B DF 6A 00 
+				00 1F 9F AA 31 F8 6C 31 49 00 
+				00 77 95 AE E3 1D C5 D7 92 00 
+				00 E0 9F 9D DC DE 95 15 00 00 
+				00 00 00 00 00 00 00 00 00 00");
+
+			await AssertFrame(_source, dest, rgbFrame, upscaledFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Downscale_With_Fit()
+		{
+			var dest = new DestinationFixedRgb24(6, 2) { DmdAllowHdScaling = true };
+
+			_graph.Source = _source;
+			_graph.ScalerMode = ScalerMode.None;
+			_graph.Resize = ResizeMode.Fit;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff ff ca fb ea 36 74 fc
+				ff ff b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 00 00
+				78 49 b8 5d 90 0d 00 00", @"
+				ff ff ce f5 04 57 65 c5
+				ff ff e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 00 00
+				34 a4 43 44 eb c9 00 00", @"
+				ff ff 3b 6a 86 4b df 6a
+				ff ff aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 00 00
+				e0 9f 9d dc de 95 00 00");
+
+			var downscaledFrame = FrameGenerator.FromString(@"
+				00 FF B2 57 88 00 
+				00 62 6F 5A 00 00", @"
+				00 FF C5 53 95 00 
+				00 87 83 B3 00 00", @"
+				00 FF 60 8D 71 00 
+				00 A3 C3 95 00 00");
+
+			await AssertFrame(_source, dest, rgbFrame, downscaledFrame);
+		}
+	}
+}

@@ -111,13 +111,14 @@ namespace LibDmd.Frame
 				case 2:
 					throw new ArgumentException("Frame is already gray2.");
 				case 4:
-					Data = FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3);
-					BitLength = 2;
-					break;
+					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3), 2);
+				case 6:
+					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3), 2);
 				case 24:
-					throw new NotImplementedException();
+					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 4), 2);
+				default:
+					throw new ArgumentException("Invalid bit length.");
 			}
-			return this;
 		}
 
 		/// <summary>
@@ -129,15 +130,37 @@ namespace LibDmd.Frame
 		{
 			switch (BitLength) {
 				case 2:
-					Data = FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf);
-					BitLength = 4;
-					break;
+					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf), 4);
 				case 4:
 					throw new ArgumentException("Frame is already gray4.");
+				case 6:
+					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf), 4);
 				case 24:
-					throw new NotImplementedException();
+					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 16), 4);
+				default:
+					throw new ArgumentException("Invalid bit length.");
 			}
-			return this;
+		}
+
+		/// <summary>
+		/// Converts this frame to gray6.
+		/// </summary>
+		/// <returns>This frame, converted to gray6.</returns>
+		/// <exception cref="ArgumentException">If the current frame any anything else but RGB24.</exception>
+		public DmdFrame ConvertToGray6()
+		{
+			switch (BitLength) {
+				case 2:
+					throw new ArgumentException("No point in converting gray2 to gray6.");
+				case 4:
+					throw new ArgumentException("No point in converting gray4 to gray6.");
+				case 6:
+					throw new ArgumentException("Frame is already gray6.");
+				case 24:
+					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 64), 6);
+				default:
+					throw new ArgumentException("Invalid bit length.");
+			}
 		}
 
 		/// <summary>
@@ -206,7 +229,7 @@ namespace LibDmd.Frame
 			return Update(targetDim, transformedFrame, BitLength);
 		}
 
-		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest)
+		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
 			// todo merge with TransformGray
 			// do anything at all?
@@ -316,10 +339,17 @@ namespace LibDmd.Frame
 		{
 			var sb = new StringBuilder();
 			sb.AppendLine($"DMD Frame {Dimensions}@{BitLength} ({Data.Length} bytes):");
-			if (BitLength <= 8) {
+			if (BitLength <= 4) {
 				for (var y = 0; y < Dimensions.Height; y++) {
 					for (var x = 0; x < Dimensions.Width; x++) {
 						sb.Append(Data[y * Dimensions.Width + x].ToString("X"));
+					}
+					sb.AppendLine();
+				}
+			} else if (BitLength <= 8) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width + x].ToString("X2") + " ");
 					}
 					sb.AppendLine();
 				}
