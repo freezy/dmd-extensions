@@ -37,7 +37,12 @@ namespace LibDmd.Frame
 		//
 		// public DmdFrame ConvertToGray4() => ImageUtil.ConvertToGray4(Bitmap);
 		//
-		// public DmdFrame ConvertToRgb24() => new DmdFrame(Bitmap.Dimensions(), ImageUtil.ConvertToRgb24(Bitmap), 24);
+
+		/// <summary>
+		/// Converts this bitmap frame to an RGB24 frame.
+		/// </summary>
+		/// <returns>RGB24 frame</returns>
+		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap), 24);
 
 		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{

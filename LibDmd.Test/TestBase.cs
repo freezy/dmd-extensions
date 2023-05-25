@@ -26,6 +26,21 @@ namespace LibDmd.Test
 			TestContext.WriteLine(obj);
 		}
 
+		protected static async Task AssertFrame(ITestSource source, ITestDestination<BmpFrame> dest, DmdFrame srcFrame, DmdFrame expectedFrame)
+		{
+			Print(srcFrame);
+
+			dest.Reset();
+			source.AddFrame(srcFrame);
+			var receivedFrame = await dest.Frame;
+			var receivedFrameRgb = receivedFrame.ConvertToRgb24();
+
+			Print(receivedFrame);
+
+			receivedFrameRgb.Data.Should().BeEquivalentTo(expectedFrame.Data);
+			receivedFrameRgb.Dimensions.Should().Be(expectedFrame.Dimensions);
+		}
+
 		protected static async Task AssertFrame(ITestSource source, ITestDestination<DmdFrame> dest, DmdFrame srcFrame, DmdFrame expectedFrame)
 		{
 			Print(srcFrame);
