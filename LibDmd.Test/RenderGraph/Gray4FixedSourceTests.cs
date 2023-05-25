@@ -319,5 +319,68 @@ namespace LibDmd.Test
 			await AssertFrame(_source, dest, frame, scaledFrame);
 		}
 
+		[TestCase]
+		public async Task Should_Convert_To_RGB24()
+		{
+			var dest = new DestinationFixedRgb24(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame = FrameGenerator.FromString(@"
+				FEDCBA98
+				04030201
+				10203040
+				00000000");
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				FF EE DD CC BB AA 99 88 
+				00 44 00 33 00 22 00 11 
+				11 00 22 00 33 00 44 00 
+				00 00 00 00 00 00 00 00 ", @"
+				45 40 3C 37 33 2E 29 25 
+				00 12 00 0E 00 09 00 05 
+				05 00 09 00 0E 00 12 00 
+				00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00");
+
+			await AssertFrame(_source, dest, frame, rgbFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_Bitmap()
+		{
+			var dest = new DestinationBitmapFixed(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame = FrameGenerator.FromString(@"
+				FEDCBA98
+				04030201
+				10203040
+				00000000");
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				FF EE DD CC BB AA 99 88 
+				00 44 00 33 00 22 00 11 
+				11 00 22 00 33 00 44 00 
+				00 00 00 00 00 00 00 00 ", @"
+				45 40 3C 37 33 2E 29 25 
+				00 12 00 0E 00 09 00 05 
+				05 00 09 00 0E 00 12 00 
+				00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00");
+
+			await AssertFrame(_source, dest, frame, rgbFrame);
+		}
 	}
 }
