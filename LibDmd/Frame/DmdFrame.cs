@@ -38,8 +38,9 @@ namespace LibDmd.Frame
 			Data = data;
 			BitLength = bitLength;
 			
-			// todo remove when coverage done and all tested
+			#if DEBUG
 			AssertData();
+			#endif
 		}
 		
 		public DmdFrame(int width, int height, byte[] data, int bitLength)
@@ -48,8 +49,9 @@ namespace LibDmd.Frame
 			Data = data;
 			BitLength = bitLength;
 			
-			// todo remove when coverage done and all tested
+			#if DEBUG
 			AssertData();
+			#endif
 		}
 
 		public DmdFrame Update(DmdFrame frame)
@@ -66,8 +68,9 @@ namespace LibDmd.Frame
 			Data = data;
 			BitLength = bitLength;
 			
-			// todo remove when coverage done and all tested
+			#if DEBUG
 			AssertData();
+			#endif
 			return this;
 		}
 
@@ -77,8 +80,9 @@ namespace LibDmd.Frame
 			Data = data;
 			BitLength = bitLength;
 			
-			// todo remove when coverage done and all tested
+			#if DEBUG
 			AssertData();
+			#endif
 			return this;
 		}
 
@@ -293,13 +297,13 @@ namespace LibDmd.Frame
 			}
 		}
 		
-		
+#if DEBUG
 		private void AssertData()
 		{
-			// todo remove when coverage done and all tested
 			if (Dimensions.Surface * BytesPerPixel != Data.Length) {
 				throw new ArgumentException($"Data length does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
 			}
 		}
+#endif
 	}
 }

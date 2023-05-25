@@ -113,12 +113,12 @@ namespace LibDmd.Output.PinUp
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
-		public void RenderBitmap(BitmapSource bmp)
+		public void RenderBitmap(BmpFrame frame)
 		{
 			if (PuPFrameMatching == false) {
 				return;
 			}
-			RenderRgb24(new DmdFrame(bmp.Dimensions(), ImageUtil.ConvertToRgb24(bmp), 24));
+			RenderRgb24(new DmdFrame(frame.Dimensions, ImageUtil.ConvertToRgb24(frame.Bitmap), 24));
 		}
 
 		public void Dispose()

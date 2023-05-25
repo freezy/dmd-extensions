@@ -17,7 +17,7 @@ namespace LibDmd.Frame
 		public BmpFrame(BitmapSource bitmap)
 		{
 			Bitmap = bitmap;
-			Dimensions = new Dimensions(bitmap.PixelWidth, bitmap.PixelHeight);
+			Dimensions = bitmap.Dimensions();
 		}
 
 		public BmpFrame(BitmapSource bitmap, Dimensions dim)
@@ -29,6 +29,7 @@ namespace LibDmd.Frame
 		public BmpFrame Update(BitmapSource bmp)
 		{
 			Bitmap = bmp;
+			Dimensions = bmp.Dimensions();
 			return this;
 		}
 
