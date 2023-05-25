@@ -13,6 +13,8 @@ namespace LibDmd.Test
 			return new DmdFrame(dim, data, bitLength);
 		}
 
+		public static DmdFrame FromWhiteString(string white) => FromString(white, white, white);
+
 		public static DmdFrame FromString(string red, string green, string blue)
 		{
 			var (r, redDim) = Parse2CharsPerColor(red);

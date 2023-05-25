@@ -103,7 +103,7 @@ namespace LibDmd.Common
 			var cropY = 0;
 
 			// image fits into dest, don't upscale, just adjust margins.
-			if (destDim.Width > bmp.PixelWidth && destDim.Height > bmp.PixelHeight) {
+			if (bmp.PixelWidth < destDim.Width && bmp.PixelHeight < destDim.Height) {
 				switch (resize) {
 					case ResizeMode.Stretch:
 						width = destDim.Width;
@@ -126,7 +126,7 @@ namespace LibDmd.Common
 			}
 			
 			// width fits into dest, only scale y-axis
-			else if (destDim.Width > bmp.PixelWidth) {
+			else if (bmp.PixelWidth < destDim.Width) {
 				marginX = (destDim.Width - bmp.PixelWidth) / 2;
 				width = bmp.PixelWidth;
 				switch (resize) {
@@ -148,7 +148,7 @@ namespace LibDmd.Common
 			}
 			
 			// height fits into dest, only scale x-axis
-			else if (destDim.Height > bmp.PixelHeight) {
+			else if (bmp.PixelHeight < destDim.Height) {
 				marginY = (destDim.Height - bmp.PixelHeight) / 2;
 				height = bmp.PixelHeight;
 				switch (resize) {
@@ -170,7 +170,7 @@ namespace LibDmd.Common
 			}
 			
 			// now the most common case: do nothing.
-			else if (destDim.Width == bmp.PixelWidth && destDim.Height == bmp.PixelHeight) { 
+			else if (destDim == bmp.Dimensions()) { 
 				width = bmp.PixelWidth;
 				height = bmp.PixelHeight;
 			}
