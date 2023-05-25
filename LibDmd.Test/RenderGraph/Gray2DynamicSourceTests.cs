@@ -21,7 +21,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame()
+		public async Task Should_Passthrough_Frame()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -39,7 +39,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped_Horizontally()
+		public async Task Should_Flip_Horizontally()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -64,7 +64,7 @@ namespace LibDmd.Test
 		}
 				
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped_Vertically()
+		public async Task Should_Flip_Vertically()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -89,7 +89,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped()
+		public async Task Should_Flip_Both()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -115,7 +115,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double()
+		public async Task Should_Upscale_With_HDScaling_Double()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -144,7 +144,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Scale2X()
+		public async Task Should_Upscale_With_HDScaling_Scale2X()
 		{
 			var dest = new DestinationDynamicGray2();
 			
@@ -173,7 +173,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame()
+		public async Task Should_Convert_To_RGB24()
 		{
 			var dest = new DestinationDynamicRgb24();
 			
@@ -205,7 +205,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_Double()
+		public async Task Should_Convert_To_RGB24_Upscaled_With_HDScaling_Double()
 		{
 			var dest = new DestinationDynamicRgb24();
 			
@@ -250,7 +250,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_2X()
+		public async Task Should_Convert_To_RGB24_Upscaled_With_HDScaling_2X()
 		{
 			var dest = new DestinationDynamicRgb24();
 			
@@ -295,7 +295,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Bitmap_Frame()
+		public async Task Should_Convert_To_Bitmap()
 		{
 			var dest = new DestinationDynamicBitmap();
 
