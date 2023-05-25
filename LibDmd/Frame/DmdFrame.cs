@@ -14,8 +14,10 @@ namespace LibDmd.Frame
 	{
 		public byte[] Data { get; private set; }
 		public int BitLength;
-		
+
+		public bool IsGray => BitLength <= 8;
 		private int BytesPerPixel => BitLength < 8 ? 1 : BitLength / 8;
+
 
 		public DmdFrame()
 		{
@@ -86,7 +88,8 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame ConvertToRgb24(Color[] palette)
+		[Obsolete]
+		public DmdFrame ConvertToRgb24Legacy(Color[] palette)
 		{
 			Data = ColorUtil.ColorizeFrame(Dimensions, Data, palette).Data;
 			return this;
@@ -123,7 +126,7 @@ namespace LibDmd.Frame
 		{
 			return new BmpFrame(ImageUtil.ConvertFromRgb24(
 				Dimensions,
-				ConvertToRgb24(palette).Data
+				ConvertToRgb24Legacy(palette).Data
 			));
 		}
 
@@ -162,18 +165,27 @@ namespace LibDmd.Frame
 			return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
 		}
 
+		/// <summary>
+		/// Up-scales the frame with the given algorithm, if the destination allows it.
+		/// </summary>
+		/// <param name="fixedDest">The fixed destination, null if dynamic. If fixed, DmdAllowHdScaling must be true, and the dimensions must be greater or equal the double of the frame size.</param>
+		/// <param name="scalerMode">If and how to scale</param>
+		/// <returns>Updated frame instance</returns>
+		/// <exception cref="ArgumentException"></exception>
 		public DmdFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
 		{
-			if (BitLength > 8) {
-				throw new ArgumentException("Cannot double-scale a frame with more than 8 bits per pixel.");
+			#if DEBUG
+			if (!IsGray) {
+				throw new ArgumentException("Can only HD scale gray frames.");
 			}
+			#endif
 
 			// skip if disabled
 			if (scalerMode == ScalerMode.None) {
 				return this;
 			}
 			
-			// if destination doesn't allow scaling (pup), return
+			// if destination doesn't allow scaling (e.g. pup), return
 			if (fixedDest != null && !fixedDest.DmdAllowHdScaling) {
 				return this;
 			}
@@ -192,11 +204,28 @@ namespace LibDmd.Frame
 			return this;
 		}
 		
-		public DmdFrame ColorizeGrayRgb24(Color[] palette)
+		/// <summary>
+		/// Converts a grayscale frame to RGB24.
+		/// </summary>
+		///
+		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
+		/// <returns>This updated instance.</returns>
+		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
+		public DmdFrame ConvertToRgb24(Color[] palette)
 		{
+			#if DEBUG
+			if (!IsGray) {
+				throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
+			}
+
+			if (palette.Length.GetBitLength() != BitLength) {
+				throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
+			}
+			#endif
+
 			Data = ColorUtil.Colorize(Dimensions, Data, palette);
 			BitLength = 24;
-			
+
 			return this;
 		}
 

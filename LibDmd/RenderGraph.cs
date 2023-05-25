@@ -681,7 +681,7 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ColorizeGrayRgb24(_gray2Palette ?? _gray2Colors)
+									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
 									.TransformRgb24(destFixedSize, Resize, FlipHorizontally, FlipVertically),
 								destRgb24.RenderRgb24
 							);
@@ -1474,6 +1474,7 @@ namespace LibDmd
 
 		#region Transformations
 
+		[Obsolete]
 		private byte[] TransformScaling(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
 		{
 			if ((dest != null && !dest.DmdAllowHdScaling) || (dim.Surface == frame.Length)) {

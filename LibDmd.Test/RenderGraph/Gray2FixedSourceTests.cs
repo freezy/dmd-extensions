@@ -975,6 +975,38 @@ namespace LibDmd.Test
 							
 			await AssertFrame(_source, dest, frame, rgbFrame);
 		}
-		
+
+		[TestCase]
+		public async Task Should_Convert_To_Bitmap_Frame()
+		{
+			var dest = new BitmapFixedTestDestination(8, 4);
+
+			_graph.Source = _source;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame = FrameGenerator.FromString(@"
+				33333333
+				02020202
+				10101010
+				00000000");
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				FF FF FF FF FF FF FF FF 
+				00 AA 00 AA 00 AA 00 AA 
+				55 00 55 00 55 00 55 00 
+				00 00 00 00 00 00 00 00", @"
+				45 45 45 45 45 45 45 45 
+				00 2E 00 2E 00 2E 00 2E 
+				17 00 17 00 17 00 17 00 
+				00 00 00 00 00 00 00 00", @"
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00 
+				00 00 00 00 00 00 00 00");
+
+			await AssertFrame(_source, dest, frame, rgbFrame);
+		}
+
 	}
 }

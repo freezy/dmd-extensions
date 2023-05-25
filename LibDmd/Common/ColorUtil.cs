@@ -275,10 +275,11 @@ namespace LibDmd.Common
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] Colorize(Dimensions dim, byte[] frame, Color[] palette)
 		{
-			// todo remove in the future
+			#if DEBUG
 			if (dim.Surface != frame.Length) {
 				throw new ArgumentException("Data and dimensions do not match.");
 			}
+			#endif
 			
 			var frameLength = dim.Surface * 3;
 			var colorizedFrame = new byte[frameLength];
