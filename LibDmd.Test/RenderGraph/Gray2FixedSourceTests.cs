@@ -23,7 +23,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame()
+		public async Task Should_Passthrough_Frame()
 		{
 			var dest = new DestinationFixedGray2(8, 4);
 			
@@ -41,7 +41,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped_Horizontally()
+		public async Task Should_Flip_Horizontally()
 		{
 			var dest = new DestinationFixedGray2(8, 4);
 			
@@ -66,7 +66,7 @@ namespace LibDmd.Test
 		}
 				
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped_Vertically()
+		public async Task Should_Flip_Vertically()
 		{
 			var dest = new DestinationFixedGray2(8, 4);
 			
@@ -91,7 +91,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Passthrough_Gray2_Frame_Flipped()
+		public async Task Should_Flip_Both()
 		{
 			var dest = new DestinationFixedGray2(8, 4);
 			
@@ -117,7 +117,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Destination_NoHdScaling()
+		public async Task Should_Upscale_With_Centering_Destination_NoHdScaling()
 		{
 			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = false };
 			
@@ -146,7 +146,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Graph_NoHdScaling()
+		public async Task Should_Upscale_With_Centering_Graph_NoHdScaling()
 		{
 			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = true };
 			
@@ -177,7 +177,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Dest_Too_Small()
+		public async Task Should_Upscale_With_Centering_Dest_Too_Small()
 		{
 			var dest = new DestinationFixedGray2(14, 6) { DmdAllowHdScaling = true };
 			
@@ -205,7 +205,7 @@ namespace LibDmd.Test
 		}
 			
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Centering_Same_Width()
+		public async Task Should_Upscale_With_Centering_Same_Width()
 		{
 			var dest = new DestinationFixedGray2(16, 8) { DmdAllowHdScaling = true };
 			
@@ -233,118 +233,9 @@ namespace LibDmd.Test
 
 			await AssertFrame(_source, dest, frame1, upscaledFrame1);
 		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fit()
-		{
-			var dest = new DestinationFixedGray2(8, 4);
-			
-			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Fit;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-
-			var frame1 = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
-
-			var frame2 = FrameGenerator.FromString(@"
-				33333333
-				21032101
-				10123210
-				02321012
-				10123210
-				21012321
-				12321012
-				33333333");
-			
-			var scaledFrame1 = FrameGenerator.FromString(@"
-				00000000
-				33331101
-				10113333
-				00000000");
-			
-			var scaledFrame2 = FrameGenerator.FromString(@"
-				00222200
-				00122100
-				00112100
-				00232200");
-
-			await AssertFrame(_source, dest, frame1, scaledFrame1);
-			await AssertFrame(_source, dest, frame2, scaledFrame2);
-		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Fill()
-		{
-			var dest = new DestinationFixedGray2(8, 4);
-			
-			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Fill;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-			
-			var frame1 = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
-			
-			var frame2 = FrameGenerator.FromString(@"
-				33333333
-				21032101
-				10123210
-				02321012
-				10123210
-				21012321
-				12321012
-				33333333");
-			
-			var scaledFrame1 = FrameGenerator.FromString(@"
-				23232132
-				33330000
-				00003333
-				23123232");
-			
-			var scaledFrame2 = FrameGenerator.FromString(@"
-				10123210
-				02321012
-				10123210
-				21012321");
-			
-			await AssertFrame(_source, dest, frame1, scaledFrame1);
-			await AssertFrame(_source, dest, frame2, scaledFrame2);
-		}
-		
-		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_Downscale_Stretch()
-		{
-			var dest = new DestinationFixedGray2(8, 4);
-			
-			_graph.Source = _source;
-			_graph.Resize = ResizeMode.Stretch;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-			
-			var frame = FrameGenerator.FromString(@"
-				3333232321321030
-				3333333300000000
-				0000000033333333
-				0301231232323333");
-			
-			var scaledFrame = FrameGenerator.FromString(@"
-				33222202
-				33330000
-				00003333
-				20222233");
-			
-			await AssertFrame(_source, dest, frame, scaledFrame);
-		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double()
+		public async Task Should_Upscale_With_HDScaling_Double()
 		{
 			var dest = new DestinationFixedGray2(16, 8);
 			
@@ -373,7 +264,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Double_With_Padding()
+		public async Task Should_Upscale_With_HDScaling_Double_With_Padding()
 		{
 			var dest = new DestinationFixedGray2(18, 10);
 			
@@ -404,7 +295,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_Gray2_Frame_With_HDScaling_Scale2X()
+		public async Task Should_Upscale_With_HDScaling_Scale2X()
 		{
 			var dest = new DestinationFixedGray2(16, 8);
 			
@@ -433,7 +324,116 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame()
+		public async Task Should_Downscale_Fit()
+		{
+			var dest = new DestinationFixedGray2(8, 4);
+
+			_graph.Source = _source;
+			_graph.Resize = ResizeMode.Fit;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame1 = FrameGenerator.FromString(@"
+				3333232321321030
+				3333333300000000
+				0000000033333333
+				0301231232323333");
+
+			var frame2 = FrameGenerator.FromString(@"
+				33333333
+				21032101
+				10123210
+				02321012
+				10123210
+				21012321
+				12321012
+				33333333");
+
+			var scaledFrame1 = FrameGenerator.FromString(@"
+				00000000
+				33331101
+				10113333
+				00000000");
+
+			var scaledFrame2 = FrameGenerator.FromString(@"
+				00222200
+				00122100
+				00112100
+				00232200");
+
+			await AssertFrame(_source, dest, frame1, scaledFrame1);
+			await AssertFrame(_source, dest, frame2, scaledFrame2);
+		}
+
+		[TestCase]
+		public async Task Should_Downscale_Fill()
+		{
+			var dest = new DestinationFixedGray2(8, 4);
+
+			_graph.Source = _source;
+			_graph.Resize = ResizeMode.Fill;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame1 = FrameGenerator.FromString(@"
+				3333232321321030
+				3333333300000000
+				0000000033333333
+				0301231232323333");
+
+			var frame2 = FrameGenerator.FromString(@"
+				33333333
+				21032101
+				10123210
+				02321012
+				10123210
+				21012321
+				12321012
+				33333333");
+
+			var scaledFrame1 = FrameGenerator.FromString(@"
+				23232132
+				33330000
+				00003333
+				23123232");
+
+			var scaledFrame2 = FrameGenerator.FromString(@"
+				10123210
+				02321012
+				10123210
+				21012321");
+
+			await AssertFrame(_source, dest, frame1, scaledFrame1);
+			await AssertFrame(_source, dest, frame2, scaledFrame2);
+		}
+
+		[TestCase]
+		public async Task Should_Downscale_Stretch()
+		{
+			var dest = new DestinationFixedGray2(8, 4);
+
+			_graph.Source = _source;
+			_graph.Resize = ResizeMode.Stretch;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var frame = FrameGenerator.FromString(@"
+				3333232321321030
+				3333333300000000
+				0000000033333333
+				0301231232323333");
+
+			var scaledFrame = FrameGenerator.FromString(@"
+				33222202
+				33330000
+				00003333
+				20222233");
+
+			await AssertFrame(_source, dest, frame, scaledFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Convert_To_RGB24()
 		{
 			var dest = new DestinationFixedRgb24(8, 4);
 			
@@ -465,7 +465,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_Flipped()
+		public async Task Should_Convert_To_RGB24_Flipped_Both()
 		{
 			var dest = new DestinationFixedRgb24(8, 4);
 			
@@ -492,7 +492,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_Double()
+		public async Task Should_Convert_To_RGB24_Upscaled_With_HDScaling_Double()
 		{
 			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
 			
@@ -537,7 +537,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_HDScaling_2X()
+		public async Task Should_Convert_To_RGB24_Upscaled_With_HDScaling_2X()
 		{
 			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
 			
@@ -582,7 +582,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fit()
+		public async Task Should_Convert_To_RGB24_Downscaled_Fit()
 		{
 			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
@@ -630,7 +630,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Fill()
+		public async Task Should_Convert_To_RGB24_Downscaled_Fill()
 		{
 			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
@@ -678,7 +678,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Downscale_Stretch()
+		public async Task Should_Convert_To_RGB24_Downscaled_Stretch()
 		{
 			var dest = new DestinationFixedRgb24(10, 4) { DmdAllowHdScaling = true };
 			
@@ -710,7 +710,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fit()
 		{
 			var dest = new DestinationFixedRgb24(16, 8);
 			
@@ -741,7 +741,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fill()
 		{
 			var dest = new DestinationFixedRgb24(16, 8);
 			
@@ -772,7 +772,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch()
+		public async Task Should_Convert_To_RGB24_Upscaled_Stretch()
 		{
 			var dest = new DestinationFixedRgb24(16, 8);
 			
@@ -803,7 +803,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill_Y()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fill_Same_Height()
 		{
 			var dest = new DestinationFixedRgb24(16, 4);
 			
@@ -832,7 +832,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit_Y()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fit_Same_Height()
 		{
 			var dest = new DestinationFixedRgb24(16, 4);
 			
@@ -861,7 +861,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch_Y()
+		public async Task Should_Convert_To_RGB24_Upscaled_Stretch_Same_Height()
 		{
 			var dest = new DestinationFixedRgb24(16, 4);
 			
@@ -890,7 +890,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fill_X()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fill_Same_Width()
 		{
 			var dest = new DestinationFixedRgb24(8, 6);
 			
@@ -919,7 +919,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Fit_X()
+		public async Task Should_Convert_To_RGB24_Upscaled_Fit_Same_Width()
 		{
 			var dest = new DestinationFixedRgb24(8, 6);
 			
@@ -948,7 +948,7 @@ namespace LibDmd.Test
 		}
 		
 		[TestCase]
-		public async Task Should_Convert_To_RGB24_Frame_With_Upscale_Stretch_X()
+		public async Task Should_Convert_To_RGB24_Upscaled_Stretch_Same_Width()
 		{
 			var dest = new DestinationFixedRgb24(8, 6);
 			
@@ -977,7 +977,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Bitmap_Frame()
+		public async Task Should_Convert_To_Bitmap()
 		{
 			var dest = new DestinationBitmapFixed(8, 4);
 

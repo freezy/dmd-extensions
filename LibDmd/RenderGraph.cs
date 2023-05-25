@@ -733,11 +733,6 @@ namespace LibDmd
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray2.RenderGray2
 							);
-
-							// Subscribe(sourceGray4.GetGray4Frames()
-							// 		.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 }))
-							// 		.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
-							// 	frame => destGray2.RenderGray2(frame));
 							break;
 
 						// gray4 -> gray4
