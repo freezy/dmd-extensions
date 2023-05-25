@@ -35,7 +35,7 @@
 		
 		public bool IsDoubleSizeOf(Dimensions dimensions) => Width == dimensions.Width * 2 && Height == dimensions.Height * 2;
 		
-		public bool FitInto(Dimensions dimensions) => Width <= dimensions.Width && Height <= dimensions.Height;
+		public bool FitsInto(Dimensions dimensions) => Width <= dimensions.Width && Height <= dimensions.Height;
 
 		public override bool Equals(object obj) => obj is Dimensions other && Equals(other);
 		
