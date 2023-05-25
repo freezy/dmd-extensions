@@ -18,7 +18,7 @@ namespace LibDmd.Frame
 		public bool IsGray => BitLength <= 8;
 		public bool IsRgb24 => BitLength == 24;
 
-		private int BytesPerPixel => BitLength < 8 ? 1 : BitLength / 8;
+		private int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
 
 
 		public DmdFrame()
@@ -97,6 +97,22 @@ namespace LibDmd.Frame
 			return this;
 		}
 
+		public DmdFrame ConvertToGray2()
+		{
+			switch (BitLength) {
+				case 2:
+					throw new ArgumentException("Frame is already gray2.");
+				case 4:
+					Data = FrameUtil.ConvertGrayToGray(Data,
+						new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 });
+					BitLength = 2;
+					break;
+				case 24:
+					throw new NotImplementedException();
+			}
+			return this;
+		}
+
 		public DmdFrame ConvertGrayToGray(params byte[] mapping)
 		{
 			Data = FrameUtil.ConvertGrayToGray(Data, mapping);
@@ -137,37 +153,66 @@ namespace LibDmd.Frame
 			));
 		}
 
-		public DmdFrame TransformGray2(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+
+		/// <summary>
+		/// Up- or downscales image, and flips if necessary.
+		/// </summary>
+		///
+		/// <remarks>
+		/// Images are actually never upscaled, if the source image is smaller than destination frame, it gets centered.
+		/// Downscaling is done depending on the render graph's `Resize` setting.
+		/// </remarks>
+		/// <param name="renderGraph">Render graph reference to retrieve flipping and resizing config</param>
+		/// <param name="fixedDest">If not null, the fixed destination we're transforming for.</param>
+		/// <param name="multiDest">If not null, the multi-res destination we're transforming for.</param>
+		/// <returns></returns>
+		public DmdFrame TransformGray(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			return Transform(2, 1, renderGraph, fixedDest, multiDest);
+			var bytesPerPixel = BytesPerPixel;
+			var targetDim = GetTargetDimensions(fixedDest, multiDest);
+			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
+				// no resizing, we're done here.
+				return Flip(bytesPerPixel, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			}
+
+			// perf: if no flipping these cases can easily done on the byte array directly
+			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+
+				// copy whole block if only vertical padding
+				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
+					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel), BitLength);
+				}
+
+				// copy line by line if centering image
+				if (Dimensions.FitInto(targetDim)) {
+					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), BitLength);
+				}
+			}
+
+			// otherwise, convert to bitmap, resize, convert back.
+			var bmp = ImageUtil.ConvertFrom(BitLength, Dimensions, Data, 0, 1, 1);
+			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+			var transformedFrame = ImageUtil.ConvertTo(BitLength, transformedBmp);
+
+			return Update(targetDim, transformedFrame, BitLength);
 		}
 
-		public DmdFrame TransformGray4(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			return Transform(4, 1, renderGraph, fixedDest, multiDest);
-		}
-
-		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			return Transform(24, 3, renderGraph, fixedDest, multiDest);
-		}
-		
-		public DmdFrame TransformRgb24(IFixedSizeDestination fixedDest, ResizeMode resize, bool flipHorizontally, bool flipVertically)
+		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest)
 		{
 			// do anything at all?
-			if (fixedDest == null && !flipHorizontally && !flipVertically) {
+			if (fixedDest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
 				return this;
 			}
 
 			// just flip?
 			if (fixedDest == null || fixedDest.FixedSize == Dimensions) {
-				Data = TransformationUtil.Flip(Dimensions, 3, Data, flipHorizontally, flipVertically);
+				Data = TransformationUtil.Flip(Dimensions, 3, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				return this;
 			}
-			
+
 			// resize
 			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
-			var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, resize, flipHorizontally, flipVertically);
+			var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
 			return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
 		}
@@ -234,50 +279,6 @@ namespace LibDmd.Frame
 			BitLength = 24;
 
 			return this;
-		}
-
-		/// <summary>
-		/// Up- or downscales image, and flips if necessary.
-		/// </summary>
-		///
-		/// <remarks>
-		/// Images are actually never upscaled, if the source image is smaller than destination frame, it gets centered.
-		/// Downscaling is done depending on the render graph's `Resize` setting.
-		/// </remarks>
-		/// <param name="bitLen">Number of bit planes</param>
-		/// <param name="bytesPerPixel">Pixel size in bytes</param>
-		/// <param name="renderGraph">Render graph reference to retrieve flipping and resizing config</param>
-		/// <param name="fixedDest">If not null, the fixed destination we're transforming for.</param>
-		/// <param name="multiDest">If not null, the multi-res destination we're transforming for.</param>
-		/// <returns></returns>
-		private DmdFrame Transform(int bitLen, int bytesPerPixel, RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
-		{
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
-				// no resizing, we're done here.
-				return Flip(bytesPerPixel, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			}
-
-			// perf: if no flipping these cases can easily done on the byte array directly
-			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-
-				// copy whole block if only vertical padding
-				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
-					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel), bitLen);
-				}
-
-				// copy line by line if centering image
-				if (Dimensions.FitInto(targetDim)) {
-					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), bitLen);
-				}
-			}
-
-			// otherwise, convert to bitmap, resize, convert back.
-			var bmp = ImageUtil.ConvertFrom(bitLen, Dimensions, Data, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertTo(bitLen, transformedBmp);
-
-			return Update(targetDim, transformedFrame, bitLen);
 		}
 
 		private DmdFrame Flip(int bytesPerPixel, bool flipHorizontally, bool flipVertically)
