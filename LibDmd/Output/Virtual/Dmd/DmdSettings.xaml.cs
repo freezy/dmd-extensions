@@ -200,7 +200,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			DmdPreview.SetDimensions(new Dimensions(_preview.PixelWidth, _preview.PixelHeight));
 			DmdPreview.SetStyle(_previewStyle, _config.DataPath);
 			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
-				DmdPreview.RenderBitmap(_preview);
+				DmdPreview.RenderBitmap(new BmpFrame(_preview));
 			} else {
 				DmdPreview.RenderGray4(new DmdFrame(_preview.Dimensions(), ImageUtil.ConvertToGray4(_preview, 1.0), 24));
 			}

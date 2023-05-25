@@ -690,11 +690,12 @@ namespace LibDmd
 						// gray2 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
+
 							Subscribe(sourceGray2.GetGray2Frames()
 									.Select(frame => TransformScaling(source.Dimensions.Value, frame.Data, destFixedSize))
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, ColorizeGray2(source.Dimensions.Value, frame).Data))
-									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+									.Select(bmp => new BmpFrame(Transform(bmp, destFixedSize))),
+								bmp => destBitmap.RenderBitmap(bmp));
 							break;
 
 						// gray2 -> colored gray2
@@ -756,7 +757,7 @@ namespace LibDmd
 									.Select(frame => TransformScaling(source.Dimensions.Value, frame.Data, destFixedSize))
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, ColorizeGray4(source.Dimensions.Value, frame).Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// gray4 -> colored gray2
@@ -822,7 +823,7 @@ namespace LibDmd
 							Subscribe(sourceGray6.GetGray6Frames()
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, ColorizeGray6(source.Dimensions.Value, frame.Data).Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// gray6 -> colored gray2
@@ -887,7 +888,7 @@ namespace LibDmd
 							Subscribe(sourceRgb24.GetRgb24Frames()
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame.Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// rgb24 -> colored gray2
@@ -948,7 +949,7 @@ namespace LibDmd
 							AssertCompatibility(Source, sourceBitmap, dest, destBitmap, from, to);
 							Subscribe(sourceBitmap.GetBitmapFrames()
 									.Select(bmp => Transform(bmp.Bitmap, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// bitmap -> colored gray2
@@ -1006,7 +1007,7 @@ namespace LibDmd
 									.Select(frame => ColorUtil.ColorizeFrame(source.Dimensions.Value, FrameUtil.Join(source.Dimensions.Value, frame.Planes), frame.Palette))
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame.Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// colored gray2 -> colored gray2
@@ -1073,7 +1074,7 @@ namespace LibDmd
 									.Select(frame => ColorUtil.ColorizeFrame(source.Dimensions.Value, FrameUtil.Join(source.Dimensions.Value, frame.Planes), frame.Palette))
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame.Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// colored gray4 -> colored gray2
@@ -1149,7 +1150,7 @@ namespace LibDmd
 									.Select(frame => ColorUtil.ColorizeFrame(source.Dimensions.Value, FrameUtil.Join(source.Dimensions.Value, frame.Planes), frame.Palette))
 									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, frame.Data))
 									.Select(bmp => Transform(bmp, destFixedSize)),
-								destBitmap.RenderBitmap);
+								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
 							break;
 
 						// colored gray6 -> colored gray2

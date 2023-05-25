@@ -157,11 +157,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			return Path.GetFullPath(path);
 		}
 
-		public void RenderBitmap(BitmapSource bmp)
+		public void RenderBitmap(BmpFrame frame)
 		{
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
-			_nextFrameBitmap = bmp;
+			_nextFrameBitmap = frame.Bitmap;
 			Dmd.RequestRender();
 		}
 

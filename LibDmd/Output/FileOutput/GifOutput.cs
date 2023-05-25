@@ -36,8 +36,8 @@ namespace LibDmd.Output.FileOutput
 		/// <summary>
 		/// Renders an image to the display.
 		/// </summary>
-		/// <param name="bmp">Any bitmap</param>
-		public void RenderBitmap(BitmapSource bmp)
+		/// <param name="frame">Any bitmap</param>
+		public void RenderBitmap(BmpFrame frame)
 		{
 			// since we don't know the frame length before the next frame, we
 			// write the last frame and the current frame when disposing.
@@ -45,7 +45,7 @@ namespace LibDmd.Output.FileOutput
 				_outputGif.WriteFrame(ImageUtil.ConvertToImage(_lastBitmap), Environment.TickCount - _lastTick);
 			}
 
-			_lastBitmap = bmp;
+			_lastBitmap = frame.Bitmap;
 			_lastTick = Environment.TickCount;
 		}
 
