@@ -21,50 +21,50 @@ namespace LibDmd.Test
 			set { testContextInstance = value; }
 		}
 
-		protected static void Print(object obj)
+		protected static void Print(object obj, string label = "")
 		{
-			TestContext.WriteLine(obj);
+			TestContext.WriteLine(label + obj);
 		}
 
-		protected static async Task AssertFrame(ITestSource source, ITestDestination<BmpFrame> dest, DmdFrame srcFrame, DmdFrame expectedFrame)
+		protected static async Task AssertFrame<TFrame>(ITestSource<TFrame> source, ITestDestination<BmpFrame> dest, TFrame srcFrame, DmdFrame expectedFrame)
 		{
-			Print(srcFrame);
+			Print(srcFrame, "In: ");
 
 			dest.Reset();
 			source.AddFrame(srcFrame);
 			var receivedFrame = await dest.Frame;
 			var receivedFrameRgb = receivedFrame.ConvertToRgb24();
 
-			Print(receivedFrame);
+			Print(receivedFrameRgb, "Out: ");
 
 			receivedFrameRgb.Data.Should().BeEquivalentTo(expectedFrame.Data);
 			receivedFrameRgb.Dimensions.Should().Be(expectedFrame.Dimensions);
 		}
 
-		protected static async Task AssertFrame(ITestSource source, ITestDestination<DmdFrame> dest, DmdFrame srcFrame, DmdFrame expectedFrame)
+		protected static async Task AssertFrame<TFrame>(ITestSource<TFrame> source, ITestDestination<DmdFrame> dest, TFrame srcFrame, DmdFrame expectedFrame)
 		{
-			Print(srcFrame);
+			Print(srcFrame, "In: ");
 			
 			dest.Reset();
 			source.AddFrame(srcFrame);
 			var receivedFrame = await dest.Frame;
 			
-			Print(receivedFrame);
+			Print(receivedFrame, "Out: ");
 			
 			receivedFrame.Data.Should().BeEquivalentTo(expectedFrame.Data);
 			receivedFrame.BitLength.Should().Be(expectedFrame.BitLength);
 			receivedFrame.Dimensions.Should().Be(expectedFrame.Dimensions);
 		}
 
-		protected static async Task AssertFrame(ITestSource source, ITestDestination<ColoredFrame> dest, DmdFrame srcFrame, ColoredFrame expectedFrame)
+		protected static async Task AssertFrame<TFrame>(ITestSource<TFrame> source, ITestDestination<ColoredFrame> dest, TFrame srcFrame, ColoredFrame expectedFrame)
 		{
-			Print(srcFrame);
+			Print(srcFrame, "In: ");
 
 			dest.Reset();
 			source.AddFrame(srcFrame);
 			var receivedFrame = await dest.Frame;
 
-			Print(receivedFrame);
+			Print(receivedFrame, "Out: ");
 
 			receivedFrame.Planes.Length.Should().Be(expectedFrame.Planes.Length);
 			for (var i = 0; i < receivedFrame.Planes.Length; i++) {
