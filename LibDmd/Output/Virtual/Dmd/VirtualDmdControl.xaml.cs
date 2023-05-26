@@ -159,6 +159,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BmpFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = frame.Bitmap;
@@ -167,6 +168,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame.Data;
@@ -175,6 +177,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderGray4(DmdFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame.Data;
@@ -183,6 +186,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			SetRgb24Frame(frame.Data);
@@ -191,12 +195,14 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray2(frame.ConvertToGray());
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray4(frame.ConvertToGray());
 		}
