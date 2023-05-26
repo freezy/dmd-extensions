@@ -24,7 +24,6 @@ namespace DmdExt.Mirror
 		private readonly IConfiguration _config;
 		private ColorizationLoader _colorizationLoader;
 		private CompositeDisposable	_subscriptions = new CompositeDisposable();
-		private CompositeDisposable _dmdColorSubscriptions = new CompositeDisposable();
 		private List<IDestination> _renderers;
 
 		public MirrorCommand(IConfiguration config, MirrorOptions options)
@@ -206,7 +205,6 @@ namespace DmdExt.Mirror
 		public override void Dispose()
 		{
 			base.Dispose();
-			_dmdColorSubscriptions.Dispose();
 			_subscriptions.Dispose();
 		}
 
