@@ -531,6 +531,16 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Bitmap);
 						continue;
 					}
+					// gray6 -> rgb24
+					if (sourceGray6 != null && destRgb24 != null) {
+						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Rgb24);
+						continue;
+					}
+					// gray6 -> bitmap
+					if (sourceGray6 != null && destBitmap != null) {
+						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Bitmap);
+						continue;
+					}
 					// rgb24 -> bitmap
 					if (sourceRgb24 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Bitmap);
@@ -573,6 +583,16 @@ namespace LibDmd
 					}
 
 					// finally, here we lose data
+					// gray6 -> gray4
+					if (sourceGray6 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray4);
+						continue;
+					}
+					// gray6 -> gray2
+					if (sourceGray6 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray2);
+						continue;
+					}
 					// gray4 -> gray2
 					if (sourceGray4 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
@@ -779,8 +799,7 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToGray2()
 									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray2.RenderGray2
-							);
+								destGray2.RenderGray2);
 							break;
 
 						// gray4 -> gray4
@@ -791,8 +810,7 @@ namespace LibDmd
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray4.RenderGray4
-							);
+								destGray4.RenderGray4);
 							break;
 
 						// gray4 -> gray6
@@ -808,8 +826,7 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToRgb24(_gray4Palette ?? _gray4Colors)
 									.TransformRgb24(this, destFixedSize, destMultiSize),
-								destRgb24.RenderRgb24
-							);
+								destRgb24.RenderRgb24);
 							break;
 
 						// gray4 -> bitmap
@@ -821,8 +838,7 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToBmp(_gray4Palette ?? _gray4Colors)
 									.Transform(this, destFixedSize, destMultiSize),
-								destBitmap.RenderBitmap
-							);
+								destBitmap.RenderBitmap);
 							break;
 
 						// gray4 -> colored gray2
@@ -850,45 +866,60 @@ namespace LibDmd
 						// gray6 -> gray2
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray6, dest, destGray2, from, to);
-							Subscribe(sourceGray6.GetGray6Frames()
-									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3}))
-									.Select(frame => TransformGray2(source.Dimensions.Value, frame, destFixedSize)),
-								frame => destGray2.RenderGray2(frame));
+							Subscribe(
+								sourceGray6.GetGray6Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToGray2()
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray2.RenderGray2);
 							break;
 
 						// gray6 -> gray4
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray6, dest, destGray4, from, to);
-							Subscribe(sourceGray6.GetGray6Frames()
-									.Select(frame => FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7 }))
-									.Select(frame => TransformGray4(source.Dimensions.Value, frame, destFixedSize)),
-								frame => destGray4.RenderGray4(frame));
+							Subscribe(
+								sourceGray6.GetGray6Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToGray4()
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray4.RenderGray4);
 							break;
 
 						// gray6 -> gray6
 						case FrameFormat.Gray6:
 							AssertCompatibility(source, sourceGray6, dest, destGray6, from, to);
-							Subscribe(sourceGray6.GetGray6Frames()
-									.Select(frame => TransformGray6(source.Dimensions.Value, frame.Data, destFixedSize)),
-								frame => destGray6.RenderGray6(frame));
+							Subscribe(
+								sourceGray6.GetGray6Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray6.RenderGray6);
 							break;
 
 						// gray6 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray6, dest, destRgb24, from, to);
-							Subscribe(sourceGray6.GetGray6Frames()
-									.Select(frame => ColorizeGray6(source.Dimensions.Value, frame.Data))
-									.Select(frame => TransformRgb24(source.Dimensions.Value, frame.Data, destFixedSize)),
+							Subscribe(
+								sourceGray6.GetGray6Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb24(_gray6Palette ?? _gray6Colors)
+									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24);
 							break;
 
 						// gray6 -> bitmap
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray6, dest, destBitmap, from, to);
-							Subscribe(sourceGray6.GetGray6Frames()
-									.Select(frame => ImageUtil.ConvertFromRgb24(source.Dimensions.Value, ColorizeGray6(source.Dimensions.Value, frame.Data).Data))
-									.Select(bmp => Transform(bmp, destFixedSize)),
-								bmp => destBitmap.RenderBitmap(new BmpFrame(bmp)));
+							Subscribe(
+								sourceGray6.GetGray6Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToBmp(_gray6Palette ?? _gray6Colors)
+									.Transform(this, destFixedSize, destMultiSize),
+								destBitmap.RenderBitmap);
 							break;
 
 						// gray6 -> colored gray2
