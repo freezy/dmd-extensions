@@ -81,6 +81,8 @@ namespace LibDmd.Test
 
 			Print(receivedFrame, "Out: ");
 
+			Print(expectedFrame, "Expected: ");
+
 			receivedFrame.Planes.Length.Should().Be(expectedFrame.Planes.Length);
 			for (var i = 0; i < receivedFrame.Planes.Length; i++) {
 				receivedFrame.Planes[i].Should().BeEquivalentTo(expectedFrame.Planes[i]);

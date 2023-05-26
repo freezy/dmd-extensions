@@ -59,7 +59,7 @@ namespace LibDmd
 
 			#if DEBUG
 			if (planes.Length != palette.Length.GetBitLength()) {
-				throw new ArgumentException("Number of planes must match palette size");
+				throw new ArgumentException($"Number of planes must match palette size ({planes.Length} != {palette.Length.GetBitLength()})");
 			}
 			#endif
 		}
@@ -223,10 +223,18 @@ namespace LibDmd
 			var data = FrameUtil.Join(Dimensions, Planes);
 			var sb = new StringBuilder();
 			sb.AppendLine($"Colored Frame {Dimensions}@{bitLength}, {Palette.Length} colors ({data.Length} bytes):");
-			if (bitLength <= 8) {
+			if (bitLength <= 4) {
 				for (var y = 0; y < Dimensions.Height; y++) {
 					for (var x = 0; x < Dimensions.Width; x++) {
 						sb.Append(data[y * Dimensions.Width + x].ToString("X"));
+					}
+					sb.AppendLine();
+				}
+
+			} else if (bitLength <= 8) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width + x].ToString("X2") + " ");
 					}
 					sb.AppendLine();
 				}

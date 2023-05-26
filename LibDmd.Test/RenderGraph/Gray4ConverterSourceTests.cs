@@ -146,7 +146,7 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Ignore_Colored_Frame_For_Gray4()
+		public async Task Should_Ignore_Colored_Frame_For_Gray6()
 		{
 			var dest = new DestinationFixedGray4(8, 4);
 
@@ -194,7 +194,6 @@ namespace LibDmd.Test
 			_graph.StartRendering();
 			await AssertFrame(source, dest, coloredFrame, frame);
 		}
-
 
 		[TestCase]
 		public async Task Should_Convert_Gray4_Data_To_Gray2_Data()
