@@ -528,7 +528,7 @@ namespace LibDmd.DmdDevice
 					});
 				}
 				
-			} else if (_colorizationPlugin != null) {
+			} else if (_colorizationPlugin != null && _colorizationPlugin.IsEnabled) {
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
