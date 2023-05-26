@@ -41,7 +41,10 @@ namespace LibDmd.Test
 
 		public static ColoredFrame FromString(string frame, params Color[] palette)
 		{
-			var (data, dim, bitLength) = Parse(frame);
+			var match = Regex.Match(frame, @"\d{2} \d{2}", RegexOptions.IgnoreCase);
+			var parse = match.Success ? (Func<string,  (byte[], Dimensions, int)>)Parse2CharsPerPixel : Parse;
+
+			var (data, dim, bitLength) = parse(frame);
 			return new ColoredFrame(new DmdFrame(dim, data, bitLength), palette);
 		}
 
