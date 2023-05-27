@@ -398,12 +398,10 @@
     <Compile Include="Frame\BaseFrame.cs" />
     <Compile Include="Frame\BmpFrame.cs" />
     <Compile Include="Frame\ColoredFrame.cs" />
-    <Compile Include="Frame\ColoredFrame_to_migrate.cs" />
     <Compile Include="Frame\Dimensions.cs" />
     <Compile Include="Frame\DmdFrame.cs" />
     <Compile Include="Frame\FrameExtensions.cs" />
     <Compile Include="Frame\RawFrame.cs" />
-    <Compile Include="Input\Frame.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
     <Compile Include="Input\IDmdColorSource.cs" />
