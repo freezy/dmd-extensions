@@ -103,7 +103,7 @@ namespace LibDmd.Converter.Pin2Color
 				Logger.Info($"[Pin2Color] {_pin2ColorizerMode.ToString()} colorization loaded ...");
 				IsColored = true;
 			} else {
-				Logger.Info($"[Pin2Color] No colorization found. Switching tp Passthrough.");
+				Logger.Info($"[Pin2Color] No colorization found. Switching to Passthrough.");
 				IsColored = false;
 			}
 
