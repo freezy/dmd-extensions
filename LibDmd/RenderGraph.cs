@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -1342,7 +1341,10 @@ namespace LibDmd
 						// colored alphanumeric -> alphanumeric
 						case FrameFormat.AlphaNumeric:
 							AssertCompatibility(source, sourceAlphaNumeric, dest, destAlphaNumeric, from, to);
-							Subscribe(sourceAlphaNumeric.GetAlphaNumericFrames(), destAlphaNumeric.RenderAlphaNumeric);
+							Subscribe(
+								sourceAlphaNumeric.GetAlphaNumericFrames(),
+								f=> f,
+								destAlphaNumeric.RenderAlphaNumeric);
 							break;
 						
 						default:
@@ -1417,51 +1419,6 @@ namespace LibDmd
 		/// <summary>
 		/// Subscribes to the given source and links it to the given destination.
 		/// </summary>
-		/// 
-		/// <remarks>
-		/// This also does all the common stuff, i.e. setting the correct scheduler,
-		/// enabling idle detection, etc.
-		/// </remarks>
-		/// 
-		/// <typeparam name="T">Frame type, already converted to match destination</typeparam>
-		/// <param name="src">Source observable</param>
-		/// <param name="onNext">Action to run on destination</param>
-		[Obsolete("Use the processor one.")]
-		private void Subscribe<T>(IObservable<T> src, Action<T> onNext) where T : class
-		{
-			// always observe on default thread, and only the latest notification (i.e. drop missed frames)
-			src = ObserveLatestOn(src, Scheduler.Default);
-
-			// set idle timeout if enabled
-			if (IdleAfter > 0) {
-
-				// So we want the sequence to continue after the timeout, which is why 
-				// IObservable.Timeout is not well suited.
-				// A better approach is to run onNext with IObservable.Do and subscribe
-				// to the timeout through IObservable.Throttle.
-				Logger.Info("Setting idle timeout to {0}ms.", IdleAfter);
-
-				// now render it
-				src = src.Do(_ => StopIdleing());
-				src = src.Do(onNext);
-
-				// but subscribe to a throttled idle action
-				src = src.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
-
-				// execute on main thread
-				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
-				src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
-				_activeSources.Add(src.Subscribe(f => StartIdleing()));
-
-			} else {
-				// subscribe and add to active sources
-				_activeSources.Add(src.Subscribe(onNext));
-			}
-		}
-		
-		/// <summary>
-		/// Subscribes to the given source and links it to the given destination.
-		/// </summary>
 		///
 		/// <remarks>
 		/// This also does all the common stuff, i.e. setting the correct scheduler,
@@ -1485,7 +1442,7 @@ namespace LibDmd
 				Logger.Info("Setting idle timeout to {0}ms.", IdleAfter);
 
 				// now render it
-				src = src.Do(_ => StopIdleing());
+				src = src.Do(_ => StopIdling());
 				var dest = src.Select(frame => (TIn)frame.Clone()).Select(processor).Do(onNext);
 
 				// but subscribe to a throttled idle action
@@ -1494,7 +1451,7 @@ namespace LibDmd
 				// execute on main thread
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 				dest = dest.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
-				_activeSources.Add(dest.Subscribe(f => StartIdleing()));
+				_activeSources.Add(dest.Subscribe(f => StartIdling()));
 
 			} else {
 				
@@ -1513,7 +1470,7 @@ namespace LibDmd
 		/// <remarks>
 		/// This sets up a new render graph with the current destinations.
 		/// </remarks>
-		private void StartIdleing()
+		private void StartIdling()
 		{
 			if (IdlePlay != null) {
 				ISource source;
@@ -1551,7 +1508,7 @@ namespace LibDmd
 		/// <summary>
 		/// Stops idling source.
 		/// </summary>
-		private void StopIdleing()
+		private void StopIdling()
 		{
 			if (_idleRenderer != null) {
 				_idleRenderer.Dispose();
@@ -1563,21 +1520,7 @@ namespace LibDmd
 			}
 		}
 
-		private DmdFrame ColorizeGray6(Dimensions dim, byte[] frame)
-		{
-			return ColorUtil.ColorizeObsolete(dim, frame, _gray6Palette ?? _gray6Colors);
-		}
-
 		/// <summary>
-		/// Returns true if at least one of the destinations can receive RGB24 frames.
-		/// </summary>
-		/// <returns>True if RGB24 is supported, false otherwise</returns>
-		private bool HasRgb24Destination()
-		{
-			return Destinations.OfType<IRgb24Destination>().Any();
-		}
-		
-				/// <summary>
 		/// Makes sure that a given source is compatible with a given destination or throws an exception.
 		/// </summary>
 		/// <param name="src">Original source</param>
@@ -1620,136 +1563,6 @@ namespace LibDmd
 			AssertCompatibility(src, castedSource, dest, castedDest, from.ToString(), to.ToString());
 		}
 		
-		#endregion
-
-		#region Transformations
-
-		[Obsolete]
-		private byte[] TransformScaling(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
-		{
-			if ((dest != null && !dest.DmdAllowHdScaling) || (dim.Surface == frame.Length)) {
-				return frame;
-			}
-
-			return ScalerMode == ScalerMode.Doubler 
-				? FrameUtil.ScaleDoubleUgh(dim, frame) 
-				: FrameUtil.Scale2xUgh(dim, frame);
-		}
-
-		private DmdFrame TransformGray2(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
-		{
-			frame = TransformScaling(dim, frame, dest);
-
-			if (dest == null)
-			{
-				return new DmdFrame(dim, TransformationUtil.Flip(dim, 1, frame, FlipHorizontally, FlipVertically), 2);
-			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
-				return new DmdFrame(dim, frame, 2);
-			}
-			if (dim == (dest.FixedSize * 2) && !FlipHorizontally && !FlipVertically) {
-				return dim.Surface == frame.Length 
-					? new DmdFrame(dim, FrameUtil.ScaleDownFrame(dest.FixedSize, frame), 2) 
-					: new DmdFrame(dim, frame, 2);
-			}
-
-			// block-copy for same width but smaller height
-			if (dim.Width == dest.FixedSize.Width && dim.Height < dest.FixedSize.Height && Resize != ResizeMode.Stretch && !FlipHorizontally && !FlipVertically) {
-				var transformedFrame = new byte[dest.FixedSize.Surface];
-				Buffer.BlockCopy(frame, 0, transformedFrame, ((dest.FixedSize.Height - dim.Height) / 2) * dest.FixedSize.Width, frame.Length);
-				return new DmdFrame(dim, transformedFrame, 2);
-			}
-
-			var bmp = ImageUtil.ConvertFromGray2(dim, frame, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			return new DmdFrame(dim, ImageUtil.ConvertToGray2(transformedBmp).Data, 2);
-		}
-
-		private DmdFrame TransformGray4(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
-		{
-			frame = TransformScaling(dim, frame, dest);
-
-			if (dest == null)
-			{
-				return new DmdFrame(dim, TransformationUtil.Flip(dim, 1, frame, FlipHorizontally, FlipVertically), 4);
-			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
-				return new DmdFrame(dim, frame, 4);
-			}
-			if (dim == (dest.FixedSize * 2) && !FlipHorizontally && !FlipVertically) {
-				return dim.Surface == frame.Length 
-					? new DmdFrame(dim, FrameUtil.ScaleDownFrame(dest.FixedSize, frame), 4) 
-					: new DmdFrame(dim, frame, 4);
-			}
-
-			var bmp = ImageUtil.ConvertFromGray4(dim, frame, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray4(transformedBmp);
-			return new DmdFrame(dim, transformedFrame, 4);
-		}
-		
-		private DmdFrame TransformGray6(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
-		{
-			frame = TransformScaling(dim, frame, dest);
-
-			if (dest == null) {
-				return new DmdFrame(dim, TransformationUtil.Flip(dim, 1, frame, FlipHorizontally, FlipVertically), 6);
-			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
-				return new DmdFrame(dim, frame, 6);
-			}
-			if (dim == (dest.FixedSize * 2) && !FlipHorizontally && !FlipVertically) {
-				return dim.Surface == frame.Length 
-					? new DmdFrame(dim, FrameUtil.ScaleDownFrame(dest.FixedSize, frame), 6) 
-					: new DmdFrame(dim, frame, 6);
-			}
-
-			var bmp = ImageUtil.ConvertFromGray6(dim, frame, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
-			return new DmdFrame(dim, transformedFrame, 6);
-		}
-
-		private ColoredFrame TransformColoredGray6(Dimensions dim, ColoredFrame frame, IFixedSizeDestination dest)
-		{
-			if (dest == null) {
-				return new ColoredFrame(dim, TransformationUtil.Flip(dim, frame.Planes, FlipHorizontally, FlipVertically), frame.Palette, frame.PaletteIndex, frame.Rotations, frame.RotateColors);
-			}
-			if (dim == dest.FixedSize && !FlipHorizontally && !FlipVertically) {
-				return frame;
-			}
-			if (dim == (dest.FixedSize * 2) && !FlipHorizontally && !FlipVertically) {
-				return new ColoredFrame(dim, FrameUtil.ScaleDown(dest.FixedSize, frame.Planes),frame.Palette, frame.PaletteIndex);
-			}
-
-			var bmp = ImageUtil.ConvertFromGray6(dim, FrameUtil.Join(dim, frame.Planes), 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToGray6(transformedBmp);
-			return new ColoredFrame(dim, FrameUtil.Split(dest.FixedSize, 6, transformedFrame), frame.Palette, frame.PaletteIndex, frame.Rotations, frame.RotateColors);
-		}
-
-		[Obsolete("Use frame method")]
-		private DmdFrame TransformRgb24(Dimensions dim, byte[] frame, IFixedSizeDestination dest)
-		{
-			if (dest == null) {
-				return new DmdFrame(dim, TransformationUtil.Flip(dim, 3, frame, FlipHorizontally, FlipVertically), 24);
-			}
-			var bmp = ImageUtil.ConvertFromRgb24(dim, frame);
-			var transformedBmp = TransformationUtil.Transform(bmp, dest.FixedSize, Resize, FlipHorizontally, FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
-			return new DmdFrame(dest.FixedSize, transformedFrame, 24);
-		}
-
-		private BitmapSource Transform(BitmapSource bmp, IFixedSizeDestination dest)
-		{
-			if (dest == null && !FlipHorizontally && !FlipVertically) {
-				return bmp;
-			}
-
-			var dim = dest?.FixedSize ?? new Dimensions(bmp.PixelWidth, bmp.PixelHeight);
-			return TransformationUtil.Transform(bmp, dim, Resize, FlipHorizontally, FlipVertically);
-		}
-
 		#endregion
 	}
 
