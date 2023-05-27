@@ -1,8 +1,9 @@
-﻿using LibDmd.DmdDevice;
+﻿using System;
+using LibDmd.DmdDevice;
 
 namespace LibDmd
 {
-	public class AlphaNumericFrame
+	public class AlphaNumericFrame : ICloneable
 	{
 		/// <summary>
 		/// The segment data
@@ -31,5 +32,7 @@ namespace LibDmd
 			SegmentDataExtended = segDataExtended;
 			SegmentLayout = layout;
 		}
+
+		public object Clone() => new AlphaNumericFrame(SegmentLayout, SegmentData, SegmentDataExtended);
 	}
 }
