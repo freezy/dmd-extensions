@@ -180,7 +180,17 @@ namespace LibDmd.DmdDevice
 		public int QuitAfter => -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
-		public ScalerMode ScalerMode => GetEnum("scalermode", ScalerMode.Scale2x);
+		public ScalerMode ScalerMode {
+			get {
+				// scaletohd was removed and replaced by ScalerMode.None. This is to keep backwards compatibility.
+				var scaleToHd = GetBoolean("scaletohd", false, out var scaleToHdInIni);
+				if (scaleToHdInIni) {
+					return !scaleToHd ? ScalerMode.None : GetEnum("scalermode", ScalerMode.Scale2x);
+				}
+				return GetEnum("scalermode", ScalerMode.None);
+			}
+		}
+
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 		public string[] Plugins {
 			get {
@@ -801,18 +811,27 @@ namespace LibDmd.DmdDevice
 
 		protected bool GetBoolean(string key, bool fallback)
 		{
+			return GetBoolean(key, fallback, out _);
+		}
+
+		protected bool GetBoolean(string key, bool fallback, out bool keyFound)
+		{
 			if (HasGameSpecificValue(key)) {
+				keyFound = true;
 				return _parent.GameConfig.GetBoolean(GameOverridePrefix + key, fallback);
 			}
 
 			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				keyFound = false;
 				return fallback;
 			}
 
 			try {
+				keyFound = true;
 				return bool.Parse(_data[Name][key]);
 
 			} catch (FormatException e) {
+				keyFound = true;
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be either \"true\" or \"false\".", e);
 				return fallback;
 			}
