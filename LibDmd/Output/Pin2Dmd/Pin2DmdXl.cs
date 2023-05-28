@@ -6,9 +6,11 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2DmdXl : Pin2DmdBase, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2DmdXl : Pin2DmdBase, IRgb24Destination, IRawOutput, IFixedSizeDestination, IMultiSizeDestination
 	{
-		public string Name { get; } = "PIN2DMD XL";
+		public string Name => "PIN2DMD XL";
+
+		public Dimensions[] Sizes { get; } = {Dim128x32, Dim192x64};
 
 		protected override string ProductString => "PIN2DMD XL";
 		
