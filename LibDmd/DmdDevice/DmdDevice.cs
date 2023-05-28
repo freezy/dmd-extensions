@@ -204,7 +204,16 @@ namespace LibDmd.DmdDevice
 		/// <param name="num">Index of the new palette.</param>
 		public void LoadPalette(uint num)
 		{
-			_pin2ColorResult.Gray4Colorizer?.LoadPalette(num);
+			_pin2ColorResult?.Gray4Colorizer?.LoadPalette(num);
+		}
+
+		/// <summary>
+		/// Pass console data through to plugin
+		/// </summary>
+		/// <param name="data"></param>
+		public void ConsoleData(byte data)
+		{
+			_colorizationPlugin?.ConsoleData(data);
 		}
 
 		public void SetGameName(string gameName)
