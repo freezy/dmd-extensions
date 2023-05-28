@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	public class VniAnimationPlane : AnimationPlane
 	{

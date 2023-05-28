@@ -3,7 +3,7 @@ using System.Linq;
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	/// <summary>
 	/// Das ischd Haiptkonfig firs iifärbä vo Graistuifä-Aazeigä.
@@ -11,7 +11,7 @@ namespace LibDmd.Converter.Colorize
 	/// Biischpiu vom Fileformat hets hiä: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
 	/// Doku übrs Format hiä: https://github.com/sker65/go-dmd-clock/blob/master/doc/README.md
 	/// </summary>
-	public class Coloring
+	public class VniColoring
 	{
 		public readonly string Filename;
 		/// <summary>
@@ -31,7 +31,7 @@ namespace LibDmd.Converter.Colorize
 		/// List di ganzi Konfig vom File inä.
 		/// </summary>
 		/// <param name="filename">Dr Pfad zum File</param>
-		public Coloring(string filename)
+		public VniColoring(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);

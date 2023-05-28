@@ -1,30 +1,21 @@
 ﻿using System;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Common;
-using LibDmd.Converter.Colorize;
 using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
-namespace LibDmd.Converter
+namespace LibDmd.Converter.Pin2Color
 {
-	/// <summary>
-	/// Tuät viär Bit Graischtuifä-Frames i RGB24-Frames umwandlä.
-	/// </summary>
-	/// 
-	/// <remarks>
-	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
-	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
-	/// </remarks>
-	public class Gray4Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
+	public class Pin2ColorGray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
-		public override string Name { get; } = "4-Bit Colorizer";
-		public FrameFormat From { get; } = FrameFormat.Gray4;
-		public IObservable<Unit> OnResume { get; }
-		public IObservable<Unit> OnPause { get; }
+		public override string Name { get; } = "2-Bit Colorizer";
+		public FrameFormat From { get; } = FrameFormat.Gray2;
+		public IObservable<Unit> OnResume => null;
+		public IObservable<Unit> OnPause => null;
+		public bool Has128x32Animation { get; set; }
 		public ScalerMode ScalerMode { get; set; }
 
 		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
@@ -34,24 +25,38 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Datä vomer uism .pal-Feil uisägläsä hend
 		/// </summary>
-		private readonly Coloring _coloring;
+		private readonly VniColoring _vniColoring;
 
 		/// <summary>
 		/// Datä vomer uism Animazionsfeil uisägläsä hend
 		/// </summary>
 		private readonly AnimationSet _animations;
+
+		/// <summary>
+		/// Wenn nid `null` de isch das d Animazion wo grad ablaift
+		/// </summary>
 		private Animation _activeAnimation;
 
 		/// <summary>
 		/// Die etzigi Palettä
 		/// </summary>
 		private Palette _palette;
+
+		/// <summary>
+		/// Dr aktueui Palettä-Index. Da wird bruicht damit s PIN2DMD schnäuer cha 
+		/// Palettä wächslä, wuis d Palettä a sich schon hett und nur nu än Index
+		/// bruicht.
+		/// </summary>
 		private int _paletteIndex;
 
 		/// <summary>
 		/// D Standardpalettä wo bruicht wird wenn grad nid erkennt wordä isch
 		/// </summary>
 		private Palette _defaultPalette;
+
+		/// <summary>
+		/// Dr Index wo ufd Standardpalettä zeigt
+		/// </summary>
 		private int _defaultPaletteIndex;
 
 		/// <summary>
@@ -59,17 +64,14 @@ namespace LibDmd.Converter
 		/// </summary>
 		private IDisposable _paletteReset;
 
-		private bool _resetEmbedded = false;
-		private int _lastEmbedded = -1;
-
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Gray4Colorizer(Coloring coloring, AnimationSet animations)
+		public Pin2ColorGray2Colorizer(VniColoring vniColoring, AnimationSet animations)
 		{
-			_coloring = coloring;
+			_vniColoring = vniColoring;
 			_animations = animations;
-
-			SetPalette(coloring.DefaultPalette, coloring.DefaultPaletteIndex, true);
+			Has128x32Animation = (_vniColoring.Masks != null && _vniColoring.Masks.Length >= 1 && _vniColoring.Masks[0].Length == 512);
+			SetPalette(vniColoring.DefaultPalette, vniColoring.DefaultPaletteIndex, true);
 		}
 
 		public void Init()
@@ -78,40 +80,13 @@ namespace LibDmd.Converter
 
 		public void Convert(DmdFrame frame)
 		{
-			if (_coloring.Palettes.Length > 1 && _animations == null)
-			{
-				if (frame.Data[0] == 0x08 && frame.Data[1] == 0x09 &&
-					frame.Data[2] == 0x0a && frame.Data[3] == 0x0b)
-				{
-					uint newpal = (uint)frame.Data[5] * 8 + (uint)frame.Data[4];
-					for (int i = 0; i < 6; i++)
-						frame.Data[i] = 0;
-
-					if (newpal != _lastEmbedded)
-					{
-						LoadPalette(newpal);
-						if (!_coloring.DefaultPalette.IsPersistent)
-						{
-							_resetEmbedded = true;
-						}
-						_lastEmbedded = (int)newpal;
-					}
-				}
-				else if (_resetEmbedded)
-				{
-					_lastEmbedded = _coloring.DefaultPaletteIndex;
-					SetPalette(_coloring.DefaultPalette, _coloring.DefaultPaletteIndex);
-					_resetEmbedded = false;
-				}
-			}
-
 			byte[][] planes;
-			if (frame.Dimensions.Surface != frame.Data.Length * 4)
-				planes = FrameUtil.Split(frame.Dimensions, 4, frame.Data);
+			if (frame.Dimensions.Width * frame.Dimensions.Height != frame.Data.Length * 4)
+				planes = FrameUtil.Split(frame.Dimensions, 2, frame.Data);
 			else
-				planes = FrameUtil.Split(frame.Dimensions / 2, 4, frame.Data);
+				planes = FrameUtil.Split(frame.Dimensions / 2, 2, frame.Data);
 
-			if (_coloring.Mappings != null)
+			if (_vniColoring.Mappings != null)
 			{
 				if (frame is RawFrame vd && vd.RawPlanes.Length > 0)
 				{
@@ -123,7 +98,6 @@ namespace LibDmd.Converter
 				}
 			}
 
-			// Wenn än Animazion am laifä isch de wirds Frame dr Animazion zuägschpiut wos Resultat de säubr uisäschickt
 			if (_activeAnimation != null)
 			{
 				_activeAnimation.ScalerMode = ScalerMode;
@@ -135,18 +109,6 @@ namespace LibDmd.Converter
 			Render(frame.Dimensions, planes);
 		}
 
-		public void LoadPalette(uint newpal)
-		{
-			if (_coloring.Palettes.Length > newpal)
-			{
-				SetPalette(_coloring.GetPalette(newpal), (int)newpal);
-
-			}
-			else
-			{
-				Logger.Warn("No palette for change to " + newpal);
-			}
-		}
 		/// <summary>
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>
@@ -172,19 +134,18 @@ namespace LibDmd.Converter
 				return;
 			}
 
-
 			// Faus scho eppis am laifä isch, ahautä
 			_activeAnimation?.Stop();
 			_activeAnimation = null;
 
 			// Palettä ladä
-			var palette = _coloring.GetPalette(mapping.PaletteIndex);
+			var palette = _vniColoring.GetPalette(mapping.PaletteIndex);
 			if (palette == null)
 			{
 				Logger.Warn("[colorize] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
-			Logger.Debug("[colorize] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
+			//Logger.Debug("[colorize] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
 			SetPalette(palette, mapping.PaletteIndex);
@@ -209,7 +170,7 @@ namespace LibDmd.Converter
 			// Animazionä
 			if (mapping.IsAnimation)
 			{
-
+				
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
 				if (_animations == null)
 				{
@@ -253,7 +214,7 @@ namespace LibDmd.Converter
 					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
 						clear = _activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse, clear);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _coloring.Masks, reverse);
+						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _vniColoring.Masks, reverse);
 				}
 			}
 		}
@@ -263,6 +224,7 @@ namespace LibDmd.Converter
 		/// wordä isch zrugg gäh.
 		/// </summary>
 		/// <param name="planes">Bitplanes vom Biud</param>
+		/// <param name="dim">Grehssi vom Biud</param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
 		private Mapping FindMapping(Dimensions dim, byte[] plane, bool reverse, out uint NoMaskCRC)
 		{
@@ -270,44 +232,43 @@ namespace LibDmd.Converter
 			var maskSize = dim.Width * dim.Height / 8;
 
 			var checksum = FrameUtil.Checksum(plane, reverse);
-
+				
 			NoMaskCRC = checksum;
 
-			var mapping = _coloring.FindMapping(checksum);
-			if (mapping != null)
+			var mapping = _vniColoring.FindMapping(checksum);
+			if (mapping != null) 
 			{
 				return mapping;
 			}
 
 			// Wenn kä Maskä definiert, de nächschti Bitplane
-			if (_coloring.Masks == null || _coloring.Masks.Length <= 0)
+			if (_vniColoring.Masks == null || _vniColoring.Masks.Length <= 0)
 				return null;
-
+		
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			var maskedPlane = new byte[maskSize];
-			foreach (var mask in _coloring.Masks)
+			foreach (var mask in _vniColoring.Masks)
 			{
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
-				mapping = _coloring.FindMapping(checksum);
-				if (mapping != null)
+				mapping = _vniColoring.FindMapping(checksum);
+				if (mapping != null) 
 				{
 					return mapping;
 				}
 			}
-
+			
 			return null;
 		}
 
 		/// <summary>
 		/// Tuäts Biud uif diä entschprächändä Sourcä uisgäh.
 		/// </summary>
-		/// <param name="dim">Dimensionä vom Biud</param>
+		/// <param name="dim">Frame dimensions</param>
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(Dimensions dim, byte[][] planes)
 		{
-
-			// todo can probably be dropped entirely, since we now do upscaling at graph level.
-			if ((dim.Surface / 8) != planes[0].Length)
+			// todo can probably be dropped entirely since we upscale at graph level.
+			if ((dim.Width * dim.Height / 8) != planes[0].Length)
 			{
 				// We want to do the scaling after the animations get triggered.
 				if (ScalerMode == ScalerMode.Doubler)
@@ -325,15 +286,13 @@ namespace LibDmd.Converter
 			}
 
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
-			if (planes.Length == 2)
-			{
+			if (planes.Length == 2) {
 				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
-			if (planes.Length == 4)
-			{
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+			if (planes.Length == 4) {
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
 			}
 
 			if (planes.Length == 6)
@@ -346,20 +305,19 @@ namespace LibDmd.Converter
 		/// Tuät nii Farbä dr Palettä wo grad bruichd wird zuäwiisä.
 		/// </summary>
 		/// <param name="palette">Diä nii Palettä</param>
+		/// <param name="index">Welä Index mr muäss setzä</param>
 		/// <param name="isDefault"></param>
 		public void SetPalette(Palette palette, int index, bool isDefault = false)
 		{
-			if (palette == null)
-			{
+			if (palette == null) {
 				Logger.Warn("[colorize] Ignoring null palette.");
 				return;
 			}
-			if (isDefault)
-			{
+			if (isDefault) {
 				_defaultPalette = palette;
 				_defaultPaletteIndex = index;
 			}
-			Logger.Debug("[colorize] Setting new palette ({0}): [ {1} ]", index, string.Join(" ", palette.Colors.Select(c => c.ToString())));
+			//Logger.Debug("[colorize] Setting new palette: [ {0} ]", string.Join(" ", palette.Colors.Select(c => c.ToString())));
 			_palette = palette;
 			_paletteIndex = index;
 		}
@@ -384,7 +342,7 @@ namespace LibDmd.Converter
 		{
 			return ColoredGray4AnimationFrames;
 		}
-		
+
 		public IObservable<ColoredFrame> GetColoredGray6Frames()
 		{
 			return ColoredGray6AnimationFrames;

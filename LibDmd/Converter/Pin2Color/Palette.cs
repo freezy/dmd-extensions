@@ -5,7 +5,7 @@ using System.Windows.Media;
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	/// <summary>
 	/// Ä palettä isch ä Lischtä vo Farbä. Jedi Palettä het än Index und a Tip wo

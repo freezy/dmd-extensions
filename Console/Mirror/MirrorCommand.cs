@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
+using LibDmd.Converter.Pin2Color;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
@@ -216,7 +217,7 @@ namespace DmdExt.Mirror
 				return serumColorizer;
 			}
 
-			return _colorizationLoader.LoadColorizer(gameName, _config.Global.ScalerMode)?.gray2;
+			return _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode)?.Gray2Colorizer;
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)

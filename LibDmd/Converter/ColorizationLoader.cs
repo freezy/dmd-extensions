@@ -5,24 +5,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
-using LibDmd.Converter.Colorize;
 using LibDmd.Converter.Plugin;
 using Microsoft.Win32;
 using NLog;
 
-namespace LibDmd.Converter
+namespace LibDmd.Converter.Pin2Color
 {
 	public class ColorizationLoader
 	{
-		public struct ColorizerResult
-		{
-			public Coloring coloring;
-			public Gray2Colorizer gray2;
-			public Gray4Colorizer gray4;
-			public VniAnimationSet vni;
-
-		}
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private string _altcolorPath;
@@ -69,7 +59,7 @@ namespace LibDmd.Converter
 			return null;
 		}
 
-		public ColorizerResult? LoadColorizer(string gameName, ScalerMode scalerMode)
+		public Pin2ColorResult LoadPin2Color(string gameName, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null)
 			{
@@ -89,7 +79,7 @@ namespace LibDmd.Converter
 				try
 				{
 					Logger.Info("Loading palette file at {0}...", palPath);
-					var coloring = new Coloring(palPath);
+					var coloring = new VniColoring(palPath);
 					VniAnimationSet vni = null;
 					if (File.Exists(vniPath))
 					{
@@ -105,18 +95,18 @@ namespace LibDmd.Converter
 						Analytics.Instance.SetColorizer("PAL");
 					}
 
-					var gray2Colorizer = new Gray2Colorizer(coloring, vni);
-					var gray4Colorizer = new Gray4Colorizer(coloring, vni);
+					var gray2Colorizer = new Pin2ColorGray2Colorizer(coloring, vni);
+					var gray4Colorizer = new Pin2ColorGray4Colorizer(coloring, vni);
 
 					gray2Colorizer.ScalerMode = scalerMode;
 					gray4Colorizer.ScalerMode = scalerMode;
 
-					return new ColorizerResult
+					return new Pin2ColorResult
 					{
-						coloring = coloring,
-						gray2 = gray2Colorizer,
-						gray4 = gray4Colorizer,
-						vni = vni,
+						Coloring = coloring,
+						Gray2Colorizer = gray2Colorizer,
+						Gray4Colorizer = gray4Colorizer,
+						Vni = vni,
 					};
 				}
 				catch (Exception e)
@@ -124,7 +114,6 @@ namespace LibDmd.Converter
 					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
 					Analytics.Instance.ClearColorizer();
 				}
-
 			}
 			else
 			{

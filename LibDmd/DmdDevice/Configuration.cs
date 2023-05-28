@@ -62,7 +62,7 @@ namespace LibDmd.DmdDevice
 		private IniData _data;
 		private string _gameName;
 
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private IDisposable _saveSubscription;
 
 		public Configuration(string iniPath = null)

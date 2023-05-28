@@ -389,6 +389,9 @@
     <Compile Include="Analytics.cs" />
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
+    <Compile Include="Converter\Pin2Color\Pin2ColorGray2Colorizer.cs" />
+    <Compile Include="Converter\Pin2Color\Pin2ColorGray4Colorizer.cs" />
+    <Compile Include="Converter\Pin2Color\Pin2ColorResult.cs" />
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
     <Compile Include="Converter\Serum\CRC32encode.cs" />
     <Compile Include="Converter\Serum\Serum.cs" />
@@ -445,17 +448,15 @@
     <Compile Include="Common\VirtualDmd.xaml.cs">
       <DependentUpon>VirtualDmd.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converter\Colorize\AnimationFrame.cs" />
-    <Compile Include="Converter\Colorize\AnimationPlane.cs" />
-    <Compile Include="Converter\Colorize\AnimationSet.cs" />
-    <Compile Include="Converter\Colorize\SwitchMode.cs" />
-    <Compile Include="Converter\Colorize\VniAnimation.cs" />
-    <Compile Include="Converter\Colorize\Animation.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationFrame.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationPlane.cs" />
-    <Compile Include="Converter\Colorize\VniAnimationSet.cs" />
-    <Compile Include="Converter\Gray2Colorizer.cs" />
-    <Compile Include="Converter\Gray4Colorizer.cs" />
+    <Compile Include="Converter\Pin2Color\AnimationFrame.cs" />
+    <Compile Include="Converter\Pin2Color\AnimationPlane.cs" />
+    <Compile Include="Converter\Pin2Color\AnimationSet.cs" />
+    <Compile Include="Converter\Pin2Color\SwitchMode.cs" />
+    <Compile Include="Converter\Pin2Color\VniAnimation.cs" />
+    <Compile Include="Converter\Pin2Color\Animation.cs" />
+    <Compile Include="Converter\Pin2Color\VniAnimationFrame.cs" />
+    <Compile Include="Converter\Pin2Color\VniAnimationPlane.cs" />
+    <Compile Include="Converter\Pin2Color\VniAnimationSet.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
@@ -493,9 +494,9 @@
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
-    <Compile Include="Converter\Colorize\Mapping.cs" />
-    <Compile Include="Converter\Colorize\Palette.cs" />
-    <Compile Include="Converter\Colorize\Coloring.cs" />
+    <Compile Include="Converter\Pin2Color\Mapping.cs" />
+    <Compile Include="Converter\Pin2Color\Palette.cs" />
+    <Compile Include="Converter\Pin2Color\VniColoring.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />

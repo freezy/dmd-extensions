@@ -1,4 +1,6 @@
-﻿using System;
+﻿// ReSharper disable CommentTypo
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,9 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
-using LibDmd.Converter;
-using LibDmd.Converter.Colorize;
-using LibDmd.Converter.Serum;
+using LibDmd.Converter.Pin2Color;
 using LibDmd.Converter.Plugin;
 using LibDmd.Converter.Serum;
 using LibDmd.Frame;
@@ -29,114 +29,114 @@ using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
+using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 
 namespace LibDmd.DmdDevice
 {
 	/// <summary>
-	/// Hiä isch d Haiptlogik fir d <c>DmdDevice.dll</c> fir VPinMAME.
+	/// The main logic of <c>DmdDevice.dll</c>.
 	/// </summary>
-	/// <seealso cref="LibDmd.DmdDevice">Vo det chemid d Datä übr VPinMAME</seealso>
+	/// <seealso cref="LibDmd.DmdDevice">The DLL wrapper where the data comes from.</seealso>
 	public class DmdDevice : IDmdDevice
 	{
-		private const int Width = 128;
-		private const int Height = 32;
-
+		// generic stuff
 		private readonly Configuration _config;
+		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
+		private bool _isOpen;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		// sources
 		private readonly PassthroughGray2Source _passthroughGray2Source;
 		private readonly PassthroughGray4Source _passthroughGray4Source;
 		private readonly PassthroughRgb24Source _passthroughRgb24Source;
 		private readonly PassthroughAlphaNumericSource _passthroughAlphaNumericSource;
-		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat;
-		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
-		private static string _version = "";
-		private static string _sha = "";
-		private static string _fullVersion = "";
+
+		// destinations
 		private VirtualDmd _virtualDmd;
 		private VirtualAlphanumericDestination _alphaNumericDest;
 
-		// Ziigs vo VPM
+		// versioning
+		private static string _sha = "";
+		private static string _fullVersion = "";
+
+		// data coming from the DLL
 		private string _gameName;
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
+		private Color[] _palette;
 		private readonly DmdFrame _dmdFrame = new DmdFrame();
 
-		// Iifärbigsziig
-		private ColorizationLoader _colorizationLoader;
-		private Color[] _palette;
-		DmdFrame _upsizedFrame;
-		private Gray2Colorizer _gray2Colorizer;
-		private Gray4Colorizer _gray4Colorizer;
-		private Coloring _coloring;
-		private bool _isOpen;
+		// colorizers
+		private readonly ColorizationLoader _colorizationLoader;
+		private Serum _serum;
+		private ColorizationPlugin _colorizationPlugin;
+		private Pin2ColorResult _pin2ColorResult;
 
-		// Wärchziig
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		// error reporting
 #if !DEBUG
-		static readonly Mindscape.Raygun4Net.RaygunClient Raygun = new Mindscape.Raygun4Net.RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static readonly NLog.Targets.MemoryTarget MemLogger = new NLog.Targets.MemoryTarget {
+		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly MemoryTarget MemLogger = new MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
 #endif
-
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
-		private Serum _serum;
-		private ColorizationPlugin _colorizationPlugin;
 
 		public DmdDevice()
 		{
-			_currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
-			_passthroughGray2Source = new PassthroughGray2Source(_currentFrameFormat, "VPM 2-bit Source");
-			_passthroughGray4Source = new PassthroughGray4Source(_currentFrameFormat, "VPM 4-bit Source");
-			_passthroughRgb24Source = new PassthroughRgb24Source(_currentFrameFormat, "VPM RGB24 Source");
-			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(_currentFrameFormat);
+			var currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
+			_passthroughGray2Source = new PassthroughGray2Source(currentFrameFormat, "DmdDevice 2-bit Source");
+			_passthroughGray4Source = new PassthroughGray4Source(currentFrameFormat, "DmdDevice 4-bit Source");
+			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source");
+			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(currentFrameFormat);
+
+			_config = new Configuration();
+			_colorizationLoader = new ColorizationLoader();
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+			#region Logger
 			// setup logger
 			var assembly = Assembly.GetCallingAssembly();
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
-			var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
-			if (File.Exists(logConfigPath)) {
-				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
+			if (assemblyPath != null) {
+				var logConfigPath = Path.Combine(assemblyPath, "DmdDevice.log.config");
+				if (File.Exists(logConfigPath)) {
+					LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath);
+					LogManager.ThrowExceptions = false;
 #if !DEBUG
-				LogManager.Configuration.AddTarget("memory", MemLogger);
-				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, MemLogger));
-				LogManager.ReconfigExistingLoggers();
+					LogManager.Configuration.AddTarget("memory", MemLogger);
+					LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, MemLogger));
+					LogManager.ReconfigExistingLoggers();
+#endif
+				}
+#if !DEBUG
+				else {
+					SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
+				}
 #endif
 			}
-#if !DEBUG
-			else {
-				SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
-			}
-#endif
 			CultureUtil.NormalizeUICulture();
-			_config = new Configuration();
-			_colorizationLoader = new ColorizationLoader();
 
 			// read versions from assembly
 			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
 			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			_version = fvi.ProductVersion;
+			var version = fvi.ProductVersion;
 			if (attr.Length > 0) {
 				var aca = (AssemblyConfigurationAttribute)attr[0];
 				_sha = aca.Configuration;
-				if (string.IsNullOrEmpty(_sha)) {
-					_fullVersion = _version;
-				}
-				else {
-					_fullVersion = $"{_version} ({_sha})";
-				}
+				_fullVersion = string.IsNullOrEmpty(_sha) ? version : $"{version} ({_sha})";
 
-			}
-			else {
+			} else {
 				_fullVersion = fvi.ProductVersion;
 				_sha = "";
 			}
-			
+			#endregion
+
 			if (_config.Global.SkipAnalytics) {
 				Analytics.Instance.Disable();
 			}
@@ -149,11 +149,12 @@ namespace LibDmd.DmdDevice
 				Analytics.Instance.Disable(false);
 			}
 
-			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion,
-				Process.GetCurrentProcess().ProcessName);
+			Logger.Info("Starting VPinMAME API {0} through {1}.exe.", _fullVersion, Process.GetCurrentProcess().ProcessName);
 			Logger.Info("Assembly located at {0}", assembly.Location);
 			Logger.Info("Running in {0}", Directory.GetCurrentDirectory());
 		}
+
+		#region DmdDevice.dll API
 
 		/// <summary>
 		/// Wird uisgfiärt wemmr aui Parametr hend.
@@ -168,10 +169,8 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
 			_serum = null;
+			_pin2ColorResult = null;
 			_colorizationPlugin = null;
 
 			SetupColorizer();
@@ -200,97 +199,201 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
-		/// Wird uifgriäft wenn vom modifiziärtä ROM ibärä Sitäkanau ä Palettäwächsu
-		/// ah gä wird.
+		/// Called if a modified ROM emits a palette change.
 		/// </summary>
-		/// <param name="num">Weli Palettä muäss gladä wärdä</param>
+		/// <param name="num">Index of the new palette.</param>
 		public void LoadPalette(uint num)
 		{
-			_gray4Colorizer?.LoadPalette(num);
+			_pin2ColorResult.Gray4Colorizer?.LoadPalette(num);
 		}
 
-		private void SetupColorizer()
+		public void SetGameName(string gameName)
 		{
-			// only setup if enabled and path is set
-			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
-				Analytics.Instance.ClearColorizer();
+			AnalyticsClear();
+
+			if (_gameName != null) { // only reload if game name is set (i.e. we didn't just load because we just started)
+				_config.Reload();
+			}
+
+			Logger.Info("Setting game name: {0}", gameName);
+			_gameName = gameName;
+			_config.GameName = gameName;
+			Analytics.Instance.SetSource(Process.GetCurrentProcess().ProcessName, gameName);
+		}
+
+		/// <summary>
+		/// Triggers frame colorization through the DLL.
+		/// </summary>
+		/// <param name="colorize">True if colorization enable in the ROM, false otherwise.</param>
+		public void SetColorize(bool colorize)
+		{
+			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
+			_colorize = colorize;
+		}
+
+		/// <summary>
+		/// Sets the color through the DLL.
+		/// </summary>
+		/// <param name="color">New color</param>
+		public void SetColor(Color color)
+		{
+			Logger.Info("Setting color: {0}", color);
+			_color = color;
+		}
+
+		/// <summary>
+		/// Sets the palette through the DLL.
+		/// </summary>
+		/// <param name="colors">New palette</param>
+		public void SetPalette(Color[] colors)
+		{
+			Logger.Info("Setting palette to {0} colors...", colors.Length);
+			_palette = colors;
+		}
+
+		/// <summary>
+		/// A new gray2 frame coming in from the DLL.
+		/// </summary>
+		/// <param name="frame">New gray frame</param>
+		public void RenderGray2(DmdFrame frame)
+		{
+			AnalyticsSetDmd();
+			if (!_isOpen) {
+				Init();
+			}
+			_passthroughGray2Source.NextFrame(frame);
+		}
+
+		/// <summary>
+		/// A new gray4 frame coming in from the DLL.
+		/// </summary>
+		/// <param name="frame">New gray4 frame</param>
+		public void RenderGray4(DmdFrame frame)
+		{
+			AnalyticsSetDmd();
+			if (!_isOpen) {
+				Init();
+			}
+			_passthroughGray4Source.NextFrame(frame);
+		}
+
+		/// <summary>
+		/// A new RGB24 frame coming in from the DLL.
+		/// </summary>
+		/// <param name="frame">New RGB24 frame</param>
+		public void RenderRgb24(DmdFrame frame)
+		{
+			AnalyticsSetDmd();
+			if (!_isOpen) {
+				Init();
+			}
+			_passthroughRgb24Source.NextFrame(frame);
+		}
+
+		/// <summary>
+		/// A new segdisplay frame coming in from the DLL.
+		/// </summary>
+		/// <param name="layout">Segment layout</param>
+		/// <param name="segData">Segment data</param>
+		/// <param name="segDataExtended">Additional segment data</param>
+		/// <exception cref="ArgumentOutOfRangeException">On unknown segment layout</exception>
+		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
+		{
+			AnalyticsSetSegmentDisplay();
+			if (_gameName.StartsWith("spagb_")) {
+				// ignore GB frames, looks like a bug from SPA side
 				return;
 			}
 
-			// abort if already setup
-			if (_gray2Colorizer != null || _gray4Colorizer != null) {
-				return;
+			if (!_isOpen) {
+				Init();
 			}
+			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
+			//_dmdFrame.Update(new Dimensions(Width, Height));
 
-			// 1. check for serum
-			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
-			if (serum != null) {
-				_serum = serum;
-			}
-
-			// 2. check for plugins
-			if (_serum == null) {
-				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
-				if (plugin != null) {
-					_colorizationPlugin = plugin;
-				}
-			}
-
-			// 3. check for vni
-			if (_serum == null && _colorizationPlugin == null) {
-				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
-				if (colorizerResult.HasValue) {
-					var colorizer = colorizerResult.Value;
-					_coloring = colorizer.coloring;
-					_gray2Colorizer = colorizer.gray2;
-					_gray4Colorizer = colorizer.gray4;
-				}
+			//Logger.Info("Alphanumeric: {0}", layout);
+			switch (layout) {
+				case NumericalLayout.__2x16Alpha:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
+					break;
+				case NumericalLayout.None:
+				case NumericalLayout.__2x20Alpha:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
+					break;
+				case NumericalLayout.__2x7Alpha_2x7Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
+					break;
+				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
+					break;
+				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
+					break;
+				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__4x7Num10:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
+					break;
+				case NumericalLayout.__6x4Num_4x1Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
+					break;
+				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
+					break;
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
+					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
 			}
 		}
 
 		/// <summary>
-		/// Tuät ä nii Inschantz vom virtueuä DMD kreiärä und tuät drnah d
-		/// Render-Graphä drabindä.
+		/// Game ended, hide the displays.
 		/// </summary>
-		private void CreateVirtualDmd()
+		public void Close()
 		{
-			// set up an event object to synchronize with the thread startup
-			var ev = new EventWaitHandle(false, EventResetMode.AutoReset);
+			Logger.Info("Closing up.");
+			try {
+				Analytics.Instance.EndGame();
+			} catch (Exception e) {
+				Logger.Warn(e, "Could not end game.");
+			}
+			_graphs.ClearDisplay();
+			_graphs.Dispose();
+			try {
+				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
+				_virtualDmd = null;
 
-			// launch a thrtead for the virtual DMD window event handler
-			var thread = new Thread(() => {
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
+			}
 
-				// create the virtual DMD window and create the render grahps
-				if (_config.VirtualDmd.Enabled) {
-					_virtualDmd = new VirtualDmd();
-					_virtualDmd.Setup(_config, _gameName);
-				}
-
-				SetupGraphs();
-
-				// Create our context, and install it:
-				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
-
-				// When the window closes, shut down the dispatcher
-				if (_config.VirtualDmd.Enabled) {
-					_virtualDmd.Closed += (s, e) => _virtualDmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-					_virtualDmd.Dispatcher.Invoke(SetupVirtualDmd);
-				}
-
-				// we're done with the setup - let the calling thread proceed
-				ev.Set();
-
-				// Start the Dispatcher Processing
-				Dispatcher.Run();
-			});
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-
-			// wait until the virtual DMD window is fully set up, to avoid any
-			// race conditions with the UI thread
-			ev.WaitOne();
-			ev.Dispose();
+			_alphaNumericDest = null;
+			_color = RenderGraph.DefaultColor;
+			_palette = null;
+			_serum?.Dispose();
+			_serum = null;
+			_colorizationPlugin?.Dispose();
+			_colorizationPlugin = null;
+			_pin2ColorResult = null;
+			_isOpen = false;
 		}
+
+		#endregion
 
 		/// <summary>
 		/// Kreiärt ä Render-Graph fir jedä Input-Tip und bindet si as
@@ -309,7 +412,6 @@ namespace LibDmd.DmdDevice
 #endif
 			ReportingTags.Add("In:DmdDevice");
 			ReportingTags.Add("Game:" + _gameName);
-
 
 			var renderers = new List<IDestination>();
 			if (_config.PinDmd1.Enabled) {
@@ -482,13 +584,13 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-
-			if (_serum != null) {
+			// === SERUM ===
+			if (_colorize && _serum != null) {
 
 				// 4-bit graph
 				if (_serum.NumColors == 16) {
 					_graphs.Add(new RenderGraph {
-						Name = "4-bit Colored VPM Graph",
+						Name = "4-bit Serum Graph",
 						Source = _passthroughGray4Source,
 						Destinations = renderers,
 						Converter = _serum,
@@ -501,7 +603,7 @@ namespace LibDmd.DmdDevice
 				// 2-bit graph
 				else {
 					_graphs.Add(new RenderGraph {
-						Name = "2-bit Colored VPM Graph",
+						Name = "2-bit Serum Graph",
 						Source = _passthroughGray2Source,
 						Destinations = renderers,
 						Converter = _serum,
@@ -511,12 +613,14 @@ namespace LibDmd.DmdDevice
 						ScalerMode = _config.Global.ScalerMode
 					});
 				}
-				
-			} else if (_colorizationPlugin != null && _colorizationPlugin.IsEnabled) {
+			}
+
+			// === COLORIZATION PLUGIN ===
+			else if (_colorize && _colorizationPlugin != null && _colorizationPlugin.IsEnabled) {
 
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "2-bit Colored VPM Graph",
+					Name = "2-bit Colorization Plugin Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
 					Converter = _colorizationPlugin,
@@ -525,10 +629,11 @@ namespace LibDmd.DmdDevice
 					FlipVertically = _config.Global.FlipVertically,
 					ScalerMode = _config.Global.ScalerMode,
 				});
+				ReportingTags.Add("Color:Gray2");
 
 				// 4-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colored VPM Graph",
+					Name = "4-bit Colorization Plugin Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Converter = _colorizationPlugin,
@@ -537,39 +642,31 @@ namespace LibDmd.DmdDevice
 					FlipVertically = _config.Global.FlipVertically,
 					ScalerMode = _config.Global.ScalerMode,
 				});
-				
-			} else if (_colorize && _gray2Colorizer != null) {
+				ReportingTags.Add("Color:Gray4");
+			}
+
+			// === NATIVE VNI 2-bit ===
+			else if (_colorize && _pin2ColorResult != null) {
+
+				// 2-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "2-bit Colored VPM Graph",
+					Name = "2-bit Pin2Color Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
-					Converter = _gray2Colorizer,
+					Converter = _pin2ColorResult.Gray2Colorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
 					ScalerMode = _config.Global.ScalerMode
 				});
 				ReportingTags.Add("Color:Gray2");
-			}
-			else {
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit VPM Graph",
-					Source = _passthroughGray2Source,
-					Destinations = renderers,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-			}
 
-			// 4-bit graph
-			if (_colorize && _gray4Colorizer != null) {
+				// 4-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colored VPM Graph",
+					Name = "4-bit Pin2Color Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
-					Converter = _gray4Colorizer,
+					Converter = _pin2ColorResult.Gray4Colorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
@@ -577,9 +674,21 @@ namespace LibDmd.DmdDevice
 				});
 				ReportingTags.Add("Color:Gray4");
 			}
+
+			// === NO COLORIZATION ===
 			else {
 				_graphs.Add(new RenderGraph {
-					Name = "4-bit VPM Graph",
+					Name = "2-bit Passthrough Graph",
+					Source = _passthroughGray2Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit Passthrough Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
@@ -591,7 +700,7 @@ namespace LibDmd.DmdDevice
 
 			// rgb24 graph
 			_graphs.Add(new RenderGraph {
-				Name = "RGB24-bit VPM Graph",
+				Name = "RGB24 Passthrough Graph",
 				Source = _passthroughRgb24Source,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
@@ -602,7 +711,7 @@ namespace LibDmd.DmdDevice
 
 			// alphanumeric graph
 			_graphs.Add(new RenderGraph {
-				Name = "Alphanumeric VPM Graph",
+				Name = "Alphanumeric Passthrough Graph",
 				Source = _passthroughAlphaNumericSource,
 				Destinations = renderers,
 				Resize = _config.Global.Resize,
@@ -611,27 +720,75 @@ namespace LibDmd.DmdDevice
 				ScalerMode = _config.Global.ScalerMode
 			});
 
-			if ((_serum!=null) || (_colorize && (_gray2Colorizer != null || _gray4Colorizer != null))) {
+			// if colorization enabled and frame-by-frame colorization enabled, just clear the color.
+			if (_colorize && (_serum != null || _colorizationPlugin != null || _pin2ColorResult != null)) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
-			
+
 			} else if (_colorize && _palette != null) {
+
+				// if colorization enabled and palette is set, apply palette.
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-				if (_coloring != null) {
-					_graphs.SetPalette(_palette, _coloring.DefaultPaletteIndex);
-				
-				} else {
-					_graphs.SetPalette(_palette, -1);
-				}
+
+				// todo retrieve palette from .pal
+				// if (_vniColoring != null) {
+				// 	_graphs.SetPalette(_palette, _vniColoring.DefaultPaletteIndex);
+
+				_graphs.SetPalette(_palette, -1);
 
 			} else {
+				// if colorization disabled, apply default color.
 				Logger.Info("Applying default color to render graphs ({0}).", _color);
 				_graphs.ClearPalette();
 				_graphs.SetColor(_color);
 			}
 
 			_graphs.Init().StartRendering();
+		}
+
+		/// <summary>
+		/// Tuät ä nii Inschantz vom virtueuä DMD kreiärä und tuät drnah d
+		/// Render-Graphä drabindä.
+		/// </summary>
+		private void CreateVirtualDmd()
+		{
+			// set up an event object to synchronize with the thread startup
+			var ev = new EventWaitHandle(false, EventResetMode.AutoReset);
+
+			// launch a thread for the virtual DMD window event handler
+			var thread = new Thread(() => {
+
+				// create the virtual DMD window and create the render graphs
+				if (_config.VirtualDmd.Enabled) {
+					_virtualDmd = new VirtualDmd();
+					_virtualDmd.Setup(_config, _gameName);
+				}
+
+				SetupGraphs();
+
+				// Create our context, and install it:
+				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+
+				// When the window closes, shut down the dispatcher
+				if (_config.VirtualDmd.Enabled) {
+					_virtualDmd.Closed += (s, e) => _virtualDmd.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+					_virtualDmd.Dispatcher.Invoke(SetupVirtualDmd);
+				}
+
+				// we're done with the setup - let the calling thread proceed
+				ev.Set();
+
+				// Start the Dispatcher Processing
+				Dispatcher.Run();
+			});
+			thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
+
+			// wait until the virtual DMD window is fully set up, to avoid any
+			// race conditions with the UI thread
+			ev.WaitOne();
+			ev.Dispose();
 		}
 
 		/// <summary>
@@ -716,160 +873,30 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
-		/// Tuät aui Renderer ahautä unds virtueua DMD vrschteckä.
+		/// Goes through all the colorizers until the first is loaded.
 		/// </summary>
-		public void Close()
+		private void SetupColorizer()
 		{
-			Logger.Info("Closing up.");
-			try {
-				Analytics.Instance.EndGame();
-			} catch (Exception e) {
-				Logger.Warn(e, "Could not end game.");
-			}
-			_graphs.ClearDisplay();
-			_graphs.Dispose();
-			try {
-				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
-				_virtualDmd = null;
-			
-			} catch (TaskCanceledException e) {
-				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
-			}
-
-			_alphaNumericDest = null;
-			_color = RenderGraph.DefaultColor;
-			_palette = null;
-			_serum?.Dispose();
-			_serum = null;
-			_colorizationPlugin?.Dispose();
-			_colorizationPlugin = null;
-			_gray2Colorizer = null;
-			_gray4Colorizer = null;
-			_coloring = null;
-			_isOpen = false;
-		}
-
-		public void SetGameName(string gameName)
-		{
-			AnalyticsClear();
-
-			if (_gameName != null) { // only reload if game name is set (i.e. we didn't just load because we just started)
-				_config.Reload();
-			}
-
-			Logger.Info("Setting game name: {0}", gameName);
-			_gameName = gameName;
-			_config.GameName = gameName;
-			Analytics.Instance.SetSource(Process.GetCurrentProcess().ProcessName, gameName);
-		}
-
-		public void SetColorize(bool colorize)
-		{
-			Logger.Info("{0} game colorization", colorize ? "Enabling" : "Disabling");
-			_colorize = colorize;
-		}
-
-		public void SetColor(Color color)
-		{
-			Logger.Info("Setting color: {0}", color);
-			_color = color;
-		}
-		public void SetPalette(Color[] colors)
-		{
-			Logger.Info("Setting palette to {0} colors...", colors.Length);
-			_palette = colors;
-		}
-		public void RenderGray2(DmdFrame frame)
-		{
-			AnalyticsSetDmd();
-			if (!_isOpen) {
-				Init();
-			}
-			_passthroughGray2Source.NextFrame(frame);
-		}
-
-		public void RenderGray4(DmdFrame frame)
-		{
-			AnalyticsSetDmd();
-			if (!_isOpen) {
-				Init();
-			}
-			_passthroughGray4Source.NextFrame(frame);
-		}
-
-		public void RenderRgb24(DmdFrame frame)
-		{
-			AnalyticsSetDmd();
-			if (!_isOpen) {
-				Init();
-			}
-			_passthroughRgb24Source.NextFrame(frame);
-		}
-
-		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
-		{
-			AnalyticsSetSegmentDisplay();
-			if (_gameName.StartsWith("spagb_")) {
-				// ignore GB frames, looks like a bug from SPA side
+			// only setup if enabled and path is set
+			if (!_config.Global.Colorize || _colorizationLoader == null || _gameName == null || !_colorize) {
+				Analytics.Instance.ClearColorizer();
 				return;
 			}
 
-			if (!_isOpen) {
-				Init();
-			}
-			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
-			//_dmdFrame.Update(new Dimensions(Width, Height));
+			// 1. check for serum
+			_serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
 
-			//Logger.Info("Alphanumeric: {0}", layout);
-			switch (layout) {
-				case NumericalLayout.__2x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
-					break;
-				case NumericalLayout.None:
-				case NumericalLayout.__2x20Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
-					break;
-				case NumericalLayout.__2x7Alpha_2x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
-					break;
-				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
-					break;
-				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
-					break;
-				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__4x7Num10:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
-					break;
-				case NumericalLayout.__6x4Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
-					break;
-				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
-					break;
-				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
+			// 2. check for plugins
+			if (_serum == null) {
+				_colorizationPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
+			}
+
+			// 3. check for native pin2color
+			if (_serum == null && _colorizationPlugin == null) {
+				_pin2ColorResult = _colorizationLoader.LoadPin2Color(_gameName, _config.Global.ScalerMode);
 			}
 		}
-		
+
 		#region Analytics
 
 		private bool _analyticsVirtualDmdEnabled;
@@ -903,6 +930,8 @@ namespace LibDmd.DmdDevice
 		
 		#endregion
 
+		#region Error Reporting
+
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			if (!(e.ExceptionObject is Exception ex)) {
@@ -918,7 +947,7 @@ namespace LibDmd.DmdDevice
 #if !DEBUG
 			Raygun.ApplicationVersion = _fullVersion;
 			Raygun.Send(ex,
-				System.Linq.Enumerable.ToList(ReportingTags), 
+				Enumerable.ToList(ReportingTags),
 				new Dictionary<string, string> {
 					{ "log", string.Join("\n", MemLogger.Logs) },
 					{ "sha", _sha }
@@ -926,5 +955,7 @@ namespace LibDmd.DmdDevice
 			);
 #endif
 		}
+
+		#endregion
 	}
 }

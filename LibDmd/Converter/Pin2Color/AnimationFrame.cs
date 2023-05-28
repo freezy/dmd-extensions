@@ -2,7 +2,7 @@
 using System.Linq;
 using NLog;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	public abstract class AnimationFrame
 	{
