@@ -42,8 +42,6 @@ namespace LibDmd.DmdDevice
 	{
 		private const int Width = 128;
 		private const int Height = 32;
-		private int aniWidth = 128;
-		private int aniHeight = 32;
 
 		private readonly Configuration _config;
 		private readonly PassthroughGray2Source _passthroughGray2Source;
@@ -228,19 +226,13 @@ namespace LibDmd.DmdDevice
 			var serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
 			if (serum != null) {
 				_serum = serum;
-				aniWidth = serum.FrameWidth;
-				aniHeight = serum.FrameHeight;
 			}
-
 
 			// 2. check for plugins
 			if (_serum == null) {
 				var plugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
 				if (plugin != null) {
 					_colorizationPlugin = plugin;
-				
-					// if (_pin2color.IsColored)
-					// 	_isColored = true;
 				}
 			}
 
@@ -249,18 +241,7 @@ namespace LibDmd.DmdDevice
 				var colorizerResult = _colorizationLoader.LoadColorizer(_gameName, _config.Global.ScalerMode);
 				if (colorizerResult.HasValue) {
 					var colorizer = colorizerResult.Value;
-
 					_coloring = colorizer.coloring;
-
-					if (colorizer.vni != null) {
-						aniHeight = colorizer.vni.MaxHeight;
-						aniWidth = colorizer.vni.MaxWidth;
-					}
-					else {
-						aniHeight = Height;
-						aniWidth = Width;
-					}
-
 					_gray2Colorizer = colorizer.gray2;
 					_gray4Colorizer = colorizer.gray4;
 				}
@@ -501,8 +482,10 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-			// 2-bit graph
+
 			if (_serum != null) {
+
+				// 4-bit graph
 				if (_serum.NumColors == 16) {
 					_graphs.Add(new RenderGraph {
 						Name = "4-bit Colored VPM Graph",
@@ -515,6 +498,7 @@ namespace LibDmd.DmdDevice
 						ScalerMode = _config.Global.ScalerMode
 					});
 				}
+				// 2-bit graph
 				else {
 					_graphs.Add(new RenderGraph {
 						Name = "2-bit Colored VPM Graph",
@@ -529,6 +513,7 @@ namespace LibDmd.DmdDevice
 				}
 				
 			} else if (_colorizationPlugin != null && _colorizationPlugin.IsEnabled) {
+
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Colored VPM Graph",
@@ -541,17 +526,17 @@ namespace LibDmd.DmdDevice
 					ScalerMode = _config.Global.ScalerMode,
 				});
 
-				// // 4-bit graph
-				// _graphs.Add(new RenderGraph {
-				// 	Name = "4-bit Colored VPM Graph",
-				// 	Source = _passthroughGray4Source,
-				// 	Destinations = renderers,
-				// 	Converter = _pin2color,
-				// 	Resize = _config.Global.Resize,
-				// 	FlipHorizontally = _config.Global.FlipHorizontally,
-				// 	FlipVertically = _config.Global.FlipVertically,
-				// 	ScalerMode = _config.Global.ScalerMode,
-				// });
+				// 4-bit graph
+				_graphs.Add(new RenderGraph {
+					Name = "4-bit Colored VPM Graph",
+					Source = _passthroughGray4Source,
+					Destinations = renderers,
+					Converter = _colorizationPlugin,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+				});
 				
 			} else if (_colorize && _gray2Colorizer != null) {
 				_graphs.Add(new RenderGraph {
@@ -794,50 +779,13 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
 		}
-		public int GetAniHeight()
-		{
-			return aniHeight;
-		}
-		public int GetAniWidth()
-		{
-			return aniWidth;
-		}
 		public void RenderGray2(DmdFrame frame)
 		{
 			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
-
-			// todo all of the below looks like garbage
-			
-			if (_colorizationPlugin != null) {
-				//frame.Update(_colorizationPlugin.Dimensions, frame.Data, frame.BitLength);
-			}
-
-			if (_serum != null) {
-				_passthroughGray2Source.NextFrame(frame);
-			
-			} else {
-				if (_gray2Colorizer != null && frame.Dimensions.Equals(128, 16) && _gray2Colorizer.Has128x32Animation) {
-					// Pin2DMD colorization may have 512 byte masks with a 128x16 source,
-					// indicating this should be upsized and treated as a centered 128x32 DMD.
-
-					var newDimensions = new Dimensions(frame.Dimensions.Width, frame.Dimensions.Width * 2);
-
-					if (_upsizedFrame == null)
-						_upsizedFrame = new DmdFrame(newDimensions, new byte[newDimensions.Surface], 2);
-					else
-						_upsizedFrame.Update(newDimensions, _upsizedFrame.Data,2);
-
-					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * newDimensions.Width, frame.Data.Length);
-
-					_passthroughGray2Source.NextFrame(_upsizedFrame);
-				
-				} else {
-					_passthroughGray2Source.NextFrame(frame);
-				}
-			}
+			_passthroughGray2Source.NextFrame(frame);
 		}
 
 		public void RenderGray4(DmdFrame frame)
@@ -846,15 +794,7 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
-
-			// todo why is this here?
-			if (_serum != null) {
-				_serum.Convert(frame);
-				_passthroughGray2Source.NextFrame(frame);
-			
-			} else {
-				_passthroughGray4Source.NextFrame(frame);
-			}
+			_passthroughGray4Source.NextFrame(frame);
 		}
 
 		public void RenderRgb24(DmdFrame frame)

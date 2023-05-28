@@ -17,23 +17,19 @@ namespace LibDmd.Converter.Serum
 		public override string Name => "Serum";
 		public FrameFormat From { get; } = FrameFormat.Gray2;
 		public bool IsLoaded;
-		public uint NumTriggersAvailable { get; }
-
-		// cROM components
-		/// <summary>
-		/// Frame width in LEDs
-		/// </summary>
-		public int FrameWidth;
-
-		/// <summary>
-		/// Frame height in LEDs
-		/// </summary>
-		public int FrameHeight;
+		private uint NumTriggersAvailable { get; }
 
 		/// <summary>
 		/// Number of colours in the manufacturer's ROM
 		/// </summary>
-		public uint NumColors;
+		public readonly uint NumColors;
+
+		// cROM components
+		/// <summary>
+		/// Frame dimensions in LEDs
+		/// </summary>
+		private readonly Dimensions _dimensions;
+
 
 		/// <summary>
 		/// =active instance of Pinup Player if available, =null if not
@@ -50,8 +46,8 @@ namespace LibDmd.Converter.Serum
 
 		public ScalerMode ScalerMode { get; set; }
 
-		public IObservable<Unit> OnResume { get; }
-		public IObservable<Unit> OnPause { get; }
+		public IObservable<Unit> OnResume => null;
+		public IObservable<Unit> OnPause => null;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -74,18 +70,23 @@ namespace LibDmd.Converter.Serum
 			if (File.Exists(dllName)) {
 				Logger.Info($"Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
-			if (!Serum_Load(altcolorPath, romName, ref FrameWidth, ref FrameHeight, ref NumColors, ref numTriggers)) {
+
+			var width = 0;
+			var height = 0;
+			if (!Serum_Load(altcolorPath, romName, ref width, ref height, ref NumColors, ref numTriggers)) {
 				IsLoaded = false;
 				return;
 			}
+
+			_dimensions = new Dimensions(width, height);
 			NumTriggersAvailable = numTriggers;
 			From = NumColors == 16 ? FrameFormat.Gray4 : FrameFormat.Gray2;
 			IsLoaded = true;
-			_frame = new DmdFrame(new Dimensions(FrameWidth, FrameHeight), From == FrameFormat.Gray4 ? 4 : 2);
+			_frame = new DmdFrame(_dimensions, From == FrameFormat.Gray4 ? 4 : 2);
 			
 			_planes = new byte[6][];
 			for (uint ti = 0; ti < 6; ti++) {
-				_planes[ti] = new byte[FrameWidth * FrameHeight / 8];
+				_planes[ti] = new byte[_dimensions.Surface / 8];
 			}
 			_rotations = new byte[MAX_COLOR_ROTATIONS * 3];
 		}
@@ -124,7 +125,7 @@ namespace LibDmd.Converter.Serum
 					_activePupOutput.RenderGray2(_frame);
 			}
 
-			Serum_Colorize(_frame.Data, FrameWidth, FrameHeight, _bytePalette, _rotations, ref triggerId);
+			Serum_Colorize(_frame.Data, _dimensions.Width, _dimensions.Height, _bytePalette, _rotations, ref triggerId);
 
 			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) {
 				if ((_rotations[ti * 3] >= 64) || (_rotations[ti * 3] + _rotations[ti * 3 + 1] > 64)) {
@@ -150,7 +151,7 @@ namespace LibDmd.Converter.Serum
 			}
 			
 			// send the colored frame
-			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(new Dimensions(FrameWidth, FrameHeight), planes, ConvertPalette(), _rotations));
+			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, planes, ConvertPalette(), _rotations));
 		}
 		
 		public static string GetVersion()
@@ -168,7 +169,7 @@ namespace LibDmd.Converter.Serum
 				_planes[tk][tj] = 0;
 			}
 
-			var len = FrameWidth * FrameHeight;
+			var len = _dimensions.Surface;
 			for (var ti = 0; ti < len; ti++) {
 				byte tl = 1;
 				for (var tk = 0; tk < colorBitDepth; tk++) {
