@@ -227,7 +227,6 @@ namespace DmdExt.Mirror
 			switch (source) {
 				case IGray2Source _: return FrameFormat.Gray2;
 				case IGray4Source _: return FrameFormat.Gray4;
-				case IGray6Source _: return FrameFormat.Gray6;
 				case IRgb24Source _: return FrameFormat.Rgb24;
 				case IColoredGray2Source _: return FrameFormat.ColoredGray2;
 				case IColoredGray4Source _: return FrameFormat.ColoredGray4;

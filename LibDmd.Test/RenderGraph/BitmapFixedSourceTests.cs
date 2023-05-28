@@ -113,38 +113,6 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Convert_To_Gray6()
-		{
-			var dest = new DestinationFixedGray6(8, 4);
-
-			_graph.Source = _source;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-
-			var bmpFrame = FrameGenerator.FromString(@"
-				ff b0 ca fb ea 36 74 fc
-				74 49 b0 54 33 08 0a a6
-				0a bd 28 80 30 9a 18 92
-				78 49 b8 5d 90 0d b9 00", @"
-				ff 18 ce f5 04 57 65 c5
-				1c a6 e6 6c 68 88 f1 3a
-				61 e1 e8 9d 20 f8 4e 9c
-				34 a4 43 44 eb c9 28 00", @"
-				ff 76 3b 6a 86 4b df 6a
-				1f 9f aa 31 f8 6c 31 49
-				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
-
-			var expectedFrame = FrameGenerator.FromString(@"
-				3F 19 21 2C 1D 11 28 2C
-				12 1E 31 13 25 12 1F 1C
-				10 2E 22 2C 0A 32 1E 25
-				22 1D 1F 24 2F 1A 19 00");
-
-			await AssertFrame(_source, dest, bmpFrame, expectedFrame);
-		}
-
-		[TestCase]
 		public async Task Should_Convert_To_Rgb24()
 		{
 			var dest = new DestinationFixedRgb24(8, 4);

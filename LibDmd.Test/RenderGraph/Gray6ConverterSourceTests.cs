@@ -193,33 +193,6 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
-		public async Task Should_Passthrough_Gray6_Data()
-		{
-			var source = new SourceColoredGray6();
-			var dest = new DestinationFixedGray6(8, 4);
-
-			_convert = dmdFrame => new ColoredFrame(dmdFrame, _palette);
-
-			var coloredFrame = FrameGenerator.FromString(@"
-				3F 2E 1D 0C 1B 2A 39 08 
-				0A 0A 0A 0A 30 30 30 30 
-				00 00 00 00 22 22 22 22 
-				00 11 22 33 04 15 26 37",
-				_palette);
-
-			var frame = FrameGenerator.FromString(@"
-				3F 2E 1D 0C 1B 2A 39 08 
-				0A 0A 0A 0A 30 30 30 30 
-				00 00 00 00 22 22 22 22 
-				00 11 22 33 04 15 26 37");
-
-			_graph.Source = source;
-			_graph.Destinations = new List<IDestination> { dest };
-			_graph.StartRendering();
-			await AssertFrame(source, dest, coloredFrame, frame);
-		}
-
-		[TestCase]
 		public async Task Should_Convert_Gray6_Data_To_Gray2_Data()
 		{
 			var source = new SourceColoredGray6();
