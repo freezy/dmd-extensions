@@ -12,7 +12,7 @@ namespace LibDmd.Output.ZeDMD
 	/// To build the ZeDMD HD version you either need 2 128x64 or 4 64x54 panels.
 	/// Check "ZeDMD Project Page" (https://github.com/zesinger/ZeDMD_ESP32) for details.
 	/// </summary>
-	public class ZeDMD : IGray2Destination, IGray4Destination, IGray6Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination,  IRawOutput, IResizableDestination
+	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRawOutput, IResizableDestination
 	{
 		public string Name => "ZeDMD";
 		public bool IsAvailable { get; private set; }
@@ -160,18 +160,6 @@ namespace LibDmd.Output.ZeDMD
 			}
 		}
 
-		public void RenderGray6(DmdFrame frame)
-		{
-			var planes = FrameUtil.Split(RomDimensions, 6, frame.Data);
-			var changed = FrameUtil.Copy(planes, _frameBuffer, 193);
-
-			// send frame buffer to device
-			if (changed)
-			{
-				RenderRaw(_frameBuffer, Gray2, 1 + 192 + 6 * RomDimensions.Surface / 8);
-			}
-		}
-
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			// copy palette
@@ -291,4 +279,3 @@ namespace LibDmd.Output.ZeDMD
 		}
 	}
 }
-
