@@ -78,17 +78,14 @@ namespace LibDmd.Converter
 			converter.Init();
 
 			if (converter is IColoredGray2Source source2) {
-				source2.Dimensions = Dimensions;
 				_latestColoredGray2.OnNext(source2.GetColoredGray2Frames());
 			}
 
 			if (converter is IColoredGray4Source source4) {
-				source4.Dimensions = Dimensions;
 				_latestColoredGray4.OnNext(source4.GetColoredGray4Frames());
 			}
 
 			if (converter is IColoredGray6Source source6) {
-				source6.Dimensions = Dimensions;
 				_latestColoredGray6.OnNext(source6.GetColoredGray6Frames());
 			}
 

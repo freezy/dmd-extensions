@@ -82,20 +82,20 @@ namespace LibDmd.Converter
 		public void Convert(DmdFrame frame)
 		{
 			byte[][] planes;
-			if (Dimensions.Value.Width * Dimensions.Value.Height != frame.Data.Length * 4)
-				planes = FrameUtil.Split(Dimensions.Value, 2, frame.Data);
+			if (frame.Dimensions.Width * frame.Dimensions.Height != frame.Data.Length * 4)
+				planes = FrameUtil.Split(frame.Dimensions, 2, frame.Data);
 			else
-				planes = FrameUtil.Split(Dimensions.Value / 2, 2, frame.Data);
+				planes = FrameUtil.Split(frame.Dimensions / 2, 2, frame.Data);
 
 			if (_coloring.Mappings != null)
 			{
 				if (frame is RawFrame vd && vd.RawPlanes.Length > 0)
 				{
-					TriggerAnimation(vd.RawPlanes, false);
+					TriggerAnimation(frame.Dimensions, vd.RawPlanes, false);
 				}
 				else
 				{
-					TriggerAnimation(planes, false);
+					TriggerAnimation(frame.Dimensions, planes, false);
 				}
 			}
 
@@ -190,14 +190,14 @@ namespace LibDmd.Converter
 			}
 		}
 
-		private void TriggerAnimation(byte[][] planes, bool reverse)
+		private void TriggerAnimation(Dimensions dim, byte[][] planes, bool reverse)
 		{
 			uint nomaskcrc = 0;
 			bool clear = true;
 
 			for (var i = 0; i < planes.Length; i++)
 			{
-				var mapping = FindMapping(planes[i], reverse, out nomaskcrc);
+				var mapping = FindMapping(dim, planes[i], reverse, out nomaskcrc);
 
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
@@ -225,11 +225,12 @@ namespace LibDmd.Converter
 		/// wordä isch zrugg gäh.
 		/// </summary>
 		/// <param name="planes">Bitplanes vom Biud</param>
+		/// <param name="dim">Grehssi vom Biud</param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
-		private Mapping FindMapping(byte[] plane, bool reverse, out uint NoMaskCRC)
+		private Mapping FindMapping(Dimensions dim, byte[] plane, bool reverse, out uint NoMaskCRC)
 		{
 			NoMaskCRC = 0;
-			var maskSize = Dimensions.Value.Width * Dimensions.Value.Height / 8;
+			var maskSize = dim.Width * dim.Height / 8;
 
 			var checksum = FrameUtil.Checksum(plane, reverse);
 				
@@ -267,20 +268,21 @@ namespace LibDmd.Converter
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(Dimensions dim, byte[][] planes)
 		{
-			if ((Dimensions.Value.Width * Dimensions.Value.Height / 8) != planes[0].Length)
+			// todo can probably be dropped entirely since we upscale at graph level.
+			if ((dim.Width * dim.Height / 8) != planes[0].Length)
 			{
 				// We want to do the scaling after the animations get triggered.
 				if (ScalerMode == ScalerMode.Doubler)
 				{
 					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(Dimensions.Value, planes);
+					planes = FrameUtil.Scale2(dim, planes);
 				}
 				else
 				{
 					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					var colorData = FrameUtil.Join(Dimensions.Value / 2, planes);
-					var scaledData = FrameUtil.Scale2xUgh(Dimensions.Value, colorData);
-					planes = FrameUtil.Split(Dimensions.Value, planes.Length, scaledData);
+					var colorData = FrameUtil.Join(dim / 2, planes);
+					var scaledData = FrameUtil.Scale2xUgh(dim, colorData);
+					planes = FrameUtil.Split(dim, planes.Length, scaledData);
 				}
 			}
 

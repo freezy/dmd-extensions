@@ -18,7 +18,7 @@ namespace LibDmd.Input.ScreenGrabber
 	/// </summary>
 	public class ScreenGrabber : AbstractSource, IBitmapSource
 	{
-		public override string Name { get; } = "Screen Grabber";
+		public override string Name => "Screen Grabber";
 
 		public readonly List<AbstractProcessor> Processors = new List<AbstractProcessor>();
 		public IObservable<Unit> OnResume => _onResume;
@@ -29,23 +29,8 @@ namespace LibDmd.Input.ScreenGrabber
 		public int Top { get; set; }
 		public int Width = 128;
 		public int Height = 32;
-		public int DestinationWidth
-		{
-			get { return _destDim.Width; }
-			set {
-				_destDim = new Dimensions(value, _destDim.Height);
-				SetDimensions(_destDim);
-			}
-		}
-		public int DestinationHeight {
-			get { return _destDim.Height; }
-			set {
-				_destDim = new Dimensions(_destDim.Width, value);
-				SetDimensions(_destDim);
-			}
-		}
 
-		private Dimensions _destDim = new Dimensions(128, 32);
+		public Dimensions DestinationDimensions = new Dimensions(128, 32);
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
@@ -61,7 +46,7 @@ namespace LibDmd.Input.ScreenGrabber
 					.Interval(TimeSpan.FromMilliseconds(1000 / FramesPerSecond))
 					.Select(x => CaptureImage())
 					.Select(bmp => enabledProcessors.Aggregate(bmp, (currentBmp, processor) => processor.Process(currentBmp)))
-					.Select(bmp => !_destDim.IsFlat ? TransformationUtil.Transform(bmp, _destDim, ResizeMode.Stretch, false, false) : bmp)
+					.Select(bmp => !DestinationDimensions.IsFlat ? TransformationUtil.Transform(bmp, DestinationDimensions, ResizeMode.Stretch, false, false) : bmp)
 					.Select(bmp => _frame.Update(bmp))
 					.Publish()
 					.RefCount()
@@ -74,7 +59,7 @@ namespace LibDmd.Input.ScreenGrabber
 			Top = rect.Y;
 			Width = rect.Width;
 			Height = rect.Height;
-			SetDimensions(new Dimensions(rect.Width, rect.Height));
+			DestinationDimensions = new Dimensions(rect.Width, rect.Height);
 		}
 
 		private BitmapSource CaptureImage()

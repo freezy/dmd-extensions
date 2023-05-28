@@ -16,7 +16,7 @@ namespace LibDmd.Input.ProPinball
 
 	public class ProPinballSlave : AbstractSource, IGray4Source
 	{
-		public override string Name { get; } = "Pro Pinball";
+		public override string Name => "Pro Pinball";
 
 		public Color Color { get; set; } = Color.FromRgb(255, 191, 0);
 
@@ -26,10 +26,11 @@ namespace LibDmd.Input.ProPinball
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
+		private readonly Dimensions _dimensions = new Dimensions(128, 32);
 		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
 		private IObservable<DmdFrame> _framesGray4;
-		private DmdFrame _dmdFrame = new DmdFrame();
+		private readonly DmdFrame _dmdFrame = new DmdFrame();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -51,20 +52,15 @@ namespace LibDmd.Input.ProPinball
 			Logger.Info("Subscribing to Pro Pinball's message queue...");
 			_framesGray4 = Observable.Create<DmdFrame>(o => {
 
-				var len = Dimensions.Value.Width * Dimensions.Value.Height;
-
 				// this is blocking, so use a new thread
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var arr = _dmdFrame.Update(Dimensions.Value, new byte[len], 4);
-							Marshal.Copy((IntPtr)frame, arr.Data, 0, len);
+							var arr = _dmdFrame.Update(_dimensions, new byte[4096], 4);
+							Marshal.Copy((IntPtr)frame, arr.Data, 0, 4096);
 							o.OnNext(arr);
 
-						}, err => {
-							throw new ProPinballSlaveException(new string(err));
-
-						}, () => {
+						}, err => throw new ProPinballSlaveException(new string(err)), () => {
 							Logger.Debug("Received exit signal from Pro Pinball, closing.");
 							Process.GetCurrentProcess().Kill();
 						});

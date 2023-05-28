@@ -10,8 +10,6 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Bitmap Test Source";
 
-		public BehaviorSubject<Dimensions> Dimensions { get; set; } = new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
-
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
@@ -21,7 +19,6 @@ namespace LibDmd.Test.Stubs
 
 		public void AddFrame(BmpFrame frame)
 		{
-			Dimensions.OnNext(frame.Dimensions);
 			_frames.OnNext(frame);
 		}
 	}

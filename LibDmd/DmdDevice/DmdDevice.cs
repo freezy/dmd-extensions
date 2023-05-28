@@ -814,7 +814,6 @@ namespace LibDmd.DmdDevice
 			}
 
 			if (_serum != null) {
-				_serum.SetDimensions(frame.Dimensions);
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
@@ -831,14 +830,9 @@ namespace LibDmd.DmdDevice
 
 					Buffer.BlockCopy(frame.Data, 0, _upsizedFrame.Data, 8 * newDimensions.Width, frame.Data.Length);
 
-					_gray2Colorizer.SetDimensions(newDimensions);
 					_passthroughGray2Source.NextFrame(_upsizedFrame);
 				
 				} else {
-					var newDimensions = frame.Dimensions;
-
-					_gray2Colorizer?.SetDimensions(newDimensions);
-					_gray4Colorizer?.SetDimensions(newDimensions);
 					_passthroughGray2Source.NextFrame(frame);
 				}
 			}
@@ -851,15 +845,12 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 
+			// todo why is this here?
 			if (_serum != null) {
-				_serum.SetDimensions(frame.Dimensions);
 				_serum.Convert(frame);
 				_passthroughGray2Source.NextFrame(frame);
 			
 			} else {
-
-				_gray2Colorizer?.SetDimensions(frame.Dimensions);
-				_gray4Colorizer?.SetDimensions(frame.Dimensions);
 				_passthroughGray4Source.NextFrame(frame);
 			}
 		}
