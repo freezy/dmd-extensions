@@ -108,7 +108,7 @@ scaling comes into play.
    double the size of the source frame size.
 
 The above mainly applies to hardware displays, which are limited to a fixed resolution. However, it's also possible to
-upscale frames to the virtual DMD. In order to do that, enable the `scaletohd` option and set the appropriate `scalermode`. 
+upscale frames to the virtual DMD. In order to do that, set `scalermode` so to either `doubler` or `scale2x`. 
 
 ## Install Instructions
 
