@@ -22,6 +22,12 @@ namespace LibDmd.Test
 			_source = new SourceGray2();
 		}
 
+		[TearDown]
+		public void Teardown()
+		{
+			_graph.Dispose();
+		}
+
 		[TestCase]
 		public async Task Should_Passthrough_Frame()
 		{

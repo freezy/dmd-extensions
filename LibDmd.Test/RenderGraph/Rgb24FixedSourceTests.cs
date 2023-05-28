@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Output;
@@ -20,6 +19,12 @@ namespace LibDmd.Test
 		{
 			_graph = new RenderGraph();
 			_source = new SourceRgb24();
+		}
+
+		[TearDown]
+		public void Teardown()
+		{
+			_graph.Dispose();
 		}
 
 		[TestCase]
