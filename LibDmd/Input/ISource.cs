@@ -26,11 +26,6 @@ namespace LibDmd.Input
 		string Name { get; }
 
 		/// <summary>
-		/// The size of the source. Can change any time.
-		/// </summary>
-		BehaviorSubject<Dimensions> Dimensions { get; set; }
-
-		/// <summary>
 		/// An observable that triggers when the source starts providing frames.
 		/// </summary>
 		IObservable<Unit> OnResume { get; }

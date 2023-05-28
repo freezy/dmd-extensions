@@ -20,11 +20,11 @@ namespace LibDmd.Converter.Plugin
 		public FrameFormat From => FrameFormat.Gray2;
 
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
-		
-		public IObservable<Unit> OnResume { get; }
-		public IObservable<Unit> OnPause { get; }
 
-		public Dimensions Dimensions { get; private set; } = new Dimensions(128, 32);
+		public IObservable<Unit> OnResume => null;
+		public IObservable<Unit> OnPause => null;
+
+		private Dimensions _dimensions = new Dimensions(128, 32);
 
 		public bool IsEnabled { get; private set; }
 
@@ -91,10 +91,10 @@ namespace LibDmd.Converter.Plugin
 				// dmd frames might return upscaled, so adapt size accordingly
 				switch (_colorizerMode) {
 					case ColorizerMode.Advanced192x64:
-						Dimensions = new Dimensions(192, 64);
+						_dimensions = new Dimensions(192, 64);
 						break;
 					case ColorizerMode.Advanced256x64:
-						Dimensions = new Dimensions(256, 64);
+						_dimensions = new Dimensions(256, 64);
 						break;
 					case ColorizerMode.Advanced128x32:
 					case ColorizerMode.None:
@@ -198,7 +198,7 @@ namespace LibDmd.Converter.Plugin
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
 		public void Convert(DmdFrame frame)
 		{
-			var frameSize = Dimensions.Surface * 3;
+			var frameSize = _dimensions.Surface * 3;
 			var coloredFrame = new byte[frameSize];
 
 			if (!_isOpen) {
@@ -306,7 +306,7 @@ namespace LibDmd.Converter.Plugin
 			//	height = 64;
 			//}
 
-			EmitFrame(Dimensions, coloredFrame);
+			EmitFrame(_dimensions, coloredFrame);
 			ProcessEvent();
 		}
 

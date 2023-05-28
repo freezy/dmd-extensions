@@ -9,23 +9,9 @@ namespace LibDmd.Input
 {
 	public abstract class AbstractSource
 	{
-		public BehaviorSubject<Dimensions> Dimensions { get; set; }
-
 		public abstract string Name { get; }
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-		public void SetDimensions(Dimensions dim)
-		{
-			if (Dimensions == null) {
-				return;
-			}
-
-			if (dim != Dimensions.Value) {
-				Logger.Info($"{Name} received new dimensions: {Dimensions} => {dim}.");
-				Dimensions.OnNext(dim);
-			}
-		}
 
 		// Set SeDebugPrivilege in our proecess token, to allow debugger
 		// level access to another process's memory space.  This is used

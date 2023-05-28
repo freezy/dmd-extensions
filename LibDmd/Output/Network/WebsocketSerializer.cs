@@ -15,7 +15,6 @@ namespace LibDmd.Output.Network
 		void OnPalette(Color[] palette);
 		void OnClearColor();
 		void OnClearPalette();
-		void OnDimensions(Dimensions dim);
 		void OnGameName(string gameName);
 		void OnRgb24(uint timestamp, byte[] frame);
 		void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes);
@@ -65,7 +64,6 @@ namespace LibDmd.Output.Network
 					}
 					case "dimensions": {
 						Dimensions = new Dimensions(reader.ReadInt32(), reader.ReadInt32());
-						action.OnDimensions(Dimensions);
 						break;
 					}
 					case "gameName": {

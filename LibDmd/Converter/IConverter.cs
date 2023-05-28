@@ -33,11 +33,5 @@ namespace LibDmd.Converter
 		/// </summary>
 		/// <returns></returns>
 		void Init();
-
-		/// <summary>
-		/// Must be run when dimensions of the source change.
-		/// </summary>
-		/// <param name="dim">New dimensions of the source</param>
-		void SetDimensions(Dimensions dim);
 	}
 }

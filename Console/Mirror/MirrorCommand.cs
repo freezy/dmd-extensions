@@ -101,8 +101,7 @@ namespace DmdExt.Mirror
 						Top = _options.Position[1],
 						Width = _options.Position[2] - _options.Position[0],
 						Height = _options.Position[3] - _options.Position[1],
-						DestinationWidth = _options.ResizeTo[0],
-						DestinationHeight = _options.ResizeTo[1]
+						DestinationDimensions = new Dimensions(_options.ResizeTo[0], _options.ResizeTo[1])
 					};
 					if (_options.GridSpacing > 0) {
 						grabber.Processors.Add(new GridProcessor {
@@ -198,8 +197,6 @@ namespace DmdExt.Mirror
 					}
 				}
 			}
-			
-			graphs.SetDimensions(new Dimensions(_options.ResizeTo[0], _options.ResizeTo[1]));
 		}
 
 		public override void Dispose()

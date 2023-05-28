@@ -139,13 +139,14 @@ namespace LibDmd.Converter.Serum
 			var planes = _planes;
 			
 			// convert to planes
-			if ((Dimensions.Value.Surface / 8) == _planes[0].Length) { // scale?
-				FrameUtil.Split(Dimensions.Value, _planes.Length, _frame.Data, _planes);
+			if ((frame.Dimensions.Surface / 8) == _planes[0].Length) { // scale?
+				FrameUtil.Split(frame.Dimensions, _planes.Length, _frame.Data, _planes);
 				
 			} else {
+				// todo can probably be dropped entirely, since we do upscaling at graph level.
 				planes = ScalerMode == ScalerMode.Doubler 
-					? FrameUtil.Scale2(Dimensions.Value, ConvertToPlanes(6)) 
-					: FrameUtil.Split(Dimensions.Value, _planes.Length, FrameUtil.Scale2xUgh(Dimensions.Value, _frame.Data));
+					? FrameUtil.Scale2(frame.Dimensions, ConvertToPlanes(6))
+					: FrameUtil.Split(frame.Dimensions, _planes.Length, FrameUtil.Scale2xUgh(frame.Dimensions, _frame.Data));
 			}
 			
 			// send the colored frame

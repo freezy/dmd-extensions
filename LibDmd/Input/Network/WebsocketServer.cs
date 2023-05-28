@@ -105,13 +105,6 @@ namespace LibDmd.Input.Network
 
 		public void OnClearPalette() => _graphs.ClearPalette();
 
-		public void OnDimensions(Dimensions dim)
-		{
-			//_dmdFrame.Update(dim);
-			//_coloredFrame.Update(dim); todo?
-			Gray2Source.Dimensions.OnNext(dim);
-		}
-
 		public void OnGameName(string gameName)
 		{
 			Logger.Info("OnGameName: {0}", gameName);

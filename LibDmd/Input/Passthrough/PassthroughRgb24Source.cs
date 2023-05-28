@@ -40,7 +40,6 @@ namespace LibDmd.Input.Passthrough
 			if (_lastFrame?.Length != frame.Data.Length) {
 				_lastFrame = new byte[frame.Data.Length];
 			}
-			SetDimensions(frame.Dimensions);
 			_framesRgb24.OnNext(frame);
 			Buffer.BlockCopy(frame.Data, 0, _lastFrame, 0, frame.Data.Length);
 			_lastFrameFormat.OnNext(FrameFormat.Rgb24);

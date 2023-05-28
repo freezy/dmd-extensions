@@ -38,9 +38,6 @@ namespace LibDmd
 
 		public void Add(RenderGraph renderGraph)
 		{
-			// use a common observable for all sources so we get proper notification when any of them changes size
-			renderGraph.Source.Dimensions = _dimensions;
-
 			_graphs.Add(renderGraph);
 
 			renderGraph.Destinations.ForEach(dest => {
@@ -65,9 +62,6 @@ namespace LibDmd
 			
 			foreach (var renderGraph in _graphs)
 			{
-				if (renderGraph.Converter is ISource converter) {
-					converter.Dimensions = _dimensions;
-				}
 				if (renderGraph.Converter != null && !_converters.Contains(renderGraph.Converter)) {
 					_converters.Add(renderGraph.Converter);
 					renderGraph.Converter.Init();
@@ -126,10 +120,6 @@ namespace LibDmd
 			} else {
 				_graphs.ForEach(graph => graph.ClearDisplay());
 			}
-		}
-
-		public void SetDimensions(Dimensions dim) {
-			_graphs.ForEach(graph => graph.Source.Dimensions.OnNext(dim));
 		}
 
 		public void Dispose()

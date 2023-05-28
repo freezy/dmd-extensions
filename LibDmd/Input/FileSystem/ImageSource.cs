@@ -19,9 +19,7 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceGray2(BitmapSource bmp)
 		{
-			var pixelDim = bmp.Dimensions();
-			SetDimensions(pixelDim);
-			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(pixelDim, ImageUtil.ConvertToGray2(bmp).Data, 2));
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(bmp.Dimensions(), ImageUtil.ConvertToGray2(bmp).Data, 2));
 		}
 	}	
 	
@@ -35,9 +33,7 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceGray4(BitmapSource bmp)
 		{
-			var pixelDim = bmp.Dimensions();
-			SetDimensions(pixelDim);
-			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(pixelDim, ImageUtil.ConvertToGray4(bmp), 4));
+			_frames = new BehaviorSubject<DmdFrame>(_dmdFrame.Update(bmp.Dimensions(), ImageUtil.ConvertToGray4(bmp), 4));
 		}
 	}
 	
@@ -49,11 +45,9 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceColoredGray2(BitmapSource bmp)
 		{
-			var pixelDim = bmp.Dimensions();
-			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
 				bmp.Dimensions(),
-				FrameUtil.Split(pixelDim, 2, ImageUtil.ConvertToGray2(bmp).Data),
+				FrameUtil.Split(bmp.Dimensions(), 2, ImageUtil.ConvertToGray2(bmp).Data),
 				new [] { Colors.Black, Colors.Red, Colors.Green, Colors.Blue }
 			);
 			_frames = new BehaviorSubject<ColoredFrame>(frame);
@@ -69,7 +63,6 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceColoredGray4(BitmapSource bmp)
 		{
 			var pixelDim = bmp.Dimensions();
-			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
 				pixelDim,
 				FrameUtil.Split(pixelDim, 4, ImageUtil.ConvertToGray4(bmp)),
@@ -93,7 +86,6 @@ namespace LibDmd.Input.FileSystem
 		public ImageSourceColoredGray6(BitmapSource bmp)
 		{
 			var pixelDim = bmp.Dimensions();
-			SetDimensions(pixelDim);
 			var frame = new ColoredFrame(
 				pixelDim,
 				FrameUtil.Split(pixelDim, 6, ImageUtil.ConvertToGray6(bmp)),
@@ -116,7 +108,6 @@ namespace LibDmd.Input.FileSystem
 
 		public ImageSourceBitmap(BitmapSource bmp)
 		{
-			SetDimensions(bmp.Dimensions());
 			_frames = new BehaviorSubject<BmpFrame>(new BmpFrame(bmp));
 		}
 
@@ -132,7 +123,6 @@ namespace LibDmd.Input.FileSystem
 				bmp.UriSource = new Uri(Path.IsPathRooted(fileName) ? fileName : Path.Combine(Directory.GetCurrentDirectory(), fileName));
 				bmp.EndInit();
 
-				SetDimensions(bmp.Dimensions());
 				_frames = new BehaviorSubject<BmpFrame>(new BmpFrame(bmp));
 
 			} catch (UriFormatException) {
