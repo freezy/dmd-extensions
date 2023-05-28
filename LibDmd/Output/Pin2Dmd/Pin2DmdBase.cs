@@ -23,6 +23,9 @@ namespace LibDmd.Output.Pin2Dmd
 		protected UsbDevice _pin2DmdDevice;
 		protected byte[] _frameBufferRgb24;
 
+		protected static readonly Dimensions Dim128x32 = new Dimensions(128, 32);
+		protected static readonly Dimensions Dim192x64 = new Dimensions(192, 64);
+
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
