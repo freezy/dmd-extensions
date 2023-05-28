@@ -10,8 +10,6 @@ namespace LibDmd.DmdDevice
 		void SetGameName(string gameName);
 		void SetColor(Color color);
 		void Init();
-		int GetAniWidth();
-		int GetAniHeight();
 		void LoadPalette(uint palIndex);
 		void SetPalette(Color[] colors);
 		void RenderRgb24(DmdFrame frame);
