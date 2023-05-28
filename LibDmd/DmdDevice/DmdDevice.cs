@@ -808,9 +808,11 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+
+			// todo all of the below looks like garbage
 			
 			if (_colorizationPlugin != null) {
-				frame.Update(_colorizationPlugin.Dimensions, frame.Data, frame.BitLength);
+				//frame.Update(_colorizationPlugin.Dimensions, frame.Data, frame.BitLength);
 			}
 
 			if (_serum != null) {
