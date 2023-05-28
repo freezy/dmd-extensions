@@ -31,14 +31,14 @@ namespace LibDmd.Converter.Pin2Color
 			var numAnimations = reader.ReadInt16BE();
 
 			if (Version >= 2) {
-				Logger.Trace("VNI[{1}] Skipping {0} bytes of animation indexes.", numAnimations * 4, reader.BaseStream.Position);
+				Logger.Trace("[pin2color] VNI[{1}] Skipping {0} bytes of animation indexes.", numAnimations * 4, reader.BaseStream.Position);
 				for (var i = 0; i < numAnimations; i++) {
 					reader.ReadUInt32();
 				}
 			}
 
 			Animations = new List<Animation>(numAnimations);
-			Logger.Debug("VNI[{3}] Reading {0} animations from {1} v{2}...", numAnimations, header, Version, reader.BaseStream.Position);
+			Logger.Debug("[pin2color] VNI[{3}] Reading {0} animations from {1} v{2}...", numAnimations, header, Version, reader.BaseStream.Position);
 
 			MaxWidth = 0;
 			MaxHeight = 0;

@@ -68,7 +68,7 @@ namespace LibDmd.Converter.Serum
 #endif
 			
 			if (File.Exists(dllName)) {
-				Logger.Info($"Found {dllName} at {Directory.GetCurrentDirectory()}.");
+				Logger.Info($"[serum] Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
 
 			var width = 0;

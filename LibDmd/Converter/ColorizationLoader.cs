@@ -78,20 +78,20 @@ namespace LibDmd.Converter.Pin2Color
 			{
 				try
 				{
-					Logger.Info("Loading palette file at {0}...", palPath);
+					Logger.Info("[pin2color] Loading palette file at {0}...", palPath);
 					var coloring = new VniColoring(palPath);
 					VniAnimationSet vni = null;
 					if (File.Exists(vniPath))
 					{
-						Logger.Info("Loading virtual animation file at {0}...", vniPath);
+						Logger.Info("[pin2color] Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
-						Logger.Info("Loaded animation set {0}", vni);
-						Logger.Info("Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
+						Logger.Info("[pin2color] Loaded animation set {0}", vni);
+						Logger.Info("[pin2color] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
 						Analytics.Instance.SetColorizer("VNI/PAL");
 					}
 					else
 					{
-						Logger.Info("No animation set found");
+						Logger.Info("[pin2color] No animation set found");
 						Analytics.Instance.SetColorizer("PAL");
 					}
 
@@ -111,13 +111,13 @@ namespace LibDmd.Converter.Pin2Color
 				}
 				catch (Exception e)
 				{
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+					Logger.Warn(e, "[pin2color] Error initializing: {0}", e.Message);
 					Analytics.Instance.ClearColorizer();
 				}
 			}
 			else
 			{
-				Logger.Info("No palette file found at {0}.", palPath);
+				Logger.Info("[pin2color] No palette file found at {0}.", palPath);
 				Analytics.Instance.ClearColorizer();
 			}
 
@@ -131,7 +131,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			if (pluginPaths.Length == 0) {
-				Logger.Info("No colorization plugins configured.");
+				Logger.Info("[plugin] No colorization plugins configured.");
 			}
 
 			foreach (var pluginPath in pluginPaths) {
@@ -140,7 +140,7 @@ namespace LibDmd.Converter.Pin2Color
 					continue;
 				}
 
-				Logger.Info($"Plugin {plugin.GetName()} v{plugin.GetVersion()} loaded.");
+				Logger.Info($"[plugin] Plugin {plugin.GetName()} v{plugin.GetVersion()} loaded.");
 				return plugin;
 			}
 			return null;
