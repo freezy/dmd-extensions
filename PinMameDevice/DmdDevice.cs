@@ -8,6 +8,7 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using NLog;
+using NLog.Targets;
 
 namespace PinMameDevice
 {
@@ -63,7 +64,7 @@ namespace PinMameDevice
 					DmdDevices[i] = new DeviceInstance {
 						Id = i
 					};
-					Logger.Info("[vpm] Create(): New output id is {0}", i);
+					Logger.Info("[dll] Create(): New output id is {0}", i);
 					return i;
 				}
 			}
@@ -71,7 +72,7 @@ namespace PinMameDevice
 				Id = DmdDevices.Count
 			};
 			DmdDevices.Add(device);
-			Logger.Info("[vpm] Create(): New output id is {0}", device.Id);
+			Logger.Info("[dll] Create(): New output id is {0}", device.Id);
 			return device.Id;
 		}
 
@@ -181,13 +182,13 @@ namespace PinMameDevice
 
 		private static int InternalOpenDevice(DeviceInstance device)
 		{
-			Logger.Info("[vpm] Open({0})", device.Id);
+			Logger.Info("[dll] Open({0})", device.Id);
 			return 1;
 		}
 
 		private static bool InternalCloseDevice(DeviceInstance device)
 		{
-			Logger.Info("[vpm] Close({0})", device.Id);
+			Logger.Info("[dll] Close({0})", device.Id);
 			device.DmdDevice.Close();
 			if (device != DefaultDevice) {
 				DmdDevices[device.Id] = null;
@@ -198,7 +199,7 @@ namespace PinMameDevice
 		private static void InternalGameSettingsDevice(DeviceInstance device, string gameName, ulong hardwareGeneration, IntPtr options)
 		{
 			var opt = (PMoptions)Marshal.PtrToStructure(options, typeof(PMoptions));
-			Logger.Info("[vpm] PM_GameSettings({0}, {1}, {2})", device.Id, gameName, opt.Colorize);
+			Logger.Info("[dll] PM_GameSettings({0}, {1}, {2})", device.Id, gameName, opt.Colorize);
 			device.DmdDevice.SetColorize(opt.Colorize != 0);
 			device.DmdDevice.SetGameName(gameName);
 			device.DmdDevice.SetColor(Color.FromRgb((byte)(opt.Red), (byte)(opt.Green), (byte)(opt.Blue)));
@@ -207,6 +208,8 @@ namespace PinMameDevice
 
 		private static void InternalConsoleDataDevice(DeviceInstance device, byte data)
 		{
+			device.DmdDevice.ConsoleData(data);
+
 			// Dä schickt immr eis Byte abr eigentlich wettr Bleck vo viär Bytes,
 			// d.h miär mind ihs merkä was diä letschtä drii Bytes gsi sind um eppis
 			// schlays chenna witr z schickä.
@@ -220,17 +223,17 @@ namespace PinMameDevice
 				return;
 			}
 			device.CData.RemoveFirst();
-			if (device.CData.First.Value == 'P')
-			{
-				var num = new string(new[] { device.CData.First.Next.Value, device.CData.First.Next.Next.Value });
-				try
-				{
-					device.DmdDevice.LoadPalette(Convert.ToUInt32(num, 16));
-				}
-				catch (FormatException e)
-				{
-					Logger.Warn(e, "Could not parse \"{0}\" as hex number.", num);
-				}
+			if (device.CData.First.Value != 'P') {
+				return;
+			}
+
+			var num = new string(new[] { device.CData.First.Next.Value, device.CData.First.Next.Next.Value });
+			try {
+				device.DmdDevice.LoadPalette(Convert.ToUInt32(num, 16));
+				Logger.Info($"[dll] Switch to palette {num}.");
+
+			} catch (FormatException e) {
+				Logger.Warn(e, "[dll] Could not parse \"{0}\" as hex number.", num);
 			}
 		}
 
@@ -296,7 +299,7 @@ namespace PinMameDevice
 
 		private static void InternalSetGray2PaletteDevice(DeviceInstance device, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			Logger.Info($"[vpm] Set_4_Colors_Palette({device.Id}, {color0}, {color33}, {color66}, {color100})");
+			Logger.Info($"[dll] Set_4_Colors_Palette({device.Id}, {color0}, {color33}, {color66}, {color100})");
 			device.DmdDevice.SetPalette(new[] {
 				ConvertColor(color0),
 				ConvertColor(color33),
@@ -307,7 +310,7 @@ namespace PinMameDevice
 
 		private static void InternalSetGray4PaletteDevice(DeviceInstance device, IntPtr palette)
 		{
-			Logger.Info("[vpm] Set_16_Colors_Palette({0},...)", device.Id);
+			Logger.Info("[dll] Set_16_Colors_Palette({0},...)", device.Id);
 			var size = Marshal.SizeOf(typeof(Rgb24));
 
 			// for some shit reason, using a loop fails compilation.
