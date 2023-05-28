@@ -113,10 +113,8 @@ namespace LibDmd
 
 		private Color[] _gray2Colors; 
 		private Color[] _gray4Colors;
-		private Color[] _gray6Colors;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
-		private Color[] _gray6Palette;
 
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
@@ -196,7 +194,6 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
-			_gray6Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 64);
 		}
 
 		/// <summary>
@@ -208,7 +205,6 @@ namespace LibDmd
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
-			_gray6Palette = ColorUtil.GetPalette(colors, 64);
 		}
 
 		/// <summary>
@@ -218,7 +214,6 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
-			_gray6Palette = null;
 		}
 
 		/// <summary>
