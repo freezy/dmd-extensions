@@ -444,7 +444,6 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
-					var destGray6 = dest as IGray6Destination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 					var sourceColoredGray2 = Source as IColoredGray2Source;
@@ -652,7 +651,6 @@ namespace LibDmd
 			var destMultiSize = dest as IMultiSizeDestination;
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
-			var destGray6 = dest as IGray6Destination;
 			var destRgb24 = dest as IRgb24Destination;
 			var destBitmap = dest as IBitmapDestination;
 			var destColoredGray2 = dest as IColoredGray2Destination;

@@ -413,7 +413,6 @@
     <Compile Include="Input\Network\WebsocketServer.cs" />
     <Compile Include="Input\Network\WebsocketGray2Source.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
-    <Compile Include="Output\IGray6Destination.cs" />
     <Compile Include="Output\IMultiSizeDestination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
