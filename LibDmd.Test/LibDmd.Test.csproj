@@ -1,19 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Platform)' == 'x86'">
 		<TargetFramework>net472</TargetFramework>
 		<IsPackable>false</IsPackable>
 		<PlatformTarget>x86</PlatformTarget>
 		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-		<Platforms>x86</Platforms>
+		<Platforms>x86;x64</Platforms>
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+	<PropertyGroup Condition="'$(Platform)' == 'x64'">
 		<TargetFramework>net472</TargetFramework>
 		<IsPackable>false</IsPackable>
 		<PlatformTarget>x64</PlatformTarget>
 		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-		<Platforms>x64</Platforms>
+		<Platforms>x86;x64</Platforms>
 	</PropertyGroup>
 
 	<ItemGroup>
