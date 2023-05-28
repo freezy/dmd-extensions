@@ -5,7 +5,7 @@ using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	public abstract class Animation
 	{

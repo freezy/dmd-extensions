@@ -4,7 +4,7 @@ using LibDmd.Common;
 using LibDmd.Common.HeatShrink;
 using System.Linq;
 
-namespace LibDmd.Converter.Colorize
+namespace LibDmd.Converter.Pin2Color
 {
 	public class VniAnimationFrame : AnimationFrame
 	{
