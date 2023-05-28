@@ -143,7 +143,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 			else
 			{
-				Logger.Warn("No palette for change to " + newpal);
+				Logger.Warn("[pin2color] No palette for change to " + newpal);
 			}
 		}
 		/// <summary>
@@ -180,10 +180,10 @@ namespace LibDmd.Converter.Pin2Color
 			var palette = _vniColoring.GetPalette(mapping.PaletteIndex);
 			if (palette == null)
 			{
-				Logger.Warn("[colorize] No palette found at index {0}.", mapping.PaletteIndex);
+				Logger.Warn("[pin2color] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
-			Logger.Debug("[colorize] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
+			Logger.Debug("[pin2color] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
 			SetPalette(palette, mapping.PaletteIndex);
@@ -198,7 +198,7 @@ namespace LibDmd.Converter.Pin2Color
 					{
 						if (_defaultPalette != null)
 						{
-							Logger.Debug("[colorize] Resetting to default palette after {0} ms.", mapping.Duration);
+							Logger.Debug("[pin2color] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette, _defaultPaletteIndex);
 						}
 						_paletteReset = null;
@@ -212,14 +212,14 @@ namespace LibDmd.Converter.Pin2Color
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
 				if (_animations == null)
 				{
-					Logger.Warn("[colorize] Tried to load animation but no animation file loaded.");
+					Logger.Warn("[pin2color] Tried to load animation but no animation file loaded.");
 					return;
 				}
 				_activeAnimation = _animations.Find(mapping.Offset);
 
 				if (_activeAnimation == null)
 				{
-					Logger.Warn("[colorize] Cannot find animation at position {0}.", mapping.Offset);
+					Logger.Warn("[pin2color] Cannot find animation at position {0}.", mapping.Offset);
 					return;
 				}
 
@@ -239,7 +239,7 @@ namespace LibDmd.Converter.Pin2Color
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
 				{
-					Logger.Debug("[vni]Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
+					Logger.Debug("[pin2color] Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
@@ -350,7 +350,7 @@ namespace LibDmd.Converter.Pin2Color
 		{
 			if (palette == null)
 			{
-				Logger.Warn("[colorize] Ignoring null palette.");
+				Logger.Warn("[pin2color] Ignoring null palette.");
 				return;
 			}
 			if (isDefault)
@@ -358,7 +358,7 @@ namespace LibDmd.Converter.Pin2Color
 				_defaultPalette = palette;
 				_defaultPaletteIndex = index;
 			}
-			Logger.Debug("[colorize] Setting new palette ({0}): [ {1} ]", index, string.Join(" ", palette.Colors.Select(c => c.ToString())));
+			Logger.Debug("[pin2color] Setting new palette ({0}): [ {1} ]", index, string.Join(" ", palette.Colors.Select(c => c.ToString())));
 			_palette = palette;
 			_paletteIndex = index;
 		}
@@ -368,7 +368,7 @@ namespace LibDmd.Converter.Pin2Color
 		/// </summary>
 		protected void AnimationFinished()
 		{
-			//Logger.Trace("[timing] Animation finished.");
+			//Logger.Trace("[pin2color] [timing] Animation finished.");
 			//LastChecksum = 0x0;
 			SetPalette(_defaultPalette, _defaultPaletteIndex);
 			_activeAnimation = null;

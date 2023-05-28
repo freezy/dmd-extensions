@@ -488,7 +488,7 @@ namespace LibDmd.Converter.Plugin
 				_getName = (GetNamePtr)Marshal.GetDelegateForFunctionPointer(addr, typeof(GetNamePtr));
 
 			} catch (Exception e) {
-				Logger.Error($"Error loading plugin, disabling: {e.Message}");
+				Logger.Error($"[plugin] Error loading plugin, disabling: {e.Message}");
 				return false;
 			}
 			return true;

@@ -40,10 +40,10 @@ namespace LibDmd.Converter.Pin2Color
 			Masks = null;
 			Filename = filename;
 			Version = reader.ReadByte();
-			Logger.Trace("PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
+			Logger.Trace("[pin2color] PAL[{1}] Read version as {0}", Version, reader.BaseStream.Position);
 
 			NumPalettes = reader.ReadUInt16BE();
-			Logger.Trace("PAL[{1}] Read number of palettes as {0}", NumPalettes, reader.BaseStream.Position);
+			Logger.Trace("[pin2color] PAL[{1}] Read number of palettes as {0}", NumPalettes, reader.BaseStream.Position);
 			Palettes = new Palette[NumPalettes];
 			for (var i = 0; i < NumPalettes; i++) {
 				Palettes[i] = new Palette(reader);
@@ -62,9 +62,9 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			var numMappings = reader.ReadUInt16BE();
-			Logger.Trace("PAL[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
+			Logger.Trace("[pin2color] PAL[{1}] Read number of mappings as {0}", numMappings, reader.BaseStream.Position);
 			if (reader.BaseStream.Length - reader.BaseStream.Position < Mapping.Length * numMappings) {
-				Logger.Warn("[{1}] Missing {0} bytes for {1} masks, ignoring.", Mapping.Length * numMappings - reader.BaseStream.Length + reader.BaseStream.Position, numMappings);
+				Logger.Warn("[pin2color] [{1}] Missing {0} bytes for {1} masks, ignoring.", Mapping.Length * numMappings - reader.BaseStream.Length + reader.BaseStream.Position, numMappings);
 				reader.Close();
 				return;
 			}
@@ -77,19 +77,19 @@ namespace LibDmd.Converter.Pin2Color
 				}
 			} else if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
-					Logger.Warn("PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
+					Logger.Warn("[pin2color] PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
 				}
 				reader.Close();
 				return;
 			}
 
 			var numMasks = reader.ReadByte();
-			Logger.Trace("PAL[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
+			Logger.Trace("[pin2color] PAL[{1}] Read number of masks as {0}", numMasks, reader.BaseStream.Position);
 			if (numMasks > 0) {
 				int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
 
 				if (maskBytes != 256 && maskBytes != 512 && maskBytes != 1536) {
-					Logger.Warn("{0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
+					Logger.Warn("[pin2color] {0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
 					reader.Close();
 					return;
 				}
