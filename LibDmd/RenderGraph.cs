@@ -285,7 +285,6 @@ namespace LibDmd
 			try {
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
-				var sourceGray6 = Source as IGray6Source;
 				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
 
 				// init converters
@@ -314,12 +313,6 @@ namespace LibDmd
 								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {sourceConverterColoredGray4?.Name}.");
 							}
 							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
-							break;
-						case FrameFormat.Gray6:
-							if (sourceGray6 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 6-bit compatible which is mandatory for converter {sourceConverterColoredGray6?.Name}.");
-							}
-							_activeSources.Add(sourceGray6.GetGray6Frames().Do(Converter.Convert).Subscribe());
 							break;
 						default:
 							throw new IncompatibleGraphException($"Frame conversion from ${Converter.From} is not implemented.");
@@ -472,12 +465,6 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray4);
 						continue;
 					}
-					// gray6 -> gray6
-					if (sourceGray6 != null && destGray6 != null)
-					{
-						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray6);
-						continue;
-					}
 					// colored gray2 -> colored gray2
 					if (sourceColoredGray2 != null && destColoredGray2 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
@@ -530,16 +517,6 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Bitmap);
 						continue;
 					}
-					// gray6 -> rgb24
-					if (sourceGray6 != null && destRgb24 != null) {
-						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Rgb24);
-						continue;
-					}
-					// gray6 -> bitmap
-					if (sourceGray6 != null && destBitmap != null) {
-						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Bitmap);
-						continue;
-					}
 					// rgb24 -> bitmap
 					if (sourceRgb24 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Bitmap);
@@ -582,24 +559,9 @@ namespace LibDmd
 					}
 
 					// finally, here we lose data
-					// gray6 -> gray4
-					if (sourceGray6 != null && destGray4 != null) {
-						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray4);
-						continue;
-					}
-					// gray6 -> gray2
-					if (sourceGray6 != null && destGray2 != null) {
-						Connect(Source, dest, FrameFormat.Gray6, FrameFormat.Gray2);
-						continue;
-					}
 					// gray4 -> gray2
 					if (sourceGray4 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
-						continue;
-					}
-					// colored gray6 -> gray6
-					if (sourceColoredGray6 != null && destGray6 != null) {
-						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.Gray6);
 						continue;
 					}
 					// colored gray6 -> gray4
@@ -617,19 +579,9 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray4);
 						continue;
 					}
-					// rgb24 -> gray6
-					if (sourceRgb24 != null && destGray6 != null) {
-						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Gray6);
-						continue;
-					}
 					// rgb24 -> gray4
 					if (sourceRgb24 != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Gray4);
-						continue;
-					}
-					// bitmap -> gray6
-					if (sourceBitmap != null && destGray6 != null) {
-						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Gray6);
 						continue;
 					}
 					// bitmap -> gray4
@@ -738,10 +690,6 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							throw new IncompatibleGraphException("Cannot convert from gray2 to gray4 (every gray4 destination should be able to do gray2 as well).");
 
-						// gray2 -> gray6
-						case FrameFormat.Gray6:
-							throw new IncompatibleGraphException("Cannot convert from gray2 to gray6 (every gray6 destination should be able to do gray2 as well).");
-
 						// gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
@@ -812,10 +760,6 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
-						// gray4 -> gray6
-						case FrameFormat.Gray6:
-							throw new IncompatibleGraphException("Cannot convert from gray4 to gray6 (every gray6 destination should be able to do gray4 as well).");
-
 						// gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
@@ -857,87 +801,6 @@ namespace LibDmd
 					}
 					break;
 
-				// source is gray6:
-				case FrameFormat.Gray6:
-					var sourceGray6 = source as IGray6Source;
-					switch (to)
-					{
-						// gray6 -> gray2
-						case FrameFormat.Gray2:
-							AssertCompatibility(source, sourceGray6, dest, destGray2, from, to);
-							Subscribe(
-								sourceGray6.GetGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToGray2()
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray2.RenderGray2);
-							break;
-
-						// gray6 -> gray4
-						case FrameFormat.Gray4:
-							AssertCompatibility(source, sourceGray6, dest, destGray4, from, to);
-							Subscribe(
-								sourceGray6.GetGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToGray4()
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray4.RenderGray4);
-							break;
-
-						// gray6 -> gray6
-						case FrameFormat.Gray6:
-							AssertCompatibility(source, sourceGray6, dest, destGray6, from, to);
-							Subscribe(
-								sourceGray6.GetGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray6.RenderGray6);
-							break;
-
-						// gray6 -> rgb24
-						case FrameFormat.Rgb24:
-							AssertCompatibility(source, sourceGray6, dest, destRgb24, from, to);
-							Subscribe(
-								sourceGray6.GetGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb24(_gray6Palette ?? _gray6Colors)
-									.TransformRgb24(this, destFixedSize, destMultiSize),
-								destRgb24.RenderRgb24);
-							break;
-
-						// gray6 -> bitmap
-						case FrameFormat.Bitmap:
-							AssertCompatibility(source, sourceGray6, dest, destBitmap, from, to);
-							Subscribe(
-								sourceGray6.GetGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBmp(_gray6Palette ?? _gray6Colors)
-									.Transform(this, destFixedSize, destMultiSize),
-								destBitmap.RenderBitmap);
-							break;
-
-						// gray6 -> colored gray2
-						case FrameFormat.ColoredGray2:
-							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray2 (doesn't make any sense, colored gray2 can also do gray4).");
-
-						// gray6 -> colored gray4
-						case FrameFormat.ColoredGray4:
-							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray4 (doesn't make any sense, colored gray4 can also do gray2).");
-
-						// gray6 -> colored gray6
-						case FrameFormat.ColoredGray6:
-							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
-
-						default:
-							throw new ArgumentOutOfRangeException(nameof(to), to, null);
-					}
-					break;
-
 				// source is rgb24:
 				case FrameFormat.Rgb24:
 					var sourceRgb24 = source as IRgb24Source;
@@ -962,17 +825,6 @@ namespace LibDmd
 									.ConvertToGray4()
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
-							break;
-
-						// rgb24 -> gray6
-						case FrameFormat.Gray6:
-							AssertCompatibility(source, sourceRgb24, dest, destGray6, from, to);
-							Subscribe(
-								sourceRgb24.GetRgb24Frames(),
-								frame => frame
-									.ConvertToGray6()
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray6.RenderGray6);
 							break;
 
 						// rgb24 -> rgb24
@@ -1039,17 +891,6 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
-						// bitmap -> gray6
-						case FrameFormat.Gray6:
-							AssertCompatibility(source, sourceBitmap, dest, destGray6, from, to);
-							Subscribe(
-								sourceBitmap.GetBitmapFrames(),
-								frame => frame
-									.ConvertToGray6()
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray6.RenderGray6);
-							break;
-
 						// bitmap -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
@@ -1108,10 +949,6 @@ namespace LibDmd
 						// colored gray2 -> gray4
 						case FrameFormat.Gray4:
 							throw new IncompatibleGraphException("Cannot convert from colored gray2 to gray4 (it's not like we can extract luminosity from the colors...)");
-
-						// colored gray2 -> gray6
-						case FrameFormat.Gray6:
-							throw new IncompatibleGraphException("Cannot convert from colored gray2 to gray6 (it's not like we can extract luminosity from the colors...)");
 
 						// colored gray2 -> rgb24
 						case FrameFormat.Rgb24:
@@ -1190,10 +1027,6 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
-						// colored gray4 -> gray6
-						case FrameFormat.Gray6:
-							throw new IncompatibleGraphException("Cannot convert from colored gray4 to gray6 (it's not like we can extract luminosity from the colors...)");
-
 						// colored gray4 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceColoredGray4, dest, destRgb24, from, to);
@@ -1271,18 +1104,6 @@ namespace LibDmd
 									.ConvertToGray4()
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
-							break;
-
-						// colored gray6 -> gray6
-						case FrameFormat.Gray6:
-							AssertCompatibility(source, sourceColoredGray6, dest, destGray6, from, to);
-							Subscribe(
-								sourceColoredGray6.GetColoredGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToGray()
-									.TransformGray(this, destFixedSize, destMultiSize),
-								destGray6.RenderGray6);
 							break;
 
 						// colored gray6 -> rgb24
@@ -1580,11 +1401,6 @@ namespace LibDmd
 		/// A 4-bit grayscale frame (16 shades)
 		/// </summary>
 		Gray4,
-
-		/// <summary>
-		/// A 6-bit grayscale frame (64 shades)
-		/// </summary>
-		Gray6,
 
 		/// <summary>
 		/// An RGB24 frame
