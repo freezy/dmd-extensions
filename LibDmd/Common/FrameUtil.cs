@@ -376,33 +376,6 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Double the pixels coming from the frame data.
 		/// </summary>
-		/// <param name="dim">New size</param>
-		/// <param name="frame">Frame data to be resized</param>
-		/// <returns></returns>
-		[Obsolete("Use ScaleDouble that uses more obvious parameters.")]
-		public static byte[] ScaleDoubleUgh(Dimensions dim, byte[] frame)
-		{
-			byte[] scaledData = new byte[dim.Surface];
-			var origwidth = dim.Width / 2;
-			var scale = 2;
-
-			int targetIdx = 0;
-			for (var i = 0; i < dim.Height; ++i)
-			{
-				var iUnscaled = i / scale;
-				for (var j = 0; j < dim.Width; ++j)
-				{
-					var jUnscaled = j / scale;
-					scaledData[targetIdx++] = frame[iUnscaled * origwidth + jUnscaled];
-				}
-			}
-
-			return scaledData;
-		}
-		
-		/// <summary>
-		/// Double the pixels coming from the frame data.
-		/// </summary>
 		/// <param name="dim">Size of the original data</param>
 		/// <param name="frame">Frame data to be resized</param>
 		/// <returns></returns>
@@ -422,6 +395,32 @@ namespace LibDmd.Common
 				}
 			}
 			
+			return scaledData;
+		}
+
+		/// <summary>
+		/// Doubles the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="dim">Size of the original data</param>
+		/// <param name="frame">RGB24 frame data to be resized</param>
+		/// <returns></returns>
+		public static byte[] ScaleDoubleRgb(Dimensions dim, byte[] frame)
+		{
+			var outputDim = dim * 2;
+			byte[] scaledData = new byte[outputDim.Surface * 3];
+			const int scale = 2;
+
+			int targetIdx = 0;
+			for (var i = 0; i < outputDim.Height; ++i) {
+				var iUnscaled = i / scale;
+				for (var j = 0; j < outputDim.Width; ++j) {
+					var jUnscaled = j / scale;
+					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
+					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
+					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
+				}
+			}
+
 			return scaledData;
 		}
 
@@ -509,6 +508,48 @@ namespace LibDmd.Common
 				}
 			}
 
+			return scaledData;
+		}
+
+
+		/// <summary>
+		/// Implementation of Scale2 for RGB frame data.
+		/// </summary>
+		/// <param name="dim">Original dimensions</param>
+		/// <param name="data">Original frame data</param>
+		/// <returns>scaled frame planes</returns>
+		public static byte[] Scale2XRgb(Dimensions dim, byte[] data)
+		{
+			var targetWidth = dim.Width * 2;
+			var targetHeight = dim.Height * 2;
+			byte[] scaledData = new byte[targetWidth * targetHeight * 3];
+
+			for (var y = 0; y < dim.Height; y++)
+			{
+				for (var x = 0; x < dim.Width; x++)
+				{
+					var colorB = ImageUtil.GetRgbPixel(x, y - 1, dim.Width, dim.Height, data);
+					var colorH = ImageUtil.GetRgbPixel(x, y + 1, dim.Width, dim.Height, data);
+					var colorD = ImageUtil.GetRgbPixel(x - 1, y, dim.Width, dim.Height, data);
+					var colorF = ImageUtil.GetRgbPixel(x + 1, y, dim.Width, dim.Height, data);
+
+					var colorE = ImageUtil.GetRgbPixel(x, y, dim.Width, dim.Height, data);
+					if (!CompareBuffers(colorB, 0, colorH, 0, 3) && !CompareBuffers(colorD, 0, colorF, 0, 3))
+					{
+						ImageUtil.SetRgbPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, 3) ? colorD : colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, 3) ? colorD : colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
+					}
+					else
+					{
+						ImageUtil.SetRgbPixel(2 * x, 2 * y, colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, colorE, targetWidth, scaledData);
+						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, colorE, targetWidth, scaledData);
+					}
+				}
+			}
 			return scaledData;
 		}
 

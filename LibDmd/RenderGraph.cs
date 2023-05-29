@@ -5,7 +5,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -605,7 +604,7 @@ namespace LibDmd
 					throw;
 				}
 			}
-			_activeRenderer = new RenderDisposable(this, _activeSources);
+			_activeRenderer = new RenderDisposable(_activeSources);
 			return _activeRenderer;
 		}
 		
@@ -792,6 +791,7 @@ namespace LibDmd
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
 									.ConvertToGray2()
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray2.RenderGray2);
 							break;
@@ -803,6 +803,7 @@ namespace LibDmd
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
 									.ConvertToGray4()
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
 							break;
@@ -813,6 +814,7 @@ namespace LibDmd
 							Subscribe(
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24);
 							break;
@@ -823,6 +825,7 @@ namespace LibDmd
 							Subscribe(
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToBmp()
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
@@ -856,6 +859,7 @@ namespace LibDmd
 								sourceBitmap.GetBitmapFrames(),
 								frame => frame
 									.ConvertToGray2()
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray2.RenderGray2);
 							break;
@@ -867,6 +871,7 @@ namespace LibDmd
 								sourceBitmap.GetBitmapFrames(),
 								frame => frame
 									.ConvertToGray4()
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
 							break;
@@ -878,6 +883,7 @@ namespace LibDmd
 								sourceBitmap.GetBitmapFrames(),
 								frame => frame
 									.ConvertToRgb24()
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24);
 							break;
@@ -888,6 +894,7 @@ namespace LibDmd
 							Subscribe(
 								sourceBitmap.GetBitmapFrames(),
 								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
 							break;
@@ -1423,13 +1430,11 @@ namespace LibDmd
 	/// </remarks>
 	internal class RenderDisposable : IDisposable
 	{
-		private readonly RenderGraph _graph;
 		private readonly CompositeDisposable _activeSources;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public RenderDisposable(RenderGraph graph, CompositeDisposable activeSources)
+		public RenderDisposable(CompositeDisposable activeSources)
 		{
-			_graph = graph;
 			_activeSources = activeSources;
 		}
 
