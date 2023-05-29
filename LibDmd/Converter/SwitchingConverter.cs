@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -28,13 +29,12 @@ namespace LibDmd.Converter
 
 		public override string Name => $"Switching Converter ({ConverterName(_converter)})";
 
-		public FrameFormat From { get; }
-		public IObservable<Unit> OnResume { get; }
-		public IObservable<Unit> OnPause { get; }
+		public IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2, FrameFormat.Gray4 };
+		public IObservable<Unit> OnResume => null;
+		public IObservable<Unit> OnPause => null;
 
-		public SwitchingConverter(FrameFormat frameFormat)
+		public SwitchingConverter()
 		{
-			From = frameFormat;
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
 			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -21,7 +22,7 @@ namespace LibDmd.Converter.Pin2Color
 	public class Pin2ColorGray4Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
 		public override string Name { get; } = "4-Bit Colorizer";
-		public FrameFormat From { get; } = FrameFormat.Gray4;
+		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public ScalerMode ScalerMode { get; set; }

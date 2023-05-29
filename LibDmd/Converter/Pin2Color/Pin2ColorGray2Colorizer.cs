@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -12,7 +13,8 @@ namespace LibDmd.Converter.Pin2Color
 	public class Pin2ColorGray2Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
 		public override string Name { get; } = "2-Bit Colorizer";
-		public FrameFormat From { get; } = FrameFormat.Gray2;
+		public IEnumerable<FrameFormat> From => new []{ FrameFormat.Gray2 };
+
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 		public bool Has128x32Animation { get; set; }

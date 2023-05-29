@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Subjects;
 using LibDmd.Converter;
@@ -12,7 +13,7 @@ namespace LibDmd.Test.Stubs
 		public string Name => "Gray6 Converter";
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
-		public FrameFormat From => FrameFormat.Gray4;
+		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 
 		private readonly Func<DmdFrame, ColoredFrame> _convert;
 

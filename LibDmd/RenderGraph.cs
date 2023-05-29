@@ -283,21 +283,21 @@ namespace LibDmd
 					sourceConverterRgb24 = Converter as IRgb24Source;
 					
 					// subscribe converter to incoming frames
-					switch (Converter.From) {
-						case FrameFormat.Gray2:
-							if (sourceGray2 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 2-bit compatible which is mandatory for converter {sourceConverterColoredGray2?.Name}.");
-							}
-							_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
-							break;
-						case FrameFormat.Gray4:
-							if (sourceGray4 == null) {
-								throw new IncompatibleSourceException($"Source {Source.Name} is not 4-bit compatible which is mandatory for converter {sourceConverterColoredGray4?.Name}.");
-							}
-							_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
-							break;
-						default:
-							throw new IncompatibleGraphException($"Frame conversion from ${Converter.From} is not implemented.");
+					foreach (var from in Converter.From) {
+						switch (from) {
+							case FrameFormat.Gray2:
+								if (sourceGray2 != null) {
+									_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+								}
+								break;
+							case FrameFormat.Gray4:
+								if (sourceGray4 != null) {
+									_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+								}
+								break;
+							default:
+								throw new IncompatibleGraphException($"Frame conversion from ${from} is not implemented.");
+						}
 					}
 				}
 
