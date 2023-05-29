@@ -27,6 +27,13 @@ namespace LibDmd.Frame
 			return this;
 		}
 
+		private BmpFrame Update(Dimensions dimensions, byte[] data)
+		{
+			Dimensions = dimensions;
+			Bitmap = ImageUtil.ConvertFromRgb24(Dimensions, data);
+			return this;
+		}
+
 		// public DmdFrame ConvertToGray2() => ImageUtil.ConvertToGray2(Bitmap);
 		//
 		// public DmdFrame ConvertToGray4() => ImageUtil.ConvertToGray4(Bitmap);
@@ -70,6 +77,50 @@ namespace LibDmd.Frame
 		{
 			Bitmap = TransformationUtil.Transform(Bitmap, dim, resize, flipHorizontally, flipVertically);
 			return this;
+		}
+
+		/// <summary>
+		/// Up-scales the frame with the given algorithm, if the destination allows it.
+		/// </summary>
+		/// <param name="fixedDest">The fixed destination, null if dynamic. If fixed, DmdAllowHdScaling must be true, and the dimensions must be greater or equal the double of the frame size.</param>
+		/// <param name="scalerMode">If and how to scale</param>
+		/// <returns>Updated frame instance</returns>
+		/// <exception cref="ArgumentException"></exception>
+		public BmpFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
+		{
+			// skip if disabled
+			if (scalerMode == ScalerMode.None) {
+				return this;
+			}
+
+			// if destination doesn't allow scaling (e.g. pup), return
+			if (fixedDest != null && !fixedDest.DmdAllowHdScaling) {
+				return this;
+			}
+
+			// if double of frame size doesn't fit into destination, return
+			if (fixedDest != null && !(Dimensions * 2).FitsInto(fixedDest.FixedSize)) {
+				return this;
+			}
+
+			return TransformHdScaling(scalerMode);
+		}
+
+		private BmpFrame TransformHdScaling(ScalerMode scalerMode)
+		{
+			switch (scalerMode) {
+				case ScalerMode.None:
+					return this;
+
+				case ScalerMode.Doubler:
+					return Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, ConvertToRgb24().Data));
+
+				case ScalerMode.Scale2x:
+					return Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, ConvertToRgb24().Data));
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);
+			}
 		}
 
 		public object Clone()

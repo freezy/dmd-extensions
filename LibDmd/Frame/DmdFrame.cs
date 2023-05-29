@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -14,9 +14,6 @@ namespace LibDmd.Frame
 		public byte[] Data { get; private set; }
 		public int BitLength;
 
-		public bool IsGray => BitLength <= 8;
-		public bool IsRgb24 => BitLength == 24;
-
 		public FrameFormat Format {
 			get {
 				switch (BitLength) {
@@ -27,6 +24,9 @@ namespace LibDmd.Frame
 				}
 			}
 		}
+
+		private bool IsGray => BitLength <= 8;
+		private bool IsRgb24 => BitLength == 24;
 
 		private int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
 
@@ -269,12 +269,6 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException"></exception>
 		public DmdFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
 		{
-			#if DEBUG
-			if (!IsGray) {
-				throw new ArgumentException("Can only HD scale gray frames.");
-			}
-			#endif
-
 			// skip if disabled
 			if (scalerMode == ScalerMode.None) {
 				return this;
@@ -300,10 +294,14 @@ namespace LibDmd.Frame
 					return this;
 
 				case ScalerMode.Doubler:
-					return Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
+					return IsRgb24
+						? Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, Data))
+						: Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
 
 				case ScalerMode.Scale2x:
-					return Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
+					return IsRgb24
+						? Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, Data))
+						: Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
 
 				default:
 					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);

@@ -233,6 +233,112 @@ namespace LibDmd.Test
 		}
 
 		[TestCase]
+		public async Task Should_Upscale_With_Doubler()
+		{
+			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
+
+			_graph.Source = _source;
+			_graph.ScalerMode = ScalerMode.Doubler;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var upscaledFrame = FrameGenerator.FromString(@"
+				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
+				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
+				74 74 49 49 B0 B0 54 54 33 33 08 08 0A 0A A6 A6 
+				74 74 49 49 B0 B0 54 54 33 33 08 08 0A 0A A6 A6 
+				0A 0A BD BD 28 28 80 80 30 30 9A 9A 18 18 92 92 
+				0A 0A BD BD 28 28 80 80 30 30 9A 9A 18 18 92 92 
+				78 78 49 49 B8 B8 5D 5D 90 90 0D 0D B9 B9 00 00 
+				78 78 49 49 B8 B8 5D 5D 90 90 0D 0D B9 B9 00 00 ", @"
+				FF FF 18 18 CE CE F5 F5 04 04 57 57 65 65 C5 C5 
+				FF FF 18 18 CE CE F5 F5 04 04 57 57 65 65 C5 C5 
+				1C 1C A6 A6 E6 E6 6C 6C 68 68 88 88 F1 F1 3A 3A 
+				1C 1C A6 A6 E6 E6 6C 6C 68 68 88 88 F1 F1 3A 3A 
+				61 61 E1 E1 E8 E8 9D 9D 20 20 F8 F8 4E 4E 9C 9C 
+				61 61 E1 E1 E8 E8 9D 9D 20 20 F8 F8 4E 4E 9C 9C 
+				34 34 A4 A4 43 43 44 44 EB EB C9 C9 28 28 00 00 
+				34 34 A4 A4 43 43 44 44 EB EB C9 C9 28 28 00 00", @"
+				FF FF 76 76 3B 3B 6A 6A 86 86 4B 4B DF DF 6A 6A 
+				FF FF 76 76 3B 3B 6A 6A 86 86 4B 4B DF DF 6A 6A 
+				1F 1F 9F 9F AA AA 31 31 F8 F8 6C 6C 31 31 49 49 
+				1F 1F 9F 9F AA AA 31 31 F8 F8 6C 6C 31 31 49 49 
+				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
+				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00 
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00");
+
+			await AssertFrame(_source, dest, rgbFrame, upscaledFrame);
+		}
+
+		[TestCase]
+		public async Task Should_Upscale_With_Scale2x()
+		{
+			var dest = new DestinationFixedRgb24(16, 8) { DmdAllowHdScaling = true };
+
+			_graph.Source = _source;
+			_graph.ScalerMode = ScalerMode.Scale2x;
+			_graph.Destinations = new List<IDestination> { dest };
+			_graph.StartRendering();
+
+			var rgbFrame = FrameGenerator.FromString(@"
+				ff b0 ca fb ea 36 74 fc
+				74 49 b0 54 33 08 0a a6
+				0a bd 28 80 30 9a 18 92
+				78 49 b8 5d 90 0d b9 00", @"
+				ff 18 ce f5 04 57 65 c5
+				1c a6 e6 6c 68 88 f1 3a
+				61 e1 e8 9d 20 f8 4e 9c
+				34 a4 43 44 eb c9 28 00", @"
+				ff 76 3b 6a 86 4b df 6a
+				1f 9f aa 31 f8 6c 31 49
+				77 95 ae e3 1d c5 d7 92
+				e0 9f 9d dc de 95 15 00");
+
+			var upscaledFrame = FrameGenerator.FromString(@"
+				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
+				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
+				74 74 49 49 B0 B0 54 54 33 33 08 08 0A 0A A6 A6 
+				74 74 49 49 B0 B0 54 54 33 33 08 08 0A 0A A6 A6 
+				0A 0A BD BD 28 28 80 80 30 30 9A 9A 18 18 92 92 
+				0A 0A BD BD 28 28 80 80 30 30 9A 9A 18 18 92 92 
+				78 78 49 49 B8 B8 5D 5D 90 90 0D 0D B9 B9 00 00 
+				78 78 49 49 B8 B8 5D 5D 90 90 0D 0D B9 B9 00 00 ", @"
+				FF FF 18 18 CE CE F5 F5 04 04 57 57 65 65 C5 C5 
+				FF FF 18 18 CE CE F5 F5 04 04 57 57 65 65 C5 C5 
+				1C 1C A6 A6 E6 E6 6C 6C 68 68 88 88 F1 F1 3A 3A 
+				1C 1C A6 A6 E6 E6 6C 6C 68 68 88 88 F1 F1 3A 3A 
+				61 61 E1 E1 E8 E8 9D 9D 20 20 F8 F8 4E 4E 9C 9C 
+				61 61 E1 E1 E8 E8 9D 9D 20 20 F8 F8 4E 4E 9C 9C 
+				34 34 A4 A4 43 43 44 44 EB EB C9 C9 28 28 00 00 
+				34 34 A4 A4 43 43 44 44 EB EB C9 C9 28 28 00 00", @"
+				FF FF 76 76 3B 3B 6A 6A 86 86 4B 4B DF DF 6A 6A 
+				FF FF 76 76 3B 3B 6A 6A 86 86 4B 4B DF DF 6A 6A 
+				1F 1F 9F 9F AA AA 31 31 F8 F8 6C 6C 31 31 49 49 
+				1F 1F 9F 9F AA AA 31 31 F8 F8 6C 6C 31 31 49 49 
+				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
+				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00 
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00");
+
+			await AssertFrame(_source, dest, rgbFrame, upscaledFrame);
+		}
+
+		[TestCase]
 		public async Task Should_Downscale_With_Fit()
 		{
 			var dest = new DestinationFixedRgb24(6, 2) { DmdAllowHdScaling = true };
