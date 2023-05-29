@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -266,7 +267,7 @@ namespace LibDmd
 			try {
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
-				Logger.Info("Setting up {0} for {1} destination(s)", Name, Destinations.Count);
+				Logger.Info("Setting up {0} for {1} destination(s) [ {2} ]", Name, Destinations.Count, string.Join(", ", Destinations.Select(d => d.Name)));
 
 				// init converters
 				IColoredGray2Source sourceConverterColoredGray2 = null;
@@ -335,18 +336,18 @@ namespace LibDmd
 						if (sourceConverterColoredGray2 != null) {
 							// if destination can render colored gray-2 frames...
 							if (destColoredGray2 != null) {
-								Logger.Info("Hooking colored 2-bit source of {0} converter to {1}.", sourceConverterColoredGray2.Name, dest.Name);
+								Logger.Info("  -> Hooking colored 2-bit source of {0} converter to {1}.", sourceConverterColoredGray2.Name, dest.Name);
 								Connect(sourceConverterColoredGray2, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
 								converterConnected = true;
 
 							// try to convert to rgb24
 							} else if (destRgb24 != null) {
-								Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
 								Connect(sourceConverterColoredGray2, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
-								Logger.Warn("Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
 								Connect(sourceConverterColoredGray2, destBitmap, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
@@ -356,18 +357,18 @@ namespace LibDmd
 						if (sourceConverterColoredGray4 != null) {
 							// if destination can render colored gray-4 frames...
 							if (destColoredGray4 != null) {
-								Logger.Info("Hooking colored 4-bit source of {0} converter to {1}.", sourceConverterColoredGray4.Name, dest.Name);
+								Logger.Info("  -> Hooking colored 4-bit source of {0} converter to {1}.", sourceConverterColoredGray4.Name, dest.Name);
 								Connect(sourceConverterColoredGray4, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
 								converterConnected = true;
 
 								// otherwise, convert to rgb24
 							} else if (destRgb24 != null) {
-								Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray4.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray4.Name);
 								Connect(sourceConverterColoredGray4, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
-								Logger.Warn("Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray4.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray4.Name);
 								Connect(sourceConverterColoredGray4, destBitmap, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
@@ -377,18 +378,18 @@ namespace LibDmd
 						if (sourceConverterColoredGray6 != null) {
 							// if destination can render colored gray-6 frames...
 							if (destColoredGray6 != null) {
-								Logger.Info("Hooking colored 6-bit source of {0} converter to {1}.", sourceConverterColoredGray6.Name, dest.Name);
+								Logger.Info("  -> Hooking colored 6-bit source of {0} converter to {1}.", sourceConverterColoredGray6.Name, dest.Name);
 								Connect(sourceConverterColoredGray6, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 								converterConnected = true;
 
 							// otherwise, convert to rgb24
 							} else if (destRgb24 != null) {
-								Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray6.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray6.Name);
 								Connect(sourceConverterColoredGray6, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
-								Logger.Warn("Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray6.Name);
+								Logger.Warn("  -> Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray6.Name);
 								Connect(sourceConverterColoredGray6, destBitmap, FrameFormat.ColoredGray6, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
@@ -396,7 +397,7 @@ namespace LibDmd
 
 						// if converter emits RGB24 frames..
 						if (sourceConverterRgb24 != null && destRgb24 != null) {
-							Logger.Info("Hooking RGB24 source of {0} converter to {1}.", sourceConverterRgb24.Name, dest.Name);
+							Logger.Info("  -> Hooking RGB24 source of {0} converter to {1}.", sourceConverterRgb24.Name, dest.Name);
 							Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
 							converterConnected = true;
 						}
@@ -640,7 +641,7 @@ namespace LibDmd
 			var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 			try {
-				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info("Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to));
+				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info("  -> Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to));
 			
 			} catch (TaskCanceledException e) {
 				Logger.Error(e, "Main thread seems already destroyed, aborting.");
