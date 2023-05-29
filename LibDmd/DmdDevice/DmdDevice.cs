@@ -29,10 +29,8 @@ using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
-using Mindscape.Raygun4Net;
 using NLog;
 using NLog.Config;
-using NLog.Targets;
 
 namespace LibDmd.DmdDevice
 {
@@ -77,8 +75,8 @@ namespace LibDmd.DmdDevice
 
 		// error reporting
 #if !DEBUG
-		static readonly RaygunClient Raygun = new RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
-		private static readonly MemoryTarget MemLogger = new MemoryTarget {
+		static readonly Mindscape.Raygun4Net.RaygunClient Raygun = new Mindscape.Raygun4Net.RaygunClient("J2WB5XK0jrP4K0yjhUxq5Q==");
+		private static readonly NLog.Targets.MemoryTarget MemLogger = new NLog.Targets.MemoryTarget {
 			Name = "Raygun Logger",
 			Layout = "${pad:padding=4:inner=[${threadid}]} ${date} ${pad:padding=5:inner=${level:uppercase=true}} | ${message} ${exception:format=ToString}"
 		};
@@ -744,7 +742,9 @@ namespace LibDmd.DmdDevice
 				// if (_vniColoring != null) {
 				// 	_graphs.SetPalette(_palette, _vniColoring.DefaultPaletteIndex);
 
-				_graphs.SetPalette(_palette, -1);
+				if (_palette != null) {
+					_graphs.SetPalette(_palette, -1);
+				}
 
 			} else {
 				// if colorization disabled, apply default color.
