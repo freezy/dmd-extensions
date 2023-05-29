@@ -73,7 +73,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		public static DmdFrame ConvertToGray2(BitmapSource bmp) => new DmdFrame(bmp.Dimensions(), ConvertToGray2(bmp, 0, 1, out _), 24);
+		public static DmdFrame ConvertToGray2(BitmapSource bmp) => new DmdFrame(bmp.Dimensions(), ConvertToGray2(bmp, 0, 1, out _), 2);
 
 		/// <summary>
 		/// Converts a bitmap to a 2-bit grayscale array by using the luminosity of the pixels and

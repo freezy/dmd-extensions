@@ -53,6 +53,7 @@ namespace DmdExt.Test
 
 			} else {
 				ISource source;
+				// rgb24, gray2, gray4, coloredgray2, coloredgray4, coloredgray6
 				switch (_testOptions.FrameFormat) {
 					case FrameFormat.Gray2:
 						source = new ImageSourceGray2(bmp);
