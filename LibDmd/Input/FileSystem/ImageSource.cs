@@ -90,10 +90,22 @@ namespace LibDmd.Input.FileSystem
 				pixelDim,
 				FrameUtil.Split(pixelDim, 6, ImageUtil.ConvertToGray6(bmp)),
 				new[] {
-					Colors.Black, Colors.Blue, Colors.Purple, Colors.DimGray,
-					Colors.Green, Colors.Brown, Colors.Red, Colors.Gray,
-					Colors.Tan, Colors.Orange, Colors.Yellow, Colors.LightSkyBlue,
-					Colors.Cyan, Colors.LightGreen, Colors.Pink, Colors.White,
+					Colors.AntiqueWhite, Colors.Aqua, Colors.BlueViolet, Colors.BurlyWood,
+					Colors.Chartreuse, Colors.Crimson, Colors.DarkGreen, Colors.DeepPink,
+					Colors.Firebrick, Colors.Fuchsia, Colors.Indigo, Colors.Green,
+					Colors.Khaki, Colors.Lime, Colors.MistyRose, Colors.Red,
+					Colors.DarkOrchid, Colors.DarkMagenta, Colors.SlateBlue, Colors.NavajoWhite,
+					Colors.Cyan, Colors.WhiteSmoke, Colors.Black, Colors.MintCream,
+					Colors.SaddleBrown, Colors.Goldenrod, Colors.Azure, Colors.Plum,
+					Colors.MediumSpringGreen, Colors.LightPink, Colors.FloralWhite, Colors.Gainsboro,
+					Colors.DarkSalmon, Colors.CornflowerBlue, Colors.MediumTurquoise, Colors.OrangeRed,
+					Colors.LightCoral, Colors.SpringGreen, Colors.CadetBlue, Colors.MediumBlue,
+					Colors.SandyBrown, Colors.OliveDrab, Colors.LightGoldenrodYellow, Colors.PeachPuff,
+					Colors.IndianRed, Colors.SeaGreen, Colors.MediumOrchid, Colors.PaleGreen,
+					Colors.YellowGreen, Colors.DarkSeaGreen, Colors.Lavender, Colors.SteelBlue,
+					Colors.Sienna, Colors.Violet, Colors.SkyBlue, Colors.MediumSlateBlue,
+					Colors.SlateGray, Colors.Wheat, Colors.DarkGray, Colors.GreenYellow,
+					Colors.Magenta, Colors.Silver, Colors.Turquoise, Colors.Thistle,
 				}
 			);
 			_frames = new BehaviorSubject<ColoredFrame>(frame);

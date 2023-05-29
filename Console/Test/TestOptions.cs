@@ -7,7 +7,7 @@ namespace DmdExt.Test
 	class TestOptions : BaseOptions
 	{
 
-		[Option("format", HelpText = "Try to output in that frame format. One of: [ rgb24, gray2, gray4, coloredgray2, coloredgray4 ].")]
+		[Option("format", HelpText = "Try to output in that frame format. One of: [ rgb24, gray2, gray4, coloredgray2, coloredgray4, coloredgray6 ].")]
 		public FrameFormat FrameFormat { get; set; } = FrameFormat.Bitmap;
 
 		[ParserState]
