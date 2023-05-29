@@ -118,7 +118,16 @@ DMDDEV void Console_Input_Ptr(Console_Input_t ptr);
 ## Building
 
 Just load the parent solution into Visual Studio and you should be fine. Set up
-for VS2019, but you should able to compile it with other versions as well.
+for VS2022, but you should able to compile it with other versions as well.
 
 If you want the build process automatically copy `DmdDevice.dll` into your VPM
 folder, point the `VPM_HOME` environment variable to your VPM folder.
+
+## Testing
+
+This is a list of particular games that should be tested after major changes.
+
+| Title                   | ROM Name | Output                          | Comments               |
+|-------------------------|----------|---------------------------------|------------------------|
+| Riverboat Gambler (L-3) | rvrbt    | 1x16Alpha 1x16Num 1x7Num 1x4Num | Support recently added |
+| Police Force (LA-4)     | polic_l4 | 2x7Num 2x7Num 4x1Num            | Support recently added |
