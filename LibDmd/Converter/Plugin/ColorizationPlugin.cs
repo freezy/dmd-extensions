@@ -179,7 +179,7 @@ namespace LibDmd.Converter.Plugin
 			}
 
 			_lastEventId = eventId;
-			_activePinUpOutput.SendTriggerID((ushort)eventId);
+			_activePinUpOutput.SendTriggerId((ushort)eventId);
 		}
 
 		public void SetPinUpOutput(PinUpOutput puo)

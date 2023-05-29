@@ -117,7 +117,7 @@ namespace LibDmd.Converter.Serum
 			Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
 			
 			uint triggerId = 0xFFFFFFFF;
-			if ((_activePupOutput != null) && ((_activePupOutput.isPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
+			if ((_activePupOutput != null) && ((_activePupOutput.IsPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
 			{
 				if (NumColors == 16)
 					_activePupOutput.RenderGray4(_frame);
@@ -134,7 +134,7 @@ namespace LibDmd.Converter.Serum
 			}
 			
 			if (_activePupOutput != null && triggerId != 0xFFFFFFFF) {
-				_activePupOutput.SendTriggerID((ushort)triggerId);
+				_activePupOutput.SendTriggerId((ushort)triggerId);
 			}
 
 			// convert to planes
