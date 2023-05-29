@@ -1,4 +1,5 @@
-﻿using LibDmd.Frame;
+﻿using System.Collections.Generic;
+using LibDmd.Frame;
 
 namespace LibDmd.Converter
 {
@@ -10,7 +11,7 @@ namespace LibDmd.Converter
 		/// <summary>
 		/// Source bit length
 		/// </summary>
-		FrameFormat From { get; }
+		IEnumerable<FrameFormat> From { get; }
 
 		/// <summary>
 		/// Receives frames and outputs them to the output sources the converter implements.

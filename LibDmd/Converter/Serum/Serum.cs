@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -15,7 +16,7 @@ namespace LibDmd.Converter.Serum
 	public class Serum : AbstractSource, IConverter, IColoredGray6Source
 	{
 		public override string Name => "Serum";
-		public FrameFormat From { get; } = FrameFormat.Gray2;
+		public IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
 
@@ -80,9 +81,8 @@ namespace LibDmd.Converter.Serum
 
 			_dimensions = new Dimensions(width, height);
 			NumTriggersAvailable = numTriggers;
-			From = NumColors == 16 ? FrameFormat.Gray4 : FrameFormat.Gray2;
 			IsLoaded = true;
-			_frame = new DmdFrame(_dimensions, From == FrameFormat.Gray4 ? 4 : 2);
+			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
 			
 			_planes = new byte[6][];
 			for (uint ti = 0; ti < 6; ti++) {

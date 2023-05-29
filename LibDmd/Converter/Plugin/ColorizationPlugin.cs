@@ -14,17 +14,18 @@ using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
-	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray6Source
+	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray6Source, IRgb24Source
 	{
 		public override string Name => "Colorization Plugin";
-		public FrameFormat From => FrameFormat.Gray2;
+		public IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
 
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
+		public IObservable<DmdFrame> GetRgb24Frames() => _rgb24Frames;
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
-		private Dimensions _dimensions = new Dimensions(128, 32);
+		private readonly Dimensions _dimensions = new Dimensions(128, 32);
 
 		public bool IsEnabled { get; private set; }
 
@@ -54,6 +55,7 @@ namespace LibDmd.Converter.Plugin
 		private bool _hasEvents;
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
+		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
 		private readonly bool _scaleToHd;
 
 		private uint _lastEventId;
@@ -85,7 +87,7 @@ namespace LibDmd.Converter.Plugin
 			IntPtr optionsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, optionsPtr, false);
 			_colorizerMode = (ColorizerMode)_setGameSettings(gameName, 0, optionsPtr);
-			if (_colorizerMode >= 0) {
+			if (IsColoring) {
 				_hasEvents = _hasEventsPtr();
 
 				// dmd frames might return upscaled, so adapt size accordingly
@@ -106,7 +108,7 @@ namespace LibDmd.Converter.Plugin
 				}
 
 				IsEnabled = true;
-				Logger.Info($"[plugin] Colorization mode {_colorizerMode.ToString()} enabled.");
+				Logger.Info($"[plugin] Colorization mode {_colorizerMode} enabled.");
 
 			} else {
 
@@ -125,6 +127,8 @@ namespace LibDmd.Converter.Plugin
 						_set16Colors(pal);
 						break;
 				}
+
+				IsEnabled = true;
 				Logger.Info("[plugin] No colorization mode detected, disabled.");
 			}
 		}
@@ -199,7 +203,7 @@ namespace LibDmd.Converter.Plugin
 		public void Convert(DmdFrame frame)
 		{
 			var frameSize = _dimensions.Surface * 3;
-			var coloredFrame = new byte[frameSize];
+			var rgb24Buffer = new byte[frameSize];
 
 			if (!_isOpen) {
 				return;
@@ -228,7 +232,7 @@ namespace LibDmd.Converter.Plugin
 							break;
 					}
 					if (IsColoring)
-						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
 
 				}
 				// 2 bit planes
@@ -244,8 +248,8 @@ namespace LibDmd.Converter.Plugin
 							rgb24FramePtr = _colorizeGray2Raw(256, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
 							break;
 					}
-					if (_colorizerMode != ColorizerMode.None)
-						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+					if (IsColoring)
+						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
 				}
 			}
 			// non-raw conversion
@@ -264,8 +268,8 @@ namespace LibDmd.Converter.Plugin
 							rgb24FramePtr = _colorizeGray4(256, 64, frame.Data);
 							break;
 					}
-					if (_colorizerMode != ColorizerMode.None)
-						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+					if (IsColoring)
+						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
 
 				}
 				// 2 bit data
@@ -284,8 +288,8 @@ namespace LibDmd.Converter.Plugin
 							rgb24FramePtr = _colorizeGray2(256, 64, frame.Data);
 							break;
 					}
-					if (_colorizerMode != ColorizerMode.None)
-						Marshal.Copy(rgb24FramePtr, coloredFrame, 0, frameSize);
+					if (IsColoring)
+						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
 
 				}
 				// rgb24 data
@@ -295,7 +299,7 @@ namespace LibDmd.Converter.Plugin
 				}
 			}
 
-			if (_colorizerMode == ColorizerMode.None) {
+			if (!IsColoring) {
 				return;
 			}
 
@@ -306,7 +310,7 @@ namespace LibDmd.Converter.Plugin
 			//	height = 64;
 			//}
 
-			EmitFrame(_dimensions, coloredFrame);
+			EmitFrame(_dimensions, rgb24Buffer);
 			ProcessEvent();
 		}
 
@@ -493,6 +497,7 @@ namespace LibDmd.Converter.Plugin
 			}
 			return true;
 		}
+
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate bool OpenPtr();
