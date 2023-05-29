@@ -14,27 +14,25 @@ namespace LibDmd.Output.PinUp
 {
 	public class PinUpOutput : IBitmapDestination, IGray2Destination, IGray4Destination, IFixedSizeDestination
 	{
-		public string OutputFolder { get; set; }
-		public string Name { get; } = "PinUP Writer";
+		public string Name => "PinUP Writer";
 		public bool IsAvailable { get; private set; }
+
 		/// <summary>
 		/// If Serum colorization, set to true if no triggers found in it => legacy mode detection
 		/// </summary>
 		public bool PuPFrameMatching { get; set; } = true;
+
 		/// <summary>
 		/// If an updated version of dmddevicepup.dll with PuP_Trigger() function found, set to true
 		/// </summary>
-		public bool isPuPTrigger { get; } = true;
-
-		private readonly Dimensions _size = new Dimensions(128, 32);
-		public uint Fps;
+		public bool IsPuPTrigger { get; } = true;
 
 		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
-		
-		public bool DmdAllowHdScaling { get; } = false;
+		public bool DmdAllowHdScaling => false;
 
+		private readonly Dimensions _size = new Dimensions(128, 32);
 		private readonly IntPtr _pnt;
-		private readonly string _gameName;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public PinUpOutput(string romName)
 		{
@@ -51,7 +49,7 @@ namespace LibDmd.Output.PinUp
 
 			if (pDll == IntPtr.Zero) {
 				IsAvailable = false;
-				Logger.Error("Cannot load " + dllFileName);
+				Logger.Error("[pinup] Cannot load " + dllFileName);
 				return;
 			}
 
@@ -74,11 +72,6 @@ namespace LibDmd.Output.PinUp
 				}
 				Close = (_dClose)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dClose));
 
-				//pAddress = NativeMethods.GetProcAddress(pDll, "GameSettings");
-				//if (pAddress == IntPtr.Zero)
-				//	throw new Exception("Cannot map function in dmddevicePUP.dll");
-				//GameSettings = (_dGameSettings)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_dGameSettings)); */
-
 				pAddress = NativeMethods.GetProcAddress(pDll, "SetGameName");
 				if (pAddress == IntPtr.Zero) { 
 					throw new Exception("Cannot map function in dmddevicePUP.dll");
@@ -87,8 +80,8 @@ namespace LibDmd.Output.PinUp
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "PuP_Trigger");
 				if (pAddress == IntPtr.Zero) {
-					isPuPTrigger = false;
-					Logger.Error("[PinUpOutput] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated");
+					IsPuPTrigger = false;
+					Logger.Error("[pinup] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated.");
 				
 				} else { 
 					PuPTrigger = (_SendTrigger)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_SendTrigger));
@@ -96,21 +89,26 @@ namespace LibDmd.Output.PinUp
 			}
 			catch (Exception e) {
 				IsAvailable = false;
-				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
+				Logger.Error(e, "[pinup] Error sending frame to PinUp, disabling.");
 				return;
 			}
 
-			Logger.Info("PinUP DLL starting " + romName + "...");
+			Logger.Info($"[pinup] Starting {romName}...");
 			Open();
 
 			_pnt = Marshal.AllocHGlobal(_size.Surface * 3); // make a global memory pnt for DLL call
-			_gameName = romName;
+			var gameName = romName;
 
-			Marshal.Copy(Encoding.ASCII.GetBytes(_gameName), 0, _pnt, _gameName.Length); // convert to bytes to make DLL call work?
-			SetGameName(_pnt, _gameName.Length); // external PUP dll call
+			Marshal.Copy(Encoding.ASCII.GetBytes(gameName), 0, _pnt, gameName.Length); // convert to bytes to make DLL call work?
+			SetGameName(_pnt, gameName.Length); // external PUP dll call
 		}
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		public void SendTriggerId(ushort id)
+		{
+			if (IsPuPTrigger) {
+				PuPTrigger(id);
+			}
+		}
 
 		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
 		public void RenderBitmap(BmpFrame frame)
@@ -121,16 +119,33 @@ namespace LibDmd.Output.PinUp
 			RenderRgb24(new DmdFrame(frame.Dimensions, ImageUtil.ConvertToRgb24(frame.Bitmap), 24));
 		}
 
-		public void Dispose()
+		public void RenderGray4(DmdFrame frame)
 		{
-			try {
-				Close();
-
-			} catch (Exception e) {
-				Logger.Warn(e, "Error closing PinUP output: {0}", e.Message);
+			if (PuPFrameMatching == false) {
+				return;
 			}
 
-			// Marshal.FreeHGlobal(pnt);
+			try {
+				// Render as orange palette (same as default with no PAL loaded)
+				var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
+
+				var orangeFrame = FrameUtil.ConvertToRgb24(FixedSize, planes,
+					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
+
+				Marshal.Copy(orangeFrame.Data, 0, _pnt, FixedSize.Surface * 3);
+				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
+
+			} catch (Exception e) {
+				IsAvailable = false;
+				Logger.Error(e, "[pinup] Error sending frame to PinUp, disabling.");
+			}
+		}
+
+		public void RenderGray2(DmdFrame frame)
+		{
+			// 2-bit frames are rendered as 4-bit
+			if (PuPFrameMatching == false) return;
+			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 2));
 		}
 
 		public void ClearDisplay()
@@ -138,7 +153,19 @@ namespace LibDmd.Output.PinUp
 			// no, we don't write a blank image.
 		}
 
-		public void RenderRgb24(DmdFrame frame)
+		public void Dispose()
+		{
+			try {
+				Close();
+
+			} catch (Exception e) {
+				Logger.Warn(e, "[pinup] Error closing PinUP output: {0}", e.Message);
+			}
+
+			// Marshal.FreeHGlobal(pnt);
+		}
+
+		private void RenderRgb24(DmdFrame frame)
 		{
 			if (PuPFrameMatching == false) {
 				return;
@@ -154,78 +181,11 @@ namespace LibDmd.Output.PinUp
 
 			} catch (Exception e) {
 				IsAvailable = false;
-				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
+				Logger.Error(e, "[pinup] Error sending frame to PinUp, disabling.");
 			}
 		}
 
-		public void RenderGray4(DmdFrame frame)
-		{
-			if (PuPFrameMatching == false) {
-				return;
-			}
-
-			try {
-				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
-
-				var orangeframe = FrameUtil.ConvertToRgb24(FixedSize, planes,
-					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
-
-				Marshal.Copy(orangeframe.Data, 0, _pnt, FixedSize.Surface * 3);
-				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
-
-			} catch (Exception e) {
-				IsAvailable = false;
-				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
-			}
-		}
-
-		public void RenderGray2(DmdFrame frame)
-		{
-			// 2-bit frames are rendered as 4-bit
-			if (PuPFrameMatching == false) return;
-			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 2));
-		}
-
-		public void RenderRaw(byte[] data)
-		{
-			if (PuPFrameMatching == false) {
-				return;
-			}
-
-			try {
-				Marshal.Copy(data, 0, _pnt, _size.Surface * 3);
-				Render_RGB24((ushort) _size.Width, (ushort) _size.Height, _pnt);
-			} catch (Exception e) {
-				IsAvailable = false;
-				Logger.Error(e, "[PinUpOutput] Error sending frame to PinUp, disabling.");
-			}
-		}
-
-		public void SetColor(Color color)
-		{
-			// ignore
-		}
-
-		public void SetPalette(Color[] colors, int index = -1)
-		{
-			// ignore
-		}
-
-		public void ClearPalette()
-		{
-			// ignore
-		}
-
-		public void ClearColor()
-		{
-			// ignore
-		}
-
-		public void SendTriggerID(ushort id)
-		{
-			if (isPuPTrigger) PuPTrigger(id);
-		}
+		#region DLL API
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void _dRender_RGB24(ushort width, ushort height, IntPtr currbuffer);
@@ -250,6 +210,8 @@ namespace LibDmd.Output.PinUp
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void _SendTrigger(ushort trigID);
 		private _SendTrigger PuPTrigger;
+
+		#endregion
 	}
 
 	static class NativeMethods
