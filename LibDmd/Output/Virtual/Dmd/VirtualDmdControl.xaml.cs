@@ -207,6 +207,41 @@ namespace LibDmd.Output.Virtual.Dmd
 			RenderGray4(frame.ConvertToGray());
 		}
 
+		public void RenderColoredGray6(ColoredFrame frame)
+		{
+			SetDimensions(frame.Dimensions);
+			byte[] tframe = FrameUtil.Join(Size, frame.Planes);
+			bool frameChanged = false;
+			if (_nextFrameData != null) {
+				for (int ti = 0; ti < Size.Surface; ti++) {
+					if (tframe[ti] != _nextFrameData[ti]) {
+						frameChanged = true;
+						break;
+					}
+				}
+			} else frameChanged = true;
+			if (frameChanged) {
+				SetPalette(frame.Palette);
+				_nextFrameData = tframe;
+				_hasFrame = true;
+				_nextFrameType = FrameFormat.ColoredGray6;
+				for (byte ti = 0; ti < 64; ti++) _rotCols[ti] = ti;
+				if (frame.RotateColors) {
+					DateTime actime = DateTime.UtcNow;
+					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) {
+						_firstCol[ti] = frame.Rotations[ti * 3];
+						_nCol[ti] = frame.Rotations[ti * 3 + 1];
+						_timespan[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
+						_startTime[ti] = actime;
+						_acFirst[ti] = 0;
+					}
+					Dmd.RequestRender();
+					return;
+				}
+			}
+			UpdateRotations(frame);
+		}
+
 		private void UpdateRotations(ColoredFrame frame)
 		{
 			DateTime actime = DateTime.UtcNow;
@@ -233,47 +268,6 @@ namespace LibDmd.Output.Virtual.Dmd
 					Dmd.RequestRender();
 				}
 			}
-		}
-
-		public void RenderColoredGray6(ColoredFrame frame)
-		{
-			byte[] tframe = FrameUtil.Join(Size, frame.Planes);
-			bool frameChanged = false;
-			if (_nextFrameData != null)
-			{
-				for (int ti = 0; ti < Size.Surface; ti++)
-				{
-					if (tframe[ti] != _nextFrameData[ti])
-					{
-						frameChanged = true;
-						break;
-					}
-				}
-			}
-			else frameChanged = true;
-			if (frameChanged)
-			{
-				SetPalette(frame.Palette);
-				_nextFrameData = tframe;
-				_hasFrame = true;
-				_nextFrameType = FrameFormat.ColoredGray6;
-				for (byte ti = 0; ti < 64; ti++) _rotCols[ti] = ti;
-				if (frame.RotateColors)
-				{
-					DateTime actime = DateTime.UtcNow;
-					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++)
-					{
-						_firstCol[ti] = frame.Rotations[ti * 3];
-						_nCol[ti] = frame.Rotations[ti * 3 + 1];
-						_timespan[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
-						_startTime[ti] = actime;
-						_acFirst[ti] = 0;
-					}
-					Dmd.RequestRender();
-					return;
-				}
-			}
-			UpdateRotations(frame);
 		}
 
 		public void SetDimensions(Dimensions dim)
