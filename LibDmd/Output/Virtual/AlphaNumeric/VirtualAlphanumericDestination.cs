@@ -310,19 +310,18 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
 					break;
 
-				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
+				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num: // polic_l4 - Police Force (LA-4)
 					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
 					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
 					ShowDisplay(2, 16, 1, SegmentType.Numeric8);
 					break;
 
-				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num: // rvrbt - Riverboat Gambler (L-3)
 					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
 					ShowDisplay(1, 4, 1, SegmentType.Numeric8);
 					ShowDisplay(2, 16, 1, SegmentType.Alphanumeric);
 					ShowDisplay(3, 16, 1, SegmentType.Numeric8);
 					break;
-
 			}
 		}
 

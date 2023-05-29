@@ -127,7 +127,16 @@ folder, point the `VPM_HOME` environment variable to your VPM folder.
 
 This is a list of particular games that should be tested after major changes.
 
-| Title                   | ROM Name | Output                          | Comments               |
-|-------------------------|----------|---------------------------------|------------------------|
-| Riverboat Gambler (L-3) | rvrbt    | 1x16Alpha 1x16Num 1x7Num 1x4Num | Support recently added |
-| Police Force (LA-4)     | polic_l4 | 2x7Num 2x7Num 4x1Num            | Support recently added |
+| Title                           | ROM Name | Output                          | Comments               |
+|---------------------------------|----------|---------------------------------|------------------------|
+| Riverboat Gambler (L-3)         | rvrbt    | 1x16Alpha 1x16Num 1x7Num 1x4Num | Support recently added |
+| Police Force (LA-4)             | polic_l4 | 2x7Num 2x7Num 4x1Num            | Support recently added |
+| Jokerz (L-6)                    | jokrz_l6 | 2x7Num 2x16Alpha                |                        |
+| Bad Girls                       | badgirls | 2x20Alpha                       |                        |
+| High Speed (L-3)                | hs_l3    | 2x7Alpha 2x7Num 4x1Num          |                        |
+| Supersonic (7-digit conversion) | sstb     | 2x7Num 2x7Num 4x1Num            |                        |
+| Black Knight (L-4)              | bk_l4    | 2x7Num 2x7Num 4x1Num_gen7       |                        |
+| Space Shuttle (L-3)             | sshtl_l3 | 2x7Num10 2x7Num10 4x1Num        |                        |
+| Topaz (Shuffle) (L-1)           | topaz_l1 | 2x6Num 2x6Num 4x1Num            |                        |
+| Atlantis (rev. 3)               | atlantis | 4x7Num10                        |                        |
+| Alley Cats (Shuffle) (L-7)      | alcat_l7 | 6x4Num_4x1Num                   |                        |
