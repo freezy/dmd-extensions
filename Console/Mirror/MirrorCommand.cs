@@ -141,7 +141,7 @@ namespace DmdExt.Mirror
 						graphs.ClearColor();
 					}
 					
-					var converter = new SwitchingConverter(GetFrameFormat(graph.Source));
+					var converter = new SwitchingConverter();
 					graph.Converter = converter;
 
 					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
