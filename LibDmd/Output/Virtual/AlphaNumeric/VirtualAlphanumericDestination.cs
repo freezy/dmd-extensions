@@ -166,6 +166,19 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 16, 16).ToArray());
 					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 32, 7).ToArray());
 					break;
+
+				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 1, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 8, 16).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 24, 16).ToArray());
+
+					break;
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
+					SendToDisplay(0, new ArraySegment<ushort>(frame.SegmentData, 0, 7).ToArray());
+					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 4).ToArray());
+					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 11, 16).ToArray());
+					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 27, 16).ToArray());
+					break;
 			}
 		}
 
@@ -296,6 +309,20 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					ShowDisplay(1, 16, 1, SegmentType.Numeric8);
 					ShowDisplay(2, 7, 1, SegmentType.Numeric8);
 					break;
+
+				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 16, 1, SegmentType.Alphanumeric);
+					ShowDisplay(2, 16, 1, SegmentType.Numeric8);
+					break;
+
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
+					ShowDisplay(0, 7, 1, SegmentType.Numeric8);
+					ShowDisplay(1, 4, 1, SegmentType.Numeric8);
+					ShowDisplay(2, 16, 1, SegmentType.Alphanumeric);
+					ShowDisplay(3, 16, 1, SegmentType.Numeric8);
+					break;
+
 			}
 		}
 

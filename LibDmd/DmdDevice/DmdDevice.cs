@@ -65,7 +65,7 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
-		private readonly DmdFrame _dmdFrame = new DmdFrame();
+		private readonly DmdFrame _alphanumFrame = new DmdFrame(new Dimensions(128, 32), 2);
 
 		// colorizers
 		private readonly ColorizationLoader _colorizationLoader;
@@ -315,53 +315,66 @@ namespace LibDmd.DmdDevice
 			if (!_isOpen) {
 				Init();
 			}
+
+			if (_gameName.StartsWith("rvrbt_")) {
+				layout = NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num;
+			}
+			if (_gameName.StartsWith("polic_")) {
+				layout = NumericalLayout.__1x7Num_1x16Alpha_1x16Num;
+			}
+
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
-			//_dmdFrame.Update(new Dimensions(Width, Height));
 
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 2));
 					break;
 				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 2));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 2));
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 2));
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 2));
 					break;
 				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__4x7Num10:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render4x7Num10(segData), 2));
 					break;
 				case NumericalLayout.__6x4Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 2));
 					break;
 				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 2));
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 2));
+					break;
+				case NumericalLayout.__1x7Num_1x16Alpha_1x16Num:
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render1x7Num_1x16Alpha_1x16Num(segData), 2));
+					break;
+				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num_1x4Num:
+					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num_1x4Num(segData), 2));
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
