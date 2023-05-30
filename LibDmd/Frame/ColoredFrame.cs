@@ -71,7 +71,7 @@ namespace LibDmd
 		{
 			Dimensions = frame.Dimensions;
 			Planes = FrameUtil.Split(Dimensions, frame.BitLength, frame.Data);
-			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, 4);
+			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, frame.NumColors);
 			RotateColors = false;
 		}
 
