@@ -14,6 +14,7 @@ namespace LibDmd.Frame
 	{
 		public byte[] Data { get; private set; }
 		public int BitLength;
+		public int NumColors => (int)Math.Pow(2, BitLength);
 
 		public FrameFormat Format {
 			get {
