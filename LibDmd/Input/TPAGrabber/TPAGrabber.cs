@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input.Passthrough;
@@ -237,12 +238,16 @@ namespace LibDmd.Input.TPAGrabber
 			var sternOrig = new byte[] { 0x83, 0xF8, 0x4F, 0x74, 0x4B };
 			// If the hack has not been initialized yet..
 			if (!_sternInit) {
-				if (!reset)
+				if (!reset) {
 					// Write the hack into memory.
 					WriteProcessMemory(procHandle, _dmdSternAddr, sternPatch, sternPatch.Length, IntPtr.Zero);
-				else {
+
+				} else {
+					Thread.Sleep(100); // Fixes no picture on start
+
 					// Reset the code to its initial state.
 					WriteProcessMemory(procHandle, _dmdSternAddr, sternOrig, sternOrig.Length, IntPtr.Zero);
+
 					// Ready!
 					_sternInit = true;
 				}
@@ -280,11 +285,11 @@ namespace LibDmd.Input.TPAGrabber
 			var bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 
 			if (_frame.Dimensions == dimensions && _frame.BitLength == bitLength) {
-				return false;
+				return true;
 			}
 
 			_frame.Resize(dimensions, bitLength);
-			return true;
+			return false;
 
 		}
 
