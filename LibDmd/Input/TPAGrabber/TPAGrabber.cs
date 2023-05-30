@@ -30,14 +30,11 @@ namespace LibDmd.Input.TPAGrabber
 		private readonly BehaviorSubject<FrameFormat> _currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
 
 		// DMD Stuff
-		private Dimensions _dimensions = new Dimensions(128, 32);
-		private byte[] _rawDMD;
-		private byte[] _lastFrame;
+		private readonly DmdFrame _frame = new DmdFrame(128, 32, 2);
+
 		private static bool _sternInit;
-		private readonly DmdFrame _dmdFrame = new DmdFrame(new Dimensions(128, 32), 2);
 		private string _gameName;
-		private int _bitLength = 4;
-		
+
 		private static readonly HashSet<double> Lums = new HashSet<double>();
 
 		public TPAGrabber()
@@ -48,7 +45,7 @@ namespace LibDmd.Input.TPAGrabber
 				if (frame.Data == null) {
 					return;
 				}
-				if (_bitLength == 2) {
+				if (_frame.BitLength == 2) {
 					Gray2Source.NextFrame(frame);
 				} else {
 					Gray4Source.NextFrame(frame);
@@ -58,9 +55,6 @@ namespace LibDmd.Input.TPAGrabber
 
 		protected override DmdFrame CaptureDMD()
 		{
-			// Initialize a new writeable bitmap to receive DMD pixels.
-			var frame = new byte[_dimensions.Surface];
-
 			// Init DMD hack for Stern tables.
 			InitSternDMD(_hProcess, false);
 
@@ -71,7 +65,7 @@ namespace LibDmd.Input.TPAGrabber
 			// ..if not, return an empty frame (blank DMD).
 			if (tableLoaded[0] == 0) {
 				_sternInit = false; // Reset Stern DMD hack state.
-				return _dmdFrame.Update(_dimensions, frame, _bitLength);
+				return _frame.Clear();
 			}
 
 			// Table is loaded, reset Stern DMD hack.
@@ -81,42 +75,41 @@ namespace LibDmd.Input.TPAGrabber
 			var eax = new byte[4];
 			ReadProcessMemory(_hProcess, _codeCave, eax, 4, IntPtr.Zero);
 
-			// Now we have our DMD location in memory + little hack to re-align the DMD block.
-			var dmdOffset = B4ToPointer(eax) - (_dimensions.Width == 128 ? 0x1F408 : 0x7E60A);
-
 			// emits game name, and sets bit length.
-			ReadGameName(_hProcess);
+			var identical = ReadGameName(_hProcess);
+
+			// Now we have our DMD location in memory + little hack to re-align the DMD block.
+			var dmdOffset = B4ToPointer(eax) - (_frame.Dimensions.Width == 128 ? 0x1F408 : 0x7E60A);
 
 			// Grab the whole raw DMD block from game's memory.
-			var size = _dimensions.Width * 8 * (_dimensions.Width / 32) * _dimensions.Height;
-			ReadProcessMemory(_hProcess, dmdOffset, _rawDMD, size, IntPtr.Zero);
+			var size = _frame.Dimensions.Width * 8 * (_frame.Dimensions.Width / 32) * _frame.Dimensions.Height;
+			var rawData = new byte[size];
+			ReadProcessMemory(_hProcess, dmdOffset, rawData, size, IntPtr.Zero);
 
 			// Check the DMD CRC flag, skip the frame if the value is incorrect.
-			if (_rawDMD[0] != (_dimensions.Width == 128 ? 0x02 : 0x04)) {
+			if (rawData[0] != (_frame.Dimensions.Width == 128 ? 0x02 : 0x04)) {
 				return null;
 			}
 
 			// Used to parse pixel bytes of the DMD memory block, starting at 2 to skip the flag bytes.
-			var rawPixelIndex = (_dimensions.Width / 32);
+			var rawPixelIndex = _frame.Dimensions.Width / 32;
 
-			var identical = true;
-
-			// emits game name, and sets bit length.
-			//ReadGameName(_hProcess);
+			// Initialize a new writeable bitmap to receive DMD pixels.
+			var frameData = new byte[_frame.Dimensions.Surface];
 
 			// For each pixel on Y axis.
-			for (var dmdY = 0; dmdY < _dimensions.Height; dmdY++) {
+			for (var dmdY = 0; dmdY < _frame.Dimensions.Height; dmdY++) {
 
 				// For each pixel on X axis.
-				for (var dmdX = 0; dmdX < _dimensions.Width; dmdX++) {
+				for (var dmdX = 0; dmdX < _frame.Dimensions.Width; dmdX++) {
 
 					// RGB to BGR
-					ColorUtil.RgbToHsl(_rawDMD[rawPixelIndex], _rawDMD[rawPixelIndex + 1], _rawDMD[rawPixelIndex + 2], out _, out _, out var lum);
+					ColorUtil.RgbToHsl(rawData[rawPixelIndex], rawData[rawPixelIndex + 1], rawData[rawPixelIndex + 2], out _, out _, out var lum);
 
-					var pos = dmdY * _dimensions.Width + dmdX;
+					var pos = dmdY * _frame.Dimensions.Width + dmdX;
 				
 					byte pixel;
-					if (_bitLength == 4) {
+					if (_frame.BitLength == 4) {
 						// from STERN, we get: [ 0, 0.0666666666666667, 0.135294117647059, 0.203921568627451, 0.272549019607843, 0.341176470588235, 0.409803921568627, 0.47843137254902 ]
 						pixel = (byte)(lum * 15 * 2); // make it 0-15
 						if (pixel > 0 && pixel < 15) { // but given we only get 8 values, it's 0,2,4,...,14, so add one if it's not 0
@@ -137,21 +130,25 @@ namespace LibDmd.Input.TPAGrabber
 						return null;
 					}
 
-					if (identical && (_lastFrame == null || _lastFrame[pos] == pixel)) {
+					if (identical && _frame.Data[pos] != pixel) {
 						identical = false;
 					}
-					frame[pos] = pixel;
+					frameData[pos] = pixel;
 
 					// Each pixel takes 4 bytes of data in memory, advance 2 pixels.
 					rawPixelIndex += 8;
 				}
 				// Jump to the next DMD line.
-				rawPixelIndex += _dimensions.Width == 128 ? 0xC00 : 0x1A00;
+				rawPixelIndex += _frame.Dimensions.Width == 128 ? 0xC00 : 0x1A00;
 			}
-			_lastFrame = frame;
 
-			// Return the DMD bitmap we've created or null if frame was identical to previous.
-			return identical ? null : _dmdFrame.Update(_dimensions, frame, _bitLength);
+			if (identical) {
+				return null;
+			}
+
+			_frame.Update(frameData, _frame.BitLength);
+
+			return _frame;
 		}
 
 		// try attaching to a process
@@ -252,7 +249,12 @@ namespace LibDmd.Input.TPAGrabber
 			}
 		}
 
-		private void ReadGameName(IntPtr procHandle)
+		/// <summary>
+		/// Reads the game name and updates the frame if format has changed.
+		/// </summary>
+		/// <param name="procHandle"></param>
+		/// <returns>True if settings are identical, false otherwise.</returns>
+		private bool ReadGameName(IntPtr procHandle)
 		{
 			var tableBuffer = new byte[20];
 			ReadProcessMemory(procHandle, _tableNameAddr, tableBuffer, tableBuffer.Length, IntPtr.Zero);
@@ -261,7 +263,7 @@ namespace LibDmd.Input.TPAGrabber
 				? rawTableName.Substring(1, rawTableName.IndexOf("_", StringComparison.Ordinal) - 1)
 				: rawTableName.Substring(1);
 			if (tableName == _gameName) {
-				return;
+				return true;
 			}
 
 			_gameName = tableName;
@@ -270,18 +272,20 @@ namespace LibDmd.Input.TPAGrabber
 			Lums.Clear();
 
 			var largeDMDGames = new[] { "Frankenstein" };
-			_dimensions = largeDMDGames.Any(_gameName.Contains)
+			var dimensions = largeDMDGames.Any(_gameName.Contains)
 				? new Dimensions(192, 64)
 				: new Dimensions(128, 32);
 
-			_rawDMD = new byte[_dimensions.Width * 8 * (_dimensions.Width / 32) * _dimensions.Height];
-
 			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
-			_bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
+			var bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 
-			if (_dmdFrame.Dimensions != _dimensions || _dmdFrame.BitLength != _bitLength) {
-				_dmdFrame.Update(_dimensions, new byte[_dimensions.Surface], _bitLength);
+			if (_frame.Dimensions == dimensions && _frame.BitLength == bitLength) {
+				return false;
 			}
+
+			_frame.Resize(dimensions, bitLength);
+			return true;
+
 		}
 
 		// byte patterns to find DMD structs in the target process

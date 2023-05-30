@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -67,15 +68,6 @@ namespace LibDmd.Frame
 			#endif
 		}
 
-		public DmdFrame Update(DmdFrame frame)
-		{
-			Dimensions = frame.Dimensions;
-			Data = frame.Data;
-			BitLength = frame.BitLength;
-			
-			return this;
-		}
-
 		public DmdFrame Update(byte[] data, int bitLength)
 		{
 			Data = data;
@@ -107,6 +99,20 @@ namespace LibDmd.Frame
 			#if DEBUG
 			AssertData();
 			#endif
+			return this;
+		}
+
+		public DmdFrame Resize(Dimensions dim, int bitLength)
+		{
+			Dimensions = dim;
+			BitLength = bitLength;
+			Data = new byte[Dimensions.Surface * BytesPerPixel];
+			return this;
+		}
+
+		public DmdFrame Clear()
+		{
+			Data = new byte[Dimensions.Surface * BytesPerPixel];
 			return this;
 		}
 
