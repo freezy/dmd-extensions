@@ -93,27 +93,27 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// current colour rotation state
 		/// </summary>
-		private readonly byte[] _rotCols = new byte[64];
+		private readonly byte[] _rotationState = new byte[64];
 		/// <summary>
 		/// first colour of the rotation
 		/// </summary>
-		private readonly byte[] _firstCol = new byte[MaxColorRotations];
+		private readonly byte[] _rotationFirstColor = new byte[MaxColorRotations];
 		/// <summary>
 		/// number of colors in the rotation
 		/// </summary>
-		private readonly byte[] _nCol = new byte[MaxColorRotations];
+		private readonly byte[] _rotationNumColors = new byte[MaxColorRotations];
 		/// <summary>
 		/// current first colour in the rotation
 		/// </summary>
-		private readonly byte[] _acFirst = new byte[MaxColorRotations];
+		private readonly byte[] _rotationCurrentFirstColor = new byte[MaxColorRotations];
 		/// <summary>
 		/// time interval between 2 rotations in ms
 		/// </summary>
-		private readonly double[] _timespan = new double[MaxColorRotations];
+		private readonly double[] _rotationIntervalMs = new double[MaxColorRotations];
 		/// <summary>
 		/// last rotation start time
 		/// </summary>
-		private readonly DateTime[] _startTime = new DateTime[MaxColorRotations];
+		private readonly DateTime[] _rotationStartTime = new DateTime[MaxColorRotations];
 		
 		// padding object pool
 		private Bitmap _padBitmap;
@@ -246,15 +246,15 @@ namespace LibDmd.Output.Virtual.Dmd
 				_frameData = tframe;
 				_hasFrame = true;
 				_frameType = FrameFormat.ColoredGray6;
-				for (byte ti = 0; ti < 64; ti++) _rotCols[ti] = ti;
+				for (byte ti = 0; ti < 64; ti++) _rotationState[ti] = ti;
 				if (frame.RotateColors) {
 					DateTime actime = DateTime.UtcNow;
 					for (uint ti = 0; ti < MaxColorRotations; ti++) {
-						_firstCol[ti] = frame.Rotations[ti * 3];
-						_nCol[ti] = frame.Rotations[ti * 3 + 1];
-						_timespan[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
-						_startTime[ti] = actime;
-						_acFirst[ti] = 0;
+						_rotationFirstColor[ti] = frame.Rotations[ti * 3];
+						_rotationNumColors[ti] = frame.Rotations[ti * 3 + 1];
+						_rotationIntervalMs[ti] = 10.0 * frame.Rotations[ti * 3 + 2];
+						_rotationStartTime[ti] = actime;
+						_rotationCurrentFirstColor[ti] = 0;
 					}
 					Dmd.RequestRender();
 					return;
@@ -268,21 +268,21 @@ namespace LibDmd.Output.Virtual.Dmd
 			DateTime actime = DateTime.UtcNow;
 			for (uint ti = 0; ti < MaxColorRotations; ti++)
 			{
-				if (_firstCol[ti] == 255) continue;
-				if (actime.Subtract(_startTime[ti]).TotalMilliseconds >= _timespan[ti])
+				if (_rotationFirstColor[ti] == 255) continue;
+				if (actime.Subtract(_rotationStartTime[ti]).TotalMilliseconds >= _rotationIntervalMs[ti])
 				{
-					_startTime[ti] = actime;
-					_acFirst[ti]++;
-					if (_acFirst[ti] == _nCol[ti]) _acFirst[ti] = 0;
-					for (byte tj = 0; tj < _nCol[ti]; tj++)
+					_rotationStartTime[ti] = actime;
+					_rotationCurrentFirstColor[ti]++;
+					if (_rotationCurrentFirstColor[ti] == _rotationNumColors[ti]) _rotationCurrentFirstColor[ti] = 0;
+					for (byte tj = 0; tj < _rotationNumColors[ti]; tj++)
 					{
-						_rotCols[tj + _firstCol[ti]] = (byte)(tj + _firstCol[ti] + _acFirst[ti]);
-						if (_rotCols[tj + _firstCol[ti]] >= _firstCol[ti] + _nCol[ti]) _rotCols[tj + _firstCol[ti]] -= _nCol[ti];
+						_rotationState[tj + _rotationFirstColor[ti]] = (byte)(tj + _rotationFirstColor[ti] + _rotationCurrentFirstColor[ti]);
+						if (_rotationState[tj + _rotationFirstColor[ti]] >= _rotationFirstColor[ti] + _rotationNumColors[ti]) _rotationState[tj + _rotationFirstColor[ti]] -= _rotationNumColors[ti];
 					}
 					Color[] newpalette = new Color[64];
 					for (int tj = 0; tj < 64; tj++)
 					{
-						newpalette[tj] = frame.Palette[_rotCols[tj]];
+						newpalette[tj] = frame.Palette[_rotationState[tj]];
 					}
 					_hasFrame = true;
 					SetPalette(newpalette);
