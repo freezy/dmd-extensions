@@ -41,7 +41,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public VirtualDisplay Host { set; get; }
 
-		public bool IsAvailable { get; } = true;
+		public bool IsAvailable => true;
 
 		public Dimensions Size { get; private set; } = new Dimensions(128, 32);
 
@@ -159,57 +159,54 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BmpFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Bitmap;
 			_nextFrameBitmap = frame.Bitmap;
+			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 		}
 
 		public void RenderGray2(DmdFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray2;
 			_nextFrameData = frame.Data;
+			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Gray4;
 			_nextFrameData = frame.Data;
+			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			_hasFrame = true;
 			_nextFrameType = FrameFormat.Rgb24;
 			SetRgb24Frame(frame.Data);
+			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray2(frame.ConvertToGray());
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray4(frame.ConvertToGray());
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
-			SetDimensions(frame.Dimensions);
 			byte[] tframe = FrameUtil.Join(Size, frame.Planes);
 			bool frameChanged = false;
 			if (_nextFrameData != null) {
@@ -219,8 +216,11 @@ namespace LibDmd.Output.Virtual.Dmd
 						break;
 					}
 				}
-			} else frameChanged = true;
+			} else {
+				frameChanged = true;
+			}
 			if (frameChanged) {
+				SetDimensions(frame.Dimensions);
 				SetPalette(frame.Palette);
 				_nextFrameData = tframe;
 				_hasFrame = true;
