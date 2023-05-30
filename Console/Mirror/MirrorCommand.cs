@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Windows.Media;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
@@ -145,7 +146,7 @@ namespace DmdExt.Mirror
 					graph.Converter = converter;
 
 					_subscriptions.Add(gameNameSource.GetGameName().Subscribe(name => {
-						converter.Switch(LoadColorizer(name));
+						converter.Switch(SetupColorizer(name));
 					}));
 
 					if (graph.Source is IDmdColorSource dmdColorSource) {
@@ -206,18 +207,29 @@ namespace DmdExt.Mirror
 			_subscriptions.Dispose();
 		}
 
-		private IConverter LoadColorizer(string gameName)
+		private IConverter SetupColorizer(string gameName)
 		{
-			if (gameName == null) {
+			// only setup if enabled and path is set
+			if (!_config.Global.Colorize || _colorizationLoader == null || gameName == null) {
+				Analytics.Instance.ClearColorizer();
 				return null;
 			}
 
+			// 1. check for serum
 			var serumColorizer = _colorizationLoader.LoadSerum(gameName, _config.Global.ScalerMode);
 			if (serumColorizer != null) {
 				return serumColorizer;
 			}
 
-			return _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode)?.Gray2Colorizer;
+			// 2. check for plugins
+			var pluginColorizer = _colorizationLoader.LoadPlugin(_config.Global.Plugins, true, gameName, Colors.OrangeRed, null, _config.Global.ScalerMode);
+			if (pluginColorizer != null) {
+				return pluginColorizer;
+			}
+
+			// 3. check for native pin2color
+			var pin2Color = _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode);
+			return (IConverter)pin2Color?.Gray2Colorizer ?? pin2Color?.Gray4Colorizer;
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)
