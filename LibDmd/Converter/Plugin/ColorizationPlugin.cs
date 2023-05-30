@@ -209,106 +209,15 @@ namespace LibDmd.Converter.Plugin
 				return;
 			}
 
-			IntPtr rgb24FramePtr = IntPtr.Zero;
+			var rgb24FramePtr = frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0
+				? ColorizeFrame(rawFrame)
+				: ColorizeFrame(frame);
 
-			// raw (bit plane) conversion
-			if (frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0) {
-				var rawBuffer = new byte[rawFrame.RawPlanes.Length * rawFrame.RawPlanes[0].Length];
-				for (int i = 0; i < rawFrame.RawPlanes.Length; i++) {
-					rawFrame.RawPlanes[i].CopyTo(rawBuffer, i * rawFrame.RawPlanes[0].Length);
-				}
-
-				// 4 bit planes
-				if (frame.BitLength == 4) {
-					switch (frame.Data.Length) {
-						case 128 * 32:
-							rgb24FramePtr = _colorizeGray4Raw(128, 32, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-						case 192 * 64:
-							rgb24FramePtr = _colorizeGray4Raw(192, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-						case 256 * 64:
-							rgb24FramePtr = _colorizeGray4Raw(256, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-					}
-					if (IsColoring)
-						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
-
-				}
-				// 2 bit planes
-				else {
-					switch (frame.Data.Length) {
-						case 128 * 32:
-							rgb24FramePtr = _colorizeGray2Raw(128, 32, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-						case 192 * 64:
-							rgb24FramePtr = _colorizeGray2Raw(192, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-						case 256 * 64:
-							rgb24FramePtr = _colorizeGray2Raw(256, 64, frame.Data, (ushort)rawFrame.RawPlanes.Length, rawBuffer);
-							break;
-					}
-					if (IsColoring)
-						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
-				}
-			}
-			// non-raw conversion
-			else {
-
-				// 4 bit data
-				if (frame.BitLength == 4) {
-					switch (frame.Data.Length) {
-						case 128 * 32:
-							rgb24FramePtr = _colorizeGray4(128, 32, frame.Data);
-							break;
-						case 192 * 64:
-							rgb24FramePtr = _colorizeGray4(192, 64, frame.Data);
-							break;
-						case 256 * 64:
-							rgb24FramePtr = _colorizeGray4(256, 64, frame.Data);
-							break;
-					}
-					if (IsColoring)
-						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
-
-				}
-				// 2 bit data
-				else if (frame.BitLength == 2) {
-					switch (frame.Data.Length) {
-						case 128 * 16:
-							rgb24FramePtr = _colorizeGray2(128, 16, frame.Data);
-							break;
-						case 128 * 32:
-							rgb24FramePtr = _colorizeGray2(128, 32, frame.Data);
-							break;
-						case 192 * 64:
-							rgb24FramePtr = _colorizeGray2(192, 64, frame.Data);
-							break;
-						case 256 * 64:
-							rgb24FramePtr = _colorizeGray2(256, 64, frame.Data);
-							break;
-					}
-					if (IsColoring)
-						Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
-
-				}
-				// rgb24 data
-				else {
-					_colorizeRgb24((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
-					return;
-				}
-			}
-
-			if (!IsColoring) {
+			if (rgb24FramePtr == IntPtr.Zero || !IsColoring) {
 				return;
 			}
 
-			//var width = Width;
-			//var height = Height;
-			//if (_scaleToHd && width == 128 && height == 32) {
-			//	width = 256;
-			//	height = 64;
-			//}
+			Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
 
 			EmitFrame(_dimensions, rgb24Buffer);
 			ProcessEvent();
@@ -335,6 +244,50 @@ namespace LibDmd.Converter.Plugin
 
 			EmitFrame(new Dimensions(width, height), coloredFrame);
 			ProcessEvent();
+		}
+
+
+		private IntPtr ColorizeFrame(RawFrame frame)
+		{
+			var rawBuffer = new byte[frame.RawPlanes.Length * frame.RawPlanes[0].Length];
+			for (int i = 0; i < frame.RawPlanes.Length; i++) {
+				frame.RawPlanes[i].CopyTo(rawBuffer, i * frame.RawPlanes[0].Length);
+			}
+
+			switch (frame.BitLength) {
+				case 4:
+					return _colorizeGray4Raw(
+						(ushort)frame.Dimensions.Width, 
+						(ushort)frame.Dimensions.Height, 
+						frame.Data, 
+						(ushort)frame.RawPlanes.Length, 
+						rawBuffer
+					);
+				default: {
+					return _colorizeGray2Raw(
+						(ushort)frame.Dimensions.Width, 
+						(ushort)frame.Dimensions.Height, 
+						frame.Data, 
+						(ushort)frame.RawPlanes.Length, 
+						rawBuffer
+					);
+				}
+			}
+		}
+
+		private IntPtr ColorizeFrame(DmdFrame frame)
+		{
+			switch (frame.BitLength) {
+				case 4: return _colorizeGray4((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
+				case 2: return _colorizeGray2((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
+				case 24:
+					// just for recording purpose?
+					_colorizeRgb24((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
+					return IntPtr.Zero;
+
+				default:
+					throw new ArgumentException($"Plugin does not support {frame.BitLength} bit planes.");
+			}
 		}
 
 		private void EmitFrame(Dimensions dim, IReadOnlyList<byte> rgb24Frame)
