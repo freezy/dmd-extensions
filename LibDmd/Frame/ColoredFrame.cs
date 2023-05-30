@@ -48,14 +48,14 @@ namespace LibDmd
 		{
 		}
 
-		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, int paletteIndex = -1, byte[] rotations = null, bool rotateColors = false)
+		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, int paletteIndex = -1, byte[] rotations = null)
 		{
 			Dimensions = dim;
 			Planes = planes;
 			Palette = palette;
 			PaletteIndex = paletteIndex;
 			Rotations = rotations;
-			RotateColors = rotateColors;
+			RotateColors = rotations != null && rotations.Length > 0;
 
 			#if DEBUG
 			if (planes.Length != palette.Length.GetBitLength()) {
@@ -83,7 +83,7 @@ namespace LibDmd
 			RotateColors = false;
 		}
 
-		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex);
+		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex, Rotations);
 		
 		/// <summary>
 		/// Creates a new grayscale frame with the only the grayscale data and no color conversion.
