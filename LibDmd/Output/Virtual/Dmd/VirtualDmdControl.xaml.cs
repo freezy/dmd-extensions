@@ -93,11 +93,11 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// current colour rotation state
 		/// </summary>
-		private readonly byte[] _rotationState = new byte[64];
+		private readonly byte[] _rotationCurrentPaletteIndex = new byte[64];
 		/// <summary>
 		/// first colour of the rotation
 		/// </summary>
-		private readonly byte[] _rotationFirstColor = new byte[MaxColorRotations];
+		private readonly byte[] _rotationStartColor = new byte[MaxColorRotations];
 		/// <summary>
 		/// number of colors in the rotation
 		/// </summary>
@@ -105,7 +105,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// current first colour in the rotation
 		/// </summary>
-		private readonly byte[] _rotationCurrentFirstColor = new byte[MaxColorRotations];
+		private readonly byte[] _rotationCurrentStartColor = new byte[MaxColorRotations];
 		/// <summary>
 		/// time interval between 2 rotations in ms
 		/// </summary>
@@ -249,16 +249,16 @@ namespace LibDmd.Output.Virtual.Dmd
 				_hasFrame = true;
 				_frameType = FrameFormat.ColoredGray6;
 				for (byte i = 0; i < 64; i++) {
-					_rotationState[i] = i;
+					_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
 				}
 				if (frame.RotateColors) {
 					DateTime now = DateTime.UtcNow;
 					for (var i = 0; i < MaxColorRotations; i++) {
-						_rotationFirstColor[i] = frame.Rotations[i * 3];
+						_rotationStartColor[i] = frame.Rotations[i * 3];
 						_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
 						_rotationIntervalMs[i] = 10.0 * frame.Rotations[i * 3 + 2];
 						_rotationStartTime[i] = now;
-						_rotationCurrentFirstColor[i] = 0;
+						_rotationCurrentStartColor[i] = 0;
 					}
 					Dmd.RequestRender();
 					return;
@@ -270,30 +270,31 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void UpdateRotations(ColoredFrame frame)
 		{
 			DateTime now = DateTime.UtcNow;
-			for (uint i = 0; i < MaxColorRotations; i++) {
-				if (_rotationFirstColor[i] == 255) {
+			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
+
+				if (_rotationStartColor[i] == 255) { // actually a rotation?
 					continue;
 				}
-				if (now.Subtract(_rotationStartTime[i]).TotalMilliseconds < _rotationIntervalMs[i]) {
+				if (now.Subtract(_rotationStartTime[i]).TotalMilliseconds < _rotationIntervalMs[i]) { // time to rotate?
 					continue;
 				}
 
 				_rotationStartTime[i] = now;
-				_rotationCurrentFirstColor[i]++;
-				if (_rotationCurrentFirstColor[i] == _rotationNumColors[i]) {
-					_rotationCurrentFirstColor[i] = 0;
+				_rotationCurrentStartColor[i]++;
+				if (_rotationCurrentStartColor[i] == _rotationNumColors[i]) { // cycle?
+					_rotationCurrentStartColor[i] = 0;
 				}
-				for (byte j = 0; j < _rotationNumColors[i]; j++) {
-					var index = j + _rotationFirstColor[i];
-					_rotationState[index] = (byte)(index + _rotationCurrentFirstColor[i]);
-					if (_rotationState[index] >= _rotationFirstColor[i] + _rotationNumColors[i]) {
-						_rotationState[index] -= _rotationNumColors[i];
+				for (byte j = 0; j < _rotationNumColors[i]; j++) { // for each color in rotation
+					var index = _rotationStartColor[i] + j;
+					_rotationCurrentPaletteIndex[index] = (byte)(index + _rotationCurrentStartColor[i]);
+					if (_rotationCurrentPaletteIndex[index] >= _rotationStartColor[i] + _rotationNumColors[i]) { // cycle?
+						_rotationCurrentPaletteIndex[index] -= _rotationNumColors[i];
 					}
 				}
 
 				Color[] newPalette = new Color[64];
 				for (int j = 0; j < 64; j++) {
-					newPalette[j] = frame.Palette[_rotationState[j]];
+					newPalette[j] = frame.Palette[_rotationCurrentPaletteIndex[j]];
 				}
 				_hasFrame = true;
 				SetPalette(newPalette);
