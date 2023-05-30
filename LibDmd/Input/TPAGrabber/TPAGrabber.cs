@@ -276,7 +276,7 @@ namespace LibDmd.Input.TPAGrabber
 				? new Dimensions(192, 64)
 				: new Dimensions(128, 32);
 
-			var fourBitGames = new[]{ "ACDC", "GhostBustersSter", "Mustang", "StarTrek" };
+			var fourBitGames = new[]{ "ACDC", "GhostBustersStern", "Mustang", "StarTrek" };
 			var bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 
 			if (_frame.Dimensions == dimensions && _frame.BitLength == bitLength) {
