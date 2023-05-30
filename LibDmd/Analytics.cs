@@ -65,7 +65,7 @@ namespace LibDmd
 				return;
 			}
 #if DEBUG			
-			RudderStack.Logger.Handlers += LoggingHandler;
+			//RudderStack.Logger.Handlers += LoggingHandler;
 #endif
 			RudderAnalytics.Initialize("2P6989v5ecReLXxEQyVUmSOXR3q", new RudderConfig(dataPlaneUrl: "https://hostsruddahrp.dataplane.rudderstack.com"));
 		}
