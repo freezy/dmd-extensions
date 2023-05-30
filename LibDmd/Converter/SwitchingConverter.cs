@@ -69,7 +69,7 @@ namespace LibDmd.Converter
 
 			if (converter == null) {
 				_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
-				_latestColoredGray4.OnNext(Observable.Empty<ColoredFrame>());
+				_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 				_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 				_converter = null;
 				return;
