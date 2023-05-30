@@ -86,14 +86,34 @@ namespace LibDmd.Output.Virtual.Dmd
 		private const uint TexCoordAttribute = 1; // Fixed index of texture attribute in the quad VBO
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 		
-		// for colour rotation
-		private const int MaxColorRotations = 8; // maximum amount of colour rotations per frame
-		private readonly byte[] _rotCols = new byte[64]; // current colour rotation state
-		private readonly byte[] _firstCol = new byte[MaxColorRotations]; // first colour of the rotation
-		private readonly byte[] _nCol = new byte[MaxColorRotations]; // number of colors in the rotation
-		private readonly byte[] _acFirst = new byte[MaxColorRotations]; // current first colour in the rotation
-		private readonly double[] _timespan = new double[MaxColorRotations];  // time interval between 2 rotations in ms
-		private readonly DateTime[] _startTime = new DateTime[MaxColorRotations]; // last rotation start time
+		/// <summary>
+		/// maximum amount of colour rotations per frame
+		/// </summary>
+		private const int MaxColorRotations = 8;
+		/// <summary>
+		/// current colour rotation state
+		/// </summary>
+		private readonly byte[] _rotCols = new byte[64];
+		/// <summary>
+		/// first colour of the rotation
+		/// </summary>
+		private readonly byte[] _firstCol = new byte[MaxColorRotations];
+		/// <summary>
+		/// number of colors in the rotation
+		/// </summary>
+		private readonly byte[] _nCol = new byte[MaxColorRotations];
+		/// <summary>
+		/// current first colour in the rotation
+		/// </summary>
+		private readonly byte[] _acFirst = new byte[MaxColorRotations];
+		/// <summary>
+		/// time interval between 2 rotations in ms
+		/// </summary>
+		private readonly double[] _timespan = new double[MaxColorRotations];
+		/// <summary>
+		/// last rotation start time
+		/// </summary>
+		private readonly DateTime[] _startTime = new DateTime[MaxColorRotations];
 		
 		// padding object pool
 		private Bitmap _padBitmap;
