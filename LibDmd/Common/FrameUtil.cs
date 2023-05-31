@@ -86,24 +86,6 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Puts an sequence of flat/concatenated bitplanes into an array.
-		/// </summary>
-		/// <param name="dim">Dimensions of the frame</param>
-		/// <param name="src">Concatenated bitplanes</param>
-		/// <returns></returns>
-		public static byte[][] SplitBitplanes(Dimensions dim, byte[] src)
-		{
-			var size = dim.Surface / 8;
-			var bitlen = src.Length / size;
-			var planes = new byte[bitlen][];
-			for (var i = 0; i < bitlen; i++) {
-				planes[i] = src.Skip(i * size).Take(size).ToArray();
-			}
-			Logger.Debug("[SplitBitplanes] From {0} bytes to {1} planes at {2} bytes.", src.Length, bitlen, size);
-			return planes;
-		}
-				
-		/// <summary>
 		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
 		/// </summary>
 		/// <param name="dim">Dimensionä vom Biud</param>
@@ -298,17 +280,6 @@ namespace LibDmd.Common
 				offset += plane.Length;
 			}
 			return !identical;
-		}
-
-		public static byte[][] Copy(Dimensions dim, byte[] planes, int bitLength, int offset)
-		{
-			var copy = new byte[bitLength][];
-			var planeSize = dim.Surface / 8;
-			for (var i = 0; i < bitLength; i++) {
-				copy[i] = new byte[planeSize];
-				Buffer.BlockCopy(planes, offset + i * planeSize, copy[i], 0, planeSize);
-			}
-			return copy;
 		}
 
 		/// <summary>
@@ -595,30 +566,6 @@ namespace LibDmd.Common
 				planes[l] = ScaleDown(dim, srcPlanes[l]);
 			}
 			return planes;
-		}
-
-		/// <summary>
-		/// Scane down frame data by taking every second pixel.
-		/// </summary>
-		/// <param name="dim"></param>
-		/// <param name="data"></param>
-		/// <returns></returns>
-		public static byte[] ScaleDownFrame(Dimensions dim, byte[] data)
-		{
-			byte[] scaledData = new byte[dim.Surface];
-			var origWidth = dim.Width * 2;
-			var origHeight = dim.Height * 2;
-
-			for (var y = 0; y < origHeight; y++)
-			{
-				for (var x = 0; x < origWidth; x++)
-				{
-					var color = ImageUtil.GetPixel(x, y, origWidth, origHeight, data);
-					ImageUtil.SetPixel(x/2, y/2, color, dim.Width, scaledData);
-				}
-				y++;
-			}
-			return scaledData;
 		}
 
 		/// <summary>

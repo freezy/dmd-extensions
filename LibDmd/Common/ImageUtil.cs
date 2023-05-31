@@ -275,20 +275,6 @@ namespace LibDmd.Common
 			return bitmap;
 		}
 
-		public static void ConvertRgb24ToDIB(Dimensions dim, byte[] from, byte[] to)
-		{
-			var pos = 0;
-			for (var y = dim.Height - 1; y >= 0; y--) {
-				for (var x = 0; x < dim.Width * 3; x += 3) {
-					var fromPos = dim.Width * 3 * y + x;
-					to[pos] = from[fromPos];
-					to[pos + 1] = from[fromPos + 1];
-					to[pos + 2] = from[fromPos + 2];
-					pos += 3;
-				}
-			}
-		}
-
 		public static void ConvertRgb24ToBgr32(Dimensions dim, byte[] from, byte[] to)
 		{
 			var pos = 0;
@@ -468,42 +454,10 @@ namespace LibDmd.Common
 		/// <param name="saturation">Saturation in which the bitmap will be created</param>
 		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
 		/// <returns>Bitmap</returns>
-		public static unsafe BitmapSource ConvertFromGray2(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
-		{
-			lock (FrameDataObjectPool) {
-				return ConvertFromGray2(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
-			}
-		}
-
-		/// <summary>
-		/// Converts an 2-bit grayscale array to a bitmap.
-		/// </summary>
-		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">2-bit grayscale array</param>
-		/// <param name="hue">Hue in which the bitmap will be created</param>
-		/// <param name="saturation">Saturation in which the bitmap will be created</param>
-		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
-		/// <returns>Bitmap</returns>
 		public static BitmapSource ConvertFromGray2(Dimensions dim, byte[] frame, double hue, double saturation, double luminosity)
 		{
 			lock (FrameDataObjectPool) {
 				return ConvertFromGray2(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
-			}
-		}
-
-		/// <summary>
-		/// Converts an 4-bit grayscale array to a bitmap.
-		/// </summary>
-		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">4-bit grayscale array</param>
-		/// <param name="hue">Hue in which the bitmap will be created</param>
-		/// <param name="saturation">Saturation in which the bitmap will be created</param>
-		/// <param name="luminosity">Maximal luminosity in which the bitmap will be created</param>
-		/// <returns>Bitmap</returns>
-		public static unsafe BitmapSource ConvertFromGray4(Dimensions dim, byte* frame, double hue, double saturation, double luminosity)
-		{
-			lock (FrameDataObjectPool) {
-				return ConvertFromGray4(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
 			}
 		}
 
@@ -554,19 +508,6 @@ namespace LibDmd.Common
 			lock (FrameDataObjectPool)
 			{
 				return ConvertFromGray6(dim, GetFrameDataFromPool(dim).With(frame), hue, saturation, luminosity);
-			}
-		}
-
-		/// <summary>
-		/// Converts an RGB24 array to a bitmap.
-		/// </summary>
-		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frame">RGB values for each pixel between 0 and 255</param>
-		/// <returns>Bitmap</returns>
-		public static unsafe BitmapSource ConvertFromRgb24(Dimensions dim, byte* frame)
-		{
-			lock (FrameDataObjectPool) {
-				return ConvertFromRgb24(dim, GetFrameDataFromPool(dim).With(frame));
 			}
 		}
 
