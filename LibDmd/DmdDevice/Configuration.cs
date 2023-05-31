@@ -194,14 +194,15 @@ namespace LibDmd.DmdDevice
 		}
 
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
-		public string[] Plugins {
+		public PluginConfig[] Plugins {
 			get {
-				var plugins = new List<string>();
+				var plugins = new List<PluginConfig>();
 				var suffix = IntPtr.Size == 8 ? "64" : "";
 				for (var i = 0; i < 10; i++) {
-					var plugin = GetString($"plugin{suffix}.{i}", null);
-					if (plugin != null) {
-						plugins.Add(plugin);
+					var path = GetString($"plugin.{i}.path{suffix}", null);
+					var passthrough = GetBoolean($"plugin.{i}.passthrough", false);
+					if (path != null) {
+						plugins.Add(new PluginConfig(path, passthrough));
 					} else {
 						break;
 					}
@@ -212,6 +213,18 @@ namespace LibDmd.DmdDevice
 
 		public GlobalConfig(IniData data, Configuration parent) : base(data, parent)
 		{
+		}
+	}
+
+	public class PluginConfig
+	{
+		public readonly string Path;
+		public readonly bool PassthroughEnabled;
+
+		public PluginConfig(string path, bool passthroughEnabled)
+		{
+			Path = path;
+			PassthroughEnabled = passthroughEnabled;
 		}
 	}
 

@@ -123,8 +123,8 @@ run it. A few notes:
   so you'll need the 32-bit `DmdDevice.dll` and if you're using `dmdext.exe`
   with the 64-bit version of Pro Pinball, it will only work with the 64-bit
   version.
-- However, if you don't have Pro Pinball, just 32-bit will do fine, and if don't
-  use VPM then just 64-bit will do fine as well. And if you're on a 32-bit
+- However, if you don't have Pro Pinball, just 32-bit will do fine, and if you
+  don't use VPM then just 64-bit will do fine as well. And if you're on a 32-bit
   Windows, then just take the 32-bit version.
 - The installer will add the install folder of `dmdext.exe` to the `PATH`
   environment variable, but only if the platform is the same:
@@ -291,7 +291,9 @@ The output are described by block below.
 | `-r`, `--resize`               | [global]<br>resize                             | How to downscale SEGA 192x64 or other high-resolution games to smaller displays. Can have three values:<ul>  <li>`stretch` - Just fill the available space and ignore the aspect ratio</li>  <li>`fill` - Fill it up so the whole DMD is filled while keeping aspect ratio intact. Pixels will be cropped off.</li>  <li>`fit` - Scale it so the whole image fits on the DMD while keeping aspect ratio intact. There will be white space (uh, more like black space).</li> |
 | `--flip-x`                     | [global]<br>fliphorizontally                   | Flips the image horizontally (left/right)                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `--flip-y`                     | [global]<br>flipvertically                     | Flips the image vertically (top/down)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| *n/a*                          | [global]<br>colorize                           | Enable or disable frame-by-frame colorization (inactive in VPX bundle)                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--colorize`                   | [global]<br>colorize                           | Enable or disable frame-by-frame colorization (inactive in VPX bundle)                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--plugin`                     | [global]<br>plugin{n}.path[64]                 | Enable a third party plugin. See [Plugin Configuration](#plugin-configuration)                                                                                                                                                                                                                                                                                                                                                                                              |
+| `--plugin-passthrough`         | [global]<br>plugin{n}.passthrough              | Enable the plugin to always receive frames. See [Plugin Configuration](#plugin-configuration)                                                                                                                                                                                                                                                                                                                                                                               |
 | `-d virtual`<br>`--no-virtual` | [virtualdmd]<br>enabled                        | Shows a virtual DMD that renders on the computer screen somewhat nicely                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `--virtual-stay-on-top`        | [virtualdmd]<br>stayontop                      | Virtual DMD stays on top of most other windows                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | *n/a*                          | [virtualdmd]<br>ignorear                       | If true, allow free resizing of the virtual DMD, otherwise the aspect ratio is locked to the DMD's.                                                                                                                                                                                                                                                                                                                                                                         |
@@ -394,9 +396,14 @@ If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcad
 colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will
 be rendered in color, with up to 64 colors per frame.
 
-There are two supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Both formats keep
-their files in the `altcolor` folder, which is located in the same folder as VPM (usually `Visual Pinball\VPinMAME\altcolor`).
-In this folder, every game has its separate folder, which contains the colorization files.
+There are two natively supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Additionally,
+dmdext supports colorization plugins from third parties. 
+
+#### Colorization File Location
+
+All formats keep their files in the `altcolor` folder, which is located in the same folder as VPM (usually 
+`Visual Pinball\VPinMAME\altcolor`). In this folder, every game has its separate folder, which contains the colorization
+files.
 
 Depending on the source, the game folders and colorization files are named differently:
 
@@ -424,10 +431,39 @@ altcolor
     └── pin2dmd.vni
 ```
 
+#### Plugin Configuration
+
+Enabling colorization plugins is done through the `plugin.path` setting in `DmdDevice.ini`, or through the `--plugin` 
+command line option in `dmdext.exe`. Additionally, you can specify the `plugin.passthrough` option, which will send 
+frames to the plugin independently of the whether a colorization file is present or not. This is useful for frame 
+dumping.
+
+`DmdDevice.ini` example:
+```ini
+; load plugins
+plugin.0.path = C:\Visual Pinball\VPinMAME\pin2color.dll
+plugin.0.path64 = C:\Visual Pinball\VPinMAME\pin2color64.dll
+plugin.0.passthrough = true
+```
+You can add up to 10 plugins. The first plugin which has a colorization file present or passthrough enabled will be used.
+
+Command line example:
+```bash
+dmdext.exe mirror --source pinballfx3 --colorize --plugin "C:\Visual Pinball\VPinMAME\pin2color.dll" --plugin-passthrough
+```
+
+Note that the `--plugin` parameter needs to point to a DLL with the correct bitness, i.e. 64-bit dmdext.exe would need
+the 64-bit version of the plugin.
+
+Also note that without `passthrough` enabled, the plugin is disabled if no colorization file is present. 
+
+#### Usage
+
 Depending on the source, enabling colorization is different:
 
 - In VPM, enter setup, open the ROM's game options and enable *Use external DMD (dll)* as well as *Colorize DMD*.
 - In Pinball Arcade and Pinball FX3, use the `--colorize` option when running `dmdext.exe`.
+ 
 
 ## Breaking Changes
 

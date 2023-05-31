@@ -129,6 +129,9 @@ namespace DmdExt.Common
 		[Option("plugin", HelpText = "Path to plugin DLL for frame-by-frame colorization.")]
 		public string Plugin { get; set; } = null;
 
+		[Option("plugin-passthrough", HelpText = "If true, frames will always be sent to the plugin, even if no colorization is found. Default: false.")]
+		public bool PluginPassthrough { get; set; } = false;
+
 		[Option("skip-analytics", HelpText = "If set, don't send anonymous usage data to the developer. Default: false.")]
 		public bool SkipAnalytics { get; set; } = false;
 
@@ -218,7 +221,9 @@ namespace DmdExt.Common
 		public bool ScaleToHd => _options.ScalingToHD;
 		public ScalerMode ScalerMode => _options.ScalingMode;
 		public bool SkipAnalytics => _options.SkipAnalytics;
-		public string[] Plugins => _options.Plugin == null ? new string[]{} : new []{ _options.Plugin };
+		public PluginConfig[] Plugins => _options.Plugin == null
+			? new PluginConfig[]{}
+			: new []{ new PluginConfig(_options.Plugin, _options.PluginPassthrough ) };
 	}
 
 	internal class VirtualDmdOptions : IVirtualDmdConfig

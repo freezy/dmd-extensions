@@ -6,6 +6,7 @@ using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Plugin;
+using LibDmd.DmdDevice;
 using Microsoft.Win32;
 using NLog;
 
@@ -124,23 +125,26 @@ namespace LibDmd.Converter.Pin2Color
 			return null;
 		}
 		
-		public ColorizationPlugin LoadPlugin(string[] pluginPaths, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
+		public ColorizationPlugin LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null) {
 				return null;
 			}
 
-			if (pluginPaths.Length == 0) {
+			if (pluginConfigs.Length == 0) {
 				Logger.Info("[plugin] No colorization plugins configured.");
 			}
 
-			foreach (var pluginPath in pluginPaths) {
-				var plugin = new ColorizationPlugin(pluginPath, colorize, _altcolorPath, gameName, defaultColor, palette, scalerMode != ScalerMode.None);
-				if (!plugin.ReceiveFrames) {
+			// grab the first configured plugin that is active or has passthrough enabled.
+			foreach (var config in pluginConfigs) {
+				var plugin = new ColorizationPlugin(config, colorize, _altcolorPath, gameName, defaultColor, palette);
+				var passthrough = config.PassthroughEnabled && plugin.IsAvailable;
+				if (!plugin.IsColoring && !passthrough) {
 					continue;
 				}
 
 				Logger.Info($"[plugin] Plugin {plugin.GetName()} v{plugin.GetVersion()} loaded.");
+
 				return plugin;
 			}
 			return null;
