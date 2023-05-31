@@ -18,7 +18,7 @@ namespace LibDmd.Test
 		[SetUp]
 		public void Setup()
 		{
-			_graph = new RenderGraph();
+			_graph = new RenderGraph(true);
 			_source = new SourceGray2();
 		}
 

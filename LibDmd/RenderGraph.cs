@@ -121,13 +121,15 @@ namespace LibDmd
 		private RenderGraph _idleRenderGraph;
 		
 		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
+		private readonly bool _runOnMainThread;
 		
 		#endregion
 
 		#region Lifecycle
 
-		public RenderGraph()
+		public RenderGraph(bool runOnMainThread = false)
 		{
+			_runOnMainThread = runOnMainThread;
 			ClearColor();
 		}
 
@@ -1266,7 +1268,11 @@ namespace LibDmd
 				
 				// subscribe and add to active sources
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
-				//src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+
+				// run frame processing on separate thread.
+				if (!_runOnMainThread) {
+					src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+				}
 				_activeSources.Add(src.Select(frame => (TIn)frame.Clone()).Select(processor).Subscribe(onNext));
 			}
 		}
