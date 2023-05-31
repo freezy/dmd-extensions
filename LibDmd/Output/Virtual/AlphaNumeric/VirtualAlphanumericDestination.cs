@@ -20,7 +20,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 		private static VirtualAlphanumericDestination _instance;
 
-		private readonly Configuration _config;
+		private readonly IConfiguration _config;
 		private readonly Dispatcher _dispatcher;
 		private readonly RasterizeStyleDefinition _styleDef;
 
@@ -32,14 +32,14 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private VirtualAlphaNumericSettings _settingWindow;
 		private IDisposable _settingSubscription;
 
-		private VirtualAlphanumericDestination(Dispatcher dispatcher, RasterizeStyleDefinition styleDef, Configuration config)
+		private VirtualAlphanumericDestination(Dispatcher dispatcher, RasterizeStyleDefinition styleDef, IConfiguration config)
 		{
 			_dispatcher = dispatcher;
 			_styleDef = styleDef;
 			_config = config;
 		}
 
-		public static VirtualAlphanumericDestination GetInstance(Dispatcher dispatcher, RasterizeStyleDefinition styleDef, Configuration config)
+		public static VirtualAlphanumericDestination GetInstance(Dispatcher dispatcher, RasterizeStyleDefinition styleDef, IConfiguration config)
 		{
 			return _instance ?? (_instance = new VirtualAlphanumericDestination(dispatcher, styleDef, config));
 		}

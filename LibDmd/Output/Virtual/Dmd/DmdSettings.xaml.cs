@@ -20,7 +20,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	public partial class DmdSettings
 	{
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private readonly Configuration _config;
+		private readonly IConfiguration _config;
 		private readonly VirtualDmdConfig _dmdConfig;
 		private readonly DmdStyle _originalStyle;
 		private BitmapImage _preview;
@@ -33,7 +33,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private string _lastFramePath;
 		private string _lastGlassPath;
 
-		public DmdSettings(DmdStyle style, Configuration config)
+		public DmdSettings(DmdStyle style, IConfiguration config)
 		{
 			_config = config;
 			_originalStyle = style.Copy();

@@ -12,7 +12,7 @@ namespace LibDmd.Common
 
 		private readonly Action<int> _toggleSettings;
 
-		public VirtualAlphaNumericDisplay(DisplaySetting displaySetting, Configuration config, Action<int> toggleSettings)
+		public VirtualAlphaNumericDisplay(DisplaySetting displaySetting, IConfiguration config, Action<int> toggleSettings)
 		{
 			LockHeight = true;
 			if (config != null) {

@@ -41,7 +41,7 @@ namespace LibDmd.DmdDevice
 	public class DmdDevice : IDmdDevice
 	{
 		// generic stuff
-		private readonly Configuration _config;
+		private readonly IConfiguration _config;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private bool _isOpen;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -84,7 +84,7 @@ namespace LibDmd.DmdDevice
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 
-		public DmdDevice()
+		public DmdDevice(IConfiguration config = null)
 		{
 			var currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_passthroughGray2Source = new PassthroughGray2Source(currentFrameFormat, "DmdDevice 2-bit Source");
@@ -92,7 +92,7 @@ namespace LibDmd.DmdDevice
 			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source");
 			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(currentFrameFormat);
 
-			_config = new Configuration();
+			_config = config ?? new Configuration();
 			_colorizationLoader = new ColorizationLoader();
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -224,7 +224,7 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Setting game name: {0}", gameName);
 			_gameName = gameName;
-			_config.GameName = gameName;
+			_config.SetGameName(gameName);
 			Analytics.Instance.SetSource(Process.GetCurrentProcess().ProcessName, gameName);
 		}
 

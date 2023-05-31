@@ -14,7 +14,7 @@ namespace LibDmd.Common
 	{
 		public override IVirtualControl VirtualControl => Dmd;
 
-		private Configuration _config;
+		private IConfiguration _config;
 		private VirtualDmdConfig _dmdConfig;
 		private IDisposable _settingSubscription;
 
@@ -24,7 +24,7 @@ namespace LibDmd.Common
 			Initialize();
 		}
 
-		public void Setup(Configuration config = null, string gameName = null)
+		public void Setup(IConfiguration config = null, string gameName = null)
 		{
 			_config = config;
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;

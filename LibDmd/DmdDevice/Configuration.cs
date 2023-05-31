@@ -120,6 +120,8 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
+		public void SetGameName(string gameName) => GameName = gameName;
+
 		private void SetupConfig()
 		{
 			Global = new GlobalConfig(_data, this);
