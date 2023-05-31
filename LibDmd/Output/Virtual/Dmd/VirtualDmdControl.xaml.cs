@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -370,7 +369,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		#region OpenGL
 
-		public const string LIBRARY_OPENGL = "opengl32.dll"; // Opengl dll is named opengl32.dll for x86 as well as x64 archs for historical reasons
+		private const string LIBRARY_OPENGL = "opengl32.dll"; // Opengl dll is named opengl32.dll for x86 as well as x64 archs for historical reasons
 		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, byte[] pixels);
 		[DllImport(LIBRARY_OPENGL, SetLastError = true)] private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, IntPtr pixels);
 
