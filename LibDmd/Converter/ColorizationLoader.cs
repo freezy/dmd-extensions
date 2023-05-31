@@ -25,35 +25,30 @@ namespace LibDmd.Converter.Pin2Color
 
 		public Serum.Serum LoadSerum(string gameName, ScalerMode scalerMode)
 		{
-			if (_altcolorPath == null)
-			{
+			if (_altcolorPath == null) {
 				return null;
 			}
 
 			var serumPath = Path.Combine(_altcolorPath, gameName, gameName + ".cRZ");
-			if (File.Exists(serumPath))
-			{
-				try
-				{
+			if (File.Exists(serumPath)) {
+				try {
 					var serum = new Serum.Serum(_altcolorPath, gameName);
-					if (serum.IsLoaded)
-					{
-						Logger.Info($"Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
-						Logger.Info($"Loading colorization at {serumPath}...");
+					if (serum.IsLoaded) {
+						Logger.Info($"[serum] Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
+						Logger.Info($"[serum] Loading colorization at {serumPath}...");
 						Analytics.Instance.SetColorizer("Serum");
 						serum.ScalerMode = scalerMode;
 						return serum;
 					}
 
-					Logger.Warn($"Found Serum coloring file at {serumPath}, but could not load colorizer.");
+					Logger.Warn($"[serum] Found Serum coloring file at {serumPath}, but could not load colorizer.");
 
-				}
-				catch (Exception e)
-				{
-					Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);
+				} catch (Exception e) {
+					Logger.Warn(e, "[serum] Error initializing colorizer: {0}", e.Message);
 					Analytics.Instance.ClearColorizer();
 				}
 			} else {
+				Logger.Info($"[serum] No colorization found at {serumPath}...");
 				Analytics.Instance.ClearColorizer();
 			}
 
@@ -75,10 +70,8 @@ namespace LibDmd.Converter.Pin2Color
 
 			var palPath = File.Exists(palPath1) ? palPath1 : palPath2;
 			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
-			if (File.Exists(palPath))
-			{
-				try
-				{
+			if (File.Exists(palPath)) {
+				try {
 					Logger.Info("[pin2color] Loading palette file at {0}...", palPath);
 					var coloring = new VniColoring(palPath);
 					VniAnimationSet vni = null;
@@ -89,9 +82,8 @@ namespace LibDmd.Converter.Pin2Color
 						Logger.Info("[pin2color] Loaded animation set {0}", vni);
 						Logger.Info("[pin2color] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
 						Analytics.Instance.SetColorizer("VNI/PAL");
-					}
-					else
-					{
+
+					} else {
 						Logger.Info("[pin2color] No animation set found");
 						Analytics.Instance.SetColorizer("PAL");
 					}
@@ -102,22 +94,19 @@ namespace LibDmd.Converter.Pin2Color
 					gray2Colorizer.ScalerMode = scalerMode;
 					gray4Colorizer.ScalerMode = scalerMode;
 
-					return new Pin2ColorResult
-					{
+					return new Pin2ColorResult {
 						Coloring = coloring,
 						Gray2Colorizer = gray2Colorizer,
 						Gray4Colorizer = gray4Colorizer,
 						Vni = vni,
 					};
-				}
-				catch (Exception e)
-				{
+
+				} catch (Exception e) {
 					Logger.Warn(e, "[pin2color] Error initializing: {0}", e.Message);
 					Analytics.Instance.ClearColorizer();
 				}
-			}
-			else
-			{
+
+			} else {
 				Logger.Info("[pin2color] No palette file found at {0}.", palPath);
 				Analytics.Instance.ClearColorizer();
 			}
