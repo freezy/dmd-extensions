@@ -295,7 +295,7 @@ namespace LibDmd.Converter.Plugin
 			}
 		}
 
-		private void EmitFrame(Dimensions dim, IReadOnlyList<byte> rgb24Frame)
+		private void EmitFrame(Dimensions dim, byte[] rgb24Frame)
 		{
 			if (_frame == null || _frame.Length != dim.Surface) {
 				_frame = new byte[dim.Surface];
@@ -313,8 +313,8 @@ namespace LibDmd.Converter.Plugin
 				int index;
 				if (!_colorIndex.ContainsKey(color)) {
 					lastIndex++;
-					if (lastIndex > 63) { // maximal 6 bit allowed.
-						continue;
+					if (lastIndex > 63) { // break out of the loop, since that's an rgb24 frame now.
+						break;
 					}
 					_colorIndex[color] = lastIndex;
 					_palette[lastIndex] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
@@ -333,8 +333,11 @@ namespace LibDmd.Converter.Plugin
 			} else if (lastIndex < 16) {
 				_coloredGray4Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 4, _frame), _palette.Take(16).ToArray()));
 
-			} else {
+			} else if (lastIndex < 64) {
 				_coloredGray6Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 6, _frame), _palette));
+
+			} else {
+				_rgb24Frames.OnNext(new DmdFrame(dim, rgb24Frame, 24));
 			}
 		}
 
