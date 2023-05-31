@@ -39,7 +39,7 @@ namespace LibDmd.DmdDevice
 		Color DmdColor { get; }
 		ScalerMode ScalerMode { get; }
 		bool SkipAnalytics { get; }
-		string[] Plugins { get; }
+		PluginConfig[] Plugins { get; }
 	}
 
 	public interface IPinDmd1Config

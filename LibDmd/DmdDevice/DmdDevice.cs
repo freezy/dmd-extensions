@@ -636,7 +636,7 @@ namespace LibDmd.DmdDevice
 			}
 
 			// === COLORIZATION PLUGIN ===
-			else if (_colorize && _colorizationPlugin != null && _colorizationPlugin.IsEnabled) {
+			else if (_colorize && _colorizationPlugin != null) {
 
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
