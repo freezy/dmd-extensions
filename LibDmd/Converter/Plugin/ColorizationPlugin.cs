@@ -32,7 +32,7 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
-		private readonly Dimensions _dimensions = new Dimensions(128, 32);
+		private readonly Dimensions _dimensions = Dimensions.Dynamic;
 
 		/// <summary>
 		/// DLL has been initialized (Open returned true).
@@ -108,6 +108,8 @@ namespace LibDmd.Converter.Plugin
 						_dimensions = new Dimensions(256, 64);
 						break;
 					case ColorizerMode.Advanced128x32:
+						_dimensions = new Dimensions(128, 32);
+						break;
 					case ColorizerMode.None:
 					case ColorizerMode.SimplePalette:
 						// no dimension changes
@@ -224,7 +226,7 @@ namespace LibDmd.Converter.Plugin
 				return;
 			}
 
-			EmitFrame(_dimensions, rgb24FramePtr);
+			EmitFrame(_dimensions == Dimensions.Dynamic ? frame.Dimensions : _dimensions, rgb24FramePtr);
 			ProcessEvent();
 		}
 
