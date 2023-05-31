@@ -151,6 +151,8 @@ namespace DmdExt.Common
 		public IBrowserConfig BrowserStream { get; }
 		public INetworkConfig NetworkStream { get; }
 		public IPinUpConfig PinUp { get; }
+		public bool HasGameName => !string.IsNullOrEmpty(GameName);
+		public string DataPath => null;
 
 		protected BaseOptions()
 		{
@@ -199,6 +201,12 @@ namespace DmdExt.Common
 				throw new InvalidOptionException("Argument --virtual-frame-padding must have four values: \"<Left> <Top> <Right> <Bottom>\".");
 			}
 		}
+
+		public void Reload()
+		{
+		}
+
+		public void SetGameName(string gameName) => GameName = gameName;
 	}
 
 	internal class GlobalConfig : IGlobalConfig

@@ -24,7 +24,11 @@ namespace LibDmd.DmdDevice
 		IBrowserConfig BrowserStream { get; }
 		INetworkConfig NetworkStream { get; }
 		IPinUpConfig PinUp { get; }
+		bool HasGameName { get; }
+		string DataPath { get; }
 		void Validate();
+		void Reload();
+		void SetGameName(string gameName);
 	}
 
 	public interface IGlobalConfig

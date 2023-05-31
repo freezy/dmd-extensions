@@ -26,7 +26,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public ISubject<RasterizeStyleDefinition> OnStyleApplied { get; } = new Subject<RasterizeStyleDefinition>();
 
 		private readonly DisplaySetting _displaySetting;
-		private readonly Configuration _config;
+		private readonly IConfiguration _config;
 		private readonly RasterizeStyleDefinition _originalStyle;
 		private readonly VirtualAlphaNumericDisplayConfig _alphaNumericConfig;
 		private ushort[] _data = { };
@@ -40,7 +40,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public List<string> StyleNames => _config == null ? null : _alphaNumericConfig.GetStyleNames();
 		public string NewStyleName { get; set; }
 
-		public VirtualAlphaNumericSettings(RasterizeStyleDefinition styleDefinition, double top, double left, Configuration config)
+		public VirtualAlphaNumericSettings(RasterizeStyleDefinition styleDefinition, double top, double left, IConfiguration config)
 		{
 			Top = top;
 			Left = left;
