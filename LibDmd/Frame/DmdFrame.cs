@@ -291,6 +291,11 @@ namespace LibDmd.Frame
 				return this;
 			}
 
+			// if source is already > 128x32, return
+			if (Dimensions > new Dimensions(128, 32)) {
+				return this;
+			}
+
 			return TransformHdScaling(scalerMode);
 		}
 

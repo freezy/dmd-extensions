@@ -209,6 +209,11 @@ namespace LibDmd
 				return this;
 			}
 
+			// if source is already > 128x32, return
+			if (Dimensions > new Dimensions(128, 32)) {
+				return this;
+			}
+
 			// resize
 			var data = scalerMode == ScalerMode.Doubler
 				? FrameUtil.ScaleDouble(Dimensions, FrameUtil.Join(Dimensions, Planes))
