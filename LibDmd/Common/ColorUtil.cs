@@ -177,16 +177,6 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Converts a color to an RGB24 array.
-		/// </summary>
-		/// <param name="color"></param>
-		/// <returns></returns>
-		public static byte[] ToByteArray(Color color)
-		{
-			return new[] { color.R, color.G, color.B };
-		}
-
-		/// <summary>
 		/// Converts multiple colors to an RGB24 array.
 		/// </summary>
 		/// <param name="colors">Color to convert</param>
