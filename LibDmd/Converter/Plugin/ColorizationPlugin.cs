@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
@@ -14,11 +15,13 @@ using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
-	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray6Source, IRgb24Source
+	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IRgb24Source
 	{
 		public override string Name => "Colorization Plugin";
 		public IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
 
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 		public IObservable<DmdFrame> GetRgb24Frames() => _rgb24Frames;
 
@@ -54,6 +57,8 @@ namespace LibDmd.Converter.Plugin
 		/// </summary>
 		private bool _hasEvents;
 
+		private readonly Subject<ColoredFrame> _coloredGray2Frames = new Subject<ColoredFrame>();
+		private readonly Subject<ColoredFrame> _coloredGray4Frames = new Subject<ColoredFrame>();
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
 		private readonly bool _scaleToHd;
@@ -308,18 +313,29 @@ namespace LibDmd.Converter.Plugin
 				int index;
 				if (!_colorIndex.ContainsKey(color)) {
 					lastIndex++;
+					if (lastIndex > 63) { // maximal 6 bit allowed.
+						continue;
+					}
 					_colorIndex[color] = lastIndex;
 					_palette[lastIndex] = Color.FromRgb(rgb24Frame[i], rgb24Frame[i + 1], rgb24Frame[i + 2]);
 					index = lastIndex;
 				} else {
 					index = _colorIndex[color];
 				}
+
 				_frame[j++] = (byte)index;
 			}
 
 			// split and send
-			var planes = FrameUtil.Split(dim, 6, _frame);
-			_coloredGray6Frames.OnNext(new ColoredFrame(dim, planes, _palette));
+			if (lastIndex < 4) {
+				_coloredGray2Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 2, _frame), _palette.Take(4).ToArray()));
+
+			} else if (lastIndex < 16) {
+				_coloredGray4Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 4, _frame), _palette.Take(16).ToArray()));
+
+			} else {
+				_coloredGray6Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 6, _frame), _palette));
+			}
 		}
 
 		#endregion
