@@ -143,6 +143,8 @@ namespace LibDmd.Converter.Serum
 			// send the colored frame
 			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _planes, ConvertPalette(), _rotations));
 		}
+
+		public void Convert(AlphaNumericFrame frame) { }
 		
 		public static string GetVersion()
 		{

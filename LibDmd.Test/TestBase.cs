@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LibDmd.Frame;
 using LibDmd.Test.Stubs;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using NUnit.Framework;
 
 namespace LibDmd.Test
@@ -10,6 +13,8 @@ namespace LibDmd.Test
 	public class TestBase
 	{
 		private TestContext testContextInstance;
+
+		private TestLogger _testLogger = new TestLogger();
 
 		/// <summary>
 		/// Gets or sets the test context which provides
@@ -19,6 +24,22 @@ namespace LibDmd.Test
 		{
 			get { return testContextInstance; }
 			set { testContextInstance = value; }
+		}
+
+		protected void AddLogger()
+		{
+			if (LogManager.Configuration == null) {
+				LogManager.Configuration = new NLog.Config.LoggingConfiguration();
+			}
+			LogManager.Configuration.AddTarget("test", _testLogger);
+			LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, _testLogger));
+			LogManager.ReconfigExistingLoggers();
+		}
+
+		protected void RemoveLogger()
+		{
+			LogManager.Configuration.RemoveTarget("test");
+			LogManager.Configuration.LoggingRules.Clear();
 		}
 
 		protected static void Print(object obj, string label = "")
@@ -89,6 +110,10 @@ namespace LibDmd.Test
 			}
 			receivedFrame.Palette.Should().BeEquivalentTo(expectedFrame.Palette);
 			receivedFrame.Dimensions.Should().Be(expectedFrame.Dimensions);
+		}
+
+		class TestLogger : Target {
+			protected override void Write(LogEventInfo logEvent) => TestContext.WriteLine($"[{logEvent.TimeStamp.Hour}:{logEvent.TimeStamp.Minute}:{logEvent.TimeStamp.Second}.{logEvent.TimeStamp.Millisecond}] {logEvent.FormattedMessage}");
 		}
 	}
 }

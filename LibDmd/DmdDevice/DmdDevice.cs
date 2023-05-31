@@ -663,6 +663,19 @@ namespace LibDmd.DmdDevice
 					ScalerMode = _config.Global.ScalerMode,
 				});
 				ReportingTags.Add("Color:Gray4");
+
+				// alphanum graph
+				_graphs.Add(new RenderGraph {
+					Name = "Alphanumeric Colorization Plugin Graph",
+					Source = _passthroughAlphaNumericSource,
+					Destinations = renderers,
+					Converter = _colorizationPlugin,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode,
+				});
+				ReportingTags.Add("Color:Gray4");
 			}
 
 			// === NATIVE VNI 2-bit ===
@@ -925,7 +938,7 @@ namespace LibDmd.DmdDevice
 		
 		private void AnalyticsSetDmd()
 		{
-			if (!_config.VirtualDmd.Enabled || _analyticsVirtualDmdEnabled) {
+			if (!_config.VirtualDmd.Enabled || _analyticsVirtualDmdEnabled || _virtualDmd == null) {
 				return;
 			}
 			_analyticsVirtualDmdEnabled = true;
@@ -936,7 +949,7 @@ namespace LibDmd.DmdDevice
 		
 		private void AnalyticsSetSegmentDisplay()
 		{
-			if (!_config.VirtualAlphaNumericDisplay.Enabled || _analyticsVirtualDmdEnabled) {
+			if (!_config.VirtualAlphaNumericDisplay.Enabled || _analyticsVirtualDmdEnabled || _alphaNumericDest == null) {
 				return;
 			}
 			_analyticsVirtualDmdEnabled = true;

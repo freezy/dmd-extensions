@@ -135,6 +135,8 @@ namespace LibDmd.Converter.Pin2Color
 			Render(frame.Dimensions, planes);
 		}
 
+		public void Convert(AlphaNumericFrame frame) { }
+
 		public void LoadPalette(uint newpal)
 		{
 			if (_vniColoring.Palettes.Length > newpal)
