@@ -116,7 +116,7 @@ namespace LibDmd.Converter.Pin2Color
 		
 		public ColorizationPlugin LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
 		{
-			if (_altcolorPath == null) {
+			if (_altcolorPath == null || pluginConfigs == null) {
 				return null;
 			}
 
