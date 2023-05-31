@@ -264,11 +264,14 @@ namespace LibDmd.Output.Virtual.Dmd
 					return;
 				}
 			}
-			UpdateRotations(frame);
+			var newPalette = UpdateRotations(frame);
+			SetPalette(newPalette);
+			Dmd.RequestRender();
 		}
 
-		private void UpdateRotations(ColoredFrame frame)
+		private Color[] UpdateRotations(ColoredFrame frame)
 		{
+			Color[] newPalette = new Color[64];
 			DateTime now = DateTime.UtcNow;
 			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
 
@@ -292,14 +295,13 @@ namespace LibDmd.Output.Virtual.Dmd
 					}
 				}
 
-				Color[] newPalette = new Color[64];
 				for (int j = 0; j < 64; j++) {
 					newPalette[j] = frame.Palette[_rotationCurrentPaletteIndex[j]];
 				}
 				_hasFrame = true;
-				SetPalette(newPalette);
-				Dmd.RequestRender();
 			}
+
+			return newPalette;
 		}
 
 		public void SetDimensions(Dimensions dim)
