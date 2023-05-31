@@ -253,12 +253,13 @@ namespace LibDmd.Output.Virtual.Dmd
 				_frameData = frameData;
 				_hasFrame = true;
 				_frameType = FrameFormat.ColoredGray6;
-				for (byte i = 0; i < 64; i++) {
-					_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
-				}
+
 				if (frame.RotateColors) {
-					DateTime now = DateTime.UtcNow;
 					_rotationsEnabled = true;
+					for (byte i = 0; i < 64; i++) {
+						_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
+					}
+					DateTime now = DateTime.UtcNow;
 					for (var i = 0; i < MaxColorRotations; i++) {
 						_rotationStartColor[i] = frame.Rotations[i * 3];
 						_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
@@ -272,17 +273,14 @@ namespace LibDmd.Output.Virtual.Dmd
 				_rotationsEnabled = false;
 			}
 
-			if (!_rotationsEnabled) {
-				return;
+			if (_rotationsEnabled) {
+				var newPalette = UpdateRotations(frame);
+				SetPalette(newPalette);
 			}
 
-			var newPalette = UpdateRotations(frame);
-			if (!_hasFrame) { // if rotations changed, set palette and request render
-				return;
+			if (_hasFrame) {
+				Dmd.RequestRender();
 			}
-
-			SetPalette(newPalette);
-			Dmd.RequestRender();
 		}
 
 		private Color[] UpdateRotations(ColoredFrame frame)
@@ -300,9 +298,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 				_rotationStartTime[i] = now;
 				_rotationCurrentStartColor[i]++;
-				if (_rotationCurrentStartColor[i] == _rotationNumColors[i]) { // cycle?
-					_rotationCurrentStartColor[i] = 0;
-				}
+				_rotationCurrentStartColor[i] %= _rotationNumColors[i];
 				for (byte j = 0; j < _rotationNumColors[i]; j++) { // for each color in rotation
 					var index = _rotationStartColor[i] + j;
 					_rotationCurrentPaletteIndex[index] = (byte)(index + _rotationCurrentStartColor[i]);
