@@ -21,7 +21,7 @@ namespace LibDmd.Test
 		[SetUp]
 		public void Setup()
 		{
-			_graph = new RenderGraph();
+			_graph = new RenderGraph(true);
 			_source = new SourceGray4();
 			_palette = new[] {
 				Colors.AntiqueWhite, Colors.Aqua, Colors.BlueViolet, Colors.BurlyWood,
