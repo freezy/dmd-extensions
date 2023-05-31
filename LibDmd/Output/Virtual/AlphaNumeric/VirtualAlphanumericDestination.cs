@@ -327,7 +327,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void ClearDisplay()
 		{
-			Logger.Info("Clearing Display");
+			// todo (i guess?)
 		}
 
 		public void Dispose()
