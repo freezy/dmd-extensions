@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -90,6 +91,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// maximum amount of colour rotations per frame
 		/// </summary>
 		private const int MaxColorRotations = 8;
+		/// <summary>
+		/// if true, the last frame enabled color rotations.
+		/// </summary>
+		private bool _rotationsEnabled;
 		/// <summary>
 		/// current colour rotation state
 		/// </summary>
@@ -253,6 +258,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 				if (frame.RotateColors) {
 					DateTime now = DateTime.UtcNow;
+					_rotationsEnabled = true;
 					for (var i = 0; i < MaxColorRotations; i++) {
 						_rotationStartColor[i] = frame.Rotations[i * 3];
 						_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
@@ -263,8 +269,18 @@ namespace LibDmd.Output.Virtual.Dmd
 					Dmd.RequestRender();
 					return;
 				}
+				_rotationsEnabled = false;
 			}
+
+			if (!_rotationsEnabled) {
+				return;
+			}
+
 			var newPalette = UpdateRotations(frame);
+			if (!_hasFrame) { // if rotations changed, set palette and request render
+				return;
+			}
+
 			SetPalette(newPalette);
 			Dmd.RequestRender();
 		}
@@ -275,7 +291,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			DateTime now = DateTime.UtcNow;
 			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
 
-				if (_rotationStartColor[i] == 255) { // actually a rotation?
+				if (_rotationStartColor[i] == 255) { // blank?
 					continue;
 				}
 				if (now.Subtract(_rotationStartTime[i]).TotalMilliseconds < _rotationIntervalMs[i]) { // time to rotate?
