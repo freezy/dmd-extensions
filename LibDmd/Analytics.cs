@@ -175,8 +175,12 @@ namespace LibDmd
 			}
 		}
 
-		private static RudderContext CreateContext(string version, string runner)
+		private RudderContext CreateContext(string version, string runner)
 		{
+			if (_isDisabled) {
+				return new RudderContext();
+			}
+
 			var sysInfo = GetSysInfo();
 			
 			var os = OSVersion.GetOSVersion();

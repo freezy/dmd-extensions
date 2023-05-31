@@ -55,7 +55,7 @@ namespace LibDmd.Test
 		public bool NoClear { get; set; }
 		public Color DmdColor { get; set; }
 		public ScalerMode ScalerMode { get; set; }
-		public bool SkipAnalytics { get; set; }
+		public bool SkipAnalytics => true;
 		public PluginConfig[] Plugins { get; set; }
 	}
 
