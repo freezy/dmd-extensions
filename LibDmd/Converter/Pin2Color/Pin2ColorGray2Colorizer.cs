@@ -111,6 +111,8 @@ namespace LibDmd.Converter.Pin2Color
 			Render(frame.Dimensions, planes);
 		}
 
+		public void Convert(AlphaNumericFrame frame) { }
+
 		/// <summary>
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>

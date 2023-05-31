@@ -48,6 +48,11 @@ namespace LibDmd.Test
 			return new ColoredFrame(new DmdFrame(dim, data, bitLength), palette);
 		}
 
+		public static ushort[] AlphaNumericData(params byte[] chars)
+		{
+			return chars.Select(s => (ushort)s).ToArray();
+		}
+
 		private static (byte[], Dimensions, int) Parse(string frame)
 		{
 			var lines = frame

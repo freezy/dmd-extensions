@@ -27,6 +27,7 @@ namespace LibDmd.Test.Stubs
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
 
 		public void Convert(DmdFrame frame) => _coloredGray2Frames.OnNext(_convert(frame));
+		public void Convert(AlphaNumericFrame frame) { }
 
 		public void Init()
 		{

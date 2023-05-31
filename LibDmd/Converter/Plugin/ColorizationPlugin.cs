@@ -17,15 +17,17 @@ using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
-	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IRgb24Source
+	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source,
+		IColoredGray6Source, IRgb24Source, IAlphaNumericSource
 	{
 		public override string Name => "Colorization Plugin";
-		public IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
+		public IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 		public IObservable<DmdFrame> GetRgb24Frames() => _rgb24Frames;
+		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
@@ -58,6 +60,7 @@ namespace LibDmd.Converter.Plugin
 		private readonly Subject<ColoredFrame> _coloredGray4Frames = new Subject<ColoredFrame>();
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
+		private readonly Subject<AlphaNumericFrame> _alphaNumericFrames = new Subject<AlphaNumericFrame>();
 
 		private uint _lastEventId;
 		private ColorizerMode _colorizerMode = ColorizerMode.None;
@@ -213,9 +216,6 @@ namespace LibDmd.Converter.Plugin
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
 		public void Convert(DmdFrame frame)
 		{
-			var frameSize = _dimensions.Surface * 3;
-			var rgb24Buffer = new byte[frameSize];
-
 			var rgb24FramePtr = frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0
 				? ColorizeFrame(rawFrame)
 				: ColorizeFrame(frame);
@@ -224,23 +224,23 @@ namespace LibDmd.Converter.Plugin
 				return;
 			}
 
-			Marshal.Copy(rgb24FramePtr, rgb24Buffer, 0, frameSize);
-
-			EmitFrame(_dimensions, rgb24Buffer);
+			EmitFrame(_dimensions, rgb24FramePtr);
 			ProcessEvent();
 		}
 
 		public void Convert(AlphaNumericFrame frame)
 		{
-			var dim = new Dimensions(128, 32);
+			var rgb24FramePtr = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
 
-			var frameSize = dim.Surface * 3;
-			var coloredFrame = new byte[frameSize];
-			var rgb24Buffer = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
+			if (_passthrough) {
+				_alphaNumericFrames.OnNext(frame);
+			}
 
-			Marshal.Copy(rgb24Buffer, coloredFrame, 0, frameSize);
+			if (rgb24FramePtr == IntPtr.Zero || !EmitFrames) {
+				return;
+			}
 
-			EmitFrame(dim, coloredFrame);
+			EmitFrame(new Dimensions(128, 32), rgb24FramePtr);
 			ProcessEvent();
 		}
 
@@ -289,8 +289,12 @@ namespace LibDmd.Converter.Plugin
 			}
 		}
 
-		private void EmitFrame(Dimensions dim, byte[] rgb24Frame)
+		private void EmitFrame(Dimensions dim, IntPtr rgb24FramePtr)
 		{
+			var frameSize = dim.Surface * 3;
+			var rgb24Frame = new byte[frameSize];
+			Marshal.Copy(rgb24FramePtr, rgb24Frame, 0, frameSize);
+
 			if (_frame == null || _frame.Length != dim.Surface) {
 				_frame = new byte[dim.Surface];
 			}

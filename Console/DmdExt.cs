@@ -81,7 +81,8 @@ namespace DmdExt
 			var assemblyPath = Path.GetDirectoryName(new Uri(assembly.CodeBase).LocalPath);
 			var logConfigPath = Path.Combine(assemblyPath, "dmdext.log.config");
 			if (File.Exists(logConfigPath)) {
-				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath, true);
+				LogManager.ThrowConfigExceptions = true;
+				LogManager.Configuration = new XmlLoggingConfiguration(logConfigPath);
 #if !DEBUG
 				LogManager.Configuration.AddTarget("memory", MemLogger);
 				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, MemLogger));

@@ -25,8 +25,14 @@ namespace LibDmd.Converter
 		/// equally dropped.
 		/// </remarks>
 		/// 
-		/// <param name="frame">Source frame, as top-left to bottom-right pixel array</param>
+		/// <param name="frame">Source frame</param>
 		void Convert(DmdFrame frame);
+
+		/// <summary>
+		/// Receives alphanumeric frames and converts them into colored DMD frames (if supported).
+		/// </summary>
+		/// <param name="frame">Source frame</param>
+		void Convert(AlphaNumericFrame frame);
 
 		/// <summary>
 		/// Initializes the converter. Run before rendering is started and after

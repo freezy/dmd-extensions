@@ -269,6 +269,7 @@ namespace LibDmd
 			try {
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
+				var sourceAlphaNumeric = Source as IAlphaNumericSource;
 				Logger.Info("Setting up {0} for {1} destination(s) [ {2} ]", Name, Destinations.Count, string.Join(", ", Destinations.Select(d => d.Name)));
 
 				// init converters
@@ -276,6 +277,7 @@ namespace LibDmd
 				IColoredGray4Source sourceConverterColoredGray4 = null;
 				IColoredGray6Source sourceConverterColoredGray6 = null;
 				IRgb24Source sourceConverterRgb24 = null;
+				IAlphaNumericSource sourceConverterAlphaNumeric = null;
 
 				// subscribe converter to incoming frames
 				if (Converter != null) {
@@ -283,7 +285,8 @@ namespace LibDmd
 					sourceConverterColoredGray4 = Converter as IColoredGray4Source;
 					sourceConverterColoredGray6 = Converter as IColoredGray6Source;
 					sourceConverterRgb24 = Converter as IRgb24Source;
-					
+					sourceConverterAlphaNumeric = Converter as IAlphaNumericSource;
+
 					// subscribe converter to incoming frames
 					foreach (var from in Converter.From) {
 						switch (from) {
@@ -295,6 +298,11 @@ namespace LibDmd
 							case FrameFormat.Gray4:
 								if (sourceGray4 != null) {
 									_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+								}
+								break;
+							case FrameFormat.AlphaNumeric:
+								if (sourceAlphaNumeric != null) {
+									_activeSources.Add(sourceAlphaNumeric.GetAlphaNumericFrames().Do(Converter.Convert).Subscribe());
 								}
 								break;
 							default:
@@ -310,6 +318,7 @@ namespace LibDmd
 					var destColoredGray6 = dest as IColoredGray6Destination;
 					var destRgb24 = dest as IRgb24Destination;
 					var destBitmap = dest as IBitmapDestination;
+					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 					// So here's how convertors work:
 					// They have one input type, given by IConvertor.From, but they can randomly 
@@ -404,6 +413,13 @@ namespace LibDmd
 							converterConnected = true;
 						}
 
+						// this is mainly for the passing through alphanumeric frames from the switching converter.
+						if (sourceConverterAlphaNumeric != null && destAlphaNumeric != null) {
+							Logger.Info("  -> Hooking alphanumeric source of {0} converter to {1}.", sourceConverterAlphaNumeric.Name, dest.Name);
+							Connect(sourceConverterAlphaNumeric, destAlphaNumeric, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
+							converterConnected = true;
+						}
+
 						// render graph is already set up through converters, so we skip the rest below
 						if (converterConnected) {
 							continue;
@@ -428,14 +444,12 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
-					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 					var sourceColoredGray2 = Source as IColoredGray2Source;
 					var sourceColoredGray4 = Source as IColoredGray4Source;
 					var sourceColoredGray6 = Source as IColoredGray6Source;
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
-					var sourceAlphaNumeric = Source as IAlphaNumericSource;
 
 					// first, check if we do without conversion. the order is important here!
 					// gray2 -> gray2
