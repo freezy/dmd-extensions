@@ -44,6 +44,7 @@ namespace LibDmd.DmdDevice
 		private readonly IConfiguration _config;
 		private readonly RenderGraphCollection _graphs = new RenderGraphCollection();
 		private bool _isOpen;
+		private Thread _dmdThread;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// sources
@@ -398,8 +399,13 @@ namespace LibDmd.DmdDevice
 				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
 				_virtualDmd = null;
 
+				_dmdThread.Abort();
+
 			} catch (TaskCanceledException e) {
 				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
+
+			} catch (ThreadAbortException) {
+				// this is expected
 			}
 
 			_alphaNumericDest = null;
@@ -792,7 +798,7 @@ namespace LibDmd.DmdDevice
 			var ev = new EventWaitHandle(false, EventResetMode.AutoReset);
 
 			// launch a thread for the virtual DMD window event handler
-			var thread = new Thread(() => {
+			_dmdThread = new Thread(() => {
 
 				// create the virtual DMD window and create the render graphs
 				if (_config.VirtualDmd.Enabled) {
@@ -817,8 +823,8 @@ namespace LibDmd.DmdDevice
 				// Start the Dispatcher Processing
 				Dispatcher.Run();
 			});
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
+			_dmdThread.SetApartmentState(ApartmentState.STA);
+			_dmdThread.Start();
 
 			// wait until the virtual DMD window is fully set up, to avoid any
 			// race conditions with the UI thread
@@ -935,7 +941,7 @@ namespace LibDmd.DmdDevice
 		#region Analytics
 
 		private bool _analyticsVirtualDmdEnabled;
-		
+
 		private void AnalyticsSetDmd()
 		{
 			if (!_config.VirtualDmd.Enabled || _analyticsVirtualDmdEnabled || _virtualDmd == null) {

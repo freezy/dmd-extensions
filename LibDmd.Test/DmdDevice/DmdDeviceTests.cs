@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace LibDmd.Test
 {
-	//[TestFixture]
+	[TestFixture]
 	public class DmdDeviceTests : TestBase
 	{
 		[SetUp]
@@ -18,7 +18,7 @@ namespace LibDmd.Test
 			RemoveLogger();
 		}
 
-		//[TestCase]
+		[TestCase]
 		public void Should_Pass_Through_A_Gray2_Frame() {
 
 			var dmdDevice = new DmdDevice.DmdDevice();
@@ -35,7 +35,7 @@ namespace LibDmd.Test
 		}
 
 
-		//[TestCase]
+		[TestCase]
 		public void Should_Pass_Through_An_Alphanumeric_Frame()
 		{
 			var dmdDevice = new DmdDevice.DmdDevice();
@@ -52,11 +52,12 @@ namespace LibDmd.Test
 			dmdDevice.Close();
 		}
 
-		//[TestCase]
+		[TestCase]
 		public void Should_Pass_Through_An_Alphanumeric_Frame2()
 		{
 			var config = new TestConfiguration();
 
+			(config.VirtualAlphaNumericDisplay as TestVirtualAlphaNumericDisplayConfig).Enabled = true;
 			(config.Global as TestGlobalConfig).Colorize = true;
 
 			var dmdDevice = new DmdDevice.DmdDevice(config);
