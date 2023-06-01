@@ -112,16 +112,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		{
 			// do we have an individual cache for that display already?
 			var displayKey = new RasterCacheKey(display, layer, type, weight, segment);
-			if (_rasterCache.ContainsKey(displayKey)) {
-				return _rasterCache[displayKey];
+			if (_rasterCache.TryGetValue(displayKey, out var rasterized)) {
+				return rasterized;
 			}
 
 			// fallback on initial cache
 			var initialKey = new RasterCacheKey(InitialCache, layer, type, weight, segment);
-			if (_rasterCache.ContainsKey(initialKey)) {
-				return _rasterCache[initialKey];
-			}
-			return null;
+			return _rasterCache.TryGetValue(initialKey, out var rasterized1) ? rasterized1 : null;
 		}
 
 		/// <summary>
@@ -343,21 +340,43 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		OuterGlow, InnerGlow, Foreground, Background
 	}
 
-	internal struct RasterCacheKey
+	internal readonly struct RasterCacheKey : IEquatable<RasterCacheKey>
 	{
-		public readonly int Display;
-		public readonly RasterizeLayer Layer;
-		public readonly SegmentType Type;
-		public readonly SegmentWeight Weight;
-		public readonly int Segment;
+		private readonly int _display;
+		private readonly RasterizeLayer _layer;
+		private readonly SegmentType _type;
+		private readonly SegmentWeight _weight;
+		private readonly int _segment;
 
 		public RasterCacheKey(int display, RasterizeLayer layer, SegmentType type, SegmentWeight weight, int segment)
 		{
-			Display = display;
-			Layer = layer;
-			Type = type;
-			Weight = weight;
-			Segment = segment;
+			_display = display;
+			_layer = layer;
+			_type = type;
+			_weight = weight;
+			_segment = segment;
+		}
+
+		public bool Equals(RasterCacheKey other)
+		{
+			return _display == other._display && _layer == other._layer && _type == other._type && _weight == other._weight && _segment == other._segment;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is RasterCacheKey other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked {
+				var hashCode = _display;
+				hashCode = (hashCode * 397) ^ (int)_layer;
+				hashCode = (hashCode * 397) ^ (int)_type;
+				hashCode = (hashCode * 397) ^ (int)_weight;
+				hashCode = (hashCode * 397) ^ _segment;
+				return hashCode;
+			}
 		}
 	}
 
