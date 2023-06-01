@@ -88,7 +88,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 			_data = data;
 
-			Logger.Debug("new data: [ {0} ]", string.Join(",", data));
+			//Logger.Debug("new data: [ {0} ]", string.Join(",", data));
 		}
 
 		public void DrawImage(WriteableBitmap writeableBitmap)

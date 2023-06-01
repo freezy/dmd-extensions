@@ -17,6 +17,7 @@ This is a list of games with non-standard display sizes or colorizations.
 | AC/DC Limited Edition (v1.70.0) MOD  | acd_170hc | 128x32                          |                        | ✔️🩹 |
 | Alley Cats (Shuffle) (L-7)           | alcat_l7  | 6x4Num_4x1Num                   |                        |  ❌   |
 | Atlantis (rev. 3)                    | atlantis  | 4x7Num10                        |                        |  ❌   |
+| Back to the Future (2.7)             | bttf_a27  | 2x16Alpha                       |                        |  ✔️  |
 | Bad Girls                            | badgirls  | 2x20Alpha                       |                        |  ❌   |
 | Batman (1.06)                        | btmn_106  | 128x16 DMD                      |                        |  ✔️  |
 | Baywatch (4.00)                      | baywatch  | 192x64 DMD                      |                        | ✔️️  |

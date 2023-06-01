@@ -185,11 +185,11 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void SendToDisplay(int displayNumber, ushort[] data)
 		{
 			if (_displays.ContainsKey(displayNumber)) {
-				Logger.Debug("Sending data to display {0}...", displayNumber);
+				//Logger.Debug("Sending data to display {0}...", displayNumber);
 				_displays[displayNumber].AlphaNumericDisplay.RenderSegments(data);
 
 			} else {
-				Logger.Debug("Got data for display {0}, but it's now created yet, so saving for later.", displayNumber);
+				//Logger.Debug("Got data for display {0}, but it's now created yet, so saving for later.", displayNumber);
 				_droppedData[displayNumber] = data;
 			}
 		}
