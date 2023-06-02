@@ -124,18 +124,21 @@ namespace LibDmd.Common
 		/// <returns>Gray2 frame, top left to bottom right, one byte per pixel with values between 0 and 3</returns>
 		public static byte[] ConvertToGray(Dimensions dim, byte[] frameRgb24, int numColors)
 		{
-			var frame = new byte[dim.Surface];
-			var pos = 0;
-			for (var y = 0; y < dim.Height; y++) {
-				for (var x = 0; x < dim.Width * 3; x += 3) {
-					var rgbPos = y * dim.Width * 3 + x;
+			using (Profiler.Start("ImageUtil.ConvertToGray")) {
 
-					// convert to HSL
-					ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out _, out _, out var luminosity);
-					frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
+				var frame = new byte[dim.Surface];
+				var pos = 0;
+				for (var y = 0; y < dim.Height; y++) {
+					for (var x = 0; x < dim.Width * 3; x += 3) {
+						var rgbPos = y * dim.Width * 3 + x;
+
+						// convert to HSL
+						ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out _, out _, out var luminosity);
+						frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
+					}
 				}
+				return frame;
 			}
-			return frame;
 		}
 
 		/// <summary>
@@ -208,35 +211,37 @@ namespace LibDmd.Common
 		/// <returns>New frame buffer. Will be filled with RGB values for each pixel between 0 and 255.</returns>
 		public static byte[] ConvertToRgb24(BitmapSource bmp, int offset = 0, double lum = 1)
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
-			var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
-			var bytes = new byte[bmp.PixelHeight * stride];
-			bmp.CopyPixels(bytes, stride, 0);
+			using (Profiler.Start("ImageUtil.ConvertToRgb24")) {
 
-			if (Math.Abs(lum - 1) > 0.01) {
-				for (var i = 0; i < bytes.Length; i += 3) {
-					ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
-					ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
-					frame[i] = r;
-					frame[i + 1] = g;
-					frame[i + 2] = b;
-				}
-			} else {
-				unsafe
-				{
-					fixed (byte* pBuffer = frame, pBytes = bytes)
+				var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
+				var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
+				var bytes = new byte[bmp.PixelHeight * stride];
+				bmp.CopyPixels(bytes, stride, 0);
+
+				if (Math.Abs(lum - 1) > 0.01) {
+					for (var i = 0; i < bytes.Length; i += 3) {
+						ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
+						ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
+						frame[i] = r;
+						frame[i + 1] = g;
+						frame[i + 2] = b;
+					}
+				} else {
+					unsafe
 					{
-						byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
-						for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
-							*(pB) = *(pByte + 2);
-							*(pB + 1) = *(pByte + 1);
-							*(pB + 2) = *(pByte);
+						fixed (byte* pBuffer = frame, pBytes = bytes)
+						{
+							byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
+							for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
+								*(pB) = *(pByte + 2);
+								*(pB + 1) = *(pByte + 1);
+								*(pB + 2) = *(pByte);
+							}
 						}
 					}
 				}
+				return frame;
 			}
-
-			return frame;
 		}
 
 		/// <summary>
@@ -419,30 +424,32 @@ namespace LibDmd.Common
 		/// <returns>Bitmap</returns>
 		private static BitmapSource ConvertFromRgb24(Dimensions dim, FrameData frameData)
 		{
-			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
-			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
-			var frameBuffer = new byte[bufferSize];
+			using (Profiler.Start("ImageUtil.ConvertFromRgb24")) {
+				var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
+				var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
+				var frameBuffer = new byte[bufferSize];
 
-			unsafe
-			{
-				fixed (byte* pFrameArray = frameData.ArraySrc, pDestArray = frameBuffer)
+				unsafe
 				{
-					byte* srcPtr = (frameData.IsPointer) ? frameData.PointerSrc : pFrameArray;
-					byte* srcEnd = srcPtr + dim.Surface * 3;
-					byte* dstPtr = pDestArray;
+					fixed (byte* pFrameArray = frameData.ArraySrc, pDestArray = frameBuffer)
+					{
+						byte* srcPtr = (frameData.IsPointer) ? frameData.PointerSrc : pFrameArray;
+						byte* srcEnd = srcPtr + dim.Surface * 3;
+						byte* dstPtr = pDestArray;
 
-					for (; srcPtr < srcEnd; srcPtr += 3, dstPtr += 4) {
-						*dstPtr = *(srcPtr + 2);
-						*(dstPtr + 1) = *(srcPtr + 1);
-						*(dstPtr + 2) = *(srcPtr);
+						for (; srcPtr < srcEnd; srcPtr += 3, dstPtr += 4) {
+							*dstPtr = *(srcPtr + 2);
+							*(dstPtr + 1) = *(srcPtr + 1);
+							*(dstPtr + 2) = *(srcPtr);
+						}
 					}
 				}
+				bmp.Lock();
+				bmp.WritePixels(new Int32Rect(0, 0, dim.Width, dim.Height), frameBuffer, bmp.BackBufferStride, 0);
+				bmp.Unlock();
+				bmp.Freeze();
+				return bmp;
 			}
-			bmp.Lock();
-			bmp.WritePixels(new Int32Rect(0, 0, dim.Width, dim.Height), frameBuffer, bmp.BackBufferStride, 0);
-			bmp.Unlock();
-			bmp.Freeze();
-			return bmp;
 		}
 
 		/// <summary>

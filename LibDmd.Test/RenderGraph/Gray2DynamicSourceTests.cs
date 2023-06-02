@@ -16,6 +16,8 @@ namespace LibDmd.Test
 		[SetUp]
 		public void Setup()
 		{
+			Profiler.Reset();
+
 			_graph = new RenderGraph(true);
 			_source = new SourceGray2();
 		}
@@ -24,6 +26,10 @@ namespace LibDmd.Test
 		public void Teardown()
 		{
 			_graph.Dispose();
+
+			AddLogger();
+			Profiler.Print();
+			RemoveLogger();
 		}
 
 		[TestCase]

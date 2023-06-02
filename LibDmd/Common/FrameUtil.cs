@@ -32,57 +32,60 @@ namespace LibDmd.Common
 		/// <returns>Än Ebini fir jedes Bit</returns>
 		public static byte[][] Split(Dimensions dim, int bitlen, byte[] frame, byte[][] destPlanes = null)
 		{
-			var planeSize = dim.Surface / 8;
-			var planes = destPlanes ?? new byte[bitlen][];
+			using (Profiler.Start("FrameUtil.Split")) {
 
-			try
-			{
-				for (var i = 0; i < bitlen; i++) {
-					if (planes[i] == null) { // recycle, if possible
-						planes[i] = new byte[planeSize];
-					}
-				}
+				var planeSize = dim.Surface / 8;
+				var planes = destPlanes ?? new byte[bitlen][];
 
-				var byteIdx = 0;
-				var bd = new byte[bitlen];
-				for (var y = 0; y < dim.Height; y++)
+				try
 				{
-					for (var x = 0; x < dim.Width; x += 8)
-					{
-						for (var i = 0; i < bitlen; i++)
-						{
-							bd[i] = 0;
+					for (var i = 0; i < bitlen; i++) {
+						if (planes[i] == null) { // recycle, if possible
+							planes[i] = new byte[planeSize];
 						}
+					}
 
-						for (var v = 7; v >= 0; v--)
+					var byteIdx = 0;
+					var bd = new byte[bitlen];
+					for (var y = 0; y < dim.Height; y++)
+					{
+						for (var x = 0; x < dim.Width; x += 8)
 						{
-							var pixel = frame[(y * dim.Width) + (x + v)];
 							for (var i = 0; i < bitlen; i++)
 							{
-								bd[i] <<= 1;
-								if ((pixel & (1 << i)) != 0)
+								bd[i] = 0;
+							}
+
+							for (var v = 7; v >= 0; v--)
+							{
+								var pixel = frame[(y * dim.Width) + (x + v)];
+								for (var i = 0; i < bitlen; i++)
 								{
-									bd[i] |= 1;
+									bd[i] <<= 1;
+									if ((pixel & (1 << i)) != 0)
+									{
+										bd[i] |= 1;
+									}
 								}
 							}
-						}
 
-						for (var i = 0; i < bitlen; i++)
-						{
-							planes[i][byteIdx] = bd[i];
-						}
+							for (var i = 0; i < bitlen; i++)
+							{
+								planes[i][byteIdx] = bd[i];
+							}
 
-						byteIdx++;
+							byteIdx++;
+						}
 					}
 				}
-			}
-			catch (IndexOutOfRangeException e)
-			{
-				Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", dim.Width, dim.Height, frame.Length, bitlen);
-				throw new IndexOutOfRangeException(e.Message, e);
-			}
+				catch (IndexOutOfRangeException e)
+				{
+					Logger.Error("Split failed: {0}x{1} frame:{2} bitlen:{3}", dim.Width, dim.Height, frame.Length, bitlen);
+					throw new IndexOutOfRangeException(e.Message, e);
+				}
 
-			return planes;
+				return planes;
+			}
 		}
 
 		/// <summary>
@@ -93,95 +96,97 @@ namespace LibDmd.Common
 		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
 		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)
 		{
-			var frame = new byte[dim.Surface];
+			using (Profiler.Start("FrameUtil.Join")) {
+				var frame = new byte[dim.Surface];
 
-			if (bitPlanes.Length == 2) {
-				unsafe
-				{
-					fixed (byte* pFrame = &frame[0])
+				if (bitPlanes.Length == 2) {
+					unsafe
 					{
-						var pfEnd = pFrame + frame.Length;
-
-						fixed (byte* plane0 = &bitPlanes[0][0], plane1 = &bitPlanes[1][0])
+						fixed (byte* pFrame = &frame[0])
 						{
-							byte* pp0 = plane0;
-							byte* pp1 = plane1;
-							byte andValue = 1;
+							var pfEnd = pFrame + frame.Length;
 
-							for (var pf = pFrame; pf < pfEnd; pf++) {
-								if ((*pp0 & andValue) > 0)
-									*pf |= 1;
-								if ((*pp1 & andValue) > 0)
-									*pf |= 2;
+							fixed (byte* plane0 = &bitPlanes[0][0], plane1 = &bitPlanes[1][0])
+							{
+								byte* pp0 = plane0;
+								byte* pp1 = plane1;
+								byte andValue = 1;
 
-								if (andValue == 0x80) {
-									pp0++;
-									pp1++;
-									andValue = 0x01;
-								} else
-									andValue <<= 1;
+								for (var pf = pFrame; pf < pfEnd; pf++) {
+									if ((*pp0 & andValue) > 0)
+										*pf |= 1;
+									if ((*pp1 & andValue) > 0)
+										*pf |= 2;
+
+									if (andValue == 0x80) {
+										pp0++;
+										pp1++;
+										andValue = 0x01;
+									} else
+										andValue <<= 1;
+								}
+							}
+						}
+					}
+				} else if (bitPlanes.Length == 4) {
+					unsafe
+					{
+						fixed (byte* pFrame = &frame[0])
+						{
+							var pfEnd = pFrame + frame.Length;
+
+							System.Diagnostics.Debug.Assert(bitPlanes.Length == 4);
+							fixed (byte* plane0 = &bitPlanes[0][0], plane1 = &bitPlanes[1][0],
+								   plane2 = &bitPlanes[2][0], plane3 = &bitPlanes[3][0])
+							{
+								byte* pp0 = plane0;
+								byte* pp1 = plane1;
+								byte* pp2 = plane2;
+								byte* pp3 = plane3;
+
+								byte andValue = 1;
+
+								for (var pf = pFrame; pf < pfEnd; pf++) {
+									if ((*pp0 & andValue) > 0)
+										*pf |= 1;
+									if ((*pp1 & andValue) > 0)
+										*pf |= 2;
+									if ((*pp2 & andValue) > 0)
+										*pf |= 4;
+									if ((*pp3 & andValue) > 0)
+										*pf |= 8;
+
+									if (andValue == 0x80) {
+										pp0++;
+										pp1++;
+										pp2++;
+										pp3++;
+										andValue = 0x01;
+									} else
+										andValue <<= 1;
+								}
+							}
+						}
+					}
+				} else {
+					var planes = new BitArray[bitPlanes.Length];
+					for (var i = 0; i < bitPlanes.Length; i++) {
+						planes[i] = new BitArray(bitPlanes[i]);
+					}
+					for (var f = 0; f < frame.Length; f++) {
+						for (var p = 0; p < bitPlanes.Length; p++) {
+							try {
+								var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
+								frame[f] |= (byte)(bit << p);
+							} catch (ArgumentOutOfRangeException) {
+								Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes[p].Length);
+								throw;
 							}
 						}
 					}
 				}
-			} else if (bitPlanes.Length == 4) {
-				unsafe
-				{
-					fixed (byte* pFrame = &frame[0])
-					{
-						var pfEnd = pFrame + frame.Length;
-
-						System.Diagnostics.Debug.Assert(bitPlanes.Length == 4);
-						fixed (byte* plane0 = &bitPlanes[0][0], plane1 = &bitPlanes[1][0],
-							   plane2 = &bitPlanes[2][0], plane3 = &bitPlanes[3][0])
-						{
-							byte* pp0 = plane0;
-							byte* pp1 = plane1;
-							byte* pp2 = plane2;
-							byte* pp3 = plane3;
-
-							byte andValue = 1;
-
-							for (var pf = pFrame; pf < pfEnd; pf++) {
-								if ((*pp0 & andValue) > 0)
-									*pf |= 1;
-								if ((*pp1 & andValue) > 0)
-									*pf |= 2;
-								if ((*pp2 & andValue) > 0)
-									*pf |= 4;
-								if ((*pp3 & andValue) > 0)
-									*pf |= 8;
-
-								if (andValue == 0x80) {
-									pp0++;
-									pp1++;
-									pp2++;
-									pp3++;
-									andValue = 0x01;
-								} else
-									andValue <<= 1;
-							}
-						}
-					}
-				}
-			} else {
-				var planes = new BitArray[bitPlanes.Length];
-				for (var i = 0; i < bitPlanes.Length; i++) {
-					planes[i] = new BitArray(bitPlanes[i]);
-				}
-				for (var f = 0; f < frame.Length; f++) {
-					for (var p = 0; p < bitPlanes.Length; p++) {
-						try {
-							var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
-							frame[f] |= (byte)(bit << p);
-						} catch (ArgumentOutOfRangeException) {
-							Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes[p].Length);
-							throw;
-						}
-					}
-				}
+				return frame;
 			}
-			return frame;
 		}
 
 		public static void SplitIntoRgbPlanes(char[] rgb565, int width, int numLogicalRows, byte[] dest, ColorMatrix colorMatrix = ColorMatrix.Rgb) // originally "convertAdafruit()"
@@ -352,21 +357,23 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		public static byte[] ScaleDouble(Dimensions dim, byte[] frame)
 		{
-			byte[] scaledData = new byte[dim.Surface * 4];
-			var outputWidth = dim.Width * 2;
-			var outputHeight = dim.Height * 2;
-			const int scale = 2;
+			using (Profiler.Start("FrameUtil.ScaleDouble")) {
+				byte[] scaledData = new byte[dim.Surface * 4];
+				var outputWidth = dim.Width * 2;
+				var outputHeight = dim.Height * 2;
+				const int scale = 2;
 
-			int targetIdx = 0;
-			for (var i = 0; i < outputHeight; ++i) {
-				var iUnscaled = i / scale;
-				for (var j = 0; j < outputWidth; ++j) {
-					var jUnscaled = j / scale;
-					scaledData[targetIdx++] = frame[iUnscaled * dim.Width + jUnscaled];
+				int targetIdx = 0;
+				for (var i = 0; i < outputHeight; ++i) {
+					var iUnscaled = i / scale;
+					for (var j = 0; j < outputWidth; ++j) {
+						var jUnscaled = j / scale;
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width + jUnscaled];
+					}
 				}
+
+				return scaledData;
 			}
-			
-			return scaledData;
 		}
 
 		/// <summary>
@@ -377,22 +384,23 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		public static byte[] ScaleDoubleRgb(Dimensions dim, byte[] frame)
 		{
-			var outputDim = dim * 2;
-			byte[] scaledData = new byte[outputDim.Surface * 3];
-			const int scale = 2;
+			using (Profiler.Start("FrameUtil.ScaleDoubleRgb")) {
+				var outputDim = dim * 2;
+				byte[] scaledData = new byte[outputDim.Surface * 3];
+				const int scale = 2;
 
-			int targetIdx = 0;
-			for (var i = 0; i < outputDim.Height; ++i) {
-				var iUnscaled = i / scale;
-				for (var j = 0; j < outputDim.Width; ++j) {
-					var jUnscaled = j / scale;
-					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
-					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
-					scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
+				int targetIdx = 0;
+				for (var i = 0; i < outputDim.Height; ++i) {
+					var iUnscaled = i / scale;
+					for (var j = 0; j < outputDim.Width; ++j) {
+						var jUnscaled = j / scale;
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
+					}
 				}
+				return scaledData;
 			}
-
-			return scaledData;
 		}
 
 		/// <summary>
@@ -448,38 +456,40 @@ namespace LibDmd.Common
 		/// <returns>Doubled frame data</returns>
 		public static byte[] Scale2X(Dimensions dim, byte[] data)
 		{
-			byte[] scaledData = new byte[dim.Surface * 4];
-			var outputWidth = dim.Width * 2;
+			using (Profiler.Start("FrameUtil.Scale2X")) {
 
-			for (var y = 0; y < dim.Height; y++)
-			{
-				for (var x = 0; x < dim.Width; x++)
+				byte[] scaledData = new byte[dim.Surface * 4];
+				var outputWidth = dim.Width * 2;
+
+				for (var y = 0; y < dim.Height; y++)
 				{
-					var colorB = ImageUtil.GetPixel(x, y - 1, dim.Width, dim.Height, data);
-					var colorH = ImageUtil.GetPixel(x, y + 1, dim.Width, dim.Height, data);
-					var colorD = ImageUtil.GetPixel(x - 1, y, dim.Width, dim.Height, data);
-					var colorF = ImageUtil.GetPixel(x + 1, y, dim.Width, dim.Height, data);
-
-					var colorE = ImageUtil.GetPixel(x, y, dim.Width, dim.Height, data);
-
-					if ((colorB != colorH) && (colorD != colorF))
+					for (var x = 0; x < dim.Width; x++)
 					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, outputWidth, scaledData);
-					}
-					else
-					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, outputWidth, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, outputWidth, scaledData);
+						var colorB = ImageUtil.GetPixel(x, y - 1, dim.Width, dim.Height, data);
+						var colorH = ImageUtil.GetPixel(x, y + 1, dim.Width, dim.Height, data);
+						var colorD = ImageUtil.GetPixel(x - 1, y, dim.Width, dim.Height, data);
+						var colorF = ImageUtil.GetPixel(x + 1, y, dim.Width, dim.Height, data);
+
+						var colorE = ImageUtil.GetPixel(x, y, dim.Width, dim.Height, data);
+
+						if ((colorB != colorH) && (colorD != colorF))
+						{
+							ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, outputWidth, scaledData);
+						}
+						else
+						{
+							ImageUtil.SetPixel(2 * x, 2 * y, colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, outputWidth, scaledData);
+							ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, outputWidth, scaledData);
+						}
 					}
 				}
+				return scaledData;
 			}
-
-			return scaledData;
 		}
 
 
@@ -491,37 +501,39 @@ namespace LibDmd.Common
 		/// <returns>scaled frame planes</returns>
 		public static byte[] Scale2XRgb(Dimensions dim, byte[] data)
 		{
-			var targetWidth = dim.Width * 2;
-			var targetHeight = dim.Height * 2;
-			byte[] scaledData = new byte[targetWidth * targetHeight * 3];
+			using (Profiler.Start("FrameUtil.Scale2XRgb")) {
+				var targetWidth = dim.Width * 2;
+				var targetHeight = dim.Height * 2;
+				byte[] scaledData = new byte[targetWidth * targetHeight * 3];
 
-			for (var y = 0; y < dim.Height; y++)
-			{
-				for (var x = 0; x < dim.Width; x++)
+				for (var y = 0; y < dim.Height; y++)
 				{
-					var colorB = ImageUtil.GetRgbPixel(x, y - 1, dim.Width, dim.Height, data);
-					var colorH = ImageUtil.GetRgbPixel(x, y + 1, dim.Width, dim.Height, data);
-					var colorD = ImageUtil.GetRgbPixel(x - 1, y, dim.Width, dim.Height, data);
-					var colorF = ImageUtil.GetRgbPixel(x + 1, y, dim.Width, dim.Height, data);
+					for (var x = 0; x < dim.Width; x++)
+					{
+						var colorB = ImageUtil.GetRgbPixel(x, y - 1, dim.Width, dim.Height, data);
+						var colorH = ImageUtil.GetRgbPixel(x, y + 1, dim.Width, dim.Height, data);
+						var colorD = ImageUtil.GetRgbPixel(x - 1, y, dim.Width, dim.Height, data);
+						var colorF = ImageUtil.GetRgbPixel(x + 1, y, dim.Width, dim.Height, data);
 
-					var colorE = ImageUtil.GetRgbPixel(x, y, dim.Width, dim.Height, data);
-					if (!CompareBuffers(colorB, 0, colorH, 0, 3) && !CompareBuffers(colorD, 0, colorF, 0, 3))
-					{
-						ImageUtil.SetRgbPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, 3) ? colorD : colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, 3) ? colorD : colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
-					}
-					else
-					{
-						ImageUtil.SetRgbPixel(2 * x, 2 * y, colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, colorE, targetWidth, scaledData);
-						ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, colorE, targetWidth, scaledData);
+						var colorE = ImageUtil.GetRgbPixel(x, y, dim.Width, dim.Height, data);
+						if (!CompareBuffers(colorB, 0, colorH, 0, 3) && !CompareBuffers(colorD, 0, colorF, 0, 3))
+						{
+							ImageUtil.SetRgbPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, 3) ? colorD : colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, 3) ? colorD : colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
+						}
+						else
+						{
+							ImageUtil.SetRgbPixel(2 * x, 2 * y, colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, colorE, targetWidth, scaledData);
+						}
 					}
 				}
+				return scaledData;
 			}
-			return scaledData;
 		}
 
 		/// <summary>
@@ -538,34 +550,39 @@ namespace LibDmd.Common
 		}
 
 		//Scale down planes by displaying every second pixel
-		public static byte[] ScaleDown(Dimensions dim, byte[] srcPlane)
+		private static byte[] ScaleDown(Dimensions dim, byte[] srcPlane)
 		{
-			var planeSize = dim.Surface / 8;
-			byte[] scaledPlane = new byte[planeSize];
-			ushort[] plane = new ushort[planeSize * 2];
-			Buffer.BlockCopy(srcPlane, 0, plane, 0, planeSize * 4);
+			using (Profiler.Start("FrameUtil.ScaleDown")) {
 
-			for (var i = 0; i < dim.Height*2; i++)
-			{
-				for (var k = 0; k < (dim.Width / 8); k++)
+				var planeSize = dim.Surface / 8;
+				byte[] scaledPlane = new byte[planeSize];
+				ushort[] plane = new ushort[planeSize * 2];
+				Buffer.BlockCopy(srcPlane, 0, plane, 0, planeSize * 4);
+
+				for (var i = 0; i < dim.Height*2; i++)
 				{
-					ushort srcVal = plane[(i * (dim.Width / 8)) + k];
-					byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
-					scaledPlane[((i / 2) * (dim.Width / 8)) + k] = destVal;
+					for (var k = 0; k < (dim.Width / 8); k++)
+					{
+						ushort srcVal = plane[(i * (dim.Width / 8)) + k];
+						byte destVal = (byte) ((srcVal & 0x0001) | (srcVal & 0x0004) >> 1 | (srcVal & 0x0010) >> 2 | (srcVal & 0x0040) >> 3 | (srcVal & 0x0100) >> 4 | (srcVal & 0x0400) >> 5 | (srcVal & 0x1000) >> 6 | (srcVal & 0x4000) >> 7);
+						scaledPlane[((i / 2) * (dim.Width / 8)) + k] = destVal;
+					}
+					i++;
 				}
-				i++;
+				return scaledPlane;
 			}
-			return scaledPlane;
 		}
 
 		public static byte[][] ScaleDown(Dimensions dim, byte[][] srcPlanes)
 		{
-			var planes = new byte[srcPlanes.Length][];
-			for (var l = 0; l < srcPlanes.Length; l++)
-			{
-				planes[l] = ScaleDown(dim, srcPlanes[l]);
+			using (Profiler.Start("FrameUtil.ScaleDown")) {
+				var planes = new byte[srcPlanes.Length][];
+				for (var l = 0; l < srcPlanes.Length; l++)
+				{
+					planes[l] = ScaleDown(dim, srcPlanes[l]);
+				}
+				return planes;
 			}
-			return planes;
 		}
 
 		/// <summary>
@@ -576,11 +593,14 @@ namespace LibDmd.Common
 		/// <returns>Top left bottom right pixels with values between 0 and 15</returns>
 		public static byte[] ConvertGrayToGray(byte[] srcFrame, params byte[] mapping)
 		{
-			var destFrame = new byte[srcFrame.Length];
-			for (var i = 0; i < destFrame.Length; i++) {
-				destFrame[i] = mapping[srcFrame[i]];
+			using (Profiler.Start("FrameUtil.ConvertGrayToGray")) {
+
+				var destFrame = new byte[srcFrame.Length];
+				for (var i = 0; i < destFrame.Length; i++) {
+					destFrame[i] = mapping[srcFrame[i]];
+				}
+				return destFrame;
 			}
-			return destFrame;
 		}
 
 		public static DmdFrame ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)

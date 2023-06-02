@@ -4,7 +4,7 @@ using NLog;
 
 namespace LibDmd.Common
 {
-	public class Profiler
+	public static class Profiler
 	{
 		private static readonly Dictionary<string, Profile> Profiles = new Dictionary<string, Profile>();
 		private static List<Profile> RootProfiles { get; } = new List<Profile>();
@@ -12,23 +12,28 @@ namespace LibDmd.Common
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static void Start(string key)
+		public static IDisposable Start(string key)
 		{
-			if (Profiles.ContainsKey(key)) {
-				Profiles[key].Start();
-			} else { 
+#if DEBUG
+			if (Profiles.TryGetValue(key, out var profile)) {
+				profile.Start();
+			} else {
 				_parent = new Profile(key, _parent);
 				Profiles.Add(key, _parent);
 				if (_parent.Parent == null) {
 					RootProfiles.Add(_parent);
 				}
 			}
+#endif
+			return new ProfilerSpan(key);
 		}
 
 		public static void Stop(string key)
 		{
+#if DEBUG
 			Profiles[key].Stop();
 			_parent = Profiles[key].Parent;
+#endif
 		}
 
 		public static void Print()
@@ -42,6 +47,20 @@ namespace LibDmd.Common
 			Profiles.Clear();
 			RootProfiles.Clear();
 			_parent = null;
+		}
+	}
+
+	public readonly struct ProfilerSpan : IDisposable
+	{
+		private readonly string _key;
+
+		public ProfilerSpan(string key)
+		{
+			_key = key;
+		}
+		public void Dispose()
+		{
+			Profiler.Stop(_key);
 		}
 	}
 
