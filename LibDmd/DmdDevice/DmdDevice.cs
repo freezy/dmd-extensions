@@ -955,6 +955,7 @@ namespace LibDmd.DmdDevice
 
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
+			AnalyticsSetSegmentDisplay();
 			if (_gameName.StartsWith("spagb_")) {
 				// ignore GB frames, looks like a bug from SPA side
 				return;
@@ -1027,7 +1028,7 @@ namespace LibDmd.DmdDevice
 					Array.Copy(_dmdFrame.Data, _dmdOldFrame.Data, _dmdFrame.Data.Length);
 				}
 			}
-			_passthroughGray2Source.NextFrame(_dmdFrame);
+			if (_dmdFrame.Data != null) _passthroughGray2Source.NextFrame(_dmdFrame);
 		}
 		
 		#region Analytics
