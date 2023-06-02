@@ -33,6 +33,7 @@ namespace LibDmd.DmdDevice
 		public IVideoConfig Video { get; private set; }
 		public IGifConfig Gif { get; private set; }
 		public IBitmapConfig Bitmap { get; private set; }
+		public IDumpAlphaConfig DumpAlpha  { get; private set; }
 
 		private readonly ISubject<Unit> _onSave = new Subject<Unit>();
 
@@ -136,6 +137,7 @@ namespace LibDmd.DmdDevice
 			BrowserStream = new BrowserConfig(_data, this);
 			NetworkStream = new NetworkConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
+			DumpAlpha = new DumpAlphaConfig(_data,this);
 
 			_saveSubscription?.Dispose();
 			_saveSubscription = _onSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
@@ -226,6 +228,15 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public bool AllowHdScaling => GetBoolean("scaletohd", true);
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class DumpAlphaConfig : AbstractConfiguration, IDumpAlphaConfig
+	{
+		public override string Name { get; } = "dumpalphanumeric";
+		public bool Enabled => GetBoolean("enabled", false);
+		public DumpAlphaConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

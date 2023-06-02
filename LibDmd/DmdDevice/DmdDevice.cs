@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -26,6 +28,7 @@ using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
+using Newtonsoft.Json.Bson;
 using NLog;
 using NLog.Config;
 
@@ -60,6 +63,8 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private readonly DMDFrame _dmdFrame = new DMDFrame();
+		private DMDFrame _dmdOldFrame = new DMDFrame(); // needed to compare old and previous frame to dump only new frames
+		private bool _firstFrame = true; // set to true if this is the first frame of the gameplay
 
 		// Iifärbigsziig
 		private ColorizationLoader _colorizationLoader;
@@ -69,6 +74,9 @@ namespace LibDmd.DmdDevice
 		private Gray4Colorizer _gray4Colorizer;
 		private Coloring _coloring;
 		private bool _isOpen;
+
+		// Bin Writer for Alphanumeric dump
+		private BinaryWriter binWriter = null;
 
 		// Wärchziig
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -170,6 +178,7 @@ namespace LibDmd.DmdDevice
 			_gray4Colorizer = null;
 			_coloring = null;
 			_serum = null;
+			_firstFrame=true;
 
 			SetupColorizer();
 
@@ -875,9 +884,77 @@ namespace LibDmd.DmdDevice
 			_passthroughRgb24Source.NextFrame(frame);
 		}
 
+		#region AlphaNumericDump
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		public static extern IntPtr GetModuleHandle(string lpModuleName);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[PreserveSig]
+		public static extern uint GetModuleFileName
+		(
+			[In] IntPtr hModule,
+			[Out] StringBuilder lpFilename,
+			[In][MarshalAs(UnmanagedType.U4)] int nSize
+		);
+		private static string GetDllPath(string name)
+		{
+			const int maxPath = 261;
+			var builder = new StringBuilder(maxPath);
+			var hModule = GetModuleHandle(name);
+			if (hModule == IntPtr.Zero) {
+				return null;
+			}
+			var size = GetModuleFileName(hModule, builder, builder.Capacity);
+			return size <= 0 ? null : builder.ToString();
+		}
+
+		private void CreateBinaryWriter()
+		{
+			Logger.Info("Alphanumeric ROM detected, starting to dump");
+			string vpmPath;
+			if (IntPtr.Size==4) vpmPath=GetDllPath("VPinMAME.dll"); else vpmPath=GetDllPath("VPinMAME64.dll");
+			if (vpmPath == null) return;
+			string dumpdir = Path.Combine(Path.GetDirectoryName(vpmPath), "dmddump");
+			string dumpfile= Path.Combine(dumpdir, _gameName+".txt");
+			if (Directory.Exists(dumpdir)) {
+				binWriter = new BinaryWriter(File.Open(dumpfile, FileMode.Append));
+				_dmdOldFrame.Data = new byte[128*32];
+			}
+		}
+
+		private bool DifferentFrame(byte[] newFrame,byte[] oldFrame)
+		{
+			for (int i = 0;i<newFrame.Length;i++) {
+				if (newFrame[i] != oldFrame[i])
+					return true;
+			}
+			return false;
+		}
+		private void SaveFrame(byte[] fdata,int timecode)
+		{
+			if (binWriter == null) return;
+			binWriter.Write((byte)'0');
+			binWriter.Write((byte)'x');
+			char[] tbytes=timecode.ToString("X8").ToCharArray();
+			for (int i=0;i<8;i++) binWriter.Write((byte)tbytes[i]);
+			binWriter.Write((byte)'\r');
+			binWriter.Write((byte)'\n');
+			int idx=0;
+			for (int j=0; j<Height; j++) {
+				for (int i=0; i<Width; i++) {
+					byte val=(byte)(fdata[idx++] + 48); // 48='0'
+					binWriter.Write(val);
+				}
+				binWriter.Write((byte)'\r');
+				binWriter.Write((byte)'\n');
+			}
+			binWriter.Write((byte)'\r');
+			binWriter.Write((byte)'\n');
+		}
+		#endregion
+
 		public void RenderAlphaNumeric(NumericalLayout layout, ushort[] segData, ushort[] segDataExtended)
 		{
-			AnalyticsSetSegmentDisplay();
 			if (_gameName.StartsWith("spagb_")) {
 				// ignore GB frames, looks like a bug from SPA side
 				return;
@@ -893,50 +970,63 @@ namespace LibDmd.DmdDevice
 			//Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 0);
 					break;
 				case NumericalLayout.None:
 				case NumericalLayout.__2x20Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x20Alpha(segData), 0);
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num(segData), 0);
 					break;
 				case NumericalLayout.__2x7Alpha_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Alpha_2x7Num_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_10x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_10x1Num(segData, segDataExtended), 0);
 					break;
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Num_2x7Num_4x1Num_gen7(segData), 0);
 					break;
 				case NumericalLayout.__2x7Num10_2x7Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Num10_2x7Num10_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__2x6Num_2x6Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x6Num_2x6Num_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__2x6Num10_2x6Num10_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x6Num10_2x6Num10_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__4x7Num10:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render4x7Num10(segData), 0);
 					break;
 				case NumericalLayout.__6x4Num_4x1Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render6x4Num_4x1Num(segData), 0);
 					break;
 				case NumericalLayout.__2x7Num_4x1Num_1x16Alpha:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render2x7Num_4x1Num_1x16Alpha(segData), 0);
 					break;
 				case NumericalLayout.__1x16Alpha_1x16Num_1x7Num:
-					_passthroughGray2Source.NextFrame(_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0));
+					_dmdFrame.Update(AlphaNumeric.Render1x16Alpha_1x16Num_1x7Num(segData), 0);
 					break;
 				default:
+					_dmdFrame.Data=null;
 					throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
+			}
+			if ((_dmdFrame.Data != null) && (_config.DumpAlpha.Enabled == true)) {
+				if (_firstFrame || DifferentFrame(_dmdFrame.Data,_dmdOldFrame.Data)) {
+					if (binWriter == null) CreateBinaryWriter();
+					_firstFrame = false;
+					SaveFrame(_dmdFrame.Data, Environment.TickCount); 
+					_dmdOldFrame.height = _dmdFrame.height;
+					_dmdOldFrame.width = _dmdFrame.width;
+					_dmdOldFrame.BitLength = _dmdFrame.BitLength;
+					Array.Copy(_dmdFrame.Data, _dmdOldFrame.Data, _dmdFrame.Data.Length);
+				}
+				_passthroughGray2Source.NextFrame(_dmdFrame);
 			}
 		}
 		

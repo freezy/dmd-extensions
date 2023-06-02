@@ -75,7 +75,10 @@ namespace LibDmd.DmdDevice
 		string Port { get; }
 		ColorMatrix ColorMatrix { get; }
 	}
-
+	public interface IDumpAlphaConfig
+	{
+		bool Enabled { get; }
+	}
 	public interface IVirtualDmdConfig
 	{
 		bool Enabled { get; }
