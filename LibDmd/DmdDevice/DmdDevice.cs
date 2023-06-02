@@ -28,7 +28,6 @@ using LibDmd.Output.Pixelcade;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.ZeDMD;
 using Microsoft.Win32;
-using Newtonsoft.Json.Bson;
 using NLog;
 using NLog.Config;
 
