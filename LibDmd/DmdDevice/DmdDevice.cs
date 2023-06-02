@@ -1026,8 +1026,8 @@ namespace LibDmd.DmdDevice
 					_dmdOldFrame.BitLength = _dmdFrame.BitLength;
 					Array.Copy(_dmdFrame.Data, _dmdOldFrame.Data, _dmdFrame.Data.Length);
 				}
-				_passthroughGray2Source.NextFrame(_dmdFrame);
 			}
+			_passthroughGray2Source.NextFrame(_dmdFrame);
 		}
 		
 		#region Analytics
