@@ -36,7 +36,7 @@ namespace LibDmd.Test
 			LogManager.ReconfigExistingLoggers();
 		}
 
-		protected void RemoveLogger()
+		protected static void RemoveLogger()
 		{
 			LogManager.Configuration.RemoveTarget("test");
 			LogManager.Configuration.LoggingRules.Clear();

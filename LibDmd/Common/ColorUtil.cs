@@ -253,43 +253,45 @@ namespace LibDmd.Common
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeRgb24(Dimensions dim, byte[] frame, Color[] palette)
 		{
-			#if DEBUG
-			if (dim.Surface != frame.Length) {
-				throw new ArgumentException("Data and dimensions do not match.");
-			}
-			#endif
-			
-			var frameLength = dim.Surface * 3;
-			var colorizedFrame = new byte[frameLength];
+			using (Profiler.Start("ColorUtil.ColorizeRgb24")) {
+				#if DEBUG
+				if (dim.Surface != frame.Length) {
+					throw new ArgumentException("Data and dimensions do not match.");
+				}
+				#endif
 
-			var rpalvalues = new byte[palette.Length];
-			var gpalvalues = new byte[palette.Length];
-			var bpalvalues = new byte[palette.Length];
+				var frameLength = dim.Surface * 3;
+				var colorizedFrame = new byte[frameLength];
 
-			for (var i = 0; i < palette.Length; i++) {
-				rpalvalues[i] = palette[i].R;
-				gpalvalues[i] = palette[i].G;
-				bpalvalues[i] = palette[i].B;
-			}
+				var rpalvalues = new byte[palette.Length];
+				var gpalvalues = new byte[palette.Length];
+				var bpalvalues = new byte[palette.Length];
 
-			var maxPixel = (byte)(palette.Length - 1);
-			unsafe
-			{
-				fixed (byte* pFrame = frame, pcolorFrame = colorizedFrame)
+				for (var i = 0; i < palette.Length; i++) {
+					rpalvalues[i] = palette[i].R;
+					gpalvalues[i] = palette[i].G;
+					bpalvalues[i] = palette[i].B;
+				}
+
+				var maxPixel = (byte)(palette.Length - 1);
+				unsafe
 				{
-					byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
-					byte* pColorFrameCur = pcolorFrame;
+					fixed (byte* pFrame = frame, pcolorFrame = colorizedFrame)
+					{
+						byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
+						byte* pColorFrameCur = pcolorFrame;
 
-					for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += 3) {
-						var pixel = *pFrameCur;
-						if (pixel > maxPixel) pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
-						*pColorFrameCur = rpalvalues[pixel];
-						*(pColorFrameCur + 1) = gpalvalues[pixel];
-						*(pColorFrameCur + 2) = bpalvalues[pixel];
+						for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += 3) {
+							var pixel = *pFrameCur;
+							if (pixel > maxPixel) pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
+							*pColorFrameCur = rpalvalues[pixel];
+							*(pColorFrameCur + 1) = gpalvalues[pixel];
+							*(pColorFrameCur + 2) = bpalvalues[pixel];
+						}
 					}
 				}
+				return colorizedFrame;
 			}
-			return colorizedFrame;
 		}
 
 		/// <summary>

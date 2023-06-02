@@ -124,17 +124,20 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">If frame is already gray2</exception>
 		public DmdFrame ConvertToGray2()
 		{
-			switch (BitLength) {
-				case 2:
-					throw new ArgumentException("Frame is already gray2.");
-				case 4:
-					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3), 2);
-				case 6:
-					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3), 2);
-				case 24:
-					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 4), 2);
-				default:
-					throw new ArgumentException("Invalid bit length.");
+			using (Profiler.Start("DmdFrame.ConvertToGray2")) {
+
+				switch (BitLength) {
+					case 2:
+						throw new ArgumentException("Frame is already gray2.");
+					case 4:
+						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3), 2);
+					case 6:
+						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3), 2);
+					case 24:
+						return Update(ImageUtil.ConvertToGray(Dimensions, Data, 4), 2);
+					default:
+						throw new ArgumentException("Invalid bit length.");
+				}
 			}
 		}
 
@@ -145,38 +148,20 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">If frame is already gray4</exception>
 		public DmdFrame ConvertToGray4()
 		{
-			switch (BitLength) {
-				case 2:
-					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf), 4);
-				case 4:
-					throw new ArgumentException("Frame is already gray4.");
-				case 6:
-					return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf), 4);
-				case 24:
-					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 16), 4);
-				default:
-					throw new ArgumentException("Invalid bit length.");
-			}
-		}
+			using (Profiler.Start("DmdFrame.ConvertToGray4")) {
 
-		/// <summary>
-		/// Converts this frame to gray6.
-		/// </summary>
-		/// <returns>This frame, converted to gray6.</returns>
-		/// <exception cref="ArgumentException">If the current frame any anything else but RGB24.</exception>
-		public DmdFrame ConvertToGray6()
-		{
-			switch (BitLength) {
-				case 2:
-					throw new ArgumentException("No point in converting gray2 to gray6.");
-				case 4:
-					throw new ArgumentException("No point in converting gray4 to gray6.");
-				case 6:
-					throw new ArgumentException("Frame is already gray6.");
-				case 24:
-					return Update(ImageUtil.ConvertToGray(Dimensions, Data, 64), 6);
-				default:
-					throw new ArgumentException("Invalid bit length.");
+				switch (BitLength) {
+					case 2:
+						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf), 4);
+					case 4:
+						throw new ArgumentException("Frame is already gray4.");
+					case 6:
+						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf), 4);
+					case 24:
+						return Update(ImageUtil.ConvertToGray(Dimensions, Data, 16), 4);
+					default:
+						throw new ArgumentException("Invalid bit length.");
+				}
 			}
 		}
 
@@ -194,12 +179,15 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">Thrown if executed on a grayscale frame</exception>
 		public BmpFrame ConvertToBmp()
 		{
-			#if DEBUG
-			if (!IsRgb24) {
-				throw new ArgumentException("Cannot convert from gray to bitmap. Convert to RGB24 first.");
+			using (Profiler.Start("DmdFrame.ConvertToBmp")) {
+
+				#if DEBUG
+				if (!IsRgb24) {
+					throw new ArgumentException("Cannot convert from gray to bitmap. Convert to RGB24 first.");
+				}
+				#endif
+				return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
 			}
-			#endif
-			return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
 		}
 
 		/// <summary>
@@ -216,55 +204,61 @@ namespace LibDmd.Frame
 		/// <returns></returns>
 		public DmdFrame TransformGray(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			var bytesPerPixel = BytesPerPixel;
-			var targetDim = GetTargetDimensions(fixedDest, multiDest);
-			if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
-				// just flip
-				Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-				return this;
-			}
+			using (Profiler.Start("DmdFrame.TransformGray")) {
 
-			// perf: if no flipping these cases can easily done on the byte array directly
-			if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-
-				// copy whole block if only vertical padding
-				if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
-					return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel), BitLength);
+				var bytesPerPixel = BytesPerPixel;
+				var targetDim = GetTargetDimensions(fixedDest, multiDest);
+				if (targetDim == Dimensions.Dynamic || Dimensions == targetDim) {
+					// just flip
+					Data = TransformationUtil.Flip(Dimensions, bytesPerPixel, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+					return this;
 				}
 
-				// copy line by line if centering image
-				if (Dimensions.FitsInto(targetDim)) {
-					return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), BitLength);
+				// perf: if no flipping these cases can easily done on the byte array directly
+				if (!renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+
+					// copy whole block if only vertical padding
+					if (Dimensions.Width == targetDim.Width && Dimensions.Height < targetDim.Height) {
+						return Update(targetDim, CenterVertically(targetDim, Data, bytesPerPixel), BitLength);
+					}
+
+					// copy line by line if centering image
+					if (Dimensions.FitsInto(targetDim)) {
+						return Update(targetDim, CenterFrame(targetDim, Data, bytesPerPixel), BitLength);
+					}
 				}
+
+				// otherwise, convert to bitmap, resize, convert back.
+				var bmp = ImageUtil.ConvertFrom(BitLength, Dimensions, Data, 0, 1, 1);
+				var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+				var transformedFrame = ImageUtil.ConvertTo(BitLength, transformedBmp);
+
+				return Update(targetDim, transformedFrame, BitLength);
 			}
-
-			// otherwise, convert to bitmap, resize, convert back.
-			var bmp = ImageUtil.ConvertFrom(BitLength, Dimensions, Data, 0, 1, 1);
-			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertTo(BitLength, transformedBmp);
-
-			return Update(targetDim, transformedFrame, BitLength);
 		}
 
 		public DmdFrame TransformRgb24(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
-			// todo merge with TransformGray
-			// do anything at all?
-			if (fixedDest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return this;
-			}
+			using (Profiler.Start("DmdFrame.TransformRgb24")) {
 
-			// just flip?
-			if (fixedDest == null || fixedDest.FixedSize == Dimensions) {
-				Data = TransformationUtil.Flip(Dimensions, 3, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-				return this;
-			}
+				// todo merge with TransformGray
+				// do anything at all?
+				if (fixedDest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+					return this;
+				}
 
-			// resize
-			var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
-			var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
-			var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
-			return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+				// just flip?
+				if (fixedDest == null || fixedDest.FixedSize == Dimensions) {
+					Data = TransformationUtil.Flip(Dimensions, 3, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+					return this;
+				}
+
+				// resize
+				var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
+				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+				var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
+				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+			}
 		}
 
 		/// <summary>
@@ -276,47 +270,53 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException"></exception>
 		public DmdFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
 		{
-			// skip if disabled
-			if (scalerMode == ScalerMode.None) {
-				return this;
-			}
-			
-			// if destination doesn't allow scaling (e.g. pup), return
-			if (fixedDest != null && !fixedDest.DmdAllowHdScaling) {
-				return this;
-			}
+			using (Profiler.Start("DmdFrame.TransformHdScaling")) {
 
-			// if double of frame size doesn't fit into destination, return
-			if (fixedDest != null && !(Dimensions * 2).FitsInto(fixedDest.FixedSize)) {
-				return this;
-			}
+				// skip if disabled
+				if (scalerMode == ScalerMode.None) {
+					return this;
+				}
 
-			// if source is already > 128x32, return
-			if (Dimensions > new Dimensions(128, 32)) {
-				return this;
-			}
+				// if destination doesn't allow scaling (e.g. pup), return
+				if (fixedDest != null && !fixedDest.DmdAllowHdScaling) {
+					return this;
+				}
 
-			return TransformHdScaling(scalerMode);
+				// if double of frame size doesn't fit into destination, return
+				if (fixedDest != null && !(Dimensions * 2).FitsInto(fixedDest.FixedSize)) {
+					return this;
+				}
+
+				// if source is already > 128x32, return
+				if (Dimensions > new Dimensions(128, 32)) {
+					return this;
+				}
+
+				return TransformHdScaling(scalerMode);
+			}
 		}
 
 		public DmdFrame TransformHdScaling(ScalerMode scalerMode)
 		{
-			switch (scalerMode) {
-				case ScalerMode.None:
-					return this;
+			using (Profiler.Start("DmdFrame.TransformHdScaling")) {
 
-				case ScalerMode.Doubler:
-					return IsRgb24
-						? Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, Data))
-						: Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
+				switch (scalerMode) {
+					case ScalerMode.None:
+						return this;
 
-				case ScalerMode.Scale2x:
-					return IsRgb24
-						? Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, Data))
-						: Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
+					case ScalerMode.Doubler:
+						return IsRgb24
+							? Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, Data))
+							: Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
 
-				default:
-					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);
+					case ScalerMode.Scale2x:
+						return IsRgb24
+							? Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, Data))
+							: Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
+
+					default:
+						throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);
+				}
 			}
 		}
 		
@@ -329,20 +329,23 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
 		public DmdFrame ConvertToRgb24(Color[] palette)
 		{
-			#if DEBUG
-			if (!IsGray) {
-				throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
+			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
+
+				#if DEBUG
+				if (!IsGray) {
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
+				}
+
+				if (palette.Length.GetBitLength() != BitLength) {
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
+				}
+				#endif
+
+				Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
+				BitLength = 24;
+
+				return this;
 			}
-
-			if (palette.Length.GetBitLength() != BitLength) {
-				throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
-			}
-			#endif
-
-			Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
-			BitLength = 24;
-
-			return this;
 		}
 
 		/// <summary>
