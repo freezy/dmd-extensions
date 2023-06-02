@@ -99,6 +99,7 @@ namespace LibDmd.DmdDevice
 		bool Enabled { get; }
 		bool StayOnTop { get; }
 		RasterizeStyleDefinition Style { get; }
+		void SetPosition(int displayNumber, VirtualDisplayPosition position);
 	}
 
 	public interface IVideoConfig
