@@ -234,7 +234,7 @@ namespace LibDmd.DmdDevice
 
 	public class DumpAlphaConfig : AbstractConfiguration, IDumpAlphaConfig
 	{
-		public override string Name { get; } = "dumpalphanumeric";
+		public override string Name { get; } = "alphanumericdump";
 		public bool Enabled => GetBoolean("enabled", false);
 		public DumpAlphaConfig(IniData data, Configuration parent) : base(data, parent)
 		{
