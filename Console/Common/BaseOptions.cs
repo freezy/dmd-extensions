@@ -293,6 +293,10 @@ namespace DmdExt.Common
 		public bool StayOnTop => _options.VirtualDmdOnTop;
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.AlphaNumeric;
 		public RasterizeStyleDefinition Style { get; } = new RasterizeStyleDefinition();
+		public void SetPosition(int displayNumber, VirtualDisplayPosition position)
+		{
+			// we can't write back the position to command line options.
+		}
 	}
 
 	internal class PinDmd1Options : IPinDmd1Config
