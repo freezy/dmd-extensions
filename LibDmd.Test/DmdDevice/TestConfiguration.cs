@@ -78,6 +78,9 @@ namespace LibDmd.Test
 		public bool Enabled { get; set; }
 		public bool StayOnTop { get; set; }
 		public RasterizeStyleDefinition Style { get; set; }
+		public void SetPosition(int displayNumber, VirtualDisplayPosition position)
+		{
+		}
 	}
 
 	public class TestPinDmd1Config : IPinDmd1Config

@@ -60,8 +60,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void CreateImage(int width, int height)
 		{
-			Logger.Debug("Creating image...");
-			Res.Loaded[DisplaySetting.SegmentType][DisplaySetting.StyleDefinition.SegmentWeight].Take(1).Subscribe(_ => {
+			Logger.Debug($"Creating image...");
+			var weight = DisplaySetting.StyleDefinition?.SegmentWeight ?? SegmentWeight.Bold;
+			Res.Loaded[DisplaySetting.SegmentType][weight].Take(1).Subscribe(_ => {
 				DisplaySetting.SetDimensions(width, height);
 				if (!_aspectRatioSet) {
 					Host.SetDimensions(new Dimensions(DisplaySetting.Dim.CanvasWidth, DisplaySetting.Dim.CanvasHeight));

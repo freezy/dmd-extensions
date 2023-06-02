@@ -1,4 +1,11 @@
-﻿using LibDmd.DmdDevice;
+﻿// ReSharper disable PossibleNullReferenceException
+
+using System;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using LibDmd.DmdDevice;
+using NLog;
 using NUnit.Framework;
 
 namespace LibDmd.Test
@@ -6,6 +13,8 @@ namespace LibDmd.Test
 	//[TestFixture]
 	public class DmdDeviceTests : TestBase
 	{
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		[SetUp]
 		public void Setup()
 		{
@@ -73,6 +82,44 @@ namespace LibDmd.Test
 
 			dmdDevice.RenderAlphaNumeric(NumericalLayout.__2x16Alpha, segData, new ushort[] {});
 			dmdDevice.Close();
+		}
+
+		//[TestCase]
+		public async Task Should_Colorize_An_Alphanumeric_Frame()
+		{
+			var config = new TestConfiguration();
+
+			(config.VirtualAlphaNumericDisplay as TestVirtualAlphaNumericDisplayConfig).Enabled = true;
+			(config.Global as TestGlobalConfig).Colorize = true;
+			(config.Global as TestGlobalConfig).Plugins = new [] {
+				new PluginConfig(@"L:\Visual Pinball\VPinMAME\pin2color.dll", false)
+			};
+
+
+			var dmdDevice = new DmdDevice.DmdDevice(config);
+			dmdDevice.SetGameName("bttf_a27");
+			dmdDevice.SetColorize(true);
+			dmdDevice.Init();
+
+			var segData = new ushort[] {
+				5120, 5120, 5120, 0, 10767, 2167, 57, 5232, 0, 8705, 63, 0, 0, 0, 0, 0, 0, 0, 8705, 2166, 121, 0,
+				113, 62, 8705, 62, 6259, 121, 0, 16640, 16640, 16640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+			};
+
+			Logger.Info("Starting thread");
+			Task.Run(() => {
+				Thread.CurrentThread.IsBackground = true;
+
+
+				dmdDevice.RenderAlphaNumeric(NumericalLayout.__2x16Alpha, segData, new ushort[] {});
+				Logger.Info("Sleeping..");
+				Thread.Sleep(1000);
+				Logger.Info("Continuing");
+				dmdDevice.Close();
+			});
+
+			await Observable.Timer(TimeSpan.FromMilliseconds(2000)).FirstAsync();
 		}
 	}
 }

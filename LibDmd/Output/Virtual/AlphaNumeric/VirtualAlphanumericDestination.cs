@@ -385,7 +385,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			if (_config != null && _config.HasGameName) {
 				display.PositionChanged.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(position => {
 					Logger.Info("Position changed: {0}", position);
-					(_config.VirtualAlphaNumericDisplay as VirtualAlphaNumericDisplayConfig).SetPosition(displayNumber, position);
+					_config.VirtualAlphaNumericDisplay.SetPosition(displayNumber, position);
 				});
 			}
 
