@@ -8,6 +8,24 @@ namespace LibDmd.Test
 {
 	public static class FrameGenerator
 	{
+		private static readonly Random _random = new Random((int)(DateTime.Now.Ticks % int.MaxValue));
+		
+		public static DmdFrame Random(int width, int height, int bitLength)
+		{
+			var length = width * height * bitLength.GetByteLength();
+			var maxVal = Math.Pow(2, bitLength);
+			var data = new byte[length];
+			for (var i = 0; i < length; i++) {
+				if (bitLength <= 8) {
+					data[i] = (byte)(_random.Next() % maxVal);
+				} else {
+					data[i] = (byte)(_random.Next());
+				}
+			}
+
+			return new DmdFrame(new Dimensions(width, height), data, bitLength);
+		}
+		
 		public static DmdFrame FromString(string frame)
 		{
 			var match = Regex.Match(frame, @"\d{2} \d{2}", RegexOptions.IgnoreCase);

@@ -15,6 +15,9 @@ namespace LibDmd.Frame
 		public byte[] Data { get; private set; }
 		public int BitLength;
 		public int NumColors => (int)Math.Pow(2, BitLength);
+		
+		public static bool operator ==(DmdFrame x, DmdFrame y) => Equals(x, y);
+		public static bool operator != (DmdFrame x, DmdFrame y) => Equals(x, y);
 
 		public FrameFormat Format {
 			get {
@@ -67,6 +70,13 @@ namespace LibDmd.Frame
 			#if DEBUG
 			AssertData();
 			#endif
+		}
+
+		public DmdFrame Update(DmdFrame frame)
+		{
+			Data = frame.Data;
+			BitLength = frame.BitLength;
+			return this;
 		}
 
 		public DmdFrame Update(byte[] data, int bitLength)
@@ -346,6 +356,29 @@ namespace LibDmd.Frame
 
 				return this;
 			}
+		}
+		
+		/// <summary>
+		/// Checks whether frame data and bit length are both equal.
+		/// </summary>
+		/// <param name="a">First frame to compare</param>
+		/// <param name="b">Second frame to compare</param>
+		/// <returns>True if data and bit length are identical, false otherwise.</returns>
+		private static bool Equals(DmdFrame a, DmdFrame b)
+		{
+			if (ReferenceEquals(null, a) && ReferenceEquals(null, b)) {
+				return true;
+			}
+			if (ReferenceEquals(null, a)) {
+				return false;
+			}
+			if (ReferenceEquals(null, b)) {
+				return false;
+			}
+			if (ReferenceEquals(a, b)) {
+				return true;
+			}
+			return a.BitLength == b.BitLength && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
 
 		/// <summary>

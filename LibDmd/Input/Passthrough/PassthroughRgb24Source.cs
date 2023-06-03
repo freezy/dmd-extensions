@@ -22,7 +22,8 @@ namespace LibDmd.Input.Passthrough
 
 		private readonly Subject<DmdFrame> _framesRgb24 = new Subject<DmdFrame>();
 		private readonly ISubject<string> _gameName = new Subject<string>();
-		private byte[] _lastFrame;
+		
+		private readonly DmdFrame _lastFrame = new DmdFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		public PassthroughRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
@@ -33,16 +34,14 @@ namespace LibDmd.Input.Passthrough
 
 		public void NextFrame(DmdFrame frame)
 		{
-			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame != null && FrameUtil.CompareBuffers(frame.Data, 0, _lastFrame, 0, frame.Data.Length)) {
-				// identical frame, drop.
+			// de-dupe frame
+			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame == frame) {
 				return;
 			}
-			if (_lastFrame?.Length != frame.Data.Length) {
-				_lastFrame = new byte[frame.Data.Length];
-			}
-			_framesRgb24.OnNext(frame);
-			Buffer.BlockCopy(frame.Data, 0, _lastFrame, 0, frame.Data.Length);
+
+			_lastFrame.Update(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Rgb24);
+			_framesRgb24.OnNext(frame);
 		}
 
 		public IObservable<DmdFrame> GetRgb24Frames() => _framesRgb24;
