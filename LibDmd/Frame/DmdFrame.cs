@@ -378,7 +378,7 @@ namespace LibDmd.Frame
 			if (ReferenceEquals(a, b)) {
 				return true;
 			}
-			return a.BitLength == b.BitLength && FrameUtil.CompareBuffersFast(a.Data, b.Data);
+			return a.BitLength == b.BitLength && a.Dimensions == b.Dimensions && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
 
 		/// <summary>
