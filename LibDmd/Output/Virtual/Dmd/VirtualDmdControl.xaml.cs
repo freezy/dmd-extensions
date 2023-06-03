@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -129,6 +130,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private ushort _fboErrorCount = 0;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private IDisposable _rotator;
 
 		public VirtualDmdControl()
 		{
@@ -226,6 +228,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray2(frame.ConvertToGray());
 			CurrentFrameFormat = FrameFormat.ColoredGray2;
@@ -233,6 +236,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray4(frame.ConvertToGray());
 			CurrentFrameFormat = FrameFormat.ColoredGray4;
@@ -240,49 +244,38 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			_hasFrame = true;
 			CurrentFrameFormat = FrameFormat.ColoredGray6;
-			var frameData = FrameUtil.Join(_frameDimensions, frame.Planes);
-			var frameChanged = false;
-			if (_frameData != null) {
-				for (var i = 0; i < _frameDimensions.Surface; i++) {
-					if (frameData[i] == _frameData[i]) {
-						continue;
-					}
-					frameChanged = true;
-					break;
+			
+			SetDimensions(frame.Dimensions);
+			SetPalette(frame.Palette);
+			_frameData = FrameUtil.Join(_frameDimensions, frame.Planes);
+			_frameType = FrameFormat.ColoredGray6;
+
+			if (frame.RotateColors) {
+				for (byte i = 0; i < 64; i++) {
+					_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
 				}
+				DateTime now = DateTime.UtcNow;
+				for (var i = 0; i < MaxColorRotations; i++) {
+					_rotationStartColor[i] = frame.Rotations[i * 3];
+					_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
+					_rotationIntervalMs[i] = 10.0 * frame.Rotations[i * 3 + 2];
+					_rotationStartTime[i] = now;
+					_rotationCurrentStartColor[i] = 0;
+				}
+				Dmd.RequestRender();
+				StartRotating();
+				
 			} else {
-				frameChanged = true;
+				StopRotating();
 			}
-
-			if (frameChanged) {
-				SetDimensions(frame.Dimensions);
-				SetPalette(frame.Palette);
-				_frameData = frameData;
-				_hasFrame = true;
-				_frameType = FrameFormat.ColoredGray6;
-
-				if (frame.RotateColors) {
-					_rotationsEnabled = true;
-					for (byte i = 0; i < 64; i++) {
-						_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
-					}
-					DateTime now = DateTime.UtcNow;
-					for (var i = 0; i < MaxColorRotations; i++) {
-						_rotationStartColor[i] = frame.Rotations[i * 3];
-						_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
-						_rotationIntervalMs[i] = 10.0 * frame.Rotations[i * 3 + 2];
-						_rotationStartTime[i] = now;
-						_rotationCurrentStartColor[i] = 0;
-					}
-					Dmd.RequestRender();
-					return;
-				}
-				_rotationsEnabled = false;
-			}
-
+		}
+		
+		private void Rotate(long _)
+		{
 			if (_rotationsEnabled) {
-				var newPalette = UpdateRotations(frame);
+				var newPalette = UpdateRotations();
 				SetPalette(newPalette);
 			}
 
@@ -290,8 +283,29 @@ namespace LibDmd.Output.Virtual.Dmd
 				Dmd.RequestRender();
 			}
 		}
+		
+		private void StartRotating()
+		{
+			_rotationsEnabled = true;
+			if (_rotator != null) {
+				return;
+			}
+			_rotator = Observable
+				.Interval(TimeSpan.FromMilliseconds(16.6))
+				.Subscribe(Rotate);
+		}
 
-		private Color[] UpdateRotations(ColoredFrame frame)
+		private void StopRotating()
+		{
+			_rotationsEnabled = false;
+			if (_rotator == null) {
+				return;
+			}
+			_rotator.Dispose();
+			_rotator = null;
+		}
+
+		private Color[] UpdateRotations()
 		{
 			Color[] newPalette = new Color[64];
 			DateTime now = DateTime.UtcNow;
@@ -316,7 +330,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 
 				for (int j = 0; j < 64; j++) {
-					newPalette[j] = frame.Palette[_rotationCurrentPaletteIndex[j]];
+					newPalette[j] = _gray6Palette[_rotationCurrentPaletteIndex[j]];
 				}
 				_hasFrame = true;
 			}
