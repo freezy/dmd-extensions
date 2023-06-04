@@ -177,9 +177,9 @@ If you don't have Visual PinMAME installed, you'll have to set the `DMDDEVICE_CO
 
 To do that:
 
-1. Press [Windows] and type "env" and select "Edit the system environment variables".
-2. Click "Environment Variables...".
-3. Under "System variables", click "New...".
+1. Press [Windows] and type "env" and select *Edit the system environment variables*.
+2. Click *Environment Variables...*.
+3. Under "System variables", click *New...*.
 4. Enter `DMDDEVICE_CONFIG` as variable name and the full path to `DmdDevice.ini` as variable value.
 
 If you have done that, or you do have VPM installed, simply enable the external DMD in Pinball FX:

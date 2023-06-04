@@ -27,7 +27,7 @@ virtualdmd height = 702
 ```
 
 | Title                                                 | ID  |  
-|-------------------------------------------------------|-----|
+|-------------------------------------------------------|:---:|
 | Adventure Land                                        | 29  |
 | Attack from Mars™                                     | 119 |
 | Back to the Future™ Pinball                           | 97  |
@@ -40,7 +40,7 @@ virtualdmd height = 702
 | CastleStorm                                           | 40  |
 | Champion Pub™                                         | 121 |
 | Cirqus Voltaire™                                      | 127 |
-| Civil War                                             | 1   |
+| Civil War                                             |  1  |
 | Crypt of the NecroDancer Pinball                      | 161 |
 | Curse of the Mummy                                    | 112 |
 | Deadpool                                              | 22  |
@@ -51,7 +51,7 @@ virtualdmd height = 702
 | DreamWorks Trolls Pinball                             | 140 |
 | E.T.™ Pinball                                         | 96  |
 | Fantastic Four                                        | 38  |
-| Fear Itself                                           | 5   |
+| Fear Itself                                           |  5  |
 | Fish Tales™                                           | 108 |
 | FunHouse™                                             | 134 |
 | Garfield Pinball                                      | 145 |
@@ -103,12 +103,12 @@ virtualdmd height = 702
 | Star Wars™ Pinball: Episode V The Empire Strikes Back | 43  |
 | Star Wars™ Pinball: Episode VI Return of the Jedi     | 24  |
 | Star Wars™ Pinball: Han Solo                          | 10  |
-| Star Wars™ Pinball: Masters of the Force              | 2   |
+| Star Wars™ Pinball: Masters of the Force              |  2  |
 | Star Wars™ Pinball: Might of the First Order          | 89  |
 | Star Wars™ Pinball: Rogue One™                        | 98  |
 | Star Wars™ Pinball: Solo                              | 105 |
 | Star Wars™ Pinball: Star Wars Rebels™                 | 77  |
-| Star Wars™ Pinball: Starfighter Assault               | 6   |
+| Star Wars™ Pinball: Starfighter Assault               |  6  |
 | Star Wars™ Pinball: The Clone Wars                    | 47  |
 | Star Wars™ Pinball: The Force Awakens™                | 88  |
 | Star Wars™ Pinball: The Last Jedi™                    | 103 |
@@ -122,7 +122,7 @@ virtualdmd height = 702
 | The Machine™: Bride of Pin·Bot™                       | 148 |
 | The Party Zone™                                       | 120 |
 | Theatre of Magic™                                     | 117 |
-| Thor                                                  | 7   |
+| Thor                                                  |  7  |
 | Twilight Zone                                         | 162 |
 | Venom                                                 | 73  |
 | White Water™                                          | 124 |
