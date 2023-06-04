@@ -18,6 +18,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
 * [Usage](#usage)
   * [Pinball FX2](#pinball-fx2)
   * [Pinball FX3](#pinball-fx3)
+  * [Pinball FX](#pinball-fx)
   * [The Pinball Arcade](#the-pinball-arcade)
   * [Pro Pinball Ultra](#pro-pinball-ultra)
   * [Visual PinMAME](#visual-pinmame)
@@ -41,6 +42,7 @@ DMD Extensions adds real DMD support to the following games:
 
 - [**Pinball FX2**](#pinball-fx2) through frame grabbing from screen
 - [**Pinball FX3**](#pinball-fx3) by reading the DMD texture data from memory
+- [**Pinball FX**](#pinball-fx) by officially supporting `DmdDevice.dll` (thanks, Zen!) 
 - [**The Pinball Arcade**](#the-pinball-arcade) by Farsight, through grabbing the DMD texture from memory
 - [**Pro Pinball Timeshock**](#pro-pinball-ultra) through their message queue
 - [**Visual PinMAME**](#visual-pinmame) through `DmdDevice.dll`
@@ -80,7 +82,7 @@ Documentation how to enable and customize this feature can be found [here](https
 DMD Extensions includes support for Serum colorizations, as well as the VNI/PAL format, originally used on PIN2DMD devices.
 PAC support is intended, but needs some refactoring first.
 
-Colorization is enabled for most games, including Pinball FX3, The Pinball Arcade, and Visual PinMAME.
+Colorization is enabled for most games, including Pinball FX(3), The Pinball Arcade, and Visual PinMAME.
 
 <image src="https://user-images.githubusercontent.com/57115343/151871089-5f958122-f9db-47d2-a133-f29e964eb8e4.jpg" width="350" />
 
@@ -164,6 +166,31 @@ Note that while the current memory grabber code should also work for future
 Pinball FX3 versions, we obviously can't guarantee it. If a new version breaks
 `dmdext`, you should still be able to fall back to the legacy screen grabber
 that is used by Pinball FX2 by using the `--fx3-legacy` flag.
+
+### Pinball FX
+
+Since mid June 2023, Pinball FX officially supports DMD Extensions through `DmdDevice.dll`. Note however that Pinball FX 
+runs on 64 bit, so it's technically `DmdDevice64.dll`, which comes with the 64-bit version of DMD Extensions.
+
+If you don't have Visual PinMAME installed, you'll have to set the `DMDDEVICE_CONFIG` environment variable to point to
+`DmdDevice.ini`, given you keep `DmdDevice64.dll` in the same directory.
+
+To do that:
+
+1. Press [Windows] and type "env" and select "Edit the system environment variables".
+2. Click "Environment Variables...".
+3. Under "System variables", click "New...".
+4. Enter `DMDDEVICE_CONFIG` as variable name and the full path to `DmdDevice.ini` as variable value.
+
+If you have done that, or you do have VPM installed, simply enable the external DMD in Pinball FX:
+
+1. Start Pinball FX
+2. Open the settings menu (gears icon at the top right)
+3. Choose *Cabinet Support*
+4. Choose *Dotmatrix Window*
+5. Under *Dotmatrix Window*, select *External DMD Device*.
+
+For customizing games in `DmdDevice.ini`, see [this list of IDs](PinMameDevice/PinballFX_IDs.md) for all supported games.
 
 ### The Pinball Arcade
 
@@ -533,58 +560,57 @@ setup, however note that games that you've already configured won't be affected.
 
 ## Game Names
 
-| Title                                | Pinball Arcade      | Pinball FX3                            |
-|--------------------------------------|---------------------|----------------------------------------|
-| Attack From Mars                     | `AttackFromMars`    | `BALLY_Attack_from_Mars`               |
-| Big Buck Hunter PRO                  | `BuckHunter`        |                                        |
-| Big Hurt                             | `BigHurt`           |                                        |
-| Black Rose                           | `BlackRose`         | `BALLY_BlackRose`                      |
-| Bram Stoker's Dracula                | `Dracula`           |                                        |
-| Cactus Canyon                        | `CactusCanyon`      |                                        |
-| Champion Pub                         | `ChampionPub`       | `BALLY_Champion_Pub`                   |
-| Cirqus Voltaire                      | `Cirqus`            | `BALLY_Cirqus_Voltaire`                |
-| Creature of the Black Lagoon         | `Creature`          | `BALLY_Creature_from_the_Black_Lagoon` |
-| Cue Ball Wizard                      | `CueBallWizard`     |                                        |
-| Doctor Who                           | `DoctorWho`         |                                        |
-| Fish Tales                           | `FishTales`         | `WMS_Fish_Tales`                       |
-| Ghostbusters                         | `GhostBustersStern` |                                        |
-| Gladiators                           | `Gladiators`        |                                        |
-| Harley Davidson                      | `HarleyDavidson`    |                                        |
-| High Roller Casino                   | `HighRollerCasino`  |                                        |
-| Hurricane                            | `Hurricane`         |                                        |
-| Hurricane                            |                     | `WMS_Hurricane`                        |
-| Indiana Jones: The Pinball Adventure |                     | `WMS_Indiana_Jones`                    |
-| Indianapolis 500                     | `Indy500`           |                                        |
-| Judge Dredd                          | `JudgeDredd`        |                                        |
-| Junk Yard                            | `JunkYard`          | `WMS_Junkyard`                         |
-| Last Action Hero                     | `LastActionHero`    |                                        |
-| Mary Shelley's Frankenstein          | `Frankenstein`      |                                        |
-| Medieval Madness                     | `Mediev`            | `WMS_Medieval_Madness`                 |
-| Monster Bash                         | `Monster`           | `WMS_Monster_Bash`                     |
-| Mustang                              | `Mustang`           |                                        |
-| No Fear: Dangerous Sports            | `NoFear`            |                                        |
-| No Good Gofers                       | `Gofers`            | `WMS_No_Good_Gofers`                   |
-| Party Zone                           |                     | `BALLY_Party_Zone`                     |
-| Pistol Poker                         | `PistolPoker`       |                                        |
-| Red and Ted's Road Show              |                     | `WMS_Roadshow`                         |
-| Rescue 911                           | `Rescue911`         |                                        |
-| Ripley's Believe it Or Not           | `Ripleys`           |                                        |
-| Safe Cracker                         |                     | `BALLY_Safe_Cracker`                   |
-| Scared Stiff                         | `ScaredStiff`       |                                        |
-| Starship Troopers                    | `StarshipTroopers`  |                                        |
-| StarTrek                             | `StarTrek`          |                                        |
-| StarTrek: The Next Generation        | `StarTrekTNG`       |                                        |
-| Tales of the Arabian Nights          | `Totan`             | `WMS_Tales_of_the_Arabian_Nights`      |
-| Teed Off                             | `TeedOff`           |                                        |
-| Terminator 2: Judgment Day           | `Terminator2`       |                                        |
-| The Getaway: High Speed 2            | `HighSpeed2`        | `WMS_Getaway`                          |
-| Theatre of Magic                     | `TheaterOfMagic`    | `BALLY_TheatreOfMagic`                 |
-| Twilight Zone                        | `TwilightZone`      |                                        |
-| White Water                          | `WhiteWater`        | `WMS_White_Water`                      |
-| WHO dunnit                           | `WHODunnit`         |                                        |
-| Whoa Nellie! Big Juicy Melons        | `WhoaNellie`        |                                        |
-| Wipeout                              | `Wipeout`           |                                        |
-| World Tour                           | `WorldTour`         |                                        |
+| Title                                | Pinball Arcade      | Pinball FX3                            | Pinball FX |
+|--------------------------------------|---------------------|----------------------------------------|------------|
+| Attack From Mars                     | `AttackFromMars`    | `BALLY_Attack_from_Mars`               | `119`      |
+| Big Buck Hunter PRO                  | `BuckHunter`        |                                        |            | 
+| Big Hurt                             | `BigHurt`           |                                        |            |
+| Black Rose                           | `BlackRose`         | `BALLY_BlackRose`                      | `118`      |
+| Bram Stoker's Dracula                | `Dracula`           |                                        |            |
+| Cactus Canyon                        | `CactusCanyon`      |                                        |            |
+| Champion Pub                         | `ChampionPub`       | `BALLY_Champion_Pub`                   | `121`      |
+| Cirqus Voltaire                      | `Cirqus`            | `BALLY_Cirqus_Voltaire`                | `127`      |
+| Creature of the Black Lagoon         | `Creature`          | `BALLY_Creature_from_the_Black_Lagoon` | `131`      |
+| Cue Ball Wizard                      | `CueBallWizard`     |                                        |            |
+| Doctor Who                           | `DoctorWho`         |                                        |            |
+| Fish Tales                           | `FishTales`         | `WMS_Fish_Tales`                       | `108`      |
+| Ghostbusters                         | `GhostBustersStern` |                                        |            |
+| Gladiators                           | `Gladiators`        |                                        |            |
+| Harley Davidson                      | `HarleyDavidson`    |                                        |            |
+| High Roller Casino                   | `HighRollerCasino`  |                                        |            |
+| Hurricane                            | `Hurricane`         | `WMS_Hurricane`                        | `126`      |
+| Indiana Jones: The Pinball Adventure |                     | `WMS_Indiana_Jones`                    | `133`      |
+| Indianapolis 500                     | `Indy500`           |                                        |            |
+| Judge Dredd                          | `JudgeDredd`        |                                        |            |
+| Junk Yard                            | `JunkYard`          | `WMS_Junkyard`                         | `110`      |
+| Last Action Hero                     | `LastActionHero`    |                                        |            |
+| Mary Shelley's Frankenstein          | `Frankenstein`      |                                        |            |
+| Medieval Madness                     | `Mediev`            | `WMS_Medieval_Madness`                 | `109`      |
+| Monster Bash                         | `Monster`           | `WMS_Monster_Bash`                     | `130`      |
+| Mustang                              | `Mustang`           |                                        |            |
+| No Fear: Dangerous Sports            | `NoFear`            |                                        |            |
+| No Good Gofers                       | `Gofers`            | `WMS_No_Good_Gofers`                   | `128`      |
+| Party Zone                           |                     | `BALLY_Party_Zone`                     | `120`      |
+| Pistol Poker                         | `PistolPoker`       |                                        |            |
+| Red and Ted's Road Show              |                     | `WMS_Roadshow`                         | `125`      |
+| Rescue 911                           | `Rescue911`         |                                        |            |
+| Ripley's Believe it Or Not           | `Ripleys`           |                                        |            |
+| Safe Cracker                         |                     | `BALLY_Safe_Cracker`                   | `122`      |
+| Scared Stiff                         | `ScaredStiff`       |                                        |            |
+| Starship Troopers                    | `StarshipTroopers`  |                                        |            |
+| StarTrek                             | `StarTrek`          |                                        |            |
+| StarTrek: The Next Generation        | `StarTrekTNG`       |                                        |            |
+| Tales of the Arabian Nights          | `Totan`             | `WMS_Tales_of_the_Arabian_Nights`      | `132`      |
+| Teed Off                             | `TeedOff`           |                                        |            |
+| Terminator 2: Judgment Day           | `Terminator2`       |                                        |            |
+| The Getaway: High Speed 2            | `HighSpeed2`        | `WMS_Getaway`                          | `111`      |
+| Theatre of Magic                     | `TheaterOfMagic`    | `BALLY_TheatreOfMagic`                 | `117`      |
+| Twilight Zone                        | `TwilightZone`      |                                        | `162`      |
+| White Water                          | `WhiteWater`        | `WMS_White_Water`                      | `124`      |
+| WHO dunnit                           | `WHODunnit`         |                                        |            |
+| Whoa Nellie! Big Juicy Melons        | `WhoaNellie`        |                                        |            |
+| Wipeout                              | `Wipeout`           |                                        |            |
+| World Tour                           | `WorldTour`         |                                        |            |
 
 ### x64 vs x86
 
