@@ -67,6 +67,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
 		private Dimensions _frameDimensions = new Dimensions(128, 32);
 		private FrameFormat _frameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
+		private Color[] _framePalette;
 		private BitmapSource _frameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
 		private byte[] _frameData; // Raw data of the frame to be processed
 
@@ -93,13 +94,14 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// </summary>
 		private const int MaxColorRotations = 8;
 		/// <summary>
-		/// if true, the last frame enabled color rotations.
-		/// </summary>
-		private bool _rotationsEnabled;
-		/// <summary>
 		/// current colour rotation state
 		/// </summary>
 		private readonly byte[] _rotationCurrentPaletteIndex = new byte[64];
+		/// <summary>
+		/// A reusable array of rotation colors when computing rotations.
+		/// </summary>
+		private readonly Color[] _rotationPalette = new Color[64];
+		
 		/// <summary>
 		/// first colour of the rotation
 		/// </summary>
@@ -174,7 +176,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			OnSizeChanged(null, null);
 		}
 
-		private string GetAbsolutePath(string path, string dataPath)
+		private static string GetAbsolutePath(string path, string dataPath)
 		{
 			if (string.IsNullOrWhiteSpace(path)) {
 				return null;
@@ -251,6 +253,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			SetPalette(frame.Palette);
 			_frameData = FrameUtil.Join(_frameDimensions, frame.Planes);
 			_frameType = FrameFormat.ColoredGray6;
+			_framePalette = frame.Palette;
 
 			if (frame.RotateColors) {
 				for (byte i = 0; i < 64; i++) {
@@ -274,30 +277,26 @@ namespace LibDmd.Output.Virtual.Dmd
 		
 		private void Rotate(long _)
 		{
-			if (_rotationsEnabled) {
-				var newPalette = UpdateRotations();
-				SetPalette(newPalette);
-			}
+			SetPalette(UpdateRotations());
 
 			if (_hasFrame) {
 				Dmd.RequestRender();
+			} else {
 			}
 		}
 		
 		private void StartRotating()
 		{
-			_rotationsEnabled = true;
 			if (_rotator != null) {
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(16.6))
+				.Interval(TimeSpan.FromMilliseconds(16.66))
 				.Subscribe(Rotate);
 		}
 
 		private void StopRotating()
 		{
-			_rotationsEnabled = false;
 			if (_rotator == null) {
 				return;
 			}
@@ -307,7 +306,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private Color[] UpdateRotations()
 		{
-			Color[] newPalette = new Color[64];
 			DateTime now = DateTime.UtcNow;
 			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
 
@@ -330,12 +328,12 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 
 				for (int j = 0; j < 64; j++) {
-					newPalette[j] = _gray6Palette[_rotationCurrentPaletteIndex[j]];
+					_rotationPalette[j] = _framePalette[_rotationCurrentPaletteIndex[j]];
 				}
 				_hasFrame = true;
 			}
 
-			return newPalette;
+			return _rotationPalette;
 		}
 
 		public void SetDimensions(Dimensions dim)
@@ -885,6 +883,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Dispose()
 		{
+			StopRotating();
 			// FIXME we should dispose the OpenGL native objects allocated in ogl_Initalized but this need to have the OpenGL context which is not garanteed here
 		}
 	}

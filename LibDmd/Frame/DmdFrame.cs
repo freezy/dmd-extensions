@@ -74,6 +74,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame Update(DmdFrame frame)
 		{
+			Dimensions = frame.Dimensions;
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			return this;
