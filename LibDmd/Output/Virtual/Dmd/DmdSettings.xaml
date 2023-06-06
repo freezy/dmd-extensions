@@ -33,7 +33,7 @@
 		<dmd:VirtualDmdControl x:Name="DmdPreview" Grid.Row="0" Width="640" Height="160" Margin="0,0,0,16"></dmd:VirtualDmdControl>
 
 		<StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" HorizontalAlignment="Center">
-			<Label Content="Preview size::" VerticalAlignment="Center" Width="100"/>
+			<Label Content="Preview size" VerticalAlignment="Center" Width="100"/>
 			<RadioButton GroupName="Preview" x:Name="PreviewMono32x8" IsChecked="True" Content="32x8" VerticalAlignment="Center" Margin="16,0,16,0" />
 			<RadioButton GroupName="Preview" x:Name="PreviewMono128x32" Content="128x32" VerticalAlignment="Center" Margin="16,0,16,0" />
 			<RadioButton GroupName="Preview" x:Name="PreviewColor128x32" Content="128x32 Color" VerticalAlignment="Center" Margin="16,0,16,0" />
@@ -60,6 +60,7 @@
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
 					</Grid.RowDefinitions>
 
 					<dmd:SliderValueSetting x:Name="DotSize"      Grid.Row="0" Grid.Column="0" Width="Auto" LabelContent="Dot Size:" MinValue="0.1" MaxValue="2" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
@@ -78,7 +79,8 @@
 						<Label Content="Tint Color:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0"/>
 						<xctk:ColorPicker x:Name="TintColor" HorizontalAlignment="Left"  VerticalAlignment="Center" Width="173" Margin="110,1.333,0,0" DisplayColorAndName="False" ColorMode="ColorCanvas" UsingAlphaChannel="False" ShowAvailableColors="False"/>
 					</Grid>
-					<dmd:SliderValueSetting x:Name="TintAmount"   Grid.Row="4" Grid.Column="1" Width="Auto" LabelContent="Tint amount:" MinValue="0.0" MaxValue="1.0" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+					<dmd:SliderValueSetting x:Name="TintAmount" Grid.Row="4" Grid.Column="1" Width="Auto" LabelContent="Tint amount:" MinValue="0.0" MaxValue="1.0" LabelWidth="110" LabelAlignment="Left" Margin="0,0,10,0"></dmd:SliderValueSetting>
+					<Label x:Name="TintWarning" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="⚠️ The currently running game is colored, so tint settings won't be applied." HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="DarkRed"/>
 				</Grid>
 			</Grid>
 		</GroupBox>

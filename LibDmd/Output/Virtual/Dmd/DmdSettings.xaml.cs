@@ -23,6 +23,8 @@ namespace LibDmd.Output.Virtual.Dmd
 		private readonly IConfiguration _config;
 		private readonly VirtualDmdConfig _dmdConfig;
 		private readonly DmdStyle _originalStyle;
+		private readonly FrameFormat _lastFrameFormat;
+
 		private BitmapImage _preview;
 		private DmdStyle _previewStyle;
 		public List<string> StyleNames => _config == null ? null : _dmdConfig.GetStyleNames(); 
@@ -33,12 +35,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		private string _lastFramePath;
 		private string _lastGlassPath;
 
-		public DmdSettings(DmdStyle style, IConfiguration config)
+		public DmdSettings(DmdStyle style, IConfiguration config, FrameFormat lastFrameFormat)
 		{
 			_config = config;
 			_originalStyle = style.Copy();
 			_previewStyle = _originalStyle.Copy();
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
+			_lastFrameFormat = lastFrameFormat;
 
 			DataContext = this;
 			InitializeComponent();
@@ -174,6 +177,10 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			FramePath.Text = _previewStyle.FrameTexture;
 			FramePadding.Pad = _previewStyle.FramePadding;
+
+			var showTintWarning = _lastFrameFormat != FrameFormat.Gray2 && _lastFrameFormat != FrameFormat.Gray4;
+			TintWarning.Visibility = showTintWarning ? Visibility.Visible : Visibility.Collapsed;
+			Height = showTintWarning ? 772 + 15 : 772;
 		}
 
 		private void LoadPreview()

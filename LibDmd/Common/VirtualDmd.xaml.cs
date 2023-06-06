@@ -97,7 +97,7 @@ namespace LibDmd.Common
 
 		private void OpenSettings(object sender, RoutedEventArgs e)
 		{
-			var settingWindow = new DmdSettings(_dmdConfig.Style, _config);
+			var settingWindow = new DmdSettings(_dmdConfig.Style, _config, Dmd.CurrentFrameFormat);
 			_settingSubscription = settingWindow.OnConfigUpdated.Subscribe(style => {
 				Dmd.SetStyle(style, _config.DataPath);
 			});

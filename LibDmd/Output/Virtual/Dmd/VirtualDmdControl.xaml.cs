@@ -40,6 +40,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public new string Name => "Virtual DMD";
 
 		public VirtualDisplay Host { set; get; }
+		public FrameFormat CurrentFrameFormat { get; private set; }
 
 		public bool IsAvailable => true;
 
@@ -189,6 +190,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_frameBitmap = frame.Bitmap;
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.Bitmap;
 		}
 
 		public void RenderGray2(DmdFrame frame)
@@ -198,6 +200,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			_frameData = frame.Data;
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.Gray2;
+
 		}
 
 		public void RenderGray4(DmdFrame frame)
@@ -207,6 +211,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_frameData = frame.Data;
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.Gray4;
 		}
 
 		public void RenderRgb24(DmdFrame frame)
@@ -216,22 +221,26 @@ namespace LibDmd.Output.Virtual.Dmd
 			SetRgb24Frame(frame);
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.Rgb24;
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
 			RenderGray2(frame.ConvertToGray());
+			CurrentFrameFormat = FrameFormat.ColoredGray2;
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette);
 			RenderGray4(frame.ConvertToGray());
+			CurrentFrameFormat = FrameFormat.ColoredGray4;
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			CurrentFrameFormat = FrameFormat.ColoredGray6;
 			var frameData = FrameUtil.Join(_frameDimensions, frame.Planes);
 			var frameChanged = false;
 			if (_frameData != null) {
