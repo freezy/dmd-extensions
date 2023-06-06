@@ -22,6 +22,9 @@ namespace DmdExt.Test
 		{
 			_config = config;
 			_testOptions = testOptions;
+			if (_testOptions.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 		}
 
 		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)

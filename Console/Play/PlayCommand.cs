@@ -20,6 +20,9 @@ namespace DmdExt.Play
 		{
 			_config = config;
 			_options = options;
+			if (_options.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 		}
 
 		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
