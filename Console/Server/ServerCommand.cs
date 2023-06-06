@@ -21,6 +21,9 @@ namespace DmdExt.Server
 		public ServerCommand(IConfiguration config, ServerOptions serverOptions) {
 			_config = config;
 			_serverOptions = serverOptions;
+			if (_serverOptions.SkipAnalytics) {
+				Analytics.Instance.Disable();
+			}
 		}
 
 		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)
