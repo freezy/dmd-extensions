@@ -108,8 +108,12 @@ namespace LibDmd.Output.Virtual.Dmd
 				_previewStyle.Tint = Color.FromArgb((byte)(value * 255), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
 				LoadPreview();
 			});
-			TintColor.SelectedColorChanged += (sender, e) => {
-				_previewStyle.Tint = Color.FromArgb((byte)(TintAmount.Value * 255), TintColor.SelectedColor.Value.R, TintColor.SelectedColor.Value.G, TintColor.SelectedColor.Value.B);
+			TintColor.SelectedColorChanged += (sender, e) =>
+			{
+				// if tint color is changed but the amount is 0, assume the user wants to actually apply the tint, so bump it to 1.
+				var tintAmount = TintAmount.Value == 0 ? 1 : TintAmount.Value;
+				var tintColor = TintColor.SelectedColor ?? Colors.OrangeRed; // just to be sure
+				_previewStyle.Tint = Color.FromArgb((byte)(tintAmount * 255), tintColor.R, tintColor.G, tintColor.B);
 				UpdatePreview();
 			};
 
@@ -202,7 +206,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
 				DmdPreview.RenderBitmap(new BmpFrame(_preview));
 			} else {
-				DmdPreview.RenderGray4(new DmdFrame(_preview.Dimensions(), ImageUtil.ConvertToGray4(_preview, 1.0), 24));
+				DmdPreview.RenderGray4(new DmdFrame(_preview.Dimensions(), ImageUtil.ConvertToGray4(_preview, 1.0), 2));
 			}
 			var baseWidth = 128.0 * 5.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
 			var baseHeight = 32.0 * 5.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews
