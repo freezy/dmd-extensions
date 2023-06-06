@@ -67,14 +67,15 @@ namespace LibDmd.DmdDevice
 
 		public Configuration(string iniPath = null)
 		{
+			var envConfigPath = GetEnvConfigPath();
 			if (iniPath != null) {
 				if (!File.Exists(iniPath)) {
 					throw new IniNotFoundException(iniPath);
 				}
 				_iniPath = iniPath;
 
-			} else if (Environment.GetEnvironmentVariable(EnvConfig) != null && File.Exists(Environment.GetEnvironmentVariable(EnvConfig))) {
-				_iniPath = Environment.GetEnvironmentVariable(EnvConfig);
+			} else if (envConfigPath != null) {
+				_iniPath = envConfigPath;
 
 			} else {
 				var assemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
@@ -157,6 +158,20 @@ namespace LibDmd.DmdDevice
 		{
 			Logger.Info("Scheduling configuration save to {0}", _iniPath);
 			_onSave.OnNext(Unit.Default);
+		}
+
+		public static string GetEnvConfigPath()
+		{
+			if (Environment.GetEnvironmentVariable(EnvConfig) == null) {
+				return null;
+			}
+			var paths = Environment.GetEnvironmentVariable(EnvConfig).Split(';');
+			foreach (var path in paths) {
+				if (File.Exists(path)) {
+					return path;
+				}
+			}
+			return null;
 		}
 	}
 
