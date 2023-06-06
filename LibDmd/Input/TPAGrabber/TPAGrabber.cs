@@ -281,6 +281,10 @@ namespace LibDmd.Input.TPAGrabber
 				? new Dimensions(192, 64)
 				: new Dimensions(128, 32);
 
+			if (dimensions == new Dimensions(192, 64)) {
+				Thread.Sleep(500); // Fixes no picture on start
+			}
+
 			var fourBitGames = new[]{ "ACDC", "GhostBustersStern", "Mustang", "StarTrek" };
 			var bitLength = fourBitGames.Any(_gameName.Contains) ? 4 : 2;
 
