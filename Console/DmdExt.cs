@@ -69,7 +69,7 @@ namespace DmdExt
 			}
 
 			CultureUtil.NormalizeUICulture();
-			_commandLineArgs = args;
+			_commandLineArgs = FixIniArg(args);
 			ReportingTags.Add("Console");
 #if PLATFORM_X86
 			ReportingTags.Add("x86");
@@ -104,7 +104,7 @@ namespace DmdExt
 			var invokedVerb = "";
 			object invokedVerbInstance = null;
 			var options = new Options();
-			if (!Parser.Default.ParseArgumentsStrict(args, options, (verb, subOptions) => {
+			if (!Parser.Default.ParseArgumentsStrict(_commandLineArgs, options, (verb, subOptions) => {
 
 				// if parsing succeeds the verb name and correct instance
 				// will be passed to onVerbCommand delegate (string,object)
@@ -246,6 +246,35 @@ namespace DmdExt
 			} finally {
 				Process.GetCurrentProcess().Kill();
 			}
+		}
+
+		/// <summary>
+		/// Checks if the --use-ini argument is present and if it is but without a path,
+		/// checks the DMDDEVICE_CONFIG environment variable and adds it to the argument,
+		/// if present.
+		/// </summary>
+		/// <param name="args">Command line args</param>
+		/// <returns>Update command line args</returns>
+		private static string[] FixIniArg(string[] args)
+		{
+			for (var i = 0; i < args.Length; i++) {
+				if (args[i] != "--use-ini") {
+					continue;
+				}
+				var envConfigPath = Configuration.GetEnvConfigPath();
+				if (args.Length > i + 1) { // value argument following?
+					if (!args[i + 1].ToLowerInvariant().Contains("dmddevice.ini")) {
+						if (envConfigPath != null) {
+							args[i] = $"--use-ini={envConfigPath}";
+						}
+					}
+				} else {
+					if (envConfigPath != null) {
+						args[i] = $"--use-ini={envConfigPath}";
+					}
+				}
+			}
+			return args;
 		}
 
 		private static void AssertDotNetVersion()
