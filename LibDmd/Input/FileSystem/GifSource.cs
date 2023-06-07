@@ -51,7 +51,7 @@ namespace LibDmd.Input.FileSystem
 				_frames = gifFrames
 					.ToObservable()
 					.Delay(frame => Observable.Timer(TimeSpan.FromMilliseconds(frame.Time)))
-					.Select(frame => new BmpFrame(frame.Bitmap));
+					.Select(frame => new BmpFrame(frame.Bitmap, frame.Dimensions));
 
 				// is looped?
 				if (BitConverter.ToInt16(gif.GetPropertyItem(20737).Value, 0) != 1) {
@@ -75,9 +75,11 @@ namespace LibDmd.Input.FileSystem
 		{
 			public readonly BitmapSource Bitmap;
 			public readonly int Time;
+			public readonly Dimensions Dimensions;
 			public GifFrame(BitmapSource bmp, int time) {
 				Bitmap = bmp;
 				Time = time;
+				Dimensions = bmp.Dimensions();
 			}
 		}
 	}
