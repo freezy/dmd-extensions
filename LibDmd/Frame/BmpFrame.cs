@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Input;
@@ -18,6 +18,11 @@ namespace LibDmd.Frame
 		{
 			Bitmap = bitmap;
 			Dimensions = bitmap.Dimensions();
+		}
+		public BmpFrame(BitmapSource bitmap, Dimensions dim)
+		{
+			Bitmap = bitmap;
+			Dimensions = dim;
 		}
 
 		public BmpFrame Update(BitmapSource bmp)

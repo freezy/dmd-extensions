@@ -281,7 +281,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_hasFrame) {
 				Dmd.RequestRender();
-			} else {
 			}
 		}
 		
