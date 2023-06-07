@@ -56,13 +56,67 @@ Pinball FX2 and FX3 use the `mirror` feature of `dmdext.exe`. FX2 is very legacy
 display games. Here are some test commands:
 
 ```bash
-dmdext.exe mirror --source pinballfx3
-dmdext.exe mirror --source pinballfx3 --colorize --plugin "C:\Visual Pinball\VPinMAME\pin2color.dll"
+dmdext mirror --source pinballfx3
+dmdext mirror --source pinballfx3 --colorize --plugin "C:\Visual Pinball\VPinMAME\pin2color.dll"
+dmdext mirror --source pinballfx3 --colorize --plugin "C:\Visual Pinball\VPinMAME\pin2color.dll" --plugin-passthrough
 ```
 
 ## The Pinball Arcade
+
+Pinball Arcade should work with all but segment display games. Here is the test command:
+
+```bash
+dmdext mirror --source pinballarcade
+```
+
+Tables to test are Mary Shelly's Frankenstein (192x64), any of the Stern games (AC/DC), and a WPC game, like Attack 
+from Mars.
+
 ## Pro Pinball: Timeshock
+
+Launch Timeshock and verify the DMD is working. Don't forget to add `m3 dProPinballSlave` in Steam as command line
+option, and make sure `ProPinballSlave.bat` points to the correct path of `dmdext.exe` (or, that the 64-bit version)
+is in your environment `PATH`.
+
 ## Future Pinball
+
+For FP, launch FP with a DMD game. Then run:
+
+```bash
+dmdext mirror -s futurepinball
+```
+
 ## Image/GIF file on disk
+
+This usually sits at `PinballX\Media\Visual Pinball\Real DMD Color Images`
+
+```bash
+dmdext play -f "ACDC (Stern 2012).gif"
+dmdext play -f "Tron Legacy (Stern 2011).png"
+```
+
 ## Screen Grabber
+
+```bash
+dmdext mirror -s screen
+```
+
+This mirrors the top-left corner of your desktop.
+
 ## Network
+
+There are two modes: 
+
+1. Stream the DMD to another instance of dmdext
+2. Stream through the browser.
+
+For the browser, enable `[browserstream]` in `DmdDevice.ini` and run a game through `DmdDevice.dll`. Then, open
+a browser, per default at [`http://localhost:9090/`](http://localhost:9090/).
+
+For network streaming, enable `[networkstream]` and open a terminal and run:
+
+```bash
+dmdext server -d virtual --ip=127.0.0.1 --port=80 --path=/dmd
+```
+
+Then, run a game through `DmdDevice.dll`.

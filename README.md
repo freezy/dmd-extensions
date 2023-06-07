@@ -24,6 +24,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
   * [Pro Pinball Ultra](#pro-pinball-ultra)
   * [Visual PinMAME](#visual-pinmame)
   * [Future Pinball](#future-pinball)
+  * [Media](#media)
 * [Configuration](#configuration)
   * [Output Configuration](#output-configuration)
   * [Command Line Configuration](#command-line-configuration)
@@ -268,6 +269,14 @@ Note that:
 
 For more details check out TerryRed's guide [here](https://vpuniverse.com/forums/topic/4928-dmdext-freezy-and-future-pinball-real-and-virtual-dmd-support/).
 
+### Media
+
+DMD Extensions can also play videos and images. Here are a few examples:
+
+```bash
+dmdext play -f "ACDC (Stern 2012).gif"
+dmdext play -f "Tron Legacy (Stern 2011).png"
+```
 
 ## Configuration
 
