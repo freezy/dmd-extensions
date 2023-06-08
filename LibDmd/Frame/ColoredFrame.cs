@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
@@ -9,7 +10,7 @@ using LibDmd.Output;
 
 namespace LibDmd
 {
-	public class ColoredFrame : BaseFrame, ICloneable
+	public class ColoredFrame : BaseFrame, ICloneable, IEqualityComparer<ColoredFrame>
 	{
 		/// <summary>
 		/// Frame data, split into bit planes
@@ -43,7 +44,9 @@ namespace LibDmd
 		private int BitLength => Planes.Length;
 
 		private byte[] Data => FrameUtil.Join(Dimensions, Planes);
-		
+
+		#region Constructors
+
 		public ColoredFrame()
 		{
 		}
@@ -83,22 +86,9 @@ namespace LibDmd
 			RotateColors = false;
 		}
 
-		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex, Rotations);
-		
-		/// <summary>
-		/// Creates a new grayscale frame with the only the grayscale data and no color conversion.
-		/// </summary>
-		/// <returns>New DMD frame</returns>
-		public DmdFrame ConvertToGray()
-		{
-			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
-		}
-		
-		public DmdFrame ConvertToGray(params byte[] mapping)
-		{
-			var data = FrameUtil.Join(Dimensions, Planes);
-			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping), mapping.Length.GetBitLength());
-		}
+		#endregion
+
+		#region Updates
 
 		public ColoredFrame Update(byte[][] planes, Color[] palette)
 		{
@@ -138,6 +128,25 @@ namespace LibDmd
 			return this;
 		}
 
+		#endregion
+
+		#region Conversions
+
+		/// <summary>
+		/// Creates a new grayscale frame with the only the grayscale data and no color conversion.
+		/// </summary>
+		/// <returns>New DMD frame</returns>
+		public DmdFrame ConvertToGray()
+		{
+			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
+		}
+
+		public DmdFrame ConvertToGray(params byte[] mapping)
+		{
+			var data = FrameUtil.Join(Dimensions, Planes);
+			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping), mapping.Length.GetBitLength());
+		}
+
 		/// <summary>
 		/// Converts this colored frame to a bitmap frame.
 		/// </summary>
@@ -149,6 +158,47 @@ namespace LibDmd
 		/// </summary>
 		/// <returns>Converted RGB24 frame</returns>
 		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette), 24);
+
+		private BitmapSource ConvertToBitmapWithColors()
+		{
+			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette);
+			return ImageUtil.ConvertFromRgb24(Dimensions, rgb24);
+		}
+
+		/// <summary>
+		/// Converts the frame with a linear color palette, for resizing purpose.
+		/// </summary>
+		/// <returns>Bitmap</returns>
+		private BitmapSource ConvertToBitmapWithoutColors()
+		{
+			switch (BitLength) {
+				case 2: return ImageUtil.ConvertFromGray2(Dimensions, Data, 0, 1, 1);
+				case 4: return ImageUtil.ConvertFromGray4(Dimensions, Data, 0, 1, 1);
+				case 6: return ImageUtil.ConvertFromGray6(Dimensions, Data, 0, 1, 1);
+				default:
+					throw new ArgumentException("Cannot convert frame with bit length " + BitLength);
+			}
+		}
+
+		/// <summary>
+		/// Converts a bitmap with a linear color palette back to gray, after resizing.
+		/// </summary>
+		/// <param name="bmp"></param>
+		/// <returns>Gray array</returns>
+		private byte[] ConvertFromBitmapWithoutColors(BitmapSource bmp)
+		{
+			switch (BitLength) {
+				case 2: return ImageUtil.ConvertToGray2(bmp, 0, 1, out _);
+				case 4: return ImageUtil.ConvertToGray4(bmp);
+				case 6: return ImageUtil.ConvertToGray6(bmp);
+				default:
+					throw new ArgumentException("Cannot convert frame with bit length " + BitLength);
+			}
+		}
+
+		#endregion
+
+		#region Transformations
 
 		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
@@ -222,6 +272,9 @@ namespace LibDmd
 			return Update(Dimensions * 2, FrameUtil.Split(Dimensions * 2, BitLength, data));
 		}
 
+		#endregion
+
+		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex, Rotations);
 		public override string ToString()
 		{
 			var bitLength = Planes.Length;
@@ -254,41 +307,91 @@ namespace LibDmd
 			return sb.ToString();
 		}
 
-		private BitmapSource ConvertToBitmapWithColors()
+		#region Equality
+
+		public override bool Equals(object obj)
 		{
-			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette);
-			return ImageUtil.ConvertFromRgb24(Dimensions, rgb24);
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType()) {
+				return false;
+			}
+
+			return Equals(this, (ColoredFrame)obj);
 		}
 
-		/// <summary>
-		/// Converts the frame with a linear color palette, for resizing purpose.
-		/// </summary>
-		/// <returns>Bitmap</returns>
-		private BitmapSource ConvertToBitmapWithoutColors()
+		public override int GetHashCode()
 		{
-			switch (BitLength) {
-				case 2: return ImageUtil.ConvertFromGray2(Dimensions, Data, 0, 1, 1);
-				case 4: return ImageUtil.ConvertFromGray4(Dimensions, Data, 0, 1, 1);
-				case 6: return ImageUtil.ConvertFromGray6(Dimensions, Data, 0, 1, 1);
-				default:
-					throw new ArgumentException("Cannot convert frame with bit length " + BitLength);
+			unchecked {
+				var hashCode = Dimensions.GetHashCode();
+				hashCode = (hashCode * 397) ^ BitLength;
+				hashCode = (hashCode * 397) ^ (Palette != null ? Palette.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
+				return hashCode;
 			}
 		}
 
 		/// <summary>
-		/// Converts a bitmap with a linear color palette back to gray, after resizing.
+		/// Checks whether frame data and bit length are both equal.
 		/// </summary>
-		/// <param name="bmp"></param>
-		/// <returns>Gray array</returns>
-		private byte[] ConvertFromBitmapWithoutColors(BitmapSource bmp)
+		/// <param name="a">First frame to compare</param>
+		/// <param name="b">Second frame to compare</param>
+		/// <returns>True if data and bit length are identical, false otherwise.</returns>
+		private static bool Equals(ColoredFrame a, ColoredFrame b)
 		{
-			switch (BitLength) {
-				case 2: return ImageUtil.ConvertToGray2(bmp, 0, 1, out _);
-				case 4: return ImageUtil.ConvertToGray4(bmp);
-				case 6: return ImageUtil.ConvertToGray6(bmp);
-				default:
-					throw new ArgumentException("Cannot convert frame with bit length " + BitLength);
+			if (ReferenceEquals(null, a) && ReferenceEquals(null, b)) {
+				return true;
 			}
+			if (ReferenceEquals(null, a)) {
+				return false;
+			}
+			if (ReferenceEquals(null, b)) {
+				return false;
+			}
+			if (ReferenceEquals(a, b)) {
+				return true;
+			}
+			return a.BitLength == b.BitLength
+			       && a.Dimensions == b.Dimensions
+			       && PaletteEquals(a.Palette, b.Palette)
+			       && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
+
+		private static bool PaletteEquals(IReadOnlyList<Color> a, IReadOnlyList<Color> b)
+		{
+			if (ReferenceEquals(null, a) && ReferenceEquals(null, b)) {
+				return true;
+			}
+			if (ReferenceEquals(null, a)) {
+				return false;
+			}
+			if (ReferenceEquals(null, b)) {
+				return false;
+			}
+			if (ReferenceEquals(a, b)) {
+				return true;
+			}
+			if (a.Count != b.Count) {
+				return false;
+			}
+
+			for (var i = 0; i < a.Count; i++) {
+				if (a[i] != b[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		bool IEqualityComparer<ColoredFrame>.Equals(ColoredFrame x, ColoredFrame y) => Equals(x, y);
+		int IEqualityComparer<ColoredFrame>.GetHashCode(ColoredFrame obj) => obj.GetHashCode();
+
+		#endregion
 	}
 }
