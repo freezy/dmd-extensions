@@ -388,6 +388,7 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="Analytics.cs" />
     <Compile Include="Common\CultureUtil.cs" />
+    <Compile Include="Converter\ClockedDeduper.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Pin2Color\Pin2ColorGray2Colorizer.cs" />
     <Compile Include="Converter\Pin2Color\Pin2ColorGray4Colorizer.cs" />

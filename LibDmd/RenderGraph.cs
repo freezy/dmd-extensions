@@ -95,7 +95,7 @@ namespace LibDmd
 		public string IdlePlay { get; set; }
 
 		public ScalerMode ScalerMode { get; set; } = ScalerMode.None;
-		
+
 		#endregion
 
 		#region Constants
@@ -272,37 +272,28 @@ namespace LibDmd
 				var sourceAlphaNumeric = Source as IAlphaNumericSource;
 				Logger.Info("Setting up {0} for {1} destination(s) [ {2} ]", Name, Destinations.Count, string.Join(", ", Destinations.Select(d => d.Name)));
 
-				// init converters
-				IColoredGray2Source sourceConverterColoredGray2 = null;
-				IColoredGray4Source sourceConverterColoredGray4 = null;
-				IColoredGray6Source sourceConverterColoredGray6 = null;
-				IRgb24Source sourceConverterRgb24 = null;
-				IAlphaNumericSource sourceConverterAlphaNumeric = null;
+				var clockedDedupedConverter = new ClockedDeduper(Converter);
+				_activeSources.Add(clockedDedupedConverter);
 
 				// subscribe converter to incoming frames
 				if (Converter != null) {
-					sourceConverterColoredGray2 = Converter as IColoredGray2Source;
-					sourceConverterColoredGray4 = Converter as IColoredGray4Source;
-					sourceConverterColoredGray6 = Converter as IColoredGray6Source;
-					sourceConverterRgb24 = Converter as IRgb24Source;
-					sourceConverterAlphaNumeric = Converter as IAlphaNumericSource;
 
 					// subscribe converter to incoming frames
 					foreach (var from in Converter.From) {
 						switch (from) {
 							case FrameFormat.Gray2:
 								if (sourceGray2 != null) {
-									_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray2.GetGray2Frames().Do(clockedDedupedConverter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.Gray4:
 								if (sourceGray4 != null) {
-									_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray4.GetGray4Frames().Do(clockedDedupedConverter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.AlphaNumeric:
 								if (sourceAlphaNumeric != null) {
-									_activeSources.Add(sourceAlphaNumeric.GetAlphaNumericFrames().Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceAlphaNumeric.GetAlphaNumericFrames().Do(clockedDedupedConverter.Convert).Subscribe());
 								}
 								break;
 							default:
@@ -341,6 +332,13 @@ namespace LibDmd
 					// will get the IColoredGray4Source converted up to RGB24.
 					if (Converter != null) {
 
+						// init converters
+						IColoredGray2Source sourceConverterColoredGray2 = Converter as IColoredGray2Source;
+						IColoredGray4Source sourceConverterColoredGray4 = Converter as IColoredGray4Source;
+						IColoredGray6Source sourceConverterColoredGray6 = Converter as IColoredGray6Source;
+						IRgb24Source sourceConverterRgb24 = Converter as IRgb24Source;
+						IAlphaNumericSource sourceConverterAlphaNumeric = Converter as IAlphaNumericSource;
+
 						var converterConnected = false;
 						
 						// if converter emits colored gray-2 frames..
@@ -348,18 +346,18 @@ namespace LibDmd
 							// if destination can render colored gray-2 frames...
 							if (destColoredGray2 != null) {
 								Logger.Info("  -> Hooking colored 2-bit source of {0} converter to {1}.", sourceConverterColoredGray2.Name, dest.Name);
-								Connect(sourceConverterColoredGray2, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
+								Connect(clockedDedupedConverter, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
 								converterConnected = true;
 
 							// try to convert to rgb24
 							} else if (destRgb24 != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
-								Connect(sourceConverterColoredGray2, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
+								Connect(clockedDedupedConverter, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 2-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray2.Name);
-								Connect(sourceConverterColoredGray2, destBitmap, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
+								Connect(clockedDedupedConverter, destBitmap, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
 						}
@@ -369,18 +367,18 @@ namespace LibDmd
 							// if destination can render colored gray-4 frames...
 							if (destColoredGray4 != null) {
 								Logger.Info("  -> Hooking colored 4-bit source of {0} converter to {1}.", sourceConverterColoredGray4.Name, dest.Name);
-								Connect(sourceConverterColoredGray4, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
+								Connect(clockedDedupedConverter, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
 								converterConnected = true;
 
 								// otherwise, convert to rgb24
 							} else if (destRgb24 != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray4.Name);
-								Connect(sourceConverterColoredGray4, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
+								Connect(clockedDedupedConverter, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 4-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray4.Name);
-								Connect(sourceConverterColoredGray4, destBitmap, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
+								Connect(clockedDedupedConverter, destBitmap, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
 						}
@@ -390,18 +388,18 @@ namespace LibDmd
 							// if destination can render colored gray-6 frames...
 							if (destColoredGray6 != null) {
 								Logger.Info("  -> Hooking colored 6-bit source of {0} converter to {1}.", sourceConverterColoredGray6.Name, dest.Name);
-								Connect(sourceConverterColoredGray6, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
+								Connect(clockedDedupedConverter, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 								converterConnected = true;
 
 							// otherwise, convert to rgb24
 							} else if (destRgb24 != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to RGB source.", dest.Name, sourceConverterColoredGray6.Name);
-								Connect(sourceConverterColoredGray6, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
+								Connect(clockedDedupedConverter, destRgb24, FrameFormat.ColoredGray6, FrameFormat.Rgb24);
 								converterConnected = true;
 
 							} else if (destBitmap != null) {
 								Logger.Warn("  -> Destination {0} doesn't support colored 6-bit frames from {1} converter, converting to Bitmap source.", dest.Name, sourceConverterColoredGray6.Name);
-								Connect(sourceConverterColoredGray6, destBitmap, FrameFormat.ColoredGray6, FrameFormat.Bitmap);
+								Connect(clockedDedupedConverter, destBitmap, FrameFormat.ColoredGray6, FrameFormat.Bitmap);
 								converterConnected = true;
 							}
 						}
@@ -409,14 +407,14 @@ namespace LibDmd
 						// if converter emits RGB24 frames..
 						if (sourceConverterRgb24 != null && destRgb24 != null) {
 							Logger.Info("  -> Hooking RGB24 source of {0} converter to {1}.", sourceConverterRgb24.Name, dest.Name);
-							Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
+							Connect(clockedDedupedConverter, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
 							converterConnected = true;
 						}
 
 						// this is mainly for the passing through alphanumeric frames from the switching converter.
 						if (sourceConverterAlphaNumeric != null && destAlphaNumeric != null) {
 							Logger.Info("  -> Hooking alphanumeric source of {0} converter to {1}.", sourceConverterAlphaNumeric.Name, dest.Name);
-							Connect(sourceConverterAlphaNumeric, destAlphaNumeric, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
+							Connect(clockedDedupedConverter, destAlphaNumeric, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
 							converterConnected = true;
 						}
 
@@ -674,7 +672,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(), 
+								sourceGray2.GetGray2Frames().DistinctUntilChanged(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
