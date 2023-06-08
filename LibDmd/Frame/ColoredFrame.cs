@@ -25,7 +25,7 @@ namespace LibDmd
 		/// <summary>
 		/// Palette index from animation or -1 if not set.
 		/// </summary>
-		public int PaletteIndex { get; }
+		public int PaletteIndex { get; private set; }
 
 		/// <summary>
 		/// Colour Rotation descriptions.
@@ -34,16 +34,19 @@ namespace LibDmd
 		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
 		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
 		/// </remarks>
-		public byte[] Rotations { get; }
+		public byte[] Rotations { get;  private set; }
 
 		/// <summary>
 		/// If set, colors defined in <see cref="Rotations" are rotated./>
 		/// </summary>
-		public readonly bool RotateColors;
+		public bool RotateColors;
 
 		private int BitLength => Planes.Length;
 
 		private byte[] Data => FrameUtil.Join(Dimensions, Planes);
+
+		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
+		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);
 
 		#region Constructors
 
@@ -126,6 +129,16 @@ namespace LibDmd
 			}
 			#endif
 			return this;
+		}
+
+		public void Update(ColoredFrame frame)
+		{
+			Dimensions = frame.Dimensions;
+			Planes = frame.Planes;
+			Palette = frame.Palette;
+			PaletteIndex = frame.PaletteIndex;
+			Rotations = frame.Rotations;
+			RotateColors = frame.RotateColors;
 		}
 
 		#endregion
@@ -331,6 +344,8 @@ namespace LibDmd
 			unchecked {
 				var hashCode = Dimensions.GetHashCode();
 				hashCode = (hashCode * 397) ^ BitLength;
+				hashCode = (hashCode * 397) ^ PaletteIndex;
+				hashCode = (hashCode * 397) ^ (Rotations != null ? Rotations.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Palette != null ? Palette.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
 				return hashCode;
@@ -357,9 +372,11 @@ namespace LibDmd
 			if (ReferenceEquals(a, b)) {
 				return true;
 			}
-			return a.BitLength == b.BitLength
-			       && a.Dimensions == b.Dimensions
+			return a.Dimensions == b.Dimensions
+			       && a.PaletteIndex == b.PaletteIndex
+			       && a.RotateColors == b.RotateColors
 			       && PaletteEquals(a.Palette, b.Palette)
+			       && FrameUtil.CompareBuffersFast(a.Rotations, b.Rotations)
 			       && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
 
