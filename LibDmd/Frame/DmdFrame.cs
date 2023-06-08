@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
@@ -10,14 +11,14 @@ namespace LibDmd.Frame
 	/// <summary>
 	/// A frame sent without a palette or color.
 	/// </summary>RGB24 buffer must be divisible by 3
-	public class DmdFrame : BaseFrame, ICloneable
+	public class DmdFrame : BaseFrame, ICloneable, IEqualityComparer<DmdFrame>
 	{
 		public byte[] Data { get; private set; }
 		public int BitLength;
 		public int NumColors => (int)Math.Pow(2, BitLength);
 		
 		public static bool operator ==(DmdFrame x, DmdFrame y) => Equals(x, y);
-		public static bool operator != (DmdFrame x, DmdFrame y) => Equals(x, y);
+		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
 		public FrameFormat Format {
 			get {
@@ -34,6 +35,8 @@ namespace LibDmd.Frame
 		private bool IsRgb24 => BitLength == 24;
 
 		private int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
+
+		#region Constructors
 
 		public DmdFrame()
 		{
@@ -55,22 +58,26 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
-			
+
 			#if DEBUG
 			AssertData();
 			#endif
 		}
-		
+
 		public DmdFrame(int width, int height, byte[] data, int bitLength)
 		{
 			Dimensions = new Dimensions(width, height);
 			Data = data;
 			BitLength = bitLength;
-			
+
 			#if DEBUG
 			AssertData();
 			#endif
 		}
+
+		#endregion
+
+		#region Update
 
 		public DmdFrame Update(DmdFrame frame)
 		{
@@ -84,7 +91,7 @@ namespace LibDmd.Frame
 		{
 			Data = data;
 			BitLength = bitLength;
-			
+
 			#if DEBUG
 			AssertData();
 			#endif
@@ -96,7 +103,7 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
-			
+
 			#if DEBUG
 			AssertData();
 			#endif
@@ -114,6 +121,10 @@ namespace LibDmd.Frame
 			return this;
 		}
 
+		#endregion
+
+		#region Utilities
+
 		public DmdFrame Resize(Dimensions dim, int bitLength)
 		{
 			Dimensions = dim;
@@ -127,6 +138,10 @@ namespace LibDmd.Frame
 			Data = new byte[Dimensions.Surface * BytesPerPixel];
 			return this;
 		}
+
+		#endregion
+
+		#region Conversions
 
 		/// <summary>
 		/// Converts this frame to gray2.
@@ -200,6 +215,40 @@ namespace LibDmd.Frame
 				return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
 			}
 		}
+
+		/// <summary>
+		/// Converts a grayscale frame to RGB24.
+		/// </summary>
+		///
+		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
+		/// <returns>This updated instance.</returns>
+		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
+		public DmdFrame ConvertToRgb24(Color[] palette)
+		{
+			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
+
+#if DEBUG
+				if (!IsGray) {
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
+				}
+
+				if (palette.Length.GetBitLength() != BitLength) {
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
+				}
+#endif
+
+				Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
+				BitLength = 24;
+
+				return this;
+			}
+		}
+
+		#endregion
+
+		#region Transformations
+
+
 
 		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
@@ -330,35 +379,38 @@ namespace LibDmd.Frame
 				}
 			}
 		}
-		
-		/// <summary>
-		/// Converts a grayscale frame to RGB24.
-		/// </summary>
-		///
-		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
-		/// <returns>This updated instance.</returns>
-		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
-		public DmdFrame ConvertToRgb24(Color[] palette)
+
+		#endregion
+
+		#region Equality
+
+		public override bool Equals(object obj)
 		{
-			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
 
-				#if DEBUG
-				if (!IsGray) {
-					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
-				}
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
 
-				if (palette.Length.GetBitLength() != BitLength) {
-					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
-				}
-				#endif
+			if (obj.GetType() != this.GetType()) {
+				return false;
+			}
 
-				Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
-				BitLength = 24;
+			return Equals(this, (DmdFrame)obj);
+		}
 
-				return this;
+		public override int GetHashCode()
+		{
+			unchecked {
+				var hashCode = Dimensions.GetHashCode();
+				hashCode = (hashCode * 397) ^ BitLength;
+				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
+				return hashCode;
 			}
 		}
-		
+
 		/// <summary>
 		/// Checks whether frame data and bit length are both equal.
 		/// </summary>
@@ -381,6 +433,11 @@ namespace LibDmd.Frame
 			}
 			return a.BitLength == b.BitLength && a.Dimensions == b.Dimensions && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
+
+		bool IEqualityComparer<DmdFrame>.Equals(DmdFrame x, DmdFrame y) => Equals(x, y);
+		int IEqualityComparer<DmdFrame>.GetHashCode(DmdFrame obj) => obj.GetHashCode();
+
+		#endregion
 
 		/// <summary>
 		/// Flat-clones the frame (i.e. the data is still the same, but now you
@@ -444,5 +501,6 @@ namespace LibDmd.Frame
 			}
 		}
 #endif
+
 	}
 }
