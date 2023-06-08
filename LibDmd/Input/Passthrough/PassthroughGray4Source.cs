@@ -22,7 +22,6 @@ namespace LibDmd.Input.Passthrough
 		private readonly Subject<DmdFrame> _framesGray4 = new Subject<DmdFrame>();
 		private readonly ISubject<string> _gameName = new Subject<string>();
 
-		private readonly DmdFrame _lastFrame = new DmdFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		public PassthroughGray4Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
@@ -33,12 +32,6 @@ namespace LibDmd.Input.Passthrough
 
 		public void NextFrame(DmdFrame frame)
 		{
-			// de-dupe frame
-			if (_lastFrameFormat.Value == FrameFormat.Gray4 && _lastFrame == frame) {
-				return;
-			}
-
-			_lastFrame.Update(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Gray4);
 			_framesGray4.OnNext(frame);
 		}
