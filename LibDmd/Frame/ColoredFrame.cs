@@ -41,7 +41,7 @@ namespace LibDmd
 		/// </summary>
 		public bool RotateColors;
 
-		private int BitLength => Planes.Length;
+		public int BitLength => Planes.Length;
 
 		private byte[] Data => FrameUtil.Join(Dimensions, Planes);
 

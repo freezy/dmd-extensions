@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive;
 using LibDmd.Frame;
 using LibDmd.Input;
+using LibDmd.Output;
 
 namespace LibDmd.Converter
 {
@@ -36,12 +38,24 @@ namespace LibDmd.Converter
 		{
 		}
 
-		/// <summary>
-		/// True if any of the converter's sources has been subscribed to.
-		/// </summary>
-		public bool IsConnected { get; protected set; }
-
 		public IObservable<Unit> OnResume { get; } = null;
 		public IObservable<Unit> OnPause { get; } = null;
+
+		private readonly Dictionary<IDestination, List<(FrameFormat, FrameFormat)>> _connections = new Dictionary<IDestination, List<(FrameFormat, FrameFormat)>>();
+
+		public void SetConnected(IDestination dest, FrameFormat from, FrameFormat to)
+		{
+			if (!_connections.ContainsKey(dest)) {
+				_connections[dest] = new List<(FrameFormat, FrameFormat)>();
+			}
+			_connections[dest].Add((from, to));
+		}
+		public bool IsConnected() => _connections.Any();
+		public bool IsConnected(IDestination dest, FrameFormat from)
+			=> _connections.ContainsKey(dest) && _connections[dest].Any(t => t.Item1 == from);
+		public bool IsConnected(IDestination dest, FrameFormat from, FrameFormat to)
+			=> _connections.ContainsKey(dest) && _connections[dest].Any(t => t.Item1 == from && t.Item2 == to);
+
+
 	}
 }
