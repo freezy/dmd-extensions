@@ -50,27 +50,29 @@ namespace LibDmd.Converter
 			}
 
 			_converter = converter;
-			if (_converter is IColoredGray2Source coloredGray2Source) {
+			var ac = converter as AbstractConverter;
+			if (_converter is IColoredGray2Source coloredGray2Source && ac != null && !ac.IsConnected) {
 				_activeSources.Add(coloredGray2Source.GetColoredGray2Frames().DistinctUntilChanged().Subscribe(_coloredGray2Frames));
 			}
-			if (_converter is IColoredGray4Source coloredGray4Source) {
+			if (_converter is IColoredGray4Source coloredGray4Source && ac != null && !ac.IsConnected) {
 				_activeSources.Add(coloredGray4Source.GetColoredGray4Frames().DistinctUntilChanged().Subscribe(_coloredGray4Frames));
 			}
-			if (_converter is IColoredGray6Source coloredGray6Source) {
+			if (_converter is IColoredGray6Source coloredGray6Source && ac != null && !ac.IsConnected) {
 				_activeSources.Add(coloredGray6Source.GetColoredGray6Frames().DistinctUntilChanged().Subscribe(_coloredGray6Frames));
 			}
-			if (_converter is IRgb24Source rgb24Source) {
+			if (_converter is IRgb24Source rgb24Source && ac != null && !ac.IsConnected) {
 				_activeSources.Add(rgb24Source.GetRgb24Frames().DistinctUntilChanged().Subscribe(_rgb24Frames));
 			}
 
-			_clock = Observable
-				.Interval(TimeSpan.FromSeconds(1d / ClockFps))
-				.Subscribe(Tick);
+			// _clock = Observable
+			// 	.Interval(TimeSpan.FromSeconds(1d / ClockFps))
+			// 	.Subscribe(Tick);
 		}
 
 		public void Convert(DmdFrame frame)
 		{
 			Logger.Info($"*** New Frame {frame.Format}");
+			_converter.Convert(frame);
 			_lastDmdFrame = frame;
 		}
 

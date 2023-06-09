@@ -8,7 +8,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class SourceBitmap : IBitmapSource, ITestSource<BmpFrame>
 	{
-		public string Name => "Bitmap Test Source";
+		public string Name => "Source[Bitmap]";
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;

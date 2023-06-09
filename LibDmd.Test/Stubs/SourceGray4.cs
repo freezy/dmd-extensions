@@ -8,7 +8,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class SourceGray4 : IGray4Source, ITestSource<DmdFrame>
 	{
-		public string Name => "Gray4 Test Source";
+		public string Name => "Source[Gray4]";
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
