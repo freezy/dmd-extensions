@@ -19,10 +19,10 @@ namespace LibDmd.Converter.Pin2Color
 	/// Fir Viärbit-Biuder git's kä Ergänzig unds einzigä wo cha 
 	/// passiärä isch das ä kompletti Animazion abgschpiut wird.
 	/// </remarks>
-	public class Pin2ColorGray4Colorizer : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
+	public class Pin2ColorGray4Colorizer : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
-		public override string Name { get; } = "4-Bit Colorizer";
-		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
+		public override string Name => "Pin2Color 4-Bit Colorizer";
+		public override IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public ScalerMode ScalerMode { get; set; }
@@ -76,7 +76,7 @@ namespace LibDmd.Converter.Pin2Color
 		{
 		}
 
-		public void Convert(DmdFrame frame)
+		public override void Convert(DmdFrame frame)
 		{
 			if (_vniColoring.Palettes.Length > 1 && _animations == null)
 			{
@@ -134,8 +134,6 @@ namespace LibDmd.Converter.Pin2Color
 			// Sisch diräkt uisgäh
 			Render(frame.Dimensions, planes);
 		}
-
-		public void Convert(AlphaNumericFrame frame) { }
 
 		public void LoadPalette(uint newpal)
 		{

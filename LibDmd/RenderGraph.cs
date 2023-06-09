@@ -34,7 +34,7 @@ namespace LibDmd
 	/// way. It does also the conversion between non-matching source and
 	/// destination. 
 	/// 
-	/// A render graph can also contain an <see cref="IConverter"/>. These are
+	/// A render graph can also contain an <see cref="AbstractConverter"/>. These are
 	/// classes that for a defined input format produce different output 
 	/// formats. An example would be a 2-bit source that gets converted to
 	/// RGB24, or, to colored 2- and 4-bit.
@@ -67,7 +67,7 @@ namespace LibDmd
 		/// <summary>
 		/// If set, convert the frame format.
 		/// </summary>
-		public IConverter Converter { get; set; }
+		public AbstractConverter Converter { get; set; }
 
 		/// <summary>
 		/// If set, flips the image vertically (top/down).
@@ -143,7 +143,6 @@ namespace LibDmd
 		/// <returns>This instance</returns>
 		public IRenderer Init()
 		{
-			Converter?.Init();
 			return this;
 		}
 

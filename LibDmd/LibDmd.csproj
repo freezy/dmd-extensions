@@ -462,7 +462,6 @@
     <Compile Include="Converter\Pin2Color\VniAnimationFrame.cs" />
     <Compile Include="Converter\Pin2Color\VniAnimationPlane.cs" />
     <Compile Include="Converter\Pin2Color\VniAnimationSet.cs" />
-    <Compile Include="Converter\IConverter.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
     <Compile Include="DmdDevice\IDmdDevice.cs" />

@@ -24,7 +24,7 @@ namespace LibDmd
 		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
-		private readonly List<IConverter> _converters = new List<IConverter>();
+		private readonly List<AbstractConverter> _converters = new List<AbstractConverter>();
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
 
 		/// <summary>
@@ -64,7 +64,6 @@ namespace LibDmd
 			{
 				if (renderGraph.Converter != null && !_converters.Contains(renderGraph.Converter)) {
 					_converters.Add(renderGraph.Converter);
-					renderGraph.Converter.Init();
 				}
 			}
 			return this;

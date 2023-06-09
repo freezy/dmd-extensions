@@ -11,13 +11,9 @@ namespace LibDmd.Test.Stubs
 {
 	public class ConverterGray2 : AbstractConverter, IColoredGray2Source
 	{
-		public string Name => "Converter[Gray2]";
-		public IObservable<Unit> OnResume => null;
-		public IObservable<Unit> OnPause => null;
+		public override string Name => "Converter[Gray2]";
 		public override IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2 };
-		public override bool IsConnected => _isConnected;
 
-		private bool _isConnected;
 		private readonly Func<DmdFrame, ColoredFrame> _convert;
 
 		private readonly Subject<ColoredFrame> _coloredGray2Frames = new Subject<ColoredFrame>();
@@ -31,7 +27,7 @@ namespace LibDmd.Test.Stubs
 
 		public IObservable<ColoredFrame> GetColoredGray2Frames()
 		{
-			_isConnected = true;
+			IsConnected = true;
 			return _coloredGray2Frames;
 		}
 
@@ -42,10 +38,6 @@ namespace LibDmd.Test.Stubs
 		}
 
 		public override void Convert(AlphaNumericFrame frame) { }
-
-		public override void Init()
-		{
-		}
 
 		public void SetDimensions(Dimensions dim)
 		{

@@ -17,20 +17,17 @@ using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
-	public class ColorizationPlugin : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source,
+	public class ColorizationPlugin : AbstractConverter, IColoredGray2Source, IColoredGray4Source,
 		IColoredGray6Source, IRgb24Source, IAlphaNumericSource
 	{
 		public override string Name => "Colorization Plugin";
-		public IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
+		public override IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 		public IObservable<DmdFrame> GetRgb24Frames() => _rgb24Frames;
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
-
-		public IObservable<Unit> OnResume => null;
-		public IObservable<Unit> OnPause => null;
 
 		private readonly Dimensions _dimensions = Dimensions.Dynamic;
 
@@ -216,7 +213,7 @@ namespace LibDmd.Converter.Plugin
 		/// The public API to convert a frame and output it to the pubs.
 		/// </summary>
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
-		public void Convert(DmdFrame frame)
+		public override void Convert(DmdFrame frame)
 		{
 			var rgb24FramePtr = frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0
 				? ColorizeFrame(rawFrame)
@@ -230,7 +227,7 @@ namespace LibDmd.Converter.Plugin
 			ProcessEvent();
 		}
 
-		public void Convert(AlphaNumericFrame frame)
+		public override void Convert(AlphaNumericFrame frame)
 		{
 			var rgb24FramePtr = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
 

@@ -88,7 +88,7 @@ Resizable displays will then be notified when the source dimension changes, whil
 
 ### Colorization
 
-It's possible to do frame-by-frame colorization similar to [ColorDMD](http://www.colordmd.com/). In such a case, an [`AbstractColorizer`](https://github.com/freezy/dmd-extensions/blob/master/LibDmd/Converter/AbstractColorizer.cs) receives the source frames and acts as source at the same time. This is done by passing it as an [`IConverter`](https://github.com/freezy/dmd-extensions/blob/master/LibDmd/Converter/IConverter.cs) to the render graph.
+It's possible to do frame-by-frame colorization similar to [ColorDMD](http://www.colordmd.com/). In such a case, an [`AbstractColorizer`](https://github.com/freezy/dmd-extensions/blob/master/LibDmd/Converter/AbstractColorizer.cs) receives the source frames and acts as source at the same time. This is done by passing it as an [`AbstractConverter`](https://github.com/freezy/dmd-extensions/blob/master/LibDmd/Converter/AbstractConverter.cs) to the render graph.
 
 ### Multiple Graphs
 

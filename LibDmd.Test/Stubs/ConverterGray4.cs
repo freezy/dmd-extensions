@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive;
 using System.Reactive.Subjects;
 using LibDmd.Converter;
 using LibDmd.Frame;
@@ -9,12 +8,11 @@ using NLog;
 
 namespace LibDmd.Test.Stubs
 {
-	public class ConverterGray4 : IConverter, IColoredGray4Source
+	public class ConverterGray4 : AbstractConverter, IColoredGray4Source
 	{
-		public string Name => "Converter[Gray4]";
-		public IObservable<Unit> OnResume { get; }
-		public IObservable<Unit> OnPause { get; }
-		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
+		public override string Name => "Converter[Gray4]";
+
+		public override IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 
 		private readonly Func<DmdFrame, ColoredFrame> _convert;
 
@@ -29,19 +27,13 @@ namespace LibDmd.Test.Stubs
 
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 
-		public void Convert(DmdFrame frame)
+		public override void Convert(DmdFrame frame)
 		{
 			Logger.Info($"ConverterGray4.Convert");
 			_coloredGray4Frames.OnNext(_convert(frame));
 		}
 
-		public void Convert(AlphaNumericFrame frame) { }
-
 		public void Init()
-		{
-		}
-
-		public void SetDimensions(Dimensions dim)
 		{
 		}
 	}

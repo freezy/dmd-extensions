@@ -207,7 +207,7 @@ namespace DmdExt.Mirror
 			_subscriptions.Dispose();
 		}
 
-		private IConverter SetupColorizer(string gameName)
+		private AbstractConverter SetupColorizer(string gameName)
 		{
 			// only setup if enabled and path is set
 			if (!_config.Global.Colorize || _colorizationLoader == null || gameName == null) {
@@ -229,7 +229,7 @@ namespace DmdExt.Mirror
 
 			// 3. check for native pin2color
 			var pin2Color = _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode);
-			return (IConverter)pin2Color?.Gray2Colorizer ?? pin2Color?.Gray4Colorizer;
+			return (AbstractConverter)pin2Color?.Gray2Colorizer ?? pin2Color?.Gray4Colorizer;
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)
