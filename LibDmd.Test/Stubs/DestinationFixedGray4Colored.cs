@@ -6,7 +6,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationFixedGray4Colored : DestinationFixed<ColoredFrame>, IColoredGray4Destination
 	{
-		public string Name => "Fixed Gray4 Colored";
+		public string Name => "Destination[Fixed/ColoredGray4]";
 		public bool IsAvailable => true;
 
 		public DestinationFixedGray4Colored(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)

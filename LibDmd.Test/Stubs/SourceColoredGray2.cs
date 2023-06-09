@@ -8,7 +8,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class SourceColoredGray2 : IColoredGray2Source, ITestSource<ColoredFrame>
 	{
-		public string Name => "Gray2 Test Source";
+		public string Name => "Source[ColoredGray2]";
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;

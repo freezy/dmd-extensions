@@ -5,7 +5,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationDynamicBitmap : DestinationDynamic<BmpFrame>, IBitmapDestination
 	{
-		public string Name => "Dynamic Bitmap";
+		public string Name => "Destination[Dynamic/Bitmap]";
 		public bool IsAvailable => true;
 
 		public void RenderBitmap(BmpFrame frame)

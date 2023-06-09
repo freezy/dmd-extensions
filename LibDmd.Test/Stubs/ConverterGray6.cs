@@ -10,7 +10,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class ConverterGray6 : IConverter, IColoredGray6Source
 	{
-		public string Name => "Gray6 Converter";
+		public string Name => "Converter[Gray6]";
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
 		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};

@@ -17,7 +17,7 @@ namespace LibDmd.Frame
 		public int BitLength;
 		public int NumColors => (int)Math.Pow(2, BitLength);
 		
-		public static bool operator ==(DmdFrame x, DmdFrame y) => Equals(x, y);
+		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
 		public FrameFormat Format {

@@ -7,7 +7,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationDynamicRgb24 : DestinationDynamic<DmdFrame>, IRgb24Destination
 	{
-		public string Name => "Dynamic RGB24";
+		public string Name => "Destination[Dynamic/RGB24]";
 		public bool IsAvailable => true;
 
 		public void RenderRgb24(DmdFrame frame)

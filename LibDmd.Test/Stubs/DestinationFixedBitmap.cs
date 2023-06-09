@@ -5,7 +5,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationFixedBitmap : DestinationFixed<BmpFrame>, IBitmapDestination
 	{
-		public string Name => "Fixed Bitmap";
+		public string Name => "Destination[Fixed/Bitmap]";
 		public bool IsAvailable => true;
 
 		public DestinationFixedBitmap(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)

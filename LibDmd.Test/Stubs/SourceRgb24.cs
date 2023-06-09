@@ -8,7 +8,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class SourceRgb24 : IRgb24Source, ITestSource<DmdFrame>
 	{
-		public string Name => "Rgb24 Test Source";
+		public string Name => "Source[Rgb24]";
 
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;

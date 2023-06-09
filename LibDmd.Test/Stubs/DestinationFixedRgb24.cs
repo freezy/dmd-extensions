@@ -7,7 +7,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationFixedRgb24 : DestinationFixed<DmdFrame>, IRgb24Destination
 	{
-		public string Name => "Fixed RGB24";
+		public string Name => "Destination[Fixed/RGB24]";
 		public bool IsAvailable => true;
 
 		public DestinationFixedRgb24(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)
