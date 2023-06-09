@@ -13,10 +13,10 @@ using NLog;
 
 namespace LibDmd.Converter.Serum
 {
-	public class Serum : AbstractSource, IConverter, IColoredGray6Source
+	public class Serum : AbstractConverter, IColoredGray6Source
 	{
 		public override string Name => "Serum";
-		public IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
+		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
 
@@ -47,11 +47,7 @@ namespace LibDmd.Converter.Serum
 
 		public ScalerMode ScalerMode { get; set; }
 
-		public IObservable<Unit> OnResume => null;
-		public IObservable<Unit> OnPause => null;
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
 
 		/// <summary>
 		/// Maximum amount of color rotations per frame
@@ -112,7 +108,7 @@ namespace LibDmd.Converter.Serum
 		{
 		}
 
-		public void Convert(DmdFrame frame)
+		public override void Convert(DmdFrame frame)
 		{
 			Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
 			
@@ -144,8 +140,6 @@ namespace LibDmd.Converter.Serum
 			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _planes, ConvertPalette(), _rotations));
 		}
 
-		public void Convert(AlphaNumericFrame frame) { }
-		
 		public static string GetVersion()
 		{
 			IntPtr pointer = Serum_GetMinorVersion();

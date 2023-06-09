@@ -28,7 +28,7 @@ namespace LibDmd.Converter
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
-		private readonly IConverter _converter;
+		private readonly AbstractConverter _converter;
 		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
 
 		private readonly Subject<ColoredFrame> _coloredGray2Frames = new Subject<ColoredFrame>();
@@ -43,7 +43,7 @@ namespace LibDmd.Converter
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ClockedDeduper(IConverter converter)
+		public ClockedDeduper(AbstractConverter converter)
 		{
 			if (converter == null) {
 				return;

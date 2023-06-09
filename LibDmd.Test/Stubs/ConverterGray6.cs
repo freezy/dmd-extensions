@@ -8,12 +8,12 @@ using LibDmd.Input;
 
 namespace LibDmd.Test.Stubs
 {
-	public class ConverterGray6 : IConverter, IColoredGray6Source
+	public class ConverterGray6 : AbstractConverter, IColoredGray6Source
 	{
-		public string Name => "Converter[Gray6]";
+		public override string Name => "Converter[Gray6]";
 		public IObservable<Unit> OnResume { get; }
 		public IObservable<Unit> OnPause { get; }
-		public IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
+		public override IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 
 		private readonly Func<DmdFrame, ColoredFrame> _convert;
 
@@ -26,12 +26,9 @@ namespace LibDmd.Test.Stubs
 
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 
-		public void Convert(DmdFrame frame) => _coloredGray6Frames.OnNext(_convert(frame));
-		public void Convert(AlphaNumericFrame frame) { }
+		public override void Convert(DmdFrame frame) => _coloredGray6Frames.OnNext(_convert(frame));
+		public override void Convert(AlphaNumericFrame frame) { }
 
-		public void Init()
-		{
-		}
 
 		public void SetDimensions(Dimensions dim)
 		{

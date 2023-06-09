@@ -14,9 +14,9 @@ namespace LibDmd.Converter
 	/// Converter that can swap in another child converter dynamically, without requiring upstream subscribers to re-subscribe.
 	/// Falls back to orange DMD colored frames when no child converter is available.
 	/// </summary>
-	public class SwitchingConverter : AbstractSource, IConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IAlphaNumericSource
+	public class SwitchingConverter : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IAlphaNumericSource
 	{
-		private IConverter _converter;
+		private AbstractConverter _converter;
 		private readonly Subject<ColoredFrame> _coloredGray2PassthroughFrames = new Subject<ColoredFrame>();
 		private readonly Subject<ColoredFrame> _coloredGray4PassthroughFrames = new Subject<ColoredFrame>();
 		private readonly Subject<AlphaNumericFrame> _alphaNumericPassthroughFrames = new Subject<AlphaNumericFrame>();
@@ -30,9 +30,7 @@ namespace LibDmd.Converter
 
 		public override string Name => $"Switching Converter ({ConverterName(_converter)})";
 
-		public IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
-		public IObservable<Unit> OnResume => null;
-		public IObservable<Unit> OnPause => null;
+		public override IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
 		public SwitchingConverter()
 		{
@@ -41,7 +39,7 @@ namespace LibDmd.Converter
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
 		}
 
-		public void Convert(DmdFrame frame)
+		public override void Convert(DmdFrame frame)
 		{
 			if (_converter != null) {
 				_converter?.Convert(frame);
@@ -54,7 +52,7 @@ namespace LibDmd.Converter
 			}
 		}
 
-		public void Convert(AlphaNumericFrame frame)
+		public override void Convert(AlphaNumericFrame frame)
 		{
 			if (_converter != null) {
 				_converter?.Convert(frame);
@@ -71,11 +69,7 @@ namespace LibDmd.Converter
 
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericPassthroughFrames;
 
-		public void Init()
-		{
-		}
-
-		public void Switch(IConverter converter)
+		public void Switch(AbstractConverter converter)
 		{
 			Logger.Info($"{Name} switching to {ConverterName(converter)}");
 
@@ -86,8 +80,6 @@ namespace LibDmd.Converter
 				_converter = null;
 				return;
 			}
-
-			converter.Init();
 
 			if (converter is IColoredGray2Source source2) {
 				_latestColoredGray2.OnNext(source2.GetColoredGray2Frames());
@@ -113,7 +105,7 @@ namespace LibDmd.Converter
 			_color = color;
 		}
 
-		private static string ConverterName(IConverter converter)
+		private static string ConverterName(AbstractConverter converter)
 		{
 			if (converter is AbstractSource source) {
 				return source.Name;
