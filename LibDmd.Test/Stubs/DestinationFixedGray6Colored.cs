@@ -9,12 +9,15 @@ namespace LibDmd.Test.Stubs
 		public string Name => "Destination[Fixed/ColoredGray6]";
 		public bool IsAvailable => true;
 
+		public int NumFrames;
+
 		public DestinationFixedGray6Colored(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)
 		{
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			NumFrames++;
 			LastFrame.OnNext(frame);
 		}
 

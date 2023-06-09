@@ -20,14 +20,13 @@ namespace LibDmd.Test.Stubs
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			Logger.Info("[DestinationFixedGray2Colored] New Frame!");
 			LastFrame.OnNext(frame);
 			NumFrames++;
 		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{
-			throw new System.NotImplementedException();
+			NumFrames++;
 		}
 
 		public void SetColor(Color color)

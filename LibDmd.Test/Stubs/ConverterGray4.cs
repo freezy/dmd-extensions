@@ -10,7 +10,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class ConverterGray4 : AbstractConverter, IColoredGray4Source
 	{
-		public override string Name => "Converter[Gray4]";
+		public override string Name => "Converter[Gray4 -> ColoredGray4]";
 
 		public override IEnumerable<FrameFormat> From => new [] {FrameFormat.Gray4};
 
@@ -20,10 +20,7 @@ namespace LibDmd.Test.Stubs
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ConverterGray4(Func<DmdFrame, ColoredFrame> convert)
-		{
-			_convert = convert;
-		}
+		public ConverterGray4(Func<DmdFrame, ColoredFrame> convert) => _convert = convert;
 
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 
@@ -31,10 +28,6 @@ namespace LibDmd.Test.Stubs
 		{
 			Logger.Info($"ConverterGray4.Convert");
 			_coloredGray4Frames.OnNext(_convert(frame));
-		}
-
-		public void Init()
-		{
 		}
 	}
 }

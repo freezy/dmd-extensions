@@ -8,24 +8,21 @@ namespace LibDmd.Test
 {
 	public static class FrameGenerator
 	{
-		private static readonly Random _random = new Random((int)(DateTime.Now.Ticks % int.MaxValue));
+		private static readonly Random RandomGen = new Random((int)(DateTime.Now.Ticks % int.MaxValue));
 		
 		public static DmdFrame Random(int width, int height, int bitLength)
 		{
-			var length = width * height * bitLength.GetByteLength();
-			var maxVal = Math.Pow(2, bitLength);
-			var data = new byte[length];
-			for (var i = 0; i < length; i++) {
-				if (bitLength <= 8) {
-					data[i] = (byte)(_random.Next() % maxVal);
-				} else {
-					data[i] = (byte)(_random.Next());
-				}
-			}
 
-			return new DmdFrame(new Dimensions(width, height), data, bitLength);
+
+			return new DmdFrame(new Dimensions(width, height), RandomData(width, height, bitLength), bitLength);
 		}
-		
+
+		public static ColoredFrame RandomColored(int width, int height, int bitLength)
+		{
+			var frame = new DmdFrame(new Dimensions(width, height), RandomData(width, height, bitLength), bitLength);
+			return new ColoredFrame(frame, RandomColors(bitLength));
+		}
+
 		public static DmdFrame FromString(string frame)
 		{
 			var match = Regex.Match(frame, @"\d{2} \d{2}", RegexOptions.IgnoreCase);
@@ -69,6 +66,31 @@ namespace LibDmd.Test
 		public static ushort[] AlphaNumericData(params byte[] chars)
 		{
 			return chars.Select(s => (ushort)s).ToArray();
+		}
+
+		private static byte[] RandomData(int width, int height, int bitLength)
+		{
+			var length = width * height * bitLength.GetByteLength();
+			var maxVal = Math.Pow(2, bitLength);
+			var data = new byte[length];
+			for (var i = 0; i < length; i++) {
+				if (bitLength <= 8) {
+					data[i] = (byte)(RandomGen.Next() % maxVal);
+				} else {
+					data[i] = (byte)(RandomGen.Next());
+				}
+			}
+			return data;
+		}
+
+		private static Color[] RandomColors(int bitLength)
+		{
+			var numColors = (int)Math.Pow(2, bitLength);
+			var colors = new Color[numColors];
+			for (var i = 0; i < numColors; i++) {
+				colors[i] = Color.FromRgb((byte)RandomGen.Next(0, 255), (byte)RandomGen.Next(0, 255), (byte)RandomGen.Next(0, 255));
+			}
+			return colors;
 		}
 
 		private static (byte[], Dimensions, int) Parse(string frame)
