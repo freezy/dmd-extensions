@@ -7,7 +7,7 @@ namespace LibDmd.Test.Stubs
 {
 	public class DestinationFixedGray2Colored : DestinationFixed<ColoredFrame>, IColoredGray2Destination
 	{
-		public string Name => "Destination[Fixed/ColoredGray4]";
+		public string Name => "Destination[Fixed/ColoredGray2]";
 		public bool IsAvailable => true;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -26,6 +26,7 @@ namespace LibDmd.Test.Stubs
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			LastFrame.OnNext(new ColoredFrame(frame, FrameGenerator.RandomPalette(2))); // don't care about the contents, but need to unblock
 			NumFrames++;
 		}
 
