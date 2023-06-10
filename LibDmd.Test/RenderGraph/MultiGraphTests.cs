@@ -125,14 +125,12 @@ namespace LibDmd.Test
 			source2.AddFrame(FrameGenerator.Random(128, 32, 2));
 
 			await dest1.Frame;
-			//await dest2.Frame;
+			await dest2.Frame;
 
 			dest1.NumFrames.Should().Be(1);
-			//dest2.NumFrames.Should().Be(1);
+			dest2.NumFrames.Should().Be(1);
 
 			gc.Dispose();
 		}
-
-
 	}
 }

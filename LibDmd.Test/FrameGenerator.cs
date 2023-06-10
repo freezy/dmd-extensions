@@ -20,7 +20,7 @@ namespace LibDmd.Test
 		public static ColoredFrame RandomColored(int width, int height, int bitLength)
 		{
 			var frame = new DmdFrame(new Dimensions(width, height), RandomData(width, height, bitLength), bitLength);
-			return new ColoredFrame(frame, RandomColors(bitLength));
+			return new ColoredFrame(frame, RandomPalette(bitLength));
 		}
 
 		public static DmdFrame FromString(string frame)
@@ -83,7 +83,7 @@ namespace LibDmd.Test
 			return data;
 		}
 
-		private static Color[] RandomColors(int bitLength)
+		public static Color[] RandomPalette(int bitLength)
 		{
 			var numColors = (int)Math.Pow(2, bitLength);
 			var colors = new Color[numColors];
