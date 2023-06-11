@@ -319,7 +319,7 @@ namespace LibDmd.Converter.Pin2Color
 				{
 					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
 					var colorData = FrameUtil.Join(dim / 2, planes);
-					var scaledData = FrameUtil.Scale2xUgh(dim, colorData);
+					var scaledData = FrameUtil.Scale2xObsolete(dim, colorData);
 					planes = FrameUtil.Split(dim, planes.Length, scaledData);
 				}
 			}
@@ -327,18 +327,30 @@ namespace LibDmd.Converter.Pin2Color
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2)
 			{
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(
+					dim,
+					FrameUtil.Join(dim, planes),
+					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
+				_paletteIndex));
 			}
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4)
 			{
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(
+					dim,
+					FrameUtil.Join(dim, planes),
+					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length)/Math.Log(2))), (int)Math.Pow(2, planes.Length)),
+					_paletteIndex));
 			}
 
 			if (planes.Length == 6)
 			{
-				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(dim, planes, ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)), _paletteIndex));
+				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(
+					dim,
+					FrameUtil.Join(dim, planes),
+					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
+					_paletteIndex));
 			}
 		}
 

@@ -102,12 +102,12 @@ namespace LibDmd.Output.Network
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray2(frame.Planes, frame.Palette));
+			_sockets.ForEach(s => s.SendColoredGray2(frame.BitPlanes, frame.Palette));
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			_sockets.ForEach(s => s.SendColoredGray4(frame.Planes, frame.Palette));
+			_sockets.ForEach(s => s.SendColoredGray4(frame.BitPlanes, frame.Palette));
 		}
 
 		public void RenderRgb24(DmdFrame frame)

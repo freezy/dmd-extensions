@@ -194,7 +194,7 @@ namespace LibDmd.Converter.Pin2Color
 					}
 					else
 					{
-						vpmFrame = FrameUtil.Scale2x(Size, vpmFrame);
+						vpmFrame = FrameUtil.Scale2xObsolete(Size, vpmFrame);
 					}
 				}
 

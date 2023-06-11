@@ -251,7 +251,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
-			_frameData = FrameUtil.Join(_frameDimensions, frame.Planes);
+			_frameData = frame.Data;
 			_frameType = FrameFormat.ColoredGray6;
 			_framePalette = frame.Palette;
 

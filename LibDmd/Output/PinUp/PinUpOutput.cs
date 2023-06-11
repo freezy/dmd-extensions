@@ -126,13 +126,8 @@ namespace LibDmd.Output.PinUp
 			}
 
 			try {
-				// Render as orange palette (same as default with no PAL loaded)
-				var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
-
-				var orangeFrame = FrameUtil.ConvertToRgb24(FixedSize, planes,
-					ColorUtil.GetPalette(new[] {Colors.Black, Colors.OrangeRed}, 16));
-
-				Marshal.Copy(orangeFrame.Data, 0, _pnt, FixedSize.Surface * 3);
+				var rgbFrame = frame.ConvertToRgb24(ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
+				Marshal.Copy(rgbFrame.Data, 0, _pnt, rgbFrame.Data.Length);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
 			} catch (Exception e) {

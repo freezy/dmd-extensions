@@ -3,6 +3,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
@@ -196,17 +197,12 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderGray2(DmdFrame frame)
 		{
-			// split to sub frames
-			var planes = FrameUtil.Split(FixedSize, 2, frame.Data);
-
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray2, 13);
+			frame.CopyPlanesTo(_frameBufferGray2, 13);
 
 			// send frame buffer to device
-			if (changed) {
-				WritePalette(_currentPalette);
-				RenderRaw(_frameBufferGray2);
-			}
+			WritePalette(_currentPalette);
+			RenderRaw(_frameBufferGray2);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
@@ -215,34 +211,26 @@ namespace LibDmd.Output.PinDmd3
 			WritePalette(frame.Palette);
 
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray2, 13);
+			frame.CopyPlanesTo(_frameBufferGray2, 13);
 
 			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray2);
-			}
+			RenderRaw(_frameBufferGray2);
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
-			// split to sub frames
-			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
-
 			// copy to frame buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 13);
+			frame.CopyPlanesTo(_frameBufferGray2, 13);
 
 			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray4);
-			}
+			RenderRaw(_frameBufferGray4);
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			// fall back if firmware doesn't support colored gray 4
 			if (!_supportsColoredGray4) {
-				var rgb24Frame = ColorUtil.ColorizeObsolete(FixedSize, FrameUtil.Join(FixedSize, frame.Planes), frame.Palette);
-				RenderRgb24(rgb24Frame);
+				RenderRgb24(frame.ConvertToRgb24());
 				return;
 			}
 
@@ -258,23 +246,19 @@ namespace LibDmd.Output.PinDmd3
 			}
 
 			// copy frame
-			var frameChanged = FrameUtil.Copy(frame.Planes, _frameBufferColoredGray4, 49);
+			frame.CopyPlanesTo(_frameBufferColoredGray4, 49);
 
 			// send frame buffer to device
-			if (frameChanged || paletteChanged) {
-				RenderRaw(_frameBufferColoredGray4);
-			}
+			RenderRaw(_frameBufferColoredGray4);
 		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{
 			// copy data to frame buffer
-			var changed = FrameUtil.Copy(frame.Data, _frameBufferRgb24, 1);
+			frame.CopyDataTo(_frameBufferRgb24, 1);
 
 			// can directly be sent to the device.
-			if (changed) {
-				RenderRaw(_frameBufferRgb24);
-			}
+			RenderRaw(_frameBufferRgb24);
 		}
 
 		public void RenderRaw(byte[] data)

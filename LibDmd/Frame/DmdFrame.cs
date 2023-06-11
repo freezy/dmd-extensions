@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -13,10 +12,33 @@ namespace LibDmd.Frame
 	/// </summary>RGB24 buffer must be divisible by 3
 	public class DmdFrame : BaseFrame, ICloneable, IEqualityComparer<DmdFrame>
 	{
-		public byte[] Data { get; private set; }
+		/// <summary>
+		/// The frame data, from top left to bottom right.
+		/// It's usually one byte per pixel, but three bytes for RGB24.
+		/// </summary>
+		public byte[] Data { get; protected set; }
+
+		/// <summary>
+		/// The bit length of each pixel.
+		/// </summary>
 		public int BitLength;
+
+		/// <summary>
+		/// The number of colors resulting from <see cref="BitLength"/>.
+		/// </summary>
 		public int NumColors => (int)Math.Pow(2, BitLength);
-		
+
+		/// <summary>
+		/// Converts <see cref="Data"/> to bit planes, which is an array for each color,
+		/// where each each pixel is either 0 or 1, 8 pixels per byte.
+		/// </summary>
+		public byte[][] BitPlanes => FrameUtil.Split(Dimensions, BitLength, Data);
+
+		/// <summary>
+		/// The length of every bit plane.
+		/// </summary>
+		public int BitPlaneLength => Dimensions.Surface / 8;
+
 		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
@@ -35,7 +57,7 @@ namespace LibDmd.Frame
 		private bool IsGray => BitLength <= 8;
 		private bool IsRgb24 => BitLength == 24;
 
-		private int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
+		protected int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
 
 		#region Constructors
 
@@ -124,6 +146,24 @@ namespace LibDmd.Frame
 
 		#endregion
 
+		#region Transfers
+
+		public void CopyPlanesTo(byte[] dest, int offset)
+		{
+			var planes = BitPlanes;
+			foreach (var plane in planes) {
+				Buffer.BlockCopy(plane, 0, dest, offset, plane.Length);
+				offset += plane.Length;
+			}
+		}
+
+		public void CopyDataTo(byte[] dest, int offset)
+		{
+			Buffer.BlockCopy(Data, 0, dest, offset, Data.Length);
+		}
+
+		#endregion
+
 		#region Utilities
 
 		public DmdFrame Resize(Dimensions dim, int bitLength)
@@ -139,6 +179,25 @@ namespace LibDmd.Frame
 			Data = new byte[Dimensions.Surface * BytesPerPixel];
 			return this;
 		}
+
+		private static string PlaneName(int p)
+		{
+			switch (p) {
+				case 0: return "RED";
+				case 1: return "GREEN";
+				case 2: return "BLUE";
+				default: return "PLANE " + p;
+			}
+		}
+
+#if DEBUG
+		protected void AssertData()
+		{
+			if (Dimensions.Surface * BytesPerPixel != Data.Length) {
+				throw new ArgumentException($"Data length does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
+			}
+		}
+#endif
 
 		#endregion
 
@@ -248,8 +307,6 @@ namespace LibDmd.Frame
 		#endregion
 
 		#region Transformations
-
-
 
 		/// <summary>
 		/// Up- or downscales image, and flips if necessary.
@@ -440,6 +497,8 @@ namespace LibDmd.Frame
 
 		#endregion
 
+		#region Overrides
+
 		/// <summary>
 		/// Flat-clones the frame (i.e. the data is still the same, but now you
 		/// can replace it without affecting other references of the frame).
@@ -484,24 +543,6 @@ namespace LibDmd.Frame
 			return sb.ToString();
 		}
 
-		private static string PlaneName(int p)
-		{
-			switch (p) {
-				case 0: return "RED";
-				case 1: return "GREEN";
-				case 2: return "BLUE";
-				default: return "PLANE " + p;
-			}
-		}
-		
-#if DEBUG
-		private void AssertData()
-		{
-			if (Dimensions.Surface * BytesPerPixel != Data.Length) {
-				throw new ArgumentException($"Data length does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
-			}
-		}
-#endif
-
+		#endregion
 	}
 }

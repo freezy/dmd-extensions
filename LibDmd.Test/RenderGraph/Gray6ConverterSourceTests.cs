@@ -167,7 +167,7 @@ namespace LibDmd.Test
 				00000000");
 
 			var coloredFrame = FrameGenerator.FromString(@"
-				3F 2E 1D 0C 1B 2A 39 08 
+				3F 2E 1D 0C 1B 2A 39 28 
 				0A 0A 0A 0A 30 30 30 30 
 				00 00 00 00 22 22 22 22 
 				00 11 22 33 04 15 26 37",

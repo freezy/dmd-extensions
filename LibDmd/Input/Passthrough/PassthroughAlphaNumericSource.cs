@@ -20,6 +20,8 @@ namespace LibDmd.Input.Passthrough
 
 		private readonly ISubject<AlphaNumericFrame> _framesAlphaNumeric;
 		private readonly ISubject<string> _gameName = new Subject<string>();
+
+		private readonly AlphaNumericFrame _lastFrame = new AlphaNumericFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		public PassthroughAlphaNumericSource(AlphaNumericFrame initialFrame)
@@ -35,6 +37,12 @@ namespace LibDmd.Input.Passthrough
 
 		public void NextFrame(AlphaNumericFrame frame)
 		{
+			// de-dupe frame
+			if (_lastFrameFormat.Value == FrameFormat.AlphaNumeric && _lastFrame == frame) {
+				return;
+			}
+
+			_lastFrame.Update(frame);
 			_framesAlphaNumeric.OnNext(frame);
 			_lastFrameFormat.OnNext(FrameFormat.AlphaNumeric);
 		}

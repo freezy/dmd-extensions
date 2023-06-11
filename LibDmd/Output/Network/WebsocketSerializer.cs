@@ -17,8 +17,8 @@ namespace LibDmd.Output.Network
 		void OnClearPalette();
 		void OnGameName(string gameName);
 		void OnRgb24(uint timestamp, byte[] frame);
-		void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes);
-		void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes);
+		void OnColoredGray4(uint timestamp, Color[] palette, byte[] data);
+		void OnColoredGray2(uint timestamp, Color[] palette, byte[] data);
 		void OnGray4(uint timestamp, byte[] frame);
 		void OnGray2(uint timestamp, byte[] frame);
 	}
@@ -92,7 +92,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 4; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnColoredGray4(timestamp, palette, planes);
+						action.OnColoredGray4(timestamp, palette, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "coloredGray2": {
@@ -107,7 +107,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 2; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnColoredGray2(timestamp, palette, planes);
+						action.OnColoredGray2(timestamp, palette, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "gray4Planes": {
