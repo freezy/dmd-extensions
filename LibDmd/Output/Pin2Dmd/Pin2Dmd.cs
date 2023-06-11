@@ -97,16 +97,11 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderGray4(DmdFrame frame)
 		{
-			// convert to bit planes
-			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
-
 			// copy to buffer
-			var changed = FrameUtil.Copy(planes, _frameBufferGray4, 4);
+			frame.CopyPlanesTo(_frameBufferGray4, 4);
 
 			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray4);
-			}
+			RenderRaw(_frameBufferGray4);
 		}
 
 		public void RenderRgb24(DmdFrame frame)
@@ -125,13 +120,10 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
 			// copy to buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray6, 4);
+			frame.CopyPlanesTo(_frameBufferGray6, 4);
 
 			// send frame buffer to device
-			if (changed)
-			{
-				RenderRaw(_frameBufferGray6);
-			}
+			RenderRaw(_frameBufferGray6);
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
@@ -139,20 +131,16 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
 			// copy to buffer
-			var changed = FrameUtil.Copy(frame.Planes, _frameBufferGray4, 4);
+			frame.CopyPlanesTo(_frameBufferGray4, 4);
 
 			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBufferGray4);
-			}
+			RenderRaw(_frameBufferGray4);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetPalette(frame.Palette, frame.PaletteIndex);
 
-			var joinedFrame = FrameUtil.Join(FixedSize, frame.Planes);
-			
 			// send frame buffer to device
 			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
 		}

@@ -10,25 +10,21 @@ using LibDmd.Output;
 
 namespace LibDmd
 {
-	public class ColoredFrame : BaseFrame, ICloneable, IEqualityComparer<ColoredFrame>
+	public class ColoredFrame : DmdFrame, ICloneable, IEqualityComparer<ColoredFrame>
 	{
-		/// <summary>
-		/// Frame data, split into bit planes
-		/// </summary>
-		public byte[][] Planes { get; private set; }
-
 		/// <summary>
 		/// Color palette
 		/// </summary>
 		public Color[] Palette { get; private set; }
 
 		/// <summary>
-		/// Palette index from animation or -1 if not set.
+		/// Palette index from animation or -1 if not set. This references a palette
+		/// that was already loaded onto a device.
 		/// </summary>
 		public int PaletteIndex { get; private set; }
 
 		/// <summary>
-		/// Colour Rotation descriptions.
+		/// Color Rotation descriptions.
 		/// </summary>
 		/// <remarks>
 		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
@@ -37,13 +33,9 @@ namespace LibDmd
 		public byte[] Rotations { get;  private set; }
 
 		/// <summary>
-		/// If set, colors defined in <see cref="Rotations" are rotated./>
+		/// If set, colors defined in <see cref="Rotations"/> are rotated.
 		/// </summary>
 		public bool RotateColors;
-
-		public int BitLength => Planes.Length;
-
-		private byte[] Data => FrameUtil.Join(Dimensions, Planes);
 
 		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);
@@ -54,37 +46,42 @@ namespace LibDmd
 		{
 		}
 
-		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, int paletteIndex = -1, byte[] rotations = null)
+		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, int paletteIndex = -1, byte[] rotations = null)
 		{
 			Dimensions = dim;
-			Planes = planes;
+			Data = data;
+			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
 			PaletteIndex = paletteIndex;
 			Rotations = rotations;
 			RotateColors = rotations != null && rotations.Length > 0;
 
 			#if DEBUG
-			if (planes.Length != palette.Length.GetBitLength()) {
-				throw new ArgumentException($"Number of planes must match palette size ({planes.Length} != {palette.Length.GetBitLength()})");
-			}
+			AssertData();
 			#endif
 		}
 
-		public ColoredFrame(Dimensions dim, byte[][] planes, Color[] palette, byte[] rotations)
-			: this(dim, planes, palette, -1, rotations) { }
+		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, byte[] rotations)
+			: this(dim, data, palette, -1, rotations) { }
 
 		public ColoredFrame(DmdFrame frame, Color color)
 		{
 			Dimensions = frame.Dimensions;
-			Planes = FrameUtil.Split(Dimensions, frame.BitLength, frame.Data);
+			Data = frame.Data;
+			BitLength = frame.BitLength;
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, frame.NumColors);
 			RotateColors = false;
+
+			#if DEBUG
+			AssertData();
+			#endif
 		}
 
 		public ColoredFrame(DmdFrame frame, params Color[] palette)
 		{
 			Dimensions = frame.Dimensions;
-			Planes = FrameUtil.Split(frame.Dimensions, frame.BitLength, frame.Data);
+			Data = frame.Data;
+			BitLength = frame.BitLength;
 			Palette = palette;
 			RotateColors = false;
 		}
@@ -93,35 +90,26 @@ namespace LibDmd
 
 		#region Updates
 
-		public ColoredFrame Update(byte[][] planes, Color[] palette)
+		public ColoredFrame Update(byte[] data, Color[] palette)
 		{
-			Planes = planes;
+			Data = data;
+			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
-
-			#if DEBUG
-			if (planes.Length != Palette.Length.GetBitLength()) {
-				throw new ArgumentException("Number of planes must match palette size");
-			}
-			#endif
 			return this;
 		}
 
-		private ColoredFrame Update(byte[][] planes)
+		private ColoredFrame Update(byte[] data)
 		{
-			Planes = planes;
-
-			#if DEBUG
-			if (planes.Length != Palette.Length.GetBitLength()) {
-				throw new ArgumentException("Number of planes must match palette size");
-			}
-			#endif
+			Data = data;
 			return this;
 		}
 
+		[Obsolete("Use byte data updates")]
 		private ColoredFrame Update(Dimensions dim, byte[][] planes)
 		{
 			Dimensions = dim;
-			Planes = planes;
+			Data = FrameUtil.Join(Dimensions, planes);
+			BitLength = planes.Length;
 
 			#if DEBUG
 			if (planes.Length != Palette.Length.GetBitLength()) {
@@ -134,7 +122,8 @@ namespace LibDmd
 		public void Update(ColoredFrame frame)
 		{
 			Dimensions = frame.Dimensions;
-			Planes = frame.Planes;
+			Data = frame.Data;
+			BitLength = frame.BitLength;
 			Palette = frame.Palette;
 			PaletteIndex = frame.PaletteIndex;
 			Rotations = frame.Rotations;
@@ -151,13 +140,12 @@ namespace LibDmd
 		/// <returns>New DMD frame</returns>
 		public DmdFrame ConvertToGray()
 		{
-			return new DmdFrame(Dimensions, FrameUtil.Join(Dimensions, Planes), Planes.Length);
+			return new DmdFrame(Dimensions, Data, BitLength);
 		}
 
 		public DmdFrame ConvertToGray(params byte[] mapping)
 		{
-			var data = FrameUtil.Join(Dimensions, Planes);
-			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(data, mapping), mapping.Length.GetBitLength());
+			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), mapping.Length.GetBitLength());
 		}
 
 		/// <summary>
@@ -170,11 +158,11 @@ namespace LibDmd
 		/// Converts this colored frame to a RGB24 frame.
 		/// </summary>
 		/// <returns>Converted RGB24 frame</returns>
-		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette), 24);
+		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb24(Dimensions, Data, Palette), 24);
 
 		private BitmapSource ConvertToBitmapWithColors()
 		{
-			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, FrameUtil.Join(Dimensions, Planes), Palette);
+			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, Data, Palette);
 			return ImageUtil.ConvertFromRgb24(Dimensions, rgb24);
 		}
 
@@ -231,20 +219,22 @@ namespace LibDmd
 
 			// for dynamic or equal target dimensions, just flip
 			if (targetDim == Dimensions.Dynamic || targetDim == Dimensions) {
-				return Update(TransformationUtil.Flip(Dimensions, Planes, renderGraph.FlipHorizontally, renderGraph.FlipVertically));
+				return Update(TransformationUtil.Flip(Dimensions, BytesPerPixel, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically));
 			}
 
-			// if we need to scale down by factor 2, do it here more efficiently
-			if (Dimensions.IsDoubleSizeOf(targetDim) && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
-				return Update(targetDim, FrameUtil.ScaleDown(targetDim, Planes));
-			}
+			// // if we need to scale down by factor 2, do it here more efficiently
+			// if (Dimensions.IsDoubleSizeOf(targetDim) && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+			// 	return Update(targetDim, FrameUtil.ScaleDown(targetDim, Data));
+			// }
 
 			// otherwise, convert to grayscale bitmap, transform, convert back.
 			var bmp = ConvertToBitmapWithoutColors();
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 			var transformedData = ConvertFromBitmapWithoutColors(transformedBmp);
 
-			return Update(targetDim, FrameUtil.Split(targetDim, BitLength, transformedData));
+			Update(targetDim, transformedData);
+
+			return this;
 		}
 
 		/// <summary>
@@ -254,7 +244,7 @@ namespace LibDmd
 		/// <param name="scalerMode">If and how to scale</param>
 		/// <returns>Updated frame instance</returns>
 		/// <exception cref="ArgumentException"></exception>
-		public ColoredFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
+		public new ColoredFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
 		{
 
 			// skip if disabled
@@ -279,46 +269,14 @@ namespace LibDmd
 
 			// resize
 			var data = scalerMode == ScalerMode.Doubler
-				? FrameUtil.ScaleDouble(Dimensions, FrameUtil.Join(Dimensions, Planes))
-				: FrameUtil.Scale2X(Dimensions, FrameUtil.Join(Dimensions, Planes));
+				? FrameUtil.ScaleDouble(Dimensions, Data)
+				: FrameUtil.Scale2X(Dimensions, Data);
 
-			return Update(Dimensions * 2, FrameUtil.Split(Dimensions * 2, BitLength, data));
+			Update(Dimensions * 2, data);
+			return this;
 		}
 
 		#endregion
-
-		public object Clone() => new ColoredFrame(Dimensions, Planes, Palette, PaletteIndex, Rotations);
-		public override string ToString()
-		{
-			var bitLength = Planes.Length;
-			var data = FrameUtil.Join(Dimensions, Planes);
-			var sb = new StringBuilder();
-			sb.AppendLine($"Colored Frame {Dimensions}@{bitLength}, {Palette.Length} colors ({data.Length} bytes):");
-			if (bitLength <= 4) {
-				for (var y = 0; y < Dimensions.Height; y++) {
-					for (var x = 0; x < Dimensions.Width; x++) {
-						sb.Append(data[y * Dimensions.Width + x].ToString("X"));
-					}
-					sb.AppendLine();
-				}
-
-			} else if (bitLength <= 8) {
-				for (var y = 0; y < Dimensions.Height; y++) {
-					for (var x = 0; x < Dimensions.Width; x++) {
-						sb.Append(Data[y * Dimensions.Width + x].ToString("X2") + " ");
-					}
-					sb.AppendLine();
-				}
-			} else {
-				throw new ArgumentException("Cannot print frame with bit length " + bitLength);
-			}
-
-			sb.AppendLine("Palette: [");
-			sb.Append(string.Join(", ", Palette.Select(c => c.ToString())));
-			sb.AppendLine("]");
-
-			return sb.ToString();
-		}
 
 		#region Equality
 
@@ -408,6 +366,42 @@ namespace LibDmd
 
 		bool IEqualityComparer<ColoredFrame>.Equals(ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		int IEqualityComparer<ColoredFrame>.GetHashCode(ColoredFrame obj) => obj.GetHashCode();
+
+		#endregion
+
+		#region Overrides
+
+		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette, PaletteIndex, Rotations);
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine($"Colored Frame {Dimensions}@{BitLength}, {Palette.Length} colors ({Data.Length} bytes):");
+			if (BitLength <= 4) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width + x].ToString("X"));
+					}
+					sb.AppendLine();
+				}
+
+			} else if (BitLength <= 8) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width + x].ToString("X2") + " ");
+					}
+					sb.AppendLine();
+				}
+			} else {
+				throw new ArgumentException("Cannot print frame with bit length " + BitLength);
+			}
+
+			sb.AppendLine("Palette: [");
+			sb.Append(string.Join(", ", Palette.Select(c => c.ToString())));
+			sb.AppendLine("]");
+
+			return sb.ToString();
+		}
 
 		#endregion
 	}

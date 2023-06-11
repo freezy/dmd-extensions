@@ -15,17 +15,17 @@ namespace LibDmd.Input.Network
 {
 	public class WebsocketServer : ISocketAction
 	{
-		internal WebsocketGray2Source Gray2Source = new WebsocketGray2Source();
-		internal WebsocketGray4Source Gray4Source = new WebsocketGray4Source();
-		internal WebsocketColoredGray2Source ColoredGray2Source = new WebsocketColoredGray2Source();
-		internal WebsocketColoredGray4Source ColoredGray4Source = new WebsocketColoredGray4Source();
-		internal WebsocketRgb24Source Rgb24Source = new WebsocketRgb24Source();
+		private readonly WebsocketGray2Source _gray2Source = new WebsocketGray2Source();
+		private readonly WebsocketGray4Source _gray4Source = new WebsocketGray4Source();
+		private readonly WebsocketColoredGray2Source _coloredGray2Source = new WebsocketColoredGray2Source();
+		private readonly WebsocketColoredGray4Source _coloredGray4Source = new WebsocketColoredGray4Source();
+		private readonly WebsocketRgb24Source _rgb24Source = new WebsocketRgb24Source();
 
 		private readonly HttpServer _server;
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 		private RenderGraphCollection _graphs;
 		private readonly DmdFrame _dmdFrame = new DmdFrame();
-		private ColoredFrame _coloredFrame = new ColoredFrame();
+		private readonly ColoredFrame _coloredFrame = new ColoredFrame();
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -61,27 +61,27 @@ namespace LibDmd.Input.Network
 			_graphs = graphs;
 			graphs.Add(new RenderGraph {
 				Name = "2-bit Websocket Graph",
-				Source = Gray2Source,
+				Source = _gray2Source,
 				Destinations = renderers,
 			});
 			graphs.Add(new RenderGraph {
 				Name = "4-bit Websocket Graph",
-				Source = Gray4Source,
+				Source = _gray4Source,
 				Destinations = renderers,
 			});
 			graphs.Add(new RenderGraph {
 				Name = "Colored 2-bit Websocket Graph",
-				Source = ColoredGray2Source,
+				Source = _coloredGray2Source,
 				Destinations = renderers,
 			});
 			graphs.Add(new RenderGraph {
 				Name = "Colored 4-bit Websocket Graph",
-				Source = ColoredGray4Source,
+				Source = _coloredGray4Source,
 				Destinations = renderers,
 			});
 			graphs.Add(new RenderGraph {
 				Name = "24-bit RGB Websocket Graph",
-				Source = Rgb24Source,
+				Source = _rgb24Source,
 				Destinations = renderers,
 			});
 		}
@@ -110,17 +110,17 @@ namespace LibDmd.Input.Network
 			Logger.Info("OnGameName: {0}", gameName);
 		}
 
-		public void OnRgb24(uint timestamp, byte[] frame) => Rgb24Source.FramesRgb24.OnNext(_dmdFrame.Update(frame, 24));
+		public void OnRgb24(uint timestamp, byte[] frame) => _rgb24Source.FramesRgb24.OnNext(_dmdFrame.Update(frame, 24));
 
-		public void OnColoredGray4(uint timestamp, Color[] palette, byte[][] planes)
-			=> ColoredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(planes, palette));
+		public void OnColoredGray4(uint timestamp, Color[] palette, byte[] data)
+			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));
 
-		public void OnColoredGray2(uint timestamp, Color[] palette, byte[][] planes)
-			=> ColoredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(planes, palette));
+		public void OnColoredGray2(uint timestamp, Color[] palette, byte[] data)
+			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));
 
-		public void OnGray4(uint timestamp, byte[] frame) => Gray4Source.FramesGray4.OnNext(_dmdFrame.Update(frame, 4));
+		public void OnGray4(uint timestamp, byte[] frame) => _gray4Source.FramesGray4.OnNext(_dmdFrame.Update(frame, 4));
 
-		public void OnGray2(uint timestamp, byte[] frame) => Gray2Source.FramesGray2.OnNext(_dmdFrame.Update(frame, 2));
+		public void OnGray2(uint timestamp, byte[] frame) => _gray2Source.FramesGray2.OnNext(_dmdFrame.Update(frame, 2));
 	}
 
 	public class DmdSocket : WebSocketBehavior

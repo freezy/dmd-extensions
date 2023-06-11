@@ -117,16 +117,11 @@ namespace LibDmd.Output.PinDmd2
 
 		public void RenderGray4(DmdFrame frame)
 		{
-			// convert to bit planes
-			var planes = FrameUtil.Split(FixedSize, 4, frame.Data);
-
 			// copy to buffer
-			var changed = FrameUtil.Copy(planes, _frameBuffer, 4);
+			frame.CopyPlanesTo(_frameBuffer, 4);
 
 			// send frame buffer to device
-			if (changed) {
-				RenderRaw(_frameBuffer);
-			}
+			RenderRaw(_frameBuffer);
 		}
 
 		public void RenderRaw(byte[] data)

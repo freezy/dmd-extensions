@@ -40,7 +40,6 @@ namespace LibDmd.Converter.Serum
 		private readonly Color[] _colorPalette = new Color[64];
 		private readonly byte[] _bytePalette = new byte[64 * 3];
 		private readonly DmdFrame _frame;
-		private readonly byte[][] _planes;
 		private readonly byte[] _rotations;
 		
 		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
@@ -79,11 +78,6 @@ namespace LibDmd.Converter.Serum
 			NumTriggersAvailable = numTriggers;
 			IsLoaded = true;
 			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
-			
-			_planes = new byte[6][];
-			for (uint ti = 0; ti < 6; ti++) {
-				_planes[ti] = new byte[_dimensions.Surface / 8];
-			}
 			_rotations = new byte[MAX_COLOR_ROTATIONS * 3];
 		}
 		
@@ -133,11 +127,8 @@ namespace LibDmd.Converter.Serum
 				_activePupOutput.SendTriggerId((ushort)triggerId);
 			}
 
-			// convert to planes
-			FrameUtil.Split(frame.Dimensions, _planes.Length, _frame.Data, _planes);
-
 			// send the colored frame
-			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _planes, ConvertPalette(), _rotations));
+			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _frame.Data, ConvertPalette(), _rotations));
 		}
 
 		public static string GetVersion()
@@ -145,39 +136,6 @@ namespace LibDmd.Converter.Serum
 			IntPtr pointer = Serum_GetMinorVersion();
 			string str = Marshal.PtrToStringAnsi(pointer);
 			return str;
-		}
-
-		private byte[][] ConvertToPlanes(byte colorBitDepth)
-		{
-			byte bitMask = 1;
-			var tj = 0;
-			for (var tk = 0; tk < colorBitDepth; tk++) {
-				_planes[tk][tj] = 0;
-			}
-
-			var len = _dimensions.Surface;
-			for (var ti = 0; ti < len; ti++) {
-				byte tl = 1;
-				for (var tk = 0; tk < colorBitDepth; tk++) {
-					if ((_frame.Data[ti] & tl) > 0) {
-						_planes[tk][tj] |= bitMask;
-					}
-					tl <<= 1;
-				}
-				if (bitMask == 0x80) {
-					bitMask = 1;
-					tj++;
-					if (tj < len / 8) {
-						for (var tk = 0; tk < colorBitDepth; tk++) {
-							_planes[tk][tj] = 0;
-						}
-					}
-				} else {
-					bitMask <<= 1;
-				}
-			}
-
-			return _planes;
 		}
 
 		private Color[] ConvertPalette()

@@ -131,14 +131,14 @@ namespace LibDmd.Output.Network
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeColoredGray2(frame.Planes, frame.Palette));
+				_client.Send(_serializer.SerializeColoredGray2(frame.BitPlanes, frame.Palette));
 			}
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			if (IsAvailable) {
-				_client.Send(_serializer.SerializeColoredGray4(frame.Planes, frame.Palette));
+				_client.Send(_serializer.SerializeColoredGray4(frame.BitPlanes, frame.Palette));
 			}
 		}
 

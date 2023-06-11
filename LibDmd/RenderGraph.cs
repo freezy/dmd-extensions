@@ -419,7 +419,7 @@ namespace LibDmd
 					// start looking at the most performant combinations first.
 					//
 					// So first we try to match the source format with the destination format. Then
-					// we go on by looking at "upscaling" convertions, e.g. if a destination only
+					// we go on by looking at "up-scaling" conversions, e.g. if a destination only
 					// supports RGB24, then convert 2-bit to RGB24. Lastly we check "downscaling"
 					// conversions, e.g. convert an RGB24 frame to 2-bit for outputs like PinDMD1
 					// that can only render 4 shades.
@@ -662,7 +662,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames().DistinctUntilChanged(),
+								sourceGray2.GetGray2Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),

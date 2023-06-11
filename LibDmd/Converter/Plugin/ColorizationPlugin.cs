@@ -205,7 +205,7 @@ namespace LibDmd.Converter.Plugin
 
 		#region Conversion
 
-		private byte[] _frame;
+		private byte[] _frameData;
 		private readonly Dictionary<int, int> _colorIndex = new Dictionary<int, int>();
 		private readonly Color[] _palette = new Color[64];
 
@@ -294,8 +294,8 @@ namespace LibDmd.Converter.Plugin
 			var rgb24Frame = new byte[frameSize];
 			Marshal.Copy(rgb24FramePtr, rgb24Frame, 0, frameSize);
 
-			if (_frame == null || _frame.Length != dim.Surface) {
-				_frame = new byte[dim.Surface];
+			if (_frameData == null || _frameData.Length != dim.Surface) {
+				_frameData = new byte[dim.Surface];
 			}
 			_colorIndex.Clear();
 			for (var k = 0; k < 64; k++) {
@@ -320,18 +320,18 @@ namespace LibDmd.Converter.Plugin
 					index = _colorIndex[color];
 				}
 
-				_frame[j++] = (byte)index;
+				_frameData[j++] = (byte)index;
 			}
 
 			// split and send
 			if (lastIndex < 4) {
-				_coloredGray2Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 2, _frame), _palette.Take(4).ToArray()));
+				_coloredGray2Frames.OnNext(new ColoredFrame(dim, _frameData, _palette.Take(4).ToArray()));
 
 			} else if (lastIndex < 16) {
-				_coloredGray4Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 4, _frame), _palette.Take(16).ToArray()));
+				_coloredGray4Frames.OnNext(new ColoredFrame(dim, _frameData, _palette.Take(16).ToArray()));
 
 			} else if (lastIndex < 64) {
-				_coloredGray6Frames.OnNext(new ColoredFrame(dim, FrameUtil.Split(dim, 6, _frame), _palette));
+				_coloredGray6Frames.OnNext(new ColoredFrame(dim, _frameData, _palette));
 
 			} else {
 				_rgb24Frames.OnNext(new DmdFrame(dim, rgb24Frame, 24));

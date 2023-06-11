@@ -1,35 +1,38 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using LibDmd.Frame;
 using NLog;
-using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Common
 {
 	/// <summary>
-	/// Wärchziig zum hin- und härkonvertiärä vo Biud-Datä.
+	/// Tools for dealing with frame data.
 	/// </summary>
-	public class FrameUtil
+	public static class FrameUtil
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
-		/// Tuät es Biud i sini Bitahteiu uifteilä.
+		/// Splits a pixel array into separate bit planes.
 		/// </summary>
 		/// 
 		/// <remarks>
-		/// Mr chas so gseh dass für äs Biud mit viar Graiteen zwe Ebänä fir
-		/// jedes Bit uisächemid
+		/// A bit plane is a byte array with the same dimensions as the original frame,
+		/// but since it's bits, a pixel can be either one or zero, so they are packed
+		/// into bytes.
+		///
+		/// This makes it more efficient to transfer than one byte per pixel, where only
+		/// 2 or 4 bits are used.
 		/// </remarks>
 		/// 
-		/// <param name="dim">Dimensionä vom Biud</param>
-		/// <param name="bitlen">Mit wefu Bits pro Pixu s Biud konstruiärt isch</param>
-		/// <param name="frame">D datä vom Biud</param>
-		/// <param name="destPlanes">Bruich das bim zruggäh wenn definiärt.</param>
-		/// <returns>Än Ebini fir jedes Bit</returns>
+		/// <param name="dim">Frame dimensions</param>
+		/// <param name="bitlen">How many bits per pixel, i.e. how many bit planes</param>
+		/// <param name="frame">Frame data, from top left to bottom right</param>
+		/// <param name="destPlanes">If set, write the bit planes into this.</param>
+		/// <returns>Array of bit plans</returns>
 		public static byte[][] Split(Dimensions dim, int bitlen, byte[] frame, byte[][] destPlanes = null)
 		{
 			using (Profiler.Start("FrameUtil.Split")) {
@@ -89,16 +92,16 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Tuät mehreri Bit-Ebänä widr zämäfiägä.
+		/// Joins an array of bit planes back into one single byte array where one byte represents one pixel.
 		/// </summary>
-		/// <param name="dim">Dimensionä vom Biud</param>
-		/// <param name="bitPlanes">Ä Lischtä vo Ebänä zum zämäfiägä</param>
-		/// <returns>Äs Graistuifäbiud mit sefu Bittiäfi wiä Ebänä gä wordä sind</returns>
+		/// <param name="dim">Frame dimensions</param>
+		/// <param name="bitPlanes">Array of bit planes</param>
+		/// <returns>Byte array from top left to bottom right</returns>
 		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)
 		{
 			using (Profiler.Start("FrameUtil.Join")) {
-				var frame = new byte[dim.Surface];
 
+				var frame = new byte[dim.Surface];
 				if (bitPlanes.Length == 2) {
 					unsafe
 					{
@@ -135,7 +138,7 @@ namespace LibDmd.Common
 						{
 							var pfEnd = pFrame + frame.Length;
 
-							System.Diagnostics.Debug.Assert(bitPlanes.Length == 4);
+							Debug.Assert(bitPlanes.Length == 4);
 							fixed (byte* plane0 = &bitPlanes[0][0], plane1 = &bitPlanes[1][0],
 								   plane2 = &bitPlanes[2][0], plane3 = &bitPlanes[3][0])
 							{
@@ -238,7 +241,7 @@ namespace LibDmd.Common
 							| (r1 & 1) << 2
 							| (g1 & 1) << 1
 							| (b1 & 1) << 0;
-						var indexWithinSubframe = mapAdafruitIndex(x, y, width, height, numLogicalRows);
+						var indexWithinSubframe = MapAdafruitIndex(x, y, width, height, numLogicalRows);
 						var indexWithinOutput = subframe * subframeSize + indexWithinSubframe;
 						dest[indexWithinOutput] = (byte)dotPair;
 						r0 >>= 1;
@@ -252,7 +255,7 @@ namespace LibDmd.Common
 			}
 		}
 
-		private static int mapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
+		private static int MapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
 		{
 			var pairOffset = 16;
 			var logicalRowLengthPerMatrix = 32 * 32 / 2 / numLogicalRows;
@@ -267,24 +270,6 @@ namespace LibDmd.Common
 			var index = logicalRow * dotPairsPerLogicalRow
 						+ matrixNumber * logicalRowLengthPerMatrix + indexWithinMatrixRow;
 			return index;
-		}
-
-	/// <summary>
-	/// Merges an array of bit planes into one single array.
-	/// </summary>
-	/// <param name="planes">Source planes</param>
-	/// <param name="frame">Destination array</param>
-	/// <param name="offset">Where to start copying at destination</param>
-	/// <returns>True if destination array changed, false otherwise.</returns>
-	public static bool Copy(byte[][] planes, byte[] frame, int offset)
-		{
-			var identical = true;
-			foreach (var plane in planes) {
-				identical = identical && CompareBuffers(plane, 0, frame, offset, plane.Length);
-				Buffer.BlockCopy(plane, 0, frame, offset, plane.Length);
-				offset += plane.Length;
-			}
-			return !identical;
 		}
 
 		/// <summary>
@@ -302,7 +287,6 @@ namespace LibDmd.Common
 		}
 
 		//Scale planes by doubling the pixels in each byte
-
 		public static readonly ushort[] doublePixel = {
 		  0x0000,0x0003,0x000C,0x000F,0x0030,0x0033,0x003C,0x003F,0x00C0,0x00C3,0x00CC,0x00CF,0x00F0,0x00F3,0x00FC,0x00FF,
 		  0x0300,0x0303,0x030C,0x030F,0x0330,0x0333,0x033C,0x033F,0x03C0,0x03C3,0x03CC,0x03CF,0x03F0,0x03F3,0x03FC,0x03FF,
@@ -410,7 +394,7 @@ namespace LibDmd.Common
 		/// <param name="data"></param>
 		/// <returns>scaled frame planes</returns>
 		[Obsolete("Use Scale2x which uses more obvious parameters.")]
-		public static byte[] Scale2xUgh(Dimensions dim, byte[] data)
+		public static byte[] Scale2xObsolete(Dimensions dim, byte[] data)
 		{
 			byte[] scaledData = new byte[dim.Surface];
 
@@ -542,10 +526,11 @@ namespace LibDmd.Common
 		/// <param name="dim"></param>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static byte[][] Scale2x(Dimensions dim, byte[][] data)
+		[Obsolete]
+		public static byte[][] Scale2xObsolete(Dimensions dim, byte[][] data)
 		{
 			var joinData = Join(dim, data);
-			var frameData = Scale2xUgh(dim, joinData);
+			var frameData = Scale2xObsolete(dim, joinData);
 			return Split(dim, data.Length, frameData);
 		}
 
@@ -603,12 +588,6 @@ namespace LibDmd.Common
 			}
 		}
 
-		public static DmdFrame ConvertToRgb24(Dimensions dim, byte[][] planes, Color[] palette)
-		{
-			var frame = Join(dim, planes);
-			return ColorUtil.ColorizeObsolete(dim, frame, palette);
-		}
-
 		public static byte[] NewPlane(Dimensions dim)
 		{
 			var count = dim.Width / 8 * dim.Height;
@@ -661,7 +640,7 @@ namespace LibDmd.Common
 		public static byte[] CombinePlaneWithMask(byte[] planeA, byte[] planeB, byte[] mask)
 		{
 			var length = planeA.Length;
-			System.Diagnostics.Debug.Assert(length == planeB.Length && length == mask.Length);
+			Debug.Assert(length == planeB.Length && length == mask.Length);
 			byte[] outPlane = new byte[length];
 
 			unchecked
@@ -881,11 +860,6 @@ namespace LibDmd.Common
 			}
 		}
 
-		public static bool CompareBuffersSlow(byte[] a, byte[] b)
-		{
-			return a != null && CompareBuffers(a, 0, b, 0, a.Length);
-		}
-		
 		/// <summary>
 		/// Fast byte array comparison, courtesy to https://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/8808245#8808245
 		///
