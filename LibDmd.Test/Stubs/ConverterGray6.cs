@@ -16,7 +16,8 @@ namespace LibDmd.Test.Stubs
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 
-		public ConverterGray6(Func<DmdFrame, ColoredFrame> convert) => _convert = convert;
+		public ConverterGray6(Func<DmdFrame, ColoredFrame> convert) : base(true)
+			=> _convert = convert;
 
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
 

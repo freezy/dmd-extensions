@@ -20,7 +20,8 @@ namespace LibDmd.Test.Stubs
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ConverterGray4(Func<DmdFrame, ColoredFrame> convert) => _convert = convert;
+		public ConverterGray4(Func<DmdFrame, ColoredFrame> convert) : base(true)
+			=> _convert = convert;
 
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 

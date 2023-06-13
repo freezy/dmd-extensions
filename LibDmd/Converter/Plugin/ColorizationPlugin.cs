@@ -12,6 +12,7 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
+using LibDmd.Input.Passthrough;
 using LibDmd.Output.PinUp;
 using NLog;
 
@@ -23,10 +24,10 @@ namespace LibDmd.Converter.Plugin
 		public override string Name => "Colorization Plugin";
 		public override IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
-		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
-		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
-		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
-		public IObservable<DmdFrame> GetRgb24Frames() => _rgb24Frames;
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => DedupedColoredGray2Source.GetColoredGray2Frames();
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => DedupedColoredGray4Source.GetColoredGray4Frames();
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => DedupedColoredGray6Source.GetColoredGray6Frames();
+		public IObservable<DmdFrame> GetRgb24Frames() => DedupedRgb24Source.GetRgb24Frames();
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
 
 		private readonly Dimensions _dimensions = Dimensions.Dynamic;
@@ -53,10 +54,6 @@ namespace LibDmd.Converter.Plugin
 		/// </summary>
 		private readonly bool _passthrough;
 
-		private readonly Subject<ColoredFrame> _coloredGray2Frames = new Subject<ColoredFrame>();
-		private readonly Subject<ColoredFrame> _coloredGray4Frames = new Subject<ColoredFrame>();
-		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
-		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
 		private readonly Subject<AlphaNumericFrame> _alphaNumericFrames = new Subject<AlphaNumericFrame>();
 
 		private uint _lastEventId;
@@ -66,7 +63,7 @@ namespace LibDmd.Converter.Plugin
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ColorizationPlugin(PluginConfig pluginConfig, bool colorize, string altcolorPath, string gameName,
-			Color defaultColor, IReadOnlyList<Color> defaultPalette)
+			Color defaultColor, IReadOnlyList<Color> defaultPalette) : base(true)
 		{
 			if (pluginConfig == null) {
 				return;
@@ -151,6 +148,8 @@ namespace LibDmd.Converter.Plugin
 
 		public void Dispose()
 		{
+			base.Dispose();
+
 			if (IsAvailable) {
 				_activePinUpOutput = null;
 				_hasEvents = false;
@@ -213,7 +212,7 @@ namespace LibDmd.Converter.Plugin
 		/// The public API to convert a frame and output it to the pubs.
 		/// </summary>
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
-		public override void Convert(DmdFrame frame)
+		protected override void ConvertClocked(DmdFrame frame)
 		{
 			var rgb24FramePtr = frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0
 				? ColorizeFrame(rawFrame)
@@ -279,7 +278,7 @@ namespace LibDmd.Converter.Plugin
 				case 24:
 					if (_passthrough) {
 						_colorizeRgb24((ushort)frame.Dimensions.Width, (ushort)frame.Dimensions.Height, frame.Data);
-						_rgb24Frames.OnNext(frame);
+						DedupedRgb24Source.NextFrame(frame);
 					}
 					return IntPtr.Zero;
 
@@ -325,16 +324,16 @@ namespace LibDmd.Converter.Plugin
 
 			// split and send
 			if (lastIndex < 4) {
-				_coloredGray2Frames.OnNext(new ColoredFrame(dim, _frameData, _palette.Take(4).ToArray()));
+				DedupedColoredGray2Source.NextFrame(new ColoredFrame(dim, _frameData, _palette.Take(4).ToArray()));
 
 			} else if (lastIndex < 16) {
-				_coloredGray4Frames.OnNext(new ColoredFrame(dim, _frameData, _palette.Take(16).ToArray()));
+				DedupedColoredGray4Source.NextFrame(new ColoredFrame(dim, _frameData, _palette.Take(16).ToArray()));
 
 			} else if (lastIndex < 64) {
-				_coloredGray6Frames.OnNext(new ColoredFrame(dim, _frameData, _palette));
+				DedupedColoredGray6Source.NextFrame(new ColoredFrame(dim, _frameData, _palette));
 
 			} else {
-				_rgb24Frames.OnNext(new DmdFrame(dim, rgb24Frame, 24));
+				DedupedRgb24Source.NextFrame(new DmdFrame(dim, rgb24Frame, 24));
 			}
 		}
 

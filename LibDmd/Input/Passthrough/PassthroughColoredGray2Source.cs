@@ -6,7 +6,7 @@ namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// Receives colored 2-bit frames from VPM and forwards them to the observable
-	/// after dropping duplicates.
+	/// after dropping duplicates (if enabled).
 	/// </summary>
 	public class PassthroughColoredGray2Source : AbstractSource, IColoredGray2Source
 	{
@@ -20,11 +20,17 @@ namespace LibDmd.Input.Passthrough
 
 		private readonly Subject<ColoredFrame> _frames = new Subject<ColoredFrame>();
 
+		private readonly bool _dedupe;
 		private readonly ColoredFrame _lastFrame = new ColoredFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public PassthroughColoredGray2Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
+		public PassthroughColoredGray2Source(BehaviorSubject<FrameFormat> lastFrameFormat,
+			string name = "Passthrough Colored Gray2 Source", bool dedupe = true)
 		{
+			if (dedupe && lastFrameFormat == null) {
+				throw new ArgumentException("lastFrameFormat must be provided if deDupe is enabled.");
+			}
+			_dedupe = dedupe;
 			_lastFrameFormat = lastFrameFormat;
 			Name = name;
 		}
@@ -32,7 +38,7 @@ namespace LibDmd.Input.Passthrough
 		public void NextFrame(ColoredFrame frame)
 		{
 			// de-dupe frame
-			if (_lastFrameFormat.Value == FrameFormat.ColoredGray2 && _lastFrame == frame) {
+			if (_dedupe && _lastFrameFormat.Value == FrameFormat.ColoredGray2 && _lastFrame == frame) {
 				return;
 			}
 			_lastFrame.Update(frame);

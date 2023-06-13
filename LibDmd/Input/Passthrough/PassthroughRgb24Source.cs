@@ -22,12 +22,18 @@ namespace LibDmd.Input.Passthrough
 
 		private readonly Subject<DmdFrame> _framesRgb24 = new Subject<DmdFrame>();
 		private readonly ISubject<string> _gameName = new Subject<string>();
-		
+
+		private readonly bool _deDupe;
 		private readonly DmdFrame _lastFrame = new DmdFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
-		public PassthroughRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
+		public PassthroughRgb24Source(BehaviorSubject<FrameFormat> lastFrameFormat = null,
+			string name = "Passthrough RGB24 Source", bool deDupe = true)
 		{
+			if (deDupe && lastFrameFormat == null) {
+				throw new ArgumentException("lastFrameFormat must be provided if deDupe is enabled.");
+			}
+			_deDupe = deDupe;
 			_lastFrameFormat = lastFrameFormat;
 			Name = name;
 		}
@@ -35,7 +41,7 @@ namespace LibDmd.Input.Passthrough
 		public void NextFrame(DmdFrame frame)
 		{
 			// de-dupe frame
-			if (_lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame == frame) {
+			if (_deDupe && _lastFrameFormat.Value == FrameFormat.Rgb24 && _lastFrame == frame) {
 				return;
 			}
 

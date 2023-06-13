@@ -233,11 +233,12 @@ namespace LibDmd
 				_activeRenderer.Dispose();
 				_activeRenderer = null;
 			}
-			if (Destinations == null) {
-				return;
-			}
-			foreach (var dest in Destinations) {
-				dest.Dispose();
+			Converter?.Dispose();
+
+			if (Destinations != null) {
+				foreach (var dest in Destinations) {
+					dest.Dispose();
+				}
 			}
 			foreach (var source in _activeSources) {
 				source.Dispose();

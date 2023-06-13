@@ -40,8 +40,8 @@ namespace LibDmd.Input.TPAGrabber
 
 		public TPAGrabber()
 		{
-			Gray2Source = new PassthroughGray2Source(_currentFrameFormat, "Pinball Arcade");
-			Gray4Source = new PassthroughGray4Source(_currentFrameFormat, "Pinball Arcade DX11 (4-bit)");
+			Gray2Source = new PassthroughGray2Source(_currentFrameFormat, "Pinball Arcade (2-bit)");
+			Gray4Source = new PassthroughGray4Source(_currentFrameFormat, "Pinball Arcade (4-bit)");
 			GetFrames().Subscribe(frame => {
 				if (frame.Data == null) {
 					return;

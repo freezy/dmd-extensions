@@ -18,10 +18,6 @@ namespace LibDmd.Converter.Pin2Color
 		public bool Has128x32Animation { get; set; }
 		public ScalerMode ScalerMode { get; set; }
 
-		protected readonly Subject<ColoredFrame> ColoredGray2AnimationFrames = new Subject<ColoredFrame>();
-		protected readonly Subject<ColoredFrame> ColoredGray4AnimationFrames = new Subject<ColoredFrame>();
-		protected readonly Subject<ColoredFrame> ColoredGray6AnimationFrames = new Subject<ColoredFrame>();
-
 		/// <summary>
 		/// Datä vomer uism .pal-Feil uisägläsä hend
 		/// </summary>
@@ -66,7 +62,7 @@ namespace LibDmd.Converter.Pin2Color
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Pin2ColorGray2Colorizer(VniColoring vniColoring, AnimationSet animations)
+		public Pin2ColorGray2Colorizer(VniColoring vniColoring, AnimationSet animations) : base(true)
 		{
 			_vniColoring = vniColoring;
 			_animations = animations;
@@ -78,7 +74,7 @@ namespace LibDmd.Converter.Pin2Color
 		{
 		}
 
-		public override void Convert(DmdFrame frame)
+		protected override void ConvertClocked(DmdFrame frame)
 		{
 			byte[][] planes;
 			if (frame.Dimensions.Width * frame.Dimensions.Height != frame.Data.Length * 4)
@@ -287,7 +283,7 @@ namespace LibDmd.Converter.Pin2Color
 
 			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
 			if (planes.Length == 2) {
-				ColoredGray2AnimationFrames.OnNext(new ColoredFrame(
+				DedupedColoredGray2Source.NextFrame(new ColoredFrame(
 					dim,
 					FrameUtil.Join(dim, planes),
 					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
@@ -296,7 +292,7 @@ namespace LibDmd.Converter.Pin2Color
 
 			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
 			if (planes.Length == 4) {
-				ColoredGray4AnimationFrames.OnNext(new ColoredFrame(
+				DedupedColoredGray4Source.NextFrame(new ColoredFrame(
 					dim,
 					FrameUtil.Join(dim, planes),
 					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
@@ -304,7 +300,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			if (planes.Length == 6) {
-				ColoredGray6AnimationFrames.OnNext(new ColoredFrame(
+				DedupedColoredGray6Source.NextFrame(new ColoredFrame(
 					dim,
 					FrameUtil.Join(dim, planes),
 					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
@@ -344,19 +340,10 @@ namespace LibDmd.Converter.Pin2Color
 			_activeAnimation = null;
 		}
 
-		public IObservable<ColoredFrame> GetColoredGray2Frames()
-		{
-			return ColoredGray2AnimationFrames;
-		}
+		public IObservable<ColoredFrame> GetColoredGray2Frames() => DedupedColoredGray2Source.GetColoredGray2Frames();
 
-		public IObservable<ColoredFrame> GetColoredGray4Frames()
-		{
-			return ColoredGray4AnimationFrames;
-		}
+		public IObservable<ColoredFrame> GetColoredGray4Frames() => DedupedColoredGray4Source.GetColoredGray4Frames();
 
-		public IObservable<ColoredFrame> GetColoredGray6Frames()
-		{
-			return ColoredGray6AnimationFrames;
-		}
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => DedupedColoredGray6Source.GetColoredGray6Frames();
 	}
 }
