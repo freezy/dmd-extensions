@@ -13,7 +13,7 @@ namespace LibDmd.Input
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		// Set SeDebugPrivilege in our proecess token, to allow debugger
+		// Set SeDebugPrivilege in our process token, to allow debugger
 		// level access to another process's memory space.  This is used
 		// for input classes that read DMD data directly from memory in 
 		// the target game process, such as Pinball Arcade DX11 and 

@@ -8,7 +8,7 @@ namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
 	/// Receives 2-bit frames from VPM and forwards them to the observable
-	/// after dropping duplicates.
+	/// after dropping duplicates (if enabled).
 	/// </summary>
 	public class PassthroughGray2Source : AbstractSource, IGray2Source, IGameNameSource
 	{
@@ -23,13 +23,19 @@ namespace LibDmd.Input.Passthrough
 		private readonly Subject<DmdFrame> _framesGray2 = new Subject<DmdFrame>();
 		private readonly ISubject<string> _gameName = new Subject<string>();
 
+		private readonly bool _deDupe;
 		private readonly DmdFrame _lastFrame = new DmdFrame();
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public PassthroughGray2Source(BehaviorSubject<FrameFormat> lastFrameFormat, string name)
+		public PassthroughGray2Source(BehaviorSubject<FrameFormat> lastFrameFormat = null,
+			string name = "Passthrough Gray2 Source", bool deDupe = true)
 		{
+			if (deDupe && lastFrameFormat == null) {
+				throw new ArgumentException("lastFrameFormat must be provided if deDupe is enabled.");
+			}
+			_deDupe = deDupe;
 			_lastFrameFormat = lastFrameFormat;
 			Name = name;
 		}
@@ -37,7 +43,7 @@ namespace LibDmd.Input.Passthrough
 		public void NextFrame(DmdFrame frame)
 		{
 			// de-dupe frame
-			if (_lastFrameFormat.Value == FrameFormat.Gray2 && _lastFrame == frame) {
+			if (_deDupe && _lastFrameFormat.Value == FrameFormat.Gray2 && _lastFrame == frame) {
 				return;
 			}
 

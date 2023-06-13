@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
@@ -32,7 +31,7 @@ namespace LibDmd.Converter
 
 		public override IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
-		public SwitchingConverter()
+		public SwitchingConverter() : base(false)
 		{
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
 			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);

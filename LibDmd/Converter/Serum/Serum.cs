@@ -17,6 +17,7 @@ namespace LibDmd.Converter.Serum
 	{
 		public override string Name => "Serum";
 		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
+
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
 
@@ -53,7 +54,7 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		private const int MAX_COLOR_ROTATIONS = 8;
 
-		public Serum(string altcolorPath, string romName)
+		public Serum(string altcolorPath, string romName) : base (false)
 		{
 			uint numTriggers = 0;
 			
@@ -93,6 +94,7 @@ namespace LibDmd.Converter.Serum
 
 		public void Dispose()
 		{
+			base.Dispose();
 			Serum_Dispose();
 			_activePupOutput = null;
 			IsLoaded = false;
