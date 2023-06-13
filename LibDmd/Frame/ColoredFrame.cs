@@ -84,6 +84,10 @@ namespace LibDmd
 			BitLength = frame.BitLength;
 			Palette = palette;
 			RotateColors = false;
+
+			#if DEBUG
+			AssertData();
+			#endif
 		}
 
 		#endregion
@@ -95,26 +99,19 @@ namespace LibDmd
 			Data = data;
 			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
+
+			#if DEBUG
+			AssertData();
+			#endif
 			return this;
 		}
 
 		private ColoredFrame Update(byte[] data)
 		{
 			Data = data;
-			return this;
-		}
-
-		[Obsolete("Use byte data updates")]
-		private ColoredFrame Update(Dimensions dim, byte[][] planes)
-		{
-			Dimensions = dim;
-			Data = FrameUtil.Join(Dimensions, planes);
-			BitLength = planes.Length;
 
 			#if DEBUG
-			if (planes.Length != Palette.Length.GetBitLength()) {
-				throw new ArgumentException("Number of planes must match palette size");
-			}
+			AssertData();
 			#endif
 			return this;
 		}
@@ -128,6 +125,10 @@ namespace LibDmd
 			PaletteIndex = frame.PaletteIndex;
 			Rotations = frame.Rotations;
 			RotateColors = frame.RotateColors;
+
+			#if DEBUG
+			AssertData();
+			#endif
 		}
 
 		#endregion
