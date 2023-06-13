@@ -62,12 +62,6 @@ namespace LibDmd.Frame
 		/// <returns>Gray4 frame</returns>
 		public DmdFrame ConvertToGray4() => new DmdFrame(Dimensions, ImageUtil.ConvertToGray4(Bitmap), 4);
 
-		/// <summary>
-		/// Converts this bitmap frame to a gray6 frame.
-		/// </summary>
-		/// <returns>Gray6 frame</returns>
-		public DmdFrame ConvertToGray6() => new DmdFrame(Dimensions, ImageUtil.ConvertToGray6(Bitmap), 6);
-
 		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
 		{
 			var targetDim = GetTargetDimensions(fixedDest, multiDest);

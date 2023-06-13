@@ -126,7 +126,7 @@ namespace LibDmd.Output.PinUp
 			}
 
 			try {
-				var rgbFrame = frame.ConvertToRgb24(ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
+				var rgbFrame = frame.CloneFrame().ConvertToRgb24(ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
 				Marshal.Copy(rgbFrame.Data, 0, _pnt, rgbFrame.Data.Length);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
@@ -157,7 +157,7 @@ namespace LibDmd.Output.PinUp
 				Logger.Warn(e, "[pinup] Error closing PinUP output: {0}", e.Message);
 			}
 
-			// Marshal.FreeHGlobal(pnt);
+			// Marshal.FreeHGlobal(_pnt);
 		}
 
 		private void RenderRgb24(DmdFrame frame)

@@ -21,7 +21,7 @@ namespace LibDmd.Frame
 		/// <summary>
 		/// The bit length of each pixel.
 		/// </summary>
-		public int BitLength;
+		public int BitLength { get; protected set; }
 
 		/// <summary>
 		/// The number of colors resulting from <see cref="BitLength"/>.
@@ -107,6 +107,10 @@ namespace LibDmd.Frame
 			Dimensions = frame.Dimensions;
 			Data = frame.Data;
 			BitLength = frame.BitLength;
+
+			#if DEBUG
+			AssertData();
+			#endif
 			return this;
 		}
 
@@ -299,6 +303,10 @@ namespace LibDmd.Frame
 
 				Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
 				BitLength = 24;
+
+				#if DEBUG
+				AssertData();
+				#endif
 
 				return this;
 			}
@@ -504,10 +512,9 @@ namespace LibDmd.Frame
 		/// can replace it without affecting other references of the frame).
 		/// </summary>
 		/// <returns></returns>
-		public object Clone()
-		{
-			return new DmdFrame(Dimensions, Data, BitLength);
-		}
+		public object Clone() => new DmdFrame(Dimensions, Data, BitLength);
+
+		public DmdFrame CloneFrame() => new DmdFrame(Dimensions, Data, BitLength);
 
 		public override string ToString()
 		{
