@@ -8,7 +8,8 @@ namespace LibDmd.Output.Pin2Dmd
 	/// Output target for PIN2DMD devices.
 	/// </summary>
 	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
-	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IRawOutput, IFixedSizeDestination
+	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGray2Destination,
+		IColoredGray4Destination, IColoredGray6Destination, IColorRotationDestination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
@@ -145,6 +146,7 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
+		public void UpdatePalette(Color[] palette) => SetSinglePalette(palette);
 
 		protected override void SetSinglePalette(Color[] colors)
 		{
