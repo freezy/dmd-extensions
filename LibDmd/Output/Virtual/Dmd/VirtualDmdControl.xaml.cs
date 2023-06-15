@@ -30,7 +30,8 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRgb24Destination, IBitmapDestination, IResizableDestination, IVirtualControl
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
+			IColoredGray6Destination, IBitmapDestination, IResizableDestination, IVirtualControl, IColorRotationDestination
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination
@@ -67,7 +68,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
 		private Dimensions _frameDimensions = new Dimensions(128, 32);
 		private FrameFormat _frameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
-		private Color[] _framePalette;
 		private BitmapSource _frameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
 		private byte[] _frameData; // Raw data of the frame to be processed
 
@@ -89,40 +89,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private const uint TexCoordAttribute = 1; // Fixed index of texture attribute in the quad VBO
 		private readonly Dictionary<uint, string> _attributeLocations = new Dictionary<uint, string> { { PositionAttribute, "Position" }, { TexCoordAttribute, "TexCoord" }, };
 		
-		/// <summary>
-		/// maximum amount of colour rotations per frame
-		/// </summary>
-		private const int MaxColorRotations = 8;
-		/// <summary>
-		/// current colour rotation state
-		/// </summary>
-		private readonly byte[] _rotationCurrentPaletteIndex = new byte[64];
-		/// <summary>
-		/// A reusable array of rotation colors when computing rotations.
-		/// </summary>
-		private readonly Color[] _rotationPalette = new Color[64];
-		
-		/// <summary>
-		/// first colour of the rotation
-		/// </summary>
-		private readonly byte[] _rotationStartColor = new byte[MaxColorRotations];
-		/// <summary>
-		/// number of colors in the rotation
-		/// </summary>
-		private readonly byte[] _rotationNumColors = new byte[MaxColorRotations];
-		/// <summary>
-		/// current first colour in the rotation
-		/// </summary>
-		private readonly byte[] _rotationCurrentStartColor = new byte[MaxColorRotations];
-		/// <summary>
-		/// time interval between 2 rotations in ms
-		/// </summary>
-		private readonly double[] _rotationIntervalMs = new double[MaxColorRotations];
-		/// <summary>
-		/// last rotation start time
-		/// </summary>
-		private readonly DateTime[] _rotationStartTime = new DateTime[MaxColorRotations];
-		
 		// padding object pool
 		private Bitmap _padBitmap;
 		private BitmapData _padBitmapData;
@@ -132,7 +98,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		private ushort _fboErrorCount = 0;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private IDisposable _rotator;
 
 		public VirtualDmdControl()
 		{
@@ -141,6 +106,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			ClearColor();
 			_fboErrorCount = 0;
 		}
+
 		public void SetStyle(DmdStyle style, string dataPath)
 		{
 			_style = style;
@@ -247,92 +213,20 @@ namespace LibDmd.Output.Virtual.Dmd
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			_hasFrame = true;
-			CurrentFrameFormat = FrameFormat.ColoredGray6;
-			
+			_frameType = FrameFormat.ColoredGray6;
+			_frameData = frame.Data;
+
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
-			_frameData = frame.Data;
-			_frameType = FrameFormat.ColoredGray6;
-			_framePalette = frame.Palette;
-
-			if (frame.RotateColors) {
-				for (byte i = 0; i < 64; i++) {
-					_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
-				}
-				DateTime now = DateTime.UtcNow;
-				for (var i = 0; i < MaxColorRotations; i++) {
-					_rotationStartColor[i] = frame.Rotations[i * 3];
-					_rotationNumColors[i] = frame.Rotations[i * 3 + 1];
-					_rotationIntervalMs[i] = 10.0 * frame.Rotations[i * 3 + 2];
-					_rotationStartTime[i] = now;
-					_rotationCurrentStartColor[i] = 0;
-				}
-				Dmd.RequestRender();
-				StartRotating();
-				
-			} else {
-				StopRotating();
-			}
-		}
-		
-		private void Rotate(long _)
-		{
-			SetPalette(UpdateRotations());
-
-			if (_hasFrame) {
-				Dmd.RequestRender();
-			}
-		}
-		
-		private void StartRotating()
-		{
-			if (_rotator != null) {
-				return;
-			}
-			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(16.66))
-				.Subscribe(Rotate);
+			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.ColoredGray6;
 		}
 
-		private void StopRotating()
+		public void UpdatePalette(Color[] palette)
 		{
-			if (_rotator == null) {
-				return;
-			}
-			_rotator.Dispose();
-			_rotator = null;
-		}
-
-		private Color[] UpdateRotations()
-		{
-			DateTime now = DateTime.UtcNow;
-			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
-
-				if (_rotationStartColor[i] == 255) { // blank?
-					continue;
-				}
-				if (now.Subtract(_rotationStartTime[i]).TotalMilliseconds < _rotationIntervalMs[i]) { // time to rotate?
-					continue;
-				}
-
-				_rotationStartTime[i] = now;
-				_rotationCurrentStartColor[i]++;
-				_rotationCurrentStartColor[i] %= _rotationNumColors[i];
-				for (byte j = 0; j < _rotationNumColors[i]; j++) { // for each color in rotation
-					var index = _rotationStartColor[i] + j;
-					_rotationCurrentPaletteIndex[index] = (byte)(index + _rotationCurrentStartColor[i]);
-					if (_rotationCurrentPaletteIndex[index] >= _rotationStartColor[i] + _rotationNumColors[i]) { // cycle?
-						_rotationCurrentPaletteIndex[index] -= _rotationNumColors[i];
-					}
-				}
-
-				for (int j = 0; j < 64; j++) {
-					_rotationPalette[j] = _framePalette[_rotationCurrentPaletteIndex[j]];
-				}
-				_hasFrame = true;
-			}
-
-			return _rotationPalette;
+			_hasFrame = true;
+			SetPalette(palette);
+			Dmd.RequestRender();
 		}
 
 		public void SetDimensions(Dimensions dim)
@@ -871,6 +765,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			RenderGray4(new DmdFrame(_frameDimensions, 4));
 		}
 
+
 		private static string ReadResource(string name)
 		{
 			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
@@ -882,7 +777,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Dispose()
 		{
-			StopRotating();
 			// FIXME we should dispose the OpenGL native objects allocated in ogl_Initalized but this need to have the OpenGL context which is not garanteed here
 		}
 	}

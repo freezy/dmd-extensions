@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
@@ -13,7 +13,7 @@ using NLog;
 
 namespace LibDmd.Converter.Serum
 {
-	public class Serum : AbstractConverter, IColoredGray6Source
+	public class Serum : AbstractConverter, IColoredGray6Source, IColorRotationSource
 	{
 		public override string Name => "Serum";
 		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
@@ -32,6 +32,41 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		private readonly Dimensions _dimensions;
 
+		/// <summary>
+		/// maximum amount of colour rotations per frame
+		/// </summary>
+		private const int MaxColorRotations = 8;
+		/// <summary>
+		/// current colour rotation state
+		/// </summary>
+		private readonly byte[] _rotationCurrentPaletteIndex = new byte[64];
+		/// <summary>
+		/// A reusable array of rotation colors when computing rotations.
+		/// </summary>
+		private readonly Color[] _rotationPalette = new Color[64];
+
+		/// <summary>
+		/// first colour of the rotation
+		/// </summary>
+		private readonly byte[] _rotationStartColor = new byte[MaxColorRotations];
+		/// <summary>
+		/// number of colors in the rotation
+		/// </summary>
+		private readonly byte[] _rotationNumColors = new byte[MaxColorRotations];
+		/// <summary>
+		/// current first colour in the rotation
+		/// </summary>
+		private readonly byte[] _rotationCurrentStartColor = new byte[MaxColorRotations];
+		/// <summary>
+		/// time interval between 2 rotations in ms
+		/// </summary>
+		private readonly double[] _rotationIntervalMs = new double[MaxColorRotations];
+		/// <summary>
+		/// last rotation start time
+		/// </summary>
+		private readonly DateTime[] _rotationStartTime = new DateTime[MaxColorRotations];
+
+		private IDisposable _rotator;
 
 		/// <summary>
 		/// =active instance of Pinup Player if available, =null if not
@@ -44,6 +79,7 @@ namespace LibDmd.Converter.Serum
 		private readonly byte[] _rotations;
 		
 		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
+		private readonly Subject<Color[]> _paletteRotation = new Subject<Color[]>();
 
 		public ScalerMode ScalerMode { get; set; }
 
@@ -83,6 +119,7 @@ namespace LibDmd.Converter.Serum
 		}
 		
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6AnimationFrames;
+		public IObservable<Color[]> GetPaletteChanges() => _paletteRotation;
 		
 		public void SetPinupInstance(PinUpOutput puo)
 		{
@@ -96,6 +133,7 @@ namespace LibDmd.Converter.Serum
 		{
 			base.Dispose();
 			Serum_Dispose();
+			StopRotating();
 			_activePupOutput = null;
 			IsLoaded = false;
 		}
@@ -119,9 +157,12 @@ namespace LibDmd.Converter.Serum
 
 			Serum_Colorize(_frame.Data, _dimensions.Width, _dimensions.Height, _bytePalette, _rotations, ref triggerId);
 
+			var hasRotations = false;
 			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS; ti++) {
 				if ((_rotations[ti * 3] >= 64) || (_rotations[ti * 3] + _rotations[ti * 3 + 1] > 64)) {
 					_rotations[ti * 3] = 255;
+				} else {
+					hasRotations = true;
 				}
 			}
 			
@@ -130,7 +171,84 @@ namespace LibDmd.Converter.Serum
 			}
 
 			// send the colored frame
-			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _frame.Data, ConvertPalette(), _rotations));
+			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _frame.Data, ConvertPalette(), hasRotations ? _rotations : null));
+
+			if (hasRotations) {
+				for (byte i = 0; i < 64; i++) {
+					_rotationCurrentPaletteIndex[i] = i; // init index to be equal to palette
+				}
+				DateTime now = DateTime.UtcNow;
+				for (var i = 0; i < MaxColorRotations; i++) {
+					_rotationStartColor[i] = _rotations[i * 3];
+					_rotationNumColors[i] = _rotations[i * 3 + 1];
+					_rotationIntervalMs[i] = 10.0 * _rotations[i * 3 + 2];
+					_rotationStartTime[i] = now;
+					_rotationCurrentStartColor[i] = 0;
+				}
+				StartRotating();
+
+			} else {
+				StopRotating();
+			}
+		}
+
+		private void Rotate(long _)
+		{
+			if (UpdateRotations()) {
+				_paletteRotation.OnNext(_rotationPalette);
+			}
+		}
+
+		private void StartRotating()
+		{
+			if (_rotator != null) {
+				return;
+			}
+			_rotator = Observable
+				.Interval(TimeSpan.FromMilliseconds(1d/60))
+				.Subscribe(Rotate);
+		}
+
+		private void StopRotating()
+		{
+			if (_rotator == null) {
+				return;
+			}
+			_rotator.Dispose();
+			_rotator = null;
+		}
+
+		private bool UpdateRotations()
+		{
+			var changed = false;
+			DateTime now = DateTime.UtcNow;
+			for (uint i = 0; i < MaxColorRotations; i++) { // for each rotation
+
+				if (_rotationStartColor[i] == 255) { // blank?
+					continue;
+				}
+				if (now.Subtract(_rotationStartTime[i]).TotalMilliseconds < _rotationIntervalMs[i]) { // time to rotate?
+					continue;
+				}
+
+				_rotationStartTime[i] = now;
+				_rotationCurrentStartColor[i]++;
+				_rotationCurrentStartColor[i] %= _rotationNumColors[i];
+				for (byte j = 0; j < _rotationNumColors[i]; j++) { // for each color in rotation
+					var index = _rotationStartColor[i] + j;
+					_rotationCurrentPaletteIndex[index] = (byte)(index + _rotationCurrentStartColor[i]);
+					if (_rotationCurrentPaletteIndex[index] >= _rotationStartColor[i] + _rotationNumColors[i]) { // cycle?
+						_rotationCurrentPaletteIndex[index] -= _rotationNumColors[i];
+					}
+				}
+
+				for (int j = 0; j < 64; j++) {
+					_rotationPalette[j] = _colorPalette[_rotationCurrentPaletteIndex[j]];
+				}
+				changed = true;
+			}
+
+			return changed;
 		}
 
 		public static string GetVersion()

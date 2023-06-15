@@ -3,7 +3,7 @@
 namespace LibDmd.Input
 {
 	/// <summary>
-	/// A source that is able to deliver color-encoded bit planes for four bits 
+	/// A source that is able to deliver color-encoded bit planes for six bits
 	/// per pixel.
 	/// </summary>
 	public interface IColoredGray6Source : ISource
