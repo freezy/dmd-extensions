@@ -310,6 +310,7 @@ namespace LibDmd
 					var destColoredGray2 = dest as IColoredGray2Destination;
 					var destColoredGray4 = dest as IColoredGray4Destination;
 					var destColoredGray6 = dest as IColoredGray6Destination;
+					var destColorRotation = dest as IColorRotationDestination;
 					var destRgb24 = dest as IRgb24Destination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
@@ -401,6 +402,17 @@ namespace LibDmd
 						if (Converter is IAlphaNumericSource sourceConverterAlphaNumeric && destAlphaNumeric != null && !Converter.IsConnected(dest, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric)) {
 							Logger.Info("    -- Hooking alphanumeric source of {0} converter to {1}.", sourceConverterAlphaNumeric.Name, dest.Name);
 							Connect(sourceConverterAlphaNumeric, destAlphaNumeric, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
+						}
+
+						// if converter emits color rotations
+						if (Converter is IColorRotationSource sourceColorRotation && destColorRotation != null && !Converter.IsConnected(destColorRotation)) {
+							Logger.Info("    ~~ Subscribing destination {0} to color rotation palette changes from {1}.", destColorRotation.Name, sourceColorRotation.Name);
+							Subscribe(
+								sourceColorRotation.GetPaletteChanges(),
+								palette => palette,
+								destColorRotation.UpdatePalette
+							);
+							Converter.SetConnected(destColorRotation);
 						}
 
 						// render graph is already set up through converters, so we skip the rest below
