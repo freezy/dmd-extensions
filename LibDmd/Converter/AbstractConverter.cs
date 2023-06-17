@@ -49,6 +49,7 @@ namespace LibDmd.Converter
 		private readonly Dictionary<IDestination, List<(FrameFormat, FrameFormat)>> _connections = new Dictionary<IDestination, List<(FrameFormat, FrameFormat)>>();
 
 		private readonly HashSet<IColorRotationDestination> _connectedColorRotationDestinations = new HashSet<IColorRotationDestination>();
+		private readonly HashSet<IFrameEventDestination> _connectedFrameEventDestinations = new HashSet<IFrameEventDestination>();
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -141,13 +142,15 @@ namespace LibDmd.Converter
 			_connections[dest].Add((from, to));
 		}
 		public void SetConnected(IColorRotationDestination dest) => _connectedColorRotationDestinations.Add(dest);
+		public void SetConnected(IFrameEventDestination dest) => _connectedFrameEventDestinations.Add(dest);
 
-		public bool IsConnected() => _connections.Any();
+		public bool IsConnected(IDestination dest) => _connections.ContainsKey(dest);
 		public bool IsConnected(IDestination dest, FrameFormat from)
 			=> _connections.ContainsKey(dest) && _connections[dest].Any(t => t.Item1 == from);
 		public bool IsConnected(IDestination dest, FrameFormat from, FrameFormat to)
 			=> _connections.ContainsKey(dest) && _connections[dest].Any(t => t.Item1 == from && t.Item2 == to);
 		public bool IsConnected(IColorRotationDestination dest) => _connectedColorRotationDestinations.Contains(dest);
+		public bool IsConnected(IFrameEventDestination dest) => _connectedFrameEventDestinations.Contains(dest);
 
 		#endregion
 	}
