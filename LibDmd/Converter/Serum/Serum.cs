@@ -8,15 +8,20 @@ using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;
-using LibDmd.Output.PinUp;
 using NLog;
 
 namespace LibDmd.Converter.Serum
 {
-	public class Serum : AbstractConverter, IColoredGray6Source, IColorRotationSource
+	public class Serum : AbstractConverter, IColoredGray6Source, IColorRotationSource, IFrameEventSource
 	{
 		public override string Name => "Serum";
+
 		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
+
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6AnimationFrames;
+		public IObservable<Color[]> GetPaletteChanges() => _paletteChanges;
+		public IObservable<FrameEventInit> GetFrameEventInit() => _frameEventInit;
+		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
 
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
@@ -44,7 +49,6 @@ namespace LibDmd.Converter.Serum
 		/// A reusable array of rotation colors when computing rotations.
 		/// </summary>
 		private readonly Color[] _rotationPalette = new Color[64];
-
 		/// <summary>
 		/// first colour of the rotation
 		/// </summary>
@@ -68,18 +72,17 @@ namespace LibDmd.Converter.Serum
 
 		private IDisposable _rotator;
 
-		/// <summary>
-		/// =active instance of Pinup Player if available, =null if not
-		/// </summary>
-		private PinUpOutput _activePupOutput;
-		
 		private readonly Color[] _colorPalette = new Color[64];
 		private readonly byte[] _bytePalette = new byte[64 * 3];
 		private readonly DmdFrame _frame;
+		private readonly FrameEvent _frameEvent = new FrameEvent();
+		private bool _frameEventsInitialized;
 		private readonly byte[] _rotations;
-		
+
 		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
-		private readonly Subject<Color[]> _paletteRotation = new Subject<Color[]>();
+		private readonly Subject<Color[]> _paletteChanges = new Subject<Color[]>();
+		private readonly Subject<FrameEventInit> _frameEventInit = new Subject<FrameEventInit>();
+		private readonly Subject<FrameEvent> _frameEvents = new Subject<FrameEvent>();
 
 		public ScalerMode ScalerMode { get; set; }
 
@@ -118,43 +121,25 @@ namespace LibDmd.Converter.Serum
 			_rotations = new byte[MAX_COLOR_ROTATIONS * 3];
 		}
 		
-		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6AnimationFrames;
-		public IObservable<Color[]> GetPaletteChanges() => _paletteRotation;
-		
-		public void SetPinupInstance(PinUpOutput puo)
-		{
-			_activePupOutput = puo;
-			if ((puo != null) && (NumTriggersAvailable > 0)) {
-				puo.PuPFrameMatching = false;
-			}
-		}
-
-		public void Dispose()
+		public new void Dispose()
 		{
 			base.Dispose();
 			Serum_Dispose();
 			StopRotating();
-			_activePupOutput = null;
+			_frameEventInit?.Dispose();
+			_frameEvents?.Dispose();
 			IsLoaded = false;
-		}
-
-		public void Init()
-		{
 		}
 
 		public override void Convert(DmdFrame frame)
 		{
-			Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
-			
-			uint triggerId = 0xFFFFFFFF;
-			if ((_activePupOutput != null) && ((_activePupOutput.IsPuPTrigger == false) || (_activePupOutput.PuPFrameMatching == true)))
-			{
-				if (NumColors == 16)
-					_activePupOutput.RenderGray4(_frame);
-				else
-					_activePupOutput.RenderGray2(_frame);
+			if (!_frameEventsInitialized) {
+				_frameEventInit.OnNext(new FrameEventInit(NumTriggersAvailable > 0));
+				_frameEventsInitialized = true;
 			}
 
+			Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
+			uint triggerId = 0xFFFFFFFF;
 			Serum_Colorize(_frame.Data, _dimensions.Width, _dimensions.Height, _bytePalette, _rotations, ref triggerId);
 
 			var hasRotations = false;
@@ -165,9 +150,11 @@ namespace LibDmd.Converter.Serum
 					hasRotations = true;
 				}
 			}
-			
-			if (_activePupOutput != null && triggerId != 0xFFFFFFFF) {
-				_activePupOutput.SendTriggerId((ushort)triggerId);
+
+			// send event trigger
+			if (triggerId != 0xFFFFFFFF) {
+				Logger.Info($"[serum] Trigger {triggerId} triggered.");
+				_frameEvents.OnNext(_frameEvent.Update((ushort)triggerId));
 			}
 
 			// send the colored frame
@@ -195,7 +182,7 @@ namespace LibDmd.Converter.Serum
 		private void Rotate(long _)
 		{
 			if (UpdateRotations()) {
-				_paletteRotation.OnNext(_rotationPalette);
+				_paletteChanges.OnNext(_rotationPalette);
 			}
 		}
 

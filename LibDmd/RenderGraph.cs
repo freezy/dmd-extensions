@@ -310,7 +310,6 @@ namespace LibDmd
 					var destColoredGray2 = dest as IColoredGray2Destination;
 					var destColoredGray4 = dest as IColoredGray4Destination;
 					var destColoredGray6 = dest as IColoredGray6Destination;
-					var destColorRotation = dest as IColorRotationDestination;
 					var destRgb24 = dest as IRgb24Destination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
@@ -342,7 +341,6 @@ namespace LibDmd
 						if (Converter is IColoredGray2Source sourceConverterColoredGray2 && !Converter.IsConnected(dest, FrameFormat.ColoredGray2)) {
 							// if destination can render colored gray-2 frames...
 							if (destColoredGray2 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2)) {
-								Logger.Info("    -- Hooking colored 2-bit source of {0} converter to {1}.", sourceConverterColoredGray2.Name, dest.Name);
 								Connect(sourceConverterColoredGray2, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
 
 							// try to convert to rgb24
@@ -360,7 +358,6 @@ namespace LibDmd
 						if (Converter is IColoredGray4Source sourceConverterColoredGray4 && !Converter.IsConnected(dest, FrameFormat.ColoredGray4)) {
 							// if destination can render colored gray-4 frames...
 							if (destColoredGray4 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray4,FrameFormat.ColoredGray4)) {
-								Logger.Info("    -- Hooking colored 4-bit source of {0} converter to {1}.", sourceConverterColoredGray4.Name, dest.Name);
 								Connect(sourceConverterColoredGray4, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
 
 								// otherwise, convert to rgb24
@@ -378,7 +375,6 @@ namespace LibDmd
 						if (Converter is IColoredGray6Source sourceConverterColoredGray6 && !Converter.IsConnected(dest, FrameFormat.ColoredGray6)) {
 							// if destination can render colored gray-6 frames...
 							if (destColoredGray6 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6)) {
-								Logger.Info("    -- Hooking colored 6-bit source of {0} converter to {1}.", sourceConverterColoredGray6.Name, dest.Name);
 								Connect(sourceConverterColoredGray6, destColoredGray6, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 
 							// otherwise, convert to rgb24
@@ -394,19 +390,17 @@ namespace LibDmd
 
 						// if converter emits RGB24 frames..
 						if (Converter is IRgb24Source sourceConverterRgb24 && destRgb24 != null && !Converter.IsConnected(dest, FrameFormat.Rgb24, FrameFormat.Rgb24)) {
-							Logger.Info("    -- Hooking RGB24 source of {0} converter to {1}.", sourceConverterRgb24.Name, dest.Name);
 							Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
 						}
 
 						// this is mainly for the passing through alphanumeric frames from the switching converter.
 						if (Converter is IAlphaNumericSource sourceConverterAlphaNumeric && destAlphaNumeric != null && !Converter.IsConnected(dest, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric)) {
-							Logger.Info("    -- Hooking alphanumeric source of {0} converter to {1}.", sourceConverterAlphaNumeric.Name, dest.Name);
 							Connect(sourceConverterAlphaNumeric, destAlphaNumeric, FrameFormat.AlphaNumeric, FrameFormat.AlphaNumeric);
 						}
 
 						// if converter emits color rotations
-						if (Converter is IColorRotationSource sourceColorRotation && destColorRotation != null && !Converter.IsConnected(destColorRotation)) {
-							Logger.Info("    ~~ Subscribing destination {0} to color rotation palette changes from {1}.", destColorRotation.Name, sourceColorRotation.Name);
+						if (Converter is IColorRotationSource sourceColorRotation && dest is IColorRotationDestination destColorRotation && !Converter.IsConnected(destColorRotation)) {
+							Logger.Info("    ~> Subscribing destination {0} to color rotation palette changes from {1}.", destColorRotation.Name, sourceColorRotation.Name);
 							Subscribe(
 								sourceColorRotation.GetPaletteChanges(),
 								palette => palette,
@@ -415,8 +409,19 @@ namespace LibDmd
 							Converter.SetConnected(destColorRotation);
 						}
 
+						// if converter frame events
+						if (Converter is IFrameEventSource sourceFrameEvent && dest is IFrameEventDestination destFrameEvent && !Converter.IsConnected(destFrameEvent)) {
+							Logger.Info("    ~> Subscribing destination {0} to frame events from {1}.", sourceFrameEvent.Name, destFrameEvent.Name);
+							Subscribe(
+								sourceFrameEvent.GetFrameEvents(),
+								e => e,
+								destFrameEvent.OnFrameEvent
+							);
+							Converter.SetConnected(destFrameEvent);
+						}
+
 						// render graph is already set up through converters, so we skip the rest below
-						if (Converter.IsConnected()) {
+						if (Converter.IsConnected(dest)) {
 							continue;
 						}
 					}

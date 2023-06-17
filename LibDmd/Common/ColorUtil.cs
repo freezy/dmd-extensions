@@ -261,7 +261,7 @@ namespace LibDmd.Common
 				#endif
 
 				var frameLength = dim.Surface * 3;
-				var colorizedFrame = new byte[frameLength];
+				var colorizedData = new byte[frameLength];
 
 				var rpalvalues = new byte[palette.Length];
 				var gpalvalues = new byte[palette.Length];
@@ -276,7 +276,7 @@ namespace LibDmd.Common
 				var maxPixel = (byte)(palette.Length - 1);
 				unsafe
 				{
-					fixed (byte* pFrame = frame, pcolorFrame = colorizedFrame)
+					fixed (byte* pFrame = frame, pcolorFrame = colorizedData)
 					{
 						byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
 						byte* pColorFrameCur = pcolorFrame;
@@ -290,7 +290,7 @@ namespace LibDmd.Common
 						}
 					}
 				}
-				return colorizedFrame;
+				return colorizedData;
 			}
 		}
 

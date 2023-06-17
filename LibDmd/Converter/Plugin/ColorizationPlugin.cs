@@ -4,22 +4,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
-using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
-using LibDmd.Input.Passthrough;
-using LibDmd.Output.PinUp;
 using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
 	public class ColorizationPlugin : AbstractConverter, IColoredGray2Source, IColoredGray4Source,
-		IColoredGray6Source, IRgb24Source, IAlphaNumericSource
+		IColoredGray6Source, IRgb24Source, IAlphaNumericSource, IFrameEventSource
 	{
 		public override string Name => "Colorization Plugin";
 		public override IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
@@ -29,6 +25,8 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => DedupedColoredGray6Source.GetColoredGray6Frames();
 		public IObservable<DmdFrame> GetRgb24Frames() => DedupedRgb24Source.GetRgb24Frames();
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
+		public IObservable<FrameEventInit> GetFrameEventInit() => _frameEventInit;
+		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
 
 		private readonly Dimensions _dimensions = Dimensions.Dynamic;
 
@@ -55,10 +53,13 @@ namespace LibDmd.Converter.Plugin
 		private readonly bool _passthrough;
 
 		private readonly Subject<AlphaNumericFrame> _alphaNumericFrames = new Subject<AlphaNumericFrame>();
+		private readonly Subject<FrameEventInit> _frameEventInit = new Subject<FrameEventInit>();
+		private readonly Subject<FrameEvent> _frameEvents = new Subject<FrameEvent>();
 
 		private uint _lastEventId;
 		private ColorizerMode _colorizerMode = ColorizerMode.None;
-		private PinUpOutput _activePinUpOutput;
+		private readonly FrameEvent _frameEvent = new FrameEvent();
+		private bool _frameEventsInitialized;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -146,15 +147,17 @@ namespace LibDmd.Converter.Plugin
 		{
 		}
 
-		public void Dispose()
+		public new void Dispose()
 		{
 			base.Dispose();
 
 			if (IsAvailable) {
-				_activePinUpOutput = null;
 				_hasEvents = false;
 				_close();
 			}
+
+			_frameEventInit?.Dispose();
+			_frameEvents?.Dispose();
 
 			_colorizerMode = ColorizerMode.None;
 			IsAvailable = false;
@@ -181,8 +184,9 @@ namespace LibDmd.Converter.Plugin
 
 		private void ProcessEvent()
 		{
-			if (_activePinUpOutput == null) {
-				return;
+			if (!_frameEventsInitialized) {
+				_frameEventInit.OnNext(new FrameEventInit(_hasEvents));
+				_frameEventsInitialized = true;
 			}
 
 			uint eventId = _getEvent();
@@ -191,15 +195,7 @@ namespace LibDmd.Converter.Plugin
 			}
 
 			_lastEventId = eventId;
-			_activePinUpOutput.SendTriggerId((ushort)eventId);
-		}
-
-		public void SetPinUpOutput(PinUpOutput puo)
-		{
-			_activePinUpOutput = puo;
-			if ((puo != null) && _hasEvents) {
-				puo.PuPFrameMatching = false;
-			}
+			_frameEvents.OnNext(_frameEvent.Update((ushort)eventId));
 		}
 
 		#region Conversion

@@ -25,6 +25,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
   * [Visual PinMAME](#visual-pinmame)
   * [Future Pinball](#future-pinball)
   * [Media](#media)
+  * [Pinup Player](#pinup-player)
 * [Configuration](#configuration)
   * [Output Configuration](#output-configuration)
   * [Command Line Configuration](#command-line-configuration)
@@ -276,6 +277,21 @@ DMD Extensions can also play videos and images. Here are a few examples:
 ```bash
 dmdext play -f "ACDC (Stern 2012).gif"
 dmdext play -f "Tron Legacy (Stern 2011).png"
+```
+
+### Pinup Player
+
+DMD Extensions can send unprocessed frames and scene events detected by supported colorizers to Pinup Player, which
+is then used to trigger videos.
+
+To enable event triggering, you'll need a recent version of `dmddevicePUP.dll` and `dmddevicePUP64.dll`. You can download the latest version
+[here](https://www.nailbuster.com/wikipinup/doku.php?id=release_notes).
+
+Then, enable the Pinup Player output in `DmdDevice.ini`:
+
+```ini
+[pinup]
+enabled = true
 ```
 
 ## Configuration

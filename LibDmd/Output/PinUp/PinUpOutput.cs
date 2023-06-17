@@ -5,29 +5,29 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Frame;
+using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Output.PinUp
 {
-	public class PinUpOutput : IBitmapDestination, IGray2Destination, IGray4Destination, IFixedSizeDestination
+	public class PinUpOutput : IGray2Destination, IGray4Destination, IFixedSizeDestination, IFrameEventDestination
 	{
 		public string Name => "PinUP Writer";
 		public bool IsAvailable { get; private set; }
 
 		/// <summary>
-		/// If Serum colorization, set to true if no triggers found in it => legacy mode detection
-		/// </summary>
-		public bool PuPFrameMatching { get; set; } = true;
-
-		/// <summary>
 		/// If an updated version of dmddevicepup.dll with PuP_Trigger() function found, set to true
 		/// </summary>
-		public bool IsPuPTrigger { get; } = true;
+		private readonly bool _pupTriggerSupported;
 
-		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		/// <summary>
+		/// If an frame event source such as Serum or Pin2Color emits event frames.
+		/// </summary>
+		private bool _frameEventsAvailable;
+
+		public Dimensions FixedSize => _size;
 		public bool DmdAllowHdScaling => false;
 
 		private readonly Dimensions _size = new Dimensions(128, 32);
@@ -80,10 +80,11 @@ namespace LibDmd.Output.PinUp
 
 				pAddress = NativeMethods.GetProcAddress(pDll, "PuP_Trigger");
 				if (pAddress == IntPtr.Zero) {
-					IsPuPTrigger = false;
-					Logger.Error("[pinup] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated.");
+					_pupTriggerSupported = false;
+					Logger.Warn("[pinup] Attempt to find PuP_Trigger function but dmddevicePUP.dll is outdated.");
 				
-				} else { 
+				} else {
+					_pupTriggerSupported = true;
 					PuPTrigger = (_SendTrigger)Marshal.GetDelegateForFunctionPointer(pAddress, typeof(_SendTrigger));
 				}
 			}
@@ -97,31 +98,15 @@ namespace LibDmd.Output.PinUp
 			Open();
 
 			_pnt = Marshal.AllocHGlobal(_size.Surface * 3); // make a global memory pnt for DLL call
-			var gameName = romName;
 
-			Marshal.Copy(Encoding.ASCII.GetBytes(gameName), 0, _pnt, gameName.Length); // convert to bytes to make DLL call work?
-			SetGameName(_pnt, gameName.Length); // external PUP dll call
-		}
-
-		public void SendTriggerId(ushort id)
-		{
-			if (IsPuPTrigger) {
-				PuPTrigger(id);
-			}
-		}
-
-		//Render Bitmap gets called by dmdext console.  (pinball fx2/3 type support)
-		public void RenderBitmap(BmpFrame frame)
-		{
-			if (PuPFrameMatching == false) {
-				return;
-			}
-			RenderRgb24(new DmdFrame(frame.Dimensions, ImageUtil.ConvertToRgb24(frame.Bitmap), 24));
+			Marshal.Copy(Encoding.ASCII.GetBytes(romName), 0, _pnt, romName.Length); // convert to bytes to make DLL call work?
+			SetGameName(_pnt, romName.Length); // external PUP dll call
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
-			if (PuPFrameMatching == false) {
+			// if we got events, and we can send them, don't render frames.
+			if (_frameEventsAvailable && _pupTriggerSupported) {
 				return;
 			}
 
@@ -138,9 +123,26 @@ namespace LibDmd.Output.PinUp
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			// if we got events, and we can send them, don't render frames.
+			if (_frameEventsAvailable && _pupTriggerSupported) {
+				return;
+			}
+
 			// 2-bit frames are rendered as 4-bit
-			if (PuPFrameMatching == false) return;
 			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 2));
+		}
+
+		public void OnFrameEventInit(FrameEventInit frameEventInit)
+		{
+			_frameEventsAvailable = frameEventInit.EventsAvailable;
+		}
+
+		public void OnFrameEvent(FrameEvent frameEvent)
+		{
+			Logger.Info($"[pinup] New event: {frameEvent.EventId}");
+			if (_pupTriggerSupported) {
+				PuPTrigger(frameEvent.EventId);
+			}
 		}
 
 		public void ClearDisplay()
@@ -158,26 +160,6 @@ namespace LibDmd.Output.PinUp
 			}
 
 			// Marshal.FreeHGlobal(_pnt);
-		}
-
-		private void RenderRgb24(DmdFrame frame)
-		{
-			if (PuPFrameMatching == false) {
-				return;
-			}
-
-			try {
-				// Copy the frame array to unmanaged memory.
-
-				// Marshal.Copy(frame, 0, pnt, Width * Height * 3);    //crash with 128x16 so try something else
-				// Render_RGB24((ushort) Width, (ushort) Height, pnt);
-				Marshal.Copy(frame.Data, 0, _pnt, FixedSize.Surface * 3);
-				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
-
-			} catch (Exception e) {
-				IsAvailable = false;
-				Logger.Error(e, "[pinup] Error sending frame to PinUp, disabling.");
-			}
 		}
 
 		#region DLL API
