@@ -411,12 +411,9 @@ namespace LibDmd
 
 						// if converter frame events
 						if (Converter is IFrameEventSource sourceFrameEvent && dest is IFrameEventDestination destFrameEvent && !Converter.IsConnected(destFrameEvent)) {
-							Logger.Info("    ~> Subscribing destination {0} to frame events from {1}.", sourceFrameEvent.Name, destFrameEvent.Name);
-							Subscribe(
-								sourceFrameEvent.GetFrameEvents(),
-								e => e,
-								destFrameEvent.OnFrameEvent
-							);
+							Logger.Info("    ~> Subscribing destination {0} to frame events from {1}.", destFrameEvent.Name, sourceFrameEvent.Name);
+							Subscribe(sourceFrameEvent.GetFrameEventInit(), e => e, destFrameEvent.OnFrameEventInit);
+							Subscribe(sourceFrameEvent.GetFrameEvents(), e => e, destFrameEvent.OnFrameEvent);
 							Converter.SetConnected(destFrameEvent);
 						}
 
