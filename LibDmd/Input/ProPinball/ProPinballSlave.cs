@@ -14,7 +14,7 @@ using NLog;
 namespace LibDmd.Input.ProPinball
 {
 
-	public class ProPinballSlave : AbstractSource, IGray4Source
+	public class ProPinballSlave : AbstractSource, IGray4Source, IGameNameSource
 	{
 		public override string Name => "Pro Pinball";
 
@@ -31,6 +31,7 @@ namespace LibDmd.Input.ProPinball
 		private ProPinballBridge.ProPinballDmd _bridge;
 		private IObservable<DmdFrame> _framesGray4;
 		private readonly DmdFrame _dmdFrame = new DmdFrame();
+		private readonly BehaviorSubject<string> _gameName = new BehaviorSubject<string>("ProPinballUltra_Timeshock");
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -41,6 +42,8 @@ namespace LibDmd.Input.ProPinball
 				_messageBufferSize = uint.Parse(match.Groups[1].Value);
 			}
 		}
+
+		public IObservable<string> GetGameName() => _gameName;
 
 		public IObservable<DmdFrame> GetGray4Frames()
 		{
@@ -56,9 +59,9 @@ namespace LibDmd.Input.ProPinball
 				var thread = new Thread(() => {
 					unsafe {
 						_bridge.GetFrames(frame => {
-							var arr = _dmdFrame.Update(_dimensions, new byte[4096], 4);
-							Marshal.Copy((IntPtr)frame, arr.Data, 0, 4096);
-							o.OnNext(arr);
+							var updatedFrame = _dmdFrame.Update(_dimensions, new byte[4096], 4);
+							Marshal.Copy((IntPtr)frame, updatedFrame.Data, 0, 4096);
+							o.OnNext(updatedFrame);
 
 						}, err => throw new ProPinballSlaveException(new string(err)), () => {
 							Logger.Debug("Received exit signal from Pro Pinball, closing.");

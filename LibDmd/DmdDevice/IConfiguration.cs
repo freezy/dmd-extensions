@@ -24,9 +24,10 @@ namespace LibDmd.DmdDevice
 		IBrowserConfig BrowserStream { get; }
 		INetworkConfig NetworkStream { get; }
 		IPinUpConfig PinUp { get; }
+		IRawOutputConfig RawOutput  { get; }
+
 		bool HasGameName { get; }
 		string DataPath { get; }
-		void Validate();
 		void Reload();
 		void SetGameName(string gameName);
 	}
@@ -144,5 +145,10 @@ namespace LibDmd.DmdDevice
 	{
 		bool Enabled { get; }
 		string GameName { get; }
+	}
+
+	public interface IRawOutputConfig
+	{
+		bool Enabled { get; }
 	}
 }

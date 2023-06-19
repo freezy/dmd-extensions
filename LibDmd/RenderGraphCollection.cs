@@ -41,9 +41,8 @@ namespace LibDmd
 			_graphs.Add(renderGraph);
 
 			renderGraph.Destinations.ForEach(dest => {
-				var rgb24Destination = dest as IRgb24Destination;
 				var resizableDestinations = dest as IResizableDestination;
-				if (rgb24Destination != null && !_rgb24Destinations.Contains(rgb24Destination)) {
+				if (dest is IRgb24Destination rgb24Destination && !_rgb24Destinations.Contains(rgb24Destination)) {
 					_rgb24Destinations.Add(rgb24Destination);
 				}
 				if (resizableDestinations != null && !_resizableDestinations.Contains(resizableDestinations)) {

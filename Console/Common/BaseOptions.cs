@@ -103,8 +103,11 @@ namespace DmdExt.Common
 		[Option('o', "output-to-file", HelpText = "If set, writes all frames as PNG bitmaps to the provided folder.")]
 		public string SaveToFile { get; set; }
 
-		[Option("pinup", HelpText = "If set, enable output to PinUP. The value is the name of the game.")]
+		[Option("pinup", HelpText = "If set, enable output to PinUP. The value is the default game name.")]
 		public string PinUpName { get; set; } = null;
+
+		[Option("dump-frames", HelpText = "If set, dump raw frames into a file.")]
+		public bool RawOutputEnabled { get; set; }
 
 		[Option("use-ini", HelpText = "If set, use options from DmdDevice.ini.")]
 		public string DmdDeviceIni { get; set; } = null;
@@ -151,6 +154,7 @@ namespace DmdExt.Common
 		public IBrowserConfig BrowserStream { get; }
 		public INetworkConfig NetworkStream { get; }
 		public IPinUpConfig PinUp { get; }
+		public IRawOutputConfig RawOutput { get; }
 		public bool HasGameName => !string.IsNullOrEmpty(GameName);
 		public string DataPath => null;
 
@@ -172,6 +176,7 @@ namespace DmdExt.Common
 			BrowserStream = new BrowserOptions();
 			NetworkStream = new NetworkOptions(this);
 			PinUp = new PinUpOptions(this);
+			RawOutput = new RawOutputOptions(this);
 		}
 
 		public enum DestinationType
@@ -446,5 +451,17 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.PinUpName != null;
 		public string GameName => _options.PinUpName;
+	}
+
+	internal class RawOutputOptions : IRawOutputConfig
+	{
+		private readonly BaseOptions _options;
+
+		public RawOutputOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.RawOutputEnabled;
 	}
 }

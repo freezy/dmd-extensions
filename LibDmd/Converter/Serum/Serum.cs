@@ -119,6 +119,7 @@ namespace LibDmd.Converter.Serum
 			IsLoaded = true;
 			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
 			_rotations = new byte[MAX_COLOR_ROTATIONS * 3];
+			Logger.Info($"[serum] Found {numTriggers} triggers to emit.");
 		}
 		
 		public new void Dispose()
@@ -153,7 +154,6 @@ namespace LibDmd.Converter.Serum
 
 			// send event trigger
 			if (triggerId != 0xFFFFFFFF) {
-				Logger.Info($"[serum] Trigger {triggerId} triggered.");
 				_frameEvents.OnNext(_frameEvent.Update((ushort)triggerId));
 			}
 

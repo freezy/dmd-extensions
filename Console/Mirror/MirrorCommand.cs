@@ -16,6 +16,7 @@ using LibDmd.Input.ProPinball;
 using LibDmd.Input.ScreenGrabber;
 using LibDmd.Input.TPAGrabber;
 using LibDmd.Output;
+using LibDmd.Output.FileOutput;
 using LibDmd.Processor;
 
 namespace DmdExt.Mirror
@@ -196,6 +197,23 @@ namespace DmdExt.Mirror
 					} else {
 						Analytics.Instance.SetSource(graph.Source.Name);
 						Analytics.Instance.StartGame(); // send now, since we won't get a game name
+					}
+				}
+			}
+
+			// raw output
+			if (_config.RawOutput.Enabled) {
+				var graph = graphs.Graphs.FirstOrDefault();
+				if (graph?.Source is IGameNameSource s) {
+					var rawOutput = graph.Destinations.OfType<RawOutput>().FirstOrDefault();
+					if (rawOutput != null) {
+						var nameSub = s.GetGameName().Subscribe(name => {
+							rawOutput.SetGameName(name);
+						});
+						_subscriptions.Add(nameSub);
+
+					} else {
+						Logger.Warn("Cannot enable raw output due to missing RawOutput destination.");
 					}
 				}
 			}
