@@ -257,7 +257,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				_padBitmap = new Bitmap(frame.Dimensions.Width, frame.Dimensions.Height, PixelFormat.Format24bppRgb);
 				_padBitmapData = _padBitmap.LockBits(new Rectangle(0, 0, frame.Dimensions.Width, frame.Dimensions.Height), ImageLockMode.WriteOnly, _padBitmap.PixelFormat);
 			}
-			
+
 			// add back dummy bytes between lines, make each line be a multiple of 4 bytes
 			int skipBytesPerLine = _padBitmapData.Stride - frame.Dimensions.Width * 3;
 			var newFrameSize = frame.Data.Length + skipBytesPerLine * frame.Dimensions.Height;
@@ -579,11 +579,7 @@ namespace LibDmd.Output.Virtual.Dmd
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, _frameDimensions.Width, _frameDimensions.Height, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _frameData);
 						break;
 					case FrameFormat.Rgb24:
-						if (_frameData.Length % 3 != 0)
-						{
-							LogErrors("RGB24 buffer must be divisible by 3, but " + _frameData.Length + " isn't.");
-							return;
-						}
+						// removed data length check because of strides. dimensions are checked when creating new frames.
 						if (createTexture)
 							gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_RGB, _frameDimensions.Width, _frameDimensions.Height, 0, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, _frameData);
 						else
