@@ -180,7 +180,6 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			var showTintWarning = _lastFrameFormat != FrameFormat.Gray2 && _lastFrameFormat != FrameFormat.Gray4;
 			TintWarning.Visibility = showTintWarning ? Visibility.Visible : Visibility.Collapsed;
-			Height = showTintWarning ? 772 + 15 : 772;
 		}
 
 		private void LoadPreview()

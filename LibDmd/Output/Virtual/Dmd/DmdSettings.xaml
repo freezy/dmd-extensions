@@ -12,10 +12,10 @@
         Height="772" 
         Width="680" 
         ResizeMode="NoResize" 
-		ShowInTaskbar="True" 
-        SizeToContent="Manual" 
+        ShowInTaskbar="True"
+        SizeToContent="Height"
         Title="Customize DMD Style">
-	<Grid Margin="16">
+	<Grid Margin="16 16 16 8">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition></ColumnDefinition>
 		</Grid.ColumnDefinitions>
