@@ -388,6 +388,7 @@
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="Analytics.cs" />
     <Compile Include="Common\CultureUtil.cs" />
+    <Compile Include="Common\PathUtil.cs" />
     <Compile Include="Converter\AbstractConverter.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Pin2Color\Pin2ColorGray2Colorizer.cs" />
@@ -421,6 +422,7 @@
     <Compile Include="Input\Passthrough\PassthroughColoredGray2Source.cs" />
     <Compile Include="Input\Passthrough\PassthroughColoredGray4Source.cs" />
     <Compile Include="Input\Passthrough\PassthroughColoredGray6Source.cs" />
+    <Compile Include="Output\FileOutput\RawOutput.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IColorRotationDestination.cs" />
     <Compile Include="Output\IFrameEventDestination.cs" />

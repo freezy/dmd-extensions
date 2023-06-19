@@ -594,6 +594,20 @@ namespace LibDmd.DmdDevice
 				ReportingTags.Add("Out:NetworkStream");
 				Analytics.Instance.AddDestination(networkStream);
 			}
+			if (_config.RawOutput.Enabled) {
+				try {
+					var rawOutput = new RawOutput(_gameName);
+					if (rawOutput.IsAvailable) {
+						renderers.Add(rawOutput);
+						Logger.Info("Added raw output renderer.");
+						ReportingTags.Add("Out:RawOutput");
+						Analytics.Instance.AddDestination(rawOutput);
+					}
+				}
+				catch (Exception e) {
+					Logger.Warn("Error setting up raw output: {0}", e.Message);
+				}
+			}
 
 			if (renderers.Count == 0) {
 				Logger.Error("No renderers found, exiting.");

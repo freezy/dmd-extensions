@@ -139,7 +139,6 @@ namespace LibDmd.Output.PinUp
 
 		public void OnFrameEvent(FrameEvent frameEvent)
 		{
-			Logger.Info($"[pinup] New event: {frameEvent.EventId}");
 			if (_pupTriggerSupported) {
 				PuPTrigger(frameEvent.EventId);
 			}

@@ -272,9 +272,6 @@ namespace LibDmd
 				var sourceAlphaNumeric = Source as IAlphaNumericSource;
 				Logger.Info("Setting up {0} for {1} destination(s) [ {2} ]", Name, Destinations.Count, string.Join(", ", Destinations.Select(d => d.Name)));
 
-				// var clockedDedupedConverter = new ClockedDeduper(Converter);
-				// _activeSources.Add(clockedDedupedConverter);
-
 				// subscribe converter to incoming frames
 				if (Converter != null) {
 
@@ -1189,62 +1186,6 @@ namespace LibDmd
 		#region Utils
 
 		/// <summary>
-		/// Similar method to ObserveOn but only keeping the latest notification
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// This method will drop unprocessed notifications received while processing a previous notification.
-		/// 
-		/// This code is largely spread across internet, and seems to initiate from Lee Campbell and Wilka Hudson in this post:
-		/// https://social.msdn.microsoft.com/Forums/en-US/bbcc1af9-64b4-456b-9038-a540cb5f5de5/how-do-i-ignore-allexceptthelatest-value-when-my-subscribe-method-is-running
-		/// The implementation below comes from this blog post: http://www.zerobugbuild.com/?p=192
-		/// </remarks>
-		public static IObservable<T> ObserveLatestOn<T>(IObservable<T> source, IScheduler scheduler)
-		{
-			return Observable.Create<T>(observer =>
-			{
-				Notification<T> outsideNotification = null;
-				var gate = new object();
-				bool active = false;
-				var cancelable = new MultipleAssignmentDisposable();
-				var disposable = source.Materialize().Subscribe(thisNotification =>
-				{
-					bool alreadyActive;
-					lock (gate)
-					{
-						alreadyActive = active;
-						active = true;
-						outsideNotification = thisNotification;
-					}
-
-					if (!alreadyActive)
-					{
-						cancelable.Disposable = scheduler.Schedule(self =>
-						{
-							Notification<T> localNotification = null;
-							lock (gate)
-							{
-								localNotification = outsideNotification;
-								outsideNotification = null;
-							}
-							localNotification.Accept(observer);
-							bool hasPendingNotification = false;
-							lock (gate)
-							{
-								hasPendingNotification = active = (outsideNotification != null);
-							}
-							if (hasPendingNotification)
-							{
-								self();
-							}
-						});
-					}
-				});
-				return new CompositeDisposable(disposable, cancelable);
-			});
-		}
-
-		/// <summary>
 		/// Subscribes to the given source and links it to the given destination.
 		/// </summary>
 		///
@@ -1282,7 +1223,7 @@ namespace LibDmd
 				_activeSources.Add(dest.Subscribe(f => StartIdling()));
 
 			} else {
-				
+
 				// subscribe and add to active sources
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 

@@ -44,12 +44,14 @@ namespace LibDmd.DmdDevice
 				GameConfig = gameSection != null ? new GameConfig(_gameName, _data, this) : null;
 			}
 		}
+
 		public bool HasGameName => _gameName != null;
 		public GameConfig GameConfig { get; private set; }
 		public IVpdbConfig VpdbStream { get; private set; }
 		public IBrowserConfig BrowserStream { get; private set; }
 		public INetworkConfig NetworkStream { get; private set; }
 		public IPinUpConfig PinUp { get; private set; }
+		public IRawOutputConfig RawOutput { get; private set; }
 		public string DataPath { get; }
 
 		public void Validate()
@@ -141,6 +143,7 @@ namespace LibDmd.DmdDevice
 			BrowserStream = new BrowserConfig(_data, this);
 			NetworkStream = new NetworkConfig(_data, this);
 			PinUp = new PinUpConfig(_data, this);
+			RawOutput = new RawOutputConfig(_data, this);
 
 			_saveSubscription?.Dispose();
 			_saveSubscription = _onSave.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
@@ -806,8 +809,16 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "pinup";
 		public bool Enabled => GetBoolean("enabled", false);
-		public string GameName => null;
 		public PinUpConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class RawOutputConfig : AbstractConfiguration, IRawOutputConfig
+	{
+		public override string Name { get; } = "rawoutput";
+		public bool Enabled => GetBoolean("enabled", false);
+		public RawOutputConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}

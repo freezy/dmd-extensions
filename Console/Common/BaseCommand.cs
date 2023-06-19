@@ -6,6 +6,7 @@ using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Output;
+using LibDmd.Output.FileOutput;
 using LibDmd.Output.Network;
 using LibDmd.Output.Pin2Dmd;
 using LibDmd.Output.PinDmd1;
@@ -180,6 +181,19 @@ namespace DmdExt.Common
 
 				} catch (Exception e) {
 					Logger.Warn("Network stream disabled: {0}", e.Message);
+				}
+			}
+
+			if (config.RawOutput.Enabled) {
+				try {
+					Logger.Info("Added raw output renderer (a.k.a. frame dumper).");
+					var rawOutput = new RawOutput();
+					renderers.Add(rawOutput);
+					reportingTags.Add("Out:RawOutput");
+					Analytics.Instance.AddDestination(rawOutput);
+
+				} catch (Exception e) {
+					Logger.Warn("Error setting up raw output: {0}", e.Message);
 				}
 			}
 

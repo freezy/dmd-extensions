@@ -26,6 +26,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
   * [Future Pinball](#future-pinball)
   * [Media](#media)
   * [Pinup Player](#pinup-player)
+  * [Frame Dumping](#frame-dumping)
 * [Configuration](#configuration)
   * [Output Configuration](#output-configuration)
   * [Command Line Configuration](#command-line-configuration)
@@ -293,6 +294,41 @@ Then, enable the Pinup Player output in `DmdDevice.ini`:
 [pinup]
 enabled = true
 ```
+
+### Frame Dumping
+
+DMD Extensions can also dump frames to disk. This is needed when colorizing a new game, since both the Serum as well as
+the Pin2Color editor use them as the basis for the colorization.
+
+Visual PinMAME has a built-in frame dumper, which is enabled when the `dmddump` folder exists, and both *Use external DMD*
+and *Show DMD Window* are active for a ROM. However, this doesn't work for the DMD rendering of alphanumeric games.
+
+Dmdext's frame dumping not only works for those games, but can also be used to dump frames from Pinball FX and all the
+other games where VPM isn't involved.
+
+To enable it, update `DmdDevice.ini`:
+
+```ini
+[rawoutput]
+enabled = true
+```
+
+For dumping frames through `dmdext.exe`, use the following command line:
+
+```bash
+dmdext mirror -s <source> --dump-frames
+```
+
+The frames will be dumped to the `dmddump` folder, which is located where PinMAME is installed. If PinMAME isn't found,
+a `dmddump` folder is created in the current working directory. Existing dump files are appended to.
+
+Note however that the frame dumper needs a source that provides a game name. Tested sources are:
+
+- VPX/VPM
+- Pinball FX
+- Pinball FX3
+- The Pinball Arcade
+- Pro Pinball Ultra (add `--dump-frames` to `ProPinballSlave.bat`)
 
 ## Configuration
 

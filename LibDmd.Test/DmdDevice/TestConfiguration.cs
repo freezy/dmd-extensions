@@ -25,6 +25,7 @@ namespace LibDmd.Test
 		public IBrowserConfig BrowserStream { get; set; } = new TestBrowserConfig();
 		public INetworkConfig NetworkStream { get; set; } = new TestNetworkConfig();
 		public IPinUpConfig PinUp { get; set; } = new TestPinUpConfig();
+		public IRawOutputConfig RawOutput { get; set; } = new RawOutputConfig();
 		public bool HasGameName => !string.IsNullOrEmpty(GameName);
 		public string DataPath { get; set; }
 
@@ -159,5 +160,10 @@ namespace LibDmd.Test
 	{
 		public bool Enabled { get; set; }
 		public string GameName { get; set; }
+	}
+
+	public class RawOutputConfig : IRawOutputConfig
+	{
+		public bool Enabled { get; set; }
 	}
 }
