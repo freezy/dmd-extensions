@@ -721,6 +721,7 @@ setup, however note that games that you've already configured won't be affected.
 | The Getaway: High Speed 2            | `HighSpeed2`        | `WMS_Getaway`                          | `111`      |
 | Theatre of Magic                     | `TheaterOfMagic`    | `BALLY_TheatreOfMagic`                 | `117`      |
 | Twilight Zone                        | `TwilightZone`      |                                        | `162`      |
+| Whirlwind                            |                     |                                        | `168`      |
 | White Water                          | `WhiteWater`        | `WMS_White_Water`                      | `124`      |
 | WHO dunnit                           | `WHODunnit`         |                                        |            |
 | Whoa Nellie! Big Juicy Melons        | `WhoaNellie`        |                                        |            |
@@ -765,6 +766,7 @@ and re-launch the DMD Extensions project and the issue will go away. [Reference]
 - mjrgh for debugging and optimizing stuff.
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 - Funkyman for 64 color support, 256x64 scaling options, bug fixes and code cleanup.
+- To Zen Studios for their support and for making Pinball FX!
 
 <a title="IntelliJ IDEA" href="https://www.jetbrains.com/resharper/"><img src="https://raw.githubusercontent.com/freezy/dmd-extensions/master/resharper.svg?sanitize=true" alt="IntelliJ Resharper" width="250"></a>
 
