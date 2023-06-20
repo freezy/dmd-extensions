@@ -387,6 +387,7 @@
     </Compile>
     <Compile Include="AlphaNumericFrame.cs" />
     <Compile Include="Analytics.cs" />
+    <Compile Include="Common\AboutDialog.xaml.cs" />
     <Compile Include="Common\CultureUtil.cs" />
     <Compile Include="Common\PathUtil.cs" />
     <Compile Include="Converter\AbstractConverter.cs" />
@@ -586,6 +587,9 @@
     <EmbeddedResource Include="Costura32\ftd2xx.dll" />
     <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <Content Include="FTDI2XX.xml" />
+    <Resource Include="icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Output\Virtual\Dmd\README.md" />
     <Resource Include="Output\Virtual\Dmd\preview-128x16-tint.png" />
     <Resource Include="Output\Virtual\Dmd\preview-128x32-tint.png" />
@@ -687,6 +691,7 @@
     <EmbeddedResource Include="Output\Virtual\AlphaNumeric\numeric-bold\full.svg" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Common\AboutDialog.xaml" />
     <Page Include="Output\Virtual\AlphaNumeric\AlphaNumericLayerSetting.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

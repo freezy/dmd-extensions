@@ -121,18 +121,8 @@ namespace LibDmd.DmdDevice
 			CultureUtil.NormalizeUICulture();
 
 			// read versions from assembly
-			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			var version = fvi.ProductVersion;
-			if (attr.Length > 0) {
-				var aca = (AssemblyConfigurationAttribute)attr[0];
-				_sha = aca.Configuration;
-				_fullVersion = string.IsNullOrEmpty(_sha) ? version : $"{version} ({_sha})";
 
-			} else {
-				_fullVersion = fvi.ProductVersion;
-				_sha = "";
-			}
+			PathUtil.GetAssemblyVersion(out _fullVersion, out _sha);
 			#endregion
 
 			if (_config.Global.SkipAnalytics) {
