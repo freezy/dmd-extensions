@@ -39,6 +39,7 @@ namespace LibDmd.Converter
 		/// </summary>
 		private readonly bool _clockAndDedupe;
 		private DmdFrame _lastDmdFrame;
+		private AlphaNumericFrame _lastAlphanumFrame;
 		private readonly IDisposable _clock;
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.AlphaNumeric);
 
@@ -115,19 +116,33 @@ namespace LibDmd.Converter
 		/// <param name="frame">Source frame</param>
 		public virtual void Convert(AlphaNumericFrame frame)
 		{
+			#if DEBUG
+			if (!_clockAndDedupe) {
+				throw new InvalidOperationException("Convert() must be overridden if convertor doesn't receive clocked frames.");
+			}
+			#endif
+			_lastAlphanumFrame = frame;
+		}
+
+		protected virtual void ConvertClocked(AlphaNumericFrame frame)
+		{
 		}
 
 		private void Tick(long _)
 		{
-			if (_lastDmdFrame == null) {
-				return;
+			if (_lastDmdFrame != null) {
+				ConvertClocked(_lastDmdFrame);
 			}
 
-			ConvertClocked(_lastDmdFrame);
+			if (_lastAlphanumFrame != null) {
+				ConvertClocked(_lastAlphanumFrame);
+			}
 		}
 
 		public void Dispose()
 		{
+			_lastDmdFrame = null;
+			_lastAlphanumFrame = null;
 			_lastFrameFormat?.Dispose();
 			_clock?.Dispose();
 		}
