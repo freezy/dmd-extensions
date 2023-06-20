@@ -146,7 +146,14 @@ namespace LibDmd.Output.Pin2Dmd
 			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
 		}
 
-		public void UpdatePalette(Color[] palette) => SetSinglePalette(palette);
+		public void UpdatePalette(Color[] palette)
+		{
+			SetSinglePalette(palette);
+
+			// we know that palette changes are only triggered by serum, i.e. 6-bit frames. but we could also check
+			// the number of colors and send other frame buffers if necessary.
+			RenderRaw(_frameBufferGray6);
+		}
 
 		protected override void SetSinglePalette(Color[] colors)
 		{
