@@ -1111,28 +1111,52 @@ namespace LibDmd
 							break;
 
 						// colored gray6 -> rgb24
-						case FrameFormat.Rgb24:
+						case FrameFormat.Rgb24: {
 							AssertCompatibility(source, sourceColoredGray6, dest, destRgb24, from, to);
-							Subscribe(
-								sourceColoredGray6.GetColoredGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb24()
-									.TransformRgb24(this, destFixedSize, destMultiSize),
-								destRgb24.RenderRgb24);
+							if (Converter is IColorRotationSource colorRotationSource) {
+								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource);
+								Subscribe(
+									rotationWrapper.GetRgb24Frames(),
+									frame => frame
+										.TransformHdScaling(destFixedSize, ScalerMode)
+										.TransformRgb24(this, destFixedSize, destMultiSize),
+									destRgb24.RenderRgb24);
+								_activeSources.Add(rotationWrapper);
+							} else {
+								Subscribe(
+									sourceColoredGray6.GetColoredGray6Frames(),
+									frame => frame
+										.TransformHdScaling(destFixedSize, ScalerMode)
+										.ConvertToRgb24()
+										.TransformRgb24(this, destFixedSize, destMultiSize),
+									destRgb24.RenderRgb24);
+							}
 							break;
+						}
 
 						// colored gray6 -> bitmap
-						case FrameFormat.Bitmap:
+						case FrameFormat.Bitmap: {
 							AssertCompatibility(source, sourceColoredGray6, dest, destBitmap, from, to);
-							Subscribe(
-								sourceColoredGray6.GetColoredGray6Frames(),
-								frame => frame
-									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBitmap()
-									.Transform(this, destFixedSize, destMultiSize),
-								destBitmap.RenderBitmap);
+							if (Converter is IColorRotationSource colorRotationSource) {
+								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource);
+								Subscribe(
+									rotationWrapper.GetRgb24Frames(),
+									frame => frame
+										.TransformHdScaling(destFixedSize, ScalerMode)
+										.ConvertToBmp()
+										.Transform(this, destFixedSize, destMultiSize),
+									destBitmap.RenderBitmap);
+							} else {
+								Subscribe(
+									sourceColoredGray6.GetColoredGray6Frames(),
+									frame => frame
+										.TransformHdScaling(destFixedSize, ScalerMode)
+										.ConvertToBitmap()
+										.Transform(this, destFixedSize, destMultiSize),
+									destBitmap.RenderBitmap);
+							}
 							break;
+						}
 
 						// colored gray6 -> colored gray2
 						case FrameFormat.ColoredGray2:

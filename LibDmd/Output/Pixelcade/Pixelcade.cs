@@ -15,7 +15,7 @@ namespace LibDmd.Output.Pixelcade
 	/// <see cref="http://pixelcade.org/"/>
 	public class Pixelcade : IRgb24Destination, IFixedSizeDestination
 	{
-		public string Name { get; } = "Pixelcade";
+		public string Name => "Pixelcade";
 		public bool IsAvailable { get; private set; }
 		public int Delay { get; set; } = 100;
 		
@@ -58,19 +58,6 @@ namespace LibDmd.Output.Pixelcade
 		/// <summary>
 		/// Returns the current instance of the Pixelcade API.
 		/// </summary>
-		/// <returns>New or current instance</returns>
-		public static Pixelcade GetInstance()
-		{
-			if (_instance == null) {
-				_instance = new Pixelcade();
-			} 
-			_instance.Init();
-			return _instance;
-		}
-
-		/// <summary>
-		/// Returns the current instance of the Pixelcade API.
-		/// </summary>
 		/// <param name="port">Don't loop through available ports but use this COM port name.</param>
 		/// <param name="colorMatrix">RGB or RBG</param>
 		/// <returns>New or current instance</returns>
@@ -92,7 +79,7 @@ namespace LibDmd.Output.Pixelcade
 			_frameBuffer[0] = RgbLedMatrixFrameCommandByte;
 		}
 
-		public void Init()
+		private void Init()
 		{
 			if (Port != null && Port.Trim().Length > 0) {
 				IsAvailable = Connect(Port);
@@ -115,6 +102,7 @@ namespace LibDmd.Output.Pixelcade
 			// put the matrix into stream mode 
 			EnableRgbLedMatrix(4, 16);
 		}
+
 		private bool Connect(string port)
 		{
 			try {
