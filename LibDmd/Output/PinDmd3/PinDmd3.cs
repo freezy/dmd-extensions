@@ -299,7 +299,13 @@ namespace LibDmd.Output.PinDmd3
 				_frameBufferRgb24[i] = 0;
 			}
 
-			RenderRaw(_frameBufferRgb24);
+			try {
+				if (_serialPort.IsOpen) {
+					_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
+				}
+			} catch (Exception e) {
+				Logger.Warn($"[pindmd3] Error clearing display: {e.Message}");
+			}
 
 		}
 
