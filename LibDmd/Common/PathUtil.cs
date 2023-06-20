@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,6 +13,8 @@ namespace LibDmd.Common
 	{
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static string _sha;
+		private static string _fullVersion;
 
 		/// <summary>
 		/// Returns an existing path to a subfolder relative to the VPM installation.
@@ -56,6 +59,34 @@ namespace LibDmd.Common
 
 			Logger.Info($"No {subfolder} folder found.");
 			return null;
+		}
+
+		public static void GetAssemblyVersion(out string fullVersion, out string sha)
+		{
+			if (_fullVersion != null) {
+				fullVersion = _fullVersion;
+				sha = _sha;
+				return;
+			}
+
+			// read versions from assembly
+			var assembly = Assembly.GetCallingAssembly();
+			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+			Console.WriteLine($"Getting assembly info at {assembly.Location}...");
+			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			var version = fvi.ProductVersion;
+			if (attr.Length > 0) {
+				var aca = (AssemblyConfigurationAttribute)attr[0];
+				_sha = aca.Configuration;
+				_fullVersion = string.IsNullOrEmpty(_sha) ? version : $"{version} ({_sha})";
+
+			} else {
+				_fullVersion = fvi.ProductVersion;
+				_sha = "";
+			}
+
+			fullVersion = _fullVersion;
+			sha = _sha;
 		}
 
 		private static string GetDllPath(string name)

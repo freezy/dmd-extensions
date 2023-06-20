@@ -28,10 +28,9 @@ namespace LibDmd.Common
 		{
 			_config = config;
 			_dmdConfig = _config?.VirtualDmd as VirtualDmdConfig;
+			ParentGrid.ContextMenu = new ContextMenu();
 
 			if (_dmdConfig != null) {
-
-				ParentGrid.ContextMenu = new ContextMenu();
 
 				var saveGlobalPos = new MenuItem();
 				saveGlobalPos.Click += SavePositionGlobally;
@@ -52,7 +51,6 @@ namespace LibDmd.Common
 				toggleAspect.Header = "Ignore Aspect Ratio";
 				toggleAspect.IsCheckable = true;
 				ParentGrid.ContextMenu.Items.Add(toggleAspect);
-
 				ParentGrid.ContextMenu.Items.Add(new Separator());
 
 				var openSettings = new MenuItem();
@@ -60,9 +58,13 @@ namespace LibDmd.Common
 				openSettings.Header = "Customize Style";
 				ParentGrid.ContextMenu.Items.Add(openSettings);
 
-			} else {
-				ParentGrid.ContextMenu = null;
+				ParentGrid.ContextMenu.Items.Add(new Separator());
 			}
+
+			var aboutDialog = new MenuItem();
+			aboutDialog.Click += OpenAbout;
+			aboutDialog.Header = "About...";
+			ParentGrid.ContextMenu.Items.Add(aboutDialog);
 
 			if (_config != null) {
 				Dmd.SetStyle(_config.VirtualDmd.Style, _config.DataPath);
@@ -102,6 +104,12 @@ namespace LibDmd.Common
 				Dmd.SetStyle(style, _config.DataPath);
 			});
 			settingWindow.Show();
+		}
+
+		private void OpenAbout(object sender, RoutedEventArgs e)
+		{
+			var aboutWindow = new AboutDialog(new Point(Left + ActualWidth,Top + ActualHeight));
+			aboutWindow.Show();
 		}
 
 		private void ToggleAspectRatio(object sender, RoutedEventArgs e)

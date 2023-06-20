@@ -52,22 +52,7 @@ namespace DmdExt
 		static void Main(string[] args)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
-			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			_version = fvi.ProductVersion;
-			if (attr.Length > 0) {
-				var aca = (AssemblyConfigurationAttribute)attr[0];
-				_sha = aca.Configuration;
-				if (string.IsNullOrEmpty(_sha)) {
-					_fullVersion = _version;
-				} else {
-					_fullVersion = $"{_version} ({_sha})";
-				}
-			} else {
-				_fullVersion = fvi.ProductVersion;
-				_sha = "";
-			}
-
+			PathUtil.GetAssemblyVersion(out _fullVersion, out _sha);
 			CultureUtil.NormalizeUICulture();
 			_commandLineArgs = FixIniArg(args);
 			ReportingTags.Add("Console");
