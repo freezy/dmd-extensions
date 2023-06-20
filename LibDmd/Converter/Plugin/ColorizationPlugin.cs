@@ -143,9 +143,6 @@ namespace LibDmd.Converter.Plugin
 					break;
 			}
 		}
-		public void Init()
-		{
-		}
 
 		public new void Dispose()
 		{
@@ -222,7 +219,7 @@ namespace LibDmd.Converter.Plugin
 			ProcessEvent();
 		}
 
-		public override void Convert(AlphaNumericFrame frame)
+		protected override void ConvertClocked(AlphaNumericFrame frame)
 		{
 			var rgb24FramePtr = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
 
