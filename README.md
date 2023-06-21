@@ -29,7 +29,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
   * [Frame Dumping](#frame-dumping)
 * [Configuration](#configuration)
   * [Output Configuration](#output-configuration)
-  * [Command Line Configuration](#command-line-configuration)
+  * [Command Line Configuration](#command-line-configuration) ([Mirror](#mirror-command) [Play](#play-command) [Test](#test-command))
   * [Colorization](#colorization)
 * [Breaking Changes](#breaking-changes)
 * [Troubleshooting](#troubleshooting)
@@ -425,7 +425,7 @@ dmdext play --help
 dmdext test --help
 ```
 
-#### Mirror
+#### Mirror Command
 
 The `mirror` command has the following additional parameters:
 
@@ -442,7 +442,7 @@ The `mirror` command has the following additional parameters:
 | `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false      |
 | `--colorize`        | Enable or disable frame-by-frame colorization. Supported on `pinballfx3` (memory grabber), `pinballarcade`, and `futurepinball` only.                                           | false      |
 
-#### Play
+#### Play Command
 
 The `play` command has the following additional parameters:
 
@@ -450,6 +450,21 @@ The `play` command has the following additional parameters:
 |---------------------|--------------------------------------------------------------------------------|---------|
 | `-f, --file`        | Path to the file to play. Currently supported file types: PNG, JPG, BIN (raw). | *none*  |
 
+#### Test Command
+
+The `test` command just outputs a single image. This allows you to test different modes and resolutions without having
+to start a game.
+
+| Parameter  | Description                                                                                         | Default  |
+|------------|-----------------------------------------------------------------------------------------------------|----------|
+| `--format` | The frame format. One of `rgb24`, `gray2`, `gray4`, `coloredgray2`, `coloredgray4`, `coloredgray6`. | `rgb24`  |
+
+Examples:
+
+```
+dmdext test
+dmdext test --format gray2
+```
 
 ### Colorization
 
