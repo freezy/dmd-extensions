@@ -246,8 +246,7 @@ namespace DmdExt.Mirror
 			}
 
 			// 3. check for native pin2color
-			var pin2Color = _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode);
-			return (AbstractConverter)pin2Color?.Gray2Colorizer ?? pin2Color?.Gray4Colorizer;
+			return _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode);
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)

@@ -71,7 +71,7 @@ namespace LibDmd.DmdDevice
 		private readonly ColorizationLoader _colorizationLoader;
 		private Serum _serum;
 		private ColorizationPlugin _colorizationPlugin;
-		private Pin2ColorResult _pin2ColorResult;
+		private VniColorizer _pin2ColorResult;
 
 		// error reporting
 #if !DEBUG
@@ -192,7 +192,7 @@ namespace LibDmd.DmdDevice
 		/// <param name="num">Index of the new palette.</param>
 		public void LoadPalette(uint num)
 		{
-			_pin2ColorResult?.Gray4Colorizer?.LoadPalette(num);
+			_pin2ColorResult?.LoadPalette(num);
 		}
 
 		/// <summary>
@@ -688,7 +688,7 @@ namespace LibDmd.DmdDevice
 					Name = "2-bit Pin2Color Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
-					Converter = _pin2ColorResult.Gray2Colorizer,
+					Converter = _pin2ColorResult,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
@@ -701,7 +701,7 @@ namespace LibDmd.DmdDevice
 					Name = "4-bit Pin2Color Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
-					Converter = _pin2ColorResult.Gray4Colorizer,
+					Converter = _pin2ColorResult,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
