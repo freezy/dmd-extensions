@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using LibDmd.Common;
 using NLog;
@@ -6,32 +7,34 @@ using NLog;
 namespace LibDmd.Converter.Vni
 {
 	/// <summary>
-	/// Das ischd Haiptkonfig firs iifärbä vo Graistuifä-Aazeigä.
+	/// Reads the VNI file format.
 	/// 
-	/// Biischpiu vom Fileformat hets hiä: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
-	/// Doku übrs Format hiä: https://github.com/sker65/go-dmd-clock/blob/master/doc/README.md
+	/// Example here: http://vpuniverse.com/forums/files/category/84-pin2dmd-files/
+	/// Documentation here: https://github.com/sker65/go-dmd-clock/blob/master/doc/README.md
 	/// </summary>
-	public class VniColoring
+	public class VniFile
 	{
 		public readonly string Filename;
+
 		/// <summary>
 		/// File version. 1 = FSQ, 2 = VNI (but we don't really care, we fetch what we get)
 		/// </summary>
 		public readonly int Version;
-		public readonly Palette[] Palettes;
-		public readonly System.Collections.Generic.Dictionary<uint, Mapping> Mappings;
+
+		public readonly VniPalette[] Palettes;
+		public readonly Dictionary<uint, Mapping> Mappings;
 		public readonly byte[][] Masks;
-		public readonly Palette DefaultPalette;
+		public readonly VniPalette DefaultPalette;
 		public readonly ushort DefaultPaletteIndex;
 		public readonly int NumPalettes;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
-		/// List di ganzi Konfig vom File inä.
+		/// Opens and parses the .vni file.
 		/// </summary>
-		/// <param name="filename">Dr Pfad zum File</param>
-		public VniColoring(string filename)
+		/// <param name="filename">Path to the file</param>
+		public VniFile(string filename)
 		{
 			var fs = new FileStream(filename, FileMode.Open);
 			var reader = new BinaryReader(fs);
@@ -44,9 +47,9 @@ namespace LibDmd.Converter.Vni
 
 			NumPalettes = reader.ReadUInt16BE();
 			Logger.Trace("[vni] PAL[{1}] Read number of palettes as {0}", NumPalettes, reader.BaseStream.Position);
-			Palettes = new Palette[NumPalettes];
+			Palettes = new VniPalette[NumPalettes];
 			for (var i = 0; i < NumPalettes; i++) {
-				Palettes[i] = new Palette(reader);
+				Palettes[i] = new VniPalette(reader);
 				if (DefaultPalette == null && Palettes[i].IsDefault) {
 					DefaultPalette = Palettes[i];
 					DefaultPaletteIndex = (ushort)i;
@@ -107,7 +110,7 @@ namespace LibDmd.Converter.Vni
 			reader.Close();
 		}
 
-		public Palette GetPalette(uint index)
+		public VniPalette GetPalette(uint index)
 		{
 			// TODO index bruichä
 			return Palettes.FirstOrDefault(p => p.Index == index);

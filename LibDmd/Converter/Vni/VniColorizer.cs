@@ -24,7 +24,7 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// Data from the .pal file
 		/// </summary>
-		private readonly VniColoring _vniColoring;
+		private readonly VniFile _vniFile;
 
 		/// <summary>
 		/// Data from the .vni file
@@ -39,7 +39,7 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// The current palette
 		/// </summary>
-		private Palette _palette;
+		private VniPalette _palette;
 
 		/// <summary>
 		/// The current palette index.
@@ -50,7 +50,7 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// The standard palette to use when nothing has matched.
 		/// </summary>
-		private Palette _defaultPalette;
+		private VniPalette _defaultPalette;
 
 		/// <summary>
 		/// The default palette index
@@ -69,17 +69,17 @@ namespace LibDmd.Converter.Vni
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VniColorizer(VniColoring vniColoring, AnimationSet animations) : base(true)
+		public VniColorizer(VniFile vniFile, AnimationSet animations) : base(true)
 		{
-			_vniColoring = vniColoring;
+			_vniFile = vniFile;
 			_animations = animations;
-			Has128x32Animation = (_vniColoring.Masks != null && _vniColoring.Masks.Length >= 1 && _vniColoring.Masks[0].Length == 512);
-			SetPalette(vniColoring.DefaultPalette, vniColoring.DefaultPaletteIndex, true);
+			Has128x32Animation = (_vniFile.Masks != null && _vniFile.Masks.Length >= 1 && _vniFile.Masks[0].Length == 512);
+			SetPalette(vniFile.DefaultPalette, vniFile.DefaultPaletteIndex, true);
 		}
 
 		protected override void ConvertClocked(DmdFrame frame)
 		{
-			if (frame.BitLength == 4 && _vniColoring.Palettes.Length > 1 && _animations == null) {
+			if (frame.BitLength == 4 && _vniFile.Palettes.Length > 1 && _animations == null) {
 
 				if (frame.Data[0] == 0x08 && frame.Data[1] == 0x09 && frame.Data[2] == 0x0a && frame.Data[3] == 0x0b) {
 					uint newPal = (uint)frame.Data[5] * 8 + (uint)frame.Data[4];
@@ -90,20 +90,20 @@ namespace LibDmd.Converter.Vni
 
 					if (newPal != _lastEmbedded) {
 						LoadPalette(newPal);
-						if (!_vniColoring.DefaultPalette.IsPersistent) {
+						if (!_vniFile.DefaultPalette.IsPersistent) {
 							_resetEmbedded = true;
 						}
 						_lastEmbedded = (int)newPal;
 					}
 				} else if (_resetEmbedded) {
-					_lastEmbedded = _vniColoring.DefaultPaletteIndex;
-					SetPalette(_vniColoring.DefaultPalette, _vniColoring.DefaultPaletteIndex);
+					_lastEmbedded = _vniFile.DefaultPaletteIndex;
+					SetPalette(_vniFile.DefaultPalette, _vniFile.DefaultPaletteIndex);
 					_resetEmbedded = false;
 				}
 			}
 
 			var planes = frame.BitPlanes;
-			if (_vniColoring.Mappings != null) {
+			if (_vniFile.Mappings != null) {
 				if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
 					TriggerAnimation(frame.Dimensions, vd.RawPlanes, false);
 
@@ -112,6 +112,7 @@ namespace LibDmd.Converter.Vni
 				}
 			}
 
+			// if an animation is playing, render it instead of the normal frame
 			if (_activeAnimation != null) {
 				_activeAnimation.ScalerMode = ScalerMode;
 				_activeAnimation.NextFrame(frame.Dimensions, planes, AnimationFinished);
@@ -124,8 +125,8 @@ namespace LibDmd.Converter.Vni
 
 		public void LoadPalette(uint newpal)
 		{
-			if (_vniColoring.Palettes.Length > newpal) {
-				SetPalette(_vniColoring.GetPalette(newpal), (int)newpal);
+			if (_vniFile.Palettes.Length > newpal) {
+				SetPalette(_vniFile.GetPalette(newpal), (int)newpal);
 			} else {
 				Logger.Warn("[vni] No palette for change to " + newpal);
 			}
@@ -161,7 +162,7 @@ namespace LibDmd.Converter.Vni
 			_activeAnimation = null;
 
 			// Palettä ladä
-			var palette = _vniColoring.GetPalette(mapping.PaletteIndex);
+			var palette = _vniFile.GetPalette(mapping.PaletteIndex);
 			if (palette == null)
 			{
 				Logger.Warn("[vni] No palette found at index {0}.", mapping.PaletteIndex);
@@ -236,7 +237,7 @@ namespace LibDmd.Converter.Vni
 					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
 						clear = _activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse, clear);
 					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _vniColoring.Masks, reverse);
+						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _vniFile.Masks, reverse);
 				}
 			}
 		}
@@ -257,22 +258,22 @@ namespace LibDmd.Converter.Vni
 				
 			NoMaskCRC = checksum;
 
-			var mapping = _vniColoring.FindMapping(checksum);
+			var mapping = _vniFile.FindMapping(checksum);
 			if (mapping != null) 
 			{
 				return mapping;
 			}
 
 			// Wenn kä Maskä definiert, de nächschti Bitplane
-			if (_vniColoring.Masks == null || _vniColoring.Masks.Length <= 0)
+			if (_vniFile.Masks == null || _vniFile.Masks.Length <= 0)
 				return null;
 		
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			var maskedPlane = new byte[maskSize];
-			foreach (var mask in _vniColoring.Masks)
+			foreach (var mask in _vniFile.Masks)
 			{
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
-				mapping = _vniColoring.FindMapping(checksum);
+				mapping = _vniFile.FindMapping(checksum);
 				if (mapping != null) 
 				{
 					return mapping;
@@ -290,7 +291,7 @@ namespace LibDmd.Converter.Vni
 		private void Render(Dimensions dim, byte[][] planes)
 		{
 			// todo can probably be dropped entirely since we upscale at graph level.
-			if ((dim.Width * dim.Height / 8) != planes[0].Length)
+			if ((dim.Surface / 8) != planes[0].Length)
 			{
 				// We want to do the scaling after the animations get triggered.
 				if (ScalerMode == ScalerMode.Doubler)
@@ -340,7 +341,7 @@ namespace LibDmd.Converter.Vni
 		/// <param name="palette">Diä nii Palettä</param>
 		/// <param name="index">Welä Index mr muäss setzä</param>
 		/// <param name="isDefault"></param>
-		public void SetPalette(Palette palette, int index, bool isDefault = false)
+		public void SetPalette(VniPalette palette, int index, bool isDefault = false)
 		{
 			if (palette == null) {
 				Logger.Warn("[vni] Ignoring null palette.");

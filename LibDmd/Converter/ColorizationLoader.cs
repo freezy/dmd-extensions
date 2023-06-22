@@ -72,7 +72,7 @@ namespace LibDmd.Converter.Vni
 			if (File.Exists(palPath)) {
 				try {
 					Logger.Info("[vni] Loading palette file at {0}...", palPath);
-					var coloring = new VniColoring(palPath);
+					var coloring = new VniFile(palPath);
 					VniAnimationSet vni = null;
 					if (File.Exists(vniPath))
 					{
