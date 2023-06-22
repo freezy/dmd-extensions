@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
-namespace LibDmd.Converter.Pin2Color
+namespace LibDmd.Converter.Vni
 {
 	public class VniColorizer : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
 	{
-		public override string Name => "Pin2Color Colorizer";
+		public override string Name => "VNI Colorizer";
 		public override IEnumerable<FrameFormat> From => new []{ FrameFormat.Gray2, FrameFormat.Gray4 };
 
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => DedupedColoredGray2Source.GetColoredGray2Frames();
@@ -128,7 +127,7 @@ namespace LibDmd.Converter.Pin2Color
 			if (_vniColoring.Palettes.Length > newpal) {
 				SetPalette(_vniColoring.GetPalette(newpal), (int)newpal);
 			} else {
-				Logger.Warn("[pin2color] No palette for change to " + newpal);
+				Logger.Warn("[vni] No palette for change to " + newpal);
 			}
 		}
 
@@ -165,10 +164,10 @@ namespace LibDmd.Converter.Pin2Color
 			var palette = _vniColoring.GetPalette(mapping.PaletteIndex);
 			if (palette == null)
 			{
-				Logger.Warn("[pin2color] No palette found at index {0}.", mapping.PaletteIndex);
+				Logger.Warn("[vni] No palette found at index {0}.", mapping.PaletteIndex);
 				return;
 			}
-			//Logger.Debug("[pin2color] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
+			//Logger.Debug("[vni] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
 			SetPalette(palette, mapping.PaletteIndex);
@@ -183,7 +182,7 @@ namespace LibDmd.Converter.Pin2Color
 					{
 						if (_defaultPalette != null)
 						{
-							Logger.Debug("[pin2color] Resetting to default palette after {0} ms.", mapping.Duration);
+							Logger.Debug("[vni] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette, _defaultPaletteIndex);
 						}
 						_paletteReset = null;
@@ -197,14 +196,14 @@ namespace LibDmd.Converter.Pin2Color
 				// Luägä ob ibrhaipt äs VNI/FSQ Feil umä gsi isch
 				if (_animations == null)
 				{
-					Logger.Warn("[pin2color] Tried to load animation but no animation file loaded.");
+					Logger.Warn("[vni] Tried to load animation but no animation file loaded.");
 					return;
 				}
 				_activeAnimation = _animations.Find(mapping.Offset);
 
 				if (_activeAnimation == null)
 				{
-					Logger.Warn("[pin2color] Cannot find animation at position {0}.", mapping.Offset);
+					Logger.Warn("[vni] Cannot find animation at position {0}.", mapping.Offset);
 					return;
 				}
 
@@ -224,7 +223,7 @@ namespace LibDmd.Converter.Pin2Color
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
 				{
-					Logger.Debug("[pin2color] Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
+					Logger.Debug("[vni] Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
@@ -344,14 +343,14 @@ namespace LibDmd.Converter.Pin2Color
 		public void SetPalette(Palette palette, int index, bool isDefault = false)
 		{
 			if (palette == null) {
-				Logger.Warn("[pin2color] Ignoring null palette.");
+				Logger.Warn("[vni] Ignoring null palette.");
 				return;
 			}
 			if (isDefault) {
 				_defaultPalette = palette;
 				_defaultPaletteIndex = index;
 			}
-			//Logger.Debug("[pin2color] Setting new palette: [ {0} ]", string.Join(" ", palette.Colors.Select(c => c.ToString())));
+			//Logger.Debug("[vni] Setting new palette: [ {0} ]", string.Join(" ", palette.Colors.Select(c => c.ToString())));
 			_palette = palette;
 			_paletteIndex = index;
 		}
@@ -361,7 +360,7 @@ namespace LibDmd.Converter.Pin2Color
 		/// </summary>
 		protected void AnimationFinished()
 		{
-			//Logger.Trace("[pin2color] [timing] Animation finished.");
+			//Logger.Trace("[vni] [timing] Animation finished.");
 			//LastChecksum = 0x0;
 			SetPalette(_defaultPalette, _defaultPaletteIndex);
 			_activeAnimation = null;

@@ -5,7 +5,7 @@ using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
 
-namespace LibDmd.Converter.Pin2Color
+namespace LibDmd.Converter.Vni
 {
 	public abstract class Animation
 	{
@@ -284,12 +284,12 @@ namespace LibDmd.Converter.Pin2Color
 			if (SwitchMode == SwitchMode.MaskedReplace)
 				ReplaceMask = new byte[Size.Surface / 8];
 
-			Logger.Debug("[pin2color][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
+			Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
 		}
 
 		private void StartReplace(Action<Dimensions, byte[][]> render, Action completed = null)
 		{
-			Logger.Debug("[pin2color][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
+			Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_lastTick = Environment.TickCount;
 			_timer = 0;
 			_currentRender = render;
@@ -369,7 +369,7 @@ namespace LibDmd.Converter.Pin2Color
 
 			if (Frames[_frameIndex].Planes.Count < 4)
 			{
-				Logger.Warn("[pin2color][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
 			}
 			else
 			{

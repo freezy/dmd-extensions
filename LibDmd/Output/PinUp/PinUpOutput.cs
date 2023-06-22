@@ -23,7 +23,7 @@ namespace LibDmd.Output.PinUp
 		private readonly bool _pupTriggerSupported;
 
 		/// <summary>
-		/// If an frame event source such as Serum or Pin2Color emits event frames.
+		/// If an frame event source such as Serum or VNI emits event frames.
 		/// </summary>
 		private bool _frameEventsAvailable;
 

@@ -6,7 +6,7 @@ using System.Windows.Media;
 using DmdExt.Common;
 using LibDmd;
 using LibDmd.Converter;
-using LibDmd.Converter.Pin2Color;
+using LibDmd.Converter.Vni;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
@@ -246,7 +246,7 @@ namespace DmdExt.Mirror
 			}
 
 			// 3. check for native pin2color
-			return _colorizationLoader.LoadPin2Color(gameName, _config.Global.ScalerMode);
+			return _colorizationLoader.LoadVniColorizer(gameName, _config.Global.ScalerMode);
 		}
 
 		private FrameFormat GetFrameFormat(ISource source)
