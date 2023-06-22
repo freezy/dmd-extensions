@@ -54,7 +54,7 @@ namespace LibDmd.Converter.Pin2Color
 			return null;
 		}
 
-		public Pin2ColorResult LoadPin2Color(string gameName, ScalerMode scalerMode)
+		public VniColorizer LoadPin2Color(string gameName, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null)
 			{
@@ -87,18 +87,7 @@ namespace LibDmd.Converter.Pin2Color
 						Analytics.Instance.SetColorizer("PAL");
 					}
 
-					var gray2Colorizer = new Pin2ColorGray2Colorizer(coloring, vni);
-					var gray4Colorizer = new Pin2ColorGray4Colorizer(coloring, vni);
-
-					gray2Colorizer.ScalerMode = scalerMode;
-					gray4Colorizer.ScalerMode = scalerMode;
-
-					return new Pin2ColorResult {
-						Coloring = coloring,
-						Gray2Colorizer = gray2Colorizer,
-						Gray4Colorizer = gray4Colorizer,
-						Vni = vni,
-					};
+					return new VniColorizer(coloring, vni);
 
 				} catch (Exception e) {
 					Logger.Warn(e, "[pin2color] Error initializing: {0}", e.Message);
