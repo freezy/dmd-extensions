@@ -8,47 +8,49 @@ using NLog;
 namespace LibDmd.Converter.Vni
 {
 	/// <summary>
-	/// Ä palettä isch ä Lischtä vo Farbä. Jedi Palettä het än Index und a Tip wo
-	/// seit obs d Standard-Palettä isch odr nid.
+	/// A Palette is a list of colors. Each palette has an index and a type
+	/// that defines whether it's the standard palette or not.
 	/// </summary>
-	public class Palette
+	public class VniPalette
 	{
 		/// <summary>
-		/// Dr Palettäindex
+		/// Palette index.
 		/// </summary>
 		public readonly uint Index;
 
 		/// <summary>
-		/// Dr Palettätip.
-		/// </summary>
-		public readonly int Type; //  0: normal, 1: default
-
-		/// <summary>
-		/// Das sind d Farbä vo dr Palettä.
+		/// The actual palette. It's an array colors.
 		/// </summary>
 		public readonly Color[] Colors;
 
 		/// <summary>
-		/// Isch true wenns d Haiptpalettä isch
+		/// Whether this is the default palette.
 		/// </summary>
-		public bool IsDefault => (Type == 1 || Type == 2);
+		public bool IsDefault => (_type == 1 || _type == 2);
 
 		/// <summary>
-		/// Diä wo immer da isch
+		/// The palette which is active by default.
 		/// </summary>
-		public bool IsPersistent => (Type == 1);
+		public bool IsPersistent => (_type == 1);
+
+		/// <summary>
+		/// Palette type from VNI file.
+		///
+		/// 0: normal, 1: default
+		/// </summary>
+		private readonly int _type;
 
 		private readonly Dictionary<int, Color[]> _colors = new Dictionary<int, Color[]>();
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		//private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Palette(BinaryReader reader)
+		public VniPalette(BinaryReader reader)
 		{
 			Index = reader.ReadUInt16BE();
 			//Logger.Trace("  [{1}] [palette] Read index as {0}", Index, reader.BaseStream.Position);
 			var numColors = reader.ReadUInt16BE();
 			//Logger.Trace("  [{1}] [palette] Read number of colors as {0}", numColors, reader.BaseStream.Position);
-			Type = reader.ReadByte();
+			_type = reader.ReadByte();
 			//Logger.Trace("  [{1}] [palette] Read type as {0}", Type, reader.BaseStream.Position);
 			Colors = new Color[numColors];
 			var j = 0;
@@ -59,19 +61,17 @@ namespace LibDmd.Converter.Vni
 			//Logger.Trace("  [{1}] [palette] Read {0} bytes of color data", numColors * 3, reader.BaseStream.Position);
 		}
 
-		public Palette(Color[] colors)
+		/// <summary>
+		/// Returns the palette for a given bit length
+		/// </summary>
+		/// <param name="bitLength">Bit length</param>
+		/// <returns>Number of colors depending on bit length</returns>
+		public Color[] GetColors(int bitLength)
 		{
-			Index = 0;
-			Type = 0;
-			Colors = colors;
-		}
-
-		public Color[] GetColors(int bitlength)
-		{
-			if (!_colors.ContainsKey(bitlength)) {
-				_colors.Add(bitlength, ColorUtil.GetPalette(Colors, (int)Math.Pow(2, bitlength)));
+			if (!_colors.ContainsKey(bitLength)) {
+				_colors.Add(bitLength, ColorUtil.GetPalette(Colors, (int)Math.Pow(2, bitLength)));
 			}
-			return _colors[bitlength];
+			return _colors[bitLength];
 		}
 	}
 }

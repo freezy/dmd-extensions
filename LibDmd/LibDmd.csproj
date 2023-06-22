@@ -504,8 +504,8 @@
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
     <Compile Include="Converter\Vni\Mapping.cs" />
-    <Compile Include="Converter\Vni\Palette.cs" />
-    <Compile Include="Converter\Vni\VniColoring.cs" />
+    <Compile Include="Converter\Vni\VniPalette.cs" />
+    <Compile Include="Converter\Vni\VniFile.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />
