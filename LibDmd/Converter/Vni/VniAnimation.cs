@@ -5,7 +5,7 @@ using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Frame;
 
-namespace LibDmd.Converter.Pin2Color
+namespace LibDmd.Converter.Vni
 {
 	public class VniAnimation : Animation
 	{
@@ -61,7 +61,7 @@ namespace LibDmd.Converter.Pin2Color
 				uint startFrame = reader.ReadUInt32BE();
 			}
 
-			Logger.Debug("[pin2color] VNI[{3}] Reading {0} frame{1} for animation \"{2}\"...", numFrames, numFrames == 1 ? "" : "s", Name, reader.BaseStream.Position);
+			Logger.Debug("[vni] VNI[{3}] Reading {0} frame{1} for animation \"{2}\"...", numFrames, numFrames == 1 ? "" : "s", Name, reader.BaseStream.Position);
 			Frames = new AnimationFrame[numFrames];
 			AnimationDuration = 0;
 			for (var i = 0; i < numFrames; i++) {
@@ -84,7 +84,7 @@ namespace LibDmd.Converter.Pin2Color
 			for (var i = 0; i < numColors; i++) {
 				AnimationColors[i] = Color.FromRgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
 			}
-			Logger.Debug("[pin2color] VNI[{2}] Found {0} colors for palette {1}.", numColors, PaletteIndex, reader.BaseStream.Position);
+			Logger.Debug("[vni] VNI[{2}] Found {0} colors for palette {1}.", numColors, PaletteIndex, reader.BaseStream.Position);
 		}
 
 		public override string ToString()

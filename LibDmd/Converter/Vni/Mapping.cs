@@ -2,7 +2,7 @@
 using LibDmd.Common;
 using NLog;
 
-namespace LibDmd.Converter.Pin2Color
+namespace LibDmd.Converter.Vni
 {
 	/// <summary>
 	/// S Mäpping definiärt Häsches wo Sachä uisleesid wiä ä Palettäwächsu odr

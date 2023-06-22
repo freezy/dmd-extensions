@@ -392,7 +392,7 @@
     <Compile Include="Common\PathUtil.cs" />
     <Compile Include="Converter\AbstractConverter.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
-    <Compile Include="Converter\Pin2Color\VniColorizer.cs" />
+    <Compile Include="Converter\Vni\VniColorizer.cs" />
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
     <Compile Include="Converter\Serum\CRC32encode.cs" />
     <Compile Include="Converter\Serum\Serum.cs" />
@@ -458,15 +458,15 @@
     <Compile Include="Common\VirtualDmd.xaml.cs">
       <DependentUpon>VirtualDmd.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converter\Pin2Color\AnimationFrame.cs" />
-    <Compile Include="Converter\Pin2Color\AnimationPlane.cs" />
-    <Compile Include="Converter\Pin2Color\AnimationSet.cs" />
-    <Compile Include="Converter\Pin2Color\SwitchMode.cs" />
-    <Compile Include="Converter\Pin2Color\VniAnimation.cs" />
-    <Compile Include="Converter\Pin2Color\Animation.cs" />
-    <Compile Include="Converter\Pin2Color\VniAnimationFrame.cs" />
-    <Compile Include="Converter\Pin2Color\VniAnimationPlane.cs" />
-    <Compile Include="Converter\Pin2Color\VniAnimationSet.cs" />
+    <Compile Include="Converter\Vni\AnimationFrame.cs" />
+    <Compile Include="Converter\Vni\AnimationPlane.cs" />
+    <Compile Include="Converter\Vni\AnimationSet.cs" />
+    <Compile Include="Converter\Vni\SwitchMode.cs" />
+    <Compile Include="Converter\Vni\VniAnimation.cs" />
+    <Compile Include="Converter\Vni\Animation.cs" />
+    <Compile Include="Converter\Vni\VniAnimationFrame.cs" />
+    <Compile Include="Converter\Vni\VniAnimationPlane.cs" />
+    <Compile Include="Converter\Vni\VniAnimationSet.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
     <Compile Include="DmdDevice\IDmdDevice.cs" />
@@ -503,9 +503,9 @@
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
-    <Compile Include="Converter\Pin2Color\Mapping.cs" />
-    <Compile Include="Converter\Pin2Color\Palette.cs" />
-    <Compile Include="Converter\Pin2Color\VniColoring.cs" />
+    <Compile Include="Converter\Vni\Mapping.cs" />
+    <Compile Include="Converter\Vni\Palette.cs" />
+    <Compile Include="Converter\Vni\VniColoring.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />

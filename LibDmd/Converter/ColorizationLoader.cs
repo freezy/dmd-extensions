@@ -10,7 +10,7 @@ using LibDmd.DmdDevice;
 using Microsoft.Win32;
 using NLog;
 
-namespace LibDmd.Converter.Pin2Color
+namespace LibDmd.Converter.Vni
 {
 	public class ColorizationLoader
 	{
@@ -54,7 +54,7 @@ namespace LibDmd.Converter.Pin2Color
 			return null;
 		}
 
-		public VniColorizer LoadPin2Color(string gameName, ScalerMode scalerMode)
+		public VniColorizer LoadVniColorizer(string gameName, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null)
 			{
@@ -71,31 +71,31 @@ namespace LibDmd.Converter.Pin2Color
 			var vniPath = File.Exists(vniPath1) ? vniPath1 : vniPath2;
 			if (File.Exists(palPath)) {
 				try {
-					Logger.Info("[pin2color] Loading palette file at {0}...", palPath);
+					Logger.Info("[vni] Loading palette file at {0}...", palPath);
 					var coloring = new VniColoring(palPath);
 					VniAnimationSet vni = null;
 					if (File.Exists(vniPath))
 					{
-						Logger.Info("[pin2color] Loading virtual animation file at {0}...", vniPath);
+						Logger.Info("[vni] Loading virtual animation file at {0}...", vniPath);
 						vni = new VniAnimationSet(vniPath);
-						Logger.Info("[pin2color] Loaded animation set {0}", vni);
-						Logger.Info("[pin2color] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
+						Logger.Info("[vni] Loaded animation set {0}", vni);
+						Logger.Info("[vni] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
 						Analytics.Instance.SetColorizer("VNI/PAL");
 
 					} else {
-						Logger.Info("[pin2color] No animation set found");
+						Logger.Info("[vni] No animation set found");
 						Analytics.Instance.SetColorizer("PAL");
 					}
 
 					return new VniColorizer(coloring, vni);
 
 				} catch (Exception e) {
-					Logger.Warn(e, "[pin2color] Error initializing: {0}", e.Message);
+					Logger.Warn(e, "[vni] Error initializing: {0}", e.Message);
 					Analytics.Instance.ClearColorizer();
 				}
 
 			} else {
-				Logger.Info("[pin2color] No palette file found at {0}.", palPath);
+				Logger.Info("[vni] No palette file found at {0}.", palPath);
 				Analytics.Instance.ClearColorizer();
 			}
 

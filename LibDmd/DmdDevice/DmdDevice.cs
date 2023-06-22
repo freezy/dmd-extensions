@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
-using LibDmd.Converter.Pin2Color;
+using LibDmd.Converter.Vni;
 using LibDmd.Converter.Plugin;
 using LibDmd.Converter.Serum;
 using LibDmd.Frame;
@@ -71,7 +71,7 @@ namespace LibDmd.DmdDevice
 		private readonly ColorizationLoader _colorizationLoader;
 		private Serum _serum;
 		private ColorizationPlugin _colorizationPlugin;
-		private VniColorizer _pin2ColorResult;
+		private VniColorizer _vniColorizer;
 
 		// error reporting
 #if !DEBUG
@@ -158,7 +158,7 @@ namespace LibDmd.DmdDevice
 			}
 
 			_serum = null;
-			_pin2ColorResult = null;
+			_vniColorizer = null;
 			_colorizationPlugin = null;
 
 			SetupColorizer();
@@ -192,7 +192,7 @@ namespace LibDmd.DmdDevice
 		/// <param name="num">Index of the new palette.</param>
 		public void LoadPalette(uint num)
 		{
-			_pin2ColorResult?.LoadPalette(num);
+			_vniColorizer?.LoadPalette(num);
 		}
 
 		/// <summary>
@@ -402,7 +402,7 @@ namespace LibDmd.DmdDevice
 			_serum = null;
 			_colorizationPlugin?.Dispose();
 			_colorizationPlugin = null;
-			_pin2ColorResult = null;
+			_vniColorizer = null;
 			_isOpen = false;
 		}
 
@@ -681,14 +681,14 @@ namespace LibDmd.DmdDevice
 			}
 
 			// === NATIVE VNI 2-bit ===
-			else if (_colorize && _pin2ColorResult != null) {
+			else if (_colorize && _vniColorizer != null) {
 
 				// 2-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "2-bit Pin2Color Graph",
+					Name = "2-bit VNI Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
-					Converter = _pin2ColorResult,
+					Converter = _vniColorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
@@ -698,10 +698,10 @@ namespace LibDmd.DmdDevice
 
 				// 4-bit graph
 				_graphs.Add(new RenderGraph {
-					Name = "4-bit Pin2Color Graph",
+					Name = "4-bit VNI Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
-					Converter = _pin2ColorResult,
+					Converter = _vniColorizer,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,
 					FlipVertically = _config.Global.FlipVertically,
@@ -756,7 +756,7 @@ namespace LibDmd.DmdDevice
 			});
 
 			// if colorization enabled and frame-by-frame colorization enabled, just clear the color.
-			if (_colorize && (_serum != null || _colorizationPlugin != null || _pin2ColorResult != null)) {
+			if (_colorize && (_serum != null || _colorizationPlugin != null || _vniColorizer != null)) {
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
 
@@ -928,9 +928,9 @@ namespace LibDmd.DmdDevice
 				_colorizationPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
 			}
 
-			// 3. check for native pin2color
+			// 3. check for native vni
 			if (_serum == null && _colorizationPlugin == null) {
-				_pin2ColorResult = _colorizationLoader.LoadPin2Color(_gameName, _config.Global.ScalerMode);
+				_vniColorizer = _colorizationLoader.LoadVniColorizer(_gameName, _config.Global.ScalerMode);
 			}
 		}
 
