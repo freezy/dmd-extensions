@@ -42,9 +42,9 @@ namespace LibDmd.Converter.Vni
 
 		#region Unused Props
 		protected int Cycles;
-		protected int Hold;
+		protected int HoldCycles;
 		protected int ClockFrom;
-		protected bool ClockSmall;
+		protected bool ClockIsSmall;
 		protected bool ClockInFront;
 		protected int ClockOffsetX;
 		protected int ClockOffsetY;

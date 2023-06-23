@@ -72,12 +72,12 @@ namespace LibDmd.Converter.Vni
 			if (File.Exists(palPath)) {
 				try {
 					Logger.Info("[vni] Loading palette file at {0}...", palPath);
-					var coloring = new VniFile(palPath);
-					VniAnimationSet vni = null;
+					var coloring = new PalFile(palPath);
+					VniFile vni = null;
 					if (File.Exists(vniPath))
 					{
-						Logger.Info("[vni] Loading virtual animation file at {0}...", vniPath);
-						vni = new VniAnimationSet(vniPath);
+						Logger.Info("[vni] Loading animation file at {0}...", vniPath);
+						vni = new VniFile(vniPath);
 						Logger.Info("[vni] Loaded animation set {0}", vni);
 						Logger.Info("[vni] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
 						Analytics.Instance.SetColorizer("VNI/PAL");

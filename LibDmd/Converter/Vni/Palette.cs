@@ -10,8 +10,10 @@ namespace LibDmd.Converter.Vni
 	/// <summary>
 	/// A Palette is a list of colors. Each palette has an index and a type
 	/// that defines whether it's the standard palette or not.
+	///
+	/// The palette is stored in the .pal file.
 	/// </summary>
-	public class VniPalette
+	public class Palette
 	{
 		/// <summary>
 		/// Palette index.
@@ -44,7 +46,7 @@ namespace LibDmd.Converter.Vni
 
 		//private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public VniPalette(BinaryReader reader)
+		public Palette(BinaryReader reader)
 		{
 			Index = reader.ReadUInt16BE();
 			//Logger.Trace("  [{1}] [palette] Read index as {0}", Index, reader.BaseStream.Position);
