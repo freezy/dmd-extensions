@@ -466,7 +466,7 @@
     <Compile Include="Converter\Vni\Animation.cs" />
     <Compile Include="Converter\Vni\VniAnimationFrame.cs" />
     <Compile Include="Converter\Vni\VniAnimationPlane.cs" />
-    <Compile Include="Converter\Vni\VniAnimationSet.cs" />
+    <Compile Include="Converter\Vni\VniFile.cs" />
     <Compile Include="DmdDevice\Configuration.cs" />
     <Compile Include="DmdDevice\DmdDevice.cs" />
     <Compile Include="DmdDevice\IDmdDevice.cs" />
@@ -504,8 +504,8 @@
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />
     <Compile Include="Converter\Vni\Mapping.cs" />
-    <Compile Include="Converter\Vni\VniPalette.cs" />
-    <Compile Include="Converter\Vni\VniFile.cs" />
+    <Compile Include="Converter\Vni\Palette.cs" />
+    <Compile Include="Converter\Vni\PalFile.cs" />
     <Compile Include="Output\Network\BrowserStream.cs" />
     <Compile Include="Output\Network\VpdbStream.cs" />
     <Compile Include="Output\Virtual\AlphaNumeric\AlphaNumericResources.cs" />

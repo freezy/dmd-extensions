@@ -7,6 +7,9 @@ using LibDmd.Frame;
 
 namespace LibDmd.Converter.Vni
 {
+	/// <summary>
+	/// An animation, as read from the VNI file.
+	/// </summary>
 	public class VniAnimation : Animation
 	{
 		public VniAnimation(BinaryReader reader, int fileVersion) : base(reader.BaseStream.Position)
@@ -17,9 +20,9 @@ namespace LibDmd.Converter.Vni
 
 			// other data
 			Cycles = reader.ReadInt16BE();
-			Hold = reader.ReadInt16BE();
+			HoldCycles = reader.ReadInt16BE();
 			ClockFrom = reader.ReadInt16BE();
-			ClockSmall = reader.ReadByte() != 0;
+			ClockIsSmall = reader.ReadByte() != 0;
 			ClockInFront = reader.ReadByte() != 0;
 			ClockOffsetX = reader.ReadInt16BE();
 			ClockOffsetY = reader.ReadInt16BE();
@@ -55,9 +58,9 @@ namespace LibDmd.Converter.Vni
 
 			if (fileVersion >= 6)
 			{
-				int LinkedAnimation = reader.ReadByte();
+				int compiledAnimation = reader.ReadByte();
 				int size = reader.ReadInt16BE();
-				string AnimName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(nameLength)) : "<undefined>";
+				string animName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(nameLength)) : "<undefined>";
 				uint startFrame = reader.ReadUInt32BE();
 			}
 
