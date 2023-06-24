@@ -2,14 +2,13 @@
 using System.IO;
 using System.Text;
 using LibDmd.Common;
+using LibDmd.Frame;
 using LibDmd.Input.FileSystem;
 
 namespace LibDmd.Converter.Vni
 {
 	public class VniFile : AnimationSet
 	{
-		public int MaxHeight { get; protected set; }
-		public int MaxWidth { get; protected set; }
 
 		public VniFile(string filename)
 		{
@@ -37,22 +36,24 @@ namespace LibDmd.Converter.Vni
 				}
 			}
 
-			Animations = new List<Animation>(numAnimations);
+			Animations = new List<FrameSeq>(numAnimations);
 			Logger.Debug("[vni] VNI[{3}] Reading {0} animations from {1} v{2}...", numAnimations, header, Version, reader.BaseStream.Position);
 
-			MaxWidth = 0;
-			MaxHeight = 0;
+			var maxWidth = 0;
+			var maxHeight = 0;
 			for (var i = 0; i < numAnimations; i++) {
-				Animations.Add(new VniAnimation(reader, Version));
+				Animations.Add(new VniFrameSeq(reader, Version));
 				int h = Animations[i].Size.Height;
 				int w = Animations[i].Size.Width;
-				if (h > MaxHeight)
-					MaxHeight = h;
-				if (w > MaxWidth)
-					MaxWidth = w;
+				if (h > maxHeight)
+					maxHeight = h;
+				if (w > maxWidth)
+					maxWidth = w;
 			}
 			reader.Close();
 			fs.Close();
+
+			Dimensions = new Dimensions(maxWidth, maxHeight);
 		}
 
 		public override string ToString()

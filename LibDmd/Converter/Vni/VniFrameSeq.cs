@@ -10,9 +10,9 @@ namespace LibDmd.Converter.Vni
 	/// <summary>
 	/// An animation, as read from the VNI file.
 	/// </summary>
-	public class VniAnimation : Animation
+	public class VniFrameSeq : FrameSeq
 	{
-		public VniAnimation(BinaryReader reader, int fileVersion) : base(reader.BaseStream.Position)
+		public VniFrameSeq(BinaryReader reader, int fileVersion) : base(reader.BaseStream.Position)
 		{
 			// animations name
 			var nameLength = reader.ReadInt16BE();

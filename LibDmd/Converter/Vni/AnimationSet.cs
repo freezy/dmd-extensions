@@ -1,13 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Converter.Vni
 {
 	public abstract class AnimationSet
 	{
+		public Dimensions Dimensions { get; protected set; } = new Dimensions(128, 32);
+
 		protected int Version;
-		protected List<Animation> Animations;
+		protected List<FrameSeq> Animations;
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -16,7 +19,7 @@ namespace LibDmd.Converter.Vni
 		/// </summary>
 		/// <param name="offset">D Steu im Feil</param>
 		/// <returns>Diä gfundini Animazion odr sisch null</returns>
-		public Animation Find(uint offset)
+		public FrameSeq Find(uint offset)
 		{
 			return Animations.FirstOrDefault(animation => animation.Offset == offset);
 		}

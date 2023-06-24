@@ -462,8 +462,8 @@
     <Compile Include="Converter\Vni\AnimationPlane.cs" />
     <Compile Include="Converter\Vni\AnimationSet.cs" />
     <Compile Include="Converter\Vni\SwitchMode.cs" />
-    <Compile Include="Converter\Vni\VniAnimation.cs" />
-    <Compile Include="Converter\Vni\Animation.cs" />
+    <Compile Include="Converter\Vni\VniFrameSeq.cs" />
+    <Compile Include="Converter\Vni\FrameSeq.cs" />
     <Compile Include="Converter\Vni\VniAnimationFrame.cs" />
     <Compile Include="Converter\Vni\VniAnimationPlane.cs" />
     <Compile Include="Converter\Vni\VniFile.cs" />

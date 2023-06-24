@@ -1,32 +1,32 @@
 ﻿using System;
-using System.Windows.Media;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Windows;
+using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
+using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Converter.Vni
 {
-	public abstract class Animation
+	public abstract class FrameSeq
 	{
 		public string Name { get; protected set; }
 
 		/// <summary>
-		/// Wefu Biudr diä Animazion het
+		/// Number of frames contained in this animation
 		/// </summary>
 		public int NumFrames => Frames.Length;
 
 		/// <summary>
-		/// Bitlängi odr Ahzahl Planes vo dr Buidr vo dr Animazion
-		/// </summary>
-		public int BitLength => Frames.Length > 0 ? Frames[0].BitLength : 0;
-
-		/// <summary>
-		/// Uif welärä Posizion (i Bytes) d Animazion im Feil gsi isch
+		/// Offset of this animation in the VNI file
 		/// </summary>
 		/// 
 		/// <remarks>
-		/// Wird aus Index zum Ladä bruicht.
+		/// Needed as index for loading.
 		/// </remarks>
 		public readonly long Offset;
 
@@ -116,11 +116,11 @@ namespace LibDmd.Converter.Vni
 
 		protected byte[][] Masks;
 
-		private List<byte[]> LCMBufferPlanes = new List<byte[]>();
+		private readonly List<byte[]> _lcmBufferPlanes = new List<byte[]>();
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		protected Animation(long offset)
+		protected FrameSeq(long offset)
 		{
 			Offset = offset;
 		}
@@ -164,51 +164,48 @@ namespace LibDmd.Converter.Vni
 
 		private void ClearLCMBuffer()
 		{
-			LCMBufferPlanes.ForEach(p => Common.FrameUtil.ClearPlane(p));
+			_lcmBufferPlanes.ForEach(FrameUtil.ClearPlane);
 		}
 
-		private byte[][] RenderLCM(byte[][] vpmFrame)
+		private byte[][] RenderLCM(Dimensions dim, byte[][] planes)
 		{
-			var frame_count = LCMBufferPlanes.Count;
-			byte[][] outplanes;
-			outplanes = new byte[frame_count][];
+			var numLcmPlanes = _lcmBufferPlanes.Count;
+			var outPlanes = new byte[numLcmPlanes][];
 
 			if (SwitchMode == SwitchMode.LayeredColorMask)
 			{
-				for (int i = 0; i < vpmFrame.Length; i++)
+				for (int i = 0; i < planes.Length; i++)
 				{
-					outplanes[i] = vpmFrame[i];
+					outPlanes[i] = planes[i];
 				}
-				for (int i = vpmFrame.Length; i < frame_count; i++)
+				for (int i = planes.Length; i < numLcmPlanes; i++)
 				{
-					outplanes[i] = LCMBufferPlanes[i];
+					outPlanes[i] = _lcmBufferPlanes[i];
 				}
 			}
 			if (SwitchMode == SwitchMode.MaskedReplace)
 			{
-				if (LCMBufferPlanes[0].Length == vpmFrame[0].Length * 4)
+
+				if (_lcmBufferPlanes[0].Length == planes[0].Length * 4)
 				{
-					if (ScalerMode == ScalerMode.Doubler)
-					{
-						vpmFrame = FrameUtil.Scale2(Size, vpmFrame);
-					}
-					else
-					{
-						vpmFrame = FrameUtil.Scale2xObsolete(Size, vpmFrame);
-					}
+					planes = ScalerMode == ScalerMode.Scale2x
+						? FrameUtil.Scale2X(dim, planes)
+						: FrameUtil.ScaleDouble(dim, planes);
 				}
 
-				for (int i = 0; i < frame_count; i++)
+				for (int i = 0; i < numLcmPlanes; i++)
 				{
-					if (i < vpmFrame.Length)
-						outplanes[i] = FrameUtil.CombinePlaneWithMask(LCMBufferPlanes[i], vpmFrame[i], ReplaceMask);
+					if (i < planes.Length)
+						outPlanes[i] = FrameUtil.CombinePlaneWithMask(_lcmBufferPlanes[i], planes[i], ReplaceMask);
 					else
-						outplanes[i] = LCMBufferPlanes[i];
+						outPlanes[i] = _lcmBufferPlanes[i];
 				}
 			}
 
-			return outplanes;
+			return outPlanes;
 		}
+
+		private static int index = 0;
 
 		public void DetectFollow(byte[] plane, uint NoMaskCRC, byte[][] masks, bool Reverse)
 		{
@@ -239,8 +236,6 @@ namespace LibDmd.Converter.Vni
 		public bool DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse, bool clear)
 		{
 			uint checksum = NoMaskCRC;
-			var maskSize = Size.Surface / 8;
-			var maskedPlane = new byte[maskSize];
 
 			for (int k = -1; k < Masks.Length; k++)
 			{
@@ -257,17 +252,16 @@ namespace LibDmd.Converter.Vni
 							ClearLCMBuffer();
 							clear = false;
 							if (SwitchMode == SwitchMode.MaskedReplace)
-								Common.FrameUtil.ClearPlane(ReplaceMask);
+								FrameUtil.ClearPlane(ReplaceMask);
 						}
 
 						for (int i = 0; i < af.Planes.Count; i++)
 						{
-							FrameUtil.OrPlane(af.PlaneData[i], LCMBufferPlanes[i]);
+							FrameUtil.OrPlane(af.PlaneData[i], _lcmBufferPlanes[i]);
 							if (SwitchMode == SwitchMode.MaskedReplace)
 								FrameUtil.OrPlane(af.Mask, ReplaceMask);
 						}
 					}
-
 				}
 			}
 			return clear;
@@ -276,9 +270,9 @@ namespace LibDmd.Converter.Vni
 		private void StartLCM(Action<Dimensions, byte[][]> render)
 		{
 			_currentRender = render;
-			LCMBufferPlanes.Clear();
+			_lcmBufferPlanes.Clear();
 			for (int i = 0; i < Frames[0].Planes.Count; i++)
-				LCMBufferPlanes.Add(FrameUtil.NewPlane(Size));
+				_lcmBufferPlanes.Add(FrameUtil.NewPlane(Size));
 
 			ClearLCMBuffer();
 			if (SwitchMode == SwitchMode.MaskedReplace)
@@ -333,7 +327,7 @@ namespace LibDmd.Converter.Vni
 			Stop("finished");
 		}
 
-		private void OutputFrame(Dimensions dim, byte[][] vpmFrame)
+		private void OutputFrame(Dimensions dim, byte[][] planes)
 		{
 			byte[][] outplanes;
 
@@ -341,7 +335,7 @@ namespace LibDmd.Converter.Vni
 			{
 				case SwitchMode.ColorMask:
 				case SwitchMode.Follow:
-					outplanes = RenderColorMask(vpmFrame);
+					outplanes = RenderColorMask(planes);
 					break;
 				case SwitchMode.FollowReplace:
 				case SwitchMode.Replace:
@@ -349,13 +343,17 @@ namespace LibDmd.Converter.Vni
 					break;
 				case SwitchMode.LayeredColorMask:
 				case SwitchMode.MaskedReplace:
-					outplanes = RenderLCM(vpmFrame);
+					outplanes = RenderLCM(dim, planes);
 					break;
 				default:
 					{
-						outplanes = vpmFrame;
+						outplanes = planes;
 					}
 					break;
+			}
+
+			if (outplanes[0].Length == dim.Surface / 2) {
+				dim *= 2;
 			}
 
 			_currentRender?.Invoke(dim, outplanes);
@@ -417,14 +415,27 @@ namespace LibDmd.Converter.Vni
 			IsRunning = false;
 		}
 
-		public bool Equals(Animation animation)
+		public bool Equals(FrameSeq frameSeq)
 		{
-			return Offset == animation.Offset;
+			return Offset == frameSeq.Offset;
 		}
 
 		public override string ToString()
 		{
 			return $"{Name}, {Frames.Length} frames";
+		}
+
+		public void Dump(string path, Mapping mapping, Palette[] palettes)
+		{
+			var i = 0;
+			foreach (var animFrame in Frames) {
+				var palette = palettes[mapping.PaletteIndex];
+				var frame = new ColoredFrame(Size, FrameUtil.Join(Size, animFrame.PlaneData), palette.Colors);
+				frame.ConvertToBitmap()
+					.GetBitmap()
+					.Save(Path.Combine(path, $"{Name}_{i:000}.png"), ImageFormat.Png);
+				i++;
+			}
 		}
 	}
 
