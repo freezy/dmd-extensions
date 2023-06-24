@@ -441,6 +441,7 @@ namespace LibDmd.Common
 							*dstPtr = *(srcPtr + 2);
 							*(dstPtr + 1) = *(srcPtr + 1);
 							*(dstPtr + 2) = *(srcPtr);
+							*(dstPtr + 3) = 255;
 						}
 					}
 				}

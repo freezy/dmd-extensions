@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using LibDmd.Common;
-using LibDmd.Input;
 using LibDmd.Output;
+using Point = System.Drawing.Point;
+using ResizeMode = LibDmd.Input.ResizeMode;
 
 namespace LibDmd.Frame
 {
@@ -120,6 +124,15 @@ namespace LibDmd.Frame
 				default:
 					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);
 			}
+		}
+
+		public Bitmap GetBitmap()
+		{
+			Bitmap bmp = new Bitmap(Bitmap.PixelWidth, Bitmap.PixelHeight, PixelFormat.Format32bppPArgb);
+			BitmapData data = bmp.LockBits(new Rectangle(Point.Empty, bmp.Size), ImageLockMode.WriteOnly, PixelFormat.Format32bppPArgb);
+			Bitmap.CopyPixels(Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
+			bmp.UnlockBits(data);
+			return bmp;
 		}
 
 		public object Clone()

@@ -306,31 +306,59 @@ namespace LibDmd.Common
 		  0xFF00,0xFF03,0xFF0C,0xFF0F,0xFF30,0xFF33,0xFF3C,0xFF3F,0xFFC0,0xFFC3,0xFFCC,0xFFCF,0xFFF0,0xFFF3,0xFFFC,0xFFFF
 		};
 
-		public static byte[] Scale2(Dimensions dim, byte[] srcPlane)
+
+		/// <summary>
+		/// Doubles the scale of a number of bit planes in both dimensions, by doubling each pixel.
+		/// </summary>
+		/// <param name="dim">Dimensions of source planes</param>
+		/// <param name="srcPlanes">Planes to scale</param>
+		/// <returns>Scaled bit planes</returns>
+		public static byte[][] ScaleDouble(Dimensions dim, byte[][] srcPlanes)
 		{
-			var planeSize = dim.Surface / 8;
-			ushort[] scaledPlane = new ushort[planeSize / 2];
-			for (var i = 0; i < dim.Height; i++)
+			var planes = new byte[srcPlanes.Length][];
+			for (var l = 0; l < srcPlanes.Length; l++)
 			{
-				for (var k = 0; k < (dim.Width / 2 / 8); k++)
-				{
-					scaledPlane[(i * (dim.Width / 2 / 8)) + k] = scaledPlane[((i + 1) * (dim.Width / 2 / 8)) + k] = doublePixel[srcPlane[((i / 2) * (dim.Width / 2 / 8)) + k]];
+				planes[l] = ScaleDoublePlane(dim, srcPlanes[l]);
+			}
+			return planes;
+		}
+
+		/// <summary>
+		/// Doubles the scale of a bit plane in both dimensions, by doubling each pixel.
+		/// </summary>
+		/// <param name="dim">Dimensions of source plane</param>
+		/// <param name="srcPlane">Source plane (eight 1-bit pixels packed into one byte</param>
+		/// <returns>Scaled bit plane</returns>
+		private static byte[] ScaleDoublePlane(Dimensions dim, byte[] srcPlane)
+		{
+			var newDim = dim * 2;
+			var newPlaneSize = newDim.Surface / 8;
+			ushort[] scaledPlane = new ushort[newPlaneSize / 2]; // div 2 because, ushorts
+			var width = newDim.Width / 2 / 8;
+			for (var i = 0; i < newDim.Height; i++) {
+				for (var k = 0; k < width; k++) {
+					scaledPlane[i * width + k] = scaledPlane[(i + 1) * width + k] = doublePixel[srcPlane[i / 2 * width + k]];
 				}
 				i++;
 			}
-			var plane = new byte[planeSize];
-			Buffer.BlockCopy(scaledPlane, 0, plane, 0, planeSize);
+			// copy ushorts back to bytes
+			var plane = new byte[newPlaneSize];
+			Buffer.BlockCopy(scaledPlane, 0, plane, 0, newPlaneSize);
 			return plane;
 		}
 
-		public static byte[][] Scale2(Dimensions dim, byte[][] srcPlanes, byte[][] destPlanes = null)
+		/// <summary>
+		/// Scales a number of bit planes in both dimensions by two, by using the "2X" algorithm.
+		/// </summary>
+		/// <see cref="http://www.scale2x.it/algorithm"/>
+		/// <param name="dim">Dimensions of source plane</param>
+		/// <param name="srcPlane">Source plane (eight 1-bit pixels packed into one byte</param>
+		/// <returns>Scaled bit planes</returns>
+		public static byte[][] Scale2X(Dimensions dim, byte[][] srcPlane)
 		{
-			var planes = destPlanes ?? new byte[srcPlanes.Length][];
-			for (var l = 0; l < srcPlanes.Length; l++)
-			{
-				planes[l] = Scale2(dim, srcPlanes[l]);
-			}
-			return planes;
+			var joinData = Join(dim, srcPlane);
+			var frameData = Scale2X(dim, joinData);
+			return Split(dim, srcPlane.Length, frameData);
 		}
 
 		/// <summary>
@@ -338,7 +366,7 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="dim">Size of the original data</param>
 		/// <param name="frame">Frame data to be resized</param>
-		/// <returns></returns>
+		/// <returns>Scaled frame data</returns>
 		public static byte[] ScaleDouble(Dimensions dim, byte[] frame)
 		{
 			using (Profiler.Start("FrameUtil.ScaleDouble")) {
@@ -361,83 +389,11 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Doubles the pixels coming from the frame data.
-		/// </summary>
-		/// <param name="dim">Size of the original data</param>
-		/// <param name="frame">RGB24 frame data to be resized</param>
-		/// <returns></returns>
-		public static byte[] ScaleDoubleRgb(Dimensions dim, byte[] frame)
-		{
-			using (Profiler.Start("FrameUtil.ScaleDoubleRgb")) {
-				var outputDim = dim * 2;
-				byte[] scaledData = new byte[outputDim.Surface * 3];
-				const int scale = 2;
-
-				int targetIdx = 0;
-				for (var i = 0; i < outputDim.Height; ++i) {
-					var iUnscaled = i / scale;
-					for (var j = 0; j < outputDim.Width; ++j) {
-						var jUnscaled = j / scale;
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
-					}
-				}
-				return scaledData;
-			}
-		}
-
-		/// <summary>
-		/// Implementation of Scale2 for frame data.
-		/// </summary>
-		/// <param name="dim"></param>
-		/// <param name="data"></param>
-		/// <returns>scaled frame planes</returns>
-		[Obsolete("Use Scale2x which uses more obvious parameters.")]
-		public static byte[] Scale2xObsolete(Dimensions dim, byte[] data)
-		{
-			byte[] scaledData = new byte[dim.Surface];
-
-			var inputWidth = dim.Width / 2;
-			var inputHeight = dim.Height / 2;
-
-			for (var y = 0; y < inputHeight; y++)
-			{
-				for (var x = 0; x < inputWidth; x++)
-				{
-					var colorB = ImageUtil.GetPixel(x, y - 1, inputWidth, inputHeight, data);
-					var colorH = ImageUtil.GetPixel(x, y + 1, inputWidth, inputHeight, data);
-					var colorD = ImageUtil.GetPixel(x - 1, y, inputWidth, inputHeight, data);
-					var colorF = ImageUtil.GetPixel(x + 1, y, inputWidth, inputHeight, data);
-
-					var colorE = ImageUtil.GetPixel(x, y, inputWidth, inputHeight, data);
-
-					if ((colorB != colorH) && (colorD != colorF))
-					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, dim.Width, scaledData);
-					}
-					else
-					{
-						ImageUtil.SetPixel(2 * x, 2 * y, colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, dim.Width, scaledData);
-						ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, dim.Width, scaledData);
-					}
-				}
-			}
-
-			return scaledData;
-		}
-		
-		/// <summary>
 		/// Implementation of Scale2 for frame data.
 		/// </summary>
 		/// <param name="dim">Original dimensions</param>
 		/// <param name="data">Original frame data</param>
-		/// <returns>Doubled frame data</returns>
+		/// <returns>Scaled frame data</returns>
 		public static byte[] Scale2X(Dimensions dim, byte[] data)
 		{
 			using (Profiler.Start("FrameUtil.Scale2X")) {
@@ -476,6 +432,32 @@ namespace LibDmd.Common
 			}
 		}
 
+		/// <summary>
+		/// Doubles the pixels coming from the frame data.
+		/// </summary>
+		/// <param name="dim">Size of the original data</param>
+		/// <param name="frame">RGB24 frame data to be resized</param>
+		/// <returns></returns>
+		public static byte[] ScaleDoubleRgb(Dimensions dim, byte[] frame)
+		{
+			using (Profiler.Start("FrameUtil.ScaleDoubleRgb")) {
+				var outputDim = dim * 2;
+				byte[] scaledData = new byte[outputDim.Surface * 3];
+				const int scale = 2;
+
+				int targetIdx = 0;
+				for (var i = 0; i < outputDim.Height; ++i) {
+					var iUnscaled = i / scale;
+					for (var j = 0; j < outputDim.Width; ++j) {
+						var jUnscaled = j / scale;
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
+						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
+					}
+				}
+				return scaledData;
+			}
+		}
 
 		/// <summary>
 		/// Implementation of Scale2 for RGB frame data.
@@ -518,20 +500,6 @@ namespace LibDmd.Common
 				}
 				return scaledData;
 			}
-		}
-
-		/// <summary>
-		/// Join 
-		/// </summary>
-		/// <param name="dim"></param>
-		/// <param name="data"></param>
-		/// <returns></returns>
-		[Obsolete]
-		public static byte[][] Scale2xObsolete(Dimensions dim, byte[][] data)
-		{
-			var joinData = Join(dim, data);
-			var frameData = Scale2xObsolete(dim, joinData);
-			return Split(dim, data.Length, frameData);
 		}
 
 		//Scale down planes by displaying every second pixel
@@ -609,6 +577,7 @@ namespace LibDmd.Common
 
 		public static void OrPlane(byte[] plane, byte[] target)
 		{
+			Debug.Assert(plane.Length == target.Length);
 			unsafe
 			{
 				fixed (void* b1 = plane, b2 = target)
@@ -636,7 +605,6 @@ namespace LibDmd.Common
 		/// <param name="planeB">Plane B</param>
 		/// <param name="mask">Mask</param>
 		/// <returns>Combined plane</returns>
-
 		public static byte[] CombinePlaneWithMask(byte[] planeA, byte[] planeB, byte[] mask)
 		{
 			var length = planeA.Length;
@@ -897,7 +865,7 @@ namespace LibDmd.Common
 						if (*((int*)x1) != *((int*)x2)) {
 							return false;
 						}
-						x1+=4; 
+						x1+=4;
 						x2+=4;
 					}
 

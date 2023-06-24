@@ -34,7 +34,7 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// IF not null, the currently playing animation.
 		/// </summary>
-		private Animation _activeAnimation;
+		private FrameSeq _activeFrameSeq;
 
 		/// <summary>
 		/// The current palette
@@ -113,9 +113,9 @@ namespace LibDmd.Converter.Vni
 			}
 
 			// if an animation is playing, render it instead of the normal frame
-			if (_activeAnimation != null) {
-				_activeAnimation.ScalerMode = ScalerMode;
-				_activeAnimation.NextFrame(frame.Dimensions, planes, AnimationFinished);
+			if (_activeFrameSeq != null) {
+				_activeFrameSeq.ScalerMode = ScalerMode;
+				_activeFrameSeq.NextFrame(frame.Dimensions, planes, AnimationFinished);
 				return;
 			}
 
@@ -146,20 +146,20 @@ namespace LibDmd.Converter.Vni
 			}
 
 			// If same LCM scene, no need to stop/start 
-			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeAnimation.Offset)
+			if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode == SwitchMode.LayeredColorMask && mapping.Mode == SwitchMode.LayeredColorMask && mapping.Offset == _activeFrameSeq.Offset)
 			{
 				return;
 			}
 
 			// If same LRM scene, no need to stop/start 
-			if (_activeAnimation != null && _activeAnimation.SwitchMode == SwitchMode.MaskedReplace && mapping.Mode == SwitchMode.MaskedReplace && mapping.Offset == _activeAnimation.Offset)
+			if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode == SwitchMode.MaskedReplace && mapping.Mode == SwitchMode.MaskedReplace && mapping.Offset == _activeFrameSeq.Offset)
 			{
 				return;
 			}
 
 			// Faus scho eppis am laifä isch, ahautä
-			_activeAnimation?.Stop();
-			_activeAnimation = null;
+			_activeFrameSeq?.Stop();
+			_activeFrameSeq = null;
 
 			// Palettä ladä
 			var palette = _palFile.GetPalette(mapping.PaletteIndex);
@@ -200,15 +200,15 @@ namespace LibDmd.Converter.Vni
 					Logger.Warn("[vni] Tried to load animation but no animation file loaded.");
 					return;
 				}
-				_activeAnimation = _animations.Find(mapping.Offset);
+				_activeFrameSeq = _animations.Find(mapping.Offset);
 
-				if (_activeAnimation == null)
+				if (_activeFrameSeq == null)
 				{
 					Logger.Warn("[vni] Cannot find animation at position {0}.", mapping.Offset);
 					return;
 				}
 
-				_activeAnimation.Start(mapping.Mode, Render, AnimationFinished);
+				_activeFrameSeq.Start(mapping.Mode, Render, AnimationFinished);
 			}
 		}
 
@@ -228,16 +228,16 @@ namespace LibDmd.Converter.Vni
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
-					if (_activeAnimation != null && _activeAnimation.SwitchMode != SwitchMode.LayeredColorMask && _activeAnimation.SwitchMode != SwitchMode.MaskedReplace)
+					if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode != SwitchMode.LayeredColorMask && _activeFrameSeq.SwitchMode != SwitchMode.MaskedReplace)
 						return;
 
 				}
-				if (_activeAnimation != null)
+				if (_activeFrameSeq != null)
 				{
-					if (_activeAnimation.SwitchMode == SwitchMode.LayeredColorMask || _activeAnimation.SwitchMode == SwitchMode.MaskedReplace)
-						clear = _activeAnimation.DetectLCM(planes[i], nomaskcrc, reverse, clear);
-					else if (_activeAnimation.SwitchMode == SwitchMode.Follow || _activeAnimation.SwitchMode == SwitchMode.FollowReplace)
-						_activeAnimation.DetectFollow(planes[i], nomaskcrc, _palFile.Masks, reverse);
+					if (_activeFrameSeq.SwitchMode == SwitchMode.LayeredColorMask || _activeFrameSeq.SwitchMode == SwitchMode.MaskedReplace)
+						clear = _activeFrameSeq.DetectLCM(planes[i], nomaskcrc, reverse, clear);
+					else if (_activeFrameSeq.SwitchMode == SwitchMode.Follow || _activeFrameSeq.SwitchMode == SwitchMode.FollowReplace)
+						_activeFrameSeq.DetectFollow(planes[i], nomaskcrc, _palFile.Masks, reverse);
 				}
 			}
 		}
@@ -290,48 +290,28 @@ namespace LibDmd.Converter.Vni
 		/// <param name="planes">S Biud zum uisgäh</param>
 		private void Render(Dimensions dim, byte[][] planes)
 		{
-			// todo can probably be dropped entirely since we upscale at graph level.
-			if ((dim.Surface / 8) != planes[0].Length)
-			{
-				// We want to do the scaling after the animations get triggered.
-				if (ScalerMode == ScalerMode.Doubler)
-				{
-					// Don't scale placeholder.
-					planes = FrameUtil.Scale2(dim, planes);
-				}
-				else
-				{
-					// Scale2 Algorithm (http://www.scale2x.it/algorithm)
-					var colorData = FrameUtil.Join(dim / 2, planes);
-					var scaledData = FrameUtil.Scale2xObsolete(dim, colorData);
-					planes = FrameUtil.Split(dim, planes.Length, scaledData);
-				}
+			// We want to do the scaling after the animations get triggered.
+			if (dim * 2 == _animations.Dimensions) {
+				planes = ScalerMode == ScalerMode.Scale2x
+					? FrameUtil.Scale2X(dim, planes)
+					: FrameUtil.ScaleDouble(dim, planes);
+				dim *= 2;
 			}
 
-			// Wenns kä Erwiiterig gä hett, de gäbemer eifach d Planes mit dr Palettä zrugg
-			if (planes.Length == 2) {
-				DedupedColoredGray2Source.NextFrame(new ColoredFrame(
-					dim,
-					FrameUtil.Join(dim, planes),
-					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
-					_paletteIndex));
-			}
+			var palette = ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length));
+			var data = FrameUtil.Join(dim, planes);
+			var coloredFrame = new ColoredFrame(dim, data, palette, _paletteIndex);
 
-			// Faus scho, de schickermr s Frame uifd entsprächendi Uisgab faus diä gsetzt isch
-			if (planes.Length == 4) {
-				DedupedColoredGray4Source.NextFrame(new ColoredFrame(
-					dim,
-					FrameUtil.Join(dim, planes),
-					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
-					_paletteIndex));
-			}
-
-			if (planes.Length == 6) {
-				DedupedColoredGray6Source.NextFrame(new ColoredFrame(
-					dim,
-					FrameUtil.Join(dim, planes),
-					ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length)),
-					_paletteIndex));
+			switch (planes.Length) {
+				case 2:
+					DedupedColoredGray2Source.NextFrame(coloredFrame);
+					break;
+				case 4:
+					DedupedColoredGray4Source.NextFrame(coloredFrame);
+					break;
+				case 6:
+					DedupedColoredGray6Source.NextFrame(coloredFrame);
+					break;
 			}
 		}
 
@@ -364,7 +344,21 @@ namespace LibDmd.Converter.Vni
 			//Logger.Trace("[vni] [timing] Animation finished.");
 			//LastChecksum = 0x0;
 			SetPalette(_defaultPalette, _defaultPaletteIndex);
-			_activeAnimation = null;
+			_activeFrameSeq = null;
+		}
+
+		public void DumpAnimations(string path)
+		{
+			foreach (var offset in _palFile.Mappings.Keys) {
+				var mapping = _palFile.Mappings[offset];
+				var anim = _animations.Find(mapping.Offset);
+				if (anim == null) {
+					Logger.Info($"Could not find animation for offset {offset}.");
+					continue;
+				}
+				Logger.Info($"Dumping animation {anim.Name} at mapping offset {mapping.Offset} (at {offset}).");
+				anim.Dump(path, mapping, _palFile.Palettes);
+			}
 		}
 	}
 }

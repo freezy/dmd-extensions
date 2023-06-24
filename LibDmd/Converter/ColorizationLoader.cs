@@ -79,7 +79,7 @@ namespace LibDmd.Converter.Vni
 						Logger.Info("[vni] Loading animation file at {0}...", vniPath);
 						vni = new VniFile(vniPath);
 						Logger.Info("[vni] Loaded animation set {0}", vni);
-						Logger.Info("[vni] Animation Dimensions: {0}x{1}", vni.MaxWidth, vni.MaxHeight);
+						Logger.Info("[vni] Animation Dimensions: {0}x{1}", vni.Dimensions.Width, vni.Dimensions.Height);
 						Analytics.Instance.SetColorizer("VNI/PAL");
 
 					} else {
