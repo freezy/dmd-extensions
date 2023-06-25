@@ -726,7 +726,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_dotColor = color;
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_lutInvalid = true;
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);

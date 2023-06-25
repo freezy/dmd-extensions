@@ -107,7 +107,6 @@ namespace LibDmd.Input.PinballFX
 		{
 			double lastHue = 0;
 			Color[] palette = null;
-            int index = -1;
 
 			if (_framesColoredGray2 == null) {
 				var gridProcessor = new GridProcessor { Spacing = 1d };
@@ -126,7 +125,7 @@ namespace LibDmd.Input.PinballFX
 							palette = ColorUtil.GetPalette(new[]{ Colors.Black, color }, 4);
 							lastHue = hue;
 						}
-						return new ColoredFrame(bmp.Dimensions(), frame, palette, index);
+						return new ColoredFrame(bmp.Dimensions(), frame, palette);
 					})
 					.Publish();
 

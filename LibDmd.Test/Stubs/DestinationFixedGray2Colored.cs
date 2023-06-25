@@ -35,7 +35,7 @@ namespace LibDmd.Test.Stubs
 			throw new System.NotImplementedException();
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			throw new System.NotImplementedException();
 		}

@@ -326,10 +326,9 @@ namespace LibDmd.Output.Pin2Dmd
 		{
 		}
 
-		public void SetPalette(Color[] colors, int index)
+		public void SetPalette(Color[] colors)
 		{
 			SetSinglePalette(colors);
-			return;
 		}
 
 		public void ClearPalette()

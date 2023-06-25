@@ -49,7 +49,7 @@ namespace LibDmd.Converter.Vni
 		protected int ClockOffsetX;
 		protected int ClockOffsetY;
 		protected int RefreshDelay;
-		[Obsolete] protected int Type;
+		protected int Type;
 		protected int Fsk;
 
 		protected int PaletteIndex;

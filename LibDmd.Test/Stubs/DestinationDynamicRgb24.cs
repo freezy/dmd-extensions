@@ -29,7 +29,7 @@ namespace LibDmd.Test.Stubs
 			throw new NotImplementedException();
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			throw new NotImplementedException();
 		}
