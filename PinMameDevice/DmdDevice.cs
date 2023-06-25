@@ -258,22 +258,26 @@ namespace PinMameDevice
 				rawplanes[i] = new byte[planeSize];
 				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(new Dimensions(width, height), frame, rawplanes));
+			device.DmdDevice.RenderGray4(device.RawDmdFrame.Update(new Dimensions(width, height), frame, rawplanes, Array.Empty<byte[]>()));
 		}
 
-		private static void InternalRenderRaw2Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
+		private static void InternalRenderRaw2Device(DeviceInstance device, ushort width, ushort height, IntPtr currBuffer, ushort noOfRawPlanes, IntPtr currrawbuffer)
 		{
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
-			Marshal.Copy(currbuffer, frame, 0, frameSize);
-			var rawplanes = new byte[noOfRawFrames][];
+			Marshal.Copy(currBuffer, frame, 0, frameSize);
+			//noOfRawPlanes = Math.Min((ushort)2, noOfRawPlanes);
+			var rawPlanes = new byte[2][];
+			var rawExtraPlanes = new byte[noOfRawPlanes - 2][];
 			var planeSize = frameSize / 8;
-			for (int i = 0; i < noOfRawFrames; i++)
+			for (int i = 0; i < noOfRawPlanes; i++)
 			{
-				rawplanes[i] = new byte[planeSize];
-				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), rawplanes[i], 0, planeSize);
+				var dest = i > 1 ? rawExtraPlanes : rawPlanes;
+				var pos = i > 1 ? i - 2 : i;
+				dest[pos] = new byte[planeSize];
+				Marshal.Copy(new IntPtr(currrawbuffer.ToInt64() + (i * planeSize)), dest[pos], 0, planeSize);
 			}
-			device.DmdDevice.RenderGray2(device.RawDmdFrame.Update(new Dimensions(width, height), frame, rawplanes));
+			device.DmdDevice.RenderGray2(device.RawDmdFrame.Update(new Dimensions(width, height), frame, rawPlanes, rawExtraPlanes));
 		}
 
 		private static void InternalRenderGray4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer)

@@ -237,9 +237,14 @@ namespace LibDmd.Converter.Plugin
 
 		private IntPtr ColorizeFrame(RawFrame frame)
 		{
-			var rawBuffer = new byte[frame.RawPlanes.Length * frame.RawPlanes[0].Length];
-			for (int i = 0; i < frame.RawPlanes.Length; i++) {
-				frame.RawPlanes[i].CopyTo(rawBuffer, i * frame.RawPlanes[0].Length);
+			var planeSize = frame.PlaneSize;
+			var rawBuffer = new byte[frame.TotalPlanes * planeSize];
+			for (int i = 0; i < frame.TotalPlanes; i++) {
+				if (i < frame.RawPlanes.Length) {
+					frame.RawPlanes[i].CopyTo(rawBuffer, i * planeSize);
+				} else {
+					frame.ExtraRawPlanes[frame.RawPlanes.Length - i].CopyTo(rawBuffer, i * planeSize);
+				}
 			}
 
 			switch (frame.BitLength) {
@@ -248,7 +253,7 @@ namespace LibDmd.Converter.Plugin
 						(ushort)frame.Dimensions.Width, 
 						(ushort)frame.Dimensions.Height, 
 						frame.Data, 
-						(ushort)frame.RawPlanes.Length, 
+						(ushort)frame.TotalPlanes,
 						rawBuffer
 					);
 				default: {
@@ -256,7 +261,7 @@ namespace LibDmd.Converter.Plugin
 						(ushort)frame.Dimensions.Width, 
 						(ushort)frame.Dimensions.Height, 
 						frame.Data, 
-						(ushort)frame.RawPlanes.Length, 
+						(ushort)frame.TotalPlanes,
 						rawBuffer
 					);
 				}
