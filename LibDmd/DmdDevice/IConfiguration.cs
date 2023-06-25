@@ -43,6 +43,7 @@ namespace LibDmd.DmdDevice
 		bool NoClear { get; }
 		Color DmdColor { get; }
 		ScalerMode ScalerMode { get; }
+		ScalerMode VniScalerMode { get; }
 		bool SkipAnalytics { get; }
 		PluginConfig[] Plugins { get; }
 	}

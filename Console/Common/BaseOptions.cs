@@ -231,12 +231,12 @@ namespace DmdExt.Common
 		public int QuitAfter => _options.QuitAfter;
 		public bool NoClear => _options.NoClear;
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
-		public bool ScaleToHd => _options.ScalingToHD;
 		public ScalerMode ScalerMode => _options.ScalingMode;
+		public ScalerMode VniScalerMode => _options.ScalingMode;
 		public bool SkipAnalytics => _options.SkipAnalytics;
 		public PluginConfig[] Plugins => _options.Plugin == null
 			? new PluginConfig[]{}
-			: new []{ new PluginConfig(_options.Plugin, _options.PluginPassthrough ) };
+			: new []{ new PluginConfig(_options.Plugin, _options.PluginPassthrough, _options.ScalingMode ) };
 	}
 
 	internal class VirtualDmdOptions : IVirtualDmdConfig

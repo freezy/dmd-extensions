@@ -930,7 +930,7 @@ namespace LibDmd.DmdDevice
 
 			// 3. check for native vni
 			if (_serum == null && _colorizationPlugin == null) {
-				_vniColorizer = _colorizationLoader.LoadVniColorizer(_gameName, _config.Global.ScalerMode);
+				_vniColorizer = _colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode);
 			}
 		}
 

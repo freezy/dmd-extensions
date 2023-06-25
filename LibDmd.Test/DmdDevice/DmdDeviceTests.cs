@@ -4,6 +4,7 @@ using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LibDmd.Common;
 using LibDmd.DmdDevice;
 using NLog;
 using NUnit.Framework;
@@ -92,7 +93,7 @@ namespace LibDmd.Test
 			(config.VirtualAlphaNumericDisplay as TestVirtualAlphaNumericDisplayConfig).Enabled = true;
 			(config.Global as TestGlobalConfig).Colorize = true;
 			(config.Global as TestGlobalConfig).Plugins = new [] {
-				new PluginConfig(@"L:\Visual Pinball\VPinMAME\pin2color.dll", false)
+				new PluginConfig(@"L:\Visual Pinball\VPinMAME\pin2color.dll", false, ScalerMode.Doubler)
 			};
 
 

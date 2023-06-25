@@ -87,7 +87,7 @@ namespace LibDmd.Converter.Vni
 						Analytics.Instance.SetColorizer("PAL");
 					}
 
-					return new VniColorizer(coloring, vni);
+					return new VniColorizer(coloring, vni) { ScalerMode = scalerMode };
 
 				} catch (Exception e) {
 					Logger.Warn(e, "[vni] Error initializing: {0}", e.Message);

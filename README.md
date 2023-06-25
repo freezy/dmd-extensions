@@ -107,8 +107,8 @@ scaling comes into play.
    using scaling algorithm defined by the `resize` option (*stretch*, *fill*, and *fit*). If the resolution is lower, the 
    frames will be centered on the DMD, with black borders around it.
 2. You're using a high-resolution DMD, like a PIN2DMD XL or ZeDMD HD, running at 256x64. In this case, frames can be
-   be **scaled up**, using either a "doubler" or "scale2x" algorithm. Note that your physical display must be at least
-   double the size of the source frame size.
+   be **scaled up**, using either a "doubler" or "[scale2x](http://www.scale2x.it/)" algorithm. Note that your physical 
+   display must be at least double the size of the source frame size.
 
 The above mainly applies to hardware displays, which are limited to a fixed resolution. However, it's also possible to
 upscale frames to the virtual DMD. In order to do that, set `scalermode` so to either `doubler` or `scale2x`. 
@@ -372,7 +372,8 @@ The output are described by block below.
 | *n/a*                          | [browserstream]<br>enabled                     | Enables streaming the DMD in real time to your browser in your LAN.                                                                                                                                                                                                                                                                                                                                                                                                         |
 | *n/a*                          | [browserstream]<br>port                        | Port of the web server to listen on                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `--pinup`                      | [pinup]<br>enable                              | Enables output to PinUP.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `--scaler-mode`                | [global]<br>scalermode                         | Scaler mode for standard content (vpm frames). <strong>Note:</strong> This is only active if you have 256x64 colorized content files <strong>OR</strong>.<br><br>Can have two scaling modes:<ul><li>`none` - No upscaling.</li> <li>`doubler` - Doubles all pixels.</li>  <li>`scale2x` - Using Scale2x algorithm for smooth 2x scaling.</li>                                                                                                                               |
+| `--scaler-mode`                | [global]<br>scalermode                         | Use to upscale <strong>all</strong> frames.<br><br>Can have three values:<ul><li>`none` - No upscaling.</li> <li>`doubler` - Double all pixels.</li>  <li>`scale2x` - Use Scale2x algorithm.</li>                                                                                                                                                                                                                                                                           |
+| `--scaler-mode`                | [global]<br>vni.scalermode                     | Scaler mode for VNI colorizations. <strong>Note:</strong> This only applies to 256x64 colorized content files.<br><br>Can have two scaling modes:<ul><li>`doubler` - Double all pixels.</li>  <li>`scale2x` - Use Scale2x algorithm.</li>                                                                                                                                                                                                                                   |
 | `--skip-analytics`             | [global]<br>skipanalytics                      | If true, Don't send anonymous usage statistics to the developer. More info [here](https://github.com/freezy/dmd-extensions/wiki/Analytics).                                                                                                                                                                                                                                                                                                                                 |
 
 You can also override all options per game by using the game's name as section
@@ -519,7 +520,7 @@ dumping.
 ; load plugins
 plugin.0.path = C:\Visual Pinball\VPinMAME\pin2color.dll
 plugin.0.path64 = C:\Visual Pinball\VPinMAME\pin2color64.dll
-plugin.0.passthrough = true
+plugin.0.passthrough = false
 ```
 You can add up to 10 plugins. The first plugin which has a colorization file present or passthrough enabled will be used.
 
@@ -528,7 +529,7 @@ Command line example:
 dmdext.exe mirror --source pinballfx3 --colorize --plugin "C:\Visual Pinball\VPinMAME\pin2color.dll" --plugin-passthrough
 ```
 
-Note that the `--plugin` parameter needs to point to a DLL with the correct bitness, i.e. 64-bit dmdext.exe would need
+Note that the `--plugin` parameter needs to point to a DLL with the correct bitness, i.e. 64-bit `dmdext.exe` would need
 the 64-bit version of the plugin.
 
 Also note that without `passthrough` enabled, the plugin is disabled if no colorization file is present. 
@@ -539,7 +540,13 @@ Depending on the source, enabling colorization is different:
 
 - In VPM, enter setup, open the ROM's game options and enable *Use external DMD (dll)* as well as *Colorize DMD*.
 - In Pinball Arcade and Pinball FX3, use the `--colorize` option when running `dmdext.exe`.
- 
+
+Colorizations in the VNI/PAL format or the plugin are able to emit selected frames at 256x64, which is twice the normal 
+size. In this case, all frames will be rendered at this resolution. Frames that aren't provided at 256x64 will be 
+upscaled. In the native VNI/PAL colorizer, you can choose which upscale algorithm to use.
+
+- For the command line, use the `--scaler-mode` option. The default is `double`.
+- In DmdDevice.ini, set the `vni.scalermode` option.
 
 ## Breaking Changes
 
