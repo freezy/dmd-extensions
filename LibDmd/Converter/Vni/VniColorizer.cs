@@ -42,21 +42,9 @@ namespace LibDmd.Converter.Vni
 		private Palette _palette;
 
 		/// <summary>
-		/// The current palette index.
-		/// </summary>
-		[Obsolete("Refactor to always send the palette instead of relying on device to have saved it.")]
-		private int _paletteIndex;
-
-		/// <summary>
 		/// The standard palette to use when nothing has matched.
 		/// </summary>
 		private Palette _defaultPalette;
-
-		/// <summary>
-		/// The default palette index
-		/// </summary>
-		/// [Obsolete("Refactor to always send the palette instead of relying on device to have saved it.")]
-		private int _defaultPaletteIndex;
 
 		/// <summary>
 		/// The timer that resets to the standard palette in case a time-limited palette change is active.
@@ -66,7 +54,6 @@ namespace LibDmd.Converter.Vni
 		private bool _resetEmbedded;
 		private int _lastEmbedded = -1;
 
-
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public VniColorizer(PalFile palFile, AnimationSet animations) : base(true)
@@ -74,7 +61,7 @@ namespace LibDmd.Converter.Vni
 			_palFile = palFile;
 			_animations = animations;
 			Has128x32Animation = (_palFile.Masks != null && _palFile.Masks.Length >= 1 && _palFile.Masks[0].Length == 512);
-			SetPalette(palFile.DefaultPalette, palFile.DefaultPaletteIndex, true);
+			SetPalette(palFile.DefaultPalette, true);
 		}
 
 		protected override void ConvertClocked(DmdFrame frame)
@@ -97,7 +84,7 @@ namespace LibDmd.Converter.Vni
 					}
 				} else if (_resetEmbedded) {
 					_lastEmbedded = _palFile.DefaultPaletteIndex;
-					SetPalette(_palFile.DefaultPalette, _palFile.DefaultPaletteIndex);
+					SetPalette(_palFile.DefaultPalette);
 					_resetEmbedded = false;
 				}
 			}
@@ -126,7 +113,7 @@ namespace LibDmd.Converter.Vni
 		public void LoadPalette(uint newpal)
 		{
 			if (_palFile.Palettes.Length > newpal) {
-				SetPalette(_palFile.GetPalette(newpal), (int)newpal);
+				SetPalette(_palFile.GetPalette(newpal));
 			} else {
 				Logger.Warn("[vni] No palette for change to " + newpal);
 			}
@@ -171,7 +158,7 @@ namespace LibDmd.Converter.Vni
 			//Logger.Debug("[vni] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
-			SetPalette(palette, mapping.PaletteIndex);
+			SetPalette(palette);
 
 			// Palettä risettä wenn ä Lengi gäh isch
 			if (!mapping.IsAnimation && mapping.Duration > 0)
@@ -184,7 +171,7 @@ namespace LibDmd.Converter.Vni
 						if (_defaultPalette != null)
 						{
 							Logger.Debug("[vni] Resetting to default palette after {0} ms.", mapping.Duration);
-							SetPalette(_defaultPalette, _defaultPaletteIndex);
+							SetPalette(_defaultPalette);
 						}
 						_paletteReset = null;
 					});
@@ -300,7 +287,7 @@ namespace LibDmd.Converter.Vni
 
 			var palette = ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length));
 			var data = FrameUtil.Join(dim, planes);
-			var coloredFrame = new ColoredFrame(dim, data, palette, _paletteIndex);
+			var coloredFrame = new ColoredFrame(dim, data, palette);
 
 			switch (planes.Length) {
 				case 2:
@@ -319,9 +306,8 @@ namespace LibDmd.Converter.Vni
 		/// Tuät nii Farbä dr Palettä wo grad bruichd wird zuäwiisä.
 		/// </summary>
 		/// <param name="palette">Diä nii Palettä</param>
-		/// <param name="index">Welä Index mr muäss setzä</param>
 		/// <param name="isDefault"></param>
-		public void SetPalette(Palette palette, int index, bool isDefault = false)
+		public void SetPalette(Palette palette, bool isDefault = false)
 		{
 			if (palette == null) {
 				Logger.Warn("[vni] Ignoring null palette.");
@@ -329,11 +315,9 @@ namespace LibDmd.Converter.Vni
 			}
 			if (isDefault) {
 				_defaultPalette = palette;
-				_defaultPaletteIndex = index;
 			}
 			//Logger.Debug("[vni] Setting new palette: [ {0} ]", string.Join(" ", palette.Colors.Select(c => c.ToString())));
 			_palette = palette;
-			_paletteIndex = index;
 		}
 
 		/// <summary>
@@ -343,7 +327,7 @@ namespace LibDmd.Converter.Vni
 		{
 			//Logger.Trace("[vni] [timing] Animation finished.");
 			//LastChecksum = 0x0;
-			SetPalette(_defaultPalette, _defaultPaletteIndex);
+			SetPalette(_defaultPalette);
 			_activeFrameSeq = null;
 		}
 

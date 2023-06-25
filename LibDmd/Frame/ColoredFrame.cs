@@ -18,12 +18,6 @@ namespace LibDmd
 		public Color[] Palette { get; private set; }
 
 		/// <summary>
-		/// Palette index from animation or -1 if not set. This references a palette
-		/// that was already loaded onto a device.
-		/// </summary>
-		public int PaletteIndex { get; private set; }
-
-		/// <summary>
 		/// Color Rotation descriptions.
 		/// </summary>
 		/// <remarks>
@@ -46,13 +40,12 @@ namespace LibDmd
 		{
 		}
 
-		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, int paletteIndex = -1, byte[] rotations = null)
+		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, byte[] rotations = null)
 		{
 			Dimensions = dim;
 			Data = data;
 			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
-			PaletteIndex = paletteIndex;
 			Rotations = rotations;
 			RotateColors = rotations != null && rotations.Length > 0;
 
@@ -60,9 +53,6 @@ namespace LibDmd
 			AssertData();
 			#endif
 		}
-
-		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, byte[] rotations)
-			: this(dim, data, palette, -1, rotations) { }
 
 		public ColoredFrame(DmdFrame frame, Color color)
 		{
@@ -122,7 +112,6 @@ namespace LibDmd
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			Palette = frame.Palette;
-			PaletteIndex = frame.PaletteIndex;
 			Rotations = frame.Rotations;
 			RotateColors = frame.RotateColors;
 
@@ -303,7 +292,6 @@ namespace LibDmd
 			unchecked {
 				var hashCode = Dimensions.GetHashCode();
 				hashCode = (hashCode * 397) ^ BitLength;
-				hashCode = (hashCode * 397) ^ PaletteIndex;
 				hashCode = (hashCode * 397) ^ (Rotations != null ? Rotations.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Palette != null ? Palette.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
@@ -332,7 +320,6 @@ namespace LibDmd
 				return true;
 			}
 			return a.Dimensions == b.Dimensions
-			       && a.PaletteIndex == b.PaletteIndex
 			       && a.RotateColors == b.RotateColors
 			       && PaletteEquals(a.Palette, b.Palette)
 			       && FrameUtil.CompareBuffersFast(a.Rotations, b.Rotations)
@@ -372,7 +359,7 @@ namespace LibDmd
 
 		#region Overrides
 
-		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette, PaletteIndex, Rotations);
+		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette, Rotations);
 
 		public override string ToString()
 		{

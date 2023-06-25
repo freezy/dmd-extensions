@@ -21,8 +21,6 @@ namespace LibDmd.Output.ZeDMD
 		
 		public Dimensions FixedSize { get; private set; } = new Dimensions(128, 32);
 		
-		public bool DmdAllowHdScaling { get; set; } = true;
-
 		// We get a DMD_ESP32 instance to communicate with ESP32
 		private readonly ZeDMDComm pDMD = new ZeDMDComm();
 
@@ -228,7 +226,7 @@ namespace LibDmd.Output.ZeDMD
 			WritePalette(_currentPalette);
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_currentPalette = ColorUtil.GetPalette(colors, 4);
 			WritePalette(_currentPalette);

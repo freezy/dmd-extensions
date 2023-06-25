@@ -315,7 +315,7 @@ namespace LibDmd.Output.PinDmd3
 			WritePalette(_currentPalette);
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_currentPalette = ColorUtil.GetPalette(colors, 4);
 			WritePalette(_currentPalette);

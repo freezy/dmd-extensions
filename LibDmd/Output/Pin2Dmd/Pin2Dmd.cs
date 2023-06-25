@@ -118,7 +118,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
+			SetPalette(frame.Palette);
 
 			// copy to buffer
 			frame.CopyPlanesTo(_frameBufferGray6, 4);
@@ -129,7 +129,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
+			SetPalette(frame.Palette);
 
 			// copy to buffer
 			frame.CopyPlanesTo(_frameBufferGray4, 4);
@@ -140,7 +140,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
-			SetPalette(frame.Palette, frame.PaletteIndex);
+			SetPalette(frame.Palette);
 
 			// send frame buffer to device
 			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));

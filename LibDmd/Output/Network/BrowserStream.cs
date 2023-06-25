@@ -127,7 +127,7 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendColor(color));
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_palette = colors;
 			_sockets.ForEach(s => s.SendPalette(colors));

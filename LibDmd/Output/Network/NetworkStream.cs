@@ -164,7 +164,7 @@ namespace LibDmd.Output.Network
 			}
 		}
 
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_palette = colors;
 			if (IsAvailable) {

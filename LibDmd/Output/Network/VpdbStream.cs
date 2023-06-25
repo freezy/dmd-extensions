@@ -143,7 +143,7 @@ namespace LibDmd.Output.Network
 			EmitObject("color", new JObject { { "color", ColorUtil.ToInt(color) } });
 		}
 
-		public void SetPalette(Color[] colors , int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_palette = colors;
 			EmitObject("palette", new JObject { { "palette", new JArray(ColorUtil.ToIntArray(colors)) } });
