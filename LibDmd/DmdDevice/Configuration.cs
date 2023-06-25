@@ -213,6 +213,20 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
+		public ScalerMode VniScalerMode
+		{
+			get
+			{
+				// retrieve from ScalerMode if key not found
+				var vniScalerMode = GetEnum("vni.scalermode", ScalerMode.Doubler, out var keyFound);
+				if (keyFound) {
+					return vniScalerMode;
+				}
+				var scalerMode = ScalerMode;
+				return scalerMode != ScalerMode.None ? scalerMode : ScalerMode.Doubler;
+			}
+		}
+
 		public bool SkipAnalytics => GetBoolean("skipanalytics", false);
 		public PluginConfig[] Plugins {
 			get {
@@ -221,8 +235,9 @@ namespace LibDmd.DmdDevice
 				for (var i = 0; i < 10; i++) {
 					var path = GetString($"plugin.{i}.path{suffix}", null);
 					var passthrough = GetBoolean($"plugin.{i}.passthrough", false);
+					var scalerMode = GetEnum<ScalerMode>($"plugin.{i}.scalermode", ScalerMode.Doubler);
 					if (path != null) {
-						plugins.Add(new PluginConfig(path, passthrough));
+						plugins.Add(new PluginConfig(path, passthrough, scalerMode));
 					} else {
 						break;
 					}
@@ -240,11 +255,13 @@ namespace LibDmd.DmdDevice
 	{
 		public readonly string Path;
 		public readonly bool PassthroughEnabled;
+		public readonly ScalerMode ScalerMode;
 
-		public PluginConfig(string path, bool passthroughEnabled)
+		public PluginConfig(string path, bool passthroughEnabled, ScalerMode scalerMode)
 		{
 			Path = path;
 			PassthroughEnabled = passthroughEnabled;
+			ScalerMode = scalerMode;
 		}
 	}
 
@@ -949,13 +966,17 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		protected T GetEnum<T>(string key, T fallback)
+		protected T GetEnum<T>(string key, T fallback) => GetEnum<T>(key, fallback, out _);
+
+		protected T GetEnum<T>(string key, T fallback, out bool keyFound)
 		{
 			if (HasGameSpecificValue(key)) {
+				keyFound = true;
 				return _parent.GameConfig.GetEnum(GameOverridePrefix + key, fallback);
 			}
 
 			if (_data[Name] == null || !_data[Name].ContainsKey(key)) {
+				keyFound = false;
 				return fallback;
 			}
 
@@ -964,10 +985,12 @@ namespace LibDmd.DmdDevice
 				if (!Enum.IsDefined(typeof(T), e)) {
 					throw new ArgumentException();
 				}
+				keyFound = true;
 				return e;
 
 			} catch (ArgumentException) {
 				Logger.Error("Value \"" + _data[Name][key] + "\" for \"" + key + "\" under [" + Name + "] must be one of: [ " + string.Join(", ", Enum.GetNames(typeof(T))) + "].");
+				keyFound = true;
 				return fallback;
 			}
 		}

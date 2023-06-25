@@ -182,7 +182,7 @@ namespace LibDmd.Common
 								var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
 								frame[f] |= (byte)(bit << p);
 							} catch (ArgumentOutOfRangeException) {
-								Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes[p].Length);
+								Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes.Length);
 								throw;
 							}
 						}
@@ -358,7 +358,7 @@ namespace LibDmd.Common
 		{
 			var joinData = Join(dim, srcPlane);
 			var frameData = Scale2X(dim, joinData);
-			return Split(dim, srcPlane.Length, frameData);
+			return Split(dim * 2, srcPlane.Length, frameData);
 		}
 
 		/// <summary>

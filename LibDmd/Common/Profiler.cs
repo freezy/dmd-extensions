@@ -60,7 +60,9 @@ namespace LibDmd.Common
 		}
 		public void Dispose()
 		{
+#if DEBUG
 			Profiler.Stop(_key);
+#endif
 		}
 	}
 
