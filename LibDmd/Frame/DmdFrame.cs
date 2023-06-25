@@ -296,7 +296,7 @@ namespace LibDmd.Frame
 					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
 				}
 
-				if (palette.Length.GetBitLength() != BitLength) {
+				if (BitLength != 3 && palette.Length.GetBitLength() != BitLength) {
 					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
 				}
 #endif
