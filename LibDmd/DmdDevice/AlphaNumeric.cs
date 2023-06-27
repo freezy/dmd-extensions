@@ -475,7 +475,6 @@ namespace LibDmd.DmdDevice
 		{
 			Clear();
 			byte i, j;
-			Clear();
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
