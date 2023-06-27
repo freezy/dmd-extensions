@@ -242,6 +242,7 @@ namespace LibDmd.Frame
 
 				switch (BitLength) {
 					case 2:
+					case 3:
 						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf), 4);
 					case 4:
 						throw new ArgumentException("Frame is already gray4.");
@@ -250,7 +251,7 @@ namespace LibDmd.Frame
 					case 24:
 						return Update(ImageUtil.ConvertToGray(Dimensions, Data, 16), 4);
 					default:
-						throw new ArgumentException("Invalid bit length.");
+						throw new ArgumentException($"Invalid bit length ({BitLength}).");
 				}
 			}
 		}
