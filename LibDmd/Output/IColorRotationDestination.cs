@@ -7,8 +7,6 @@ namespace LibDmd.Output
 	/// </summary>
 	public interface IColorRotationDestination : IDestination
 	{
-		//int MaxBitLength { get; }
-
 		void UpdatePalette(Color[] palette);
 	}
 }
