@@ -71,22 +71,47 @@ namespace LibDmd.Common
 
 			// read versions from assembly
 			var assembly = Assembly.GetCallingAssembly();
-			var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
-			Console.WriteLine($"Getting assembly info at {assembly.Location}...");
-			var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			var version = fvi.ProductVersion;
-			if (attr.Length > 0) {
-				var aca = (AssemblyConfigurationAttribute)attr[0];
-				_sha = aca.Configuration;
-				_fullVersion = string.IsNullOrEmpty(_sha) ? version : $"{version} ({_sha})";
+			var assemblyLocation = GetAssemblyLocation(assembly);
+
+			if (assemblyLocation == null) {
+				Logger.Warn($"Unable to determine assembly location.");
+				_fullVersion = "<unable to find assembly>";
+				_sha = "";
 
 			} else {
-				_fullVersion = fvi.ProductVersion;
-				_sha = "";
+				var fvi = FileVersionInfo.GetVersionInfo(assemblyLocation);
+				var version = fvi.ProductVersion;
+				var attr = assembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+				if (attr.Length > 0) {
+					var aca = (AssemblyConfigurationAttribute)attr[0];
+					_sha = aca.Configuration;
+					_fullVersion = string.IsNullOrEmpty(_sha) ? version : $"{version} ({_sha})";
+
+				} else {
+					_fullVersion = fvi.ProductVersion;
+					_sha = "";
+				}
 			}
 
 			fullVersion = _fullVersion;
 			sha = _sha;
+		}
+
+		private static string GetAssemblyLocation(Assembly assembly)
+		{
+			if (assembly == null) {
+				return null;
+			}
+			if (!string.IsNullOrEmpty(assembly.Location)) {
+				return assembly.Location;
+			}
+
+			if (!assembly.CodeBase.ToLowerInvariant().StartsWith("file:")) {
+				return null;
+			}
+
+			var uri = new UriBuilder(assembly.CodeBase);
+			return Uri.UnescapeDataString(uri.Path);
 		}
 
 		private static string GetDllPath(string name)
