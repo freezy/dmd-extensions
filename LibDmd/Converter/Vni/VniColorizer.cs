@@ -278,7 +278,7 @@ namespace LibDmd.Converter.Vni
 		private void Render(Dimensions dim, byte[][] planes)
 		{
 			// We want to do the scaling after the animations get triggered.
-			if (dim * 2 == _animations.Dimensions) {
+			if (_animations != null && dim * 2 == _animations.Dimensions) {
 				planes = ScalerMode == ScalerMode.Scale2x
 					? FrameUtil.Scale2X(dim, planes)
 					: FrameUtil.ScaleDouble(dim, planes);
