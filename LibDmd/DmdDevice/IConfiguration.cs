@@ -38,8 +38,8 @@ namespace LibDmd.DmdDevice
 		bool FlipHorizontally { get; }
 		bool FlipVertically { get; }
 		bool Colorize { get; }
-		bool QuitWhenDone { get; }
-		int QuitAfter { get; }
+		bool QuitWhenDone { get; set; }
+		int QuitAfter { get; set; }
 		bool NoClear { get; }
 		Color DmdColor { get; }
 		ScalerMode ScalerMode { get; }

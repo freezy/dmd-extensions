@@ -227,8 +227,18 @@ namespace DmdExt.Common
 		public bool FlipHorizontally => _options.FlipHorizontally;
 		public bool FlipVertically => _options.FlipVertically;
 		public bool Colorize => _options.Colorize;
-		public bool QuitWhenDone => _options.QuitWhenDone;
-		public int QuitAfter => _options.QuitAfter;
+		public bool QuitWhenDone
+		{
+			get => _options.QuitWhenDone;
+			set => _options.QuitWhenDone = value;
+		}
+
+		public int QuitAfter
+		{
+			get => _options.QuitAfter;
+			set => _options.QuitAfter = value;
+		}
+
 		public bool NoClear => _options.NoClear;
 		public Color DmdColor => ColorUtil.ParseColor(_options.RenderColor);
 		public ScalerMode ScalerMode => _options.ScalingMode;
