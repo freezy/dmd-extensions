@@ -4,7 +4,6 @@ using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Converter;
 using LibDmd.Frame;
-using LibDmd.Input;
 using LibDmd.Output;
 
 namespace LibDmd

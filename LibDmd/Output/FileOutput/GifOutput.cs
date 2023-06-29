@@ -18,7 +18,7 @@ namespace LibDmd.Output.FileOutput
 
 		private int _lastTick;
 		private BitmapSource _lastBitmap;
-		private bool _disposed = false;
+		private bool _disposed;
 
 		public GifOutput(string path)
 		{

@@ -13,7 +13,7 @@ namespace LibDmd.Output.ZeDMD
 		public string nCOM;
 		public const int BaudRate = 921600;
 		private const int SERIAL_TIMEOUT = 120;
-		public bool Opened = false;
+		public bool Opened;
 		private SerialPort _serialPort;
 		private const int MAX_SERIAL_WRITE_AT_ONCE = 8192;
 		private const int SLOW_FRAMES_THRESHOLD = 4096;
@@ -32,10 +32,10 @@ namespace LibDmd.Output.ZeDMD
 			Task.Run(() =>
 			{
 				Logger.Info("Starting ZeDMD frame thread.");
-				byte[] frame = null;
 				bool sleep = false;
 				int bufferedFramesThreshold = FRAME_BUFFER_SIZE;
 				while (true) {
+					byte[] frame;
 					try {
 						frame = _frames.Take();
 						if (frame.Length < COMMAND_SIZE_LIMIT) {
@@ -107,15 +107,16 @@ namespace LibDmd.Output.ZeDMD
 
 		private void SafeClose()
 		{
-			try
-			{
+			try {
 				// In case of error discard serial data and close
 				//_serialPort.DiscardInBuffer();
 				//_serialPort.DiscardOutBuffer();
 				_serialPort.Close();
 				System.Threading.Thread.Sleep(100); // otherwise the next device will fail
 			}
-			catch { };
+			catch {
+				// do nothing
+			}
 		}
 
 		private bool Connect(string port, out int width, out int height)
@@ -123,7 +124,7 @@ namespace LibDmd.Output.ZeDMD
 			// Try to find an ESP32 on the COM port and check if it answers with the shake-hand bytes
 			try
 			{
-				_serialPort = new SerialPort(port, BaudRate, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One)
+				_serialPort = new SerialPort(port, BaudRate, Parity.None, 8, StopBits.One)
 				{
 					ReadTimeout = SERIAL_TIMEOUT,
 					WriteBufferSize = MAX_SERIAL_WRITE_AT_ONCE,
@@ -254,4 +255,3 @@ namespace LibDmd.Output.ZeDMD
 		}
 	}
 }
-

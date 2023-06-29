@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using LibDmd.Common;
-using NLog;
 
 namespace LibDmd.Converter.Vni
 {
@@ -51,7 +50,7 @@ namespace LibDmd.Converter.Vni
 		/// </summary>
 		public bool IsAnimation => Mode != SwitchMode.Event && Mode != SwitchMode.Palette;
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		//private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public Mapping(BinaryReader reader)
 		{

@@ -109,7 +109,7 @@ namespace LibDmd.Test
 			};
 
 			Logger.Info("Starting thread");
-			Task.Run(() => {
+			await Task.Run(() => {
 				Thread.CurrentThread.IsBackground = true;
 
 

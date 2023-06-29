@@ -57,7 +57,9 @@ namespace LibDmd.DmdDevice
 		private VirtualAlphanumericDestination _alphaNumericDest;
 
 		// versioning
+		// ReSharper disable once NotAccessedField.Local
 		private static string _sha = "";
+		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private static string _fullVersion = "";
 
 		// data coming from the DLL
@@ -82,6 +84,7 @@ namespace LibDmd.DmdDevice
 		};
 #endif
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+		// ReSharper disable once CollectionNeverQueried.Local
 		private static readonly HashSet<string> ReportingTags = new HashSet<string>();
 
 		public DmdDevice(IConfiguration config = null)
@@ -815,6 +818,7 @@ namespace LibDmd.DmdDevice
 				}
 
 				// we're done with the setup - let the calling thread proceed
+				// ReSharper disable once AccessToDisposedClosure
 				ev.Set();
 
 				// Start the Dispatcher Processing
@@ -980,6 +984,7 @@ namespace LibDmd.DmdDevice
 			ReportError(ex);
 		}
 
+		// ReSharper disable once UnusedParameter.Local
 		private static void ReportError(Exception ex)
 		{
 #if !DEBUG

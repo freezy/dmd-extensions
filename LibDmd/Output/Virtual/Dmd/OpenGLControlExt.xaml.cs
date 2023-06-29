@@ -236,8 +236,6 @@ namespace LibDmd.Output.Virtual.Dmd
 							}
 						}
 						break;
-					default:
-						break;
 				}
 			}
 		}
@@ -299,26 +297,6 @@ namespace LibDmd.Output.Virtual.Dmd
 		}
 
 		/// <summary>
-		/// This method converts the output from the OpenGL render context provider to a 
-		/// FormatConvertedBitmap in order to show it in the image.
-		/// </summary>
-		/// <param name="hBitmap">The handle of the bitmap from the OpenGL render context.</param>
-		/// <returns>Returns the new format converted bitmap.</returns>
-		private static FormatConvertedBitmap GetFormatedBitmapSource(IntPtr hBitmap)
-		{
-			//  TODO: We have to remove the alpha channel - for some reason it comes out as 0.0 
-			//  meaning the drawing comes out transparent.
-
-			FormatConvertedBitmap newFormatedBitmapSource = new FormatConvertedBitmap();
-			newFormatedBitmapSource.BeginInit();
-			newFormatedBitmapSource.Source = BitmapConversion.HBitmapToBitmapSource(hBitmap);
-			newFormatedBitmapSource.DestinationFormat = PixelFormats.Rgb24;
-			newFormatedBitmapSource.EndInit();
-
-			return newFormatedBitmapSource;
-		}
-
-		/// <summary>
 		/// Called when the frame rate is changed.
 		/// </summary>
 		/// <param name="o">The object.</param>
@@ -350,7 +328,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// The dispatcher timer.
 		/// </summary>
-		DispatcherTimer timer = null;
+		DispatcherTimer timer;
 
 		private static readonly RoutedEvent OpenGLInitializedEvent = EventManager.RegisterRoutedEvent("OpenGLInitialized",
 			RoutingStrategy.Direct, typeof(OpenGLRoutedEventHandler), typeof(OpenGLControlExt));

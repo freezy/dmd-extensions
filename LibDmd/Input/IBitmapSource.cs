@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Media.Imaging;
 using LibDmd.Frame;
 
 namespace LibDmd.Input

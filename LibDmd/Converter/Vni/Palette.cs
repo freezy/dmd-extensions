@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
-using NLog;
 
 namespace LibDmd.Converter.Vni
 {

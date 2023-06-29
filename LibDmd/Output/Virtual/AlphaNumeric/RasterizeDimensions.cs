@@ -78,14 +78,14 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// </summary>
 		public float SegmentPaddingPercentage { get; set; } = 0.3f;
 
-		public RasterizeDimensions(SKRect svgSize, int canvasWidth, int canvasHeight, int numChars, int numLines, float skewAngle)
+		public RasterizeDimensions(SKRect svgSize, int canvasHeight, int numChars, int numLines, float skewAngle)
 		{
 			OuterPadding = (int)Math.Round(OuterPaddingPercentage * canvasHeight);
 			SvgHeight = canvasHeight - 2 * OuterPadding;
 			SvgScale = SvgHeight / svgSize.Height;
 			SvgWidth = svgSize.Width * SvgScale;
 			LinePadding = (int)Math.Round(SvgHeight * LinePaddingPercentage);
-			SvgMatrix = SKMatrix.MakeScale(SvgScale, SvgScale);
+			SvgMatrix = SKMatrix.CreateScale(SvgScale, SvgScale);
 			var svgSkewedWidth = SkewedWidth(SvgWidth, SvgHeight, skewAngle);
 			SegmentPadding = (int)Math.Round(Math.Sqrt(SvgWidth * SvgWidth + SvgHeight * SvgHeight) * SegmentPaddingPercentage);
 			SvgInfo = new SKImageInfo((int)(svgSkewedWidth + 2 * SegmentPadding), (int)(SvgHeight + 2 * SegmentPadding));

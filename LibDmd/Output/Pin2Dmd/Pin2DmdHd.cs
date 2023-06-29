@@ -5,7 +5,7 @@ namespace LibDmd.Output.Pin2Dmd
 	/// <summary>
 	/// Output target for PIN2DMD devices.
 	/// </summary>
-	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
+	/// <see href="https://github.com/lucky01/PIN2DMD"/>
 	public class Pin2DmdHd : Pin2DmdBase, IRgb24Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PIN2DMD HD";

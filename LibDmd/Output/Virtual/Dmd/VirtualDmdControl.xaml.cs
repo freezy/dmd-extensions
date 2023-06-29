@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -95,7 +94,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private const ushort FboErrorMax = 30;
 
-		private ushort _fboErrorCount = 0;
+		private ushort _fboErrorCount;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -325,11 +324,11 @@ namespace LibDmd.Output.Virtual.Dmd
 			var posVBO = new VertexBuffer();
 			posVBO.Create(gl);
 			posVBO.Bind(gl);
-			posVBO.SetData(gl, PositionAttribute, new float[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
+			posVBO.SetData(gl, PositionAttribute, new[] { -1f, -1f, -1f, 1f, 1f, 1f, 1f, -1f }, false, 2);
 			var texVBO = new VertexBuffer();
 			texVBO.Create(gl);
 			texVBO.Bind(gl);
-			texVBO.SetData(gl, TexCoordAttribute, new float[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
+			texVBO.SetData(gl, TexCoordAttribute, new[] { 0f, 1f, 0f, 0f, 1f, 0f, 1f, 1f }, false, 2);
 			_quadVbo.Unbind(gl);
 		}
 
@@ -391,7 +390,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				_fboInvalid = false;
 				createTexture = true;
 				// Release previous textures and FBOs if any (0 are ignored by OpenGL driver)
-				uint[] texs = new uint[5] { _textures[3], _textures[4], _textures[5], _textures[6], _textures[7] };
+				uint[] texs = new uint[] { _textures[3], _textures[4], _textures[5], _textures[6], _textures[7] };
 				gl.DeleteTextures(5, texs);
 				gl.DeleteFramebuffersEXT(5, _fbos);
 				Logger.Info($"Creating FBOs for {_frameDimensions}");
@@ -406,7 +405,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				{
 					gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, _fbos[i]);
 					gl.BindTexture(OpenGL.GL_TEXTURE_2D, _textures[i + 3]);
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new float[] { 0f, 0f, 0f, 0f });
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new[] { 0f, 0f, 0f, 0f });
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
@@ -597,7 +596,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 				if (createTexture)
 				{
-					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new float[] { 0f, 0f, 0f, 0f });
+					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_BORDER_COLOR, new[] { 0f, 0f, 0f, 0f });
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_BORDER);
 					gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_NEAREST);
@@ -688,7 +687,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 						var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
 						var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
-						AspectRatio = frameWidth / (double)frameHeight;
+						AspectRatio = frameWidth / frameHeight;
 
 						var alphaW = ActualWidth / frameWidth;
 						var alphaH = ActualHeight / frameHeight;

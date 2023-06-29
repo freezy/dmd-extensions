@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -124,7 +125,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void UpdateControls()
 		{
-			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString();
+			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString(CultureInfo.InvariantCulture);
 			SkewAngleSlider.Value = -_displaySetting.StyleDefinition.SkewAngle;
 			BackgroundColor.SelectedColor = _displaySetting.StyleDefinition.BackgroundColor.ToColor();
 			ThinWeight.IsChecked = _displaySetting.StyleDefinition.SegmentWeight == SegmentWeight.Thin;
@@ -243,12 +244,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 	public class ComparisonConverter : IValueConverter
 	{
-		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			return value?.Equals(parameter);
 		}
 
-		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			return value?.Equals(true) == true ? parameter : Binding.DoNothing;
 		}

@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Output;
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace LibDmd.Frame
 {

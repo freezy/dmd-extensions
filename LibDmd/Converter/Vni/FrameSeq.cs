@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Windows;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
-using Color = System.Windows.Media.Color;
 
 namespace LibDmd.Converter.Vni
 {
@@ -90,7 +87,6 @@ namespace LibDmd.Converter.Vni
 		/// </summary>
 		public byte[] ReplaceMask { get; private set; }
 
-		private IObservable<AnimationFrame> _frames;
 		private Action<Dimensions, byte[][]> _currentRender;
 		private int _lastTick;
 		private int _timer;
@@ -101,18 +97,6 @@ namespace LibDmd.Converter.Vni
 		private int _frameIndex;
 
 		#endregion
-
-		/// <summary>
-		/// Next hash to look for (in col seq mode)
-		/// </summary>
-		uint Crc32 { get; }
-
-
-
-		/// <summary>
-		/// Mask for "Follow" switch mode.
-		/// </summary>
-		byte[] Mask { get; }
 
 		protected byte[][] Masks;
 
@@ -146,7 +130,7 @@ namespace LibDmd.Converter.Vni
 					break;
 				case SwitchMode.Replace:
 				case SwitchMode.FollowReplace:
-					StartReplace(render, completed);
+					StartReplace(render);
 					break;
 				case SwitchMode.LayeredColorMask:
 				case SwitchMode.MaskedReplace:
@@ -204,8 +188,6 @@ namespace LibDmd.Converter.Vni
 
 			return outPlanes;
 		}
-
-		private static int index = 0;
 
 		public void DetectFollow(byte[] plane, uint NoMaskCRC, byte[][] masks, bool Reverse)
 		{
@@ -281,7 +263,7 @@ namespace LibDmd.Converter.Vni
 			Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
 		}
 
-		private void StartReplace(Action<Dimensions, byte[][]> render, Action completed = null)
+		private void StartReplace(Action<Dimensions, byte[][]> render)
 		{
 			Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_lastTick = Environment.TickCount;

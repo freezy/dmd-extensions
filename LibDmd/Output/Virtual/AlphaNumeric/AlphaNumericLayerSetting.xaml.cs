@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,14 +65,14 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			LayerEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsEnabled;
 
 			DilateEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsDilateEnabled;
-			DilateXValue.Text = _rasterizeLayerStyleDefinition.Dilate.X.ToString();
-			DilateYValue.Text = _rasterizeLayerStyleDefinition.Dilate.Y.ToString();
+			DilateXValue.Text = _rasterizeLayerStyleDefinition.Dilate.X.ToString(CultureInfo.InvariantCulture);
+			DilateYValue.Text = _rasterizeLayerStyleDefinition.Dilate.Y.ToString(CultureInfo.InvariantCulture);
 			DilateXSlider.Value = _rasterizeLayerStyleDefinition.Dilate.X;
 			DilateYSlider.Value = _rasterizeLayerStyleDefinition.Dilate.Y;
 
 			BlurEnabled.IsChecked = _rasterizeLayerStyleDefinition.IsBlurEnabled;
-			BlurXValue.Text = _rasterizeLayerStyleDefinition.Blur.X.ToString();
-			BlurYValue.Text = _rasterizeLayerStyleDefinition.Blur.Y.ToString();
+			BlurXValue.Text = _rasterizeLayerStyleDefinition.Blur.X.ToString(CultureInfo.InvariantCulture);
+			BlurYValue.Text = _rasterizeLayerStyleDefinition.Blur.Y.ToString(CultureInfo.InvariantCulture);
 			BlurXSlider.Value = _rasterizeLayerStyleDefinition.Blur.X;
 			BlurYSlider.Value = _rasterizeLayerStyleDefinition.Blur.Y;
 

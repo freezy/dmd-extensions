@@ -3,7 +3,6 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
@@ -48,8 +47,8 @@ namespace LibDmd.Output.PinDmd3
 		private readonly byte[] _frameBufferGray4;
 		private readonly byte[] _frameBufferGray2;
 		private readonly byte[] _frameBufferColoredGray4;
-		private bool _lastFrameFailed = false;
-		private bool _supportsColoredGray4 = false;
+		private bool _lastFrameFailed;
+		private bool _supportsColoredGray4;
 
 		private Color[] _currentPalette = ColorUtil.GetPalette( new [] { Colors.Black, Colors.OrangeRed }, 4);
 

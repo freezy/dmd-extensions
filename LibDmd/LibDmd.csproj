@@ -394,7 +394,6 @@
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Vni\VniColorizer.cs" />
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
-    <Compile Include="Converter\Serum\CRC32encode.cs" />
     <Compile Include="Converter\Serum\Serum.cs" />
     <Compile Include="Converter\SwitchingConverter.cs" />
     <Compile Include="DmdDevice\PMOptions.cs" />

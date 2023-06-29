@@ -257,7 +257,6 @@ namespace LibDmd.Common
 
 		private static int MapAdafruitIndex(int x, int y, int width, int height, int numLogicalRows)
 		{
-			var pairOffset = 16;
 			var logicalRowLengthPerMatrix = 32 * 32 / 2 / numLogicalRows;
 			var logicalRow = y % numLogicalRows;
 			var dotPairsPerLogicalRow = width * height / numLogicalRows / 2;
@@ -660,7 +659,6 @@ namespace LibDmd.Common
 		/// <summary>
 		/// Tuät äs Biud häschä
 		/// </summary>
-		/// <param name="input">S Biud</param>
 		/// <returns>Dr Häsch</returns>
 		public static readonly uint[] checksumtable = {
 				0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,

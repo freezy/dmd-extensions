@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
 using LibDmd.Frame;
-using NLog.Config;
 
 namespace LibDmd.Common
 {

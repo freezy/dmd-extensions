@@ -248,20 +248,5 @@ namespace DmdExt.Mirror
 			// 3. check for native pin2color
 			return _colorizationLoader.LoadVniColorizer(gameName, _config.Global.ScalerMode);
 		}
-
-		private FrameFormat GetFrameFormat(ISource source)
-		{
-			switch (source) {
-				case IGray2Source _: return FrameFormat.Gray2;
-				case IGray4Source _: return FrameFormat.Gray4;
-				case IRgb24Source _: return FrameFormat.Rgb24;
-				case IColoredGray2Source _: return FrameFormat.ColoredGray2;
-				case IColoredGray4Source _: return FrameFormat.ColoredGray4;
-				case IColoredGray6Source _: return FrameFormat.ColoredGray6;
-				case IAlphaNumericSource _: return FrameFormat.AlphaNumeric;
-				case IBitmapSource _: return FrameFormat.Bitmap;
-			}
-			throw new ArgumentException($"Unknown source type: {source.Name}");
-		}
 	}
 }

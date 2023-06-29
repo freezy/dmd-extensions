@@ -60,7 +60,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			} else {
 				ApplyButton.Visibility = Visibility.Visible;
-				ApplyButton.Content = $"Apply to \"{_dmdConfig.GameName}\"";
+				ApplyButton.Content = $"Apply to \"{_dmdConfig?.GameName}\"";
 				ApplyGloballyButton.Visibility = Visibility.Hidden;
 			}
 
@@ -212,7 +212,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (PreviewColor128x32.IsChecked == true || !_previewStyle.HasTint) {
 				DmdPreview.RenderBitmap(new BmpFrame(_preview));
 			} else {
-				DmdPreview.RenderGray4(new DmdFrame(_preview.Dimensions(), ImageUtil.ConvertToGray4(_preview, 1.0), 2));
+				DmdPreview.RenderGray4(new DmdFrame(_preview.Dimensions(), ImageUtil.ConvertToGray4(_preview), 2));
 			}
 			var baseWidth = 128.0 * 5.0; // Need to be a multiple of 128.0 and 192.0 to avoid aliasing of the previews
 			var baseHeight = 32.0 * 5.0; // Need to be a multiple of 64.0 to avoid aliasing of the previews

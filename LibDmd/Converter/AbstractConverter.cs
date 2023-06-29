@@ -8,7 +8,6 @@ using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
-using NLog;
 
 namespace LibDmd.Converter
 {
@@ -52,8 +51,6 @@ namespace LibDmd.Converter
 		private readonly HashSet<IColorRotationDestination> _connectedColorRotationDestinations = new HashSet<IColorRotationDestination>();
 		private readonly HashSet<IFrameEventDestination> _connectedFrameEventDestinations = new HashSet<IFrameEventDestination>();
 
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
 		protected AbstractConverter(bool clockAndDedupe)
 		{
 			DedupedColoredGray2Source = new PassthroughColoredGray2Source(_lastFrameFormat, dedupe: clockAndDedupe);
@@ -73,7 +70,7 @@ namespace LibDmd.Converter
 		/// Receives de-duped frames and outputs them to the output sources the converter implements.<br/>
 		///
 		/// For converters that need frames at 60Hz, this method should not be overridden,
-		/// but <see cref="ConvertClocked"/> instead. For converters that work with de-duped frames,
+		/// but <see cref="ConvertClocked(LibDmd.Frame.DmdFrame)"/> instead. For converters that work with de-duped frames,
 		/// override this as usual.
 		/// </summary>
 		///

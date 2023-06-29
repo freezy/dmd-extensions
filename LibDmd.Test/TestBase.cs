@@ -29,7 +29,7 @@ namespace LibDmd.Test
 		protected void AddLogger()
 		{
 			if (LogManager.Configuration == null) {
-				LogManager.Configuration = new NLog.Config.LoggingConfiguration();
+				LogManager.Configuration = new LoggingConfiguration();
 			}
 			LogManager.Configuration.AddTarget("test", _testLogger);
 			LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, _testLogger));

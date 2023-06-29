@@ -24,49 +24,49 @@
         <Rectangle x:Name="Borders" Fill="#01ff0000" Stroke="#80ff0000" StrokeThickness="4"
                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Cursor="SizeAll"/>
 
-        <Rectangle x:Name="leftSizeGrip"
+        <Rectangle x:Name="LeftSizeGrip"
             Width="7"
             HorizontalAlignment="Left"
             Cursor="SizeWE"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle x:Name="rightSizeGrip"
+        <Rectangle x:Name="RightSizeGrip"
             Width="7"
             HorizontalAlignment="Right"
             Cursor="SizeWE"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle x:Name="topSizeGrip"
+        <Rectangle x:Name="TopSizeGrip"
             Height="7"
             VerticalAlignment="Top"
             Cursor="SizeNS"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle x:Name="bottomSizeGrip"
+        <Rectangle x:Name="BottomSizeGrip"
             Height="7"
             VerticalAlignment="Bottom"
             Cursor="SizeNS"
             Style="{StaticResource RectBorderStyle}" />
         <!--  Corners  -->
-        <Rectangle Name="topLeftSizeGrip"
+        <Rectangle Name="TopLeftSizeGrip"
             Width="7"
             Height="7"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Cursor="SizeNWSE"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle Name="bottomRightSizeGrip"
+        <Rectangle Name="BottomRightSizeGrip"
             Width="7"
             Height="7"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Cursor="SizeNWSE"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle Name="topRightSizeGrip"
+        <Rectangle Name="TopRightSizeGrip"
             Width="7"
             Height="7"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             Cursor="SizeNESW"
             Style="{StaticResource RectBorderStyle}" />
-        <Rectangle Name="bottomLeftSizeGrip"
+        <Rectangle Name="BottomLeftSizeGrip"
             Width="7"
             Height="7"
             HorizontalAlignment="Left"

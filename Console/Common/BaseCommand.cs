@@ -236,7 +236,7 @@ namespace DmdExt.Common
 			// On closing the window, shut down the dispatcher associated with the thread.
 			// This will allow the thread to exit after the window is closed and all of
 			// the events resulting from the window close have been processed.
-			dmd.Closed += (s, e) => Dispatcher.FromThread(thread).BeginInvokeShutdown(DispatcherPriority.Background);
+			dmd.Closed += (s, e) => FromThread(thread)?.BeginInvokeShutdown(DispatcherPriority.Background);
 
 			// run the thread
 			thread.SetApartmentState(ApartmentState.STA);

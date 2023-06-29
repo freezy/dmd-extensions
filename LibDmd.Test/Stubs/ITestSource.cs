@@ -1,6 +1,4 @@
-﻿using LibDmd.Frame;
-
-namespace LibDmd.Test.Stubs
+﻿namespace LibDmd.Test.Stubs
 {
 	public interface ITestSource<in TFrame>
 	{

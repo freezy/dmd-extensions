@@ -2,6 +2,7 @@
 using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Controls;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace LibDmd.Output.Virtual.Dmd
 {

@@ -4,7 +4,6 @@ using System.Reactive.Subjects;
 using LibDmd.Converter;
 using LibDmd.Frame;
 using LibDmd.Input;
-using NLog;
 
 namespace LibDmd.Test.Stubs
 {
@@ -20,10 +19,6 @@ namespace LibDmd.Test.Stubs
 		private readonly Subject<ColoredFrame> _coloredGray4Frames = new Subject<ColoredFrame>();
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
-
-		private int _numConnected;
-
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ConverterGray2Multi(Func<DmdFrame, ColoredFrame> convert) : base(true)
 			=> _convert = convert;

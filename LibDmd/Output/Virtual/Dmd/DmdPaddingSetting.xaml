@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 			 xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
-             xmlns:local="clr-namespace:LibDmd.Common"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" Width="Auto" Height="Auto" d:DesignWidth="830.667">
 	<Grid>
 		<Grid.RowDefinitions>
@@ -20,7 +18,7 @@
 		</Grid.ColumnDefinitions>
 
 		<CheckBox x:Name="Locked" Grid.Column="0" Margin="0,5,0,0" IsChecked="true">
-			<Label Content="🔒" Grid.Column="0" FontSize="15" Margin="-2,-6,0,0"></Label>
+			<Label Content="🔒" FontSize="15" Margin="-2,-6,0,0"></Label>
 		</CheckBox>
 
 		<dmd:SliderValueSetting x:Name="PaddingLeft" Grid.Column="1" Width="Auto" LabelContent="Left:" MinValue="0" MaxValue="30" LabelAlignment="Left"></dmd:SliderValueSetting>

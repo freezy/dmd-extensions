@@ -8,8 +8,8 @@ namespace LibDmd.Common.HeatShrink
 	/// Implementation of the HeatShrink compression algorithm
 	/// </summary>
 	/// 
-	/// <see cref="https://github.com/atomicobject/heatshrink/blob/master/heatshrink_decoder.c">Original Implementation</see>
-	/// <see cref="https://github.com/sker65/heatshrink-java/blob/master/src/main/java/com/rinke/solutions/io/HeatShrinkDecoder.java">Java Implementation by Stefan Rinke</see>
+	/// <see href="https://github.com/atomicobject/heatshrink/blob/master/heatshrink_decoder.c">Original Implementation</see>
+	/// <see href="https://github.com/sker65/heatshrink-java/blob/master/src/main/java/com/rinke/solutions/io/HeatShrinkDecoder.java">Java Implementation by Stefan Rinke</see>
 	public class HeatShrinkDecoder
 	{
 		private const int NoBits = -1;

@@ -1,6 +1,5 @@
 ﻿using System;
 using FTD2XX_NET;
-using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
 

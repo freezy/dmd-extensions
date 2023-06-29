@@ -1,13 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Converter.Plugin;
 using LibDmd.DmdDevice;
-using Microsoft.Win32;
 using NLog;
 
 namespace LibDmd.Converter.Vni
@@ -15,7 +11,7 @@ namespace LibDmd.Converter.Vni
 	public class ColorizationLoader
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		private string _altcolorPath;
+		private readonly string _altcolorPath;
 
 		public ColorizationLoader()
 		{

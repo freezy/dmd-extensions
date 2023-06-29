@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using FluentAssertions;
-using LibDmd.Common;
+﻿using FluentAssertions;
 using LibDmd.Converter.Vni;
 using LibDmd.Frame;
-using LibDmd.Output;
-using LibDmd.Test.Stubs;
 using NUnit.Framework;
+// ReSharper disable EqualExpressionComparison
 
 namespace LibDmd.Test
 {

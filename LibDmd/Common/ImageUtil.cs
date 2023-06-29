@@ -191,10 +191,7 @@ namespace LibDmd.Common
 					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 					// convert to HSL
-					double hue;
-					double saturation;
-					double luminosity;
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
 					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 63d * lum);
 				}
@@ -274,7 +271,7 @@ namespace LibDmd.Common
 			// copy to bitmap
 			var bitmap = new Bitmap(src.PixelWidth, src.PixelHeight, PixelFormat.Format32bppArgb);
 			var data = bitmap.LockBits(new Rectangle(Point.Empty, bitmap.Size), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-			src.CopyPixels(System.Windows.Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
+			src.CopyPixels(Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
 			bitmap.UnlockBits(data);
 
 			return bitmap;
@@ -631,6 +628,7 @@ namespace LibDmd.Common
 		/// <param name="x">x coord</param>
 		/// <param name="y">y coord</param>
 		/// <param name="width">stride of data</param>
+		/// <param name="height"></param>
 		/// <param name="frame">data</param>
 		/// <returns>color of coord</returns>
 		public static byte GetPixel(int x, int y, int width, int height, byte[] frame)

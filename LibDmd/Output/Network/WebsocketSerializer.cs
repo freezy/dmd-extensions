@@ -29,7 +29,7 @@ namespace LibDmd.Output.Network
 
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public void Unserialize(byte[] data, ISocketAction action) {
 			var start = 0;

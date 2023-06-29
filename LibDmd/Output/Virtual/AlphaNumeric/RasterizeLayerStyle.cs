@@ -1,5 +1,6 @@
 ﻿using System;
 using SkiaSharp;
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace LibDmd.Output.Virtual.AlphaNumeric
 {
