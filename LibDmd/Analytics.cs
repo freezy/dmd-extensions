@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Management;
 using System.Net;
+using System.Threading;
 using LibDmd.Output;
 using Microsoft.Win32;
 using RudderStack;
@@ -156,8 +157,9 @@ namespace LibDmd
 					RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);
 				}
 				_hasGameStarted = false;
-				RudderAnalytics.Client.FlushAsync();
-				
+				// this used to block, now on a separate thread it doesn't seem to anymore.
+				new Thread(() => RudderAnalytics.Client.Flush()).Start();
+
 			} catch (Exception _) {
 				// do nothing
 			}
