@@ -104,9 +104,14 @@ namespace DmdExt
 				Logger.Info("Launching console tool v{0}", _fullVersion);
 				options.Validate();
 				var cmdLineOptions = (BaseOptions)invokedVerbInstance;
-				var config = cmdLineOptions.DmdDeviceIni == null
-					? (IConfiguration)cmdLineOptions
-					: new Configuration(cmdLineOptions.DmdDeviceIni) { GameName = cmdLineOptions.GameName };
+				IConfiguration config;
+				if (cmdLineOptions.DmdDeviceIni == null) {
+					config = cmdLineOptions;
+				} else {
+					config = new Configuration(cmdLineOptions.DmdDeviceIni) { GameName = cmdLineOptions.GameName };
+					config.Global.QuitWhenDone = cmdLineOptions.QuitWhenDone;
+					config.Global.QuitAfter = cmdLineOptions.QuitAfter;
+				}
 
 				try {
 					Analytics.Instance.Init(_fullVersion, "EXE");

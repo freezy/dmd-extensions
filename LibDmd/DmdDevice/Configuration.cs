@@ -198,8 +198,8 @@ namespace LibDmd.DmdDevice
 #else
 		public bool Colorize => GetBoolean("colorize", true);
 #endif
-		public bool QuitWhenDone => false;
-		public int QuitAfter => -1;
+		public bool QuitWhenDone { get; set; }
+		public int QuitAfter { get; set; } = -1;
 		public bool NoClear => false;
 		public Color DmdColor => RenderGraph.DefaultColor;
 		public ScalerMode ScalerMode {
