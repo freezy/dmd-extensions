@@ -25,7 +25,7 @@ namespace LibDmd.Output.ZeDMD
 		private readonly ZeDMDComm pDMD = new ZeDMDComm();
 
 		private static ZeDMD _instance;
-		private readonly byte[] _frameBuffer;
+		private byte[] _frameBuffer;
 
 		private const byte RGB24 = 3;
 		private const byte ColGray6 = 11;
@@ -88,6 +88,7 @@ namespace LibDmd.Output.ZeDMD
 			}
 
 			FixedSize = new Dimensions(width, height);
+			_frameBuffer = new byte[1 + FixedSize.Surface * 4];
 
 			Logger.Info($"{Name} device found on port {pDMD.nCOM} with a resolution of {FixedSize} LEDs");
 		}
