@@ -337,7 +337,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// Occurs when OpenGL should be initialised.
 		/// </summary>
 		[Description("Called when OpenGL has been initialized."), Category("SharpGL")]
+#pragma warning disable CS0067
 		public event OpenGLRoutedEventHandler OpenGLInitialized;
+#pragma warning restore CS0067
 
 		private static readonly RoutedEvent OpenGLDrawEvent = EventManager.RegisterRoutedEvent("OpenGLDraw",
 			RoutingStrategy.Direct, typeof(OpenGLRoutedEventHandler), typeof(OpenGLControlExt));
@@ -346,16 +348,12 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// Occurs when OpenGL drawing should occur.
 		/// </summary>
 		[Description("Called whenever OpenGL drawing should occur."), Category("SharpGL")]
+#pragma warning disable CS0067
 		public event OpenGLRoutedEventHandler OpenGLDraw;
+#pragma warning restore CS0067
 
 		private static readonly RoutedEvent ResizedEvent = EventManager.RegisterRoutedEvent("Resized",
 			RoutingStrategy.Direct, typeof(OpenGLRoutedEventHandler), typeof(OpenGLControlExt));
-
-		/// <summary>
-		/// Occurs when the control is resized. This can be used to perform custom projections.
-		/// </summary>
-		[Description("Called when the control is resized - you can use this to do custom viewport projections."), Category("SharpGL")]
-		public event OpenGLRoutedEventHandler Resized;
 
 		/// <summary>
 		/// The frame rate dependency property.
