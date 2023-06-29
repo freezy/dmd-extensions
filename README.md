@@ -639,16 +639,16 @@ Try unchecking "backglass bring to front" by right clicking the backglass ([sour
 
 ## Reporting Bugs
 
-Make sure you include the application log. You can *usually* find it at the same
-place you copied your `DmdDevice.dll` or `dmdext.exe`. However, there are two
-premises for the log to be created:
+Make sure you include the application log, in its entirety. You can *usually* find
+it at the same place you copied your `DmdDevice.dll` or `dmdext.exe`. However, there
+are two premises for the log to be created:
 
 1. You need a log config file. If there's no log config file, no log is created.
-   The log config file is called `DmdDevice.log.config` for `DmdDevice.dll` and
-   `dmdext.log.config` for `dmdext.exe`. They must be at the same place as the DLL
-   and EXE respectively.
+   The log config file is called `DmdDevice.log.config` for both `DmdDevice.dll` and 
+   `DmdDevice64.dll`, and `dmdext.log.config` for `dmdext.exe`. They must be at
+   the same place as the DLL and EXE respectively.
 2. The user running the host app must have write permissions to the log folder.
-   Per default that's the current directory. If you have copied the DLL to the
+   Per default that's the current working directory. If you have copied the DLL to the
    `Windows\SysWOW64` folder, you don't have write access. In this case you need
    to write the log elsewhere. You can do that by editing the log config file.
    The format of the log file is XML. To change the log file location, find this line:
@@ -675,22 +675,21 @@ If you have a crash, please also include which OS/bitness you're using. If it's
 about the DLL, let us know where you copied the DLL and which host application
 you're using (VPM's `setup.exe` or`vpinball.exe`, also which version).
 
-You can post bugs at [VPF](http://www.vpforums.org/index.php?showtopic=36915) or
-[VPU](http://vpuniverse.com/forums/forums/topic/2728-sam-build-with-modular-dmd-drivers-for-pindmd123-and-pin2dmd/),
-but preferably [here](https://github.com/freezy/dmd-extensions/issues).
+You can post bugs at [VPUniverse](https://vpuniverse.com/forums/forum/175-dmd-extensions/), 
+or preferably [here](https://github.com/freezy/dmd-extensions/issues).
 
 ## Manual Installation
 
 1. [Download the .zip archive](https://github.com/freezy/dmd-extensions/releases),
-   copy its content to your hard drive, preferable in your `PATH`,
+   copy its content to your hard drive, preferably in your `PATH`,
    and unblock the `.exe` file (right-click, properties, unblock).
 2. Download and install the [Visual C++ Redistributables for Visual Studio 2017](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
 3. If you haven't already, download and install the [.NET Framework 4.7.2](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472).
 
 If you want to use DMD Extensions with VisualPinMAME:
 
-1. Copy `DmdDevice.dll`, `DmdDevice.ini` and `DmdDevice.log.config` into your
-   VPM folder (usually at `Visual Pinball\VPinMAME`).
+1. Copy `DmdDevice.dll`, `DmdDevice64.dll`, `DmdDevice.ini` and `DmdDevice.log.config` 
+   into your VPM folder (usually at `Visual Pinball\VPinMAME`).
 2. Run the VPM setup
 3. Click on *Test*, select the game and click on *Game Options*.
 4. Enable *Use External DMD* and optionally disable *Show DMD*.
@@ -757,8 +756,8 @@ setup, however note that games that you've already configured won't be affected.
 
 - For `dmdext.exe`, take the bitness of your OS. This is important for Pro
   Pinball, where the bitness of the binary must be the same as dmdext's.
-- For `dmddevice.dll` you probably want the 32-bit version unless you've set up
-  VPM with `Setup64.exe` and you know what you're doing.
+- For `DmdDevice.dll`, we now recommend using the 64-bit version 
+  (i.e. `DmdDevice64.dll`).
 
 
 ## Build Instructions
