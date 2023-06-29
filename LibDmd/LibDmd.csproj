@@ -574,17 +574,29 @@
     <EmbeddedResource Include="Output\Virtual\Dmd\Convert.vert" />
     <None Include="packages.config" />
   </ItemGroup>
+  <Choose>
+    <When Condition=" '$(Platform)'=='x86' ">
+      <ItemGroup>
+        <EmbeddedResource Include="Costura32\serum.dll" />
+        <EmbeddedResource Include="Costura32\libminiz-3.0.2.dll" />
+        <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
+        <EmbeddedResource Include="Costura32\sqlite3.dll" />
+        <EmbeddedResource Include="Costura32\ftd2xx.dll" />
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition=" '$(Platform)'=='x64' ">
+      <ItemGroup>
+        <EmbeddedResource Include="Costura64\serum64.dll" />
+        <EmbeddedResource Include="Costura64\libminiz-3.0.2.dll" />
+        <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
+        <EmbeddedResource Include="Costura64\sqlite3.dll" />
+        <EmbeddedResource Include="Costura64\ftd2xx.dll" />
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
-    <EmbeddedResource Include="Costura32\serum.dll" />
-    <EmbeddedResource Include="Costura64\serum64.dll" />
-    <EmbeddedResource Include="Costura32\libminiz-3.0.2.dll" />
-    <EmbeddedResource Include="Costura64\libminiz-3.0.2.dll" />
-    <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
-    <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
-    <EmbeddedResource Include="Costura32\sqlite3.dll" />
-    <EmbeddedResource Include="Costura64\sqlite3.dll" />
-    <EmbeddedResource Include="Costura32\ftd2xx.dll" />
-    <EmbeddedResource Include="Costura64\ftd2xx.dll" />
     <Content Include="FTDI2XX.xml" />
     <Resource Include="icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
