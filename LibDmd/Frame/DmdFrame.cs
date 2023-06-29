@@ -46,7 +46,6 @@ namespace LibDmd.Frame
 			get {
 				switch (BitLength) {
 					case 2: return FrameFormat.Gray2;
-					case 3: return FrameFormat.Gray2;
 					case 4: return FrameFormat.Gray4;
 					case 24: return FrameFormat.Rgb24;
 					default: throw new InvalidOperationException($"Invalid bit length {BitLength}");

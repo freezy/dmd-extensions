@@ -220,7 +220,7 @@ namespace LibDmd.Output.PinDmd3
 		public void RenderGray4(DmdFrame frame)
 		{
 			// copy to frame buffer
-			frame.CopyPlanesTo(_frameBufferGray2, 13);
+			frame.CopyPlanesTo(_frameBufferGray4, 13);
 
 			// send frame buffer to device
 			RenderRaw(_frameBufferGray4);
