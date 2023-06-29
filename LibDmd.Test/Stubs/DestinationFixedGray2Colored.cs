@@ -1,7 +1,7 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 using LibDmd.Frame;
 using LibDmd.Output;
-using NLog;
 
 namespace LibDmd.Test.Stubs
 {
@@ -9,8 +9,6 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Fixed/ColoredGray2]";
 		public bool IsAvailable => true;
-
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public int NumFrames;
 
@@ -32,22 +30,22 @@ namespace LibDmd.Test.Stubs
 
 		public void SetColor(Color color)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		public void SetPalette(Color[] colors)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		public void ClearPalette()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		public void ClearColor()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		public void Dispose()

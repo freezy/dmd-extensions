@@ -62,7 +62,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <param name="canvasHeight">Height of the canvas in pixels</param>
 		public void SetDimensions(int canvasWidth, int canvasHeight)
 		{
-			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType, StyleDefinition.SegmentWeight), canvasWidth, canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
+			Dim = new RasterizeDimensions(_res.GetSvgSize(SegmentType, StyleDefinition.SegmentWeight), canvasHeight, NumChars, NumLines, StyleDefinition.SkewAngle);
 			Style = StyleDefinition.Scale(Dim.SvgScale);
 		}
 

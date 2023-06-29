@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LibDmd.DmdDevice;
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace LibDmd
 {

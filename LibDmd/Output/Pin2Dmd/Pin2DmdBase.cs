@@ -116,17 +116,6 @@ namespace LibDmd.Output.Pin2Dmd
 				}
 			}
 		}
-
-		/// <summary>
-		/// Creates outputbuffer from RGB24 frame
-		/// </summary>
-		/// <param name="width">Width of the frame</param>
-		/// <param name="height">Height of the frame</param>
-		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
-		/// <param name="frameBuffer">Destination buffer where planes are written</param>
-		/// <param name="offset">Start writing at this offset</param>
-		/// <returns>True if destination buffer changed, false otherwise.</returns>
-		/// 
 		public static readonly byte[] GAMMA_TABLE =
 			{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -145,6 +134,15 @@ namespace LibDmd.Output.Pin2Dmd
 			45, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 52, 52, 53, 53, 54,
 			55, 55, 56, 56, 57, 58, 58, 59, 60, 60, 61, 62, 62, 63, 63, 63 };
 
+		/// <summary>
+		/// Creates outputbuffer from RGB24 frame
+		/// </summary>
+		/// <param name="dim">Frame dimensions</param>
+		/// <param name="frame">RGB24 data, top-left to bottom-right</param>
+		/// <param name="frameBuffer">Destination buffer where planes are written</param>
+		/// <param name="offset">Start writing at this offset</param>
+		/// <param name="rgbSequence"></param>
+		/// <returns>True if destination buffer changed, false otherwise.</returns>
 		protected static bool CreateRgb24(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence)
 		{
 			var identical = true;
@@ -247,8 +245,7 @@ namespace LibDmd.Output.Pin2Dmd
 			try
 			{
 				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
-				int bytesWritten;
-				var error = writer.Write(frame, 2000, out bytesWritten);
+				var error = writer.Write(frame, 2000, out _);
 				if (error != ErrorCode.None)
 				{
 					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
@@ -284,8 +281,7 @@ namespace LibDmd.Output.Pin2Dmd
 				frame[3] = 0xff; // cmd
 				frame[4] = 0x10;
 				var writer = _pin2DmdDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
-				int bytesWritten;
-				var error = writer.Write(frame, 2000, out bytesWritten);
+				var error = writer.Write(frame, 2000, out _);
 				if (error != ErrorCode.None)
 				{
 					Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
@@ -299,8 +295,7 @@ namespace LibDmd.Output.Pin2Dmd
 			{
 				byte[] config = new byte[64];
 				var reader = _pin2DmdDevice.OpenEndpointReader(ReadEndpointID.Ep01);
-				int bytesRead;
-				var error = reader.Read(config, 2000, out bytesRead);
+				var error = reader.Read(config, 2000, out _);
 				if (error != ErrorCode.None)
 				{
 					Logger.Error("Error reading config from device: {0}", UsbDevice.LastErrorString);

@@ -2,8 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-        xmlns:local="clr-namespace:LibDmd.Common"
-        xmlns:Virtual="clr-namespace:LibDmd.Output.Virtual"
         xmlns:dmd="clr-namespace:LibDmd.Output.Virtual.Dmd"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         x:Class="LibDmd.Output.Virtual.Dmd.DmdSettings"
@@ -16,9 +14,6 @@
         SizeToContent="Height"
         Title="Customize DMD Style">
 	<Grid Margin="16 16 16 8">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition></ColumnDefinition>
-		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Input
@@ -65,15 +63,14 @@ namespace LibDmd.Input
 		}
 
 		// enable a privilege
-		private bool SetPrivilege(IntPtr hToken, string privilege)
+		private void SetPrivilege(IntPtr hToken, string privilege)
 		{
 			// look up the LUID for the privilege
 			LUID luid;
-			if (!LookupPrivilegeValueW(null, privilege, out luid))
-			{
+			if (!LookupPrivilegeValueW(null, privilege, out luid)) {
 				Logger.Log(LogLevel.Error, "Error looking up LUID for privilege " + privilege + ", win32 error "
-					+ Marshal.GetLastWin32Error());
-				return false;
+				                           + Marshal.GetLastWin32Error());
+				return;
 			}
 
 			// set the new privilege setting
@@ -82,15 +79,12 @@ namespace LibDmd.Input
 			tp.Privileges = new LUID_AND_ATTRIBUTES[1];
 			tp.Privileges[0].Luid = luid;
 			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (!AdjustTokenPrivileges(hToken, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero))
-			{
+			if (!AdjustTokenPrivileges(hToken, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) {
 				Logger.Log(LogLevel.Warn, "Error setting privilege " + privilege + "in security token, win32 error "
-					+ Marshal.GetLastWin32Error());
-				return false;
+				                          + Marshal.GetLastWin32Error());
 			}
 
 			// success
-			return true;
 		}
 
 		// native imports for adjusting the process token
@@ -99,9 +93,6 @@ namespace LibDmd.Input
 
 		[DllImport("advapi32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
 		static extern bool OpenProcessToken(IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr hToken);
-
-		[DllImport("advapi32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
-		static extern bool OpenThreadToken(IntPtr ThreadHandle, UInt32 DesiredAccess, bool openAsSelf, out IntPtr hToken);
 
 		// thread access rights
 		public const UInt32 STANDARD_RIGHTS_REQUIRED = (0x000F0000);
@@ -117,9 +108,6 @@ namespace LibDmd.Input
 
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
 		static extern IntPtr GetCurrentProcess();
-
-		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
-		static extern IntPtr GetCurrentThread();
 
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
 		protected static extern bool CloseHandle(IntPtr handle);
@@ -153,20 +141,13 @@ namespace LibDmd.Input
 
 		[DllImport("advapi32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
 		static extern bool AdjustTokenPrivileges(IntPtr hToken, bool disableAll, ref TOKEN_PRIVILEGES newState,
-		   UInt32 bufferLength, ref TOKEN_PRIVILEGES previousState, out UInt32 returnLength);
-
-		[DllImport("advapi32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
-		static extern bool AdjustTokenPrivileges(IntPtr hToken, bool disableAll, ref TOKEN_PRIVILEGES newState,
 		   UInt32 bufferLength, IntPtr oldState, IntPtr oldStateLength);
 
 		[DllImport("advapi32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto, SetLastError = true)]
 		static extern bool ImpersonateSelf(UInt32 securityImpersonationLevel);
 
 		// impersonation levels
-		const UInt32 SecurityAnonymous = 0;
-		const UInt32 SecurityIdentification = 1;
 		const UInt32 SecurityImpersonation = 2;
-		const UInt32 SecurityDeletation = 3;
 
 		[DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
 		public static extern UInt32 WaitForSingleObject(IntPtr hWaitHandle, UInt32 dwMilliseconds);

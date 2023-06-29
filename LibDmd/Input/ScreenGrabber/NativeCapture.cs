@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LibDmd.Frame;
 using Point = System.Drawing.Point;
+// ReSharper disable UnusedMember.Local
 
 namespace LibDmd.Input.ScreenGrabber
 {

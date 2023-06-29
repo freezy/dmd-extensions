@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -235,7 +236,7 @@ namespace LibDmd.DmdDevice
 				for (var i = 0; i < 10; i++) {
 					var path = GetString($"plugin.{i}.path{suffix}", null);
 					var passthrough = GetBoolean($"plugin.{i}.passthrough", false);
-					var scalerMode = GetEnum<ScalerMode>($"plugin.{i}.scalermode", ScalerMode.Doubler);
+					var scalerMode = GetEnum($"plugin.{i}.scalermode", ScalerMode.Doubler);
 					if (path != null) {
 						plugins.Add(new PluginConfig(path, passthrough, scalerMode));
 					} else {
@@ -331,7 +332,7 @@ namespace LibDmd.DmdDevice
 
 	public class VirtualDmdConfig : AbstractConfiguration, IVirtualDmdConfig
 	{
-		public override string Name { get; } = "virtualdmd";
+		public override string Name => "virtualdmd";
 		public bool Enabled => GetBoolean("enabled", true);
 		public bool StayOnTop => GetBoolean("stayontop", false);
 		public bool IgnoreAr => GetBoolean("ignorear", false);
@@ -966,7 +967,7 @@ namespace LibDmd.DmdDevice
 			}
 		}
 
-		protected T GetEnum<T>(string key, T fallback) => GetEnum<T>(key, fallback, out _);
+		protected T GetEnum<T>(string key, T fallback) => GetEnum(key, fallback, out _);
 
 		protected T GetEnum<T>(string key, T fallback, out bool keyFound)
 		{
@@ -1026,14 +1027,14 @@ namespace LibDmd.DmdDevice
 				if (_data[Name] == null) {
 					_data.Sections.Add(new SectionData(Name));
 				}
-				_data[Name][key] = value.ToString();
+				_data[Name][key] = value.ToString(CultureInfo.InvariantCulture);
 				if (DoWrite) {
 					_parent.Save();
 				}
 			}
 		}
 
-		protected void Set(string key, bool value, bool onlyForGame = false)
+		protected void Set(string key, bool value, bool onlyForGame)
 		{
 			Set(key, value ? "true" : "false", onlyForGame);
 		}

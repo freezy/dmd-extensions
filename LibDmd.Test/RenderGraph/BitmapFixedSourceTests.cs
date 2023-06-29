@@ -262,7 +262,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();;
+				e0 9f 9d dc de 95 15 00").ConvertToBmp();
 
 			var upscaledFrame = FrameGenerator.FromString(@"
 				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
@@ -315,7 +315,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();;
+				e0 9f 9d dc de 95 15 00").ConvertToBmp();
 
 			var upscaledFrame = FrameGenerator.FromString(@"
 				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 

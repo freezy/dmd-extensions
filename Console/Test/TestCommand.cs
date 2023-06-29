@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DmdExt.Common;
 using LibDmd;
@@ -8,7 +7,6 @@ using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Input.Passthrough;
-using LibDmd.Output;
 
 namespace DmdExt.Test
 {

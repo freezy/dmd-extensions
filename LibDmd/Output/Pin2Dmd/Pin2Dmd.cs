@@ -7,11 +7,11 @@ namespace LibDmd.Output.Pin2Dmd
 	/// <summary>
 	/// Output target for PIN2DMD devices.
 	/// </summary>
-	/// <see cref="https://github.com/lucky01/PIN2DMD"/>
+	/// <see href="https://github.com/lucky01/PIN2DMD"/>
 	public class Pin2Dmd : Pin2DmdBase, IGray2Destination, IGray4Destination, IColoredGray2Destination,
 		IColoredGray4Destination, IColoredGray6Destination, IColorRotationDestination, IRawOutput, IFixedSizeDestination
 	{
-		public string Name { get; } = "PIN2DMD";
+		public string Name => "PIN2DMD";
 		protected override string ProductString => "PIN2DMD";
 		public override Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;

@@ -66,7 +66,7 @@ namespace LibDmd.Output.Network
 				Logger.Warn("Streaming connection error: {0}", data);
 			});
 			_socket.On(Socket.EVENT_CONNECT_TIMEOUT, data => {
-				Logger.Info("Streaming connection timeout.", data);
+				Logger.Info("Streaming connection timeout.");
 			});
 			_socket.On(Socket.EVENT_ERROR, data => {
 				Logger.Warn("Streaming error: {0}", data);

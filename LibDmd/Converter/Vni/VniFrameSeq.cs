@@ -50,6 +50,7 @@ namespace LibDmd.Converter.Vni
 				Masks = new byte[numMasks][];
 				for (var i = 0; i < numMasks; i++)
 				{
+					// ReSharper disable once UnusedVariable
 					int locked = reader.ReadByte();
 					int size = reader.ReadInt16BE();
 					Masks[i] = reader.ReadBytesRequired(size).Select(VniAnimationPlane.Reverse).ToArray();
@@ -58,9 +59,13 @@ namespace LibDmd.Converter.Vni
 
 			if (fileVersion >= 6)
 			{
+				// ReSharper disable once UnusedVariable
 				int compiledAnimation = reader.ReadByte();
 				int size = reader.ReadInt16BE();
+				// ReSharper disable once UnusedVariable
 				string animName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(nameLength)) : "<undefined>";
+
+				// ReSharper disable once UnusedVariable
 				uint startFrame = reader.ReadUInt32BE();
 			}
 

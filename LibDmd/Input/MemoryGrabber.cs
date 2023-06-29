@@ -50,7 +50,7 @@ namespace LibDmd.Input
 		// subject process handle
 		protected IntPtr _hProcess;
 
-		private IConnectableObservable<FrameType> _framesObservable = null;
+		private IConnectableObservable<FrameType> _framesObservable;
 
 		/// <summary>
 		/// Search the system process list for the subject process.  Returns a Win32

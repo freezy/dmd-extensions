@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
-using LibDmd;
 using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using NLog;
-using NLog.Targets;
 
 namespace PinMameDevice
 {
@@ -20,7 +18,7 @@ namespace PinMameDevice
 	/// Diä Klass beinhautet fasch kä Logik sondrn tuät fascht auäs diräkt a
 	/// <see cref="LibDmd.DmdDevice.DmdDevice"/> weytrleitä.
 	/// </remarks>
-	/// <see cref="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
+	/// <see href="https://sourceforge.net/p/pinmame/code/HEAD/tree/trunk/ext/dmddevice/dmddevice.h"/>
 	public static class DmdDevice
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

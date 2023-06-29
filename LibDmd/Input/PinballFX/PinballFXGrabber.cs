@@ -13,7 +13,6 @@ using System.Windows.Media.Imaging;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input.ScreenGrabber;
-using LibDmd.Processor;
 using NLog;
 using Color = System.Windows.Media.Color;
 
@@ -109,7 +108,6 @@ namespace LibDmd.Input.PinballFX
 			Color[] palette = null;
 
 			if (_framesColoredGray2 == null) {
-				var gridProcessor = new GridProcessor { Spacing = 1d };
 				Logger.Info("Capturing at {0} frames per second...", FramesPerSecond);
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
@@ -283,6 +281,7 @@ namespace LibDmd.Input.PinballFX
 
 		#endregion
 
+		// ReSharper disable once UnusedMember.Local
 		private static void Dump(BitmapSource bmp, string filePath)
 		{
 			using (var fileStream = new FileStream(filePath, FileMode.Create))

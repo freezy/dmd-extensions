@@ -22,6 +22,7 @@ namespace LibDmd.Input.Network
 		private readonly WebsocketRgb24Source _rgb24Source = new WebsocketRgb24Source();
 
 		private readonly HttpServer _server;
+		// ReSharper disable once CollectionNeverQueried.Local
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 		private RenderGraphCollection _graphs;
 		private readonly DmdFrame _dmdFrame = new DmdFrame();

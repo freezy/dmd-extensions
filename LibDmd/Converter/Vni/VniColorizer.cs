@@ -69,7 +69,7 @@ namespace LibDmd.Converter.Vni
 			if (frame.BitLength == 4 && _palFile.Palettes.Length > 1 && _animations == null) {
 
 				if (frame.Data[0] == 0x08 && frame.Data[1] == 0x09 && frame.Data[2] == 0x0a && frame.Data[3] == 0x0b) {
-					uint newPal = (uint)frame.Data[5] * 8 + (uint)frame.Data[4];
+					uint newPal = (uint)frame.Data[5] * 8 + frame.Data[4];
 
 					for (int i = 0; i < 6; i++) {
 						frame.Data[i] = 0;
@@ -92,10 +92,10 @@ namespace LibDmd.Converter.Vni
 			var planes = frame.BitPlanes;
 			if (_palFile.Mappings != null) {
 				if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
-					TriggerAnimation(frame.Dimensions, vd.RawPlanes, false);
+					TriggerAnimation(vd.RawPlanes, false);
 
 				} else {
-					TriggerAnimation(frame.Dimensions, planes, false);
+					TriggerAnimation(planes, false);
 				}
 			}
 
@@ -122,9 +122,6 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// Tuät s Biud durähäschä, luägt obs än Animazion uisleest odr Palettä setzt und macht das grad.
 		/// </summary>
-		/// <param name="planes">S Buid zum iberpriäfä
-		/// </param>
-		/// 
 		public void ActivateMapping(Mapping mapping)
 		{
 			if (mapping.Mode == SwitchMode.Event)
@@ -199,14 +196,14 @@ namespace LibDmd.Converter.Vni
 			}
 		}
 
-		private void TriggerAnimation(Dimensions dim, byte[][] planes, bool reverse)
+		private void TriggerAnimation(byte[][] planes, bool reverse)
 		{
 			uint nomaskcrc = 0;
 			bool clear = true;
 
 			for (var i = 0; i < planes.Length; i++)
 			{
-				var mapping = FindMapping(dim, planes[i], reverse, out nomaskcrc);
+				var mapping = FindMapping(planes[i], reverse, out nomaskcrc);
 
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
@@ -233,17 +230,15 @@ namespace LibDmd.Converter.Vni
 		/// Tuät Bitplane fir Bitplane häschä unds erschtä Mäpping wo gfundä
 		/// wordä isch zrugg gäh.
 		/// </summary>
-		/// <param name="planes">Bitplanes vom Biud</param>
-		/// <param name="dim">Grehssi vom Biud</param>
+		/// <param name="plane"></param>
+		/// <param name="reverse"></param>
+		/// <param name="noMaskCrc"></param>
 		/// <returns>Mäpping odr null wenn nid gfundä</returns>
-		private Mapping FindMapping(Dimensions dim, byte[] plane, bool reverse, out uint NoMaskCRC)
+		private Mapping FindMapping(byte[] plane, bool reverse, out uint noMaskCrc)
 		{
-			NoMaskCRC = 0;
-			var maskSize = dim.Width * dim.Height / 8;
-
+			noMaskCrc = 0;
 			var checksum = FrameUtil.Checksum(plane, reverse);
-				
-			NoMaskCRC = checksum;
+			noMaskCrc = checksum;
 
 			var mapping = _palFile.FindMapping(checksum);
 			if (mapping != null) 
@@ -256,7 +251,6 @@ namespace LibDmd.Converter.Vni
 				return null;
 		
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
-			var maskedPlane = new byte[maskSize];
 			foreach (var mask in _palFile.Masks)
 			{
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);

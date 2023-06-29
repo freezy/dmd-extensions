@@ -1,5 +1,4 @@
 ﻿using System;
-using LibDmd.Common;
 using LibDmd.Frame;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
@@ -134,8 +133,7 @@ namespace LibDmd.Output.PinDmd2
 
 				try {
 					var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
-					int bytesWritten;
-					var error = writer.Write(data, 2000, out bytesWritten);
+					var error = writer.Write(data, 2000, out _);
 					if (error != ErrorCode.None) {
 						Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 					}

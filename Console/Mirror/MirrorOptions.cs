@@ -1,6 +1,5 @@
 ﻿using CommandLine;
 using DmdExt.Common;
-using NLog;
 
 namespace DmdExt.Mirror
 {

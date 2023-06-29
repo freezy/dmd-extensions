@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using LibDmd.Frame;
 using LibDmd.Input;
 
 namespace LibDmd.Test.Stubs

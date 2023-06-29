@@ -35,13 +35,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// Glow caused by dots (blurry light directly around them).
 		/// </summary>
-		public double DotGlow { get; set; } = 0.0;
+		public double DotGlow { get; set; }
 		public bool HasDotGlow => DotGlow > 0.01;
 
 		/// <summary>
 		/// Glow caused by DMD background (very blurry light that spreads far away from dots).
 		/// </summary>
-		public double BackGlow { get; set; } = 0.0;
+		public double BackGlow { get; set; }
 		public bool HasBackGlow => BackGlow > 0.01;
 
 		/// <summary>
@@ -59,13 +59,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// Path to the texture of the DMD glass (can be either absolute or relative).
 		/// </summary>
-		public string GlassTexture { get; set; } = null;
+		public string GlassTexture { get; set; }
 		public bool HasGlass => GlassTexture != null && (GlassLighting > 0.0 || GlassColor.R > 0 || GlassColor.G > 0 || GlassColor.B > 0);
 
 		/// <summary>
 		/// Padding of the DMD inside the glass. Fake unlit dots are rendered in this padding area.
 		/// </summary>
-		public System.Windows.Thickness GlassPadding { get; set; } = new System.Windows.Thickness();
+		public System.Windows.Thickness GlassPadding { get; set; }
 
 		/// <summary>
 		/// Glass tint used to tint the provided texture (RGB of given color).
@@ -75,17 +75,17 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// <summary>
 		/// Level of light interaction between glass and DMD.
 		/// </summary>
-		public double GlassLighting { get; set; } = 0.0;
+		public double GlassLighting { get; set; }
 
 		/// <summary>
 		/// Path to the texture of a frame, rendered around the DMD (can be either absolute or relative).
 		/// </summary>
-		public string FrameTexture { get; set; } = null;
+		public string FrameTexture { get; set; }
 
 		/// <summary>
 		/// Padding of the glass inside the frame.
 		/// </summary>
-		public System.Windows.Thickness FramePadding { get; set; } = new System.Windows.Thickness();
+		public System.Windows.Thickness FramePadding { get; set; }
 
 		/// <summary>
 		/// Returns an exact copy of this style

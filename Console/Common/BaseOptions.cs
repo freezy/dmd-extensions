@@ -92,7 +92,7 @@ namespace DmdExt.Common
 		public int OutputDelay { get; set; } = 25;
 
 		[Option('q', "quit-when-done", HelpText = "Exit the program when finished, e.g. when Pinball FX or Future Pinball doesn't receive any frames anymore. Default: false")]
-		public bool QuitWhenDone { get; set; } = false;
+		public bool QuitWhenDone { get; set; }
 
 		[Option("quit-after", HelpText = "Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used. Default: -1")]
 		public int QuitAfter { get; set; } = -1;
@@ -113,7 +113,7 @@ namespace DmdExt.Common
 		public string DmdDeviceIni { get; set; } = null;
 
 		[Option('g', "game", HelpText = "Name of the game running. Useful when retrieving setting from DmdDevice.ini.")]
-		public string GameName { get; set; } = null;
+		public string GameName { get; set; }
 
 		[Option("color-matrix", HelpText = "Color matrix to use for Pixelcade displays. Default: RBG.")]
 		public ColorMatrix ColorMatrix { get; set; } = ColorMatrix.Rbg;

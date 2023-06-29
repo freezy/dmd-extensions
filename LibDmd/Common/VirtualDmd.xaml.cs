@@ -18,7 +18,7 @@ namespace LibDmd.Common
 		private VirtualDmdConfig _dmdConfig;
 		private IDisposable _settingSubscription;
 
-		public VirtualDmd() : base()
+		public VirtualDmd()
 		{
 			InitializeComponent();
 			Initialize();

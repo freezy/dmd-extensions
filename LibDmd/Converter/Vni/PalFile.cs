@@ -77,7 +77,7 @@ namespace LibDmd.Converter.Vni
 					var mapping = new Mapping(reader);
 					Mappings.Add(mapping.Checksum, mapping);
 				}
-			} else if (numMappings == 0 || reader.BaseStream.Position == reader.BaseStream.Length) {
+			} else if (reader.BaseStream.Position == reader.BaseStream.Length) {
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
 					Logger.Warn("[vni] PAL[{1}] No mappings found but there are still {0} bytes in the file!", reader.BaseStream.Length - reader.BaseStream.Position, reader.BaseStream.Position);
 				}

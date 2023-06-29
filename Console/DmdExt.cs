@@ -42,7 +42,10 @@ namespace DmdExt
 		private static BaseCommand _command;
 		private static EventHandler _handler;
 		private static string[] _commandLineArgs;
+#pragma warning disable CS0169
 		private static string _version;
+#pragma warning restore CS0169
+		// ReSharper disable once NotAccessedField.Local
 		private static string _sha;
 		private static string _fullVersion;
 
@@ -290,6 +293,7 @@ namespace DmdExt
 			ReportError(ex);
 		}
 
+		// ReSharper disable once UnusedParameter.Local
 		private static void ReportError(Exception ex)
 		{
 #if !DEBUG
@@ -325,6 +329,7 @@ namespace DmdExt
 		enum CtrlType
 		{
 			CTRL_C_EVENT = 0,
+			// ReSharper disable once UnusedMember.Local
 			CTRL_BREAK_EVENT = 1,
 			CTRL_CLOSE_EVENT = 2,
 			CTRL_LOGOFF_EVENT = 5,

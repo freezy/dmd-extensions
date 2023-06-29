@@ -262,7 +262,6 @@ namespace LibDmd.Converter.Serum
 		/// <summary>
 		/// Serum library functions declarations
 		/// </summary>
-
 		/// <summary>
 		/// Serum_Load: Function to call at table opening time
 		/// </summary>
@@ -271,6 +270,7 @@ namespace LibDmd.Converter.Serum
 		/// <param name="width">out: colorized rom width in LEDs</param>
 		/// <param name="height">out: colorized rom height in LEDs</param>
 		/// <param name="numColors">out: number of colours in the manufacturer rom</param>
+		/// <param name="triggernb"></param>
 		/// <returns></returns>
 #if PLATFORM_X64
 		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
@@ -279,7 +279,7 @@ namespace LibDmd.Converter.Serum
 #endif
 		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, int* pwidth, int* pheight, unsigned int* pnocolors, unsigned int* pntriggers)
 		private static extern bool Serum_Load(string altcolorpath, string romname, ref int width, ref int height, ref uint numColors, ref uint triggernb);
-		
+
 		/// <summary>
 		/// Serum_Colorize: Function to call with a VpinMame frame to colorize it
 		/// </summary>
@@ -288,13 +288,14 @@ namespace LibDmd.Converter.Serum
 		/// <param name="height">frame height in LEDs</param>
 		/// <param name="palette">64*3 bytes: out: RGB palette description 64 colours with their R, G and B component</param>
 		/// <param name="rotations">8*3 bytes: out: colour rotations 8 maximum per frame with first colour, number of colour and time interval in 10ms</param>
+		/// <param name="triggerId"></param>
 #if PLATFORM_X64
 		[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #else
 		[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		// C format: void Serum_Colorize(UINT8* frame, int width, int height, UINT8* palette, UINT8* rotations, UINT32* triggerID)
-		private static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations,ref uint triggerID);
+		private static extern void Serum_Colorize(Byte[] frame, int width, int height, byte[] palette, byte[] rotations, ref uint triggerId);
 		
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory

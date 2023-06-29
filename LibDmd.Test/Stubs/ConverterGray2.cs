@@ -4,7 +4,6 @@ using System.Reactive.Subjects;
 using LibDmd.Converter;
 using LibDmd.Frame;
 using LibDmd.Input;
-using NLog;
 
 namespace LibDmd.Test.Stubs
 {
@@ -16,8 +15,6 @@ namespace LibDmd.Test.Stubs
 		private readonly Func<DmdFrame, ColoredFrame> _convert;
 
 		private readonly Subject<ColoredFrame> _coloredGray2Frames = new Subject<ColoredFrame>();
-
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ConverterGray2(Func<DmdFrame, ColoredFrame> convert) : base(true)
 			=> _convert = convert;

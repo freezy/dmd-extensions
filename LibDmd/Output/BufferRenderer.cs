@@ -45,10 +45,7 @@ namespace LibDmd.Output
 						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 						// convert to HSL
-						double hue;
-						double saturation;
-						double luminosity;
-						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
 						// pixel shade between 0 and 3
 						var pixel = (byte)(luminosity * 4);
@@ -102,10 +99,7 @@ namespace LibDmd.Output
 						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
 						// convert to HSL
-						double hue;
-						double saturation;
-						double luminosity;
-						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out hue, out saturation, out luminosity);
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
 						var pixel = (byte)(luminosity * 255d);
 

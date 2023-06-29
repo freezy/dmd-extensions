@@ -81,7 +81,7 @@ namespace LibDmd
 				_data["Display"] = display;
 				try {
 					RudderAnalytics.Client.Track(GetId(), "Game Started", _data, _options);
-				} catch (Exception _) {
+				} catch (Exception) {
 					// do nothing
 				}
 			}
@@ -160,7 +160,7 @@ namespace LibDmd
 				// this used to block, now on a separate thread it doesn't seem to anymore.
 				new Thread(() => RudderAnalytics.Client.Flush()).Start();
 
-			} catch (Exception _) {
+			} catch (Exception) {
 				// do nothing
 			}
 		}
@@ -342,6 +342,7 @@ namespace LibDmd
 		}
 
 #if DEBUG			
+		// ReSharper disable once UnusedMember.Local
 		static void LoggingHandler(RudderStack.Logger.Level level, string message, IDictionary<string, object> args)
 		{
 			if (args != null) {

@@ -222,8 +222,7 @@ namespace LibDmd.Input.TPAGrabber
 		// Function to calculate the 5-byte array for an ASM JMP.
 		private static byte[] ASMJump(IntPtr location, IntPtr destination)
 		{
-			var JMPbytes = new byte[4];
-			JMPbytes = BitConverter.GetBytes((UInt64)destination - (UInt64)location - (UInt64)5);
+			var JMPbytes = BitConverter.GetBytes((UInt64)destination - (UInt64)location - 5);
 			return new byte[] { 0xE9, JMPbytes[0], JMPbytes[1], JMPbytes[2], JMPbytes[3] };
 		}
 

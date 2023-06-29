@@ -11,14 +11,14 @@ namespace LibDmd.Output.Network
 	public class NetworkStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
 		public string Name { get; } = "Network Stream";
-		public bool IsAvailable { get; private set; } = false;
+		public bool IsAvailable { get; private set; }
 
 		private WebSocket _client;
 		private Uri _uri;
 		private bool _retry;
 		private int _retryInterval;
 		private Timer _retryTimer;
-		private bool _disposed = false;
+		private bool _disposed;
 		private string _gameName;
 		private readonly WebsocketSerializer _serializer = new WebsocketSerializer();
 
