@@ -138,6 +138,10 @@ run it. A few notes:
   location of your `DmdDevice.ini`. That means from wherever you launch
   `DmdDevice.dll` (or run `dmdext.exe` with `--use-ini`), the same
   `DmdDevice.ini` will be used.
+- If you re-install and your VPM installation folder changed since the last
+  installation, a new `DmdDevice.ini` will be copied to the new location (if it
+  doesn't exist), and the `DMDDEVICE_CONFIG` environment variable will be updated
+  accordingly.
 - During installation, when a feature is deactivated, that means the installer
   couldn't find the host program. For VPM that means that you haven't registered
   `VPinMAME.dll`. For Pro Pinball it means it's not installed via Steam, and
@@ -407,15 +411,14 @@ from VPM where no configuration is necessary (apart from enabling it in VPM).
 
 The following parameters are valid for all of dmdext's commands:
 
-| Parameter              | Description                                                                                                                                              | Default |
-|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `--use-ini`            | Path to `DmdDevice.ini` to use instead of command line options. If no path is provided, the `DMDDEVICE_CONFIG` environment variable is used as fallback. | *none*  |
-| `-c, --color`          | Sets the color of a grayscale source that is rendered on an RGB destination.                                                                             | ff3000  |
-| `-q, --quit-when-done` | Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.                                                                | false   |
-| `--quit-after`         | Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used.                                                       | -1      |
-| `--no-clear`           | Don't clear screen when quitting.                                                                                                                        | false   |
-| `-o, --output-to-file` | If set, writes all frames as PNG bitmaps to the provided folder.                                                                                         |         |
-
+| Parameter              | Description                                                                                                                                                                                                                                             | Default |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| `--use-ini`            | Path to `DmdDevice.ini` to use instead of command line options. If no path is provided, the `DMDDEVICE_CONFIG` environment variable is used as fallback. If just `DmdDevice.ini` is provided, dmdext will look for it in the current working directory. | *none*  |
+| `-c, --color`          | Sets the color of a grayscale source that is rendered on an RGB destination.                                                                                                                                                                            | ff3000  |
+| `-q, --quit-when-done` | Exit the program when finished, e.g. when Pinball FX2 doesn't receive any frames anymore.                                                                                                                                                               | false   |
+| `--quit-after`         | Exit after n milliseconds. If set to -1, waits indefinitely or until source finishes when -q used.                                                                                                                                                      | -1      |
+| `--no-clear`           | Don't clear screen when quitting.                                                                                                                                                                                                                       | false   |
+| `-o, --output-to-file` | If set, writes all frames as PNG bitmaps to the provided folder.                                                                                                                                                                                        |         |
 
 Note that all options of dmdext.exe are also available via command line:
 
