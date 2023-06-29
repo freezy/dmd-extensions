@@ -156,7 +156,7 @@ namespace LibDmd
 					RudderAnalytics.Client.Track(GetId(), "Game Ended", _data, _options);
 				}
 				_hasGameStarted = false;
-				RudderAnalytics.Client.Flush();
+				RudderAnalytics.Client.FlushAsync();
 				
 			} catch (Exception _) {
 				// do nothing
