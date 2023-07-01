@@ -95,9 +95,6 @@ namespace LibDmd.DmdDevice
 			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source");
 			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(currentFrameFormat);
 
-			_config = config ?? new Configuration();
-			_colorizationLoader = new ColorizationLoader();
-
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
 			#region Logger
@@ -128,6 +125,14 @@ namespace LibDmd.DmdDevice
 			PathUtil.GetAssemblyVersion(out _fullVersion, out _sha);
 			#endregion
 
+			var bitLength = Environment.Is64BitProcess ? "x64" : "x86";
+			Logger.Info($"Starting VPinMAME API {_fullVersion} ({bitLength}) through {Process.GetCurrentProcess().ProcessName}.exe.");
+			Logger.Info("Assembly located at {0}", assembly.Location);
+			Logger.Info("Running in {0}", Directory.GetCurrentDirectory());
+
+			_config = config ?? new Configuration();
+			_colorizationLoader = new ColorizationLoader();
+
 			if (_config.Global.SkipAnalytics) {
 				Analytics.Instance.Disable();
 			}
@@ -139,11 +144,6 @@ namespace LibDmd.DmdDevice
 				ReportError(e);
 				Analytics.Instance.Disable(false);
 			}
-
-			var bitLength = Environment.Is64BitProcess ? "x64" : "x86";
-			Logger.Info($"Starting VPinMAME API {_fullVersion} ({bitLength}) through {Process.GetCurrentProcess().ProcessName}.exe.");
-			Logger.Info("Assembly located at {0}", assembly.Location);
-			Logger.Info("Running in {0}", Directory.GetCurrentDirectory());
 		}
 
 		#region DmdDevice.dll API
