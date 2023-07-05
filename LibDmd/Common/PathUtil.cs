@@ -72,7 +72,7 @@ namespace LibDmd.Common
 				}
 			}
 
-			Logger.Info($"No {fileOrFolder} folder found.");
+			Logger.Info($"{logPrefix} {fileOrFolder} not found.");
 			return null;
 		}
 
