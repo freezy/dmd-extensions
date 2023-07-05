@@ -77,7 +77,7 @@ namespace LibDmd.Converter.Plugin
 
 			// open plugin
 			if (!_open()) {
-				Logger.Info("[plugin] Failed to open colorizer plugin.");
+				Logger.Info($"[plugin] Failed to open colorizer plugin {GetName()} v{GetVersion()}");
 				return;
 			}
 			IsAvailable = true;
@@ -341,11 +341,6 @@ namespace LibDmd.Converter.Plugin
 
 		private bool LoadPlugin(string dllPath)
 		{
-			if (!File.Exists(dllPath)) {
-				Logger.Error("[plugin] Ignoring plugin defined at " + dllPath + ", file does not exist.");
-				return false;
-			}
-
 			var dll = NativeDllLoad.LoadLibrary(dllPath);
 			if (dll == IntPtr.Zero) {
 				Logger.Error("[plugin] Error loading plugin at " + dllPath + ".");
