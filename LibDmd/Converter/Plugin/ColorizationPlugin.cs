@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
+using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
@@ -343,8 +344,12 @@ namespace LibDmd.Converter.Plugin
 		{
 			var dll = NativeDllLoad.LoadLibrary(dllPath);
 			if (dll == IntPtr.Zero) {
-				Logger.Error("[plugin] Error loading plugin at " + dllPath + ".");
-				return false;
+				var dllFallbackPath = PathUtil.GetVpmFile(dllPath, "[plugin]");
+				dll = NativeDllLoad.LoadLibrary(dllFallbackPath);
+				if (dll == IntPtr.Zero) {
+					Logger.Error("[plugin] Error loading plugin at " + dllPath + ".");
+					return false;
+				}
 			}
 
 			// Now load function calls using PinMame BSD-3 licensed DmdDevice.DLL API

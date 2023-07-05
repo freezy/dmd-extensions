@@ -15,7 +15,7 @@ namespace LibDmd.Converter.Vni
 
 		public ColorizationLoader()
 		{
-			_altcolorPath = PathUtil.GetVpmPath("altcolor", "[serum]");
+			_altcolorPath = PathUtil.GetVpmFolder("altcolor", "[serum]");
 		}
 
 		public Serum.Serum LoadSerum(string gameName, ScalerMode scalerMode)
