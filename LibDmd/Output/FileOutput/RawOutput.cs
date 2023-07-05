@@ -29,7 +29,7 @@ namespace LibDmd.Output.FileOutput
 		public void SetGameName(string gameName)
 		{
 			_gameName = gameName;
-			var folder = PathUtil.GetVpmPath("dmddump", "[rawoutput]");
+			var folder = PathUtil.GetVpmFolder("dmddump", "[rawoutput]");
 			if (folder == null) {
 				folder = Path.Combine(Directory.GetCurrentDirectory(), "dmddump");
 				if (!Directory.Exists(folder)) {

@@ -15,19 +15,34 @@ namespace LibDmd.Common
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static string _sha;
 		private static string _fullVersion;
+		private delegate bool FileOrDirectoryExists(string path);
 
 		/// <summary>
 		/// Returns an existing path to a subfolder relative to the VPM installation.
 		/// </summary>
-		/// <param name="subfolder">name of the subfolder ("altcolor", "dmddump", etc)</param>
+		/// <param name="subfolder">Name of the subfolder ("altcolor", "dmddump", etc)</param>
 		/// <param name="logPrefix">How to prefix the log messages during search</param>
 		/// <returns>Existing, absolute path, or null if not found</returns>
-		public static string GetVpmPath(string subfolder, string logPrefix)
+		public static string GetVpmFolder(string subfolder, string logPrefix) =>
+			GetVpmFileOrFolder(subfolder, logPrefix, Directory.Exists);
+
+		/// <summary>
+		/// Returns an existing path to a file at the VPM folder.
+		/// </summary>
+		/// <param name="filename">Name of the file, can be the entire path as well</param>
+		/// <param name="logPrefix">How to prefix the log messages during search</param>
+		/// <returns>Existing, absolute path, or null if not found</returns>
+		public static string GetVpmFile(string filename, string logPrefix) =>
+			GetVpmFileOrFolder(filename, logPrefix, File.Exists);
+
+		private static string GetVpmFileOrFolder(string fileOrFolder, string logPrefix, FileOrDirectoryExists exists)
 		{
+			fileOrFolder = Path.GetFileName(fileOrFolder);
+
 			// first, try executing assembly.
-			var absPath = Path.Combine(AssemblyPath, subfolder);
-			if (Directory.Exists(absPath)) {
-				Logger.Info($"{logPrefix} Determined {subfolder} path from assembly path: {absPath}");
+			var absPath = Path.Combine(AssemblyPath, fileOrFolder);
+			if (exists(absPath)) {
+				Logger.Info($"{logPrefix} Determined {fileOrFolder} path from assembly path: {absPath}");
 				return absPath;
 			}
 
@@ -35,9 +50,9 @@ namespace LibDmd.Common
 			var vpmDllName = IntPtr.Size == 4  ? "VPinMAME.dll" : "VPinMAME64.dll";
 			var vpmPath = GetDllPath(vpmDllName);
 			if (vpmPath != null) {
-				absPath = Path.Combine(Path.GetDirectoryName(vpmPath), subfolder);
-				if (Directory.Exists(absPath)) {
-					Logger.Info($"{logPrefix} Determined {subfolder} path from {vpmDllName} location: {absPath}");
+				absPath = Path.Combine(Path.GetDirectoryName(vpmPath), fileOrFolder);
+				if (exists(absPath)) {
+					Logger.Info($"{logPrefix} Determined {fileOrFolder} path from {vpmDllName} location: {absPath}");
 					return absPath;
 				}
 			}
@@ -49,15 +64,15 @@ namespace LibDmd.Common
 				var x64Suffix = Environment.Is64BitOperatingSystem ? @"WOW6432Node\" : "";
 				reg = Registry.ClassesRoot.OpenSubKey(x64Suffix + @"CLSID\" + clsid + @"\InprocServer32");
 				if (reg != null) {
-					absPath = Path.Combine(Path.GetDirectoryName(reg.GetValue(null).ToString()), subfolder);
-					if (Directory.Exists(absPath)) {
-						Logger.Info($"{logPrefix} Determined {subfolder} path from VPinMAME registry: {absPath}");
+					absPath = Path.Combine(Path.GetDirectoryName(reg.GetValue(null).ToString()), fileOrFolder);
+					if (exists(absPath)) {
+						Logger.Info($"{logPrefix} Determined {fileOrFolder} path from VPinMAME registry: {absPath}");
 						return absPath;
 					}
 				}
 			}
 
-			Logger.Info($"No {subfolder} folder found.");
+			Logger.Info($"No {fileOrFolder} folder found.");
 			return null;
 		}
 
