@@ -264,7 +264,6 @@ namespace PinMameDevice
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currBuffer, frame, 0, frameSize);
-			//noOfRawPlanes = Math.Min((ushort)2, noOfRawPlanes);
 			var rawPlanes = new byte[2][];
 			var rawExtraPlanes = new byte[noOfRawPlanes - 2][];
 			var planeSize = frameSize / 8;
