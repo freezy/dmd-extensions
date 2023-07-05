@@ -110,7 +110,8 @@ namespace LibDmd
 		public void Update(ColoredFrame frame)
 		{
 			Dimensions = frame.Dimensions;
-			Data = frame.Data;
+			Data = new byte[frame.Data.Length];
+			Buffer.BlockCopy(frame.Data, 0, Data, 0, frame.Data.Length);
 			BitLength = frame.BitLength;
 			Palette = frame.Palette;
 			Rotations = frame.Rotations;
