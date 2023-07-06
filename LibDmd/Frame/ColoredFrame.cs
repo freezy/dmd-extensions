@@ -135,9 +135,9 @@ namespace LibDmd
 			return new DmdFrame(Dimensions, Data, BitLength);
 		}
 
-		public DmdFrame ConvertToGray(params byte[] mapping)
+		public DmdFrame ConvertToGray4(params byte[] mapping)
 		{
-			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), mapping.Length.GetBitLength());
+			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), 4);
 		}
 
 		/// <summary>

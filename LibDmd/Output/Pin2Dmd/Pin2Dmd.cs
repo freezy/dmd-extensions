@@ -143,7 +143,7 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(frame.Palette);
 
 			// send frame buffer to device
-			RenderGray4(frame.ConvertToGray(0x0, 0x1, 0x4, 0xf));
+			RenderGray4(frame.ConvertToGray4(0x0, 0x1, 0x4, 0xf));
 		}
 
 		public void UpdatePalette(Color[] palette)
