@@ -618,7 +618,7 @@ namespace LibDmd.DmdDevice
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
 			// connect colorizer
-			if (_colorize && _colorizer != null) {
+			if (_colorizer != null) {
 
 				if (_colorizer.Supports(FrameFormat.Gray2)) {
 					_graphs.Add(new RenderGraph {
@@ -662,11 +662,52 @@ namespace LibDmd.DmdDevice
 					ReportingTags.Add("Color:Alphanumeric");
 				}
 
+				// if plugin has passthrough enabled and is not loaded, create new render graphs that pull from the source.
+				if (!(_colorizer is ColorizationPlugin) && _config.Global.Plugins.Any(p => p.PassthroughEnabled)) {
+					var colorizerPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette) as IDestination;
+					_graphs.Add(new RenderGraph {
+						Name = "2-bit Plugin Passthrough Graph",
+						Source = _passthroughGray2Source,
+						Destinations = new List<IDestination> { colorizerPlugin },
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+
+					_graphs.Add(new RenderGraph {
+						Name = "4-bit Plugin Passthrough Graph",
+						Source = _passthroughGray4Source,
+						Destinations = new List<IDestination> { colorizerPlugin },
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+
+					_graphs.Add(new RenderGraph {
+						Name = "Alphanumeric Plugin Passthrough Graph",
+						Source = _passthroughAlphaNumericSource,
+						Destinations = new List<IDestination> { colorizerPlugin },
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+				}
+
 				Logger.Info("Just clearing palette, colorization is done by converter.");
 				_graphs.ClearColor();
 			}
 			// === NO COLORIZATION ===
 			else {
+
+				// if there is a plugin with passthrough enabled, add it to the list of renderers
+				if (_config.Global.Plugins.Any(p => p.PassthroughEnabled)) {
+					var colorizerPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette);
+					renderers.Add(colorizerPlugin as IDestination);
+				}
+
 				_graphs.Add(new RenderGraph {
 					Name = "2-bit Passthrough Graph",
 					Source = _passthroughGray2Source,
@@ -872,7 +913,7 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 			_colorizer = (_colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode)
-				?? _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode))
+				?? _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette))
 				??_colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode);
 		}
 

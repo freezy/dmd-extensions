@@ -240,7 +240,7 @@ namespace DmdExt.Mirror
 			}
 
 			// 2. check for plugins
-			var pluginColorizer = _colorizationLoader.LoadPlugin(_config.Global.Plugins, true, gameName, Colors.OrangeRed, null, _config.Global.ScalerMode);
+			var pluginColorizer = _colorizationLoader.LoadPlugin(_config.Global.Plugins, true, gameName, Colors.OrangeRed, null);
 			if (pluginColorizer != null) {
 				return pluginColorizer;
 			}
