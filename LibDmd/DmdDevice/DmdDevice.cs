@@ -705,7 +705,9 @@ namespace LibDmd.DmdDevice
 				// if there is a plugin with passthrough enabled, add it to the list of renderers
 				if (_config.Global.Plugins.Any(p => p.PassthroughEnabled)) {
 					var colorizerPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette);
-					renderers.Add(colorizerPlugin as IDestination);
+					if (colorizerPlugin != null) {
+						renderers.Add(colorizerPlugin as IDestination);
+					}
 				}
 
 				_graphs.Add(new RenderGraph {
