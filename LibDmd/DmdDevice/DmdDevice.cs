@@ -665,35 +665,37 @@ namespace LibDmd.DmdDevice
 				// if plugin has passthrough enabled and is not loaded, create new render graphs that pull from the source.
 				if (!(_colorizer is ColorizationPlugin) && _config.Global.Plugins.Any(p => p.PassthroughEnabled)) {
 					var colorizerPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette) as IDestination;
-					_graphs.Add(new RenderGraph {
-						Name = "2-bit Plugin Passthrough Graph",
-						Source = _passthroughGray2Source,
-						Destinations = new List<IDestination> { colorizerPlugin },
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
-					});
+					if (colorizerPlugin != null) {
+						_graphs.Add(new RenderGraph {
+							Name = "2-bit Plugin Passthrough Graph",
+							Source = _passthroughGray2Source,
+							Destinations = new List<IDestination> { colorizerPlugin },
+							Resize = _config.Global.Resize,
+							FlipHorizontally = _config.Global.FlipHorizontally,
+							FlipVertically = _config.Global.FlipVertically,
+							ScalerMode = _config.Global.ScalerMode
+						});
 
-					_graphs.Add(new RenderGraph {
-						Name = "4-bit Plugin Passthrough Graph",
-						Source = _passthroughGray4Source,
-						Destinations = new List<IDestination> { colorizerPlugin },
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
-					});
+						_graphs.Add(new RenderGraph {
+							Name = "4-bit Plugin Passthrough Graph",
+							Source = _passthroughGray4Source,
+							Destinations = new List<IDestination> { colorizerPlugin },
+							Resize = _config.Global.Resize,
+							FlipHorizontally = _config.Global.FlipHorizontally,
+							FlipVertically = _config.Global.FlipVertically,
+							ScalerMode = _config.Global.ScalerMode
+						});
 
-					_graphs.Add(new RenderGraph {
-						Name = "Alphanumeric Plugin Passthrough Graph",
-						Source = _passthroughAlphaNumericSource,
-						Destinations = new List<IDestination> { colorizerPlugin },
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
-					});
+						_graphs.Add(new RenderGraph {
+							Name = "Alphanumeric Plugin Passthrough Graph",
+							Source = _passthroughAlphaNumericSource,
+							Destinations = new List<IDestination> { colorizerPlugin },
+							Resize = _config.Global.Resize,
+							FlipHorizontally = _config.Global.FlipHorizontally,
+							FlipVertically = _config.Global.FlipVertically,
+							ScalerMode = _config.Global.ScalerMode
+						});
+					}
 				}
 
 				Logger.Info("Just clearing palette, colorization is done by converter.");
