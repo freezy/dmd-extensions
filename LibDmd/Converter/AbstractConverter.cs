@@ -66,6 +66,8 @@ namespace LibDmd.Converter
 			}
 		}
 
+		public abstract bool Supports(FrameFormat format);
+
 		/// <summary>
 		/// Receives de-duped frames and outputs them to the output sources the converter implements.<br/>
 		///

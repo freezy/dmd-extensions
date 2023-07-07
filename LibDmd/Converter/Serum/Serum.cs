@@ -132,6 +132,17 @@ namespace LibDmd.Converter.Serum
 			IsLoaded = false;
 		}
 
+		public override bool Supports(FrameFormat format)
+		{
+			switch (format) {
+				case FrameFormat.Gray4 when NumColors == 16:
+				case FrameFormat.Gray2:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public override void Convert(DmdFrame frame)
 		{
 			if (!_frameEventsInitialized) {

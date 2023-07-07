@@ -64,6 +64,17 @@ namespace LibDmd.Converter.Vni
 			SetPalette(palFile.DefaultPalette, true);
 		}
 
+		public override bool Supports(FrameFormat format)
+		{
+			switch (format) {
+				case FrameFormat.Gray2:
+				case FrameFormat.Gray4:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		protected override void ConvertClocked(DmdFrame frame)
 		{
 			if (frame.BitLength == 4 && _palFile.Palettes.Length > 1 && _animations == null) {

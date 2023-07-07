@@ -25,6 +25,8 @@ namespace LibDmd.Test.Stubs
 
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 
+		public override bool Supports(FrameFormat format) => true;
+
 		public override void Convert(DmdFrame frame)
 		{
 			Logger.Info($"ConverterGray4.Convert");

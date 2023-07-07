@@ -23,6 +23,8 @@ namespace LibDmd.Test.Stubs
 		public ConverterGray2Multi(Func<DmdFrame, ColoredFrame> convert) : base(true)
 			=> _convert = convert;
 
+		public override bool Supports(FrameFormat format) => true;
+
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => _coloredGray2Frames;
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => _coloredGray4Frames;
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;

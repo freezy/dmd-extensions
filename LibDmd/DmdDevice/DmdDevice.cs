@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using LibDmd.Common;
+using LibDmd.Converter;
 using LibDmd.Converter.Vni;
 using LibDmd.Converter.Plugin;
 using LibDmd.Converter.Serum;
@@ -71,9 +72,10 @@ namespace LibDmd.DmdDevice
 
 		// colorizers
 		private readonly ColorizationLoader _colorizationLoader;
-		private Serum _serum;
-		private ColorizationPlugin _colorizationPlugin;
-		private VniColorizer _vniColorizer;
+		private AbstractConverter _colorizer;
+		// private Serum _serum;
+		// private ColorizationPlugin _colorizationPlugin;
+		// private VniColorizer _vniColorizer;
 
 		// error reporting
 #if !DEBUG
@@ -161,10 +163,7 @@ namespace LibDmd.DmdDevice
 				return;
 			}
 
-			_serum = null;
-			_vniColorizer = null;
-			_colorizationPlugin = null;
-
+			_colorizer = null;
 			SetupColorizer();
 
 			if (_config.VirtualDmd.Enabled || _config.VirtualAlphaNumericDisplay.Enabled) {
@@ -196,7 +195,9 @@ namespace LibDmd.DmdDevice
 		/// <param name="num">Index of the new palette.</param>
 		public void LoadPalette(uint num)
 		{
-			_vniColorizer?.LoadPalette(num);
+			if (_colorizer is VniColorizer vniColorizer) {
+				vniColorizer.LoadPalette(num);
+			}
 		}
 
 		/// <summary>
@@ -205,7 +206,9 @@ namespace LibDmd.DmdDevice
 		/// <param name="data"></param>
 		public void ConsoleData(byte data)
 		{
-			_colorizationPlugin?.ConsoleData(data);
+			if (_colorizer is ColorizationPlugin plugin) {
+				plugin.ConsoleData(data);
+			}
 		}
 
 		public void SetGameName(string gameName)
@@ -402,11 +405,15 @@ namespace LibDmd.DmdDevice
 			_alphaNumericDest = null;
 			_color = RenderGraph.DefaultColor;
 			_palette = null;
-			_serum?.Dispose();
-			_serum = null;
-			_colorizationPlugin?.Dispose();
-			_colorizationPlugin = null;
-			_vniColorizer = null;
+			switch (_colorizer) {
+				case Serum serum:
+					serum.Dispose();
+					break;
+				case ColorizationPlugin plugin:
+					plugin.Dispose();
+					break;
+			}
+			_colorizer = null;
 			_isOpen = false;
 		}
 
@@ -610,110 +617,54 @@ namespace LibDmd.DmdDevice
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
 
-			// === SERUM ===
-			if (_colorize && _serum != null) {
+			// connect colorizer
+			if (_colorize && _colorizer != null) {
 
-				// 4-bit graph
-				if (_serum.NumColors == 16) {
+				if (_colorizer.Supports(FrameFormat.Gray2)) {
 					_graphs.Add(new RenderGraph {
-						Name = "4-bit Serum Graph",
-						Source = _passthroughGray4Source,
-						Destinations = renderers,
-						Converter = _serum,
-						Resize = _config.Global.Resize,
-						FlipHorizontally = _config.Global.FlipHorizontally,
-						FlipVertically = _config.Global.FlipVertically,
-						ScalerMode = _config.Global.ScalerMode
-					});
-				}
-				// 2-bit graph
-				else {
-					_graphs.Add(new RenderGraph {
-						Name = "2-bit Serum Graph",
+						Name = "2-bit Colorization Graph",
 						Source = _passthroughGray2Source,
 						Destinations = renderers,
-						Converter = _serum,
+						Converter = _colorizer,
 						Resize = _config.Global.Resize,
 						FlipHorizontally = _config.Global.FlipHorizontally,
 						FlipVertically = _config.Global.FlipVertically,
 						ScalerMode = _config.Global.ScalerMode
 					});
+					ReportingTags.Add("Color:Gray2");
 				}
+
+				if (_colorizer.Supports(FrameFormat.Gray4)) {
+					_graphs.Add(new RenderGraph {
+						Name = "4-bit Colorization Graph",
+						Source = _passthroughGray4Source,
+						Destinations = renderers,
+						Converter = _colorizer,
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode
+					});
+					ReportingTags.Add("Color:Gray4");
+				}
+
+				if (_colorizer.Supports(FrameFormat.AlphaNumeric)) {
+					_graphs.Add(new RenderGraph {
+						Name = "Alphanumeric Colorization Graph",
+						Source = _passthroughAlphaNumericSource,
+						Destinations = renderers,
+						Converter = _colorizer,
+						Resize = _config.Global.Resize,
+						FlipHorizontally = _config.Global.FlipHorizontally,
+						FlipVertically = _config.Global.FlipVertically,
+						ScalerMode = _config.Global.ScalerMode,
+					});
+					ReportingTags.Add("Color:Alphanumeric");
+				}
+
+				Logger.Info("Just clearing palette, colorization is done by converter.");
+				_graphs.ClearColor();
 			}
-
-			// === COLORIZATION PLUGIN ===
-			else if (_colorize && _colorizationPlugin != null) {
-
-				// 2-bit graph
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit Colorization Plugin Graph",
-					Source = _passthroughGray2Source,
-					Destinations = renderers,
-					Converter = _colorizationPlugin,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode,
-				});
-				ReportingTags.Add("Color:Gray2");
-
-				// 4-bit graph
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit Colorization Plugin Graph",
-					Source = _passthroughGray4Source,
-					Destinations = renderers,
-					Converter = _colorizationPlugin,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode,
-				});
-				ReportingTags.Add("Color:Gray4");
-
-				// alphanum graph
-				_graphs.Add(new RenderGraph {
-					Name = "Alphanumeric Colorization Plugin Graph",
-					Source = _passthroughAlphaNumericSource,
-					Destinations = renderers,
-					Converter = _colorizationPlugin,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode,
-				});
-				ReportingTags.Add("Color:Gray4");
-			}
-
-			// === NATIVE VNI 2-bit ===
-			else if (_colorize && _vniColorizer != null) {
-
-				// 2-bit graph
-				_graphs.Add(new RenderGraph {
-					Name = "2-bit VNI Graph",
-					Source = _passthroughGray2Source,
-					Destinations = renderers,
-					Converter = _vniColorizer,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-				ReportingTags.Add("Color:Gray2");
-
-				// 4-bit graph
-				_graphs.Add(new RenderGraph {
-					Name = "4-bit VNI Graph",
-					Source = _passthroughGray4Source,
-					Destinations = renderers,
-					Converter = _vniColorizer,
-					Resize = _config.Global.Resize,
-					FlipHorizontally = _config.Global.FlipHorizontally,
-					FlipVertically = _config.Global.FlipVertically,
-					ScalerMode = _config.Global.ScalerMode
-				});
-				ReportingTags.Add("Color:Gray4");
-			}
-
 			// === NO COLORIZATION ===
 			else {
 				_graphs.Add(new RenderGraph {
@@ -759,12 +710,8 @@ namespace LibDmd.DmdDevice
 				ScalerMode = _config.Global.ScalerMode
 			});
 
-			// if colorization enabled and frame-by-frame colorization enabled, just clear the color.
-			if (_colorize && (_serum != null || _colorizationPlugin != null || _vniColorizer != null)) {
-				Logger.Info("Just clearing palette, colorization is done by converter.");
-				_graphs.ClearColor();
-
-			} else if (_colorize && _palette != null) {
+			// if colorization enabled and frame-by-frame colorization disabled, just set the palette.
+			if (_colorize && _colorizer == null && _palette != null) {
 
 				// if colorization enabled and palette is set, apply palette.
 				Logger.Info("Applying palette to render graphs.");
@@ -924,19 +871,9 @@ namespace LibDmd.DmdDevice
 				Analytics.Instance.ClearColorizer();
 				return;
 			}
-
-			// 1. check for serum
-			_serum = _colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode);
-
-			// 2. check for plugins
-			if (_serum == null) {
-				_colorizationPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode);
-			}
-
-			// 3. check for native vni
-			if (_serum == null && _colorizationPlugin == null) {
-				_vniColorizer = _colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode);
-			}
+			_colorizer = (_colorizationLoader.LoadSerum(_gameName, _config.Global.ScalerMode)
+				?? _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette, _config.Global.ScalerMode))
+				??_colorizationLoader.LoadVniColorizer(_gameName, _config.Global.VniScalerMode);
 		}
 
 		#region Analytics

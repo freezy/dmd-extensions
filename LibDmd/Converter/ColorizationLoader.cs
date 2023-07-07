@@ -18,7 +18,7 @@ namespace LibDmd.Converter.Vni
 			_altcolorPath = PathUtil.GetVpmFolder("altcolor", "[serum]");
 		}
 
-		public Serum.Serum LoadSerum(string gameName, ScalerMode scalerMode)
+		public AbstractConverter LoadSerum(string gameName, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null) {
 				return null;
@@ -50,7 +50,7 @@ namespace LibDmd.Converter.Vni
 			return null;
 		}
 
-		public VniColorizer LoadVniColorizer(string gameName, ScalerMode scalerMode)
+		public AbstractConverter LoadVniColorizer(string gameName, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null)
 			{
@@ -98,7 +98,7 @@ namespace LibDmd.Converter.Vni
 			return null;
 		}
 		
-		public ColorizationPlugin LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
+		public AbstractConverter LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
 		{
 			if (_altcolorPath == null || pluginConfigs == null) {
 				return null;
