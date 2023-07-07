@@ -45,11 +45,14 @@ namespace LibDmd.Converter.Plugin
 		public bool IsAvailable { get; private set; }
 
 		/// <summary>
-		/// Whether the plugin has found colorization data and will output colored frames.
+		/// Whether the plugin has found colorization data and can output colored frames.
 		/// </summary>
-		public bool IsColoring => _colorizerMode >= 0;
+		public bool CanColorize => _colorizerMode >= 0;
 
-		private bool EmitFrames => _passthrough || IsColoring;
+		/// <summary>
+		/// Whether the host app has coloring enabled
+		/// </summary>
+		private readonly bool _shouldColorize;
 
 		/// <summary>
 		/// If true, the plugin has events that should be sent to PinUp.
@@ -90,6 +93,7 @@ namespace LibDmd.Converter.Plugin
 				return;
 			}
 			IsAvailable = true;
+			_shouldColorize = colorize;
 			_passthrough = pluginConfig.PassthroughEnabled;
 
 			Logger.Info($"[plugin] Successfully opened colorizer plugin at {pluginConfig.Path}");
@@ -100,7 +104,7 @@ namespace LibDmd.Converter.Plugin
 			IntPtr optionsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(options));
 			Marshal.StructureToPtr(options, optionsPtr, false);
 			_colorizerMode = (ColorizerMode)_setGameSettings(gameName, 0, optionsPtr);
-			if (IsColoring) {
+			if (CanColorize) {
 				_hasEvents = _hasEventsPtr();
 
 				// dmd frames might return upscaled, so adapt size accordingly
@@ -143,7 +147,7 @@ namespace LibDmd.Converter.Plugin
 				}
 			}
 
-			switch (IsColoring) {
+			switch (CanColorize) {
 				case false when _passthrough:
 					Logger.Info("[plugin] No colorization mode detected, using passthrough mode.");
 					break;
@@ -232,7 +236,7 @@ namespace LibDmd.Converter.Plugin
 				? ColorizeFrame(rawFrame)
 				: ColorizeFrame(frame);
 
-			if (rgb24FramePtr == IntPtr.Zero || !EmitFrames) {
+			if (rgb24FramePtr == IntPtr.Zero || !_shouldColorize) {
 				return;
 			}
 
@@ -248,7 +252,7 @@ namespace LibDmd.Converter.Plugin
 				_alphaNumericFrames.OnNext(frame);
 			}
 
-			if (rgb24FramePtr == IntPtr.Zero || !EmitFrames) {
+			if (rgb24FramePtr == IntPtr.Zero || !_shouldColorize) {
 				return;
 			}
 

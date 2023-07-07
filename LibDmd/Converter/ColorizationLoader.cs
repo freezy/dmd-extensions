@@ -112,7 +112,7 @@ namespace LibDmd.Converter.Vni
 			foreach (var config in pluginConfigs) {
 				var plugin = new ColorizationPlugin(config, colorize, _altcolorPath, gameName, defaultColor, palette);
 				var passthrough = config.PassthroughEnabled && plugin.IsAvailable;
-				if (!plugin.IsColoring && !passthrough) {
+				if (!plugin.CanColorize && !passthrough) {
 					continue;
 				}
 
