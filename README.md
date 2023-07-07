@@ -26,6 +26,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
   * [Future Pinball](#future-pinball)
   * [Media](#media)
   * [Pinup Player](#pinup-player)
+  * [PinballX](#pinballx)
   * [Frame Dumping](#frame-dumping)
 * [Configuration](#configuration)
   * [Output Configuration](#output-configuration)
@@ -298,6 +299,12 @@ Then, enable the Pinup Player output in `DmdDevice.ini`:
 [pinup]
 enabled = true
 ```
+
+### PinballX
+
+DMD Extensions can be used in [PinballX](https://www.pinballx.com/), the frontend for virtual pinball cabinets. In order 
+to do so, copy `DmdDevice64.dll` to the PinballX's installation folder, and delete or rename `PinDMD.dll`. Then, activate
+the DMD output through the Settings app, and you should be good to go.
 
 ### Frame Dumping
 
