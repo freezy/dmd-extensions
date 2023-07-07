@@ -98,7 +98,7 @@ namespace LibDmd.Converter.Vni
 			return null;
 		}
 		
-		public AbstractConverter LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette, ScalerMode scalerMode)
+		public AbstractConverter LoadPlugin(PluginConfig[] pluginConfigs, bool colorize, string gameName, Color defaultColor, Color[] palette)
 		{
 			if (_altcolorPath == null || pluginConfigs == null) {
 				return null;

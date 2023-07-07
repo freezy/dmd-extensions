@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
@@ -11,12 +10,14 @@ using LibDmd.Common;
 using LibDmd.DmdDevice;
 using LibDmd.Frame;
 using LibDmd.Input;
+using LibDmd.Output;
 using NLog;
 
 namespace LibDmd.Converter.Plugin
 {
 	public class ColorizationPlugin : AbstractConverter, IColoredGray2Source, IColoredGray4Source,
-		IColoredGray6Source, IRgb24Source, IAlphaNumericSource, IFrameEventSource
+		IColoredGray6Source, IRgb24Source, IAlphaNumericSource, IFrameEventSource,
+		IGray2Destination, IGray4Destination, IAlphaNumericDestination
 	{
 		public override string Name => "Colorization Plugin";
 		public override IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
@@ -28,6 +29,13 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
 		public IObservable<FrameEventInit> GetFrameEventInit() => _frameEventInit;
 		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
+
+		#region Passthrough
+		public void ClearDisplay() { }
+		public void RenderAlphaNumeric(AlphaNumericFrame frame) => Convert(frame);
+		public void RenderGray4(DmdFrame frame) => Convert(frame);
+		public void RenderGray2(DmdFrame frame) => Convert(frame);
+		#endregion
 
 		private readonly Dimensions _dimensions = Dimensions.Dynamic;
 
