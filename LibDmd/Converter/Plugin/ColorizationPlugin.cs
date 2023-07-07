@@ -202,6 +202,18 @@ namespace LibDmd.Converter.Plugin
 		private readonly Dictionary<int, int> _colorIndex = new Dictionary<int, int>();
 		private readonly Color[] _palette = new Color[64];
 
+		public override bool Supports(FrameFormat format)
+		{
+			switch (format) {
+				case FrameFormat.Gray2:
+				case FrameFormat.Gray4:
+				case FrameFormat.AlphaNumeric:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		/// <summary>
 		/// The public API to convert a frame and output it to the pubs.
 		/// </summary>

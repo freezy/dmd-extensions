@@ -31,6 +31,8 @@ namespace LibDmd.Converter
 
 		public override IEnumerable<FrameFormat> From => new[] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
 
+		public override bool Supports(FrameFormat format) => true;
+
 		public SwitchingConverter() : base(false)
 		{
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);

@@ -16,6 +16,8 @@ namespace LibDmd.Test.Stubs
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
 
+		public override bool Supports(FrameFormat format) => true;
+
 		public ConverterGray6(Func<DmdFrame, ColoredFrame> convert) : base(true)
 			=> _convert = convert;
 
