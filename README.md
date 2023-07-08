@@ -451,7 +451,7 @@ The `mirror` command has the following additional parameters:
 | `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0          |
 | `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |            |
 | `--fx3-legacy`      | *pinballfx3* - If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2.                                                                            | false      |
-| `--colorize`        | Enable or disable frame-by-frame colorization. Supported on `pinballfx3` (memory grabber), `pinballarcade`, and `futurepinball` only.                                           | false      |
+| `--colorize`        | Enable or disable frame-by-frame colorization. Supported on `pinballfx3` (memory grabber) and `pinballarcade`.                                                                  | false      |
 
 #### Play Command
 

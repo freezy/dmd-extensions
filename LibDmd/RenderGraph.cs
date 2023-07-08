@@ -311,12 +311,10 @@ namespace LibDmd
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
 
 					// So here's how convertors work:
-					// They have one input type, given by IConvertor.From, but they can randomly 
-					// output frames in different formats (both dimensions and bit depth).
-					// For example, the ColoredGray2Colorizer outputs in ColoredGray2 or
-					// ColoredGray4, depending if data is enhanced or not.
+					// They have multiple input types, given by IConvertor.From, and they can
+					// randomly output frames in different formats (both dimensions and bit depth).
 					//
-					// So, for the output, the converter acts as ISource, implementing the specific 
+					// For the output, the converter acts as ISource, implementing the specific
 					// interfaces supported. Currently the following output sources are supported:
 					//
 					//    IColoredGray2Source, IColoredGray4Source, IColoredGray6Source and IRgb24Source.
@@ -347,6 +345,9 @@ namespace LibDmd
 							} else if (destBitmap != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray2, FrameFormat.Bitmap)) {
 								Logger.Warn("    -- Destination doesn't support colored 2-bit frames from converter, converting to RGB source.");
 								Connect(sourceConverterColoredGray2, destBitmap, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
+
+							} else {
+								Logger.Warn("    -- Destination doesn't support colored 2-bit frames from converter, ignoring converter.");
 							}
 						}
 
@@ -364,6 +365,8 @@ namespace LibDmd
 							} else if (destBitmap != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray4,FrameFormat.Bitmap)) {
 								Logger.Warn("    -- Destination doesn't support colored 4-bit frames from converter, converting to Bitmap source.");
 								Connect(sourceConverterColoredGray4, destBitmap, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
+							} else {
+								Logger.Warn("    -- Destination doesn't support colored 4-bit frames from converter, ignoring converter.");
 							}
 						}
 
@@ -381,6 +384,8 @@ namespace LibDmd
 							} else if (destBitmap != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray6, FrameFormat.Bitmap)) {
 								Logger.Warn("    -- Destination doesn't support colored 6-bit frames from converter, converting to Bitmap source.");
 								Connect(sourceConverterColoredGray6, destBitmap, FrameFormat.ColoredGray6, FrameFormat.Bitmap);
+							} else {
+								Logger.Warn("    -- Destination doesn't support colored 6-bit frames from converter, ignoring converter.");
 							}
 						}
 
@@ -413,7 +418,7 @@ namespace LibDmd
 							Converter.SetConnected(destFrameEvent);
 						}
 
-						// render graph is already set up through converters, so we skip the rest below
+						// if the above yielded to a connection to the converter, we skip the rest below
 						if (Converter.IsConnected(dest)) {
 							continue;
 						}

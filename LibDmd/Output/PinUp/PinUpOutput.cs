@@ -111,7 +111,7 @@ namespace LibDmd.Output.PinUp
 			}
 
 			try {
-				var rgbFrame = frame.CloneFrame().ConvertToRgb24(ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, 16));
+				var rgbFrame = frame.CloneFrame().ConvertToRgb24(ColorUtil.GetPalette(new[] { Colors.Black, Colors.OrangeRed }, frame.NumColors));
 				Marshal.Copy(rgbFrame.Data, 0, _pnt, rgbFrame.Data.Length);
 				Render_RGB24((ushort) FixedSize.Width, (ushort) FixedSize.Height, _pnt);
 
