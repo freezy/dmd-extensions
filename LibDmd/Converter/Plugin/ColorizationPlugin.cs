@@ -88,7 +88,7 @@ namespace LibDmd.Converter.Plugin
 			}
 
 			// open plugin
-			if (!_open()) {
+			if (!(System.Convert.ToBoolean(_open()))) {
 				Logger.Info($"[plugin] Failed to open colorizer plugin {GetName()} v{GetVersion()}");
 				return;
 			}
@@ -105,7 +105,7 @@ namespace LibDmd.Converter.Plugin
 			Marshal.StructureToPtr(options, optionsPtr, false);
 			_colorizerMode = (ColorizerMode)_setGameSettings(gameName, 0, optionsPtr);
 			if (CanColorize) {
-				_hasEvents = _hasEventsPtr();
+				_hasEvents = System.Convert.ToBoolean(_hasEventsPtr());
 
 				// dmd frames might return upscaled, so adapt size accordingly
 				switch (_colorizerMode) {
@@ -490,7 +490,7 @@ namespace LibDmd.Converter.Plugin
 
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool OpenPtr();
+		private delegate byte OpenPtr();
 		private OpenPtr _open;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -530,7 +530,7 @@ namespace LibDmd.Converter.Plugin
 		private SetGameSettingsPtr _setGameSettings;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool ClosePtr();
+		private delegate byte ClosePtr();
 		private ClosePtr _close;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -542,7 +542,7 @@ namespace LibDmd.Converter.Plugin
 		private GetEventPtr _getEvent;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool HasEventsPtr();
+		private delegate byte HasEventsPtr();
 		private HasEventsPtr _hasEventsPtr;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
