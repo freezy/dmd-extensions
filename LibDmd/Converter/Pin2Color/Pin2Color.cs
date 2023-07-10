@@ -81,7 +81,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			if (!IsOpen) {
-				if (!ColorizeOpen()) {
+				if (!System.Convert.ToBoolean(ColorizeOpen())) {
 					Logger.Info($"[Pin2Color] Failed to open colorizer ...");
 					IsOpen = false;
 					return;
@@ -108,7 +108,7 @@ namespace LibDmd.Converter.Pin2Color
 			}
 
 			if (IsColored) {
-				_hasEvents = ColorizeHasEvents();
+				_hasEvents = System.Convert.ToBoolean(ColorizeHasEvents());
 			}
 
 			if (palette != null && !IsColored) {
@@ -424,7 +424,7 @@ namespace LibDmd.Converter.Pin2Color
 		}
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeOpen();
+		private delegate byte _dColorizeOpen();
 		private static _dColorizeOpen ColorizeOpen;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -464,7 +464,7 @@ namespace LibDmd.Converter.Pin2Color
 		private static _dColorizeGameSettings ColorizeGameSettings;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeClose();
+		private delegate byte _dColorizeClose();
 		private static _dColorizeClose ColorizeClose;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -476,7 +476,7 @@ namespace LibDmd.Converter.Pin2Color
 		private static _dColorizeGetEvent ColorizeGetEvent;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate bool _dColorizeHasEvents();
+		private delegate byte _dColorizeHasEvents();
 		private static _dColorizeHasEvents ColorizeHasEvents;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]

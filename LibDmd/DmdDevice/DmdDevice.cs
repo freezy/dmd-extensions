@@ -419,7 +419,7 @@ namespace LibDmd.DmdDevice
 					var pinupOutput = new PinUpOutput(_gameName);
 					if (pinupOutput.IsAvailable) {
 						if ((_serum != null) && (pinupOutput.isPuPTrigger)) _serum.SetPinupInstance(pinupOutput);
-						//if (_pin2color != null && _isColored && (pinupOutput.isPuPTrigger)) _pin2color.SetPinUpOutput(pinupOutput);
+						if (_pin2color != null && _isColored && (pinupOutput.isPuPTrigger)) _pin2color.SetPinUpOutput(pinupOutput);
 						renderers.Add(pinupOutput);
 						Logger.Info("Added PinUP renderer.");
 						ReportingTags.Add("Out:PinUP");
