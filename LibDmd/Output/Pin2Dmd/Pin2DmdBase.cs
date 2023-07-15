@@ -58,7 +58,12 @@ namespace LibDmd.Output.Pin2Dmd
 
 		public void Init()
 		{
-#if (!TEST_WITHOUT_PIN2DMD)
+
+#if TEST_WITHOUT_PIN2DMD
+			Logger.Info($"[PIN2DMD] Emulating, just dumping data to disk.");
+			IsAvailable = FixedSize == Dim128x32;
+			InitFrameBuffers();
+#else
 			// find and open the usb device.
 			var allDevices = UsbDevice.AllDevices;
 			foreach (UsbRegistry usbRegistry in allDevices)
@@ -105,7 +110,6 @@ namespace LibDmd.Output.Pin2Dmd
 						usbDevice.SetConfiguration(1);
 						usbDevice.ClaimInterface(0);
 					}
-#endif
 					IsAvailable = true;
 
 				}
@@ -115,7 +119,9 @@ namespace LibDmd.Output.Pin2Dmd
 					Logger.Warn(e, "Probing PIN2DMD failed, skipping.");
 				}
 			}
+#endif
 		}
+
 		public static readonly byte[] GAMMA_TABLE =
 			{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -254,6 +260,14 @@ namespace LibDmd.Output.Pin2Dmd
 			catch (Exception e)
 			{
 				Logger.Error(e, $"Error sending data to {ProductString}: {e.Message}");
+			}
+#else
+			const string dumpPath = "pin2dmd.txt";
+			using (var file = System.IO.File.Exists(dumpPath) ? System.IO.File.Open(dumpPath, System.IO.FileMode.Append) : System.IO.File.Open(dumpPath, System.IO.FileMode.CreateNew))
+			using (var stream = new System.IO.StreamWriter(file)) {
+				stream.Write(DateTime.Now.ToLongTimeString());
+				stream.Write(" ");
+				stream.WriteLine(frame.Length + " bytes");
 			}
 #endif
 		}
