@@ -128,7 +128,7 @@ namespace LibDmd.DmdDevice
 			#endregion
 
 			var bitLength = Environment.Is64BitProcess ? "x64" : "x86";
-			Logger.Info($"Starting VPinMAME API {_fullVersion} ({bitLength}) through {Process.GetCurrentProcess().ProcessName}.exe.");
+			Logger.Info($"Starting DmdDevice API {_fullVersion} ({bitLength}) through {Process.GetCurrentProcess().ProcessName}.exe.");
 			Logger.Info("Assembly located at {0}", assembly.Location);
 			Logger.Info("Running in {0}", Directory.GetCurrentDirectory());
 
