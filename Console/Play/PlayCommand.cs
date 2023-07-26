@@ -54,7 +54,7 @@ namespace DmdExt.Play
 			var frameSource = source as ISource;
 			if (frameSource != null) {
 				// chain them up
-				graphs.Add(new RenderGraph(false) {
+				graphs.Add(new RenderGraph {
 					Source = frameSource,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
