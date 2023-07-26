@@ -44,7 +44,8 @@ namespace DmdExt.Test
 						0, 0, 0, 5120, 8704, 16640, 0, 0, 0, 0, 2112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 					});
-				_graph = new RenderGraph(false) {
+				_graph = new RenderGraph
+				{
 					Source = new PassthroughAlphaNumericSource(alphaNumericFrame),
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
@@ -80,7 +81,8 @@ namespace DmdExt.Test
 						source = new ImageSourceBitmap(bmp);
 						break;
 				}
-				_graph = new RenderGraph(false) {
+				_graph = new RenderGraph
+				{
 					Source = source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,

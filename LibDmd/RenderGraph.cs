@@ -126,7 +126,7 @@ namespace LibDmd
 
 		#region Lifecycle
 
-		public RenderGraph(bool runOnMainThread = true)
+		public RenderGraph(bool runOnMainThread = false)
 		{
 			_runOnMainThread = runOnMainThread;
 			ClearColor();
@@ -1248,7 +1248,7 @@ namespace LibDmd
 				// execute on main thread
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 				if (!_runOnMainThread) {
-					dest = dest.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+					dest = dest.ObserveOn(Scheduler.Default);
 				}
 				_activeSources.Add(dest.Subscribe(f => StartIdling()));
 
@@ -1259,8 +1259,9 @@ namespace LibDmd
 
 				// run frame processing on separate thread.
 				if (!_runOnMainThread) {
-					src = src.ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current));
+					src = src.ObserveOn(Scheduler.Default);
 				}
+
 				_activeSources.Add(src.Select(frame => (TIn)frame.Clone()).Select(processor).Subscribe(onNext));
 			}
 		}

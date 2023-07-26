@@ -15,13 +15,15 @@ namespace LibDmd.Common
 		public static IDisposable Start(string key)
 		{
 #if DEBUG
-			if (Profiles.TryGetValue(key, out var profile)) {
-				profile.Start();
-			} else {
-				_parent = new Profile(key, _parent);
-				Profiles.Add(key, _parent);
-				if (_parent.Parent == null) {
-					RootProfiles.Add(_parent);
+			lock (Profiles) {
+				if (Profiles.TryGetValue(key, out var profile)) {
+					profile.Start();
+				} else {
+					_parent = new Profile(key, _parent);
+					Profiles.Add(key, _parent);
+					if (_parent.Parent == null) {
+						RootProfiles.Add(_parent);
+					}
 				}
 			}
 #endif
