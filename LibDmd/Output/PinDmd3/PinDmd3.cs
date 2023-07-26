@@ -125,6 +125,10 @@ namespace LibDmd.Output.PinDmd3
 
 		public void Init()
 		{
+#if TEST_WITHOUT_PINDMD3
+			Logger.Info($"[PINDMD3] Emulating, just dumping data to disk.");
+			IsAvailable = true;
+#else
 			if (Port != null && Port.Trim().Length > 0) {
 				IsAvailable = Connect(Port, false);
 
@@ -149,6 +153,8 @@ namespace LibDmd.Output.PinDmd3
 
 			var result = new byte[20];
 			_serialPort.Read(result, 0, 20); // no idea what this is
+#endif
+
 		}
 
 		private bool Connect(string port, bool checkFirmware)
@@ -262,6 +268,15 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderRaw(byte[] data)
 		{
+#if TEST_WITHOUT_PINDMD3
+			const string dumpPath = "pindmd3.txt";
+			using (var file = System.IO.File.Exists(dumpPath) ? System.IO.File.Open(dumpPath, System.IO.FileMode.Append) : System.IO.File.Open(dumpPath, System.IO.FileMode.CreateNew))
+			using (var stream = new System.IO.StreamWriter(file)) {
+				stream.Write(DateTime.Now.ToLongTimeString());
+				stream.Write(" ");
+				stream.WriteLine(data.Length + " bytes");
+			}
+#else
 			lock (locker) {
 				if (_serialPort.IsOpen) {
 					//var start = DateTime.Now.Ticks;
@@ -290,6 +305,7 @@ namespace LibDmd.Output.PinDmd3
 					_lastTick = start;*/
 				}
 			}
+#endif
 		}
 
 		public void ClearDisplay()
@@ -298,6 +314,7 @@ namespace LibDmd.Output.PinDmd3
 				_frameBufferRgb24[i] = 0;
 			}
 
+#if !TEST_WITHOUT_PINDMD3
 			try {
 				if (_serialPort.IsOpen) {
 					_serialPort.Write(_frameBufferRgb24, 0, _frameBufferRgb24.Length);
@@ -305,7 +322,7 @@ namespace LibDmd.Output.PinDmd3
 			} catch (Exception e) {
 				Logger.Warn($"[pindmd3] Error clearing display: {e.Message}");
 			}
-
+#endif
 		}
 
 		public void SetColor(Color color)
