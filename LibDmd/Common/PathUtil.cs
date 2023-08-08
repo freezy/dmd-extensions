@@ -112,6 +112,8 @@ namespace LibDmd.Common
 			sha = _sha;
 		}
 
+		public static string GetAssemblyPath() => Path.GetDirectoryName(GetAssemblyLocation(Assembly.GetCallingAssembly()));
+
 		private static string GetAssemblyLocation(Assembly assembly)
 		{
 			if (assembly == null) {

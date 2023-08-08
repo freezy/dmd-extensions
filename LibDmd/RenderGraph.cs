@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -12,11 +13,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LibDmd.Common;
 using LibDmd.Converter;
+using LibDmd.Converter.Vni;
 using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Input.FileSystem;
 using LibDmd.Output;
 using NLog;
+using Scorbit;
 
 namespace LibDmd
 {
@@ -1208,10 +1211,35 @@ namespace LibDmd
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-		
-		#endregion
 
+		#endregion
 		#region Utils
+
+		private static readonly IScorbitProcessor Scorbit;
+		private FrameInfoCli _scorbitFrame;
+
+		static RenderGraph()
+		{
+			string target = Path.Combine(PathUtil.GetAssemblyPath(), "ScorbitProcessorCli.dll");
+			if (!File.Exists(target)) {
+				return;
+			}
+
+			Logger.Info($"Trying to load Scorbit at {target}...");
+			Assembly assembly = Assembly.LoadFrom(target);
+
+			Type spClassType = assembly.GetType("Scorbit.ScorbitProcessorCli");
+			dynamic spInstance = Activator.CreateInstance(spClassType);
+			if (spInstance is IScorbitProcessor sp) {
+				Scorbit = sp;
+				Logger.Info($"Loaded {sp.ProjectName} {sp.Version}.");
+			}
+		}
+
+		private static void LogScorbit(string message)
+		{
+			Logger.Info($"[Scorbit] {message}");
+		}
 
 		/// <summary>
 		/// Subscribes to the given source and links it to the given destination.
@@ -1256,6 +1284,23 @@ namespace LibDmd
 
 				// subscribe and add to active sources
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+
+				if (Scorbit != null) {
+					src = src.Select(f => {
+						if (f is DmdFrame dmdFrame && (dmdFrame.BitLength == 2 || dmdFrame.BitLength == 4)) {
+							_scorbitFrame.Width = dmdFrame.Dimensions.Width;
+							_scorbitFrame.Height = dmdFrame.Dimensions.Height;
+							_scorbitFrame.Colors = dmdFrame.NumColors;
+							_scorbitFrame.Duplicate = false;
+							_scorbitFrame.FrameBuffer = dmdFrame.Data;
+
+							Scorbit.Process(ref _scorbitFrame);
+
+							dmdFrame.Update(_scorbitFrame.FrameBuffer, _scorbitFrame.Colors.GetBitLength());
+						}
+						return f;
+					});
+				}
 
 				// run frame processing on separate thread.
 				if (!_runOnMainThread) {

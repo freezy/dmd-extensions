@@ -747,6 +747,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IScorbitProcessor\IScorbitProcessor.csproj">
+      <Project>{0021a72b-ee6b-467b-b880-e14a5e93dce3}</Project>
+      <Name>IScorbitProcessor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProPinballBridge\ProPinballBridge.vcxproj">
       <Project>{668cdaaf-49e4-4b01-bd9d-37d5ae89ddac}</Project>
       <Name>ProPinballBridge</Name>
