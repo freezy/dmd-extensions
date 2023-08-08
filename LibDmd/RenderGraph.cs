@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -1215,7 +1216,7 @@ namespace LibDmd
 		#endregion
 		#region Utils
 
-		private static readonly IScorbitProcessor Scorbit;
+		private static readonly IScorbitProcessor ScorbitProcessor;
 		private FrameInfoCli _scorbitFrame;
 
 		static RenderGraph()
@@ -1231,8 +1232,9 @@ namespace LibDmd
 			Type spClassType = assembly.GetType("Scorbit.ScorbitProcessorCli");
 			dynamic spInstance = Activator.CreateInstance(spClassType);
 			if (spInstance is IScorbitProcessor sp) {
-				Scorbit = sp;
+				ScorbitProcessor = sp;
 				Logger.Info($"Loaded {sp.ProjectName} {sp.Version}.");
+				ScorbitProcessor.Init(LogScorbit, Scorbit.LogLevel.Debug);
 			}
 		}
 
@@ -1285,16 +1287,16 @@ namespace LibDmd
 				// subscribe and add to active sources
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 
-				if (Scorbit != null) {
+				if (ScorbitProcessor != null) {
 					src = src.Select(f => {
 						if (f is DmdFrame dmdFrame && (dmdFrame.BitLength == 2 || dmdFrame.BitLength == 4)) {
 							_scorbitFrame.Width = dmdFrame.Dimensions.Width;
 							_scorbitFrame.Height = dmdFrame.Dimensions.Height;
 							_scorbitFrame.Colors = dmdFrame.NumColors;
 							_scorbitFrame.Duplicate = false;
-							_scorbitFrame.FrameBuffer = dmdFrame.Data;
+							_scorbitFrame.FrameBuffer = new byte[dmdFrame.Dimensions.Surface];
 
-							Scorbit.Process(ref _scorbitFrame);
+							ScorbitProcessor.Process(ref _scorbitFrame);
 
 							dmdFrame.Update(_scorbitFrame.FrameBuffer, _scorbitFrame.Colors.GetBitLength());
 						}
