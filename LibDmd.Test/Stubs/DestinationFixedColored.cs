@@ -9,6 +9,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Fixed/Gray2+4+ColoredGray2+4+6+Raw]";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 		public int NumFrames;
 
 		public DestinationFixedColored(int dmdWidth, int dmdHeight, bool dmdAllowHdScaling = true) : base(dmdWidth, dmdHeight, dmdAllowHdScaling)

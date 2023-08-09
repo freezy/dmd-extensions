@@ -7,6 +7,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Fixed/Gray4]";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		public int NumFrames;
 

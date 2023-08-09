@@ -274,19 +274,21 @@ namespace LibDmd
 				// subscribe converter to incoming frames
 				if (Converter != null) {
 
+					var converterDest = Converter as IDestination;
+
 					// subscribe converter to incoming frames
 					foreach (var from in Converter.From) {
 						switch (from) {
 							case FrameFormat.Gray2:
 								if (sourceGray2 != null) {
 									Logger.Info($"  == Listening to {sourceGray2.Name} for {((ISource)Converter).Name} ({from})");
-									_activeSources.Add(sourceGray2.GetGray2Frames().Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray2.GetGray2Frames(!converterDest?.NeedsDuplicateFrames ?? true).Do(Converter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.Gray4:
 								if (sourceGray4 != null) {
 									Logger.Info($"  == Listening to {sourceGray4.Name} for {((ISource)Converter).Name} ({from})");
-									_activeSources.Add(sourceGray4.GetGray4Frames().Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray4.GetGray4Frames(!converterDest?.NeedsDuplicateFrames ?? true).Do(Converter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.AlphaNumeric:
@@ -661,7 +663,11 @@ namespace LibDmd
 			}
 
 			try {
-				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info("  {4}-> Connecting {0} to {1} ({2} => {3})", source.Name, dest.Name, @from, to, indent));
+				var deduped = string.Empty;
+				if (from == FrameFormat.Gray2 || from == FrameFormat.Gray4) {
+					deduped = dest.NeedsDuplicateFrames ? " - not deduped" : " - deduped";
+				}
+				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info($"  {indent}-> Connecting {source.Name} to {dest.Name} ({@from} => {to}){deduped}"));
 			
 			} catch (TaskCanceledException e) {
 				Logger.Error(e, "Main thread seems already destroyed, aborting.");
@@ -678,7 +684,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
@@ -694,7 +700,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
@@ -707,7 +713,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToBmp(_gray2Palette ?? _gray2Colors)
@@ -741,7 +747,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToGray2()
@@ -753,7 +759,7 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
@@ -764,7 +770,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToRgb24(_gray4Palette ?? _gray4Colors)
@@ -776,7 +782,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray4, dest, destBitmap, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToBmp(_gray4Palette ?? _gray4Colors)

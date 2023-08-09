@@ -94,7 +94,7 @@ namespace LibDmd.DmdDevice
 			var currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_passthroughGray2Source = new PassthroughGray2Source(currentFrameFormat, "DmdDevice 2-bit Source");
 			_passthroughGray4Source = new PassthroughGray4Source(currentFrameFormat, "DmdDevice 4-bit Source");
-			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source");
+			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source", deDupe: false);
 			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(currentFrameFormat);
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

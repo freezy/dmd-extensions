@@ -18,6 +18,7 @@ namespace LibDmd.Output.Network
 	{
 		public string Name { get; } = "Browser Stream";
 		public bool IsAvailable { get; } = true;
+		public bool NeedsDuplicateFrames => false;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 		private readonly Dictionary<string, string> _www = new Dictionary<string, string>(); 

@@ -15,6 +15,7 @@ namespace LibDmd.Output.Network
 	{
 		public string Name { get; } = "VPDB Stream";
 		public bool IsAvailable { get; } = true;
+		public bool NeedsDuplicateFrames => false;
 
 		public string ApiKey { get; set; }
 		public string EndPoint { get; set; } = "https://api-test.vpdb.io/";

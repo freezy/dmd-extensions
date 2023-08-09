@@ -45,7 +45,7 @@ namespace LibDmd.Input.ProPinball
 
 		public IObservable<string> GetGameName() => _gameName;
 
-		public IObservable<DmdFrame> GetGray4Frames()
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe)
 		{
 			if (_framesGray4 != null) {
 				return _framesGray4;

@@ -11,11 +11,12 @@ namespace LibDmd.Input
 	{
 		/// <summary>
 		/// Returns an observable that produces a sequence of 2-bit frames.
-		/// 
-		/// The returned byte array contains Width * Height bytes, with values 
+		///
+		/// The returned byte array contains Width * Height bytes, with values
 		/// between 0 and 3 for every pixel.
 		/// </summary>
+		/// <param name="dedupe"></param>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<DmdFrame> GetGray2Frames();
+		IObservable<DmdFrame> GetGray2Frames(bool dedupe);
 	}
 }

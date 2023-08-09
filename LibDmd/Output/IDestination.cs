@@ -23,6 +23,11 @@ namespace LibDmd.Output
 		bool IsAvailable { get; }
 
 		/// <summary>
+		/// If true, don't de-dupe frames for this destination.
+		/// </summary>
+		bool NeedsDuplicateFrames { get; }
+
+		/// <summary>
 		/// Clears the display.
 		/// </summary>
 		void ClearDisplay();

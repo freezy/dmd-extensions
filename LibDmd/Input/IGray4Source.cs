@@ -11,11 +11,12 @@ namespace LibDmd.Input
 	{
 		/// <summary>
 		/// Returns an observable that produces a sequence of 4-bit frames.
-		/// 
-		/// The returned byte array contains Width * Height bytes, with values 
+		///
+		/// The returned byte array contains Width * Height bytes, with values
 		/// between 0 and 15 for every pixel.
 		/// </summary>
+		/// <param name="dedupe"></param>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<DmdFrame> GetGray4Frames();
+		IObservable<DmdFrame> GetGray4Frames(bool dedupe);
 	}
 }

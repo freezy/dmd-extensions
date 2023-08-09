@@ -7,6 +7,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Dynamic/Gray2]";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		public void RenderGray2(DmdFrame frame)
 		{

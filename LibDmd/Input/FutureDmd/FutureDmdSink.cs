@@ -48,7 +48,7 @@ namespace LibDmd.Input.FutureDmd
 			Thread.Sleep(250);
 		}
 
-		public IObservable<DmdFrame> GetGray4Frames()
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe)
 		{
 			return _framesGray4;
 		}

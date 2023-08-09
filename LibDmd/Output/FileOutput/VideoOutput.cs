@@ -21,6 +21,7 @@ namespace LibDmd.Output.FileOutput
 		public readonly uint Fps;
 		public string Name { get; } = "Video Writer";
 		public bool IsAvailable { get; } = true;
+		public bool NeedsDuplicateFrames => false;
 
 		private AviWriter _writer;
 		private IAviVideoStream _stream;

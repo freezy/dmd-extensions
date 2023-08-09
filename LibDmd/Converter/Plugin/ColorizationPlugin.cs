@@ -29,6 +29,7 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericFrames;
 		public IObservable<FrameEventInit> GetFrameEventInit() => _frameEventInit;
 		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
+		public bool NeedsDuplicateFrames => false;
 
 		#region Passthrough
 		public void ClearDisplay() { }

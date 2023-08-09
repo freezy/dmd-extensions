@@ -16,6 +16,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public string Name => "ZeDMD";
 		public bool IsAvailable { get; private set; }
+		public bool NeedsDuplicateFrames => false;
 
 		public int Delay { get; set; } = 100;
 		
