@@ -22,6 +22,7 @@ namespace LibDmd.Converter
 		/// Source bit length
 		/// </summary>
 		public abstract IEnumerable<FrameFormat> From { get; }
+		public bool NeedsDuplicateFrames => _clockAndDedupe;
 
 		public IObservable<Unit> OnResume { get; } = null;
 		public IObservable<Unit> OnPause { get; } = null;

@@ -171,7 +171,6 @@ namespace LibDmd.Output.Virtual.Dmd
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 			CurrentFrameFormat = FrameFormat.Gray2;
-
 		}
 
 		public void RenderGray4(DmdFrame frame)

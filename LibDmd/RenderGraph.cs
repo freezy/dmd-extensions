@@ -274,21 +274,19 @@ namespace LibDmd
 				// subscribe converter to incoming frames
 				if (Converter != null) {
 
-					var converterDest = Converter as IDestination;
-
 					// subscribe converter to incoming frames
 					foreach (var from in Converter.From) {
 						switch (from) {
 							case FrameFormat.Gray2:
 								if (sourceGray2 != null) {
 									Logger.Info($"  == Listening to {sourceGray2.Name} for {((ISource)Converter).Name} ({from})");
-									_activeSources.Add(sourceGray2.GetGray2Frames(!converterDest?.NeedsDuplicateFrames ?? true).Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray2.GetGray2Frames(!Converter.NeedsDuplicateFrames).Do(Converter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.Gray4:
 								if (sourceGray4 != null) {
 									Logger.Info($"  == Listening to {sourceGray4.Name} for {((ISource)Converter).Name} ({from})");
-									_activeSources.Add(sourceGray4.GetGray4Frames(!converterDest?.NeedsDuplicateFrames ?? true).Do(Converter.Convert).Subscribe());
+									_activeSources.Add(sourceGray4.GetGray4Frames(!Converter.NeedsDuplicateFrames).Do(Converter.Convert).Subscribe());
 								}
 								break;
 							case FrameFormat.AlphaNumeric:
