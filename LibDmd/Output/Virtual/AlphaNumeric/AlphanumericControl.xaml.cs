@@ -20,6 +20,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		public DisplaySetting DisplaySetting { get; set; }
 		public bool IgnoreAspectRatio { get; set; }

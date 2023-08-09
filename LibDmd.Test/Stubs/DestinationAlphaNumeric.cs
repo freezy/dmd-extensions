@@ -7,6 +7,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Fixed/Gray2]";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

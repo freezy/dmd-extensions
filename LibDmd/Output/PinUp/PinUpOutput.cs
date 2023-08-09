@@ -16,6 +16,7 @@ namespace LibDmd.Output.PinUp
 	{
 		public string Name => "PinUP Writer";
 		public bool IsAvailable { get; private set; }
+		public bool NeedsDuplicateFrames => true;
 
 		/// <summary>
 		/// If an updated version of dmddevicepup.dll with PuP_Trigger() function found, set to true

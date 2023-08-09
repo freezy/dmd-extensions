@@ -17,6 +17,7 @@ namespace LibDmd.Output.Pixelcade
 	{
 		public string Name => "Pixelcade";
 		public bool IsAvailable { get; private set; }
+		public bool NeedsDuplicateFrames => false;
 		public int Delay { get; set; } = 100;
 		
 		public Dimensions FixedSize { get; } = new Dimensions(128, 32);

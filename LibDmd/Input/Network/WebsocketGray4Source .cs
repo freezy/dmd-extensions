@@ -17,7 +17,7 @@ namespace LibDmd.Input.Network
 
 		public readonly Subject<DmdFrame> FramesGray4 = new Subject<DmdFrame>();
 
-		public IObservable<DmdFrame> GetGray4Frames()
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe)
 		{
 			return FramesGray4;
 		}

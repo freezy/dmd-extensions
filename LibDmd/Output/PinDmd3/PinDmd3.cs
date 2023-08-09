@@ -18,6 +18,7 @@ namespace LibDmd.Output.PinDmd3
 	{
 		public string Name { get; } = "PinDMD v3";
 		public bool IsAvailable { get; private set; }
+		public bool NeedsDuplicateFrames => false;
 
 		public int Delay { get; set; } = 100;
 		

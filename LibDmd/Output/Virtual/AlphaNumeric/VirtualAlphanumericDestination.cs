@@ -15,6 +15,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	{
 		public string Name => "Virtual Alphanumeric Display";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();

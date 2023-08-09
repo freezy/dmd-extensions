@@ -9,6 +9,7 @@ namespace LibDmd.Test.Stubs
 	{
 		public string Name => "Destination[Dynamic/RGB24]";
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		public void RenderRgb24(DmdFrame frame)
 		{

@@ -13,6 +13,7 @@ namespace LibDmd.Output.PinDmd1
 	{
 		public string Name { get; } = "PinDMD v1";
 		public bool IsAvailable { get; private set; }
+		public bool NeedsDuplicateFrames => false;
 
 		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
 		public bool DmdAllowHdScaling { get; set; } = true;

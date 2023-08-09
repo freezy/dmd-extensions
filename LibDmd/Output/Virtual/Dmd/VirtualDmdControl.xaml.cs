@@ -44,6 +44,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		public FrameFormat CurrentFrameFormat { get; private set; }
 
 		public bool IsAvailable => true;
+		public bool NeedsDuplicateFrames => false;
 
 		public double AspectRatio { get; private set; } = 1.0;
 
