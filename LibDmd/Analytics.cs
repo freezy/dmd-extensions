@@ -354,6 +354,8 @@ namespace LibDmd
 		
 #if SRC_GITHUB
 		private const string Distributor = "GitHub";
+#elif SRC_INSTALLER
+		private const string Distributor = "GitHub (Installer)";
 #elif SRC_PIXELCADE
 		private const string Distributor = "Pixelcade";
 #elif SRC_BALLER
