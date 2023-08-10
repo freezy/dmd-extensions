@@ -130,7 +130,7 @@ namespace LibDmd.Output.PinUp
 			}
 
 			// 2-bit frames are rendered as 4-bit
-			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 2));
+			RenderGray4(frame.Update(FrameUtil.ConvertGrayToGray(frame.Data, new byte[] { 0x0, 0x1, 0x4, 0xf }), 4));
 		}
 
 		public void OnFrameEventInit(FrameEventInit frameEventInit)
