@@ -84,13 +84,6 @@ foreach ($buildConfig in getBuildConfiguration) {
     Copy-Item "PinMameDevice\data\textures" -Destination "$buildDir\dmdext" -Force -Recurse
     Copy-Item "LibDmd\Input\FutureDmd\OpenGL32.dll" -Destination "$buildDir\Future Pinball" -Force
 
-#    Copy-Item "Console\bin\$platform\$config\dmdext.exe" -Destination $buildDir -Force
-#    Copy-Item "Console\bin\$platform\$config\dmdext.log.config" -Destination $buildDir -Force
-#    Copy-Item "Console\ProPinballSlave.bat" -Destination $buildDir -Force
-#    Copy-Item "PinMameDevice\bin\$platform\$config\DmdDevice$dllSuffix.dll" -Destination $buildDir -Force
-#    Copy-Item "PinMameDevice\bin\$platform\$config\DmdDevice.log.config" -Destination $buildDir -Force
-#    Copy-Item "PinMameDevice\DmdDevice.ini" -Destination $buildDir -Force
-
     New-Item -ItemType Directory -Force -Path $releaseDir
 
     $zipArchive = "$releaseDir\dmdext-v$version-$platform$suffix.zip"
@@ -109,5 +102,8 @@ foreach ($buildConfig in getBuildConfiguration) {
     Compress-Archive -Path "$buildDir\Future Pinball" -Update -DestinationPath $zipArchive
 
     Move-Item -Path "Installer\Builds\dmdext-v$version-$platform.msi" -Destination "$releaseDir\dmdext-v$version-$platform$suffix.msi"
+    if ($LastExitCode -ne 0) {
+        Exit
+    }
 
 }
