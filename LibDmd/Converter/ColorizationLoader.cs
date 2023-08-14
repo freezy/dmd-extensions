@@ -92,6 +92,7 @@ namespace LibDmd.Converter.Vni
 				}
 
 				Logger.Info($"[plugin] Plugin {plugin.GetName()} v{plugin.GetVersion()} loaded.");
+				Analytics.Instance.SetColorizer($"PLUGIN ({Path.GetFileName(config.Path)})");
 
 				return plugin;
 			}

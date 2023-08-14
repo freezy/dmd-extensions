@@ -57,9 +57,11 @@ namespace LibDmd.Converter.Vni
 				Vni = new VniFile(_vniPath);
 				Logger.Info("Loaded animation set {0}", Vni);
 				Logger.Info("Animation Dimensions: {0}x{1}", Vni.Dimensions.Width, Vni.Dimensions.Height);
+				Analytics.Instance.SetColorizer("VNI/PAL");
 				
 			} else {
 				Logger.Info("No animation set found");
+				Analytics.Instance.SetColorizer("PAL");
 			}
 		}
 
@@ -85,6 +87,7 @@ namespace LibDmd.Converter.Vni
 			}
 			NextChunk(key);
 			Logger.Info($"PAC v{version} loaded successfully.");
+			Analytics.Instance.SetColorizer("PAC");
 		}
 
 		private void NextChunk(byte[] key)
