@@ -114,6 +114,6 @@
     </PropertyGroup>
     <!-- Create build folder and move artifacts to it -->
     <Exec Command="if not exist Builds mkdir Builds" />
-    <Exec Command="move $(TargetPath) Builds\dmdext-$(AssemblyInformationalVersion)-$(Platform)-$(Configuration).msi" />
+    <Exec Command="move $(TargetPath) Builds\dmdext-v$(AssemblyInformationalVersion)-$(Platform).msi" />
   </Target>
 </Project>

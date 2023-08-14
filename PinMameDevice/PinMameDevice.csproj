@@ -233,9 +233,6 @@ if "$(Platform)"=="x64" (
     echo Copying $(TargetName).dll to %25VPM_HOME%25...
     copy /Y "$(TargetDir)$(TargetName).dll" "%25VPM_HOME%25"
     copy /Y "$(TargetDir)$(TargetName).pdb" "%25VPM_HOME%25"
-    copy /Y "$(TargetDir)LibDMD.dll" "%25VPM_HOME%25"
-    copy /Y "$(TargetDir)LibDMD.pdb" "%25VPM_HOME%25"
-
 )
 echo Copying DmdDevice.log.config to %25VPM_HOME%25...
 copy /Y "$(TargetDir)DmdDevice.log.config" "%25VPM_HOME%25"
