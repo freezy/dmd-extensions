@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using LibDmd.Common;
@@ -27,17 +28,12 @@ namespace LibDmd.Converter.Vni
 			Vni = 2,
 		}
 
-		public VniLoader(string altColorPath, string gameName, string vniKey)
+		public VniLoader(string altColorPath, string gameName)
 		{
-			if (!SetPath(Path.Combine(altColorPath, gameName, "pin2dmd.pac"), ref _pacPath)) {
-				SetPath(Path.Combine(altColorPath, gameName, gameName + ".pac"), ref _pacPath);
-			}
-			if (!SetPath(Path.Combine(altColorPath, gameName, "pin2dmd.pal"), ref _palPath)) {
-				SetPath(Path.Combine(altColorPath, gameName, gameName + ".pal"), ref _palPath);
-			}
-			if (!SetPath(Path.Combine(altColorPath, gameName, "pin2dmd.vni"), ref _vniPath)) {
-				SetPath(Path.Combine(altColorPath, gameName, gameName + ".vni"), ref _vniPath);
-			}
+			var altColorDir = new DirectoryInfo(Path.Combine(altColorPath, gameName));
+			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "pac"), ref _pacPath);
+			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "pal"), ref _palPath);
+			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "vni"), ref _vniPath);
 		}
 
 		public void Load(string vniKey)
@@ -161,15 +157,18 @@ namespace LibDmd.Converter.Vni
 			int val = hex;
 			return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
 		}
-		
-		private static bool SetPath(string path, ref string dest)
+
+		private static void SetPath(FileSystemInfo fi, ref string dest)
 		{
+			if (fi == null) {
+				return;
+			}
+			var path = fi.FullName;
 			if (!File.Exists(path)) {
-				return false;
+				return;
 			}
 
 			dest = path;
-			return true;
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -153,5 +154,12 @@ namespace LibDmd.Common
 			[Out] StringBuilder lpFilename,
 			[In][MarshalAs(UnmanagedType.U4)] int nSize
 		);
+
+		public static FileInfo GetLastCreatedFile(DirectoryInfo altColorDir, string ext)
+		{
+			return altColorDir.GetFiles($"*.{ext}")
+				.OrderByDescending(f => f.CreationTimeUtc)
+				.FirstOrDefault();
+		}
 	}
 }

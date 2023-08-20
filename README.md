@@ -84,8 +84,8 @@ Documentation how to enable and customize this feature can be found [here](https
 
 ### Frame Colorization
 
-DMD Extensions includes support for Serum colorizations, as well as the VNI/PAL format, originally used on PIN2DMD devices.
-PAC support is intended, but needs some refactoring first.
+DMD Extensions includes support for Serum colorizations, as well as the VNI/PAL/PAC format, originally used on PIN2DMD 
+devices.
 
 Colorization is enabled for most games, including Pinball FX(3), The Pinball Arcade, and Visual PinMAME.
 
@@ -384,7 +384,7 @@ The output are described by block below.
 | *n/a*                          | [browserstream]<br>port                        | Port of the web server to listen on                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `--pinup`                      | [pinup]<br>enable                              | Enables output to PinUP.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `--scaler-mode`                | [global]<br>scalermode                         | Use to upscale <strong>all</strong> frames.<br><br>Can have three values:<ul><li>`none` - No upscaling.</li> <li>`doubler` - Double all pixels.</li>  <li>`scale2x` - Use Scale2x algorithm.</li>                                                                                                                                                                                                                                                                           |
-| `--scaler-mode`                | [global]<br>vni.scalermode                     | Scaler mode for VNI colorizations. <strong>Note:</strong> This only applies to 256x64 colorized content files.<br><br>Can have two scaling modes:<ul><li>`doubler` - Double all pixels.</li>  <li>`scale2x` - Use Scale2x algorithm.</li>                                                                                                                                                                                                                                   |
+| `--scaler-mode`                | [global]<br>vni.scalermode                     | Scaler mode for VNI/PAC colorizations. <strong>Note:</strong> This only applies to 256x64 colorized content files.<br><br>Can have two scaling modes:<ul><li>`doubler` - Double all pixels.</li>  <li>`scale2x` - Use Scale2x algorithm.</li>                                                                                                                                                                                                                               |
 | `--skip-analytics`             | [global]<br>skipanalytics                      | If true, Don't send anonymous usage statistics to the developer. More info [here](https://github.com/freezy/dmd-extensions/wiki/Analytics).                                                                                                                                                                                                                                                                                                                                 |
 
 You can also override all options per game by using the game's name as section
@@ -483,8 +483,8 @@ If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcad
 colorization for games that are supported by the creators of the virtual pinball community. This means that the DMD will
 be rendered in color, with up to 64 colors per frame.
 
-There are two natively supported formats: Serum and VNI/PAL (originally only available for PIN2DMD displays). Additionally,
-dmdext supports colorization plugins from third parties. 
+There are two natively supported formats: Serum and VNI/PAL/PAC (originally only available for PIN2DMD displays). 
+Additionally, dmdext supports colorization plugins from third parties. 
 
 #### Colorization File Location
 
@@ -495,25 +495,29 @@ files.
 Depending on the source, the game folders and colorization files are named differently:
 
 - In VPM, the game folders are named after the ROM name (e.g. `cp_16` for Champion Pub).
-- Serum files are named after the game name, but with the `.cRZ` extension (e.g. `cp_16.cRZ`)
-- VNI/PAL files are always named `pin2dmd.vni` and `pin2dmd.pal`.
+- Serum files can be named anything, but must have the `.cRZ` extension.
+- VNI/PAL/PAC files can be named anything, but must have the `.vni`/`.pal`/`.pac` extension.
 - In Pinball Arcade and Pinball FX3, the games have different names. Scroll down for [a list of game names](#game-names)
   at the time of writing.
 
-For example, a structure for Champion Pub for all games and all color formats, would look like this (note that if both
-a `.cRZ` and VNI/PAL files are present in the same game folder, the `.cRZ` file will be used):
+For example, a structure for Champion Pub for all games and all color formats, could look like this (note that if both
+a `.cRZ` and VNI/PAL/PAC files are present in the same game folder, the `.cRZ` file will be used):
 ```
 altcolor
 ├── cp_16
-│   ├── cp_16.cRZ
+│   ├── ChampionPub.cRZ
 │   ├── pin2dmd.pal
 │   └── pin2dmd.vni
 ├── ChampionPub
 │   ├── ChampionPub.cRZ
 │   ├── pin2dmd.pal
 │   └── pin2dmd.vni
-└── BALLY_Champion_Pub
-    ├── BALLY_Champion_Pub.cRZ
+├── BALLY_Champion_Pub
+│   ├── ChampionPub.cRZ
+│   ├── pin2dmd.pal
+│   ├── pin2dmd.vni
+└── 121
+    ├── ChampionPub.cRZ
     ├── pin2dmd.pal
     └── pin2dmd.vni
 ```
@@ -559,7 +563,7 @@ Depending on the source, enabling colorization is different:
 
 Colorizations in the VNI/PAL format or the plugin are able to emit selected frames at 256x64, which is twice the normal 
 size. In this case, all frames will be rendered at this resolution. Frames that aren't provided at 256x64 will be 
-upscaled. In the native VNI/PAL colorizer, you can choose which upscale algorithm to use.
+upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algorithm to use.
 
 - For the command line, use the `--scaler-mode` option. The default is `double`.
 - In DmdDevice.ini, set the `vni.scalermode` option.

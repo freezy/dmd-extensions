@@ -24,8 +24,10 @@ namespace LibDmd.Converter.Vni
 				return null;
 			}
 
-			var serumPath = Path.Combine(_altcolorPath, gameName, gameName + ".cRZ");
-			if (File.Exists(serumPath)) {
+			var altColorDir = new DirectoryInfo(Path.Combine(_altcolorPath, gameName));
+			var serumFile = PathUtil.GetLastCreatedFile(altColorDir, "cRZ");
+			if (serumFile != null) {
+				var serumPath = serumFile.FullName;
 				try {
 					var serum = new Serum.Serum(_altcolorPath, gameName);
 					if (serum.IsLoaded) {
@@ -43,7 +45,7 @@ namespace LibDmd.Converter.Vni
 					Analytics.Instance.ClearColorizer();
 				}
 			} else {
-				Logger.Info($"[serum] No colorization found at {serumPath}...");
+				Logger.Info($"[serum] No colorization found at {altColorDir.FullName}...");
 				Analytics.Instance.ClearColorizer();
 			}
 
@@ -57,7 +59,7 @@ namespace LibDmd.Converter.Vni
 				return null;
 			}
 
-			var loader = new VniLoader(_altcolorPath, gameName, vniKey);
+			var loader = new VniLoader(_altcolorPath, gameName);
 			if (!loader.FilesExist) {
 				Logger.Info("No palette file found at {0}.", Path.Combine(_altcolorPath, gameName));
 				return null;
