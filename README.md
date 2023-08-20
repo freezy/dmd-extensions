@@ -518,6 +518,12 @@ altcolor
     └── pin2dmd.vni
 ```
 
+*Not about Serum*: The [library that does Serum colorization](https://github.com/zesinger/libserum) (`serum.dll`) is 
+bundled with `DmdDevice.dll` and `dmdext.exe`. However, you can also replace this library with a newer version if you wish.
+To do that, download the latest DLL from [here](https://github.com/zesinger/libserum/releases) and place it alongside
+with `DmdDevice.dll` or `dmdext.exe`. Note that this might break compatibility, so check your log if Serum suddenly stops
+working.
+
 #### Plugin Configuration
 
 Enabling colorization plugins is done through the `plugin.path` setting in `DmdDevice.ini`, or through the `--plugin` 
