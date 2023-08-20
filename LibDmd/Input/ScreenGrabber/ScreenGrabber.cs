@@ -30,7 +30,7 @@ namespace LibDmd.Input.ScreenGrabber
 		public int Width = 128;
 		public int Height = 32;
 
-		public Dimensions DestinationDimensions = new Dimensions(128, 32);
+		public Dimensions DestinationDimensions = Dimensions.Standard;
 
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();

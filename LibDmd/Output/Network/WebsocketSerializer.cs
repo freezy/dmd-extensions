@@ -25,7 +25,7 @@ namespace LibDmd.Output.Network
 
 	internal class WebsocketSerializer
 	{
-		public Dimensions Dimensions = new Dimensions(128, 32);
+		public Dimensions Dimensions = Dimensions.Standard;
 
 		private readonly long _startedAt = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 

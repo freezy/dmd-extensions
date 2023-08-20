@@ -415,7 +415,7 @@ namespace LibDmd.Frame
 				}
 
 				// if source is already > 128x32, return
-				if (Dimensions > new Dimensions(128, 32)) {
+				if (Dimensions > Dimensions.Standard) {
 					return this;
 				}
 

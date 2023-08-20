@@ -66,7 +66,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private Color[] _gray6Palette;
 
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
-		private Dimensions _frameDimensions = new Dimensions(128, 32);
+		private Dimensions _frameDimensions = Dimensions.Standard;
 		private FrameFormat _frameType = FrameFormat.AlphaNumeric; // Format of the frame to be processed
 		private BitmapSource _frameBitmap; // Bitmap of the frame to be processed if RenderBitmap was called
 		private byte[] _frameData; // Raw data of the frame to be processed

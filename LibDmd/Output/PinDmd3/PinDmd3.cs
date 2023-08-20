@@ -22,7 +22,7 @@ namespace LibDmd.Output.PinDmd3
 
 		public int Delay { get; set; } = 100;
 		
-		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		public Dimensions FixedSize => Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private const int ReadTimeoutMs = 100;

@@ -20,7 +20,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public int Delay { get; set; } = 100;
 		
-		public Dimensions FixedSize { get; private set; } = new Dimensions(128, 32);
+		public Dimensions FixedSize { get; private set; } = Dimensions.Standard;
 		
 		// We get a DMD_ESP32 instance to communicate with ESP32
 		private readonly ZeDMDComm pDMD = new ZeDMDComm();
@@ -39,7 +39,7 @@ namespace LibDmd.Output.ZeDMD
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private const int MAX_COLOR_ROTATIONS = 8; // maximum amount of color rotations per frame
 
-		private Dimensions RomDimensions = new Dimensions(128, 32); // The size of the frames in the rom
+		private Dimensions RomDimensions = Dimensions.Standard; // The size of the frames in the rom
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD API.

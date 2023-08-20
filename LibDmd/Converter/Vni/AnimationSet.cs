@@ -7,7 +7,7 @@ namespace LibDmd.Converter.Vni
 {
 	public abstract class AnimationSet
 	{
-		public Dimensions Dimensions { get; protected set; } = new Dimensions(128, 32);
+		public Dimensions Dimensions { get; protected set; } = Dimensions.Standard;
 
 		protected int Version;
 		protected List<FrameSeq> Animations;

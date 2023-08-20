@@ -15,7 +15,7 @@ namespace LibDmd.Output.PinDmd1
 		public bool IsAvailable { get; private set; }
 		public bool NeedsDuplicateFrames => false;
 
-		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		public Dimensions FixedSize { get; } = Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;

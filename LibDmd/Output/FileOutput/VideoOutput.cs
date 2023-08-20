@@ -15,7 +15,7 @@ namespace LibDmd.Output.FileOutput
 	{
 		public string VideoPath { get; set; }
 
-		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		public Dimensions FixedSize { get; } = Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		public readonly uint Fps;

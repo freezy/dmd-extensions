@@ -31,7 +31,7 @@ namespace LibDmd.Output.PinUp
 		public Dimensions FixedSize => _size;
 		public bool DmdAllowHdScaling => false;
 
-		private readonly Dimensions _size = new Dimensions(128, 32);
+		private readonly Dimensions _size = Dimensions.Standard;
 		private readonly IntPtr _pnt;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

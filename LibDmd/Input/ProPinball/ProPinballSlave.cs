@@ -26,7 +26,7 @@ namespace LibDmd.Input.ProPinball
 		private readonly ISubject<Unit> _onResume = new Subject<Unit>();
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 
-		private readonly Dimensions _dimensions = new Dimensions(128, 32);
+		private readonly Dimensions _dimensions = Dimensions.Standard;
 		private readonly uint _messageBufferSize = 392;
 		private ProPinballBridge.ProPinballDmd _bridge;
 		private IObservable<DmdFrame> _framesGray4;

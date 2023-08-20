@@ -112,7 +112,7 @@ namespace LibDmd.Input.PinballFX
 				_framesColoredGray2 = Observable.Interval(TimeSpan.FromMilliseconds(1000d / FramesPerSecond))
 					.Select(x => CaptureWindow())
 					.Where(bmp => bmp != null)
-					.Select(bmp => TransformationUtil.Transform(bmp, new Dimensions(128, 32), ResizeMode.Stretch, false, false))
+					.Select(bmp => TransformationUtil.Transform(bmp, Dimensions.Standard, ResizeMode.Stretch, false, false))
 					.Select(bmp => {
 						double hue;
 						var frame = ImageUtil.ConvertToGray2(bmp, 0.025, 0.3, out hue);

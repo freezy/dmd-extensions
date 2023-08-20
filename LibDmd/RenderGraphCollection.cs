@@ -24,7 +24,7 @@ namespace LibDmd
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly List<AbstractConverter> _converters = new List<AbstractConverter>();
-		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(new Dimensions(128, 32));
+		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(Dimensions.Standard);
 
 		/// <summary>
 		/// Special case: We have no graphs, only one IRenderer

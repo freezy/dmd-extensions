@@ -68,7 +68,7 @@ namespace LibDmd.DmdDevice
 		private bool _colorize;
 		private Color _color = RenderGraph.DefaultColor;
 		private Color[] _palette;
-		private readonly DmdFrame _alphanumFrame = new DmdFrame(new Dimensions(128, 32), 2);
+		private readonly DmdFrame _alphanumFrame = new DmdFrame(Dimensions.Standard, 2);
 
 		// colorizers
 		private readonly ColorizationLoader _colorizationLoader;
