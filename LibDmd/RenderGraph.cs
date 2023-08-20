@@ -665,13 +665,13 @@ namespace LibDmd
 				if (from == FrameFormat.Gray2 || from == FrameFormat.Gray4) {
 					deduped = dest.NeedsDuplicateFrames ? " - not deduped" : " - deduped";
 				}
-				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info($"  {indent}-> Connecting {source.Name} to {dest.Name} ({@from} => {to}){deduped}"));
+				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info($"  {indent}-> Connecting {source.Name} to {dest.Name} ({@from} -> {to}){deduped}"));
 			
 			} catch (TaskCanceledException e) {
 				Logger.Error(e, "Main thread seems already destroyed, aborting.");
 			}
 
-			switch (from) { 
+			switch (from) {
 
 				// source is gray2:
 				case FrameFormat.Gray2:

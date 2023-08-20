@@ -135,10 +135,7 @@ namespace LibDmd.Frame
 			return bmp;
 		}
 
-		public object Clone()
-		{
-			return new BmpFrame(Bitmap);
-		}
+		public object Clone() => this; // doesn't need cloning (and will crash with InvalidOperationException when not created on main thread)
 
 		public override string ToString() => ConvertToRgb24().ToString();
 	}
