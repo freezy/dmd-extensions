@@ -88,7 +88,11 @@ namespace LibDmd.Converter.Vni
 				Mappings = new Dictionary<uint, Mapping>();
 				for (var i = 0; i < numMappings; i++) {
 					var mapping = new Mapping(reader);
-					Mappings.Add(mapping.Checksum, mapping);
+					if (!Mappings.ContainsKey(mapping.Checksum)) {
+						Mappings.Add(mapping.Checksum, mapping);
+					} else {
+						Logger.Warn($"Mapping {mapping.Checksum} ({mapping.Mode} {mapping.PaletteIndex}) already exists, skipping.");
+					}
 				}
 			} else if (reader.BaseStream.Position == reader.BaseStream.Length) {
 				if (reader.BaseStream.Position != reader.BaseStream.Length) {
