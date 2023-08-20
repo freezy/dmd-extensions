@@ -78,7 +78,7 @@ namespace LibDmd.Converter.Plugin
 		public ColorizationPlugin(PluginConfig pluginConfig, bool colorize, string altcolorPath, string gameName,
 			Color defaultColor, IReadOnlyList<Color> defaultPalette) : base(true)
 		{
-			if (pluginConfig == null) {
+			if (pluginConfig == null || string.IsNullOrWhiteSpace(pluginConfig.Path)) {
 				return;
 			}
 

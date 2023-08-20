@@ -44,19 +44,19 @@ namespace LibDmd.Converter.Vni
 			}
 			
 			if (_palPath != null) {
-				Logger.Info("Loading palette file at {0}...", _palPath);
+				Logger.Info("[vni] Loading palette file at {0}...", _palPath);
 				Pal = new PalFile(_palPath);
 			}
 
 			if (_vniPath != null) {
-				Logger.Info("Loading virtual animation file at {0}...", _vniPath);
+				Logger.Info("[vni] Loading virtual animation file at {0}...", _vniPath);
 				Vni = new VniFile(_vniPath);
-				Logger.Info("Loaded animation set {0}", Vni);
-				Logger.Info("Animation Dimensions: {0}x{1}", Vni.Dimensions.Width, Vni.Dimensions.Height);
+				Logger.Info("[vni] Loaded animation set {0}", Vni);
+				Logger.Info("[vni] Animation Dimensions: {0}x{1}", Vni.Dimensions.Width, Vni.Dimensions.Height);
 				Analytics.Instance.SetColorizer("VNI/PAL");
 				
 			} else {
-				Logger.Info("No animation set found");
+				Logger.Info("[vni] No animation set found");
 				Analytics.Instance.SetColorizer("PAL");
 			}
 		}
@@ -64,10 +64,10 @@ namespace LibDmd.Converter.Vni
 		private void LoadPac(string vniKey)
 		{
 			if (vniKey == null) {
-				throw new ArgumentException("No PAC key found. Set it in DmdDevice.ini under vni.key.");
+				throw new ArgumentException("[vni] No PAC key found. Set it in DmdDevice.ini under vni.key.");
 			}
 			var key = HexToBytes(vniKey);
-			Logger.Info("Loading PAC file at {0}...", _pacPath);
+			Logger.Info("[vni] Loading PAC file at {0}...", _pacPath);
 			_reader = new BinaryReader(File.OpenRead(_pacPath));
 			var header = _reader.ReadBytes(4);
 			if (Encoding.Default.GetString(header) != "PAC ") {
@@ -78,11 +78,11 @@ namespace LibDmd.Converter.Vni
 			NextChunk(key);
 			var bs = _reader.BaseStream;
 			if (bs.Position == bs.Length) { // EOF?
-				Logger.Info($"PAC v{version} without animations loaded successfully.");
+				Logger.Info($"[vni] PAC v{version} without animations loaded successfully.");
 				return;
 			}
 			NextChunk(key);
-			Logger.Info($"PAC v{version} loaded successfully.");
+			Logger.Info($"[vni] PAC v{version} loaded successfully.");
 			Analytics.Instance.SetColorizer("PAC");
 		}
 
