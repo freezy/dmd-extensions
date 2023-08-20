@@ -245,6 +245,7 @@ namespace PinMameDevice
 
 		private static void InternalRenderRaw4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)
 		{
+			noOfRawFrames = Math.Min(noOfRawFrames, (ushort)4);
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
 			Marshal.Copy(currbuffer, frame, 0, frameSize);
