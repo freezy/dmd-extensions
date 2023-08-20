@@ -96,6 +96,9 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			frame.CopyPlanesTo(_frameBuffer, 13);
 
 			// send frame buffer to device
@@ -104,6 +107,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+
 			// copy palette
 			CopyPalette(frame.Palette, _frameBuffer, 4);
 
@@ -122,6 +129,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray4(DmdFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+
 			frame.CopyPlanesTo(_frameBuffer, 49);
 
 			// copy palette
@@ -138,6 +149,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+
 			// copy palette
 			CopyPalette(frame.Palette, _frameBuffer, 16);
 
@@ -150,6 +165,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+
 			// copy palette
 			CopyPalette(frame.Palette, _frameBuffer, 64);
 
@@ -186,6 +205,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			if (RomDimensions != frame.Dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+
 			// can directly be sent to the device.
 			_frameBuffer[0] = RGB24;
 
