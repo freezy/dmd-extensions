@@ -57,7 +57,7 @@ namespace LibDmd.Frame
 		private bool IsGray => BitLength <= 8;
 		private bool IsRgb24 => BitLength == 24;
 
-		protected int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
+		public int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
 
 		#region Constructors
 

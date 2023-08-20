@@ -22,6 +22,12 @@ namespace LibDmd.Converter
 		/// Source bit length
 		/// </summary>
 		public abstract IEnumerable<FrameFormat> From { get; }
+
+		/// <summary>
+		/// If set, pad smaller frames such as 128x16 to 128x32.
+		/// </summary>
+		protected virtual bool PadSmallFrames => false;
+
 		public bool NeedsDuplicateFrames => _clockAndDedupe;
 
 		public IObservable<Unit> OnResume { get; } = null;
@@ -88,12 +94,14 @@ namespace LibDmd.Converter
 		/// <param name="frame">Source frame</param>
 		public virtual void Convert(DmdFrame frame)
 		{
-			#if DEBUG
+#if DEBUG
 			if (!_clockAndDedupe) {
 				throw new InvalidOperationException("Convert() must be overridden if convertor doesn't receive clocked frames.");
 			}
-			#endif
-			_lastDmdFrame = frame;
+#endif
+			_lastDmdFrame = PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)
+				? frame.Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength)
+				: frame;
 		}
 
 		/// <summary>

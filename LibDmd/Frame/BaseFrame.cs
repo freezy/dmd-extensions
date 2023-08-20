@@ -36,7 +36,7 @@ namespace LibDmd.Frame
 			return nextLargerDim == Dimensions.Dynamic ? maxDim : nextLargerDim;
 		}
 		
-		protected byte[] CenterFrame(Dimensions targetDim, byte[] data, int bytesPerPixel)
+		public byte[] CenterFrame(Dimensions targetDim, byte[] data, int bytesPerPixel)
 		{
 			var padX = (targetDim.Width - Dimensions.Width) / 2;
 			var padY = (targetDim.Height - Dimensions.Height) / 2;

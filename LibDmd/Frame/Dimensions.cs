@@ -20,6 +20,7 @@
 		}
 
 		public static readonly Dimensions Dynamic = new Dimensions(-1, -1);
+		public static readonly Dimensions Standard = new Dimensions(128, 32);
 
 		public static bool operator < (Dimensions x, Dimensions y) => x.Surface < y.Surface;
 		public static bool operator > (Dimensions x, Dimensions y) => x.Surface > y.Surface;
@@ -36,6 +37,7 @@
 		public bool IsDoubleSizeOf(Dimensions dimensions) => Width == dimensions.Width * 2 && Height == dimensions.Height * 2;
 		
 		public bool FitsInto(Dimensions dimensions) => Width <= dimensions.Width && Height <= dimensions.Height;
+		public bool IsSmallerThan(Dimensions dimensions) => Width < dimensions.Width || Height < dimensions.Height;
 
 		public override bool Equals(object obj) => obj is Dimensions other && Equals(other);
 		

@@ -21,6 +21,8 @@ namespace LibDmd.Converter.Vni
 		public bool Has128x32Animation { get; set; }
 		public ScalerMode ScalerMode { get; set; }
 
+		protected override bool PadSmallFrames => true;
+
 		/// <summary>
 		/// Data from the .pal file
 		/// </summary>
