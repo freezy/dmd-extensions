@@ -36,11 +36,12 @@ var typeSet = {
 	},
 	clearColor: 'blob',
 	clearPalette: 'blob',
+	gameName: 'string0',
 	Data: {
 		name: 'string0',
 		data: jBinary.Template({
 			getBaseType: function(context) {
-				return context.name;				
+				return context.name;
 			}
 		})
 	}

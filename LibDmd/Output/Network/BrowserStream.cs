@@ -16,8 +16,8 @@ namespace LibDmd.Output.Network
 {
 	public class BrowserStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
 	{
-		public string Name { get; } = "Browser Stream";
-		public bool IsAvailable { get; } = true;
+		public string Name => "Browser Stream";
+		public bool IsAvailable => true;
 		public bool NeedsDuplicateFrames => false;
 
 		private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -53,11 +53,11 @@ namespace LibDmd.Output.Network
 				var path = req.RawUrl;
 				var output = res.OutputStream;
 
-				if (_www.ContainsKey(path)) {
+				if (_www.TryGetValue(path, out var resourcePath)) {
 					res.StatusCode = (int)HttpStatusCode.OK;
 					res.ContentType = GetMimeType(Path.GetExtension(path));
 					res.ContentEncoding = Encoding.UTF8;
-					using (var input = _assembly.GetManifestResourceStream(_www[path])) {
+					using (var input = _assembly.GetManifestResourceStream(resourcePath)) {
 						res.ContentLength64 = input.Length;
 						CopyStream(input, output);
 					}
@@ -93,26 +93,41 @@ namespace LibDmd.Output.Network
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			_sockets.ForEach(s => s.SendGray(frame.Data, 2));
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			_sockets.ForEach(s => s.SendGray(frame.Data, 4));
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			_sockets.ForEach(s => s.SendColoredGray2(frame.BitPlanes, frame.Palette));
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			_sockets.ForEach(s => s.SendColoredGray4(frame.BitPlanes, frame.Palette));
 		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
 			_sockets.ForEach(s => s.SendRgb24(frame.Data));
 		}
 
