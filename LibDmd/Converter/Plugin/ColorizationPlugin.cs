@@ -268,7 +268,7 @@ namespace LibDmd.Converter.Plugin
 				if (i < frame.RawPlanes.Length) {
 					frame.RawPlanes[i].CopyTo(rawBuffer, i * planeSize);
 				} else {
-					frame.ExtraRawPlanes[frame.RawPlanes.Length - i].CopyTo(rawBuffer, i * planeSize);
+					frame.ExtraRawPlanes[i - frame.RawPlanes.Length].CopyTo(rawBuffer, i * planeSize);
 				}
 			}
 
