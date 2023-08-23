@@ -157,6 +157,9 @@ namespace LibDmd.Common
 
 		public static FileInfo GetLastCreatedFile(DirectoryInfo altColorDir, string ext)
 		{
+			if (!Directory.Exists(altColorDir.FullName)) {
+				return null;
+			}
 			return altColorDir.GetFiles($"*.{ext}")
 				.OrderByDescending(f => f.CreationTimeUtc)
 				.FirstOrDefault();
