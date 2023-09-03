@@ -428,6 +428,7 @@
     <Compile Include="Frame\DmdFrame.cs" />
     <Compile Include="Frame\FrameExtensions.cs" />
     <Compile Include="Frame\RawFrame.cs" />
+    <Compile Include="Input\FileSystem\DumpSource.cs" />
     <Compile Include="Input\FutureDmd\FutureDmdSink.cs" />
     <Compile Include="Input\IColoredGray6Source.cs" />
     <Compile Include="Input\IColorRotationSource.cs" />

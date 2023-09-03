@@ -44,9 +44,13 @@ namespace DmdExt.Play
 					source = new RawSource(_options.FileName);
 					break;
 
+				case ".txt":
+					source = new DumpSource(_options.FileName);
+					break;
+
 				default:
 					throw new UnknownFormatException("Unknown format " + Path.GetExtension(_options.FileName.ToLower()) +
-						". Known formats: png, jpg, gif, bin.");
+						". Known formats: png, jpg, gif, bin, txt.");
 			}
 
 			// define renderers

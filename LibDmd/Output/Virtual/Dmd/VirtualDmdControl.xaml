@@ -10,5 +10,5 @@
 	<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 		<dmd:OpenGLControlExt x:Name="Dmd" OpenGLInitialized="ogl_OpenGLInitialized" OpenGLDraw="ogl_OpenGLDraw" RenderContextType="FBO" RenderTrigger="Manual" />
 		<Image x:Name="DmdFraming" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
-	</Grid>
+    </Grid>
 </UserControl>
