@@ -8,19 +8,22 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using LibDmd.Frame;
 
 namespace LibDmd.Input.FileSystem
 {
-	public class DumpSource : AbstractSource, IGray2Source
+	public class DumpSource : AbstractSource, IGray2Source, IGameNameSource
 	{
 		public override string Name => "Dump File";
 		public IObservable<Unit> OnResume => null;
 		public IObservable<Unit> OnPause => null;
 
+		public IObservable<string> GetGameName() => _gameName;
+
 		private readonly string _filename;
+
+		private readonly Subject<string> _gameName = new Subject<string>();
 
 		public DumpSource(string filename)
 		{
@@ -32,18 +35,14 @@ namespace LibDmd.Input.FileSystem
 
 		public IObservable<DmdFrame> GetGray2Frames(bool dedupe)
 		{
-			return GetObserver();
-		}
-
-		public IObservable<DmdFrame> GetObserver()
-		{
-			const Int32 BufferSize = 128;
+			const Int32 bufferSize = 128;
+			_gameName.OnNext(Path.GetFileNameWithoutExtension(_filename).TrimEnd('-'));
 			return Observable.Create<DmdFrame>(async (subject, token) =>
 			{
 				try {
 
 					using (var fileStream = File.OpenRead(_filename))
-					using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize)) {
+					using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, bufferSize)) {
 
 						var lastTimestamp = 0L;
 						var frame = new DmdFrame(128, 32, 2);
@@ -72,7 +71,7 @@ namespace LibDmd.Input.FileSystem
 							} while (!string.IsNullOrEmpty(line));
 
 							var wait = timestamp - lastTimestamp;
-							if (wait < 0) {
+							if (wait < 0 || wait > 2000) {
 								wait = 0;
 							}
 							await Task.Delay((int)wait, token);
@@ -91,7 +90,6 @@ namespace LibDmd.Input.FileSystem
 					subject.OnCompleted();
 				}
 				return Disposable.Empty;
-
 			});
 		}
 	}
