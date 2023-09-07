@@ -105,7 +105,7 @@ namespace LibDmd.Converter.Vni
 			var planes = frame.BitPlanes;
 			if (_palFile.Mappings != null) {
 				if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
-					TriggerAnimation(vd.RawPlanes, false);
+					TriggerAnimation(vd.AllPlanes, false);
 
 				} else {
 					TriggerAnimation(planes, false);

@@ -262,16 +262,6 @@ namespace LibDmd.Converter.Plugin
 
 		private IntPtr ColorizeFrame(RawFrame frame)
 		{
-			var planeSize = frame.PlaneSize;
-			var rawBuffer = new byte[frame.TotalPlanes * planeSize];
-			for (int i = 0; i < frame.TotalPlanes; i++) {
-				if (i < frame.RawPlanes.Length) {
-					frame.RawPlanes[i].CopyTo(rawBuffer, i * planeSize);
-				} else {
-					frame.ExtraRawPlanes[i - frame.RawPlanes.Length].CopyTo(rawBuffer, i * planeSize);
-				}
-			}
-
 			switch (frame.BitLength) {
 				case 4:
 					return _colorizeGray4Raw(
@@ -279,7 +269,7 @@ namespace LibDmd.Converter.Plugin
 						(ushort)frame.Dimensions.Height, 
 						frame.Data, 
 						(ushort)frame.TotalPlanes,
-						rawBuffer
+						frame.RawBuffer
 					);
 				default: {
 					return _colorizeGray2Raw(
@@ -287,7 +277,7 @@ namespace LibDmd.Converter.Plugin
 						(ushort)frame.Dimensions.Height, 
 						frame.Data, 
 						(ushort)frame.TotalPlanes,
-						rawBuffer
+						frame.RawBuffer
 					);
 				}
 			}

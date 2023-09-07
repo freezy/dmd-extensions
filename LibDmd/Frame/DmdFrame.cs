@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -549,6 +550,20 @@ namespace LibDmd.Frame
 				throw new ArgumentException("Cannot print frame with bit length " + BitLength);
 			}
 			return sb.ToString();
+		}
+
+		#endregion
+
+		#region Debug
+
+		public void Dump(string path, string prefix = null)
+		{
+			using (StreamWriter sw = File.Exists(path) ? File.AppendText(path) : File.CreateText(path)) {
+				if (prefix != null) {
+					sw.WriteLine(prefix);
+				}
+				sw.WriteLine(ToString());
+			}
 		}
 
 		#endregion
