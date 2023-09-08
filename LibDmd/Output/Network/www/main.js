@@ -1,4 +1,4 @@
-﻿var url = 'ws://' + window.location.host + '/dmd';
+var url = 'ws://' + window.location.host + '/dmd';
 var typeSet = {
 	'jBinary.littleEndian': true,
 	gray2Planes: {
@@ -214,7 +214,9 @@ var controller = {
 						});
 						break;
 					case 'rgb24':
-						that.renderRgb24(frame);
+						that.renderFrame(frame, function () {
+							return that.rgb24toInvertedRgb24(frame.planes);
+						});
 						break;
 					case 'dimensions':
 						that.setDimensions(frame);
@@ -243,10 +245,6 @@ var controller = {
 			that.clear();
 			console.log('Connection closed');
 		};
-	},
-
-	renderRgb24(frame) {
-		console.log('Colored rgb24 Frame: %s', frame.timestamp);
 	},
 
 	renderFrame: function(data, render) {
@@ -397,6 +395,23 @@ var controller = {
 				rgbFrame[pos] = Math.floor(dotColor.r * 255);
 				rgbFrame[pos + 1] = Math.floor(dotColor.g * 255);
 				rgbFrame[pos + 2] = Math.floor(dotColor.b * 255);
+				pos += 3;
+			}
+		}
+		return rgbFrame;
+	},
+
+	rgb24toInvertedRgb24: function (buffer) {
+		// the received frame is correctly 00..height, but graytoRgb24 uses heigth to 0, we need to revert
+		var rgbFrame = new Uint8Array(this._width * this._height * 3);
+		var pos = 0;
+		var pos_orig = 0;
+		for (var y = this._height - 1; y >= 0; y--) {
+			for (var x = 0; x < this._width; x++) {
+				pos_orig = (y * this._width * 3) + (x*3);
+				rgbFrame[pos] = buffer[pos_orig];
+				rgbFrame[pos + 1] = buffer[pos_orig+1];
+				rgbFrame[pos + 2] = buffer[pos_orig+1];
 				pos += 3;
 			}
 		}
