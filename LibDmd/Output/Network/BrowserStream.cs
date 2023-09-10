@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using LibDmd.Frame;
 using MimeTypes;
 using NLog;
@@ -14,7 +15,7 @@ using HttpStatusCode = WebSocketSharp.Net.HttpStatusCode;
 
 namespace LibDmd.Output.Network
 {
-	public class BrowserStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IResizableDestination
+	public class BrowserStream : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IResizableDestination
 	{
 		public string Name => "Browser Stream";
 		public bool IsAvailable => true;
@@ -123,6 +124,14 @@ namespace LibDmd.Output.Network
 			_sockets.ForEach(s => s.SendColoredGray4(frame.BitPlanes, frame.Palette));
 		}
 
+		public void RenderColoredGray6(ColoredFrame frame)
+		{
+			if (frame.Dimensions != _dimensions) {
+				SetDimensions(frame.Dimensions);
+			}
+			_sockets.ForEach(s => s.SendColoredGray6(frame.BitPlanes, frame.Palette, frame.Rotations, frame.RotateColors));
+		}
+
 		public void RenderRgb24(DmdFrame frame)
 		{
 			if (frame.Dimensions != _dimensions) {
@@ -229,6 +238,14 @@ namespace LibDmd.Output.Network
 				return;
 			}
 			Send(_serializer.SerializeColoredGray4(planes, palette));
+		}
+
+		public void SendColoredGray6(byte[][] planes, Color[] palette, byte[] rotations, bool RotateColors)
+		{
+			if (planes.Length == 0) {
+				return;
+			}
+			Send(_serializer.SerializeColoredGray6(planes, palette, rotations, RotateColors));
 		}
 
 		public void SendRgb24(byte[] frame) => Send(_serializer.SerializeRgb24(frame));

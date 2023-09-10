@@ -2,7 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Web.Routing;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Xml.Linq;
 using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
@@ -17,6 +20,7 @@ namespace LibDmd.Output.Network
 		void OnClearPalette();
 		void OnGameName(string gameName);
 		void OnRgb24(uint timestamp, byte[] frame);
+		void OnColoredGray6(uint timestamp, Color[] palette, byte[] data); //, byte[] rotations); 
 		void OnColoredGray4(uint timestamp, Color[] palette, byte[] data);
 		void OnColoredGray2(uint timestamp, Color[] palette, byte[] data);
 		void OnGray4(uint timestamp, byte[] frame);
@@ -80,6 +84,21 @@ namespace LibDmd.Output.Network
 						action.OnRgb24(reader.ReadUInt32(), reader.ReadBytes(data.Length - (int)reader.BaseStream.Position));
 						break;
 					}
+					case "coloredGray6": {
+							var timestamp = reader.ReadUInt32();
+							var numColors = reader.ReadInt32();
+							var palette = new Color[numColors];
+							for (var i = 0; i < numColors; i++) {
+								palette[i] = ColorUtil.FromInt(reader.ReadInt32());
+							}
+							var planes = new byte[4][];
+							var planeSize = (data.Length - (int)reader.BaseStream.Position) / 4;
+							for (var i = 0; i < 4; i++) {
+								planes[i] = reader.ReadBytes(planeSize);
+							}
+							action.OnColoredGray6(timestamp, palette, FrameUtil.Join(Dimensions, planes));
+							break;
+						}
 					case "coloredGray4": {
 						var timestamp = reader.ReadUInt32();
 						var numColors = reader.ReadInt32();
@@ -154,6 +173,31 @@ namespace LibDmd.Output.Network
 		public byte[] SerializeColoredGray4(byte[][] planes, Color[] palette)
 		{
 			return SerializeColoredGray("coloredGray4", planes, palette);
+		}
+
+		public byte[] SerializeColoredGray6(byte[][] planes, Color[] palette, byte[] rotations, bool RotateColors)
+		{
+			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			var buffer = new byte[24];
+			if (!RotateColors) {
+				for (var i = 0; i< 24; i++) {
+					buffer[i] = 255;
+				}
+			}
+			else
+				for (var i = 0; i< 8; i++) {
+					buffer[i] = rotations[i];
+				}
+
+			var data = Encoding.ASCII
+				.GetBytes("coloredGray6")
+				.Concat(new byte[] { 0x0 })
+				.Concat(BitConverter.GetBytes((uint)(timestamp - _startedAt)))
+				.Concat(BitConverter.GetBytes(palette.Length))
+				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
+				.Concat(buffer)
+				.Concat(planes.SelectMany(p => p));
+			return data.ToArray();
 		}
 
 		private byte[] SerializeColoredGray(string name, byte[][] planes, Color[] palette)
