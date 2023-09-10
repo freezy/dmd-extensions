@@ -100,8 +100,8 @@ namespace LibDmd.Converter
 			}
 #endif
 			_lastDmdFrame = PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)
-				? frame.Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength)
-				: frame;
+				? DmdFrame.GetFromPool().Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength)
+				: DmdFrame.GetFromPool().Update(frame);
 		}
 
 		/// <summary>
@@ -140,6 +140,7 @@ namespace LibDmd.Converter
 		{
 			if (_lastDmdFrame != null) {
 				ConvertClocked(_lastDmdFrame);
+				_lastDmdFrame.ReturnToPool();
 			}
 
 			if (_lastAlphanumFrame != null) {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -43,6 +44,8 @@ namespace LibDmd.Frame
 
 		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
+
+		private static ObjectPool Pool = new ObjectPool();
 
 		public FrameFormat Format {
 			get {
@@ -551,6 +554,27 @@ namespace LibDmd.Frame
 			}
 			return sb.ToString();
 		}
+
+		#endregion
+
+		#region Pool
+
+		private class ObjectPool
+		{
+			private readonly ConcurrentBag<DmdFrame> _objects;
+
+			public ObjectPool()
+			{
+				_objects = new ConcurrentBag<DmdFrame>();
+			}
+
+			public DmdFrame Get() => _objects.TryTake(out DmdFrame item) ? item : new DmdFrame();
+
+			public void Return(DmdFrame item) => _objects.Add(item);
+		}
+
+		public static DmdFrame GetFromPool() => Pool.Get();
+		public void ReturnToPool() => Pool.Return(this);
 
 		#endregion
 
