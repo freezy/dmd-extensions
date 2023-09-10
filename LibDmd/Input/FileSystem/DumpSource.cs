@@ -10,6 +10,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using LibDmd.Frame;
+using NLog;
 
 namespace LibDmd.Input.FileSystem
 {
@@ -24,6 +25,8 @@ namespace LibDmd.Input.FileSystem
 		private readonly string _filename;
 
 		private readonly Subject<string> _gameName = new Subject<string>();
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public DumpSource(string filename)
 		{
@@ -44,11 +47,17 @@ namespace LibDmd.Input.FileSystem
 					using (var fileStream = File.OpenRead(_filename))
 					using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, bufferSize)) {
 
+						Logger.Info($"[dump] Starting to stream frames from {_filename}");
 						var lastTimestamp = 0L;
 						var frame = new DmdFrame(128, 32, 2);
 						var data = new List<byte>();
 						var line = await streamReader.ReadLineAsync();
 						while (line != null) {
+
+							if (string.IsNullOrWhiteSpace(line)) {
+								line = await streamReader.ReadLineAsync();
+								continue;
+							}
 
 							var timestamp = long.Parse(line.Substring(2), NumberStyles.HexNumber);
 							if (lastTimestamp == 0) {
