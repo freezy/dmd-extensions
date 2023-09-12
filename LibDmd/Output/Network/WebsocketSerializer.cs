@@ -85,18 +85,20 @@ namespace LibDmd.Output.Network
 						break;
 					}
 					case "coloredGray6": {
-							var timestamp = reader.ReadUInt32();
-							var numColors = reader.ReadInt32();
-							var palette = new Color[numColors];
+							// 13 name
+							var timestamp = reader.ReadUInt32(); 
+							var numColors = reader.ReadInt32();  
+							var palette = new Color[numColors]; 
 							for (var i = 0; i < numColors; i++) {
 								palette[i] = ColorUtil.FromInt(reader.ReadInt32());
 							}
-							var planes = new byte[4][];
-							var planeSize = (data.Length - (int)reader.BaseStream.Position) / 4;
-							for (var i = 0; i < 4; i++) {
+							var planes = new byte[6][];  
+							var planeSize = (data.Length - (int)reader.BaseStream.Position) / 6;
+							for (var i = 0; i < 6; i++) {
 								planes[i] = reader.ReadBytes(planeSize);
 							}
 							action.OnColoredGray6(timestamp, palette, FrameUtil.Join(Dimensions, planes));
+							// missing - rotations!!!!
 							break;
 						}
 					case "coloredGray4": {
@@ -188,15 +190,14 @@ namespace LibDmd.Output.Network
 				for (var i = 0; i< 8; i++) {
 					buffer[i] = rotations[i];
 				}
-
 			var data = Encoding.ASCII
 				.GetBytes("coloredGray6")
 				.Concat(new byte[] { 0x0 })
 				.Concat(BitConverter.GetBytes((uint)(timestamp - _startedAt)))
 				.Concat(BitConverter.GetBytes(palette.Length))
 				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
-				.Concat(buffer)
 				.Concat(planes.SelectMany(p => p));
+			    //.Concat(buffer);
 			return data.ToArray();
 		}
 

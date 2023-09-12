@@ -19,6 +19,12 @@ var typeSet = {
 		palette: 'palette',
 		planes: 'blob'
 	},
+	coloredGray6: {
+		timestamp: 'uint32',
+		palette: 'palette',
+		planes: 'blob',
+		rotations: 'blob'
+	},
 	rgb24: {
 		timestamp: 'uint32',
 		planes: 'blob'
@@ -64,6 +70,7 @@ var controller = {
 	// timing stuff
 	_bufferTime: 0,
 	_started: 0,
+	_lastTime: 0, 
 
 	// scene
 	_camera: null,
@@ -213,6 +220,11 @@ var controller = {
 							return that.graytoRgb24(that.joinPlanes(4, frame.planes), frame.palette.colors);
 						});
 						break;
+					case 'coloredGray6':
+						that.renderFrame(frame, function () {
+							return that.graytoRgb24(that.joinPlanes(6, frame.planes), frame.palette.colors);
+						});
+						break;
 					case 'rgb24':
 						that.renderFrame(frame, function () {
 							return that.rgb24toInvertedRgb24(frame.planes);
@@ -220,6 +232,7 @@ var controller = {
 						break;
 					case 'dimensions':
 						that.setDimensions(frame);
+						that._lastTime = data.timestamp;
 						break;
 					case 'color':
 						that.setColor(frame.color);
@@ -253,6 +266,7 @@ var controller = {
 			this._clientStart = new Date().getTime();
 			this._serverStart = data.timestamp;
 		}
+
 		var serverDiff = data.timestamp - this._serverStart;
 		var clientDiff = new Date().getTime() - this._clientStart;
 		var delay = this._bufferTime + serverDiff - clientDiff;
@@ -264,12 +278,17 @@ var controller = {
 		}
 
 		var that = this;
-		var frame = render();
-		setTimeout(function () {
-			that._dmdMesh.material.map.image.data = frame;
-			that._dmdMesh.material.map.needsUpdate = true;
-			that.renderCanvas();
-		}, delay);
+		if (that._lastTime < data.timestamp) {
+			// if new frame was sent later than the last one, ignore older ones arriving late
+			console.log("time: %s", data.timestamp);
+			var frame = render();
+			setTimeout(function () {
+				that._dmdMesh.material.map.image.data = frame;
+				that._dmdMesh.material.map.needsUpdate = true;
+				that.renderCanvas();
+			}, delay);
+		}
+		that._lastTime = data.timestamp;
 	},
 
 	setDimensions: function (dim) {
