@@ -196,8 +196,8 @@ namespace LibDmd.Output.Network
 				.Concat(BitConverter.GetBytes((uint)(timestamp - _startedAt)))
 				.Concat(BitConverter.GetBytes(palette.Length))
 				.Concat(ColorUtil.ToIntArray(palette).SelectMany(BitConverter.GetBytes))
+				.Concat(buffer)
 				.Concat(planes.SelectMany(p => p));
-			    //.Concat(buffer);
 			return data.ToArray();
 		}
 

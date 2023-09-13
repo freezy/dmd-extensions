@@ -22,8 +22,8 @@ var typeSet = {
 	coloredGray6: {
 		timestamp: 'uint32',
 		palette: 'palette',
-		planes: 'blob',
-		rotations: 'blob'
+		rotations: 'rotations',
+		planes: 'blob'
 	},
 	rgb24: {
 		timestamp: 'uint32',
@@ -39,6 +39,9 @@ var typeSet = {
 	palette: {
 		length: 'int32',
 		colors: ['array', 'int32', 'length']
+	},
+	rotations: {
+		colors: ['array', 'int8', 24]
 	},
 	clearColor: 'blob',
 	clearPalette: 'blob',
