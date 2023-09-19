@@ -718,6 +718,7 @@ setup, however note that games that you've already configured won't be affected.
 
 | Title                                | Pinball Arcade      | Pinball FX3                            | Pinball FX |
 |--------------------------------------|---------------------|----------------------------------------|------------|
+| AC/DC                                | `ACDC`              |                                        |            |
 | Attack From Mars                     | `AttackFromMars`    | `BALLY_Attack_from_Mars`               | `119`      |
 | Big Buck Hunter PRO                  | `BuckHunter`        |                                        |            | 
 | Big Hurt                             | `BigHurt`           |                                        |            |
@@ -729,7 +730,9 @@ setup, however note that games that you've already configured won't be affected.
 | Creature of the Black Lagoon         | `Creature`          | `BALLY_Creature_from_the_Black_Lagoon` | `131`      |
 | Cue Ball Wizard                      | `CueBallWizard`     |                                        |            |
 | Doctor Who                           | `DoctorWho`         |                                        |            |
+| Dr. Dude and his Excellent Ray       | `DrDude`            | `BALLY_Dr_Dude`                        | `135`      |
 | Fish Tales                           | `FishTales`         | `WMS_Fish_Tales`                       | `108`      |
+| Funhouse                             | `FnHouse`           | `WMS_Funhouse`                         | `134`      |
 | Ghostbusters                         | `GhostBustersStern` |                                        |            |
 | Gladiators                           | `Gladiators`        |                                        |            |
 | Harley Davidson                      | `HarleyDavidson`    |                                        |            |
@@ -737,6 +740,7 @@ setup, however note that games that you've already configured won't be affected.
 | Hurricane                            | `Hurricane`         | `WMS_Hurricane`                        | `126`      |
 | Indiana Jones: The Pinball Adventure |                     | `WMS_Indiana_Jones`                    | `133`      |
 | Indianapolis 500                     | `Indy500`           |                                        |            |
+| Jack·Bot                             | `JackBot`           |                                        |            |
 | Judge Dredd                          | `JudgeDredd`        |                                        |            |
 | Junk Yard                            | `JunkYard`          | `WMS_Junkyard`                         | `110`      |
 | Last Action Hero                     | `LastActionHero`    |                                        |            |
@@ -746,27 +750,32 @@ setup, however note that games that you've already configured won't be affected.
 | Mustang                              | `Mustang`           |                                        |            |
 | No Fear: Dangerous Sports            | `NoFear`            |                                        |            |
 | No Good Gofers                       | `Gofers`            | `WMS_No_Good_Gofers`                   | `128`      |
-| Party Zone                           |                     | `BALLY_Party_Zone`                     | `120`      |
+| Party Zone                           | `PartyZone`         | `BALLY_Party_Zone`                     | `120`      |
 | Pistol Poker                         | `PistolPoker`       |                                        |            |
-| Red and Ted's Road Show              |                     | `WMS_Roadshow`                         | `125`      |
+| Red and Ted's Road Show              | `RoadShow`          | `WMS_Roadshow`                         | `125`      |
 | Rescue 911                           | `Rescue911`         |                                        |            |
 | Ripley's Believe it Or Not           | `Ripleys`           |                                        |            |
-| Safe Cracker                         |                     | `BALLY_Safe_Cracker`                   | `122`      |
+| Safe Cracker                         | `SafeCracker`       | `BALLY_Safe_Cracker`                   | `122`      |
 | Scared Stiff                         | `ScaredStiff`       |                                        |            |
+| Space Station                        |                     | `WMS_Space_Station`                    | `129`      |
 | Starship Troopers                    | `StarshipTroopers`  |                                        |            |
 | StarTrek                             | `StarTrek`          |                                        |            |
-| StarTrek: The Next Generation        | `StarTrekTNG`       |                                        |            |
+| StarTrek: The Next Generation        | `StarTrekTNG`       |                                        | `163`      |
+| Swords of Fury                       | `SwordsOfFury`      |                                        | `149`      |
 | Tales of the Arabian Nights          | `Totan`             | `WMS_Tales_of_the_Arabian_Nights`      | `132`      |
 | Teed Off                             | `TeedOff`           |                                        |            |
 | Terminator 2: Judgment Day           | `Terminator2`       |                                        |            |
+| The Addams Family                    | `AddamsFamily`      |                                        | `156`      |
 | The Getaway: High Speed 2            | `HighSpeed2`        | `WMS_Getaway`                          | `111`      |
+| The Machine: Bride of Pin·Bot        | `BridePB`           |                                        | `148`      |
 | Theatre of Magic                     | `TheaterOfMagic`    | `BALLY_TheatreOfMagic`                 | `117`      |
 | Twilight Zone                        | `TwilightZone`      |                                        | `162`      |
-| Whirlwind                            |                     |                                        | `168`      |
+| Whirlwind                            | `WhirlWind`         |                                        | `168`      |
 | White Water                          | `WhiteWater`        | `WMS_White_Water`                      | `124`      |
-| WHO dunnit                           | `WHODunnit`         |                                        |            |
+| WHO dunnit                           | `WhoDunnit`         |                                        |            |
 | Whoa Nellie! Big Juicy Melons        | `WhoaNellie`        |                                        |            |
 | Wipeout                              | `Wipeout`           |                                        |            |
+| World Cup Soccer                     | `WorldCup`          |                                        | `157`      |
 | World Tour                           | `WorldTour`         |                                        |            |
 
 ### x64 vs x86
