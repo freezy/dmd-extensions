@@ -230,13 +230,13 @@ namespace LibDmd.DmdDevice
 			byte i, j;
 			for (i = 0; i < 16; i++) {
 				for (j = 0; j < 16; j++) {
-					if (((seg_data[i] >> j) & 0x1) > 0)
+					if (((seg_data[i] >> j) & 0x1) != 0)
 						DrawSegment(i * 8, 2, 0, j, 3);
-					if (((seg_data[i + 16] >> j) & 0x1) > 0)
+					if (((seg_data[i + 16] >> j) & 0x1) != 0)
 						DrawSegment(i * 8, 19, 0, j, 3);
-					SmoothDigitCorners(i * 8, 2);
-					SmoothDigitCorners(i * 8, 19);
 				}
+				SmoothDigitCorners(i * 8, 2);
+				SmoothDigitCorners(i * 8, 19);
 			}
 			return FrameBuffer;
 		}
@@ -478,10 +478,10 @@ namespace LibDmd.DmdDevice
 			for (i = 0; i < 14; i++) {
 				for (j = 0; j < 16; j++) {
 					// 2x7 numeric
-					if (((seg_data[i] >> j) & 0x1) > 0)
+					if (((seg_data[i] >> j) & 0x1) != 0)
 						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 0, 2, j, 3);
 					// 2x7 numeric
-					if (((seg_data[i + 14] >> j) & 0x1) > 0)
+					if (((seg_data[i + 14] >> j) & 0x1) != 0)
 						DrawSegment((i + ((i < 7) ? 0 : 2)) * 8, 20, 2, j, 3);
 				}
 				SmoothDigitCorners((i + ((i < 7) ? 0 : 2)) * 8, 0);
@@ -489,13 +489,13 @@ namespace LibDmd.DmdDevice
 			}
 			// 4x1 numeric small
 			for (j = 0; j < 16; j++) {
-				if (((seg_data[28] >> j) & 0x1) > 0)
+				if (((seg_data[28] >> j) & 0x1) != 0)
 					DrawSegment(8, 12, 5, j, 3);
-				if (((seg_data[29] >> j) & 0x1) > 0)
+				if (((seg_data[29] >> j) & 0x1) != 0)
 					DrawSegment(16, 12, 5, j, 3);
-				if (((seg_data[30] >> j) & 0x1) > 0)
+				if (((seg_data[30] >> j) & 0x1) != 0)
 					DrawSegment(32, 12, 5, j, 3);
-				if (((seg_data[31] >> j) & 0x1) > 0)
+				if (((seg_data[31] >> j) & 0x1) != 0)
 					DrawSegment(40, 12, 5, j, 3);
 			}
 			return FrameBuffer;
