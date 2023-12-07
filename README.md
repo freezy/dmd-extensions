@@ -68,6 +68,12 @@ Currently supported hardware displays:
 - **Pixelcade**, full RGB support
 - **ZeDMD**, full RGB support
 
+*Not about ZeDMD*: The [ZeDMD library](https://github.com/PPUC/libzedmd) (`zedmd.dll`) is 
+bundled with `DmdDevice.dll` and `dmdext.exe`. However, you can also replace this library with a newer version if you wish.
+To do that, download the latest DLL from [here](https://github.com/PPUC/libzedmd/releases) and place it alongside
+with `DmdDevice.dll` or `dmdext.exe`. Note that this might break compatibility, so check your log if ZeDMD suddenly stops
+working.
+
 ### High Resolution DMD for Monitors
 
 DMD Extensions includes a complex shader with awesome effects for monitor users. For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
