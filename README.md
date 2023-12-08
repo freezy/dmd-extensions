@@ -516,8 +516,8 @@ Now you have to remove `wifi.ssid` and `wifi.password` from `DmdDevice.ini`.
 At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
 This address has to be added as `wifi.address` to `DmdDevice.ini`.
 
-**ZeDMD will store the credentials internally! So ensure to erase them using of the processes above before
-giving your ZeDMD to someone else!**
+**ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
+above before giving your ZeDMD to someone else!**
 
 ### Colorization
 
