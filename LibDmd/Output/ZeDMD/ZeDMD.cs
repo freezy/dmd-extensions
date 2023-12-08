@@ -11,13 +11,21 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IRawOutput, IMultiSizeDestination
+	public class ZeDMD : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IMultiSizeDestination
 	{
 		public string Name => "ZeDMD";
 		public bool IsAvailable { get; private set; }
 		public bool NeedsDuplicateFrames => false;
 		// libzedmd has it's own queuing.
 		public int Delay { get; set; } = 0;
+		public bool Debug { get; set; }
+		public int Brightness { get; set; }
+		public int RgbOrder { get; set; }
+		public string WifiAddress { get; set; }
+		public int WifiPort { get; set; }
+		public string WifiSsid { get; set; }
+		public string WifiPassword { get; set; }
+
 		public Dimensions[] Sizes { get; } = { new Dimensions(128, 16), Dimensions.Standard, new Dimensions(192, 64), new Dimensions(256, 64) };
 		
 		private static ZeDMD _instance;
@@ -30,13 +38,14 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMD GetInstance()
+		public static ZeDMD GetInstance(bool debug, int brightness, int rgbOrder, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
 		{
 			if (_instance == null)
 			{
-				_instance = new ZeDMD();
+				_instance = new ZeDMD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
+				_instance.Init();
 			}
-
+	
 			return _instance;
 		}
 
@@ -46,7 +55,26 @@ namespace LibDmd.Output.ZeDMD
 		private ZeDMD()
 		{
 			_pZeDMD = ZeDMD_GetInstance();
-			IsAvailable = ZeDMD_Open(_pZeDMD);
+		}
+
+		private void Init()
+		{
+			if (!string.IsNullOrEmpty(WifiAddress) && WifiPort > 0) {
+				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
+			}
+			else {
+				IsAvailable = ZeDMD_Open(_pZeDMD);
+
+				if (IsAvailable && !string.IsNullOrEmpty(WifiSsid) && !string.IsNullOrEmpty(WifiPassword)) {
+					ZeDMD_SetWiFiSSID(_pZeDMD, WifiSsid);
+					ZeDMD_SetWiFiPassword(_pZeDMD, WifiPassword);
+					ZeDMD_SaveSettings(_pZeDMD);
+					Logger.Info(Name + " WiFi credentials submitted");
+					ZeDMD_Close(_pZeDMD);
+					IsAvailable = false;
+					return;
+				}
+			}
 
 			if (!IsAvailable)
 			{
@@ -57,6 +85,10 @@ namespace LibDmd.Output.ZeDMD
 
 			// Different modes require different palette sizes. This one should be safe for all.
 			_paletteBuffer = new byte[64 * 3];
+
+			if (Debug) { ZeDMD_EnableDebug(_pZeDMD); }
+			if (Brightness >= 0 && Brightness <= 15) { ZeDMD_SetBrightness(_pZeDMD, Brightness); }
+			if (RgbOrder >= 0 && RgbOrder <= 15) { ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder); }
 
 			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
 		}
@@ -110,11 +142,6 @@ namespace LibDmd.Output.ZeDMD
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
 		}
 
-		public void RenderRaw(byte[] data)
-		{
-			// Todo
-		}
-
 		public void ClearDisplay()
 		{
 			ZeDMD_ClearScreen(_pZeDMD);
@@ -122,7 +149,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void Dispose()
 		{
-			ZeDMD_Close(_pZeDMD);
+			ZeDMD_ClearScreen(_pZeDMD);
 		}
 
 		private void SetPalette(Color[] palette, int ncol)
@@ -183,7 +210,56 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
+		private static extern bool ZeDMD_OpenWiFi(IntPtr pZeDMD, string ip, int port);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		private static extern void ZeDMD_Close(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_EnableDebug(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_SetBrightness(IntPtr pZeDMD, int brightness);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_SetRGBOrder(IntPtr pZeDMD, int order);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_SetWiFiSSID(IntPtr pZeDMD, string ssid);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_SetWiFiPassword(IntPtr pZeDMD, string password);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		private static extern void ZeDMD_SaveSettings(IntPtr pZeDMD);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

@@ -84,7 +84,7 @@ namespace DmdExt.Common
 
 			if (config.ZeDMD.Enabled)
 			{
-				var zeDMD = ZeDMD.GetInstance();
+				var zeDMD = ZeDMD.GetInstance(config.ZeDMD.Debug, config.ZeDMD.Brightness, config.ZeDMD.RgbOrder, config.ZeDMD.WifiAddress, config.ZeDMD.WifiPort, config.ZeDMD.WifiSsid, config.ZeDMD.WifiPassword);
 				if (zeDMD.IsAvailable)
 				{
 					renderers.Add(zeDMD);
