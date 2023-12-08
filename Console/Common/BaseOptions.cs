@@ -141,6 +141,27 @@ namespace DmdExt.Common
 		[Option("--pac-key", HelpText = "Key to decrypt PAC files, in hex.")]
 		public string PacKey { get; set; } = null;
 
+		[Option("zedmd-debug", HelpText = "If set, ZeDMD will show its debug informations. Default: false.")]
+		public bool Debug { get; set; } = false;
+
+		[Option("zedmd-brightness", HelpText = "Change ZeDMD brightness between 0 and 15.")]
+		public int Brightness { get; set; } = -1;
+
+		[Option("zedmd-rgborder", HelpText = "Change ZeDMD RGB order between 0 and 15.")]
+		public int RgbOrder { get; set; } = -1;
+
+		[Option("zedmd-wifi-address", HelpText = "Connect to ZeDMD in WiFi mode using this IP address.")]
+		public string WifiAddress { get; set; } = null;
+
+		[Option("zedmd-wifi-port", HelpText = "Connect to ZeDMD in WiFi mode using this port. Default: 80.")]
+		public int WifiPort { get; set; } = 80;
+
+		[Option("zedmd-wifi-ssid", HelpText = "Configure ZeDMD to use this SSID for WiFi mode.")]
+		public string WifiSsid { get; set; } = null;
+
+		[Option("zedmd-wifi-port", HelpText = "Configure ZeDMD to use this password for WiFi mode.")]
+		public string WifiPassword { get; set; } = null;
+
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -369,7 +390,13 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 							   _options.Destination == BaseOptions.DestinationType.zeDMD;
-		public string Port => _options.Port;
+		public bool Debug => _options.Debug;
+		public int Brightness => _options.Brightness;
+		public int RgbOrder => _options.RgbOrder;
+		public string WifiAddress => _options.WifiAddress;
+		public int WifiPort => _options.WifiPort;
+		public string WifiSsid => _options.WifiSsid;
+		public string WifiPassword => _options.WifiPassword;
 	}
 
 	internal class Pin2DmdOptions : IPin2DmdConfig

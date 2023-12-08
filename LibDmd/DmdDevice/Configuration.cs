@@ -302,7 +302,14 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "zedmd";
 		public bool Enabled => GetBoolean("enabled", false);
-		public bool AllowHdScaling => GetBoolean("scaletohd", true);
+		public bool Debug => GetBoolean("debug", false);
+		public int Brightness => GetInt("brightness", -1);
+		public int RgbOrder => GetInt("rgborder", -1);
+		public string WifiAddress => GetString("wifi.address", null);
+		public int WifiPort => GetInt("wifi.port", 80);
+		public string WifiSsid => GetString("wifi.ssid", null);
+		public string WifiPassword => GetString("wifi.password", null);
+		public bool AllowHdScaling => false;
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

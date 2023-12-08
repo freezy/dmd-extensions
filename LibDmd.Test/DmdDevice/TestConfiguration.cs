@@ -104,9 +104,15 @@ namespace LibDmd.Test
 	public class TestZeDMDConfig : IZeDMDConfig
 	{
 		public bool Enabled { get; set; }
-		public string Port { get; set; }
+		public bool Debug { get; set; }
+		public int Brightness { get; set; }
+		public int RgbOrder { get; set; }
+		public string WifiAddress { get; set; }
+		public int WifiPort { get; set; }
+		public string WifiSsid { get; set; }
+		public string WifiPassword { get; set; }
 	}
-	
+
 	public class TestPin2DmdConfig : IPin2DmdConfig
 	{
 		public bool Enabled { get; set; }

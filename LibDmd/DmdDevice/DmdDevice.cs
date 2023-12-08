@@ -466,7 +466,7 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.ZeDMD.Enabled) {
-				var zeDmd = ZeDMD.GetInstance();
+				var zeDmd = ZeDMD.GetInstance(_config.ZeDMD.Debug, _config.ZeDMD.Brightness, _config.ZeDMD.RgbOrder, _config.ZeDMD.WifiAddress, _config.ZeDMD.WifiPort, _config.ZeDMD.WifiSsid, _config.ZeDMD.WifiPassword);
 				if (zeDmd.IsAvailable) {
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
