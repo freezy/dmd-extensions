@@ -92,7 +92,6 @@ namespace LibDmd.Output.ZeDMD
 			if (RgbOrder >= 0 && RgbOrder <= 15) { ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder); }
 
 			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
-			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		public void SetDimensions(Dimensions newDim)
@@ -144,7 +143,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void ClearDisplay()
 		{
-			ZeDMD_ClearScreen(_pZeDMD);
+			qZeDMD_ClearScreen(_pZeDMD);
 		}
 
 		public void Dispose()
@@ -176,12 +175,10 @@ namespace LibDmd.Output.ZeDMD
 
 		public void ClearPalette()
 		{
-			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		public void ClearColor()
 		{
-			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		#region libzedmd
@@ -273,13 +270,6 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		private static extern void ZeDMD_SetPalette(IntPtr pZeDMD, byte[] palette, int numColors);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		private static extern void ZeDMD_SetDefaultPalette(IntPtr pZeDMD, int bitDepth);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
