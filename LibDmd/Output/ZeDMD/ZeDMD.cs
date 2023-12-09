@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
+using LibDmd.Common;
 using LibDmd.Frame;
 using NLog;
 
@@ -91,6 +92,7 @@ namespace LibDmd.Output.ZeDMD
 			if (RgbOrder >= 0 && RgbOrder <= 15) { ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder); }
 
 			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
+			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		public void SetDimensions(Dimensions newDim)
@@ -104,35 +106,33 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderGray2(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette, frame.NumColors);
+			SetPalette(frame.Palette);
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			ZeDMD_SetDefaultPalette(_pZeDMD, 4);
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette, frame.NumColors);
+			SetPalette(frame.Palette);
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette, frame.NumColors);
+			SetPalette(frame.Palette);
 			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, frame.Rotations);
 		}
 
@@ -152,10 +152,10 @@ namespace LibDmd.Output.ZeDMD
 			ZeDMD_ClearScreen(_pZeDMD);
 		}
 
-		private void SetPalette(Color[] palette, int ncol)
+		public void SetPalette(Color[] palette)
 		{
 			var paletteChanged = false;
-			for (var i = 0; i < ncol; i++) {
+			for (var i = 0; i < palette.Length; i++) {
 				var color = palette[i];
 				var j = i * 3;
 				paletteChanged = paletteChanged || (_paletteBuffer[j] != color.R || _paletteBuffer[j + 1] != color.G || _paletteBuffer[j + 2] != color.B);
@@ -165,24 +165,23 @@ namespace LibDmd.Output.ZeDMD
 			}
 
 			if (paletteChanged) {
-				ZeDMD_SetPalette(_pZeDMD, _paletteBuffer, ncol);
+				ZeDMD_SetPalette(_pZeDMD, _paletteBuffer, palette.Length);
 			}
 		}
 
 		public void SetColor(Color color)
 		{
-		}
-
-		public void SetPalette(Color[] colors)
-		{
+			SetPalette(ColorUtil.GetPalette(new[] { Colors.Black, color }, 4));
 		}
 
 		public void ClearPalette()
 		{
+			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		public void ClearColor()
 		{
+			ZeDMD_SetDefaultPalette(_pZeDMD, 2);
 		}
 
 		#region libzedmd
