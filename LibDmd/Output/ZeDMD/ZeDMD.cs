@@ -143,7 +143,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void ClearDisplay()
 		{
-			qZeDMD_ClearScreen(_pZeDMD);
+			ZeDMD_ClearScreen(_pZeDMD);
 		}
 
 		public void Dispose()
