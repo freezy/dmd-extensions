@@ -13,7 +13,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public string Name => "ZeDMD HD";
 
-		public Dimensions FixedSize { get; } = Dimensions.Standard;
+		public Dimensions FixedSize { get; } = new Dimensions(256, 64);
 		public bool DmdAllowHdScaling { get; } = true;
 
 		private static ZeDMDHD _instance;
