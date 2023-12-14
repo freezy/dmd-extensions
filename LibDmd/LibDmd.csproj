@@ -558,6 +558,10 @@
     <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Output\ZeDMD\ZeDMDHDWiFi.cs" />
+    <Compile Include="Output\ZeDMD\ZeDMDHD.cs" />
+    <Compile Include="Output\ZeDMD\ZeDMDWiFi.cs" />
+    <Compile Include="Output\ZeDMD\ZeDMDBase.cs" />
     <Compile Include="Output\ZeDMD\ZeDMD.cs" />
     <Compile Include="RawRenderer.cs" />
     <Compile Include="Input\FileSystem\RawSource.cs" />

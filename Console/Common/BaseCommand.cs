@@ -82,19 +82,51 @@ namespace DmdExt.Common
 				}
 			}
 
-			if (config.ZeDMD.Enabled)
-			{
-				var zeDMD = ZeDMD.GetInstance(config.ZeDMD.Debug, config.ZeDMD.Brightness, config.ZeDMD.RgbOrder, config.ZeDMD.WifiAddress, config.ZeDMD.WifiPort, config.ZeDMD.WifiSsid, config.ZeDMD.WifiPassword);
-				if (zeDMD.IsAvailable)
-				{
+			if (config.ZeDMD.Enabled) {
+				var zeDMD = ZeDMD.GetInstance(config.ZeDMD.Debug, config.ZeDMD.Brightness, config.ZeDMD.RgbOrder);
+				if (zeDMD.IsAvailable) {
 					renderers.Add(zeDMD);
 					Logger.Info("Added ZeDMD renderer.");
 					reportingTags.Add("Out:ZeDMD");
 					Analytics.Instance.AddDestination(zeDMD);
-				}
-				else
-				{
+				} else {
 					Logger.Warn("Device {0} is not available.", zeDMD);
+				}
+			}
+
+			if (config.ZeDMDHD.Enabled) {
+				var zeDMDHD = ZeDMD.GetInstance(config.ZeDMDHD.Debug, config.ZeDMDHD.Brightness, config.ZeDMDHD.RgbOrder);
+				if (zeDMDHD.IsAvailable) {
+					renderers.Add(zeDMDHD);
+					Logger.Info("Added ZeDMD renderer.");
+					reportingTags.Add("Out:ZeDMD");
+					Analytics.Instance.AddDestination(zeDMDHD);
+				} else {
+					Logger.Warn("Device {0} is not available.", zeDMDHD);
+				}
+			}
+
+			if (config.ZeDMDWiFi.Enabled) {
+				var zeDMDWiFi = ZeDMDWiFi.GetInstance(config.ZeDMDWiFi.Debug, config.ZeDMDWiFi.Brightness, config.ZeDMDWiFi.RgbOrder, config.ZeDMDWiFi.WifiAddress, config.ZeDMDWiFi.WifiPort, config.ZeDMDWiFi.WifiSsid, config.ZeDMDWiFi.WifiPassword);
+				if (zeDMDWiFi.IsAvailable) {
+					renderers.Add(zeDMDWiFi);
+					Logger.Info("Added ZeDMD WiFi renderer.");
+					reportingTags.Add("Out:ZeDMDWiFi");
+					Analytics.Instance.AddDestination(zeDMDWiFi);
+				} else {
+					Logger.Warn("Device {0} is not available.", zeDMDWiFi);
+				}
+			}
+
+			if (config.ZeDMDHDWiFi.Enabled) {
+				var zeDMDHDWiFi = ZeDMDHDWiFi.GetInstance(config.ZeDMDHDWiFi.Debug, config.ZeDMDHDWiFi.Brightness, config.ZeDMDHDWiFi.RgbOrder, config.ZeDMDHDWiFi.WifiAddress, config.ZeDMDHDWiFi.WifiPort, config.ZeDMDHDWiFi.WifiSsid, config.ZeDMDHDWiFi.WifiPassword);
+				if (zeDMDHDWiFi.IsAvailable) {
+					renderers.Add(zeDMDHDWiFi);
+					Logger.Info("Added ZeDMD HD WiFi renderer.");
+					reportingTags.Add("Out:ZeDMDHDWiFi");
+					Analytics.Instance.AddDestination(zeDMDHDWiFi);
+				} else {
+					Logger.Warn("Device {0} is not available.", zeDMDHDWiFi);
 				}
 			}
 
