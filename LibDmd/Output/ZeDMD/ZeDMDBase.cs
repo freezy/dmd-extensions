@@ -20,8 +20,9 @@ namespace LibDmd.Output.ZeDMD
 		public bool Debug { get; set; }
 		public int Brightness { get; set; }
 		public int RgbOrder { get; set; }
+		public string Port { get; set; }
 
-		protected static IntPtr _pZeDMD = IntPtr.Zero;
+		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		// Different modes require different palette sizes. This one should be safe for all.
 		protected byte[] _paletteBuffer = new byte[64 * 3];
@@ -80,6 +81,13 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern IntPtr ZeDMD_GetInstance();
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern bool ZeDMD_SetDevice(IntPtr pZeDMD, string device);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

@@ -20,10 +20,10 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public new static ZeDMDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
+		public new static ZeDMDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string port, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
 		{
 			if (_instance == null) {
-				_instance = new ZeDMDHDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
+				_instance = new ZeDMDHDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
 				_instance.Init();
 			}
 

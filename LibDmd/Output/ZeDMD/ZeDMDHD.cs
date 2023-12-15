@@ -24,10 +24,10 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMDHD GetInstance(bool debug, int brightness, int rgbOrder)
+		public static ZeDMDHD GetInstance(bool debug, int brightness, int rgbOrder, string port)
 		{
 			if (_instance == null) {
-				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder };
+				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port };
 				_instance.Init();
 			}
 
@@ -44,6 +44,10 @@ namespace LibDmd.Output.ZeDMD
 		protected void Init()
 		{
 			_pZeDMD = ZeDMD_GetInstance();
+
+			if (!string.IsNullOrEmpty("\\\\.\\" + Port)) {
+				ZeDMD.ZeDMD_SetDevice(_pZeDMD, Port);
+			}
 
 			IsAvailable = ZeDMD_Open(_pZeDMD);
 

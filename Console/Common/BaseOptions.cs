@@ -400,6 +400,7 @@ namespace DmdExt.Common
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
 	}
 
 	internal class ZeDMDHDOptions : IZeDMDConfig
@@ -416,6 +417,7 @@ namespace DmdExt.Common
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
 	}
 
 	internal class ZeDMDWiFiOptions : IZeDMDWiFiConfig
@@ -432,6 +434,7 @@ namespace DmdExt.Common
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
 		public int WifiPort => _options.WifiPort;
 		public string WifiSsid => _options.WifiSsid;
@@ -452,6 +455,7 @@ namespace DmdExt.Common
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
 		public int WifiPort => _options.WifiPort;
 		public string WifiSsid => _options.WifiSsid;
