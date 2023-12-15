@@ -74,6 +74,7 @@ namespace LibDmd.DmdDevice
 		bool Debug { get; }
 		int Brightness { get; }
 		int RgbOrder { get; }
+		string Port { get; }
 	}
 
 	public interface IZeDMDWiFiConfig : IZeDMDConfig

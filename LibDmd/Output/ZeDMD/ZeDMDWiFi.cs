@@ -28,11 +28,11 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
+		public static ZeDMDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string port, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
 		{
 			if (_instance == null)
 			{
-				_instance = new ZeDMDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
+				_instance = new ZeDMDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
 				_instance.Init();
 			}
 	
@@ -51,6 +51,10 @@ namespace LibDmd.Output.ZeDMD
 			_pZeDMD = ZeDMD_GetInstance();
 
 			if (!string.IsNullOrEmpty(WifiAddress) && WifiPort > 0) {
+				if (!string.IsNullOrEmpty(Port)) {
+					ZeDMD.ZeDMD_SetDevice(_pZeDMD, "\\\\.\\" + Port);
+				}
+
 				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
 			}
 			else {
