@@ -11,18 +11,19 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public class ZeDMDWiFi : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
 	{
-		public string Name => "ZeDMD WiFi";
+		public override string Name => "ZeDMD WiFi";
 		public string WifiAddress { get; set; }
 		public int WifiPort { get; set; }
 		public string WifiSsid { get; set; }
 		public string WifiPassword { get; set; }
-
-		public Dimensions FixedSize { get; } = Dimensions.Standard;
-		public bool DmdAllowHdScaling { get; } = false;
+		// In WiFi mode we can't leverage ZeDMD's own advanced downscaling.
+		// Implementing IFixedSize activates DMDExt's downsacling.
+		public override Dimensions FixedSize { get; } = Dimensions.Standard;
+		public override bool DmdAllowHdScaling { get; set; } = false;
+		// libzedmd has it's own queuing.
+		public override int Delay { get; set; } = 0;
 
 		private static ZeDMDWiFi _instance;
-
-		protected ColoredFrame _lastFrame = null;
 
 		/// <summary>
 		/// Returns the current instance of ZeDMD.
@@ -58,6 +59,7 @@ namespace LibDmd.Output.ZeDMD
 				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
 			}
 			else {
+				// Open The USB connection to set the WiFi credentials.
 				IsAvailable = ZeDMD_Open(_pZeDMD);
 
 				if (IsAvailable && !string.IsNullOrEmpty(WifiSsid) && !string.IsNullOrEmpty(WifiPassword) && WifiPort > 0) {
@@ -123,7 +125,7 @@ namespace LibDmd.Output.ZeDMD
 		public void UpdatePalette(Color[] palette)
 		{
 			// For Rgb24, we get a new frame for each color rotation.
-			// But for ColoredGray6, we hae to trigger the frame with
+			// But for ColoredGray6, we have to trigger the frame with
 			// an updated palette here.
 			if (_lastFrame != null) {
 				SetPalette(palette);

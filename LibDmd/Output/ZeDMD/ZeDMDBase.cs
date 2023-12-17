@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using LibDmd.Common;
 using System.Windows.Media;
 using NLog;
+using LibDmd.Frame;
 
 namespace LibDmd.Output.ZeDMD
 {
@@ -13,19 +14,22 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public abstract class ZeDMDBase
 	{
+		public abstract string Name { get; }
 		public bool IsAvailable { get; protected set; }
 		public bool NeedsDuplicateFrames { get; } = false;
-		// libzedmd has it's own queuing.
-		public int Delay { get; set; } = 0;
+		public abstract bool DmdAllowHdScaling { get; set; }
+		public abstract Dimensions FixedSize { get; }
+		public abstract int Delay { get; set; }
 		public bool Debug { get; set; }
 		public int Brightness { get; set; }
 		public int RgbOrder { get; set; }
 		public string Port { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
-		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		// Different modes require different palette sizes. This one should be safe for all.
 		protected byte[] _paletteBuffer = new byte[64 * 3];
+		protected ColoredFrame _lastFrame = null;
 
 		public void ClearDisplay()
 		{
@@ -158,6 +162,13 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_DisableUpscaling(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern void ZeDMD_EnforceStreaming(IntPtr pZeDMD);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

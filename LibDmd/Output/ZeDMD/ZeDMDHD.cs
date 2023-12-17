@@ -11,14 +11,12 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public class ZeDMDHD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
 	{
-		public string Name => "ZeDMD HD";
-
-		public Dimensions FixedSize { get; } = new Dimensions(256, 64);
-		public bool DmdAllowHdScaling { get; } = true;
+		public override string Name => "ZeDMD HD";
+		public override Dimensions FixedSize { get; } = new Dimensions(256, 64);
+		public override bool DmdAllowHdScaling { get; set; } = true;
+		public override int Delay { get; set; } = 0;
 
 		private static ZeDMDHD _instance;
-
-		protected ColoredFrame _lastFrame = null;
 
 		/// <summary>
 		/// Returns the current instance of ZeDMD.
@@ -45,8 +43,8 @@ namespace LibDmd.Output.ZeDMD
 		{
 			_pZeDMD = ZeDMD_GetInstance();
 
-			if (!string.IsNullOrEmpty("\\\\.\\" + Port)) {
-				ZeDMD.ZeDMD_SetDevice(_pZeDMD, Port);
+			if (!string.IsNullOrEmpty(Port)) {
+				ZeDMD.ZeDMD_SetDevice(_pZeDMD, "\\\\.\\" + Port);
 			}
 
 			IsAvailable = ZeDMD_Open(_pZeDMD);
@@ -65,28 +63,33 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			DmdAllowHdScaling = true;
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			DmdAllowHdScaling = true;
 			SetPalette(frame.Palette);
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
 
 		public void RenderGray4(DmdFrame frame)
 		{
+			DmdAllowHdScaling = true;
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			DmdAllowHdScaling = true;
 			SetPalette(frame.Palette);
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			DmdAllowHdScaling = true;
 			SetPalette(frame.Palette);
 			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, frame.Rotations);
 			_lastFrame = (ColoredFrame)frame.Clone();
@@ -94,13 +97,14 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			DmdAllowHdScaling = false;
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
 		}
 
 		public void UpdatePalette(Color[] palette)
 		{
 			// For Rgb24, we get a new frame for each color rotation.
-			// But for ColoredGray6, we hae to trigger the frame with
+			// But for ColoredGray6, we have to trigger the frame with
 			// an updated palette here.
 			if (_lastFrame != null) {
 				SetPalette(palette);
