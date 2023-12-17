@@ -10,10 +10,16 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public class ZeDMD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IMultiSizeDestination
 	{
-		public string Name => "ZeDMD";
-
+		public override string Name => "ZeDMD";
+		// To leverage ZeDMD's own advanced downscaling we can't use FixedSize and RGB24Stream like ZeDMD HD.  
 		public Dimensions[] Sizes { get; } = { new Dimensions(128, 16), Dimensions.Standard, new Dimensions(192, 64), new Dimensions(256, 64) };
-		
+		// FixedSIze is just needed for inheritance.
+		public override Dimensions FixedSize { get; } = Dimensions.Standard;
+		public override bool DmdAllowHdScaling { get; set; } = false;
+		// Even if libzedmd has it's own queuing, we could reduce the load a bit by adding a delay.
+		public override int Delay { get; set; } = 16;
+
+
 		private static ZeDMD _instance;
 		protected Dimensions _currentDimensions = Dimensions.Standard;
 
@@ -28,7 +34,7 @@ namespace LibDmd.Output.ZeDMD
 				_instance = new ZeDMD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port };
 				_instance.Init();
 			}
-	
+
 			return _instance;
 		}
 
@@ -49,8 +55,7 @@ namespace LibDmd.Output.ZeDMD
 
 			IsAvailable = ZeDMD_Open(_pZeDMD);
 
-			if (!IsAvailable)
-			{
+			if (!IsAvailable) {
 				Logger.Info(Name + " device not found");
 				return;
 			}

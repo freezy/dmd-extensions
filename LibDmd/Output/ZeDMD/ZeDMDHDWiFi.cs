@@ -9,10 +9,12 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public class ZeDMDHDWiFi : ZeDMDWiFi
 	{
-		public new string Name => "ZeDMD HD WiFi";
+		public override string Name => "ZeDMD HD WiFi";
 
-		public new Dimensions FixedSize { get; } = new Dimensions(256, 64);
-		public new bool DmdAllowHdScaling { get; } = true;
+		public override Dimensions FixedSize { get; } = new Dimensions(256, 64);
+		public override bool DmdAllowHdScaling { get; set; } = true;
+		// libzedmd has it's own queuing.
+		public override int Delay { get; set; } = 0;
 
 		private static ZeDMDHDWiFi _instance;
 
