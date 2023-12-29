@@ -312,6 +312,7 @@ namespace LibDmd.DmdDevice
 		public int Brightness => GetInt("brightness", -1);
 		public int RgbOrder => GetInt("rgborder", -1);
 		public string Port => GetString("port", null);
+		public bool ScaleRgb24 => GetBoolean("scalergb24", true);
 		public bool AllowHdScaling => false;
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
 		{

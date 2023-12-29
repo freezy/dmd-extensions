@@ -75,6 +75,7 @@ namespace LibDmd.DmdDevice
 		int Brightness { get; }
 		int RgbOrder { get; }
 		string Port { get; }
+		bool ScaleRgb24 { get; }
 	}
 
 	public interface IZeDMDWiFiConfig : IZeDMDConfig
