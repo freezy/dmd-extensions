@@ -111,6 +111,7 @@ namespace LibDmd.Test
 		public int Brightness { get; set; }
 		public int RgbOrder { get; set; }
 		public string Port { get; set; }
+		public bool ScaleRgb24 { get; set; }
 	}
 
 	public class TestZeDMDWiFiConfig : TestZeDMDConfig, IZeDMDWiFiConfig

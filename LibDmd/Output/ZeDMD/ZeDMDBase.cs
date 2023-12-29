@@ -24,6 +24,7 @@ namespace LibDmd.Output.ZeDMD
 		public int Brightness { get; set; }
 		public int RgbOrder { get; set; }
 		public string Port { get; set; }
+		public bool ScaleRgb24 { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,4 +1,5 @@
-﻿using LibDmd.Frame;
+﻿using System.Windows.Media;
+using LibDmd.Frame;
 using NLog;
 
 namespace LibDmd.Output.ZeDMD
@@ -8,16 +9,17 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IMultiSizeDestination
+	public class ZeDMD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IMultiSizeDestination, IColorRotationDestination
 	{
 		public override string Name => "ZeDMD";
-		// To leverage ZeDMD's own advanced downscaling we can't use FixedSize and RGB24Stream like ZeDMD HD.  
-		public Dimensions[] Sizes { get; } = { new Dimensions(128, 16), Dimensions.Standard, new Dimensions(192, 64), new Dimensions(256, 64) };
-		// FixedSIze is just needed for inheritance.
+		// To leverage ZeDMD's own advanced downscaling we can't use FixedSize and RGB24Stream like ZeDMD HD.
+		// By not declaring 192x62 supported, we get a centered 256x64 frame.
+		public Dimensions[] Sizes { get; } = { new Dimensions(128, 16), Dimensions.Standard, new Dimensions(256, 64) };
+		// FixedSize is just needed for inheritance.
 		public override Dimensions FixedSize { get; } = Dimensions.Standard;
+		// DmdAllowHdScaling is just needed for inheritance.
 		public override bool DmdAllowHdScaling { get; set; } = false;
-		// Even if libzedmd has it's own queuing, we could reduce the load a bit by adding a delay.
-		public override int Delay { get; set; } = 16;
+		public override int Delay { get; set; } = 0;
 
 
 		private static ZeDMD _instance;
@@ -63,6 +65,9 @@ namespace LibDmd.Output.ZeDMD
 
 			if (Debug) { ZeDMD_EnableDebug(_pZeDMD); }
 			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
+			ZeDMD_EnforceStreaming(_pZeDMD);
+			ZeDMD_EnablePreDownscaling(_pZeDMD);
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			if (Brightness >= 0 && Brightness <= 15) { ZeDMD_SetBrightness(_pZeDMD, Brightness); }
 			if (RgbOrder >= 0 && RgbOrder <= 5) { ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder); }
 		}
@@ -106,12 +111,24 @@ namespace LibDmd.Output.ZeDMD
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, frame.Rotations);
+			_lastFrame = (ColoredFrame)frame.Clone();
 		}
 
 		public void RenderRgb24(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+		}
+
+		public void UpdatePalette(Color[] palette)
+		{
+			// For Rgb24, we get a new frame for each color rotation.
+			// But for ColoredGray6, we have to trigger the frame with
+			// an updated palette here.
+			if (_lastFrame != null) {
+				SetPalette(palette);
+				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, _lastFrame.Rotations);
+			}
 		}
 	}
 }

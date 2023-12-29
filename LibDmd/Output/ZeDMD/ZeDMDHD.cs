@@ -22,10 +22,10 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMDHD GetInstance(bool debug, int brightness, int rgbOrder, string port)
+		public static ZeDMDHD GetInstance(bool debug, int brightness, int rgbOrder, string port, bool scaleRgb24)
 		{
 			if (_instance == null) {
-				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port };
+				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, ScaleRgb24 = scaleRgb24 };
 				_instance.Init();
 			}
 
@@ -97,7 +97,7 @@ namespace LibDmd.Output.ZeDMD
 
 		public void RenderRgb24(DmdFrame frame)
 		{
-			DmdAllowHdScaling = false;
+			DmdAllowHdScaling = ScaleRgb24;
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
 		}
 

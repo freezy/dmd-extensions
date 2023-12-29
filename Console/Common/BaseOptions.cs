@@ -151,6 +151,9 @@ namespace DmdExt.Common
 		[Option("zedmd-rgborder", HelpText = "Change ZeDMD RGB order between 0 and 5.")]
 		public int RgbOrder { get; set; } = -1;
 
+		[Option("zedmd-scalergb24", HelpText = "Upscale pure RGB24 content on ZeDMD HD. Default: true.")]
+		public bool ScaleRgb24 { get; set; } = true;
+
 		[Option("zedmd-wifi-address", HelpText = "Connect to ZeDMD in WiFi mode using this IP address.")]
 		public string WifiAddress { get; set; } = null;
 
@@ -401,6 +404,7 @@ namespace DmdExt.Common
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
 	}
 
 	internal class ZeDMDHDOptions : IZeDMDConfig
@@ -418,6 +422,7 @@ namespace DmdExt.Common
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
 	}
 
 	internal class ZeDMDWiFiOptions : IZeDMDWiFiConfig
@@ -435,6 +440,7 @@ namespace DmdExt.Common
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
 		public string WifiAddress => _options.WifiAddress;
 		public int WifiPort => _options.WifiPort;
 		public string WifiSsid => _options.WifiSsid;
@@ -456,6 +462,7 @@ namespace DmdExt.Common
 		public int Brightness => _options.Brightness;
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
 		public string WifiAddress => _options.WifiAddress;
 		public int WifiPort => _options.WifiPort;
 		public string WifiSsid => _options.WifiSsid;
