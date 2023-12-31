@@ -4,6 +4,7 @@ using LibDmd.Common;
 using System.Windows.Media;
 using NLog;
 using LibDmd.Frame;
+using System.Linq;
 
 namespace LibDmd.Output.ZeDMD
 {
@@ -28,8 +29,6 @@ namespace LibDmd.Output.ZeDMD
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		// Different modes require different palette sizes. This one should be safe for all.
-		protected byte[] _paletteBuffer = new byte[64 * 3];
 		protected ColoredFrame _lastFrame = null;
 
 		public void ClearDisplay()
@@ -44,20 +43,37 @@ namespace LibDmd.Output.ZeDMD
 			ClearDisplay();
 		}
 
-		public void SetPalette(Color[] palette)
+		public void SetPalette(Color[] colors)
 		{
-			var paletteChanged = false;
-			for (var i = 0; i < palette.Length; i++) {
-				var color = palette[i];
-				var j = i * 3;
-				paletteChanged = paletteChanged || (_paletteBuffer[j] != color.R || _paletteBuffer[j + 1] != color.G || _paletteBuffer[j + 2] != color.B);
-				_paletteBuffer[j] = color.R;
-				_paletteBuffer[j + 1] = color.G;
-				_paletteBuffer[j + 2] = color.B;
-			}
+			byte[] paletteBuffer = Enumerable.Repeat((byte)0x0, 64 * 3).ToArray();
+			var numOfColors = colors.Length;
 
-			if (paletteChanged && _pZeDMD != IntPtr.Zero) {
-				ZeDMD_SetPalette(_pZeDMD, _paletteBuffer, palette.Length);
+			// Custom palettes could be defined with less colors as
+			// required by the ROM. So we interpolate bigger palettes.
+			// 2 colors (1 bit) is not supported by ZeDMD.
+			if (numOfColors == 2) { numOfColors = 4; }
+
+			while (numOfColors > 0) {
+				var palette = ColorUtil.GetPalette(colors, numOfColors);
+				var pos = 0;
+
+				for (int i = 0; i < palette.Length; i++) {
+					paletteBuffer[pos++] = palette[i].R;
+					paletteBuffer[pos++] = palette[i].G;
+					paletteBuffer[pos++] = palette[i].B;
+				}
+
+				if (_pZeDMD != IntPtr.Zero) {
+					ZeDMD_SetPalette(_pZeDMD, paletteBuffer, numOfColors);
+				}
+				
+				if (numOfColors == 4){
+					numOfColors = 16;
+				} else if (numOfColors == 16) {
+					numOfColors = 64;
+				} else {
+					numOfColors = 0;
+				}
 			}
 		}
 
