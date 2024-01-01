@@ -64,12 +64,14 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderGray2(DmdFrame frame)
 		{
 			DmdAllowHdScaling = true;
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
 			DmdAllowHdScaling = true;
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			SetPalette(frame.Palette);
 			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
 		}
@@ -77,12 +79,14 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderGray4(DmdFrame frame)
 		{
 			DmdAllowHdScaling = true;
+			ZeDMD_DisablePreUpscaling(_pZeDMD);
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
 			DmdAllowHdScaling = true;
+			ZeDMD_DisablePreUpscaling(_pZeDMD);
 			SetPalette(frame.Palette);
 			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
 		}
@@ -90,6 +94,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
 			DmdAllowHdScaling = true;
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			SetPalette(frame.Palette);
 			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, frame.Rotations);
 			_lastFrame = (ColoredFrame)frame.Clone();
@@ -98,6 +103,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderRgb24(DmdFrame frame)
 		{
 			DmdAllowHdScaling = ScaleRgb24;
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
 		}
 
