@@ -66,12 +66,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <summary>
 		/// Line padding as percentage of the line height
 		/// </summary>
-		public float LinePaddingPercentage { get; set; } = 0.2f;
+		public float LinePaddingPercentage { get; set; } = 0.04f;
 
 		/// <summary>
 		/// Outer padding as percentage of the display height
 		/// </summary>
-		public float OuterPaddingPercentage { get; set; } = 0.2f;
+		public float OuterPaddingPercentage { get; set; } = 0.04f;
 
 		/// <summary>
 		/// Segment padding as percentage of the segment's diagonal
