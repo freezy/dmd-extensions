@@ -16,7 +16,6 @@ namespace LibDmd.Output.ZeDMD
 		public string WifiSsid { get; set; }
 		public string WifiPassword { get; set; }
 
-
 		protected new void Init()
 		{
 			base.Init();
