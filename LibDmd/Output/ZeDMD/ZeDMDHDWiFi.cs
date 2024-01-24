@@ -1,5 +1,4 @@
-﻿using System.Windows.Media;
-using LibDmd.Frame;
+﻿using LibDmd.Frame;
 
 namespace LibDmd.Output.ZeDMD
 {
