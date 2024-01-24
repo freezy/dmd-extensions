@@ -31,6 +31,42 @@ namespace LibDmd.Output.ZeDMD
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		protected ColoredFrame _lastFrame = null;
 
+		protected void Init()
+		{
+			_pZeDMD = ZeDMD_GetInstance();
+		}
+
+		protected void OpenUSBConnection()
+		{
+			if (!string.IsNullOrEmpty(Port)) {
+				ZeDMD.ZeDMD_SetDevice(_pZeDMD, "\\\\.\\" + Port);
+			}
+
+			IsAvailable = ZeDMD_Open(_pZeDMD);
+
+			if (!IsAvailable) {
+				Logger.Info(Name + " device not found");
+				return;
+			}
+			Logger.Info(Name + " device found");
+		}
+
+		protected void SendConfiguration(bool save = false)
+		{
+			if (Debug) {
+				ZeDMD_EnableDebug(_pZeDMD);
+			}
+			if (Brightness >= 0 && Brightness <= 15) {
+				ZeDMD_SetBrightness(_pZeDMD, Brightness);
+			}
+			if (RgbOrder >= 0 && RgbOrder <= 5) {
+				ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder);
+			}
+			if (save) {
+				ZeDMD_SaveSettings(_pZeDMD);
+			}
+		}
+
 		public void ClearDisplay()
 		{
 			if (_pZeDMD != IntPtr.Zero) {
@@ -49,9 +85,11 @@ namespace LibDmd.Output.ZeDMD
 			var numOfColors = colors.Length;
 
 			// Custom palettes could be defined with less colors as
-			// required by the ROM. So we interpolate bigger palettes.
+			// required by the ROM. So we interpolate bigger palettes uo to 64 colors.
 			// 2 colors (1 bit) is not supported by ZeDMD.
-			if (numOfColors == 2) { numOfColors = 4; }
+			if (numOfColors == 2) {
+				numOfColors = 4;
+			}
 
 			while (numOfColors > 0) {
 				var palette = ColorUtil.GetPalette(colors, numOfColors);
@@ -74,6 +112,17 @@ namespace LibDmd.Output.ZeDMD
 				} else {
 					numOfColors = 0;
 				}
+			}
+		}
+
+		public void UpdatePalette(Color[] palette)
+		{
+			// For Rgb24, we get a new frame for each color rotation.
+			// But for ColoredGray6, we have to trigger the frame with
+			// an updated palette here.
+			if (_lastFrame != null) {
+				SetPalette(palette);
+				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, _lastFrame.Rotations);
 			}
 		}
 
