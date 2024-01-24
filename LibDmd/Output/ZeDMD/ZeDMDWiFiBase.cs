@@ -54,6 +54,7 @@ namespace LibDmd.Output.ZeDMD
 
 		/// <summary>
 		/// WiFi specific libzedmd functions declarations
+		/// See https://ppuc.github.io/libzedmd/docs/html/class_ze_d_m_d.html
 		/// </summary>
 
 #if PLATFORM_X64
