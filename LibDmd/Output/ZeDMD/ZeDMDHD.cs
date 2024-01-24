@@ -39,26 +39,12 @@ namespace LibDmd.Output.ZeDMD
 		{
 		}
 
-		protected void Init()
+		protected new void Init()
 		{
-			_pZeDMD = ZeDMD_GetInstance();
-
-			if (!string.IsNullOrEmpty(Port)) {
-				ZeDMD.ZeDMD_SetDevice(_pZeDMD, "\\\\.\\" + Port);
-			}
-
-			IsAvailable = ZeDMD_Open(_pZeDMD);
-
-			if (!IsAvailable) {
-				Logger.Info(Name + " device not found");
-				return;
-			}
-			Logger.Info(Name + " device found");
-
-			if (Debug) { ZeDMD_EnableDebug(_pZeDMD); }
+			base.Init();
+			OpenUSBConnection();
+			SendConfiguration();
 			ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
-			if (Brightness >= 0 && Brightness <= 15) { ZeDMD_SetBrightness(_pZeDMD, Brightness); }
-			if (RgbOrder >= 0 && RgbOrder <= 5) { ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder); }
 		}
 
 		public void RenderGray2(DmdFrame frame)
@@ -105,17 +91,6 @@ namespace LibDmd.Output.ZeDMD
 			DmdAllowHdScaling = ScaleRgb24;
 			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
-		}
-
-		public void UpdatePalette(Color[] palette)
-		{
-			// For Rgb24, we get a new frame for each color rotation.
-			// But for ColoredGray6, we have to trigger the frame with
-			// an updated palette here.
-			if (_lastFrame != null) {
-				SetPalette(palette);
-				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, _lastFrame.Rotations);
-			}
 		}
 	}
 }
