@@ -10,9 +10,8 @@ namespace LibDmd.Output.ZeDMD
 	public class ZeDMDHD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
 	{
 		public override string Name => "ZeDMD HD";
-		public override Dimensions FixedSize { get; } = new Dimensions(256, 64);
-		public override bool DmdAllowHdScaling { get; set; } = true;
-		public override int Delay { get; set; } = 0;
+		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
+		public virtual bool DmdAllowHdScaling { get; protected set; } = true;
 
 		private static ZeDMDHD _instance;
 
