@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using LibDmd.Common;
 using System.Windows.Media;
 using NLog;
-using LibDmd.Frame;
 using System.Linq;
 
 namespace LibDmd.Output.ZeDMD
@@ -12,20 +11,19 @@ namespace LibDmd.Output.ZeDMD
 	/// ZeDMD - real DMD with LED matrix display controlled with a cheap ESP32.
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
+	///
+	/// DLL documentation can be found here: https://ppuc.github.io/libzedmd/docs/html/class_ze_d_m_d.html
 	/// </summary>
 	public abstract class ZeDMDBase
 	{
 		public abstract string Name { get; }
 		public bool IsAvailable { get; protected set; }
-		public bool NeedsDuplicateFrames { get; } = false;
-		public abstract bool DmdAllowHdScaling { get; set; }
-		public abstract Dimensions FixedSize { get; }
-		public abstract int Delay { get; set; }
-		public bool Debug { get; set; }
-		public int Brightness { get; set; }
-		public int RgbOrder { get; set; }
-		public string Port { get; set; }
-		public bool ScaleRgb24 { get; set; }
+		public bool NeedsDuplicateFrames => false;
+		protected bool Debug { get; set; }
+		protected int Brightness { get; set; }
+		protected int RgbOrder { get; set; }
+		protected string Port { get; set; }
+		protected bool ScaleRgb24 { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -39,7 +37,7 @@ namespace LibDmd.Output.ZeDMD
 		protected void OpenUSBConnection()
 		{
 			if (!string.IsNullOrEmpty(Port)) {
-				ZeDMD.ZeDMD_SetDevice(_pZeDMD, "\\\\.\\" + Port);
+				ZeDMD_SetDevice(_pZeDMD, @"\\.\" + Port);
 			}
 
 			IsAvailable = ZeDMD_Open(_pZeDMD);

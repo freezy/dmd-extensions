@@ -11,10 +11,10 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public abstract class ZeDMDWiFiBase : ZeDMDBase
 	{
-		public string WifiAddress { get; set; }
-		public int WifiPort { get; set; }
-		public string WifiSsid { get; set; }
-		public string WifiPassword { get; set; }
+		protected string WifiAddress { get; set; }
+		protected int WifiPort { get; set; }
+		protected string WifiSsid { get; set; }
+		protected string WifiPassword { get; set; }
 
 		protected new void Init()
 		{

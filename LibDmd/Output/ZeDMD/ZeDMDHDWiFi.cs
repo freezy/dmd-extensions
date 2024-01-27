@@ -10,10 +10,8 @@ namespace LibDmd.Output.ZeDMD
 	public class ZeDMDHDWiFi : ZeDMDWiFiBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
 	{
 		public override string Name => "ZeDMD HD WiFi";
-		public override Dimensions FixedSize { get; } = new Dimensions(256, 64);
-		public override bool DmdAllowHdScaling { get; set; } = true;
-		// libzedmd has it's own queuing.
-		public override int Delay { get; set; } = 0;
+		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
+		public virtual bool DmdAllowHdScaling { get; protected set; } = true;
 
 		private static ZeDMDHDWiFi _instance;
 
@@ -31,7 +29,7 @@ namespace LibDmd.Output.ZeDMD
 			return _instance;
 		}
 
-		protected new void Init()
+		private new void Init()
 		{
 			base.Init();
 			ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
