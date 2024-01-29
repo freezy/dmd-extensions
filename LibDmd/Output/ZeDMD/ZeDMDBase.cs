@@ -79,37 +79,31 @@ namespace LibDmd.Output.ZeDMD
 
 		public void SetPalette(Color[] colors)
 		{
+			if (_pZeDMD == IntPtr.Zero) {
+				return;
+			}
+
 			byte[] paletteBuffer = Enumerable.Repeat((byte)0x0, 64 * 3).ToArray();
 			var numOfColors = colors.Length;
 
-			// Custom palettes could be defined with less colors as
-			// required by the ROM. So we interpolate bigger palettes uo to 64 colors.
-			// 2 colors (1 bit) is not supported by ZeDMD.
-			if (numOfColors == 2) {
-				numOfColors = 4;
+			if (numOfColors != 4 && numOfColors != 16 && numOfColors != 64) {
+				return;
 			}
 
-			while (numOfColors > 0) {
+			// Custom palettes could be defined with less colors as required by the ROM.
+			// So we interpolate bigger palettes up to 64 colors.
+			while (numOfColors <= 64) {
 				var palette = ColorUtil.GetPalette(colors, numOfColors);
 				var pos = 0;
 
-				for (int i = 0; i < palette.Length; i++) {
-					paletteBuffer[pos++] = palette[i].R;
-					paletteBuffer[pos++] = palette[i].G;
-					paletteBuffer[pos++] = palette[i].B;
+				foreach (var color in palette) {
+					paletteBuffer[pos++] = color.R;
+					paletteBuffer[pos++] = color.G;
+					paletteBuffer[pos++] = color.B;
 				}
+				ZeDMD_SetPalette(_pZeDMD, paletteBuffer, numOfColors);
 
-				if (_pZeDMD != IntPtr.Zero) {
-					ZeDMD_SetPalette(_pZeDMD, paletteBuffer, numOfColors);
-				}
-				
-				if (numOfColors == 4){
-					numOfColors = 16;
-				} else if (numOfColors == 16) {
-					numOfColors = 64;
-				} else {
-					numOfColors = 0;
-				}
+				numOfColors *= 4;
 			}
 		}
 
