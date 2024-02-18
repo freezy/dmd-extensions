@@ -19,6 +19,7 @@ namespace LibDmd.Input.Network
 		private readonly WebsocketGray4Source _gray4Source = new WebsocketGray4Source();
 		private readonly WebsocketColoredGray2Source _coloredGray2Source = new WebsocketColoredGray2Source();
 		private readonly WebsocketColoredGray4Source _coloredGray4Source = new WebsocketColoredGray4Source();
+		private readonly WebsocketColoredGray6Source _coloredGray6Source = new WebsocketColoredGray6Source(); 
 		private readonly WebsocketRgb24Source _rgb24Source = new WebsocketRgb24Source();
 
 		private readonly HttpServer _server;
@@ -120,6 +121,8 @@ namespace LibDmd.Input.Network
 
 		public void OnColoredGray4(uint timestamp, Color[] palette, byte[] data)
 			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));
+		public void OnColoredGray6(uint timestamp, Color[] palette, byte[] data)
+			=> _coloredGray6Source.FramesColoredGray6.OnNext(_coloredFrame.Update(data, palette));
 
 		public void OnColoredGray2(uint timestamp, Color[] palette, byte[] data)
 			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));

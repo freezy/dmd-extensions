@@ -437,6 +437,7 @@
     <Compile Include="Input\IGameNameSource.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
+    <Compile Include="Input\Network\WebsocketColoredGray6Source.cs" />
     <Compile Include="Input\Network\WebsocketGray4Source .cs" />
     <Compile Include="Input\Network\WebsocketRgb24Source.cs" />
     <Compile Include="Input\Network\WebsocketServer.cs" />
