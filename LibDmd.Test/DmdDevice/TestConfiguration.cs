@@ -16,6 +16,9 @@ namespace LibDmd.Test
 		public IPinDmd2Config PinDmd2 { get; set; } = new TestPinDmd2Config();
 		public IPinDmd3Config PinDmd3 { get; set; } = new TestPinDmd3Config();
 		public IZeDMDConfig ZeDMD { get; set; } = new TestZeDMDConfig();
+		public IZeDMDConfig ZeDMDHD { get; set; } = new TestZeDMDConfig();
+		public IZeDMDWiFiConfig ZeDMDWiFi { get; set; } = new TestZeDMDWiFiConfig();
+		public IZeDMDWiFiConfig ZeDMDHDWiFi { get; set; } = new TestZeDMDWiFiConfig();
 		public IPin2DmdConfig Pin2Dmd { get; set; } = new TestPin2DmdConfig();
 		public IPixelcadeConfig Pixelcade { get; set; } = new TestPixelcadeConfig();
 		public IVideoConfig Video { get; set; } = new TestVideoConfig();
@@ -104,9 +107,21 @@ namespace LibDmd.Test
 	public class TestZeDMDConfig : IZeDMDConfig
 	{
 		public bool Enabled { get; set; }
+		public bool Debug { get; set; }
+		public int Brightness { get; set; }
+		public int RgbOrder { get; set; }
 		public string Port { get; set; }
+		public bool ScaleRgb24 { get; set; }
 	}
-	
+
+	public class TestZeDMDWiFiConfig : TestZeDMDConfig, IZeDMDWiFiConfig
+	{
+		public string WifiAddress { get; set; }
+		public int WifiPort { get; set; }
+		public string WifiSsid { get; set; }
+		public string WifiPassword { get; set; }
+	}
+
 	public class TestPin2DmdConfig : IPin2DmdConfig
 	{
 		public bool Enabled { get; set; }

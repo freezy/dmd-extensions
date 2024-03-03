@@ -466,12 +466,39 @@ namespace LibDmd.DmdDevice
 				}
 			}
 			if (_config.ZeDMD.Enabled) {
-				var zeDmd = ZeDMD.GetInstance();
+				var zeDmd = ZeDMD.GetInstance(_config.ZeDMD.Debug, _config.ZeDMD.Brightness, _config.ZeDMD.RgbOrder, _config.ZeDMD.Port);
 				if (zeDmd.IsAvailable) {
 					renderers.Add(zeDmd);
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
 					Analytics.Instance.AddDestination(zeDmd);
+				}
+			}
+			if (_config.ZeDMDHD.Enabled) {
+				var zeDmdHd = ZeDMDHD.GetInstance(_config.ZeDMDHD.Debug, _config.ZeDMDHD.Brightness, _config.ZeDMDHD.RgbOrder, _config.ZeDMDHD.Port, _config.ZeDMDHD.ScaleRgb24);
+				if (zeDmdHd.IsAvailable) {
+					renderers.Add(zeDmdHd);
+					Logger.Info("Added ZeDMD HD renderer.");
+					ReportingTags.Add("Out:ZeDMDHD");
+					Analytics.Instance.AddDestination(zeDmdHd);
+				}
+			}
+			if (_config.ZeDMDWiFi.Enabled) {
+				var zeDmdWifi = ZeDMDWiFi.GetInstance(_config.ZeDMDWiFi.Debug, _config.ZeDMDWiFi.Brightness, _config.ZeDMDWiFi.RgbOrder, _config.ZeDMDWiFi.Port, _config.ZeDMDWiFi.WifiAddress, _config.ZeDMDWiFi.WifiPort, _config.ZeDMDWiFi.WifiSsid, _config.ZeDMDWiFi.WifiPassword);
+				if (zeDmdWifi.IsAvailable) {
+					renderers.Add(zeDmdWifi);
+					Logger.Info("Added ZeDMD WiFi renderer.");
+					ReportingTags.Add("Out:ZeDMDWiFi");
+					Analytics.Instance.AddDestination(zeDmdWifi);
+				}
+			}
+			if (_config.ZeDMDHDWiFi.Enabled) {
+				var zeDmdHdWifi = ZeDMDHDWiFi.GetInstance(_config.ZeDMDHDWiFi.Debug, _config.ZeDMDHDWiFi.Brightness, _config.ZeDMDHDWiFi.RgbOrder, _config.ZeDMDHDWiFi.Port, _config.ZeDMDHD.ScaleRgb24, _config.ZeDMDHDWiFi.WifiAddress, _config.ZeDMDHDWiFi.WifiPort, _config.ZeDMDHDWiFi.WifiSsid, _config.ZeDMDHDWiFi.WifiPassword);
+				if (zeDmdHdWifi.IsAvailable) {
+					renderers.Add(zeDmdHdWifi);
+					Logger.Info("Added ZeDMD HD WiFi renderer.");
+					ReportingTags.Add("Out:ZeDMDHDWiFi");
+					Analytics.Instance.AddDestination(zeDmdHdWifi);
 				}
 			}
 			if (_config.Pin2Dmd.Enabled) {

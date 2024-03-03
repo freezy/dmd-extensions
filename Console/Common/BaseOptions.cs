@@ -5,12 +5,13 @@ using LibDmd.DmdDevice;
 using LibDmd.Input;
 using LibDmd.Output.Virtual.AlphaNumeric;
 using LibDmd.Output.Virtual.Dmd;
+using LibDmd.Output.ZeDMD;
 
 namespace DmdExt.Common
 {
 	internal abstract class BaseOptions : IConfiguration
 	{
-		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, pin2dmd, virtual, alphanumeric, network ]. Default: \"virtual\".")]
+		[Option('d', "destination", HelpText = "The destination where the DMD data is sent to. One of: [ auto, pindmdv1, pindmdv2, pindmdv3, zedmd, zdmdhd, zedmdwifi, zedmdhdwifi, pin2dmd, virtual, alphanumeric, network ]. Default: \"virtual\".")]
 		public DestinationType Destination { get; set; } = DestinationType.Virtual;
 
 		[Option('r', "resize", HelpText = "How the source image is resized. One of: [ stretch, fill, fit ]. Default: \"stretch\".")]
@@ -141,6 +142,30 @@ namespace DmdExt.Common
 		[Option("--pac-key", HelpText = "Key to decrypt PAC files, in hex.")]
 		public string PacKey { get; set; } = null;
 
+		[Option("zedmd-debug", HelpText = "If set, ZeDMD will show its debug informations. Default: false.")]
+		public bool Debug { get; set; } = false;
+
+		[Option("zedmd-brightness", HelpText = "Change ZeDMD brightness between 0 and 15.")]
+		public int Brightness { get; set; } = -1;
+
+		[Option("zedmd-rgborder", HelpText = "Change ZeDMD RGB order between 0 and 5.")]
+		public int RgbOrder { get; set; } = -1;
+
+		[Option("zedmd-scalergb24", HelpText = "Upscale pure RGB24 content on ZeDMD HD. Default: true.")]
+		public bool ScaleRgb24 { get; set; } = true;
+
+		[Option("zedmd-wifi-address", HelpText = "Connect to ZeDMD in WiFi mode using this IP address.")]
+		public string WifiAddress { get; set; } = null;
+
+		[Option("zedmd-wifi-port", HelpText = "Connect to ZeDMD in WiFi mode using this port. Default: 3333.")]
+		public int WifiPort { get; set; } = 3333;
+
+		[Option("zedmd-wifi-ssid", HelpText = "Configure ZeDMD to use this SSID for WiFi mode.")]
+		public string WifiSsid { get; set; } = null;
+
+		[Option("zedmd-wifi-port", HelpText = "Configure ZeDMD to use this password for WiFi mode.")]
+		public string WifiPassword { get; set; } = null;
+
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -148,6 +173,9 @@ namespace DmdExt.Common
 		public IPinDmd2Config PinDmd2 { get; }
 		public IPinDmd3Config PinDmd3 { get; }
 		public IZeDMDConfig ZeDMD { get; }
+		public IZeDMDConfig ZeDMDHD { get; }
+		public IZeDMDWiFiConfig ZeDMDWiFi { get; }
+		public IZeDMDWiFiConfig ZeDMDHDWiFi { get; }
 		public IPin2DmdConfig Pin2Dmd { get; }
 		public IPixelcadeConfig Pixelcade { get; }
 		public IVideoConfig Video { get; }
@@ -170,6 +198,9 @@ namespace DmdExt.Common
 			PinDmd2 = new PinDmd2Options(this);
 			PinDmd3 = new PinDmd3Options(this);
 			ZeDMD = new ZeDMDOptions(this);
+			ZeDMDHD = new ZeDMDHDOptions(this);
+			ZeDMDWiFi = new ZeDMDWiFiOptions(this);
+			ZeDMDHDWiFi = new ZeDMDHDWiFiOptions(this);
 			Pin2Dmd = new Pin2DmdOptions(this);
 			Pixelcade = new PixelcadeOptions(this);
 			Video = new VideoOptions();
@@ -184,7 +215,7 @@ namespace DmdExt.Common
 
 		public enum DestinationType
 		{
-			Auto, PinDMDv1, PinDMDv2, PinDMDv3, zeDMD, PIN2DMD, PIN2DMDXL, PIN2DMDHD, PIXELCADE, Virtual, AlphaNumeric, Network
+			Auto, PinDMDv1, PinDMDv2, PinDMDv3, zeDMD, zeDMDHD, zeDMDWiFi, zeDMDHDWiFi, PIN2DMD, PIN2DMDXL, PIN2DMDHD, PIXELCADE, Virtual, AlphaNumeric, Network
 		}
 
 		public void Validate()
@@ -369,7 +400,73 @@ namespace DmdExt.Common
 
 		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
 							   _options.Destination == BaseOptions.DestinationType.zeDMD;
+		public bool Debug => _options.Debug;
+		public int Brightness => _options.Brightness;
+		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
+	}
+
+	internal class ZeDMDHDOptions : IZeDMDConfig
+	{
+		private readonly BaseOptions _options;
+
+		public ZeDMDHDOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+							   _options.Destination == BaseOptions.DestinationType.zeDMDHD;
+		public bool Debug => _options.Debug;
+		public int Brightness => _options.Brightness;
+		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
+	}
+
+	internal class ZeDMDWiFiOptions : IZeDMDWiFiConfig
+	{
+		private readonly BaseOptions _options;
+
+		public ZeDMDWiFiOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+							   _options.Destination == BaseOptions.DestinationType.zeDMDWiFi;
+		public bool Debug => _options.Debug;
+		public int Brightness => _options.Brightness;
+		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
+		public string WifiAddress => _options.WifiAddress;
+		public int WifiPort => _options.WifiPort;
+		public string WifiSsid => _options.WifiSsid;
+		public string WifiPassword => _options.WifiPassword;
+	}
+
+	internal class ZeDMDHDWiFiOptions : IZeDMDWiFiConfig
+	{
+		private readonly BaseOptions _options;
+
+		public ZeDMDHDWiFiOptions(BaseOptions options)
+		{
+			_options = options;
+		}
+
+		public bool Enabled => _options.Destination == BaseOptions.DestinationType.Auto ||
+							   _options.Destination == BaseOptions.DestinationType.zeDMDHDWiFi;
+		public bool Debug => _options.Debug;
+		public int Brightness => _options.Brightness;
+		public int RgbOrder => _options.RgbOrder;
+		public string Port => _options.Port;
+		public bool ScaleRgb24 => _options.ScaleRgb24;
+		public string WifiAddress => _options.WifiAddress;
+		public int WifiPort => _options.WifiPort;
+		public string WifiSsid => _options.WifiSsid;
+		public string WifiPassword => _options.WifiPassword;
 	}
 
 	internal class Pin2DmdOptions : IPin2DmdConfig

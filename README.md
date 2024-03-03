@@ -378,6 +378,18 @@ The output are described by block below.
 | `--port`                       | [pindmd3]<br>port                              | COM port, e.g. `COM3`.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `-d pin2dmd`                   | [pin2dmd]<br>enabled                           | Enables the RGB24 PIN2DMD display.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | *n/a*                          | [pin2dmd]<br>delay                             | Delay in milliseconds to wait after loading a palette.                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `-d zedmd`                     | [zedmd]<br>enabled                             | Enables the RGB24 ZeDMD display.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `-d zedmdhd`                   | [zedmdhd]<br>enabled                           | Enables the RGB24 ZeDMD HD display.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `-d zedmdwifi`                 | [zedmdwifi]<br>enabled                         | Enables the RGB24 ZeDMD WiFi display.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `-d zedmdhdwifi`               | [zedmdhdwifi]<br>enabled                       | Enables the RGB24 ZeDMD HD WiFi display.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `--zedmd-debug`                | [zedmd]<br>debug                               | Let any ZeDMD show its debug informations.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--zedmd-brightness`           | [zedmd]<br>brightness                          | Change any ZeDMD brightness between 0 and 15.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `--zedmd-rgborder`             | [zedmd]<br>rgborder                            | Change any ZeDMD RGB order between 0 and 5.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--zedmd-scalergb24`           | [zedmd]<br>scalergb24                          | Scale pure RGB24 content on ZeDMD HD. Default: true.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--zedmd-wifi-address`         | [zedmdwifi]<br>wifi.address                    | Connect to ZeDMD (HD) WiFi using this IP address.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--zedmd-wifi-port`            | [zedmdwifi]<br>wifi.port                       | Connect to ZeDMD (HD) WiFi using this port. Default: 3333.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `--zedmd-wifi-ssid`            | [zedmdwifi]<br>wifi.ssid                       | Configure ZeDMD (HD) WiFi to use this SSID.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `--zedmd-wifi-password`        | [zedmdwifi]<br>wifi.password                   | Configure ZeDMD (HD) WiFi to use this password.                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | *n/a*                          | [video]<br>enabled                             | Enables creating an .avi video from the DMD frames.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | *n/a*                          | [video]<br>path                                | Path to folder or .avi file. If a folder is given, it will create a file named after the current game.                                                                                                                                                                                                                                                                                                                                                                      |
 | *n/a*                          | [browserstream]<br>enabled                     | Enables streaming the DMD in real time to your browser in your LAN.                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -477,6 +489,43 @@ dmdext test
 dmdext test --format gray2
 ```
 
+### ZeDMD
+
+The [ZeDMD library](https://github.com/PPUC/libzedmd) (`zedmd.dll`) is bundled with `DmdDevice.dll` and `dmdext.exe`.
+However, you can also replace this library with a newer version if you wish.
+To do that, download the latest DLL from [here](https://github.com/PPUC/libzedmd/releases) and place it alongside
+with `DmdDevice.dll` or `dmdext.exe`. Note that this might break compatibility, so check your log if ZeDMD suddenly stops
+working.
+
+#### USB mode
+
+This is the default maode for ZeDMD. You don't need to configuire anything except setting `enabled` to `true` in
+`DmdDevice.ini` for `[zedmd]` or `[zedmdhd]`.
+BUit in case you have multiple devices or run into issues with the auto detection and other USB devices attached,
+you can set a conctrete COM port to use in `DmdDevice.ini` using `port`.
+
+#### WiFi mode
+
+Alternatively ZeDMD could be flashed with a firmware that provides a WiFi mode.
+In `DmdDevice.ini` there're special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
+
+To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the network connection.
+These could also be set once via the DMD Extension.
+Run `dmdext.exe -d zedmd --zedmd-wifi-ssid YOUR_SECRET_SSID --zedmd-wifi-password YOUR_SECRET_PASSWORD`.
+At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
+This address has to be added as `wifi.address` to `DmdDevice.ini`.
+
+You can also perform that configuration without `dmdext.exe` using this multi-step process:
+First you have to add the SSID and the password in the zedmd section of `DmdDevice.ini` using
+`wifi.ssid` and `wifi.password`. These will be submitted to ZeDMD the next time you start DMD Extensions.
+Once done you should quit DMD Extensions.
+Now you have to remove `wifi.ssid` and `wifi.password` from `DmdDevice.ini`.
+At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
+This address has to be added as `wifi.address` to `DmdDevice.ini`.
+
+**ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
+above before giving your ZeDMD to someone else!**
+
 ### Colorization
 
 If you are a PC monitor user or have an RGB display (PinDMDv3, PIN2DMD, Pixelcade or ZeDMD), you can enable frame-by-frame
@@ -569,6 +618,12 @@ upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algo
 - In DmdDevice.ini, set the `vni.scalermode` option.
 
 ## Breaking Changes
+
+### v2.x.x
+
+- In DmdDevice.ini, the `[zedmd]` has been split into `[zedmd]`, `[zedmdhd]`, `[zedmdwifi]`, `[zedmdhdwifi]`.
+- ZeDMD HD devices don't use their built-in scaler anymore when attached to DMD Extension. They now leverage the common `scalermode` setting.
+- ZeDMD firmware versions before 3.5.0 aren't supported anymore.
 
 ### v2.3.0
 

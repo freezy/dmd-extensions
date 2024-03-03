@@ -15,6 +15,9 @@ namespace LibDmd.DmdDevice
 		IPinDmd2Config PinDmd2 { get; }
 		IPinDmd3Config PinDmd3 { get; }
 		IZeDMDConfig ZeDMD { get; }
+		IZeDMDConfig ZeDMDHD { get; }
+		IZeDMDWiFiConfig ZeDMDWiFi { get; }
+		IZeDMDWiFiConfig ZeDMDHDWiFi { get; }
 		IPin2DmdConfig Pin2Dmd { get; }
 		IPixelcadeConfig Pixelcade { get; }
 		IVideoConfig Video { get; }
@@ -68,6 +71,19 @@ namespace LibDmd.DmdDevice
 	public interface IZeDMDConfig
 	{
 		bool Enabled { get; }
+		bool Debug { get; }
+		int Brightness { get; }
+		int RgbOrder { get; }
+		string Port { get; }
+		bool ScaleRgb24 { get; }
+	}
+
+	public interface IZeDMDWiFiConfig : IZeDMDConfig
+	{
+		string WifiAddress { get; }
+		int WifiPort { get; }
+		string WifiSsid { get; }
+		string WifiPassword { get; }
 	}
 
 	public interface IPin2DmdConfig

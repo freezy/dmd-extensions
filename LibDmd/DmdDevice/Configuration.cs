@@ -29,6 +29,9 @@ namespace LibDmd.DmdDevice
 		public IPinDmd2Config PinDmd2 { get; private set; }
 		public IPinDmd3Config PinDmd3 { get; private set; }
 		public IZeDMDConfig ZeDMD { get; private set; }
+		public IZeDMDConfig ZeDMDHD { get; private set; }
+		public IZeDMDWiFiConfig ZeDMDWiFi { get; private set; }
+		public IZeDMDWiFiConfig ZeDMDHDWiFi { get; private set; }
 		public IPin2DmdConfig Pin2Dmd { get; private set; }
 		public IPixelcadeConfig Pixelcade { get; private set; }
 		public IVideoConfig Video { get; private set; }
@@ -135,6 +138,9 @@ namespace LibDmd.DmdDevice
 			PinDmd2 = new PinDmd2Config(_data, this);
 			PinDmd3 = new PinDmd3Config(_data, this);
 			ZeDMD = new ZeDMDConfig(_data, this);
+			ZeDMDHD = new ZeDMDHDConfig(_data, this);
+			ZeDMDWiFi = new ZeDMDWiFiConfig(_data, this);
+			ZeDMDHDWiFi = new ZeDMDHDWiFiConfig(_data, this);
 			Pin2Dmd = new Pin2DmdConfig(_data, this);
 			Pixelcade = new PixelcadeConfig(_data, this);
 			Video = new VideoConfig(_data, this);
@@ -302,8 +308,43 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "zedmd";
 		public bool Enabled => GetBoolean("enabled", false);
-		public bool AllowHdScaling => GetBoolean("scaletohd", true);
+		public bool Debug => GetBoolean("debug", false);
+		public int Brightness => GetInt("brightness", -1);
+		public int RgbOrder => GetInt("rgborder", -1);
+		public string Port => GetString("port", null);
+		public bool ScaleRgb24 => GetBoolean("scalergb24", true);
+		public bool AllowHdScaling => false;
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class ZeDMDHDConfig : ZeDMDConfig
+	{
+		public override string Name { get; } = "zedmdhd";
+		public new bool AllowHdScaling => true;
+		public ZeDMDHDConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class ZeDMDWiFiConfig : ZeDMDConfig, IZeDMDWiFiConfig
+	{
+		public override string Name { get; } = "zedmdwifi";
+		public string WifiAddress => GetString("wifi.address", null);
+		public int WifiPort => GetInt("wifi.port", 3333);
+		public string WifiSsid => GetString("wifi.ssid", null);
+		public string WifiPassword => GetString("wifi.password", null);
+		public ZeDMDWiFiConfig(IniData data, Configuration parent) : base(data, parent)
+		{
+		}
+	}
+
+	public class ZeDMDHDWiFiConfig : ZeDMDWiFiConfig
+	{
+		public override string Name { get; } = "zedmdhdwifi";
+		public new bool AllowHdScaling => true;
+		public ZeDMDHDWiFiConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}
 	}
