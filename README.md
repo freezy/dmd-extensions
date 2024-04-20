@@ -66,7 +66,10 @@ Currently supported hardware displays:
 - **PinDMD v1**, 2 bit (4 shades) support
 - **PIN2DMD**, full RGB support
 - **Pixelcade**, full RGB support
-- **ZeDMD**, full RGB support
+- **ZeDMD** / **PinDMD3.1***, full RGB support
+
+_* The display from VirtuaPin marketed as [PinDMD v3.1](https://virtuapin.net/index.php?main_page=product_info&products_id=283) is
+a [ZeDMD](https://github.com/PPUC/ZeDMD) under the hood._
 
 ### High Resolution DMD for Monitors
 
