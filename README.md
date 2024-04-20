@@ -619,14 +619,11 @@ upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algo
 
 ## Breaking Changes
 
-### v2.x.x
+### v2.2.2
 
 - In DmdDevice.ini, the `[zedmd]` has been split into `[zedmd]`, `[zedmdhd]`, `[zedmdwifi]`, `[zedmdhdwifi]`.
 - ZeDMD HD devices don't use their built-in scaler anymore when attached to DMD Extension. They now leverage the common `scalermode` setting.
-- ZeDMD firmware versions before 3.5.0 aren't supported anymore.
-
-### v2.3.0
-
+- ZeDMD firmware versions before 3.6.0 aren't supported anymore.
 - Removed --scale-to-hd in favor of --scaler-mode. Set scaler mode to `none` if you want to disable scaling.
 
 ### v2.1.1
