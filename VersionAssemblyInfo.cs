@@ -2,7 +2,7 @@
 using System.Reflection;
 
 [assembly: AssemblyCompany("freezy <freezy@vpdb.io>")]
-[assembly: AssemblyCopyright("Copyright (C) 2023 <freezy@vpdb.io>")]
+[assembly: AssemblyCopyright("Copyright (C) 2024 <freezy@vpdb.io>")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,5 +19,5 @@ using System.Reflection;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.2.2.0")]
 [assembly: AssemblyFileVersion("2.2.2.0")]
-[assembly: AssemblyInformationalVersion("2.2.2-SNAPSHOT")]
+[assembly: AssemblyInformationalVersion("2.2.2")]
 [assembly: NeutralResourcesLanguage("en")]
