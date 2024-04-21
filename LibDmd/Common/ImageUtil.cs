@@ -720,7 +720,7 @@ namespace LibDmd.Common
 		private static void Dispatch(DispatcherObject bmp, Action action)
 		{
 			// if already on main thread, go head and execute
-			if (bmp.Dispatcher.Thread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId) {
+			if (bmp.Dispatcher == null || bmp.Dispatcher.Thread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId) {
 				action.Invoke();
 				return;
 			}
