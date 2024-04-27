@@ -30,6 +30,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image x:Name="Preview" Height="108" Width="453" Grid.Row="0" />
 
@@ -45,11 +47,21 @@
         <TextBox x:Name="SkewAngleValue" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
 
 
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="3" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="4" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="6" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
-        <GroupBox x:Name="SaveGroup"  Grid.Row="7" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
+        <Label Grid.Row="3" Content="Line Padding Percentage" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,190,0"/>
+        <Slider x:Name="LinePadSlider" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center" Width="150" Maximum="30" Margin="0,0,38,0" SmallChange="1"/>
+        <TextBox x:Name="LinePadValue" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
+
+
+        <Label Grid.Row="4" Content="Outer Padding Percentage" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,190,0"/>
+        <Slider x:Name="OuterPadSlider" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Center" Width="150" Maximum="30" Margin="0,0,38,0" SmallChange="1"/>
+        <TextBox x:Name="OuterPadValue" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"/>
+
+
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="5" x:Name="ForegroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="6" x:Name="InnerGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="7" x:Name="OuterGlowStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <alphaNumeric:VirtualAlphaNumericLayerSetting Grid.Row="8" x:Name="BackgroundStyle" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,8"/>
+        <GroupBox x:Name="SaveGroup"  Grid.Row="9" Header="Load, save and delete from DmdDevice.ini" Padding="8,0,8,8" Margin="0,0,0,16">
             <Grid>
                 <ComboBox ItemsSource="{Binding StyleNames}" SelectedValue="{Binding NewStyleName, Mode=TwoWay}"  IsSynchronizedWithCurrentItem="True" x:Name="StyleNameComboBox" Width="220" HorizontalAlignment="Left" Margin="0,8,0,0" IsEditable="True"/>
                 <Button x:Name="LoadStyleButton" Width="60" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Margin="0,7,136,0" Content="Load" Click="LoadFromIniClicked"/>
@@ -58,8 +70,8 @@
             </Grid>
         </GroupBox>
 
-        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyClicked"/>
-        <Button Content="Close" Grid.Row="8" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="CancelClicked"/>
-        <Button Content="Reset" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="ResetClicked"/>
+        <Button x:Name="ApplyButton" Content="Apply" Grid.Row="10" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" IsDefault="True" Click="ApplyClicked"/>
+        <Button Content="Close" Grid.Row="10" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="CancelClicked"/>
+        <Button Content="Reset" Grid.Row="10" HorizontalAlignment="Left" VerticalAlignment="Top" Width="60" Height="24" Margin="0,0,68,0" IsCancel="True" Click="ResetClicked"/>
     </Grid>
 </Window>
