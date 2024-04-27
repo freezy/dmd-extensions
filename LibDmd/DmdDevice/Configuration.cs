@@ -626,6 +626,12 @@ namespace LibDmd.DmdDevice
 						case "skewangle":
 							_styles[styleName].SkewAngle = -(float)GetDouble(keyValues.Current.KeyName, 0);
 							break;
+						case "linepad":
+							_styles[styleName].LinePad = (float)GetDouble(keyValues.Current.KeyName, 0);
+							break;
+						case "outerpad":
+							_styles[styleName].OuterPad = (float)GetDouble(keyValues.Current.KeyName, 0);
+							break;
 						case "weight":
 							_styles[styleName].SegmentWeight = GetEnum(keyValues.Current.KeyName, SegmentWeight.Thin);
 							break;
@@ -694,6 +700,8 @@ namespace LibDmd.DmdDevice
 			DoWrite = false;
 
 			Set(prefix + "skewangle", -style.SkewAngle);
+			Set(prefix + "linepad", style.LinePad);
+			Set(prefix + "outerpad", style.OuterPad);
 			Set(prefix + "weight", style.SegmentWeight);
 			Set(prefix + "backgroundcolor", style.BackgroundColor);
 			SetLayerStyle(name, "foreground", style.Foreground);
@@ -712,6 +720,8 @@ namespace LibDmd.DmdDevice
 			DoWrite = false;
 			Remove("style");
 			Remove(prefix + "skewangle");
+			Remove(prefix + "linepad");
+			Remove(prefix + "outerpad");
 			Remove(prefix + "backgroundcolor");
 			RemoveLayerStyle(name, "foreground");
 			RemoveLayerStyle(name, "innerglow");

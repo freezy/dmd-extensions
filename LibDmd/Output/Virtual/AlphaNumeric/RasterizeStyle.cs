@@ -10,6 +10,16 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public float SkewAngle { get; set; } = -12;
 
 		/// <summary>
+		/// Line padding percentage
+		/// </summary>
+		public float LinePad { get; set; } = 0.2f;
+
+		/// <summary>
+		/// Outer padding percentage
+		/// </summary>
+		public float OuterPad { get; set; } = 0.2f;
+
+		/// <summary>
 		/// Segment weight
 		/// </summary>
 		public SegmentWeight SegmentWeight { get; set; } = SegmentWeight.Thin;
@@ -93,6 +103,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			return new RasterizeStyleDefinition {
 				SegmentWeight = SegmentWeight,
 				SkewAngle = SkewAngle,
+				LinePad = LinePad,
+				OuterPad = OuterPad,
 				BackgroundColor = new SKColor(BackgroundColor.Red, BackgroundColor.Green, BackgroundColor.Blue, BackgroundColor.Alpha),
 				Foreground = Foreground.Copy(),
 				InnerGlow = InnerGlow.Copy(),
