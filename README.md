@@ -66,7 +66,10 @@ Currently supported hardware displays:
 - **PinDMD v1**, 2 bit (4 shades) support
 - **PIN2DMD**, full RGB support
 - **Pixelcade**, full RGB support
-- **ZeDMD**, full RGB support
+- **ZeDMD** / **PinDMD v3.1***, full RGB support
+
+_* The display from VirtuaPin marketed as [PinDMD v3.1](https://virtuapin.net/index.php?main_page=product_info&products_id=283) is
+a [ZeDMD](https://github.com/PPUC/ZeDMD) under the hood._
 
 ### High Resolution DMD for Monitors
 
@@ -458,7 +461,7 @@ The `mirror` command has the following additional parameters:
 | `-f, --fps`         | How many frames per second should be mirrored.                                                                                                                                  | 25         |
 | `--idle-after`      | Wait for number of milliseconds until clearing the screen. Disable with 0.                                                                                                      | 0          |
 | `--idle-play`       | Play this file while idleing instead of blank screen. Supported formats: JPG, PNG, GIF. Animated GIFs are supported.                                                            | *none*     |
-| `--position`        | *screen* - Position and size of screen grabber source. Four values: `<Left> <Top> <Width> <Height>`.                                                                            | 0 0 128 32 |
+| `--position`        | *screen* - Position and size of screen grabber source. Four values: `<Left> <Top> <Right> <Bottom>`.                                                                            | 0 0 128 32 |
 | `--resize-to`       | *screen* - Resize captured screen to this size. Two values: <Width> <Height>.                                                                                                   | 128 32     |
 | `--grid-spacing`    | *screen* - How much of the white space around the dot should be cut off (grid size is defined by --resize-to). 1 means same size as the dot, 0.5 half size, etc. 0 for disable. | 0          |
 | `--propinball-args` | *propinball* - Arguments send from the Pro Pinball master process. Usually something like: `ndmd w0_0_0_0_w m392`. Will be set automatically when called through Pro Pinball.   |            |
@@ -619,14 +622,11 @@ upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algo
 
 ## Breaking Changes
 
-### v2.x.x
+### v2.2.2
 
 - In DmdDevice.ini, the `[zedmd]` has been split into `[zedmd]`, `[zedmdhd]`, `[zedmdwifi]`, `[zedmdhdwifi]`.
 - ZeDMD HD devices don't use their built-in scaler anymore when attached to DMD Extension. They now leverage the common `scalermode` setting.
-- ZeDMD firmware versions before 3.5.0 aren't supported anymore.
-
-### v2.3.0
-
+- ZeDMD firmware versions before 3.6.0 aren't supported anymore.
 - Removed --scale-to-hd in favor of --scaler-mode. Set scaler mode to `none` if you want to disable scaling.
 
 ### v2.1.1

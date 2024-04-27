@@ -1,4 +1,4 @@
-var url = 'ws://' + window.location.host + '/dmd';
+﻿var url = 'ws://' + window.location.host + '/dmd';
 var typeSet = {
 	'jBinary.littleEndian': true,
 	gray2Planes: {
@@ -19,6 +19,12 @@ var typeSet = {
 		palette: 'palette',
 		planes: 'blob'
 	},
+	coloredGray6: {
+		timestamp: 'uint32',
+		palette: 'palette',
+		rotations: 'rotations',
+		planes: 'blob'
+	},
 	rgb24: {
 		timestamp: 'uint32',
 		planes: 'blob'
@@ -33,6 +39,9 @@ var typeSet = {
 	palette: {
 		length: 'int32',
 		colors: ['array', 'int32', 'length']
+	},
+	rotations: {
+		colors: ['array', 'uint8', 24]
 	},
 	clearColor: 'blob',
 	clearPalette: 'blob',
@@ -61,9 +70,24 @@ var controller = {
 	_gray2Palette: null,
 	_gray4Palette: null,
 
+	// 6color rotations
+	_frame: null,
+	_framepanels: null,
+	_colorpalette: null,
+	_rotCols:[],
+	_nextTime:[],
+	_firstCol:[],
+	_nCol:[],
+	_acFirst:[],
+	_timeSpan:[],
+	_timervar: null,
+
+	_mode64: false,
+
 	// timing stuff
 	_bufferTime: 0,
 	_started: 0,
+	_lastTime: 0, 
 
 	// scene
 	_camera: null,
@@ -194,32 +218,65 @@ var controller = {
 				var frame = data.data;
 				switch (data.name) {
 					case 'gray2Planes':
+						that._mode64= false;
 						that.renderFrame(frame, function () {
 							return that.graytoRgb24(that.joinPlanes(2, frame.planes), 4);
 						});
 						break;
 					case 'gray4Planes':
+						that._mode64= false;
 						that.renderFrame(frame, function () {
 							return that.graytoRgb24(that.joinPlanes(4, frame.planes), 16);
 						});
 						break;
 					case 'coloredGray2':
+						that._mode64= false;
 						that.renderFrame(frame, function () {
 							return that.graytoRgb24(that.joinPlanes(2, frame.planes), frame.palette.colors);
 						});
 						break;
 					case 'coloredGray4':
+						that._mode64= false;
 						that.renderFrame(frame, function () {
 							return that.graytoRgb24(that.joinPlanes(4, frame.planes), frame.palette.colors);
 						});
 						break;
+					case 'coloredGray6':
+							that._mode64 = false;
+							that._frame = frame;
+							that._framepanels = that.joinPlanes(6, frame.planes);
+							that._colorpalette = frame.palette.colors;
+							actime = new Date().getTime();
+          					for ( ti = 0; ti < 64; ti++)
+            					that._rotCols[ti] = ti;
+          					for ( ti = 0; ti < 8; ti++)
+							{
+								if (frame.rotations.colors[ti * 3] != 255) 
+									that._mode64= true;
+								that._firstCol[ti] = frame.rotations.colors[ti * 3];
+								that._nCol[ti] = frame.rotations.colors[ti * 3 + 1];
+								that._acFirst[ti] = 0;
+								that._timeSpan[ti] = 10 * frame.rotations.colors[ti * 3 + 2];
+								if (that._timeSpan[ti] < 60)
+								that._timeSpan[ti] = 60;
+								that._nextTime[ti] = actime + that._timeSpan[ti];
+							}
+							if (that._timervar == null)
+								that._timervar = setInterval(that.color6redraw, 10, that);
+
+							that.renderFrame(frame, function () {
+								return that.graytoRgb24(that._framepanels, that._colorpalette);
+						});
+						break;
 					case 'rgb24':
+						that._mode64= false;
 						that.renderFrame(frame, function () {
 							return that.rgb24toInvertedRgb24(frame.planes);
 						});
 						break;
 					case 'dimensions':
 						that.setDimensions(frame);
+						that._lastTime = 0;
 						break;
 					case 'color':
 						that.setColor(frame.color);
@@ -247,29 +304,70 @@ var controller = {
 		};
 	},
 
+	color6redraw: function(that) {
+		if (!that._mode64) return;
+		actime = new Date().getTime();
+		rotfound = false;
+		
+		for (ti = 0; ti < 8; ti++)
+		{
+		  if (that._firstCol[ti] == 255)
+			continue;
+		  if (actime >= that._nextTime[ti])
+		  {	
+			that._nextTime[ti] = actime + that._timeSpan[ti];
+			that._acFirst[ti]++;
+			if (that._acFirst[ti] == that._nCol[ti])
+				that._acFirst[ti] = 0;
+			rotfound = true;
+			for (tj = 0; tj < that._nCol[ti]; tj++)
+			{
+			  that._rotCols[tj + that._firstCol[ti]] = tj + that._firstCol[ti] + that._acFirst[ti];
+			  if (that._rotCols[tj + that._firstCol[ti]] >= that._firstCol[ti] + that._nCol[ti])
+			  	that._rotCols[tj + that._firstCol[ti]] -= that._nCol[ti];
+			}
+		  }
+		}
+		if (rotfound == true) {
+			that.renderFrame(that._frame, function () {
+				return that.graytoRgb24(that._framepanels, that._colorpalette);
+			});
+		}	
+	},
+
 	renderFrame: function(data, render) {
 
 		if (!this._clientStart) {
 			this._clientStart = new Date().getTime();
 			this._serverStart = data.timestamp;
 		}
-		var serverDiff = data.timestamp - this._serverStart;
-		var clientDiff = new Date().getTime() - this._clientStart;
-		var delay = this._bufferTime + serverDiff - clientDiff;
 
-		if (delay < 0) {
-			this._bufferTime -= delay;
-			console.log("Increasing buffer time to %sms.", this._bufferTime);
-			delay = 0;
-		}
+		var delay=0;
+        if (this._mode64) 
+        	delay=0;
+        else {
+			var serverDiff = data.timestamp - this._serverStart;
+			var clientDiff = new Date().getTime() - this._clientStart;
+			var delay = this._bufferTime + serverDiff - clientDiff;
+
+			if (delay < 0) {
+				this._bufferTime -= delay;
+				console.log("Increasing buffer time to %sms.", this._bufferTime);
+				delay = 0;
+			}
+		}	
 
 		var that = this;
-		var frame = render();
-		setTimeout(function () {
-			that._dmdMesh.material.map.image.data = frame;
-			that._dmdMesh.material.map.needsUpdate = true;
-			that.renderCanvas();
-		}, delay);
+		if (that._lastTime <= data.timestamp) {
+			// if new frame was sent later than the last one, ignore older ones arriving late
+			var frame = render();
+			setTimeout(function () {
+				that._dmdMesh.material.map.image.data = frame;
+				that._dmdMesh.material.map.needsUpdate = true;
+				that.renderCanvas();
+			}, delay);
+		}
+		that._lastTime = data.timestamp;
 	},
 
 	setDimensions: function (dim) {
@@ -387,7 +485,10 @@ var controller = {
 		for (var y = this._height - 1; y >= 0; y--) {
 			for (var x = 0; x < this._width; x++) {
 				if (palette) {
-					dotColor = new THREE.Color(palette[buffer[y * this._width + x]]);
+					if (this._mode64)
+						dotColor = new THREE.Color(palette[this._rotCols[buffer[y * this._width + x]]]);
+					else
+						dotColor = new THREE.Color(palette[buffer[y * this._width + x]]);
 				} else {
 					var lum = buffer[y * this._width + x] / paletteOrNumColors;
 					dotColor.setHSL(this._hsl.h, this._hsl.s, lum * this._hsl.l);

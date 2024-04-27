@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using LibDmd.Frame;
 using NLog;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -86,31 +88,34 @@ namespace LibDmd.Common
 		/// <returns>Array with value for every pixel between 0 and 3</returns>
 		public static byte[] ConvertToGray2(BitmapSource bmp, double minLum, double maxLum, out double hue)
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
+			byte[] frame = null;
 			double imageHue = 0;
-			for (var y = 0; y < bmp.PixelHeight; y++) {
-				rect.Y = y;
-				for (var x = 0; x < bmp.PixelWidth; x++) {
+			Dispatch(bmp, () => {
+				frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
+				var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+				var bytes = new byte[bytesPerPixel];
+				var rect = new Int32Rect(0, 0, 1, 1);
+				for (var y = 0; y < bmp.PixelHeight; y++) {
+					rect.Y = y;
+					for (var x = 0; x < bmp.PixelWidth; x++) {
 
-					rect.X = x;
-					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+						rect.X = x;
+						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
-					// convert to HSL
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out var h, out _, out var luminosity);
+						// convert to HSL
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out var h, out _, out var luminosity);
 
-					var pixelBrightness = (luminosity - minLum) / (maxLum - minLum);
-					byte frameVal = (byte)Math.Min(Math.Max(Math.Round(pixelBrightness * 3d), 0), 3);
-					frame[y * bmp.PixelWidth + x] = frameVal;
+						var pixelBrightness = (luminosity - minLum) / (maxLum - minLum);
+						byte frameVal = (byte)Math.Min(Math.Max(Math.Round(pixelBrightness * 3d), 0), 3);
+						frame[y * bmp.PixelWidth + x] = frameVal;
 
-					// Don't use very low luminosity values to calculate hue because they are less accurate.
-					if (frameVal > 0) {
-						imageHue = h;
+						// Don't use very low luminosity values to calculate hue because they are less accurate.
+						if (frameVal > 0) {
+							imageHue = h;
+						}
 					}
 				}
-			}
+			});
 			hue = imageHue;
 			return frame;
 		}
@@ -149,23 +154,26 @@ namespace LibDmd.Common
 		/// <returns>Array with value for every pixel between 0 and 15</returns>
 		public static byte[] ConvertToGray4(BitmapSource bmp, double lum = 1)
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			for (var y = 0; y < bmp.PixelHeight; y++) {
-				rect.Y = y;
-				for (var x = 0; x < bmp.PixelWidth; x++) {
+			byte[] frame = null;
+			Dispatch(bmp, () => {
+				frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
+				var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+				var bytes = new byte[bytesPerPixel];
+				var rect = new Int32Rect(0, 0, 1, 1);
+				for (var y = 0; y < bmp.PixelHeight; y++) {
+					rect.Y = y;
+					for (var x = 0; x < bmp.PixelWidth; x++) {
 
-					rect.X = x;
-					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+						rect.X = x;
+						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
-					// convert to HSL
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
+						// convert to HSL
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
+						frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
+					}
 				}
-			}
+			});
 			return frame;
 		}
 
@@ -177,25 +185,26 @@ namespace LibDmd.Common
 		/// <returns>Array with value for every pixel between 0 and 15</returns>
 		public static byte[] ConvertToGray6(BitmapSource bmp, double lum = 1)
 		{
-			var frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
-			var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-			var bytes = new byte[bytesPerPixel];
-			var rect = new Int32Rect(0, 0, 1, 1);
-			for (var y = 0; y < bmp.PixelHeight; y++)
-			{
-				rect.Y = y;
-				for (var x = 0; x < bmp.PixelWidth; x++)
-				{
+			byte[] frame = null;
+			Dispatch(bmp, () => {
+				frame = new byte[bmp.PixelWidth * bmp.PixelHeight];
+				var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
+				var bytes = new byte[bytesPerPixel];
+				var rect = new Int32Rect(0, 0, 1, 1);
+				for (var y = 0; y < bmp.PixelHeight; y++) {
+					rect.Y = y;
+					for (var x = 0; x < bmp.PixelWidth; x++) {
+						rect.X = x;
+						bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
 
-					rect.X = x;
-					bmp.CopyPixels(rect, bytes, bytesPerPixel, 0);
+						// convert to HSL
+						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
-					// convert to HSL
-					ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
-
-					frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 63d * lum);
+						frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 63d * lum);
+					}
 				}
-			}
+			});
+
 			return frame;
 		}
 
@@ -209,34 +218,34 @@ namespace LibDmd.Common
 		public static byte[] ConvertToRgb24(BitmapSource bmp, int offset = 0, double lum = 1)
 		{
 			using (Profiler.Start("ImageUtil.ConvertToRgb24")) {
+				byte[] frame = null;
+				Dispatch(bmp, () => {
+					frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
+					var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
+					var bytes = new byte[bmp.PixelHeight * stride];
+					bmp.CopyPixels(bytes, stride, 0);
 
-				var frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 3];
-				var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
-				var bytes = new byte[bmp.PixelHeight * stride];
-				bmp.CopyPixels(bytes, stride, 0);
-
-				if (Math.Abs(lum - 1) > 0.01) {
-					for (var i = 0; i < bytes.Length; i += 3) {
-						ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
-						ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
-						frame[i] = r;
-						frame[i + 1] = g;
-						frame[i + 2] = b;
-					}
-				} else {
-					unsafe
-					{
-						fixed (byte* pBuffer = frame, pBytes = bytes)
-						{
-							byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
-							for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
-								*(pB) = *(pByte + 2);
-								*(pB + 1) = *(pByte + 1);
-								*(pB + 2) = *(pByte);
+					if (Math.Abs(lum - 1) > 0.01) {
+						for (var i = 0; i < bytes.Length; i += 3) {
+							ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
+							ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
+							frame[i] = r;
+							frame[i + 1] = g;
+							frame[i + 2] = b;
+						}
+					} else {
+						unsafe {
+							fixed (byte* pBuffer = frame, pBytes = bytes) {
+								byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
+								for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
+									*(pB) = *(pByte + 2);
+									*(pB + 1) = *(pByte + 1);
+									*(pB + 2) = *(pByte);
+								}
 							}
 						}
 					}
-				}
+				});
 				return frame;
 			}
 		}
@@ -702,8 +711,31 @@ namespace LibDmd.Common
 		{
 			return (value < min) ? min : (value > max) ? max : value;
 		}
-	}
 
+		/// <summary>
+		/// Dispatches the action to the UI thread and waits until it completes.
+		/// </summary>
+		/// <param name="bmp">Bitmap</param>
+		/// <param name="action">Action to execute</param>
+		private static void Dispatch(DispatcherObject bmp, Action action)
+		{
+			// if already on main thread, go head and execute
+			if (bmp.Dispatcher == null || bmp.Dispatcher.Thread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId) {
+				action.Invoke();
+				return;
+			}
+
+			var semaphore = new Semaphore(2, 3);
+			bmp.Dispatcher.Invoke(() => {
+				try {
+					action.Invoke();
+				} finally {
+					semaphore.Release();
+				}
+			});
+			semaphore.WaitOne(1000);
+		}
+	}
 
 	/// <summary>
 	/// Scaler mode determines whether "HD up-scaling" is enabled.
