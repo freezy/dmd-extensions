@@ -97,7 +97,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			});
 			BackgroundStyle.OnLayerChanged.DistinctUntilChanged().Subscribe(layerStyle => {
 				_displaySetting.ApplyLayerStyle(RasterizeLayer.Background, layerStyle);
-				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, _displaySetting.Style.Background, new [] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
+				Res.RasterizeLayer(_displaySetting, RasterizeLayer.Background, layerStyle, _displaySetting.Style.Background, new[] { AlphaNumericResources.FullSegment }, _displaySetting.StyleDefinition.SkewAngle);
 			});
 
 			Res.Rasterize(_displaySetting, true);
@@ -110,23 +110,39 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			};
 			StyleNameComboBox.KeyUp += (sender, e) => StyleSelectionChanged(StyleNameComboBox.Text);
 
-			SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
-			SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
-			SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
-			SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
-			ThinWeight.Checked += (sender, e) => RasterizeAll();
-			BoldWeight.Checked += (sender, e) => RasterizeAll();
-			BackgroundColor.SelectedColorChanged += (sender, e) =>
-				_displaySetting.StyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
-					BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
-					BackgroundColor.SelectedColor.Value.A);
 
-		}
+				SkewAngleSlider.ValueChanged += (sender, e) => SkewAngleValue.Text = DoubleToString(SkewAngleSlider.Value);
+				SkewAngleValue.TextChanged += (sender, e) => SkewAngleSlider.Value = StringToDouble(SkewAngleValue.Text, SkewAngleSlider.Value);
+				SkewAngleSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.SkewAngle = -(float)SkewAngleSlider.Value;
+				SkewAngleSlider.ValueChanged += (sender, e) => RasterizeAll();
+
+				LinePadSlider.ValueChanged += (sender, e) => LinePadValue.Text = DoubleToString(LinePadSlider.Value);
+				LinePadValue.TextChanged += (sender, e) => LinePadSlider.Value = StringToDouble(LinePadValue.Text, LinePadSlider.Value);
+				LinePadSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.LinePad = (float)LinePadSlider.Value;
+				LinePadSlider.ValueChanged += (sender, e) => RasterizeAll();
+
+				OuterPadSlider.ValueChanged += (sender, e) => OuterPadValue.Text = DoubleToString(OuterPadSlider.Value);
+				OuterPadValue.TextChanged += (sender, e) => OuterPadSlider.Value = StringToDouble(OuterPadValue.Text, OuterPadSlider.Value);
+				OuterPadSlider.ValueChanged += (sender, e) => _displaySetting.StyleDefinition.OuterPad = (float)OuterPadSlider.Value;
+				OuterPadSlider.ValueChanged += (sender, e) => RasterizeAll();
+
+				ThinWeight.Checked += (sender, e) => RasterizeAll();
+				BoldWeight.Checked += (sender, e) => RasterizeAll();
+				BackgroundColor.SelectedColorChanged += (sender, e) =>
+					_displaySetting.StyleDefinition.BackgroundColor = new SKColor(BackgroundColor.SelectedColor.Value.R,
+						BackgroundColor.SelectedColor.Value.G, BackgroundColor.SelectedColor.Value.B,
+						BackgroundColor.SelectedColor.Value.A);
+
+			}
 
 		private void UpdateControls()
 		{
 			SkewAngleValue.Text = (-_displaySetting.StyleDefinition.SkewAngle).ToString(CultureInfo.InvariantCulture);
 			SkewAngleSlider.Value = -_displaySetting.StyleDefinition.SkewAngle;
+			LinePadValue.Text = (_displaySetting.StyleDefinition.LinePad).ToString(CultureInfo.InvariantCulture);
+			LinePadSlider.Value = _displaySetting.StyleDefinition.LinePad;
+			OuterPadValue.Text = (_displaySetting.StyleDefinition.OuterPad).ToString(CultureInfo.InvariantCulture);
+			OuterPadSlider.Value = _displaySetting.StyleDefinition.OuterPad;
 			BackgroundColor.SelectedColor = _displaySetting.StyleDefinition.BackgroundColor.ToColor();
 			ThinWeight.IsChecked = _displaySetting.StyleDefinition.SegmentWeight == SegmentWeight.Thin;
 			BoldWeight.IsChecked = _displaySetting.StyleDefinition.SegmentWeight == SegmentWeight.Bold;
