@@ -143,22 +143,6 @@ namespace LibDmd.Converter.Serum
 
 		private readonly Subject<ColoredFrame> _coloredSerumFrame = new Subject<ColoredFrame>();
 
-
-
-
-
-
-		/*
-		 * for the whole file, I suppose you created a "ColoredFrame16" class similar to "ColoredFrame" but with UINT16 RGB565 content
-		 * and no palette and will separate the code to modify from the rest of the code with several line feeds like below
-		*/
-
-
-
-
-
-
-
 		private readonly Subject<Color[]> _paletteChanges = new Subject<Color[]>();
 		private readonly Subject<FrameEventInit> _frameEventInit = new Subject<FrameEventInit>();
 		private readonly Subject<FrameEvent> _frameEvents = new Subject<FrameEvent>();
