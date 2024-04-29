@@ -84,7 +84,7 @@ namespace LibDmd
 		/// <param name="dim64"></param>
 		/// <param name="data32">rgb565 32 pixel high frame, can be null if no 32P data is available for this frame</param>
 		/// <param name="data64">rgb565 64 pixel high frame, can be null if no 64P data is available for this frame</param>
-		public ColoredFrame(Dimensions dim32, Dimensions dim64, ushort[] data32, ushort[] data64)
+		public ColoredFrame(Dimensions dim32, Dimensions dim64, ushort[] data32, ushort[] data64, bool isNewFrame)
 		{
 			if (data32 != null && data64 != null) {
 				DataType = 3;

@@ -347,7 +347,7 @@ namespace LibDmd.Converter.Serum
 					tdata = new byte[_rgb565Frame64.Length * 2];
 					Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
 					Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
-					_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64));
+					_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64, true));
 					ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
 					tdata = new byte[trot.Length * 2];
 					Marshal.Copy(_serumFramev2.rotations32, tdata, 0, tdata.Length);
@@ -369,7 +369,7 @@ namespace LibDmd.Converter.Serum
 						byte[] tdata = new byte[_rgb565Frame32.Length * 2];
 						Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
-						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null));
+						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null, true));
 						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
 						tdata = new byte[trot.Length * 2];
 						Marshal.Copy(_serumFramev2.rotations32, tdata, 0, tdata.Length);
@@ -384,7 +384,7 @@ namespace LibDmd.Converter.Serum
 						byte[] tdata = new byte[_rgb565Frame64.Length * 2];
 						Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
-						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64));
+						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64, true));
 						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
 						tdata = new byte[trot.Length * 2];
 						Marshal.Copy(_serumFramev2.rotations64, tdata, 0, tdata.Length);
@@ -448,19 +448,19 @@ namespace LibDmd.Converter.Serum
 						tdata = new byte[_rgb565Frame64.Length * 2];
 						Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
-						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64));
+						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64, false));
 					} else {
 						if ((changed | 1) > 0) { // there is a rotation in the 32P frame
 							byte[] tdata = new byte[_rgb565Frame32.Length * 2];
 							Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
 							Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
-							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null));
+							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null, false));
 						}
 						if ((changed | 2) > 0) { // there is a rotation in the 64P frame
 							byte[] tdata = new byte[_rgb565Frame64.Length * 2];
 							Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
 							Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
-							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64));
+							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64, false));
 						}
 					}
 				}
