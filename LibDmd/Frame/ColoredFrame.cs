@@ -11,13 +11,6 @@ using LibDmd.Output;
 
 namespace LibDmd
 {
-	enum ColorFrameFlags
-	{
-		cff_RGB565Frame = 1,	// is this a Serum v2 RGB565 frame or a standard palette + color indices one
-		//cff_NewFrame = 2,       // has the frame new frame content or is this just a color rotation change (so that devices managing color rotations internally could ignore it)
-		cff_32PFrame = 4,       // has the frame a 32P version
-		cff_64PFrame = 8,       // has the frame a 64P version
-	}
 	public class ColoredFrame : DmdFrame, ICloneable, IEqualityComparer<ColoredFrame>
 	{
 		/// <summary>
@@ -54,11 +47,6 @@ namespace LibDmd
 		/// If set, colors defined in <see cref="Rotationsv1"/> or <see cref="Rotationsv2"/> are rotated.
 		/// </summary>
 		public bool RotateColors;*/
-
-		/// <summary>
-		/// Flags giving details about the current frame <see cref="ColorFrameFlags"/>:
-		/// </summary>
-		public uint flags;
 
 		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);

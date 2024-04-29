@@ -53,13 +53,13 @@ namespace LibDmd.Frame
 
 		/// <summary>
 		/// The frame data in RGB565 UINT16 colors, from top left to bottom right. This one is for 32 pixel high frames
-		/// It's usually one byte per pixel, but three bytes for RGB24.
+		/// 1 ushort per pixel.
 		/// </summary>
 		public ushort[] Data32 { get; protected set; }
 
 		/// <summary>
 		/// The frame data in RGB565 UINT16 colors, from top left to bottom right. This one is for 64 pixel high frames
-		/// It's usually one byte per pixel, but three bytes for RGB24.
+		/// 1 ushort per pixel.
 		/// </summary>
 		public ushort[] Data64 { get; protected set; }
 
