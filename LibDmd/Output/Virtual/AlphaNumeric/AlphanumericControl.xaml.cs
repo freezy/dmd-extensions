@@ -55,7 +55,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Init()
 		{
-			ObservableExtensions.Subscribe(Host.WindowResized, pos => CreateImage((int)pos.Width, (int)pos.Height));
+			Host.WindowResized.Subscribe(pos => CreateImage((int)pos.Width, (int)pos.Height));
 			_stopwatch.Start();
 		}
 
@@ -128,6 +128,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		public void UpdateStyle(RasterizeStyleDefinition styleDef)
 		{
 			DisplaySetting.ApplyStyle(styleDef);
+			CreateImage((int)ActualWidth, (int)ActualHeight);
 			Res.Rasterize(DisplaySetting, true);
 		}
 
