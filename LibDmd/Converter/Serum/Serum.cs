@@ -6,14 +6,17 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
 using System.Windows.Media;
 using LibDmd.Common;
+using LibDmd.Common.HeatShrink;
 using LibDmd.Frame;
 using LibDmd.Input;
 using LibDmd.Output;
 using Newtonsoft.Json.Linq;
 using NLog;
+using SharpGL;
 
 namespace LibDmd.Converter.Serum
 {
@@ -27,7 +30,7 @@ namespace LibDmd.Converter.Serum
 	/// Structure to manage former format Serum files.
 	/// All the elements must have been allocated BEFORE the structure is used in colorization and color rotation functions
 	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
+	/*[StructLayout(LayoutKind.Sequential)]
 	public struct Serum_Frame
 	{
 		public IntPtr frame; // Pointer to the destination colorized frame (128*32 or 196*64 bytes)
@@ -59,6 +62,42 @@ namespace LibDmd.Converter.Serum
 					  // if flags & 2 : frame64 has been filled
 					  // if none of them, display the original frame
 		public IntPtr frameID; // Pointer to an UINT to get the identified frame in the Serum file (for the editor and for debugging)
+	}*/
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Serum_Frame_Struc
+	{
+		// data for v1 Serum format
+		public IntPtr frame; // return the colorized frame
+		public IntPtr palette; // and its palette
+		public IntPtr rotations; // and its color rotations
+						  // data for v2 Serum format
+						  // the frame (frame32 or frame64) corresponding to the resolution of the ROM must ALWAYS be defined
+						  // if a frame pointer is defined, its width, rotations and rotationsinframe pointers must be defined
+		public IntPtr frame32;
+		public uint width32; // 0 is returned if the 32p colorized frame is not available for this frame
+		public IntPtr rotations32;
+		public IntPtr rotationsinframe32; // [width32*32*2] precalculated array to tell if a color is in a color rotations of the frame ([X*Y*0]=0xffff if not part of a rotation)
+		public IntPtr modifiedelements32; // (optional) 32P pixels modified during the last rotation
+		public IntPtr frame64;
+		public uint width64; // 0 is returned if the 64p colorized frame is not available for this frame
+		public IntPtr rotations64;
+		public IntPtr rotationsinframe64;  // [width64*64*2] precalculated array to tell if a color is in a color rotations of the frame ([X*Y*0]=0xffff if not part of a rotation)
+		public IntPtr modifiedelements64; // (optional) 64P pixels modified during the last rotation
+										  // common data
+		public uint SerumVersion; // SERUM_V1 or SERUM_V2
+		/// <summary>
+		/// flags for return:
+		/// if flags & 1 : frame32 has been filled
+		/// if flags & 2 : frame64 has been filled
+		/// if flags & 4 : frame + palette have been filled
+		/// if none of them, display the original frame
+		/// </summary>
+		public byte flags;
+		public uint nocolors; // number of shades of orange in the ROM
+		public uint ntriggers; // number of triggers in the Serum file
+		public uint triggerID; // return 0xffff if no trigger for that frame, the ID of the trigger if one is set for that frame
+		public uint frameID; // for CDMD ingame tester
+		public ushort rotationtimer;
 	}
 	public class Serum : AbstractConverter, IColoredGray6Source, IColorRotationSource, IFrameEventSource
 	{
@@ -129,11 +168,10 @@ namespace LibDmd.Converter.Serum
 		private readonly ushort[] _rgb565Frame64;
 		private readonly byte[] _bytePalette = new byte[64 * 3];
 		private readonly Color[] _colorPalette = new Color[64];
-		private uint _width32 = 0;
-		private uint _width64 = 0;
+		//private uint _width32 = 0;
+		//private uint _width64 = 0;
 		private Serum_Version _version;
-		private Serum_Frame _serumFramev1;
-		private Serum_Frame_New _serumFramev2;
+		private Serum_Frame_Struc _serumFrame;
 		private bool _hasRotations;
 		private bool _hasRotations32;
 		private bool _hasRotations64;
@@ -154,13 +192,14 @@ namespace LibDmd.Converter.Serum
 		/// <summary>
 		/// Maximum amount of color rotations per frame (both Serum format)
 		/// </summary>
-		private const int MAX_COLOR_ROTATIONS_OLD = 8;
-		private const int MAX_COLOR_ROTATIONS_NEW = 4;
+		private const int MAX_COLOR_ROTATIONS_V1 = 8;
+		private const int MAX_COLOR_ROTATIONS_V2 = 4;
 		private const int MAX_LENGTH_COLOR_ROTATION = 64; // maximum number of new colors in a rotation
 		public const int FLAG_REQUEST_32P_FRAMES = 1; // there is an output DMD which is 32 leds high
 		public const int FLAG_REQUEST_64P_FRAMES = 2; // there is an output DMD which is 64 leds high
 		public const int FLAG_32P_FRAME_OK = 1; // the 32p frame has been filled
 		public const int FLAG_64P_FRAME_OK = 2; // the 64p frame has been filled
+		private IntPtr DLLSerumPtr; // a pointer to the serum structure in the DLL
 
 		public Serum(string altcolorPath, string romName, byte flags) : base (false)
 		{
@@ -176,91 +215,40 @@ namespace LibDmd.Converter.Serum
 				Logger.Info($"[serum] Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
 
-			byte formatversion = 0;
-			if (!Serum_Load(altcolorPath, romName, ref NumColors, ref numTriggers, flags, ref _width32, ref _width64, ref formatversion)) {
+			DLLSerumPtr = Serum_Load(altcolorPath, romName, flags);
+			if (DLLSerumPtr == null) {
 				IsLoaded = false;
 				return;
 			}
-
-			_dimensions32 = new Dimensions((int)_width32, 32);
-			_dimensions64 = new Dimensions((int)_width64, 64);
-			NumTriggersAvailable = numTriggers;
+			_serumFrame = (Serum_Frame_Struc)Marshal.PtrToStructure(DLLSerumPtr, typeof(Serum_Frame_Struc));
+			NumColors = _serumFrame.nocolors;
+			numTriggers = _serumFrame.ntriggers;
+			_dimensions32 = new Dimensions((int)_serumFrame.width32, 32);
+			_dimensions64 = new Dimensions((int)_serumFrame.width64, 64);
+			NumTriggersAvailable = _serumFrame.ntriggers;
 			IsLoaded = true;
-			if (formatversion == (byte)Serum_Version.SERUM_V1) {
+			if (_serumFrame.SerumVersion == (uint)Serum_Version.SERUM_V1) {
 				_version = Serum_Version.SERUM_V1;
-				if (_width32 > 0) {
-					_dimensions = new Dimensions((int)_width32, 32);
-					_byteFrame = new byte[_width32 * 32];
+				if (_serumFrame.width32 > 0) {
+					_dimensions = new Dimensions((int)_serumFrame.width32, 32);
+					_byteFrame = new byte[_serumFrame.width32 * 32];
 				} else {
-					_dimensions = new Dimensions((int)_width64, 64);
-					_byteFrame = new byte[_width64 * 64];
+					_dimensions = new Dimensions((int)_serumFrame.width64, 64);
+					_byteFrame = new byte[_serumFrame.width64 * 64];
 				}
-				_serumFramev1 = new Serum_Frame
-				{
-					palette = Marshal.AllocHGlobal(64 * 3), // Allocate the palette bytes
-					rotations = Marshal.AllocHGlobal(MAX_COLOR_ROTATIONS_OLD * 3), // Allocate the color rotation bytes
-					triggerID = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint))), // Allocate the PuP trigger ID uint
-					frameID = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint))), // Allocate the frame detection ID uint
-				};
-				if (_width32 > 0) {
-					_serumFramev1.frame = Marshal.AllocHGlobal((int)_width32 * 32); // Allocate the colorized frame bytes
-
-				} else {
-					_serumFramev1.frame = Marshal.AllocHGlobal((int)_width64 * 64); // Allocate the colorized frame bytes
-				}
-			}
-			else {
+			} else {
 				_version = Serum_Version.SERUM_V2;
-				_serumFramev2 = new Serum_Frame_New
-				{
-					triggerID = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint))), // Allocate the PuP trigger ID uint
-					flags = Marshal.AllocHGlobal(1), // Allocate the return flags
-					frameID = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint))), // Allocate the frame detection ID uint
-				};
-				_serumFramev2.frame32 = IntPtr.Zero;
-				_serumFramev2.frame64 = IntPtr.Zero;
-				if (_width32 > 0) {
-					_serumFramev2.frame32 = Marshal.AllocHGlobal((int)_width32 * 32 * Marshal.SizeOf(typeof(ushort)));
-					_serumFramev2.width32 = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
-					_serumFramev2.rotations32 = Marshal.AllocHGlobal(MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION * Marshal.SizeOf(typeof(ushort)));
-					_serumFramev2.rotationsinframe32 = Marshal.AllocHGlobal((int)_width32 * 32 * 2 * Marshal.SizeOf(typeof(ushort)));
-					_rgb565Frame32 = new ushort[_width32 * 32];
+				if (_serumFrame.width32 > 0) {
+					_rgb565Frame32 = new ushort[_serumFrame.width32 * 32];
 				}
-				if (_width64 > 0) {
-					_serumFramev2.frame64 = Marshal.AllocHGlobal((int)_width64 * 64 * Marshal.SizeOf(typeof(ushort)));
-					_serumFramev2.width64 = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
-					_serumFramev2.rotations64 = Marshal.AllocHGlobal(MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION * Marshal.SizeOf(typeof(ushort)));
-					_serumFramev2.rotationsinframe64 = Marshal.AllocHGlobal((int)_width64 * 64 * 2 * Marshal.SizeOf(typeof(ushort)));
-					_rgb565Frame64 = new ushort[_width64 * 64];
+				if (_serumFrame.width64 > 0) {
+					_rgb565Frame64 = new ushort[_serumFrame.width64 * 64];
 				}
 			}
 			Logger.Info($"[serum] Found {numTriggers} triggers to emit.");
 		}
 		public new void Dispose()
 		{
-			if (_version == Serum_Version.SERUM_V1) {
-				Marshal.FreeHGlobal(_serumFramev1.frame);
-				Marshal.FreeHGlobal(_serumFramev1.palette);
-				Marshal.FreeHGlobal(_serumFramev1.rotations);
-				Marshal.FreeHGlobal(_serumFramev1.triggerID);
-				Marshal.FreeHGlobal(_serumFramev1.frameID);
-			} else {
-				Marshal.FreeHGlobal(_serumFramev2.triggerID);
-				Marshal.FreeHGlobal(_serumFramev2.flags);
-				Marshal.FreeHGlobal(_serumFramev2.frameID);
-				if (_serumFramev2.frame32 != IntPtr.Zero) {
-					Marshal.FreeHGlobal(_serumFramev2.frame32);
-					Marshal.FreeHGlobal(_serumFramev2.width32);
-					Marshal.FreeHGlobal(_serumFramev2.rotations32);
-					Marshal.FreeHGlobal(_serumFramev2.rotationsinframe32);
-				}
-				if (_serumFramev2.frame64 != IntPtr.Zero) {
-					Marshal.FreeHGlobal(_serumFramev2.frame64);
-					Marshal.FreeHGlobal(_serumFramev2.width64);
-					Marshal.FreeHGlobal(_serumFramev2.rotations64);
-					Marshal.FreeHGlobal(_serumFramev2.rotationsinframe64);
-				}
-			}
 			base.Dispose();
 			Serum_Dispose();
 			StopRotating();
@@ -287,31 +275,18 @@ namespace LibDmd.Converter.Serum
 				_frameEventsInitialized = true;
 			}
 
-			//Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
-			uint triggerId;
-			Serum_Colorize(frame.Data, ref _serumFramev1, ref _serumFramev2);
-
+			uint isrot = Serum_Colorize(frame.Data);
+			_serumFrame = (Serum_Frame_Struc)Marshal.PtrToStructure(DLLSerumPtr, typeof(Serum_Frame_Struc));
 			if (_version == Serum_Version.SERUM_V1) {
-				Marshal.Copy(_serumFramev1.palette, _bytePalette, 0, _bytePalette.Length);
-				Marshal.Copy(_serumFramev1.frame, _byteFrame, 0, _dimensions.Width * _dimensions.Height);
+				Marshal.Copy(_serumFrame.palette, _bytePalette, 0, _bytePalette.Length);
+				Marshal.Copy(_serumFrame.frame, _byteFrame, 0, _dimensions.Width * _dimensions.Height);
 				// send the colored frame
 				_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions, _byteFrame, ConvertPalette()));
 
-				byte[] trot = new byte[MAX_COLOR_ROTATIONS_OLD * 3];
-				Marshal.Copy(_serumFramev1.rotations, trot, 0, MAX_COLOR_ROTATIONS_OLD * 3);
-				_hasRotations = false;
-				for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_OLD; ti++) {
-					if ((trot[ti * 3] >= 64) || (trot[ti * 3] + trot[ti * 3 + 1] > 64)) {
-						trot[ti * 3] = 255;
-					} else {
-						_hasRotations = true;
-					}
-				}
+				if (isrot != 0xffffffff && isrot > 0) _hasRotations = true;
 
-				// send event trigger
-				triggerId= (uint)Marshal.ReadInt32(_serumFramev1.triggerID);
-				if (triggerId != 0xFFFFFFFF) {
-					_frameEvents.OnNext(_frameEvent.Update((ushort)triggerId));
+				if (_serumFrame.triggerID != 0xFFFFFFFF) {
+					_frameEvents.OnNext(_frameEvent.Update((ushort)_serumFrame.triggerID));
 				}
 
 				if (_hasRotations) {
@@ -320,70 +295,66 @@ namespace LibDmd.Converter.Serum
 					StopRotating();
 				}
 			} else { // Serum_Version.SERUM_V2
-				uint width32 = (uint)Marshal.ReadInt32(_serumFramev2.width32);
-				uint width64 = (uint)Marshal.ReadInt32(_serumFramev2.width64);
 				_hasRotations32 = false;
 				_hasRotations64 = false;
-				if (width32 > 0 && width64 > 0) {
+				if (_serumFrame.width32 > 0 && _serumFrame.width64 > 0) {
 					byte[] tdata = new byte[_rgb565Frame32.Length * 2];
-					Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
+					Marshal.Copy(_serumFrame.frame32, tdata, 0, tdata.Length);
 					Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
 					tdata = new byte[_rgb565Frame64.Length * 2];
-					Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
+					Marshal.Copy(_serumFrame.frame64, tdata, 0, tdata.Length);
 					Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
 					_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64, true));
-					ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
+					ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_V2 * MAX_LENGTH_COLOR_ROTATION];
 					tdata = new byte[trot.Length * 2];
-					Marshal.Copy(_serumFramev2.rotations32, tdata, 0, tdata.Length);
+					Marshal.Copy(_serumFrame.rotations32, tdata, 0, tdata.Length);
 					Buffer.BlockCopy(tdata, 0, trot, 0, tdata.Length);
-					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_NEW; ti++) {
+					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
 						if (trot[ti * 3] > 0) {
 							_hasRotations32 = true;
 						}
 					}
-					Marshal.Copy(_serumFramev2.rotations64, tdata, 0, tdata.Length);
+					Marshal.Copy(_serumFrame.rotations64, tdata, 0, tdata.Length);
 					Buffer.BlockCopy(tdata, 0, trot, 0, tdata.Length);
-					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_NEW; ti++) {
+					for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
 						if (trot[ti * 3] > 0) {
 							_hasRotations64 = true;
 						}
 					}
 				} else {
-					if (width32 > 0) {
+					if (_serumFrame.width32 > 0) {
 						byte[] tdata = new byte[_rgb565Frame32.Length * 2];
-						Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.frame32, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
 						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null, true));
-						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
+						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_V2 * MAX_LENGTH_COLOR_ROTATION];
 						tdata = new byte[trot.Length * 2];
-						Marshal.Copy(_serumFramev2.rotations32, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.rotations32, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, trot, 0, tdata.Length);
-						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_NEW; ti++) {
+						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
 							if (trot[ti * 3] > 0) {
 								_hasRotations32 = true;
 							}
 						}
 					}
-					if (width64 > 0) {
+					if (_serumFrame.width64 > 0) {
 						byte[] tdata = new byte[_rgb565Frame64.Length * 2];
-						Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.frame64, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
 						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64, true));
-						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_NEW * MAX_LENGTH_COLOR_ROTATION];
+						ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_V2 * MAX_LENGTH_COLOR_ROTATION];
 						tdata = new byte[trot.Length * 2];
-						Marshal.Copy(_serumFramev2.rotations64, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.rotations64, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, trot, 0, tdata.Length);
-						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_NEW; ti++) {
+						for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
 							if (trot[ti * 3] > 0) {
 								_hasRotations64 = true;
 							}
 						}
 					}
 				}
-				// send event trigger
-				triggerId = (uint)Marshal.ReadInt32(_serumFramev2.triggerID);
-				if (triggerId != 0xFFFFFFFF) {
-					_frameEvents.OnNext(_frameEvent.Update((ushort)triggerId));
+				if (_serumFrame.triggerID != 0xffffffff) {
+					_frameEvents.OnNext(_frameEvent.Update((ushort)_serumFrame.triggerID));
 				}
 				if (_hasRotations32 || _hasRotations64) {
 					StartRotating();
@@ -419,30 +390,31 @@ namespace LibDmd.Converter.Serum
 
 		private void UpdateRotations()
 		{
-			byte changed = Serum_Rotate(ref _serumFramev1, ref _serumFramev2, IntPtr.Zero, IntPtr.Zero);
-			if (changed > 0)  {
+			uint changed = Serum_Rotate();
+			_serumFrame = (Serum_Frame_Struc)Marshal.PtrToStructure(DLLSerumPtr, typeof(Serum_Frame_Struc));
+			if ((changed & (0x10000 + 0x20000)) > 0) {
 				if (_version == Serum_Version.SERUM_V1) {
-					Marshal.Copy(_serumFramev1.palette, _bytePalette, 0, _bytePalette.Length);
+					Marshal.Copy(_serumFrame.palette, _bytePalette, 0, _bytePalette.Length);
 					_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions, _byteFrame, ConvertPalette()));
 				} else { //Serum_Version.SERUM_V2
-					if ((changed | 3) == 3) {
+					if ((changed & (0x10000 + 0x20000)) == (0x10000 + 0x20000)) {
 						byte[] tdata = new byte[_rgb565Frame32.Length * 2];
-						Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.frame32, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
 						tdata = new byte[_rgb565Frame64.Length * 2];
-						Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
+						Marshal.Copy(_serumFrame.frame64, tdata, 0, tdata.Length);
 						Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
 						_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, _rgb565Frame64, false));
 					} else {
-						if ((changed | 1) > 0) { // there is a rotation in the 32P frame
+						if ((changed | 0x10000) > 0) { // there is a rotation in the 32P frame
 							byte[] tdata = new byte[_rgb565Frame32.Length * 2];
-							Marshal.Copy(_serumFramev2.frame32, tdata, 0, tdata.Length);
+							Marshal.Copy(_serumFrame.frame32, tdata, 0, tdata.Length);
 							Buffer.BlockCopy(tdata, 0, _rgb565Frame32, 0, tdata.Length);
 							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, _rgb565Frame32, null, false));
 						}
-						if ((changed | 2) > 0) { // there is a rotation in the 64P frame
+						if ((changed | 0x20000) > 0) { // there is a rotation in the 64P frame
 							byte[] tdata = new byte[_rgb565Frame64.Length * 2];
-							Marshal.Copy(_serumFramev2.frame64, tdata, 0, tdata.Length);
+							Marshal.Copy(_serumFrame.frame64, tdata, 0, tdata.Length);
 							Buffer.BlockCopy(tdata, 0, _rgb565Frame64, 0, tdata.Length);
 							_coloredSerumFrame.OnNext(new ColoredFrame(_dimensions32, _dimensions64, null, _rgb565Frame64, false));
 						}
@@ -477,20 +449,15 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		/// <param name="altcolorpath">path of the altcolor directory, e.g. "c:/Visual Pinball/VPinMame/altcolor/"</param>
 		/// <param name="romname">rom name</param>
-		/// <param name="numColors">out: number of colours in the manufacturer rom</param>
-		/// <param name="triggernb">out: # of the PuP trigger if this frame triggers one, 0xffff if no trigger</param>
 		/// <param name="flags">out: a combination of FLAG_32P_FRAME_OK and FLAG_64P_FRAME_OK according to what has been filled</param>
-		/// <param name="width32">out: colorized rom width in LEDs for 32P frames</param>
-		/// <param name="width64">out: colorized rom width in LEDs for 64P frames</param>
-		/// <param name="formatVersion">out: UINT8 element from Serum_Version enum</param>
 		/// <returns></returns>
 		#if PLATFORM_X64
 				[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#else
+#else
 				[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#endif
-		// C format: bool Serum_Load(const char* const altcolorpath, const char* const romname, unsigned int* pnocolors, unsigned int* pntriggers, UINT8 flags, UINT* width32, UINT* width64, UINT8*formatVersion)
-		private static extern bool Serum_Load(string altcolorpath, string romname, ref uint numColors, ref uint triggernb,byte flags, ref uint width32, ref uint width64, ref byte formatVersion);
+#endif
+		// C format: Serum_Frame_Struc* Serum_Load(const char* const altcolorpath, const char* const romname,  const UINT8 flags);
+		private static extern IntPtr Serum_Load(string altcolorpath, string romname, byte flags);
 		/// <summary>
 		/// Serum_Dispose: Function to call at table unload time to free allocated memory
 		/// </summary>
@@ -515,31 +482,25 @@ namespace LibDmd.Converter.Serum
 		/// Colorize a frame
 		/// </summary>
 		/// <param name="frame">the inbound frame with [0-3]/[0-15] indices</param>
-		/// <param name="pframev1">the Serum_Frame structure if a v1 Serum (empty if this is a v2 Serum)</param>
-		/// <param name="pframev2">the Serum_Frame_New structure if a v2 Serum (empty if this is a v1 Serum)</param>
 		/// <returns></returns>
 		#if PLATFORM_X64
 				[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#else
+#else
 				[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#endif
-		// C format: bool Serum_Colorize(UINT8* frame, Serum_Frame* poldframe, Serum_Frame_New* pnewframe);
-		private static extern bool Serum_Colorize(byte[] frame, ref Serum_Frame pframev1, ref Serum_Frame_New pframev2);
+#endif
+		// C format: int Serum_Colorize(UINT8* frame)
+		private static extern uint Serum_Colorize(byte[] frame);
 		/// <summary>
 		/// Apply the rotations
 		/// </summary>
-		/// <param name="pframev1">the Serum_Frame structure if a v1 Serum (empty if this is a v2 Serum)</param>
-		/// <param name="pframev2">the Serum_Frame_New structure if a v2 Serum (empty if this is a v1 Serum)</param>
-		/// <param name="modelements32">can be null, if defined, return the pixels that have changed</param>
-		/// <param name="modelements64">can be null, if defined, return the pixels that have changed</param>
 		/// <returns></returns>
 		#if PLATFORM_X64
 				[DllImport("serum64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#else
+#else
 				[DllImport("serum.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		#endif
-		// C format: UINT8 Serum_Rotate(Serum_Frame* poldframe, Serum_Frame_New* pnewframe, UINT8* modelements32, UINT8* modelements64);
-		private static extern byte Serum_Rotate(ref Serum_Frame pframev1, ref Serum_Frame_New pframev2, IntPtr modelements32, IntPtr modelements64);
+#endif
+		// C format: int Serum_Rotate(void)
+		private static extern uint Serum_Rotate();
 		#endregion
 	}
 }
