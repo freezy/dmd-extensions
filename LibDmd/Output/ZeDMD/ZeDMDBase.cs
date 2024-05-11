@@ -74,7 +74,9 @@ namespace LibDmd.Output.ZeDMD
 
 		public void Dispose()
 		{
-			ClearDisplay();
+			if (_pZeDMD != IntPtr.Zero) {
+				ZeDMD_Close(_pZeDMD);
+			}
 		}
 
 		public void SetPalette(Color[] colors)
