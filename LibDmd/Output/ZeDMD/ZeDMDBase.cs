@@ -74,8 +74,11 @@ namespace LibDmd.Output.ZeDMD
 
 		public void Dispose()
 		{
-			if (_pZeDMD != IntPtr.Zero) {
-				ZeDMD_Close(_pZeDMD);
+			if (IsAvailable == true) {
+				if (_pZeDMD != IntPtr.Zero) {
+					ZeDMD_Close(_pZeDMD);
+				}
+				IsAvailable = false;
 			}
 		}
 
