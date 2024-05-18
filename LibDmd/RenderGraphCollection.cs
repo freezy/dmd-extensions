@@ -133,7 +133,9 @@ namespace LibDmd
 
 		public void AddDestination(IDestination dest)
 		{
-			_graphs.ForEach(graph => graph.Destinations.Add(dest));
+			foreach (var graph in _graphs) {
+				graph.AddDestination(dest);
+			}
 		}
 	}
 }
