@@ -12,12 +12,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		/// <summary>
 		/// Line padding percentage
 		/// </summary>
-		public float LinePad { get; set; } = 0.2f;
+		public float LinePad { get; set; } = 20f;
 
 		/// <summary>
 		/// Outer padding percentage
 		/// </summary>
-		public float OuterPad { get; set; } = 0.2f;
+		public float OuterPad { get; set; } = 20f;
 
 		/// <summary>
 		/// Segment weight
