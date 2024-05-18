@@ -627,7 +627,7 @@ namespace LibDmd
 					throw;
 				}
 			}
-			_activeRenderer = new RenderDisposable(_activeSources);
+			_activeRenderer = new RenderDisposable(_refs, _activeSources);
 			return _activeRenderer;
 		}
 		
@@ -1438,20 +1438,28 @@ namespace LibDmd
 	/// </remarks>
 	internal class RenderDisposable : IDisposable
 	{
+		private readonly UndisposedReferences _refs;
 		private readonly CompositeDisposable _activeSources;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public RenderDisposable(CompositeDisposable activeSources)
+		public RenderDisposable(UndisposedReferences refs, CompositeDisposable activeSources)
 		{
+			_refs = refs;
 			_activeSources = activeSources;
+			_refs.Add(activeSources);
 		}
 
 		public void Dispose()
 		{
+			var numDisposed = 0;
 			foreach (var source in _activeSources) {
-				source.Dispose();
+				numDisposed += _refs.Dispose(source) ? 1 : 0;
 			}
-			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
+
+			if (numDisposed > 0) {
+				Logger.Info("Source for {0} renderer(s) stopped.", numDisposed);
+			}
+
 			_activeSources.Clear();
 		}
 	}
@@ -1472,14 +1480,24 @@ namespace LibDmd
 			}
 		}
 
-		public void Dispose(IDisposable dest)
+		public void Add(CompositeDisposable activeSources)
 		{
 			lock (_refs) {
-				if (!_refs.Contains(dest)) {
-					return;
+				foreach (var src in activeSources) {
+					_refs.Add(src);
 				}
-				dest.Dispose();
-				_refs.Remove(dest);
+			}
+		}
+
+		public bool Dispose(IDisposable disposable)
+		{
+			lock (_refs) {
+				if (!_refs.Contains(disposable)) {
+					return false;
+				}
+				disposable.Dispose();
+				_refs.Remove(disposable);
+				return true;
 			}
 		}
 	}
