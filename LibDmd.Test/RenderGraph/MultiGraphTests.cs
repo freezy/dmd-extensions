@@ -37,13 +37,14 @@ namespace LibDmd.Test
 			var renderers = new List<IDestination> { dest };
 			var gc = new RenderGraphCollection();
 			var converter = new ConverterGray2(_convert);
-			gc.Add(new RenderGraph(true) {
+			var refs = new UndisposedReferences();
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "2-bit Test Graph",
 				Source = source2,
 				Destinations = renderers,
 				Converter = converter
 			});
-			gc.Add(new RenderGraph(true) {
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "4-bit Test Graph",
 				Source = source4,
 				Destinations = renderers,
@@ -70,13 +71,14 @@ namespace LibDmd.Test
 			var renderers = new List<IDestination> { dest };
 			var gc = new RenderGraphCollection();
 			var converter = new ConverterGray2Multi(_convert);
-			gc.Add(new RenderGraph(true) {
+			var refs = new UndisposedReferences();
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "2-bit Test Graph",
 				Source = source2,
 				Destinations = renderers,
 				Converter = converter
 			});
-			gc.Add(new RenderGraph(true) {
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "4-bit Test Graph",
 				Source = source4,
 				Destinations = renderers,
@@ -105,13 +107,14 @@ namespace LibDmd.Test
 			var renderers = new List<IDestination> { dest1, dest2 };
 			var gc = new RenderGraphCollection();
 			var converter = new ConverterGray2Multi(_convert);
-			gc.Add(new RenderGraph(true) {
+			var refs = new UndisposedReferences();
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "2-bit Test Graph",
 				Source = source2,
 				Destinations = renderers,
 				Converter = converter
 			});
-			gc.Add(new RenderGraph(true) {
+			gc.Add(new RenderGraph(refs, true) {
 				Name = "4-bit Test Graph",
 				Source = source4,
 				Destinations = renderers,

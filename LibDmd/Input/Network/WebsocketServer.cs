@@ -61,31 +61,33 @@ namespace LibDmd.Input.Network
 		public void SetupGraphs(RenderGraphCollection graphs, List<IDestination> renderers)
 		{
 			_graphs = graphs;
-			graphs.Add(new RenderGraph
+			var refs = new UndisposedReferences();
+
+			graphs.Add(new RenderGraph(refs)
 			{
 				Name = "2-bit Websocket Graph",
 				Source = _gray2Source,
 				Destinations = renderers,
 			});
-			graphs.Add(new RenderGraph
+			graphs.Add(new RenderGraph(refs)
 			{
 				Name = "4-bit Websocket Graph",
 				Source = _gray4Source,
 				Destinations = renderers,
 			});
-			graphs.Add(new RenderGraph
+			graphs.Add(new RenderGraph(refs)
 			{
 				Name = "Colored 2-bit Websocket Graph",
 				Source = _coloredGray2Source,
 				Destinations = renderers,
 			});
-			graphs.Add(new RenderGraph
+			graphs.Add(new RenderGraph(refs)
 			{
 				Name = "Colored 4-bit Websocket Graph",
 				Source = _coloredGray4Source,
 				Destinations = renderers,
 			});
-			graphs.Add(new RenderGraph
+			graphs.Add(new RenderGraph(refs)
 			{
 				Name = "24-bit RGB Websocket Graph",
 				Source = _rgb24Source,

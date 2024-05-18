@@ -29,6 +29,7 @@ namespace DmdExt.Test
 		{
 			// define renderers
 			var renderers = GetRenderers(_config, reportingTags);
+			var refs = new UndisposedReferences();
 
 			// retrieve image
 			var bmp = new BitmapImage();
@@ -44,7 +45,7 @@ namespace DmdExt.Test
 						0, 0, 0, 5120, 8704, 16640, 0, 0, 0, 0, 2112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 					});
-				_graph = new RenderGraph
+				_graph = new RenderGraph(refs)
 				{
 					Source = new PassthroughAlphaNumericSource(alphaNumericFrame),
 					Destinations = renderers,
@@ -81,7 +82,7 @@ namespace DmdExt.Test
 						source = new ImageSourceBitmap(bmp);
 						break;
 				}
-				_graph = new RenderGraph
+				_graph = new RenderGraph(refs)
 				{
 					Source = source,
 					Destinations = renderers,

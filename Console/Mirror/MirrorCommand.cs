@@ -43,7 +43,7 @@ namespace DmdExt.Mirror
 			if (_renderers == null) {
 				_renderers = GetRenderers(_config, reportingTags);
 			}
-			var graph = new RenderGraph {
+			var graph = new RenderGraph(new UndisposedReferences()) {
 				Name = name,
 				Source = source,
 				Destinations = _renderers,
