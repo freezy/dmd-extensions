@@ -643,12 +643,13 @@ namespace LibDmd.DmdDevice
 			}
 
 			Logger.Info("Transformation options: Resize={0}, HFlip={1}, VFlip={2}", _config.Global.Resize, _config.Global.FlipHorizontally, _config.Global.FlipVertically);
+			var refs = new UndisposedReferences();
 
 			// connect colorizer
 			if (_colorizer != null) {
 
 				if (_colorizer.Supports(FrameFormat.Gray2)) {
-					_graphs.Add(new RenderGraph {
+					_graphs.Add(new RenderGraph(refs) {
 						Name = "2-bit Colorization Graph",
 						Source = _passthroughGray2Source,
 						Destinations = renderers,
@@ -662,7 +663,7 @@ namespace LibDmd.DmdDevice
 				}
 
 				if (_colorizer.Supports(FrameFormat.Gray4)) {
-					_graphs.Add(new RenderGraph {
+					_graphs.Add(new RenderGraph(refs) {
 						Name = "4-bit Colorization Graph",
 						Source = _passthroughGray4Source,
 						Destinations = renderers,
@@ -676,7 +677,7 @@ namespace LibDmd.DmdDevice
 				}
 
 				if (_colorizer.Supports(FrameFormat.AlphaNumeric)) {
-					_graphs.Add(new RenderGraph {
+					_graphs.Add(new RenderGraph(refs) {
 						Name = "Alphanumeric Colorization Graph",
 						Source = _passthroughAlphaNumericSource,
 						Destinations = renderers,
@@ -693,7 +694,7 @@ namespace LibDmd.DmdDevice
 				if (!(_colorizer is ColorizationPlugin) && _config.Global.Plugins.Any(p => p.PassthroughEnabled)) {
 					var colorizerPlugin = _colorizationLoader.LoadPlugin(_config.Global.Plugins, _colorize, _gameName, _color, _palette) as IDestination;
 					if (colorizerPlugin != null) {
-						_graphs.Add(new RenderGraph {
+						_graphs.Add(new RenderGraph(refs) {
 							Name = "2-bit Plugin Passthrough Graph",
 							Source = _passthroughGray2Source,
 							Destinations = new List<IDestination> { colorizerPlugin },
@@ -703,7 +704,7 @@ namespace LibDmd.DmdDevice
 							ScalerMode = _config.Global.ScalerMode
 						});
 
-						_graphs.Add(new RenderGraph {
+						_graphs.Add(new RenderGraph(refs) {
 							Name = "4-bit Plugin Passthrough Graph",
 							Source = _passthroughGray4Source,
 							Destinations = new List<IDestination> { colorizerPlugin },
@@ -713,7 +714,7 @@ namespace LibDmd.DmdDevice
 							ScalerMode = _config.Global.ScalerMode
 						});
 
-						_graphs.Add(new RenderGraph {
+						_graphs.Add(new RenderGraph(refs) {
 							Name = "Alphanumeric Plugin Passthrough Graph",
 							Source = _passthroughAlphaNumericSource,
 							Destinations = new List<IDestination> { colorizerPlugin },
@@ -739,7 +740,7 @@ namespace LibDmd.DmdDevice
 					}
 				}
 
-				_graphs.Add(new RenderGraph {
+				_graphs.Add(new RenderGraph(refs) {
 					Name = "2-bit Passthrough Graph",
 					Source = _passthroughGray2Source,
 					Destinations = renderers,
@@ -749,7 +750,7 @@ namespace LibDmd.DmdDevice
 					ScalerMode = _config.Global.ScalerMode
 				});
 
-				_graphs.Add(new RenderGraph {
+				_graphs.Add(new RenderGraph(refs) {
 					Name = "4-bit Passthrough Graph",
 					Source = _passthroughGray4Source,
 					Destinations = renderers,
@@ -761,7 +762,7 @@ namespace LibDmd.DmdDevice
 			}
 
 			// rgb24 graph
-			_graphs.Add(new RenderGraph {
+			_graphs.Add(new RenderGraph(refs) {
 				Name = "RGB24 Passthrough Graph",
 				Source = _passthroughRgb24Source,
 				Destinations = renderers,
@@ -772,7 +773,7 @@ namespace LibDmd.DmdDevice
 			});
 
 			// alphanumeric graph
-			_graphs.Add(new RenderGraph {
+			_graphs.Add(new RenderGraph(refs) {
 				Name = "Alphanumeric Passthrough Graph",
 				Source = _passthroughAlphaNumericSource,
 				Destinations = renderers,

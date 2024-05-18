@@ -20,7 +20,7 @@ namespace LibDmd.Test
 		{
 			Profiler.Reset();
 
-			_graph = new RenderGraph(true);
+			_graph = new RenderGraph(new UndisposedReferences(), true);
 			_source = new SourceGray2();
 		}
 

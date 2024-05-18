@@ -62,7 +62,7 @@ namespace DmdExt.Play
 			var renderers = GetRenderers(_config, reportingTags);
 			if (source is ISource frameSource) {
 				// chain them up
-				graphs.Add(new RenderGraph {
+				graphs.Add(new RenderGraph(new UndisposedReferences()) {
 					Source = frameSource,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,

@@ -61,7 +61,13 @@ namespace LibDmd
 		/// Examples of destinations is a virtual DMD that renders frames
 		/// on the computer screen, PinDMD and PIN2DMD integrations.
 		/// </summary>
-		public List<IDestination> Destinations { get; set; }
+		public List<IDestination> Destinations {
+			get => _destinations;
+			set {
+				_destinations = value;
+				_refs.Add(_destinations);
+			} }
+		private List<IDestination> _destinations;
 
 		/// <summary>
 		/// If set, convert the frame format.
@@ -121,13 +127,15 @@ namespace LibDmd
 		
 		private readonly CompositeDisposable _activeSources = new CompositeDisposable();
 		private readonly bool _runOnMainThread;
-		
+		private readonly UndisposedReferences _refs;
+
 		#endregion
 
 		#region Lifecycle
 
-		public RenderGraph(bool runOnMainThread = false)
+		public RenderGraph(UndisposedReferences refs, bool runOnMainThread = false)
 		{
+			_refs = refs;
 			_runOnMainThread = runOnMainThread;
 			ClearColor();
 		}
@@ -236,7 +244,7 @@ namespace LibDmd
 
 			if (Destinations != null) {
 				foreach (var dest in Destinations) {
-					dest.Dispose();
+					_refs.Dispose(dest);
 				}
 			}
 			foreach (var source in _activeSources) {
@@ -1297,7 +1305,7 @@ namespace LibDmd
 						Logger.Error("Unsupported format " + Path.GetExtension(IdlePlay.ToLower()) + ". Supported formats: png, jpg, gif.");
 						return;
 				}
-				_idleRenderGraph = new RenderGraph {
+				_idleRenderGraph = new RenderGraph(new UndisposedReferences()) {
 					Name = "Idle Renderer",
 					Source = source,
 					Destinations = Destinations,
@@ -1426,7 +1434,7 @@ namespace LibDmd
 	/// </summary>
 	/// <remarks>
 	/// Note that destinations are still active, i.e. not yet disposed and can
-	/// be re-subscribed if necssary.
+	/// be re-subscribed if necessary.
 	/// </remarks>
 	internal class RenderDisposable : IDisposable
 	{
@@ -1445,6 +1453,34 @@ namespace LibDmd
 			}
 			Logger.Info("Source for {0} renderer(s) stopped.", _activeSources.Count);
 			_activeSources.Clear();
+		}
+	}
+
+	/// <summary>
+	/// Keeps references of undisposed objects, so we don't dispose them multiple times.
+	/// </summary>
+	public class UndisposedReferences
+	{
+		private readonly HashSet<IDisposable> _refs = new HashSet<IDisposable>();
+
+		public void Add(List<IDestination> destinations)
+		{
+			lock (_refs) {
+				foreach (var dest in destinations) {
+					_refs.Add(dest);
+				}
+			}
+		}
+
+		public void Dispose(IDisposable dest)
+		{
+			lock (_refs) {
+				if (!_refs.Contains(dest)) {
+					return;
+				}
+				dest.Dispose();
+				_refs.Remove(dest);
+			}
 		}
 	}
 
