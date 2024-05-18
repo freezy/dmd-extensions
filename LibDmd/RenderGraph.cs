@@ -69,6 +69,12 @@ namespace LibDmd
 			} }
 		private List<IDestination> _destinations;
 
+		public void AddDestination(IDestination dest)
+		{
+			_destinations.Add(dest);
+			_refs.Add(dest);
+		}
+
 		/// <summary>
 		/// If set, convert the frame format.
 		/// </summary>
@@ -1477,6 +1483,13 @@ namespace LibDmd
 				foreach (var dest in destinations) {
 					_refs.Add(dest);
 				}
+			}
+		}
+
+		public void Add(IDestination dest)
+		{
+			lock (_refs) {
+				_refs.Add(dest);
 			}
 		}
 
