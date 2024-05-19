@@ -251,8 +251,15 @@ namespace LibDmd.DmdDevice
 		/// <param name="colors">New palette</param>
 		public void SetPalette(Color[] colors)
 		{
-			Logger.Info("Setting palette to {0} colors...", colors.Length);
 			_palette = colors;
+
+			if (!_colorize || _colorizer != null || _palette == null) {
+				return;
+			}
+
+			// if colorization enabled and palette is set, apply palette.
+			Logger.Info($"Applying palette of ${colors.Length} to render graphs.");
+			_graphs.SetPalette(_palette, -1);
 		}
 
 		/// <summary>
@@ -785,18 +792,10 @@ namespace LibDmd.DmdDevice
 
 			// if colorization enabled and frame-by-frame colorization disabled, just set the palette.
 			if (_colorize && _colorizer == null && _palette != null) {
-
 				// if colorization enabled and palette is set, apply palette.
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-
-				// todo retrieve palette from .pal
-				// if (_vniColoring != null) {
-				// 	_graphs.SetPalette(_palette, _vniColoring.DefaultPaletteIndex);
-
-				if (_palette != null) {
-					_graphs.SetPalette(_palette, -1);
-				}
+				_graphs.SetPalette(_palette, -1);
 
 			} else {
 				// if colorization disabled, apply default color.
