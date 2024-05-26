@@ -313,36 +313,17 @@ namespace PinMameDevice
 		private static void InternalSetGray4PaletteDevice(DeviceInstance device, IntPtr palette)
 		{
 			Logger.Info("[dll] Set_16_Colors_Palette({0},...)", device.Id);
-			var size = Marshal.SizeOf(typeof(Rgb24));
 
-			// for some shit reason, using a loop fails compilation.
-			device.DmdDevice.SetPalette(new[] {
-				ConvertColor(GetColorAtPosition(palette, 0, size)),
-				ConvertColor(GetColorAtPosition(palette, 1, size)),
-				ConvertColor(GetColorAtPosition(palette, 2, size)),
-				ConvertColor(GetColorAtPosition(palette, 3, size)),
-				ConvertColor(GetColorAtPosition(palette, 4, size)),
-				ConvertColor(GetColorAtPosition(palette, 5, size)),
-				ConvertColor(GetColorAtPosition(palette, 6, size)),
-				ConvertColor(GetColorAtPosition(palette, 7, size)),
-				ConvertColor(GetColorAtPosition(palette, 8, size)),
-				ConvertColor(GetColorAtPosition(palette, 9, size)),
-				ConvertColor(GetColorAtPosition(palette, 10, size)),
-				ConvertColor(GetColorAtPosition(palette, 11, size)),
-				ConvertColor(GetColorAtPosition(palette, 12, size)),
-				ConvertColor(GetColorAtPosition(palette, 13, size)),
-				ConvertColor(GetColorAtPosition(palette, 14, size)),
-				ConvertColor(GetColorAtPosition(palette, 15, size)),
-			});
+			byte[] p = new byte[48];
+			Color[] colors = new Color[16];
+			Marshal.Copy(palette, p, 0, 48);
+			for (var i = 0; i < 16; i++) {
+				colors[i] = Color.FromRgb(p[i*3], p[i*3+1], p[i*3+2]);
+			}
+			device.DmdDevice.SetPalette(colors);
 		}
 
 		#endregion
-
-		private static Rgb24 GetColorAtPosition(IntPtr data, int pos, int size)
-		{
-			var p = new IntPtr(data.ToInt64() + pos*size);
-			return (Rgb24) Marshal.PtrToStructure(p, typeof (Rgb24));
-		}
 
 		private static Color ConvertColor(Rgb24 color)
 		{
