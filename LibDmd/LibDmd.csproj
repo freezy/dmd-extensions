@@ -414,7 +414,9 @@
     <Compile Include="Common\PathUtil.cs" />
     <Compile Include="Converter\AbstractConverter.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
+    <Compile Include="Converter\Serum\ISerumApi.cs" />
     <Compile Include="Converter\Serum\SerumFrame.cs" />
+    <Compile Include="Converter\Serum\SerumApiV1.cs" />
     <Compile Include="Converter\Serum\SerumVersion.cs" />
     <Compile Include="Converter\Vni\VniColorizer.cs" />
     <Compile Include="Converter\Plugin\ColorizationPlugin.cs" />
