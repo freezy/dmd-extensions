@@ -35,6 +35,7 @@ namespace LibDmd.Converter.Serum
 
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
+		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
 		/// <summary>
 		/// Number of colours in the manufacturer's ROM
@@ -95,13 +96,12 @@ namespace LibDmd.Converter.Serum
 			}
 
 			_serumFramePtr = Serum_Load(altcolorPath, romName, flags);
-			ReadSerumFrame();
-
 			if (_serumFramePtr == null) {
 				IsLoaded = false;
 				return;
 			}
 
+			ReadSerumFrame();
 			NumColors = _serumFrame.nocolors;
 			NumTriggersAvailable = _serumFrame.ntriggers;
 			_serumVersion = (SerumVersion)_serumFrame.SerumVersion;
@@ -175,8 +175,8 @@ namespace LibDmd.Converter.Serum
 				case SerumVersion.Version1: {
 
 					// copy data from unmanaged to managed
-					Marshal.Copy(_serumFrame.palette, _bytePalette, 0, _bytePalette.Length);
-					Marshal.Copy(_serumFrame.frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
+					Marshal.Copy(_serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
+					Marshal.Copy(_serumFrame.Frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
 					BytesToColors(_bytePalette, _colorPalette);
 
 					var hasRotations = rotations != 0xffffffff && rotations > 0;
@@ -242,7 +242,7 @@ namespace LibDmd.Converter.Serum
 			if ((changed & (0x10000 + 0x20000)) > 0) {
 				switch (_serumVersion) {
 					case SerumVersion.Version1: {
-						Marshal.Copy(_serumFrame.palette, _bytePalette, 0, _bytePalette.Length);
+						Marshal.Copy(_serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
 						BytesToColors(_bytePalette, _rotationPalette);
 						return true;
 					}
