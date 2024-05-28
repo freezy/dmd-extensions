@@ -32,33 +32,12 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		public const int FlagRequest64PFrames = 2;
 
-
 		public bool IsLoaded;
 		private uint NumTriggersAvailable { get; }
 		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
-		/// <summary>
-		/// Number of colours in the manufacturer's ROM
-		/// </summary>
-		public readonly uint NumColors;
-
-		// cROM components
-		/// <summary>
-		/// Frame dimensions in LEDs
-		/// </summary>
-		private readonly Dimensions _dimensions;
-
-		/// <summary>
-		/// A reusable array of rotation colors when computing rotations.
-		/// </summary>
-		private readonly Color[] _rotationPalette = new Color[64];
-
 		private IDisposable _rotator;
 
-		private readonly Color[] _colorPalette = new Color[64];
-		private readonly byte[] _bytePalette = new byte[64 * 3];
-		private readonly DmdFrame _frame;
-		private readonly FrameEvent _frameEvent = new FrameEvent();
 		private bool _frameEventsInitialized;
 
 		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
@@ -81,7 +60,14 @@ namespace LibDmd.Converter.Serum
 		/// </summary>
 		private readonly SerumVersion _serumVersion;
 
+		/// <summary>
+		/// A reusable array of rotation colors when computing rotations.
+		/// </summary>
+		private readonly Color[] _rotationPalette = new Color[64];
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		private readonly ISerumApi _api;
 
 		public Serum(string altcolorPath, string romName, byte flags) : base (false)
 		{
@@ -102,24 +88,17 @@ namespace LibDmd.Converter.Serum
 			}
 
 			ReadSerumFrame();
-			NumColors = _serumFrame.nocolors;
+
 			NumTriggersAvailable = _serumFrame.ntriggers;
 			_serumVersion = (SerumVersion)_serumFrame.SerumVersion;
 
 			switch (_serumVersion) {
 
 				case SerumVersion.Version1: {
-					_serumVersion = SerumVersion.Version1;
-					if (_serumFrame.width32 > 0) {
-						_dimensions = new Dimensions((int)_serumFrame.width32, 32);
-					} else {
-						_dimensions = new Dimensions((int)_serumFrame.width64, 64);
-					}
-
+					_api = new SerumApiV1(_coloredGray6AnimationFrames, _frameEvents, ref _serumFrame);
 					break;
 				}
 				case SerumVersion.Version2: {
-					_serumVersion = SerumVersion.Version2;
 					break;
 				}
 				default:
@@ -127,7 +106,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			IsLoaded = true;
-			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
+
 			Logger.Info($"[serum] Found {NumTriggersAvailable} triggers to emit.");
 		}
 		
@@ -144,7 +123,7 @@ namespace LibDmd.Converter.Serum
 		public override bool Supports(FrameFormat format)
 		{
 			switch (format) {
-				case FrameFormat.Gray4 when NumColors == 16:
+				case FrameFormat.Gray4 when _api.NumColors == 16:
 				case FrameFormat.Gray2:
 					return true;
 				default:
@@ -159,48 +138,14 @@ namespace LibDmd.Converter.Serum
 				_frameEventsInitialized = true;
 			}
 
-			// Buffer.BlockCopy(frame.Data, 0, _frame.Data, 0, frame.Data.Length);
-			// Serum_Colorize(_frame.Data, _dimensions.Width, _dimensions.Height, _bytePalette, _rotations, ref triggerId);
-
-
-			// 0 => no rotation
-			// 1 - 0xFFFF => time in ms to next rotation
-			// 0xFFFFFFFF => frame wasn't colorized
-			// 0xFFFFFFFE => same frame as before
 			var rotations = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
+			var hasRotations = _api.Convert(ref _serumFrame, rotations);
 
-			switch (_serumVersion) {
-
-				case SerumVersion.Version1: {
-
-					// copy data from unmanaged to managed
-					Marshal.Copy(_serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
-					Marshal.Copy(_serumFrame.Frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
-					BytesToColors(_bytePalette, _colorPalette);
-
-					var hasRotations = rotations != 0xffffffff && rotations > 0;
-
-					// send event trigger
-					if (_serumFrame.triggerID != 0xffffffff) {
-						_frameEvents.OnNext(_frameEvent.Update((ushort)_serumFrame.triggerID));
-					}
-
-					// send the colored frame
-					_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _frame.Data, _colorPalette));
-					if (hasRotations) {
-						StartRotating();
-					} else {
-						StopRotating();
-					}
-
-					break;
-				}
-				case SerumVersion.Version2: {
-					break;
-				}
-				default:
-					throw new NotSupportedException($"Unsupported Serum version: {_serumFrame.SerumVersion}");
+			if (hasRotations) {
+				StartRotating();
+			} else {
+				StopRotating();
 			}
 		}
 
@@ -238,23 +183,13 @@ namespace LibDmd.Converter.Serum
 		private bool UpdateRotations()
 		{
 			var changed = Serum_Rotate();
-			ReadSerumFrame();
-			if ((changed & (0x10000 + 0x20000)) > 0) {
-				switch (_serumVersion) {
-					case SerumVersion.Version1: {
-						Marshal.Copy(_serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
-						BytesToColors(_bytePalette, _rotationPalette);
-						return true;
-					}
-					case SerumVersion.Version2: {
-						break;
-					}
-					default:
-						throw new NotSupportedException($"Unsupported Serum version: {_serumFrame.SerumVersion}");
-				}
+			if ((changed & (0x10000 + 0x20000)) <= 0) {
+				return false;
 			}
 
-			return false;
+			ReadSerumFrame();
+			_api.UpdateRotations(ref _serumFrame, _rotationPalette);
+			return true;
 		}
 
 		public static string GetVersion()
@@ -264,16 +199,6 @@ namespace LibDmd.Converter.Serum
 			return str;
 		}
 
-		private static void BytesToColors(IReadOnlyList<byte> bytes, Color[] palette)
-		{
-			for (int ti = 0; ti < 64; ti++) {
-				palette[ti].A = 255;
-				palette[ti].R = bytes[ti * 3];
-				palette[ti].G = bytes[ti * 3 + 1];
-				palette[ti].B = bytes[ti * 3 + 2];
-			}
-		}
-		
 		#region Serum API
 
 		/// <summary>
