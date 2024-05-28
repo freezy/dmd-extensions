@@ -1,13 +1,29 @@
 ﻿using System;
+// ReSharper disable UnassignedField.Global
 
 namespace LibDmd.Converter.Serum
 {
 	public struct SerumFrame
 	{
 		// data for v1 Serum format
-		public IntPtr frame; // return the colorized frame
-		public IntPtr palette; // and its palette
-		public IntPtr rotations; // and its color rotations
+		/// <summary>
+		/// The colorized frame data.
+		/// </summary>
+		/// <remarks>Serum V1 only.</remarks>
+		public IntPtr Frame;
+
+		/// <summary>
+		/// Palette of the colorized frame.
+		/// </summary>
+		/// <remarks>Serum V1 only.</remarks>
+		public IntPtr Palette; // and its palette
+
+		/// <summary>
+		/// Rotations of the colorized frame.
+		/// </summary>
+		/// <remarks>Serum V1 only.</remarks>
+		public IntPtr Rotations; // and its color rotations
+
 		// data for v2 Serum format
 		// the frame (frame32 or frame64) corresponding to the resolution of the ROM must ALWAYS be defined
 		// if a frame pointer is defined, its width, rotations and rotationsinframe pointers must be defined

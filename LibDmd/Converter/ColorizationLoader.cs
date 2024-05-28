@@ -32,11 +32,10 @@ namespace LibDmd.Converter.Vni
 					var serum = new Serum.Serum(_altcolorPath, gameName, Serum.Serum.FlagRequest32PFrames);
 					if (serum.IsLoaded) {
 						Logger.Info($"[serum] Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
-						Logger.Info($"[serum] Loading colorization at {serumPath}...");
+						Logger.Info($"[serum] Loaded {serum.ColorizationVersion} colorization at {serumPath}.");
 						Analytics.Instance.SetColorizer("Serum");
 						return serum;
 					}
-
 					Logger.Warn($"[serum] Found Serum coloring file at {serumPath}, but could not load colorizer.");
 
 				} catch (Exception e) {
