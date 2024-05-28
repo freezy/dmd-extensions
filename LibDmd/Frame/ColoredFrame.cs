@@ -18,20 +18,6 @@ namespace LibDmd
 		/// </summary>
 		public Color[] Palette { get; private set; }
 
-		/// <summary>
-		/// Color Rotation descriptions.
-		/// </summary>
-		/// <remarks>
-		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
-		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
-		/// </remarks>
-		public byte[] Rotations { get;  private set; }
-
-		/// <summary>
-		/// If set, colors defined in <see cref="Rotations"/> are rotated.
-		/// </summary>
-		public bool RotateColors;
-
 		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);
 
@@ -41,14 +27,12 @@ namespace LibDmd
 		{
 		}
 
-		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, byte[] rotations = null)
+		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette)
 		{
 			Dimensions = dim;
 			Data = data;
 			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
-			Rotations = rotations;
-			RotateColors = rotations != null && rotations.Length > 0;
 
 			#if DEBUG
 			AssertData();
@@ -61,7 +45,6 @@ namespace LibDmd
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, frame.NumColors);
-			RotateColors = false;
 
 			#if DEBUG
 			AssertData();
@@ -74,7 +57,6 @@ namespace LibDmd
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			Palette = palette;
-			RotateColors = false;
 
 			#if DEBUG
 			AssertData();
@@ -114,8 +96,6 @@ namespace LibDmd
 			Buffer.BlockCopy(frame.Data, 0, Data, 0, frame.Data.Length);
 			BitLength = frame.BitLength;
 			Palette = frame.Palette;
-			Rotations = frame.Rotations;
-			RotateColors = frame.RotateColors;
 
 			#if DEBUG
 			AssertData();
@@ -294,7 +274,6 @@ namespace LibDmd
 			unchecked {
 				var hashCode = Dimensions.GetHashCode();
 				hashCode = (hashCode * 397) ^ BitLength;
-				hashCode = (hashCode * 397) ^ (Rotations != null ? Rotations.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Palette != null ? Palette.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
 				return hashCode;
@@ -322,9 +301,7 @@ namespace LibDmd
 				return true;
 			}
 			return a.Dimensions == b.Dimensions
-			       && a.RotateColors == b.RotateColors
 			       && PaletteEquals(a.Palette, b.Palette)
-			       && FrameUtil.CompareBuffersFast(a.Rotations, b.Rotations)
 			       && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
 
@@ -361,7 +338,7 @@ namespace LibDmd
 
 		#region Overrides
 
-		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette, Rotations);
+		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette);
 
 		public override string ToString()
 		{

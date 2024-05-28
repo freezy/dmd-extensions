@@ -78,7 +78,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
-			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, frame.Rotations);
+			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, null);
 			_lastFrame = (ColoredFrame)frame.Clone();
 		}
 

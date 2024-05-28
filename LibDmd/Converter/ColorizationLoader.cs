@@ -29,12 +29,11 @@ namespace LibDmd.Converter.Vni
 			if (serumFile != null) {
 				var serumPath = serumFile.FullName;
 				try {
-					var serum = new Serum.Serum(_altcolorPath, gameName);
+					var serum = new Serum.Serum(_altcolorPath, gameName, Serum.Serum.FlagRequest32PFrames);
 					if (serum.IsLoaded) {
 						Logger.Info($"[serum] Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
 						Logger.Info($"[serum] Loading colorization at {serumPath}...");
 						Analytics.Instance.SetColorizer("Serum");
-						serum.ScalerMode = scalerMode;
 						return serum;
 					}
 
