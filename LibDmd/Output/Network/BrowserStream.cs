@@ -129,7 +129,7 @@ namespace LibDmd.Output.Network
 			if (frame.Dimensions != _dimensions) {
 				SetDimensions(frame.Dimensions);
 			}
-			_sockets.ForEach(s => s.SendColoredGray6(frame.BitPlanes, frame.Palette, frame.Rotations, frame.RotateColors));
+			_sockets.ForEach(s => s.SendColoredGray6(frame.BitPlanes, frame.Palette));
 		}
 
 		public void RenderRgb24(DmdFrame frame)
@@ -240,12 +240,12 @@ namespace LibDmd.Output.Network
 			Send(_serializer.SerializeColoredGray4(planes, palette));
 		}
 
-		public void SendColoredGray6(byte[][] planes, Color[] palette, byte[] rotations, bool RotateColors)
+		public void SendColoredGray6(byte[][] planes, Color[] palette)
 		{
 			if (planes.Length == 0) {
 				return;
 			}
-			Send(_serializer.SerializeColoredGray6(planes, palette, rotations, RotateColors));
+			Send(_serializer.SerializeColoredGray6(planes, palette));
 		}
 
 		public void SendRgb24(byte[] frame) => Send(_serializer.SerializeRgb24(frame));
