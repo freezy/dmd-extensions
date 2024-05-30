@@ -320,6 +320,7 @@ namespace LibDmd
 					var destColoredGray2 = dest as IColoredGray2Destination;
 					var destColoredGray4 = dest as IColoredGray4Destination;
 					var destColoredGray6 = dest as IColoredGray6Destination;
+					var destRgb565 = dest as IRgb565Destination;
 					var destRgb24 = dest as IRgb24Destination;
 					var destBitmap = dest as IBitmapDestination;
 					var destAlphaNumeric = dest as IAlphaNumericDestination;
@@ -381,6 +382,25 @@ namespace LibDmd
 								Connect(sourceConverterColoredGray4, destBitmap, FrameFormat.ColoredGray4, FrameFormat.Bitmap);
 							} else {
 								Logger.Warn("    -- Destination doesn't support colored 4-bit frames from converter, ignoring converter.");
+							}
+						}
+
+						// if converter emits rgb565 frames..
+						if (Converter is IRgb565Source sourceConverterRgb565 && !Converter.IsConnected(dest, FrameFormat.Rgb565)) {
+							// if destination can render rgb565 frames...
+							if (destRgb565 != null && !Converter.IsConnected(dest, FrameFormat.Rgb565,FrameFormat.Rgb565)) {
+								Connect(sourceConverterRgb565, destRgb565, FrameFormat.Rgb565, FrameFormat.Rgb565);
+
+							// otherwise, convert to rgb24
+							} else if (destRgb24 != null && !Converter.IsConnected(dest, FrameFormat.Rgb565,FrameFormat.Rgb24)) {
+								Logger.Warn("    -- Destination doesn't support RGB565 frames from converter, converting to RGB24 source.");
+								Connect(sourceConverterRgb565, destRgb24, FrameFormat.Rgb565, FrameFormat.Rgb24);
+
+							} else if (destBitmap != null && !Converter.IsConnected(dest, FrameFormat.Rgb565,FrameFormat.Bitmap)) {
+								Logger.Warn("    -- Destination doesn't support RGB565 frames from converter, converting to Bitmap source.");
+								Connect(sourceConverterRgb565, destBitmap, FrameFormat.Rgb565, FrameFormat.Bitmap);
+							} else {
+								Logger.Warn("    -- Destination doesn't support RGB565 frames from converter, ignoring converter.");
 							}
 						}
 
@@ -661,6 +681,7 @@ namespace LibDmd
 			var destMultiSize = dest as IMultiSizeDestination;
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
+			var destRgb565 = dest as IRgb565Destination;
 			var destRgb24 = dest as IRgb24Destination;
 			var destBitmap = dest as IBitmapDestination;
 			var destColoredGray2 = dest as IColoredGray2Destination;
@@ -813,6 +834,75 @@ namespace LibDmd
 						// gray4 -> colored gray6
 						case FrameFormat.ColoredGray6:
 							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
+
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+				// source is rgb565:
+				case FrameFormat.Rgb565:
+					var sourceRgb565 = source as IRgb565Source;
+					switch (to) {
+						// rgb565 -> gray2
+						case FrameFormat.Gray2:
+							AssertCompatibility(source, sourceRgb565, dest, destGray2, from, to);
+							Subscribe(
+								sourceRgb565.GetRgb565Frames(),
+								frame => frame
+									.ConvertToGray2()
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray2.RenderGray2);
+							break;
+
+						// rgb565 -> gray4
+						case FrameFormat.Gray4:
+							AssertCompatibility(source, sourceRgb565, dest, destGray4, from, to);
+							Subscribe(
+								sourceRgb565.GetRgb565Frames(),
+								frame => frame
+									.ConvertToGray4()
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray4.RenderGray4);
+							break;
+
+						// rgb565 -> rgb24
+						case FrameFormat.Rgb24:
+							AssertCompatibility(source, sourceRgb565, dest, destRgb24, from, to);
+							Subscribe(
+								sourceRgb565.GetRgb565Frames(),
+								frame => frame
+									.ConvertRgb565ToRgb24()
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformRgb24(this, destFixedSize, destMultiSize),
+								destRgb24.RenderRgb24);
+							break;
+
+						// rgb565 -> bitmap
+						case FrameFormat.Bitmap:
+							AssertCompatibility(source, sourceRgb565, dest, destBitmap, from, to);
+							Subscribe(
+								sourceRgb565.GetRgb565Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToBmp()
+									.Transform(this, destFixedSize, destMultiSize),
+								destBitmap.RenderBitmap);
+							break;
+
+						// rgb565 -> colored gray2
+						case FrameFormat.ColoredGray2:
+							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray2 only has 4 colors per frame).");
+
+						// rgb565 -> colored gray4
+						case FrameFormat.ColoredGray4:
+							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray4 only has 16 colors per frame).");
+
+						// rgb565 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray6 (colored gray6 only has 64 colors per frame).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -1404,7 +1494,12 @@ namespace LibDmd
 		Gray4,
 
 		/// <summary>
-		/// An RGB24 frame
+		/// A 16-bit RGB frame
+		/// </summary>
+		Rgb565,
+
+		/// <summary>
+		/// A 24-bit RGB frame
 		/// </summary>
 		Rgb24,
 

@@ -415,6 +415,7 @@
     <Compile Include="Converter\AbstractConverter.cs" />
     <Compile Include="Converter\ColorizationLoader.cs" />
     <Compile Include="Converter\Serum\ISerumApi.cs" />
+    <Compile Include="Converter\Serum\SerumApiV2.cs" />
     <Compile Include="Converter\Serum\SerumFrame.cs" />
     <Compile Include="Converter\Serum\SerumApiV1.cs" />
     <Compile Include="Converter\Serum\SerumVersion.cs" />
@@ -439,6 +440,7 @@
     <Compile Include="Input\IDmdColorSource.cs" />
     <Compile Include="Input\IFrameEventSource.cs" />
     <Compile Include="Input\IGameNameSource.cs" />
+    <Compile Include="Input\IRgb565Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray6Source.cs" />
@@ -455,6 +457,7 @@
     <Compile Include="Output\IColorRotationDestination.cs" />
     <Compile Include="Output\IFrameEventDestination.cs" />
     <Compile Include="Output\IMultiSizeDestination.cs" />
+    <Compile Include="Output\IRgb565Destination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
     <Compile Include="Output\Network\WebsocketSerializer.cs" />
     <Compile Include="Output\Pin2Dmd\Pin2DmdBase.cs" />
