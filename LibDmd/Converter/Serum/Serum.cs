@@ -5,19 +5,21 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
+using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;
 using NLog;
 
 namespace LibDmd.Converter.Serum
 {
-	public class Serum : AbstractConverter, IColoredGray6Source, IColorRotationSource, IFrameEventSource
+	public class Serum : AbstractConverter, IColoredGray6Source, IRgb565Source, IColorRotationSource, IFrameEventSource
 	{
 		public override string Name => "Serum";
 
 		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
 
-		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6AnimationFrames;
+		public IObservable<ColoredFrame> GetColoredGray6Frames() => _coloredGray6Frames;
+		public IObservable<DmdFrame> GetRgb565Frames() => _rgb565Frames;
 		public IObservable<Color[]> GetPaletteChanges() => _paletteChanges;
 		public IObservable<FrameEventInit> GetFrameEventInit() => _frameEventInit;
 		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
@@ -40,7 +42,8 @@ namespace LibDmd.Converter.Serum
 
 		private bool _frameEventsInitialized;
 
-		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames = new Subject<ColoredFrame>();
+		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
+		private readonly Subject<DmdFrame> _rgb565Frames = new Subject<DmdFrame>();
 		private readonly Subject<Color[]> _paletteChanges = new Subject<Color[]>();
 		private readonly Subject<FrameEventInit> _frameEventInit = new Subject<FrameEventInit>();
 		private readonly Subject<FrameEvent> _frameEvents = new Subject<FrameEvent>();
@@ -69,7 +72,7 @@ namespace LibDmd.Converter.Serum
 
 		private readonly ISerumApi _api;
 
-		public Serum(string altcolorPath, string romName, byte flags) : base (false)
+		public Serum(string altcolorPath, string romName, ScalerMode scalerMode) : base (false)
 		{
 #if PLATFORM_X64
 			const string dllName = "serum64.dll";
@@ -81,24 +84,23 @@ namespace LibDmd.Converter.Serum
 				Logger.Info($"[serum] Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
 
-			_serumFramePtr = Serum_Load(altcolorPath, romName, flags);
+			_serumFramePtr = Serum_Load(altcolorPath, romName, FlagRequest32PFrames | FlagRequest64PFrames);
 			if (_serumFramePtr == null) {
 				IsLoaded = false;
 				return;
 			}
 
 			ReadSerumFrame();
-
 			NumTriggersAvailable = _serumFrame.ntriggers;
 			_serumVersion = (SerumVersion)_serumFrame.SerumVersion;
 
 			switch (_serumVersion) {
-
 				case SerumVersion.Version1: {
-					_api = new SerumApiV1(_coloredGray6AnimationFrames, _frameEvents, ref _serumFrame);
+					_api = new SerumApiV1(_coloredGray6Frames, _frameEvents, ref _serumFrame);
 					break;
 				}
 				case SerumVersion.Version2: {
+					_api = new SerumApiV2(_rgb565Frames, scalerMode, ref _serumFrame);
 					break;
 				}
 				default:
@@ -106,7 +108,6 @@ namespace LibDmd.Converter.Serum
 			}
 
 			IsLoaded = true;
-
 			Logger.Info($"[serum] Found {NumTriggersAvailable} triggers to emit.");
 		}
 		
@@ -123,7 +124,7 @@ namespace LibDmd.Converter.Serum
 		public override bool Supports(FrameFormat format)
 		{
 			switch (format) {
-				case FrameFormat.Gray4 when _api.NumColors == 16:
+				case FrameFormat.Gray4 when _api.NumColors == 16 || _api is SerumApiV2:
 				case FrameFormat.Gray2:
 					return true;
 				default:

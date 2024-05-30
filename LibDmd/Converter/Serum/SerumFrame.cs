@@ -27,13 +27,13 @@ namespace LibDmd.Converter.Serum
 		// data for v2 Serum format
 		// the frame (frame32 or frame64) corresponding to the resolution of the ROM must ALWAYS be defined
 		// if a frame pointer is defined, its width, rotations and rotationsinframe pointers must be defined
-		public IntPtr frame32;
-		public uint width32; // 0 is returned if the 32p colorized frame is not available for this frame
+		public IntPtr Frame32Data;
+		public uint Width32; // 0 is returned if the 32p colorized frame is not available for this frame
 		public IntPtr rotations32;
 		public IntPtr rotationsinframe32; // [width32*32*2] precalculated array to tell if a color is in a color rotations of the frame ([X*Y*0]=0xffff if not part of a rotation)
 		public IntPtr modifiedelements32; // (optional) 32P pixels modified during the last rotation
-		public IntPtr frame64;
-		public uint width64; // 0 is returned if the 64p colorized frame is not available for this frame
+		public IntPtr Frame64Data;
+		public uint Width64; // 0 is returned if the 64p colorized frame is not available for this frame
 		public IntPtr rotations64;
 		public IntPtr rotationsinframe64;  // [width64*64*2] precalculated array to tell if a color is in a color rotations of the frame ([X*Y*0]=0xffff if not part of a rotation)
 		public IntPtr modifiedelements64; // (optional) 64P pixels modified during the last rotation
@@ -52,5 +52,8 @@ namespace LibDmd.Converter.Serum
 		public uint triggerID; // return 0xffff if no trigger for that frame, the ID of the trigger if one is set for that frame
 		public uint frameID; // for CDMD ingame tester
 		public ushort rotationtimer;
+
+		public bool Has32PFrame => Width32 > 0;
+		public bool Has64PFrame => Width64 > 0;
 	}
 }
