@@ -293,6 +293,25 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
+		{
+			var rgb888Data = new byte[dim.Surface * 3];
+			for (var x = 0; x < dim.Width; x++) {
+				for (var y = 0; y < dim.Height; y++) {
+					var i = (y * dim.Width + x) * 2;
+					var rgb565 = (ushort)((rgb565Data[i + 1] << 8) | rgb565Data[i]);
+					var r = (byte)((rgb565 & 0xf800) >> 8);
+					var g = (byte)((rgb565 & 0x07e0) >> 3);
+					var b = (byte)((rgb565 & 0x001f) << 3);
+					var j = (y * dim.Width + x) * 3;
+					rgb888Data[j] = r;
+					rgb888Data[j + 1] = g;
+					rgb888Data[j + 2] = b;
+				}
+			}
+			return rgb888Data;
+		}
+
 		/// <summary>
 		/// Mixes two colors in a give proportion
 		/// </summary>

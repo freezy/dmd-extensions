@@ -45,13 +45,14 @@ namespace LibDmd.Frame
 		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
-		private static ObjectPool Pool = new ObjectPool();
+		private static readonly ObjectPool Pool = new ObjectPool();
 
 		public FrameFormat Format {
 			get {
 				switch (BitLength) {
 					case 2: return FrameFormat.Gray2;
 					case 4: return FrameFormat.Gray4;
+					case 16: return FrameFormat.Rgb565;
 					case 24: return FrameFormat.Rgb24;
 					default: throw new InvalidOperationException($"Invalid bit length {BitLength}");
 				}
@@ -317,6 +318,27 @@ namespace LibDmd.Frame
 			}
 		}
 
+		public DmdFrame ConvertRgb565ToRgb24()
+		{
+			using (Profiler.Start("DmdFrame.ConvertRgb565ToRgb24")) {
+
+#if DEBUG
+				if (BitLength != 16) {
+					throw new ArgumentException("Cannot convert non-RGB565 frame to RGB24.");
+				}
+#endif
+
+				Data = ColorUtil.ConvertRgb565ToRgb24(Dimensions, Data);
+				BitLength = 24;
+
+				#if DEBUG
+				AssertData();
+				#endif
+
+				return this;
+			}
+		}
+
 		#endregion
 
 		#region Transformations
@@ -561,12 +583,7 @@ namespace LibDmd.Frame
 
 		private class ObjectPool
 		{
-			private readonly ConcurrentBag<DmdFrame> _objects;
-
-			public ObjectPool()
-			{
-				_objects = new ConcurrentBag<DmdFrame>();
-			}
+			private readonly ConcurrentBag<DmdFrame> _objects = new ConcurrentBag<DmdFrame>();
 
 			public DmdFrame Get() => _objects.TryTake(out DmdFrame item) ? item : new DmdFrame();
 

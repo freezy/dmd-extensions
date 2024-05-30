@@ -14,7 +14,7 @@ namespace LibDmd.Converter.Serum
 		private readonly DmdFrame _frame;
 		private readonly Dimensions _dimensions;
 
-		private readonly Subject<ColoredFrame> _coloredGray6AnimationFrames;
+		private readonly Subject<ColoredFrame> _coloredGray6Frames;
 		private readonly Subject<FrameEvent> _frameEvents;
 
 		private readonly byte[] _bytePalette = new byte[64 * 3];
@@ -22,13 +22,13 @@ namespace LibDmd.Converter.Serum
 
 		private readonly FrameEvent _frameEvent = new FrameEvent();
 
-		public SerumApiV1(Subject<ColoredFrame> coloredGray6AnimationFrames, Subject<FrameEvent> frameEvents, ref SerumFrame serumFrame)
+		public SerumApiV1(Subject<ColoredFrame> coloredGray6Frames, Subject<FrameEvent> frameEvents, ref SerumFrame serumFrame)
 		{
-			_coloredGray6AnimationFrames = coloredGray6AnimationFrames;
+			_coloredGray6Frames = coloredGray6Frames;
 			_frameEvents = frameEvents;
-			_dimensions = serumFrame.width32 > 0
-				? new Dimensions((int)serumFrame.width32, 32)
-				: new Dimensions((int)serumFrame.width64, 64);
+			_dimensions = serumFrame.Width32 > 0
+				? new Dimensions((int)serumFrame.Width32, 32)
+				: new Dimensions((int)serumFrame.Width64, 64);
 
 			NumColors = serumFrame.nocolors;
 			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
@@ -53,7 +53,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			// send the colored frame
-			_coloredGray6AnimationFrames.OnNext(new ColoredFrame(_dimensions, _frame.Data, _colorPalette));
+			_coloredGray6Frames.OnNext(new ColoredFrame(_dimensions, _frame.Data, _colorPalette));
 			return hasRotations;
 		}
 
