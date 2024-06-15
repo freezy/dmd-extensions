@@ -41,15 +41,15 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="bitLength">Bit length, 2, 4 or 24.</param>
 		/// <param name="bmp">Source bitmap</param>
-		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Frame with value for every pixel between 0 and 15</returns>
-		public static byte[] ConvertTo(int bitLength, BitmapSource bmp, double lum = 1)
+		public static byte[] ConvertTo(int bitLength, BitmapSource bmp)
 		{
 			switch (bitLength) {
-				case 2: return ConvertToGray2(bmp, 0, lum, out _);
-				case 4: return ConvertToGray4(bmp, lum);
-				case 24: return ConvertToRgb24(bmp, lum: lum);
-				default: throw new ArgumentException("Bit length must be either 2, 4 or 24.");
+				case 2: return ConvertToGray2(bmp, 0, 1, out _);
+				case 4: return ConvertToGray4(bmp);
+				case 16: return ConvertToRgb565(bmp);
+				case 24: return ConvertToRgb24(bmp);
+				default: throw new ArgumentException("Bit length must be either 2, 4, 16 or 24.");
 			}
 		}
 		
@@ -173,9 +173,8 @@ namespace LibDmd.Common
 		/// Converts a bitmap to a 4-bit grayscale array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
-		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>Array with value for every pixel between 0 and 15</returns>
-		public static byte[] ConvertToGray4(BitmapSource bmp, double lum = 1)
+		public static byte[] ConvertToGray4(BitmapSource bmp)
 		{
 			byte[] frame = null;
 			Dispatch(bmp, () => {
@@ -193,7 +192,7 @@ namespace LibDmd.Common
 						// convert to HSL
 						ColorUtil.RgbToHsl(bytes[2], bytes[1], bytes[0], out _, out _, out var luminosity);
 
-						frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d * lum);
+						frame[y * bmp.PixelWidth + x] = (byte)Math.Round(luminosity * 15d);
 					}
 				}
 			});
@@ -235,10 +234,8 @@ namespace LibDmd.Common
 		/// Converts a bitmap to an RGB24 array.
 		/// </summary>
 		/// <param name="bmp">Source bitmap</param>
-		/// <param name="offset">Offset in destination array</param>
-		/// <param name="lum">Multiply luminosity</param>
 		/// <returns>New frame buffer. Will be filled with RGB values for each pixel between 0 and 255.</returns>
-		public static byte[] ConvertToRgb24(BitmapSource bmp, int offset = 0, double lum = 1)
+		public static byte[] ConvertToRgb24(BitmapSource bmp)
 		{
 			using (Profiler.Start("ImageUtil.ConvertToRgb24")) {
 				byte[] frame = null;
@@ -248,23 +245,52 @@ namespace LibDmd.Common
 					var bytes = new byte[bmp.PixelHeight * stride];
 					bmp.CopyPixels(bytes, stride, 0);
 
-					if (Math.Abs(lum - 1) > 0.01) {
-						for (var i = 0; i < bytes.Length; i += 3) {
-							ColorUtil.RgbToHsl(bytes[i + 2], bytes[i + 1], bytes[i], out var hue, out var saturation, out var luminosity);
-							ColorUtil.HslToRgb(hue, saturation, luminosity * lum, out var r, out var g, out var b);
-							frame[i] = r;
-							frame[i + 1] = g;
-							frame[i + 2] = b;
+					unsafe {
+						fixed (byte* pBuffer = frame, pBytes = bytes) {
+							byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
+							for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
+								*(pB) = *(pByte + 2);
+								*(pB + 1) = *(pByte + 1);
+								*(pB + 2) = *(pByte);
+							}
 						}
-					} else {
-						unsafe {
-							fixed (byte* pBuffer = frame, pBytes = bytes) {
-								byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
-								for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
-									*(pB) = *(pByte + 2);
-									*(pB + 1) = *(pByte + 1);
-									*(pB + 2) = *(pByte);
-								}
+					}
+				});
+				return frame;
+			}
+		}
+
+		/// <summary>
+		/// Converts a bitmap to an RGB565 array.
+		/// </summary>
+		/// <param name="bmp">Source bitmap</param>
+		/// <returns>New frame buffer. Will be filled with RGB values.</returns>
+		public static byte[] ConvertToRgb565(BitmapSource bmp)
+		{
+			using (Profiler.Start("ImageUtil.ConvertToRgb565")) {
+				byte[] frame = null;
+				Dispatch(bmp, () => {
+					frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 2];
+					var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
+					var bytes = new byte[bmp.PixelHeight * stride];
+					bmp.CopyPixels(bytes, stride, 0);
+
+					unsafe {
+						fixed (byte* pBuffer = frame, pBytes = bytes) {
+							byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
+							for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
+								byte b = *(pByte);
+								byte g = *(pByte + 1);
+								byte r = *(pByte + 2);
+
+								ushort r5 = (ushort)(r >> 3);
+								ushort g6 = (ushort)(g >> 2);
+								ushort b5 = (ushort)(b >> 3);
+
+								ushort rgb565 = (ushort)((r5 << 11) | (g6 << 5) | b5);
+
+								*(pB) = (byte)(rgb565 >> 8);
+								*(pB + 1) = (byte)(rgb565 & 0xFF);
 							}
 						}
 					}
@@ -482,6 +508,49 @@ namespace LibDmd.Common
 			}
 		}
 
+		private static unsafe BitmapSource ConvertFromRgb565(Dimensions dim, FrameData frameData)
+		{
+			var bmp = new WriteableBitmap(dim.Width, dim.Height, 96, 96, PixelFormats.Bgr32, null);
+			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
+			var frameBuffer = new byte[bufferSize];
+
+			fixed (byte* pRgb565Data = frameData.ArraySrc, pBgra32Data = frameBuffer)
+			{
+				byte* pRgb565 = pRgb565Data;
+				byte* pBgra32 = pBgra32Data;
+
+				for (int i = 0; i < dim.Width * dim.Height; i++)
+				{
+					// Extract the RGB565 pixel
+					ushort rgb565 = (ushort)((pRgb565[0] << 8) | pRgb565[1]);
+					pRgb565 += 2;
+
+					// Convert RGB565 to RGB888
+					byte r = (byte)((rgb565 >> 11) & 0x1F);
+					byte g = (byte)((rgb565 >> 5) & 0x3F);
+					byte b = (byte)(rgb565 & 0x1F);
+
+					// Scale RGB888 to 8 bits per channel
+					r = (byte)((r << 3) | (r >> 2));
+					g = (byte)((g << 2) | (g >> 4));
+					b = (byte)((b << 3) | (b >> 2));
+
+					// Set the Bgra32 pixel
+					pBgra32[0] = b;        // Blue
+					pBgra32[1] = g;        // Green
+					pBgra32[2] = r;        // Red
+					pBgra32[3] = 255;      // Alpha
+					pBgra32 += 4;
+				}
+			}
+
+			bmp.Lock();
+			bmp.WritePixels(new Int32Rect(0, 0, dim.Width, dim.Height), frameBuffer, bmp.BackBufferStride, 0);
+			bmp.Unlock();
+			bmp.Freeze();
+			return bmp;
+		}
+
 		/// <summary>
 		/// Converts an 2-bit grayscale array to a bitmap.
 		/// </summary>
@@ -558,6 +627,19 @@ namespace LibDmd.Common
 		{
 			lock (FrameDataObjectPool) {
 				return ConvertFromRgb24(dim, GetFrameDataFromPool(dim).With(frame));
+			}
+		}
+
+		/// <summary>
+		/// Converts an RGB565 array to a bitmap.
+		/// </summary>
+		/// <param name="dim">Dimensions of the image.</param>
+		/// <param name="frame">RGB565 values</param>
+		/// <returns></returns>
+		public static BitmapSource ConvertFromRgb565(Dimensions dim, byte[] frame)
+		{
+			lock (FrameDataObjectPool) {
+				return ConvertFromRgb565(dim, GetFrameDataFromPool(dim).With(frame));
 			}
 		}
 
@@ -693,19 +775,16 @@ namespace LibDmd.Common
 		/// <param name="width">stride of data</param>
 		/// <param name="height"></param>
 		/// <param name="frame">data</param>
-		/// <returns>color of coord</returns>
-		public static byte[] GetRgbPixel(int x, int y, int width, int height, byte[] frame)
+		/// <param name="rgb"></param>
+		public static void GetRgbPixel(int x, int y, int width, int height, byte[] frame, byte[] rgb)
 		{
-			var rgb = new byte[3];
 			// Clamp edges so it doesn't wrap.
 			x = Clamp(x, 0, width - 1);
 			y = Clamp(y, 0, height - 1);
 
-			rgb[0] = frame[x * 3 + (width * 3 * y)];
-			rgb[1] = frame[x * 3 + 1 + (width * 3 * y)];
-			rgb[2] = frame[x * 3 + 2 + (width * 3 * y)];
-
-			return rgb;
+			for (var i = 0; i < rgb.Length; i++) {
+				rgb[i] = frame[x * rgb.Length + i + (width * rgb.Length * y)];
+			}
 		}
 
 		/// <summary>
@@ -716,11 +795,12 @@ namespace LibDmd.Common
 		/// <param name="color">color to set</param>
 		/// <param name="width">stride of data</param>
 		/// <param name="frame">data</param>
-		public static void SetRgbPixel(int x, int y, byte[] color, int width, byte[] frame)
+		/// <param name="bytesPerPixel">Number of bytes per pixel</param>
+		public static void SetRgbPixel(int x, int y, byte[] color, int width, byte[] frame, int bytesPerPixel)
 		{
-			frame[x * 3 + (width * 3 * y)] = color[0];
-			frame[x * 3 + 1 + (width * 3 * y)] = color[1];
-			frame[x * 3 + 2 + (width * 3 * y)] = color[2];
+			for (var i = 0; i < bytesPerPixel; i++) {
+				frame[x * bytesPerPixel + i + (width * bytesPerPixel * y)] = color[i];
+			}
 		}
 
 		/// <summary>

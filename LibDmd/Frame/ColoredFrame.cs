@@ -130,11 +130,17 @@ namespace LibDmd
 		/// Converts this colored frame to a RGB24 frame.
 		/// </summary>
 		/// <returns>Converted RGB24 frame</returns>
-		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb24(Dimensions, Data, Palette), 24);
+		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 3), 24);
+
+		/// <summary>
+		/// Converts this colored frame to a RGB565 frame.
+		/// </summary>
+		/// <returns>Converted RGB565 frame</returns>
+		public DmdFrame ConvertToRgb565() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 2), 16);
 
 		private BitmapSource ConvertToBitmapWithColors()
 		{
-			var rgb24 = ColorUtil.ColorizeRgb24(Dimensions, Data, Palette);
+			var rgb24 = ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 3);
 			return ImageUtil.ConvertFromRgb24(Dimensions, rgb24);
 		}
 
@@ -241,8 +247,8 @@ namespace LibDmd
 
 			// resize
 			var data = scalerMode == ScalerMode.Doubler
-				? FrameUtil.ScaleDouble(Dimensions, Data)
-				: FrameUtil.Scale2X(Dimensions, Data);
+				? FrameUtil.ScaleDouble(Dimensions, Data, 1)
+				: FrameUtil.Scale2X(Dimensions, Data, 1);
 
 			Update(Dimensions * 2, data);
 			return this;
