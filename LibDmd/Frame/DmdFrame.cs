@@ -61,6 +61,7 @@ namespace LibDmd.Frame
 
 		private bool IsGray => BitLength <= 8;
 		private bool IsRgb24 => BitLength == 24;
+		private bool IsRgb565 => BitLength == 16;
 
 		public int BytesPerPixel => BitLength <= 8 ? 1 : BitLength / 8;
 
@@ -255,6 +256,8 @@ namespace LibDmd.Frame
 						throw new ArgumentException("Frame is already gray4.");
 					case 6:
 						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf), 4);
+					case 16:
+						return Update(ImageUtil.ConvertRgb565ToGray(Dimensions, Data, 16), 4);
 					case 24:
 						return Update(ImageUtil.ConvertToGray(Dimensions, Data, 16), 4);
 					default:
@@ -280,11 +283,13 @@ namespace LibDmd.Frame
 			using (Profiler.Start("DmdFrame.ConvertToBmp")) {
 
 				#if DEBUG
-				if (!IsRgb24) {
-					throw new ArgumentException("Cannot convert from gray to bitmap. Convert to RGB24 first.");
+				if (!IsRgb24 && !IsRgb565) {
+					throw new ArgumentException("Cannot convert from gray to bitmap. Convert to RGB24 or RGB565 first.");
 				}
 				#endif
-				return new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data));
+				return IsRgb24
+					? new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data))
+					: new BmpFrame(ImageUtil.ConvertFromRgb565(Dimensions, Data))
 			}
 		}
 
@@ -295,7 +300,26 @@ namespace LibDmd.Frame
 		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
 		/// <returns>This updated instance.</returns>
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
-		public DmdFrame ConvertToRgb24(Color[] palette)
+		public DmdFrame ConvertToRgb24(Color[] palette) => ConvertToRgb(palette, 3);
+
+		/// <summary>
+		/// Converts a grayscale frame to RGB565.
+		/// </summary>
+		///
+		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
+		/// <returns>This updated instance.</returns>
+		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
+		public DmdFrame ConvertToRgb565(Color[] palette) => ConvertToRgb(palette, 2);
+
+		/// <summary>
+		/// Converts a grayscale frame to RGB24.
+		/// </summary>
+		///
+		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
+		/// <param name="bytesPerPixel">Number of RGB bytes per pixel. 2 or 3.</param>
+		/// <returns>This updated instance.</returns>
+		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
+		private DmdFrame ConvertToRgb(Color[] palette, int bytesPerPixel)
 		{
 			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
 
@@ -304,12 +328,12 @@ namespace LibDmd.Frame
 					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
 				}
 
-				if (BitLength != 3 && palette.Length.GetBitLength() != BitLength) {
+				if (BitLength != bytesPerPixel && palette.Length.GetBitLength() != BitLength) {
 					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
 				}
 #endif
 
-				Data = ColorUtil.ColorizeRgb24(Dimensions, Data, palette);
+				Data = ColorUtil.ColorizeRgb(Dimensions, Data, palette, bytesPerPixel);
 				BitLength = 24;
 
 				#if DEBUG
@@ -415,6 +439,29 @@ namespace LibDmd.Frame
 			}
 		}
 
+		public DmdFrame TransformRgb565(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+		{
+			using (Profiler.Start("DmdFrame.TransformRgb24")) {
+
+				// do anything at all?
+				if (fixedDest == null && !renderGraph.FlipHorizontally && !renderGraph.FlipVertically) {
+					return this;
+				}
+
+				// just flip?
+				if (fixedDest == null || fixedDest.FixedSize == Dimensions) {
+					Data = TransformationUtil.Flip(Dimensions, 2, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+					return this;
+				}
+
+				// resize
+				var bmp = ImageUtil.ConvertFromRgb565(Dimensions, Data);
+				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
+				var transformedFrame = ImageUtil.ConvertToRgb565(transformedBmp);
+				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+			}
+		}
+
 		/// <summary>
 		/// Up-scales the frame with the given algorithm, if the destination allows it.
 		/// </summary>
@@ -459,14 +506,18 @@ namespace LibDmd.Frame
 						return this;
 
 					case ScalerMode.Doubler:
-						return IsRgb24
-							? Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, Data))
-							: Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data));
+						switch (BitLength) {
+							case 24: return Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data, 3));
+							case 16: return Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data, 2));
+							default: return Update(Dimensions * 2, FrameUtil.ScaleDouble(Dimensions, Data, 1));
+						}
 
 					case ScalerMode.Scale2x:
-						return IsRgb24
-							? Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, Data))
-							: Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data));
+						switch (BitLength) {
+							case 24: return Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data, 3));
+							case 16: return Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data, 2));
+							default: return Update(Dimensions * 2, FrameUtil.Scale2X(Dimensions, Data, 1));
+						}
 
 					default:
 						throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);

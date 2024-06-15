@@ -729,6 +729,19 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							throw new IncompatibleGraphException("Cannot convert from gray2 to gray4 (every gray4 destination should be able to do gray2 as well).");
 
+						// gray2 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceGray2, dest, destRgb565, from, to);
+							Subscribe(
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb565(_gray2Palette ?? _gray2Colors)
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565
+							);
+							break;
+
 						// gray2 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
@@ -797,6 +810,19 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
+							break;
+
+						// gray4 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceGray4, dest, destRgb565, from, to);
+							Subscribe(
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb565(_gray4Palette ?? _gray4Colors)
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565
+							);
 							break;
 
 						// gray4 -> rgb24
@@ -868,6 +894,18 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
+						// rgb565 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceRgb565, dest, destRgb565, from, to);
+							Subscribe(
+								sourceRgb565.GetRgb565Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565
+							);
+							break;
+
 						// rgb565 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceRgb565, dest, destRgb24, from, to);
@@ -894,15 +932,15 @@ namespace LibDmd
 
 						// rgb565 -> colored gray2
 						case FrameFormat.ColoredGray2:
-							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray2 only has 4 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from rgb565 to colored gray2 (colored gray2 only has 4 colors per frame).");
 
 						// rgb565 -> colored gray4
 						case FrameFormat.ColoredGray4:
-							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray2 (colored gray4 only has 16 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from rgb565 to colored gray2 (colored gray4 only has 16 colors per frame).");
 
 						// rgb565 -> colored gray6
 						case FrameFormat.ColoredGray6:
-							throw new IncompatibleGraphException("Cannot convert from rgb24 to colored gray6 (colored gray6 only has 64 colors per frame).");
+							throw new IncompatibleGraphException("Cannot convert from rgb565 to colored gray6 (colored gray6 only has 64 colors per frame).");
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
@@ -935,6 +973,19 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
+							break;
+
+						// rgb24 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceRgb24, dest, destRgb565, from, to);
+							Subscribe(
+								sourceRgb24.GetRgb24Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertRgb565ToRgb24()
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565
+							);
 							break;
 
 						// rgb24 -> rgb24
@@ -1005,6 +1056,19 @@ namespace LibDmd
 								destGray4.RenderGray4);
 							break;
 
+
+						// bitmap -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceBitmap, dest, destRgb565, from, to);
+							Subscribe(
+								sourceBitmap.GetBitmapFrames(),
+								frame => frame
+									.ConvertToRgb565()
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565);
+							break;
+
 						// bitmap -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceBitmap, dest, destRgb24, from, to);
@@ -1065,6 +1129,18 @@ namespace LibDmd
 						// colored gray2 -> gray4
 						case FrameFormat.Gray4:
 							throw new IncompatibleGraphException("Cannot convert from colored gray2 to gray4 (it's not like we can extract luminosity from the colors...)");
+
+						// colored gray2 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceColoredGray2, dest, destRgb565, from, to);
+							Subscribe(
+								sourceColoredGray2.GetColoredGray2Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb565()
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565);
+							break;
 
 						// colored gray2 -> rgb24
 						case FrameFormat.Rgb24:
@@ -1141,6 +1217,18 @@ namespace LibDmd
 									.ConvertToGray()
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray4.RenderGray4);
+							break;
+
+						// colored gray4 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceColoredGray4, dest, destRgb565, from, to);
+							Subscribe(
+								sourceColoredGray4.GetColoredGray4Frames(),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToRgb565()
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565);
 							break;
 
 						// colored gray4 -> rgb24
