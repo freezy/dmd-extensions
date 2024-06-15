@@ -146,6 +146,29 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static byte[] ConvertRgb565ToGray(Dimensions dim, byte[] rgb565Data, int numColors)
+		{
+			using (Profiler.Start("ImageUtil.ConvertRgb565ToGray")) {
+
+				var frame = new byte[dim.Surface];
+				var pos = 0;
+				for (var x = 0; x < dim.Width; x++) {
+					for (var y = 0; y < dim.Height; y++) {
+						var i = (y * dim.Width + x) * 2;
+						var rgb565 = (ushort)((rgb565Data[i + 1] << 8) | rgb565Data[i]);
+						var r = (byte)((rgb565 & 0xf800) >> 8);
+						var g = (byte)((rgb565 & 0x07e0) >> 3);
+						var b = (byte)((rgb565 & 0x001f) << 3);
+
+						// convert to HSL
+						ColorUtil.RgbToHsl(r, g, b, out _, out _, out var luminosity);
+						frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
+					}
+				}
+				return frame;
+			}
+		}
+
 		/// <summary>
 		/// Converts a bitmap to a 4-bit grayscale array.
 		/// </summary>
