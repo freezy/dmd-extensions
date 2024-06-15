@@ -356,92 +356,22 @@ namespace LibDmd.Common
 		public static byte[][] Scale2X(Dimensions dim, byte[][] srcPlane)
 		{
 			var joinData = Join(dim, srcPlane);
-			var frameData = Scale2X(dim, joinData);
+			var frameData = Scale2X(dim, joinData, 1);
 			return Split(dim * 2, srcPlane.Length, frameData);
-		}
-
-		/// <summary>
-		/// Double the pixels coming from the frame data.
-		/// </summary>
-		/// <param name="dim">Size of the original data</param>
-		/// <param name="frame">Frame data to be resized</param>
-		/// <returns>Scaled frame data</returns>
-		public static byte[] ScaleDouble(Dimensions dim, byte[] frame)
-		{
-			using (Profiler.Start("FrameUtil.ScaleDouble")) {
-				byte[] scaledData = new byte[dim.Surface * 4];
-				var outputWidth = dim.Width * 2;
-				var outputHeight = dim.Height * 2;
-				const int scale = 2;
-
-				int targetIdx = 0;
-				for (var i = 0; i < outputHeight; ++i) {
-					var iUnscaled = i / scale;
-					for (var j = 0; j < outputWidth; ++j) {
-						var jUnscaled = j / scale;
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width + jUnscaled];
-					}
-				}
-
-				return scaledData;
-			}
-		}
-
-		/// <summary>
-		/// Implementation of Scale2 for frame data.
-		/// </summary>
-		/// <param name="dim">Original dimensions</param>
-		/// <param name="data">Original frame data</param>
-		/// <returns>Scaled frame data</returns>
-		public static byte[] Scale2X(Dimensions dim, byte[] data)
-		{
-			using (Profiler.Start("FrameUtil.Scale2X")) {
-
-				byte[] scaledData = new byte[dim.Surface * 4];
-				var outputWidth = dim.Width * 2;
-
-				for (var y = 0; y < dim.Height; y++)
-				{
-					for (var x = 0; x < dim.Width; x++)
-					{
-						var colorB = ImageUtil.GetPixel(x, y - 1, dim.Width, dim.Height, data);
-						var colorH = ImageUtil.GetPixel(x, y + 1, dim.Width, dim.Height, data);
-						var colorD = ImageUtil.GetPixel(x - 1, y, dim.Width, dim.Height, data);
-						var colorF = ImageUtil.GetPixel(x + 1, y, dim.Width, dim.Height, data);
-
-						var colorE = ImageUtil.GetPixel(x, y, dim.Width, dim.Height, data);
-
-						if ((colorB != colorH) && (colorD != colorF))
-						{
-							ImageUtil.SetPixel(2 * x, 2 * y, colorD == colorB ? colorD : colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x + 1, 2 * y, colorB == colorF ? colorF : colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x, 2 * y + 1, colorD == colorH ? colorD : colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorH == colorF ? colorF : colorE, outputWidth, scaledData);
-						}
-						else
-						{
-							ImageUtil.SetPixel(2 * x, 2 * y, colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x + 1, 2 * y, colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x, 2 * y + 1, colorE, outputWidth, scaledData);
-							ImageUtil.SetPixel(2 * x + 1, 2 * y + 1, colorE, outputWidth, scaledData);
-						}
-					}
-				}
-				return scaledData;
-			}
 		}
 
 		/// <summary>
 		/// Doubles the pixels coming from the frame data.
 		/// </summary>
 		/// <param name="dim">Size of the original data</param>
-		/// <param name="frame">RGB24 frame data to be resized</param>
+		/// <param name="frame">frame data to be resized</param>
+		/// <param name="byteSize">Number of bytes per pixel</param>
 		/// <returns></returns>
-		public static byte[] ScaleDoubleRgb(Dimensions dim, byte[] frame)
+		public static byte[] ScaleDouble(Dimensions dim, byte[] frame, int byteSize)
 		{
-			using (Profiler.Start("FrameUtil.ScaleDoubleRgb")) {
+			using (Profiler.Start($"FrameUtil.ScaleDouble({byteSize})")) {
 				var outputDim = dim * 2;
-				byte[] scaledData = new byte[outputDim.Surface * 3];
+				byte[] scaledData = new byte[outputDim.Surface * byteSize];
 				const int scale = 2;
 
 				int targetIdx = 0;
@@ -449,9 +379,9 @@ namespace LibDmd.Common
 					var iUnscaled = i / scale;
 					for (var j = 0; j < outputDim.Width; ++j) {
 						var jUnscaled = j / scale;
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3];
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 1];
-						scaledData[targetIdx++] = frame[iUnscaled * dim.Width * 3 + jUnscaled * 3 + 2];
+						for (var k = 0; k < byteSize; k++) {
+							scaledData[targetIdx++] = frame[iUnscaled * dim.Width * byteSize + jUnscaled * byteSize + k];
+						}
 					}
 				}
 				return scaledData;
@@ -463,37 +393,44 @@ namespace LibDmd.Common
 		/// </summary>
 		/// <param name="dim">Original dimensions</param>
 		/// <param name="data">Original frame data</param>
+		/// <param name="bytesPerPixel">Number of bytes per pixel</param>
 		/// <returns>scaled frame planes</returns>
-		public static byte[] Scale2XRgb(Dimensions dim, byte[] data)
+		public static byte[] Scale2X(Dimensions dim, byte[] data, int bytesPerPixel)
 		{
-			using (Profiler.Start("FrameUtil.Scale2XRgb")) {
+			using (Profiler.Start($"FrameUtil.Scale2X({bytesPerPixel})")) {
 				var targetWidth = dim.Width * 2;
 				var targetHeight = dim.Height * 2;
-				byte[] scaledData = new byte[targetWidth * targetHeight * 3];
+				byte[] scaledData = new byte[targetWidth * targetHeight * bytesPerPixel];
+
+				var colorB = new byte[bytesPerPixel];
+				var colorH = new byte[bytesPerPixel];
+				var colorD = new byte[bytesPerPixel];
+				var colorF = new byte[bytesPerPixel];
+				var colorE = new byte[bytesPerPixel];
 
 				for (var y = 0; y < dim.Height; y++)
 				{
 					for (var x = 0; x < dim.Width; x++)
 					{
-						var colorB = ImageUtil.GetRgbPixel(x, y - 1, dim.Width, dim.Height, data);
-						var colorH = ImageUtil.GetRgbPixel(x, y + 1, dim.Width, dim.Height, data);
-						var colorD = ImageUtil.GetRgbPixel(x - 1, y, dim.Width, dim.Height, data);
-						var colorF = ImageUtil.GetRgbPixel(x + 1, y, dim.Width, dim.Height, data);
+						ImageUtil.GetRgbPixel(x, y - 1, dim.Width, dim.Height, data, colorB);
+						ImageUtil.GetRgbPixel(x, y + 1, dim.Width, dim.Height, data, colorH);
+						ImageUtil.GetRgbPixel(x - 1, y, dim.Width, dim.Height, data, colorD);
+						ImageUtil.GetRgbPixel(x + 1, y, dim.Width, dim.Height, data, colorF);
+						ImageUtil.GetRgbPixel(x, y, dim.Width, dim.Height, data, colorE);
 
-						var colorE = ImageUtil.GetRgbPixel(x, y, dim.Width, dim.Height, data);
-						if (!CompareBuffers(colorB, 0, colorH, 0, 3) && !CompareBuffers(colorD, 0, colorF, 0, 3))
+						if (!CompareBuffers(colorB, 0, colorH, 0, bytesPerPixel) && !CompareBuffers(colorD, 0, colorF, 0, bytesPerPixel))
 						{
-							ImageUtil.SetRgbPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, 3) ? colorD : colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, 3) ? colorD : colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, 3) ? colorF : colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y, CompareBuffers(colorD, 0, colorB, 0, bytesPerPixel) ? colorD : colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, CompareBuffers(colorB, 0, colorF, 0, bytesPerPixel) ? colorF : colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, CompareBuffers(colorD, 0, colorH, 0, bytesPerPixel) ? colorD : colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, CompareBuffers(colorH, 0, colorF, 0, bytesPerPixel) ? colorF : colorE, targetWidth, scaledData, bytesPerPixel);
 						}
 						else
 						{
-							ImageUtil.SetRgbPixel(2 * x, 2 * y, colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, colorE, targetWidth, scaledData);
-							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, colorE, targetWidth, scaledData);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y, colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y, colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x, 2 * y + 1, colorE, targetWidth, scaledData, bytesPerPixel);
+							ImageUtil.SetRgbPixel(2 * x + 1, 2 * y + 1, colorE, targetWidth, scaledData, bytesPerPixel);
 						}
 					}
 				}

@@ -55,6 +55,12 @@ namespace LibDmd.Frame
 		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ImageUtil.ConvertToRgb24(Bitmap), 24);
 
 		/// <summary>
+		/// Converts this bitmap frame to an RGB2565frame.
+		/// </summary>
+		/// <returns>RGB565 frame</returns>
+		public DmdFrame ConvertToRgb565() => new DmdFrame(Dimensions, ImageUtil.ConvertToRgb565(Bitmap), 16);
+
+		/// <summary>
 		/// Converts this bitmap frame to a gray2 frame.
 		/// </summary>
 		/// <returns>Gray2 frame</returns>
@@ -116,10 +122,10 @@ namespace LibDmd.Frame
 					return this;
 
 				case ScalerMode.Doubler:
-					return Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb(Dimensions, ConvertToRgb24().Data));
+					return Update(Dimensions * 2, FrameUtil.ScaleDoubleRgb24(Dimensions, ConvertToRgb24().Data));
 
 				case ScalerMode.Scale2x:
-					return Update(Dimensions * 2, FrameUtil.Scale2XRgb(Dimensions, ConvertToRgb24().Data));
+					return Update(Dimensions * 2, FrameUtil.Scale2XRgb24(Dimensions, ConvertToRgb24().Data));
 
 				default:
 					throw new ArgumentOutOfRangeException(nameof(scalerMode), scalerMode, null);

@@ -232,12 +232,6 @@ namespace LibDmd.Common
 			return arr;
 		}
 
-		[Obsolete("Use the ColorizeRgb24 instead")]
-		public static DmdFrame ColorizeObsolete(Dimensions dim, byte[] frame, Color[] palette)
-		{
-			return new DmdFrame(dim, ColorizeRgb24(dim, frame, palette), 24);
-		}
-		
 		/// <summary>
 		/// Returns an RGB24 frame with colors from the palette applied to the frame.
 		/// 
@@ -248,11 +242,12 @@ namespace LibDmd.Common
 		/// <param name="dim">Dimensions of the frame to color</param>
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
+		/// <param name="bytesPerPixel">Number of output bytes per pixel. 3 for RGB24, 2 for RGB16.</param>
 		/// <returns>Colorized frame</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
-		public static byte[] ColorizeRgb24(Dimensions dim, byte[] frame, Color[] palette)
+		public static byte[] ColorizeRgb(Dimensions dim, byte[] frame, Color[] palette, int bytesPerPixel)
 		{
-			using (Profiler.Start("ColorUtil.ColorizeRgb24")) {
+			using (Profiler.Start("ColorUtil.ColorizeRgb")) {
 				#if DEBUG
 				if (dim.Surface != frame.Length) {
 					throw new ArgumentException("Data and dimensions do not match.");
@@ -262,30 +257,47 @@ namespace LibDmd.Common
 				var frameLength = dim.Surface * 3;
 				var colorizedData = new byte[frameLength];
 
-				var rpalvalues = new byte[palette.Length];
-				var gpalvalues = new byte[palette.Length];
-				var bpalvalues = new byte[palette.Length];
+				var palValues = new byte[bytesPerPixel][];
+				for (var k = 0; k < bytesPerPixel; k++) {
+					palValues[k] = new byte[palette.Length];
+				}
 
 				for (var i = 0; i < palette.Length; i++) {
-					rpalvalues[i] = palette[i].R;
-					gpalvalues[i] = palette[i].G;
-					bpalvalues[i] = palette[i].B;
+					switch (bytesPerPixel) {
+						case 3:
+							palValues[0][i] = palette[i].R;
+							palValues[1][i] = palette[i].G;
+							palValues[2][i] = palette[i].B;
+							break;
+						case 2: {
+							ushort r5 = (ushort)((palette[i].R >> 3) & 0x1F);
+							ushort g6 = (ushort)((palette[i].G >> 2) & 0x3F);
+							ushort b5 = (ushort)((palette[i].B >> 3) & 0x1F);
+							ushort rgb565 = (ushort)((r5 << 11) | (g6 << 5) | b5);
+
+							palValues[0][i] = (byte)((rgb565 >> 8) & 0xFF);
+							palValues[1][i] = (byte)(rgb565 & 0xFF);
+							break;
+						}
+						default:
+							throw new ArgumentException("Unsupported number of bytes per pixel.");
+					}
 				}
 
 				var maxPixel = (byte)(palette.Length - 1);
-				unsafe
-				{
-					fixed (byte* pFrame = frame, pcolorFrame = colorizedData)
-					{
+				unsafe {
+					fixed (byte* pFrame = frame, pcolorFrame = colorizedData) {
 						byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
 						byte* pColorFrameCur = pcolorFrame;
 
 						for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += 3) {
 							var pixel = *pFrameCur;
-							if (pixel > maxPixel) pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
-							*pColorFrameCur = rpalvalues[pixel];
-							*(pColorFrameCur + 1) = gpalvalues[pixel];
-							*(pColorFrameCur + 2) = bpalvalues[pixel];
+							if (pixel > maxPixel) {
+								pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
+							}
+							for (var i = 0; i < bytesPerPixel; i++) {
+								*(pColorFrameCur + i) = palValues[i][pixel];
+							}
 						}
 					}
 				}
