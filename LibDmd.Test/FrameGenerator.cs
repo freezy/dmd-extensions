@@ -25,8 +25,13 @@ namespace LibDmd.Test
 
 		public static DmdFrame FromString(string frame)
 		{
-			var match = Regex.Match(frame, @"\d{2} \d{2}", RegexOptions.IgnoreCase);
-			var parse = match.Success ? (Func<string,  (byte[], Dimensions, int)>)Parse2CharsPerPixel : Parse;
+			var match2 = Regex.Match(frame, @"\d{2} \d{2} ", RegexOptions.IgnoreCase);
+			var match4 = Regex.Match(frame, @"[\da-f]{4} [\da-f]{4} ", RegexOptions.IgnoreCase);
+			var parse = match2.Success
+				? Parse2CharsPerPixel
+				: match4.Success
+					? (Func<string, (byte[], Dimensions, int)>)Parse4CharsPerPixel
+					: Parse;
 
 			var (data, dim, bitLength) = parse(frame);
 			return new DmdFrame(dim, data, bitLength);
@@ -155,6 +160,36 @@ namespace LibDmd.Test
 			}
 			var bitLength = (max + 1).GetBitLength();
 			return (data, new Dimensions(width, height), bitLength);
+		}
+
+		private static (byte[], Dimensions, int) Parse4CharsPerPixel(string frame)
+		{
+			var lines = frame
+				.Trim()
+				.Split('\n')
+				.Select(l => l.Trim())
+				.Select(l => l.Split(' '))
+				.Where(l => l.Length > 0)
+				.ToArray();
+
+			var width = lines.OrderBy(l => -l.Length).First().Length;
+			var height = lines.Length;
+
+			var data = new byte[width * height * 2];
+			for (var y = 0; y < height; y++) {
+				var line = lines[y];
+				for (var x = 0; x < width; x++) {
+					if (x < line.Length) {
+						var c = line[x];
+						data[y * width * 2 + x * 2] = Convert.ToByte(c.Substring(0, 2), 16);;
+						data[y * width * 2 + x * 2 + 1] = Convert.ToByte(c.Substring(2), 16);
+					} else {
+						data[y * width * 2 + x * 2] = 0;
+						data[y * width * 2 + x * 2 + 1] = 0;
+					}
+				}
+			}
+			return (data, new Dimensions(width, height), 16);
 		}
 	}
 }
