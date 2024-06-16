@@ -480,6 +480,7 @@ namespace LibDmd
 					var sourceColoredGray2 = Source as IColoredGray2Source;
 					var sourceColoredGray4 = Source as IColoredGray4Source;
 					var sourceColoredGray6 = Source as IColoredGray6Source;
+					var sourceRgb565 = Source as IRgb565Source;
 					var sourceRgb24 = Source as IRgb24Source;
 					var sourceBitmap = Source as IBitmapSource;
 
@@ -509,6 +510,11 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.ColoredGray6);
 						continue;
 					}
+					// rgb565 -> rgb565
+					if (sourceRgb565 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Rgb565);
+						continue;
+					}
 					// rgb24 -> rgb24
 					if (sourceRgb24 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Rgb24);
@@ -526,6 +532,11 @@ namespace LibDmd
 					}
 
 					// then, start at the bottom
+					// gray2 -> rgb565
+					if (sourceGray2 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Rgb565);
+						continue;
+					}
 					// gray2 -> rgb24
 					if (sourceGray2 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Rgb24);
@@ -536,6 +547,11 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray2, FrameFormat.Bitmap);
 						continue;
 					}
+					// gray4 -> rgb565
+					if (sourceGray4 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Rgb565);
+						continue;
+					}
 					// gray4 -> rgb24
 					if (sourceGray4 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Rgb24);
@@ -544,6 +560,16 @@ namespace LibDmd
 					// gray4 -> bitmap
 					if (sourceGray4 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Bitmap);
+						continue;
+					}
+					// rgb565 -> rgb24
+					if (sourceRgb565 != null && destRgb24 != null) {
+						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Rgb24);
+						continue;
+					}
+					// rgb565 -> bitmap
+					if (sourceRgb565 != null && destBitmap != null) {
+						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Bitmap);
 						continue;
 					}
 					// rgb24 -> bitmap
@@ -593,6 +619,11 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
 						continue;
 					}
+					// colored gray6 -> rgb565
+					if (sourceColoredGray6 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.Rgb565);
+						continue;
+					}
 					// colored gray6 -> gray4
 					if (sourceColoredGray6 != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray6, FrameFormat.Gray4);
@@ -608,6 +639,21 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Gray4);
 						continue;
 					}
+					// rgb565 -> gray4
+					if (sourceRgb565 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Gray4);
+						continue;
+					}
+					// rgb565 -> gray2
+					if (sourceRgb565 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Gray2);
+						continue;
+					}
+					// rgb24 -> rgb565
+					if (sourceRgb24 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Rgb565);
+						continue;
+					}
 					// rgb24 -> gray4
 					if (sourceRgb24 != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Rgb24, FrameFormat.Gray4);
@@ -618,9 +664,19 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Bitmap, FrameFormat.Gray4);
 						continue;
 					}
+					// colored gray2 -> rgb565
+					if (sourceColoredGray2 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Rgb565);
+						continue;
+					}
 					// colored gray2 -> gray2
 					if (sourceColoredGray2 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.ColoredGray2, FrameFormat.Gray2);
+						continue;
+					}
+					// colored gray4 -> rgb565
+					if (sourceColoredGray4 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.ColoredGray4, FrameFormat.Rgb565);
 						continue;
 					}
 					// colored gray4 -> gray2
