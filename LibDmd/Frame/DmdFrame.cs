@@ -289,7 +289,7 @@ namespace LibDmd.Frame
 				#endif
 				return IsRgb24
 					? new BmpFrame(ImageUtil.ConvertFromRgb24(Dimensions, Data))
-					: new BmpFrame(ImageUtil.ConvertFromRgb565(Dimensions, Data))
+					: new BmpFrame(ImageUtil.ConvertFromRgb565(Dimensions, Data));
 			}
 		}
 
