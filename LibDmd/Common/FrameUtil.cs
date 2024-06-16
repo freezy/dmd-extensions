@@ -457,6 +457,33 @@ namespace LibDmd.Common
 				return scaledData;
 			}
 		}
+		/// <summary>
+		/// Convert a RGB16/RGB565 ushort (UINT16) to 3 bytes RGB24
+		/// </summary>
+		/// <param name="rgb565">in: RGB565 color</param>
+		/// <param name="r">out: red RGB24 component</param>
+		/// <param name="g">out: green RGB24 component</param>
+		/// <param name="b">out: blue RGB24 component</param>
+		public static void rgb565_to_rgb888(ushort rgb565, ref byte r, ref byte g, ref byte b)
+		{
+			r = (byte)(((rgb565 >> 8) & 0xF8) | ((rgb565 >> 13) & 0x07)); // shifting then copying the 3 most significant bits to the right
+			g = (byte)(((rgb565 >> 3) & 0xFC) | ((rgb565 >> 9) & 0x03)); // shifting then copying the 2 most significant bits to the right
+			b = (byte)(((rgb565 << 3) & 0xF8) | ((rgb565 >> 2) & 0x07)); // shifting then copying the 3 most significant bits to the right
+		}
+		/// <summary>
+		/// Convert a full frame data in RGB16/RGB565 to a frame data in RGB24
+		/// </summary>
+		/// <param name="dim">dimensions of the frame</param>
+		/// <param name="frame">ushort buffer with the RGB565 frame data</param>
+		/// <returns>byte buffer with the RGB24 frame data</returns>
+		public static byte[] ConvertRGB16ToRGB24(Dimensions dim, ushort[] frame)
+		{
+			byte[] rgb24Data = new byte[dim.Surface * 3];
+			for (var i = 0; i < dim.Surface; i++) {
+				rgb565_to_rgb888(frame[i], ref rgb24Data[i * 3], ref rgb24Data[i * 3 + 1], ref rgb24Data[i * 3 + 2]);
+			}
+			return rgb24Data;
+		}
 
 		/// <summary>
 		/// Implementation of Scale2 for RGB frame data.

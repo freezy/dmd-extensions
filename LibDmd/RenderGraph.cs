@@ -1404,6 +1404,11 @@ namespace LibDmd
 		Gray4,
 
 		/// <summary>
+		/// An RGB16 (RGB565) frame
+		/// </summary>
+		Rgb16,
+
+		/// <summary>
 		/// An RGB24 frame
 		/// </summary>
 		Rgb24,

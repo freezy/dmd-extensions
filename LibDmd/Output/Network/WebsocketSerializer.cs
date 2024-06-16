@@ -177,11 +177,11 @@ namespace LibDmd.Output.Network
 			return SerializeColoredGray("coloredGray4", planes, palette);
 		}
 
-		public byte[] SerializeColoredGray6(byte[][] planes, Color[] palette, byte[] rotations, bool RotateColors)
+		public byte[] SerializeColoredGray6(byte[][] planes, Color[] palette)//, byte[] rotations, bool RotateColors)
 		{
 			var timestamp = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 			var buffer = new byte[24];
-			if (!RotateColors) {
+			/*if (!RotateColors) {
 				for (var i = 0; i< 24; i++) {
 					buffer[i] = 255;
 				}
@@ -189,7 +189,7 @@ namespace LibDmd.Output.Network
 			else
 				for (var i = 0; i< 24; i++) {
 					buffer[i] = rotations[i];
-				}
+				}*/
 			var data = Encoding.ASCII
 				.GetBytes("coloredGray6")
 				.Concat(new byte[] { 0x0 })

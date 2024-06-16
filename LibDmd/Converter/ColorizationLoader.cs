@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -29,7 +29,19 @@ namespace LibDmd.Converter.Vni
 			if (serumFile != null) {
 				var serumPath = serumFile.FullName;
 				try {
-					var serum = new Serum.Serum(_altcolorPath, gameName);
+
+
+
+
+
+					// adapt "Serum.Serum.FLAG_REQUEST_XXP_FRAMES" in the line below according to the connected devices if you don't need both resolutions
+					var serum = new Serum.Serum(_altcolorPath, gameName, Serum.Serum.FLAG_REQUEST_32P_FRAMES | Serum.Serum.FLAG_REQUEST_64P_FRAMES);
+
+
+
+
+
+
 					if (serum.IsLoaded) {
 						Logger.Info($"[serum] Serum colorizer v{Serum.Serum.GetVersion()} initialized.");
 						Logger.Info($"[serum] Loading colorization at {serumPath}...");

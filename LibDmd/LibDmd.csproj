@@ -807,6 +807,10 @@
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.3\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets" Condition="Exists('..\packages\NetMiniZ.Native.win-x64.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x64.targets')" />
   <Import Project="..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets" Condition="Exists('..\packages\NetMiniZ.Native.win-x86.1.6.1\build\netstandard2.0\NetMiniZ.Native.win-x86.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).dll" "C:\visual pinball\VPinMAME\$(ProjectName).dll"
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

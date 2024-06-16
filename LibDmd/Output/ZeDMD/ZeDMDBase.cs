@@ -119,7 +119,7 @@ namespace LibDmd.Output.ZeDMD
 			// an updated palette here.
 			if (_lastFrame != null) {
 				SetPalette(palette);
-				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, _lastFrame.Rotations);
+				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, null);// _lastFrame.Rotations);
 			}
 		}
 

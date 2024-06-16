@@ -18,19 +18,35 @@ namespace LibDmd
 		/// </summary>
 		public Color[] Palette { get; private set; }
 
-		/// <summary>
-		/// Color Rotation descriptions.
+		/*/// <summary>
+		/// number of Color Rotation
 		/// </summary>
 		/// <remarks>
-		/// Size: 8*3 bytes: 8 colour rotations available per frame, 1 byte for the first colour,
-		/// 1 byte for the number of colours, 1 byte for the time interval between 2 rotations in 10ms
+		/// give the number of active color rotations for this frame
+		/// up to 8 for a v1 format frame, up to 4 for a v2 format frame
 		/// </remarks>
-		public byte[] Rotations { get;  private set; }
+		public byte nRotations { get; private set; }
+		/// <summary>
+		/// Color Rotation description for v1 Serum.
+		/// </summary>
+		/// <remarks>
+		/// Size: 1 byte for the first colour, 1 byte for the number of colours,
+		/// 1 byte for the time interval between 2 rotations in 10ms
+		/// </remarks>
+		public byte[] Rotationsv1 { get; private set; }
+		/// <summary>
+		/// Color Rotation description for v2 Serum.
+		/// </summary>
+		/// <remarks>
+		/// Size: nRotations*64 ushorts: 1 ushort for the number of colors in the rotation, 1 ushort for the time interval between
+		/// 2 rotations in ms, 62 ushort giving the rgb565 colors of the rotation
+		/// </remarks>
+		public ushort[] Rotationsv2 { get; private set; }
 
 		/// <summary>
-		/// If set, colors defined in <see cref="Rotations"/> are rotated.
+		/// If set, colors defined in <see cref="Rotationsv1"/> or <see cref="Rotationsv2"/> are rotated.
 		/// </summary>
-		public bool RotateColors;
+		public bool RotateColors;*/
 
 		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);
@@ -40,19 +56,54 @@ namespace LibDmd
 		public ColoredFrame()
 		{
 		}
-
-		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette, byte[] rotations = null)
+		/// <summary>
+		/// New color frame in v1 Serum format
+		/// </summary>
+		/// <param name="dim"></param>
+		/// <param name="data"></param>
+		/// <param name="palette"></param>
+		public ColoredFrame(Dimensions dim, byte[] data, Color[] palette)//, bool isNewFrame, byte[] rotations = null)
 		{
+			DataType = 0;
 			Dimensions = dim;
 			Data = data;
 			BitLength = palette.Length.GetBitLength();
 			Palette = palette;
-			Rotations = rotations;
-			RotateColors = rotations != null && rotations.Length > 0;
+			//Rotationsv1 = rotations;
+			//RotateColors = rotations != null && rotations.Length > 0;
 
 			#if DEBUG
 			AssertData();
 			#endif
+		}
+
+		/// <summary>
+		/// New color frame in v2 Serum format
+		/// </summary>
+		/// <param name="dim32"></param>
+		/// <param name="dim64"></param>
+		/// <param name="data32">rgb565 32 pixel high frame, can be null if no 32P data is available for this frame</param>
+		/// <param name="data64">rgb565 64 pixel high frame, can be null if no 64P data is available for this frame</param>
+		public ColoredFrame(Dimensions dim32, Dimensions dim64, ushort[] data32, ushort[] data64, bool isNewFrame)
+		{
+			if (data32 != null && data64 != null) {
+				DataType = 3;
+				Data32 = data32;
+				Data64 = data64;
+			} else if (data32 != null) {
+				DataType = 1;
+				Data32 = data32;
+			} else if (data64 != null) {
+				DataType = 2;
+				Data64 = data64;
+			}
+			
+
+
+			// I have 2 possible dimensions here as there may be 
+
+
+
 		}
 
 		public ColoredFrame(DmdFrame frame, Color color)
@@ -61,7 +112,7 @@ namespace LibDmd
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			Palette = ColorUtil.GetPalette(new[] { Colors.Black, color }, frame.NumColors);
-			RotateColors = false;
+			//RotateColors = false;
 
 			#if DEBUG
 			AssertData();
@@ -74,7 +125,7 @@ namespace LibDmd
 			Data = frame.Data;
 			BitLength = frame.BitLength;
 			Palette = palette;
-			RotateColors = false;
+			//RotateColors = false;
 
 			#if DEBUG
 			AssertData();
@@ -114,8 +165,8 @@ namespace LibDmd
 			Buffer.BlockCopy(frame.Data, 0, Data, 0, frame.Data.Length);
 			BitLength = frame.BitLength;
 			Palette = frame.Palette;
-			Rotations = frame.Rotations;
-			RotateColors = frame.RotateColors;
+			//Rotations = frame.Rotations;
+			//RotateColors = frame.RotateColors;
 
 			#if DEBUG
 			AssertData();
@@ -294,7 +345,7 @@ namespace LibDmd
 			unchecked {
 				var hashCode = Dimensions.GetHashCode();
 				hashCode = (hashCode * 397) ^ BitLength;
-				hashCode = (hashCode * 397) ^ (Rotations != null ? Rotations.GetHashCode() : 0);
+				//hashCode = (hashCode * 397) ^ (Rotations != null ? Rotations.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Palette != null ? Palette.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
 				return hashCode;
@@ -322,9 +373,9 @@ namespace LibDmd
 				return true;
 			}
 			return a.Dimensions == b.Dimensions
-			       && a.RotateColors == b.RotateColors
+			       //&& a.RotateColors == b.RotateColors
 			       && PaletteEquals(a.Palette, b.Palette)
-			       && FrameUtil.CompareBuffersFast(a.Rotations, b.Rotations)
+			       //&& FrameUtil.CompareBuffersFast(a.Rotations, b.Rotations)
 			       && FrameUtil.CompareBuffersFast(a.Data, b.Data);
 		}
 
@@ -361,7 +412,7 @@ namespace LibDmd
 
 		#region Overrides
 
-		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette, Rotations);
+		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette); //, Rotations);
 
 		public override string ToString()
 		{

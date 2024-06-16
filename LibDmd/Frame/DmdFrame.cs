@@ -16,6 +16,15 @@ namespace LibDmd.Frame
 	public class DmdFrame : BaseFrame, ICloneable, IEqualityComparer<DmdFrame>
 	{
 		/// <summary>
+		/// Type of data for this frame:
+		/// 0: standard palette + color indices frame
+		/// 1: RGB565 32 pixel high frame only
+		/// 2: RGB565 64 pixel high frame only
+		/// 3: RGB565 32 pixel high frame + 64 pixel high frame
+		/// </summary>
+		public byte DataType { get; protected set; }
+
+		/// <summary>
 		/// The frame data, from top left to bottom right.
 		/// It's usually one byte per pixel, but three bytes for RGB24.
 		/// </summary>
@@ -42,6 +51,18 @@ namespace LibDmd.Frame
 		/// </summary>
 		public int BitPlaneLength => Dimensions.Surface / 8;
 
+		/// <summary>
+		/// The frame data in RGB565 UINT16 colors, from top left to bottom right. This one is for 32 pixel high frames
+		/// 1 ushort per pixel.
+		/// </summary>
+		public ushort[] Data32 { get; protected set; }
+
+		/// <summary>
+		/// The frame data in RGB565 UINT16 colors, from top left to bottom right. This one is for 64 pixel high frames
+		/// 1 ushort per pixel.
+		/// </summary>
+		public ushort[] Data64 { get; protected set; }
+
 		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
@@ -52,6 +73,7 @@ namespace LibDmd.Frame
 				switch (BitLength) {
 					case 2: return FrameFormat.Gray2;
 					case 4: return FrameFormat.Gray4;
+					case 16: return FrameFormat.Rgb16;
 					case 24: return FrameFormat.Rgb24;
 					default: throw new InvalidOperationException($"Invalid bit length {BitLength}");
 				}
@@ -78,6 +100,7 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			BitLength = bitLength;
 			Data = new byte[dim.Surface * BytesPerPixel];
+			DataType = 0;
 		}
 
 		public DmdFrame(Dimensions dim, byte[] data, int bitLength)
@@ -85,6 +108,7 @@ namespace LibDmd.Frame
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
+			DataType = 0;
 
 			#if DEBUG
 			AssertData();
@@ -96,6 +120,7 @@ namespace LibDmd.Frame
 			Dimensions = new Dimensions(width, height);
 			Data = data;
 			BitLength = bitLength;
+			DataType = 0;
 
 			#if DEBUG
 			AssertData();
