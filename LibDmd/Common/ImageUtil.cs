@@ -152,10 +152,10 @@ namespace LibDmd.Common
 
 				var frame = new byte[dim.Surface];
 				var pos = 0;
-				for (var x = 0; x < dim.Width; x++) {
-					for (var y = 0; y < dim.Height; y++) {
+				for (var y = 0; y < dim.Height; y++) {
+					for (var x = 0; x < dim.Width; x++) {
 						var i = (y * dim.Width + x) * 2;
-						var rgb565 = (ushort)((rgb565Data[i + 1] << 8) | rgb565Data[i]);
+						var rgb565 = (ushort)((rgb565Data[i] << 8) | rgb565Data[i + 1]);
 						var r = (byte)((rgb565 & 0xf800) >> 8);
 						var g = (byte)((rgb565 & 0x07e0) >> 3);
 						var b = (byte)((rgb565 & 0x001f) << 3);
@@ -514,33 +514,19 @@ namespace LibDmd.Common
 			var bufferSize = (Math.Abs(bmp.BackBufferStride) * dim.Height + 2);
 			var frameBuffer = new byte[bufferSize];
 
-			fixed (byte* pRgb565Data = frameData.ArraySrc, pBgra32Data = frameBuffer)
-			{
-				byte* pRgb565 = pRgb565Data;
-				byte* pBgra32 = pBgra32Data;
+			for (var y = 0; y < dim.Height; y++) {
+				for (var x = 0; x < dim.Width; x++) {
+					var i = (y * dim.Width + x) * 2;
+					var rgb565 = (ushort)((frameData.Get(i) << 8) | frameData.Get(i + 1));
+					var r = (byte)((rgb565 & 0xf800) >> 8);
+					var g = (byte)((rgb565 & 0x07e0) >> 3);
+					var b = (byte)((rgb565 & 0x001f) << 3);
+					var j = (y * dim.Width + x) * 4;
 
-				for (int i = 0; i < dim.Width * dim.Height; i++)
-				{
-					// Extract the RGB565 pixel
-					ushort rgb565 = (ushort)((pRgb565[0] << 8) | pRgb565[1]);
-					pRgb565 += 2;
-
-					// Convert RGB565 to RGB888
-					byte r = (byte)((rgb565 >> 11) & 0x1F);
-					byte g = (byte)((rgb565 >> 5) & 0x3F);
-					byte b = (byte)(rgb565 & 0x1F);
-
-					// Scale RGB888 to 8 bits per channel
-					r = (byte)((r << 3) | (r >> 2));
-					g = (byte)((g << 2) | (g >> 4));
-					b = (byte)((b << 3) | (b >> 2));
-
-					// Set the Bgra32 pixel
-					pBgra32[0] = b;        // Blue
-					pBgra32[1] = g;        // Green
-					pBgra32[2] = r;        // Red
-					pBgra32[3] = 255;      // Alpha
-					pBgra32 += 4;
+					frameBuffer[j] = b;          // Blue
+					frameBuffer[j+1] = g;        // Green
+					frameBuffer[j+2] = r;        // Red
+					frameBuffer[j+3] = 255;      // Alpha
 				}
 			}
 

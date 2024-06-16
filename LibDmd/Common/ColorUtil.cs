@@ -308,10 +308,10 @@ namespace LibDmd.Common
 		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
 		{
 			var rgb888Data = new byte[dim.Surface * 3];
-			for (var x = 0; x < dim.Width; x++) {
-				for (var y = 0; y < dim.Height; y++) {
+			for (var y = 0; y < dim.Height; y++) {
+				for (var x = 0; x < dim.Width; x++) {
 					var i = (y * dim.Width + x) * 2;
-					var rgb565 = (ushort)((rgb565Data[i + 1] << 8) | rgb565Data[i]);
+					var rgb565 = (ushort)((rgb565Data[i] << 8) | rgb565Data[i + 1]);
 					var r = (byte)((rgb565 & 0xf800) >> 8);
 					var g = (byte)((rgb565 & 0x07e0) >> 3);
 					var b = (byte)((rgb565 & 0x001f) << 3);
