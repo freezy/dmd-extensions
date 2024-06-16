@@ -29,8 +29,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
-			IColoredGray6Destination, IBitmapDestination, IResizableDestination, IVirtualControl, IColorRotationDestination
+	public partial class VirtualDmdControl : IGray4Destination, IResizableDestination, IVirtualControl, IColorRotationDestination
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
 	// standard (aka production); IRgb24Destination, IBitmapDestination, IResizableDestination

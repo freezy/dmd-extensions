@@ -54,7 +54,7 @@ namespace LibDmd.Test
 				c9 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 ea").ConvertToBmp();
+				e0 9f 9d dc de 95 15 ea").ConvertRgbToBmp();
 
 			await AssertFrame(_source, dest, bitmapFrame, bitmapFrame);
 		}
@@ -80,7 +80,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var expectedFrame = FrameGenerator.FromString(@"
 				31221122
@@ -112,7 +112,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var expectedFrame = FrameGenerator.FromString(@"
 				F68A74AB
@@ -146,7 +146,7 @@ namespace LibDmd.Test
 				77 95 ae e3 1d c5 d7 92
 				e0 9f 9d dc de 95 15 00");
 
-			var bmpFrame = rgbFrame.ConvertToBmp();
+			var bmpFrame = rgbFrame.ConvertRgbToBmp();
 
 			await AssertFrame(_source, dest, bmpFrame, rgbFrame);
 		}
@@ -173,7 +173,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var flippedFrame = FrameGenerator.FromString(@"
 				FC 74 36 EA FB CA B0 FF
@@ -215,7 +215,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var upscaledFrame = FrameGenerator.FromString(@"
 				00 00 00 00 00 00 00 00 00 00
@@ -262,7 +262,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var upscaledFrame = FrameGenerator.FromString(@"
 				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
@@ -288,7 +288,7 @@ namespace LibDmd.Test
 				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
 				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
 				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00 
-				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00").ConvertToBmp();
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00").ConvertRgbToBmp();
 
 			await AssertFrame(_source, dest, rgbFrame, upscaledFrame);
 		}
@@ -315,7 +315,7 @@ namespace LibDmd.Test
 				ff 76 3b 6a 86 4b df 6a
 				1f 9f aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 d7 92
-				e0 9f 9d dc de 95 15 00").ConvertToBmp();
+				e0 9f 9d dc de 95 15 00").ConvertRgbToBmp();
 
 			var upscaledFrame = FrameGenerator.FromString(@"
 				FF FF B0 B0 CA CA FB FB EA EA 36 36 74 74 FC FC 
@@ -341,7 +341,7 @@ namespace LibDmd.Test
 				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
 				77 77 95 95 AE AE E3 E3 1D 1D C5 C5 D7 D7 92 92 
 				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00 
-				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00").ConvertToBmp();
+				E0 E0 9F 9F 9D 9D DC DC DE DE 95 95 15 15 00 00").ConvertRgbToBmp();
 
 			await AssertFrame(_source, dest, rgbFrame, upscaledFrame);
 		}
@@ -370,7 +370,7 @@ namespace LibDmd.Test
 				ff ff 3b 6a 86 4b df 6a
 				ff ff aa 31 f8 6c 31 49
 				77 95 ae e3 1d c5 00 00
-				e0 9f 9d dc de 95 00 00").ConvertToBmp();
+				e0 9f 9d dc de 95 00 00").ConvertRgbToBmp();
 
 			var downscaledFrame = FrameGenerator.FromString(@"
 				FF CA FB EA 36 74 

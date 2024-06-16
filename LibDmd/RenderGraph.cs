@@ -792,7 +792,7 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb565(_gray2Palette ?? _gray2Colors)
+									.ConvertGrayToRgb565(_gray2Palette ?? _gray2Colors)
 									.TransformRgb565(this, destFixedSize, destMultiSize),
 								destRgb565.RenderRgb565
 							);
@@ -805,7 +805,7 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb24(_gray2Palette ?? _gray2Colors)
+									.ConvertGrayToRgb24(_gray2Palette ?? _gray2Colors)
 									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24
 							);
@@ -818,7 +818,7 @@ namespace LibDmd
 								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBmp(_gray2Palette ?? _gray2Colors)
+									.ConvertGrayToBmp(_gray2Palette ?? _gray2Colors)
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap
 							);
@@ -875,7 +875,7 @@ namespace LibDmd
 								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb565(_gray4Palette ?? _gray4Colors)
+									.ConvertGrayToRgb565(_gray4Palette ?? _gray4Colors)
 									.TransformRgb565(this, destFixedSize, destMultiSize),
 								destRgb565.RenderRgb565
 							);
@@ -888,7 +888,7 @@ namespace LibDmd
 								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToRgb24(_gray4Palette ?? _gray4Colors)
+									.ConvertGrayToRgb24(_gray4Palette ?? _gray4Colors)
 									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24);
 							break;
@@ -900,7 +900,7 @@ namespace LibDmd
 								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBmp(_gray4Palette ?? _gray4Colors)
+									.ConvertGrayToBmp(_gray4Palette ?? _gray4Colors)
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
 							break;
@@ -981,7 +981,7 @@ namespace LibDmd
 								sourceRgb565.GetRgb565Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBmp()
+									.ConvertRgbToBmp()
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
 							break;
@@ -1038,7 +1038,7 @@ namespace LibDmd
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertRgb565ToRgb24()
+									.ConvertRgb24ToRgb565()
 									.TransformRgb565(this, destFixedSize, destMultiSize),
 								destRgb565.RenderRgb565
 							);
@@ -1062,7 +1062,7 @@ namespace LibDmd
 								sourceRgb24.GetRgb24Frames(),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertToBmp()
+									.ConvertRgbToBmp()
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
 							break;
@@ -1399,7 +1399,7 @@ namespace LibDmd
 									rotationWrapper.GetRgb24Frames(),
 									frame => frame
 										.TransformHdScaling(destFixedSize, ScalerMode)
-										.ConvertToBmp()
+										.ConvertRgbToBmp()
 										.Transform(this, destFixedSize, destMultiSize),
 									destBitmap.RenderBitmap);
 							} else {

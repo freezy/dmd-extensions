@@ -155,10 +155,7 @@ namespace LibDmd.Common
 				for (var y = 0; y < dim.Height; y++) {
 					for (var x = 0; x < dim.Width; x++) {
 						var i = (y * dim.Width + x) * 2;
-						var rgb565 = (ushort)((rgb565Data[i] << 8) | rgb565Data[i + 1]);
-						var r = (byte)((rgb565 & 0xf800) >> 8);
-						var g = (byte)((rgb565 & 0x07e0) >> 3);
-						var b = (byte)((rgb565 & 0x001f) << 3);
+						var (r, g, b) = ColorUtil.Rgb565ToRgb888(rgb565Data, i);
 
 						// convert to HSL
 						ColorUtil.RgbToHsl(r, g, b, out _, out _, out var luminosity);
@@ -272,27 +269,16 @@ namespace LibDmd.Common
 				Dispatch(bmp, () => {
 					frame = new byte[bmp.PixelWidth * bmp.PixelHeight * 2];
 					var stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
-					var bytes = new byte[bmp.PixelHeight * stride];
-					bmp.CopyPixels(bytes, stride, 0);
+					var bgraData = new byte[bmp.PixelHeight * stride];
+					bmp.CopyPixels(bgraData, stride, 0);
 
-					unsafe {
-						fixed (byte* pBuffer = frame, pBytes = bytes) {
-							byte* pB = pBuffer, pEnd = pBytes + bytes.Length;
-							for (var pByte = pBytes; pByte < pEnd; pByte += 4, pB += 3) {
-								byte b = *(pByte);
-								byte g = *(pByte + 1);
-								byte r = *(pByte + 2);
-
-								ushort r5 = (ushort)(r >> 3);
-								ushort g6 = (ushort)(g >> 2);
-								ushort b5 = (ushort)(b >> 3);
-
-								ushort rgb565 = (ushort)((r5 << 11) | (g6 << 5) | b5);
-
-								*(pB) = (byte)(rgb565 >> 8);
-								*(pB + 1) = (byte)(rgb565 & 0xFF);
-							}
-						}
+					for (var i = 0; i < frame.Length; i += 2) {
+						var r = bgraData[i * 2 + 2];
+						var g = bgraData[i * 2 + 1];
+						var b = bgraData[i * 2];
+						var (x1, x2) = ColorUtil.Rgb24ToRgb565(r, g, b);
+						frame[i] = x1;
+						frame[i + 1] = x2;
 					}
 				});
 				return frame;
@@ -627,32 +613,6 @@ namespace LibDmd.Common
 			lock (FrameDataObjectPool) {
 				return ConvertFromRgb565(dim, GetFrameDataFromPool(dim).With(frame));
 			}
-		}
-
-		/// <summary>
-		/// Convert an RGB24 array to a RGB565 array.
-		/// </summary>
-		/// <param name="dim">Dimensions of the image</param>
-		/// <param name="frameRgb24">RGB24 array, from top left to bottom right</param>
-		/// <returns></returns>
-		public static char[] ConvertToRgb565(Dimensions dim, byte[] frameRgb24)
-		{
-			var frame = new char[dim.Surface];
-			var pos = 0;
-			for (var y = 0; y < dim.Height; y++) {
-				for (var x = 0; x < dim.Width * 3; x += 3) {
-					var rgbPos = y * dim.Width * 3 + x;
-					var r = frameRgb24[rgbPos];
-					var g = frameRgb24[rgbPos + 1];
-					var b = frameRgb24[rgbPos + 2];
-
-					var x1 = (r & 0xF8) | (g >> 5);          // Take 5 bits of Red component and 3 bits of G component
-					var x2 = ((g & 0x1C) << 3) | (b >> 3);   // Take remaining 3 Bits of G component and 5 bits of Blue component
-
-					frame[pos++] = (char)((x1 << 8) + x2);
-				}
-			}
-			return frame;
 		}
 
 		/// <summary>
