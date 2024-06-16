@@ -613,6 +613,15 @@ namespace LibDmd.Frame
 					}
 					sb.AppendLine();
 				}
+			} else if (BitLength == 16) {
+				for (var y = 0; y < Dimensions.Height; y++) {
+					for (var x = 0; x < Dimensions.Width; x++) {
+						sb.Append(Data[y * Dimensions.Width * 2 + x * 2].ToString("X2"));
+						sb.Append(Data[y * Dimensions.Width * 2 + x * 2 + 1].ToString("X2"));
+						sb.Append(" ");
+					}
+					sb.AppendLine();
+				}
 			} else if (BitLength == 24) {
 				for (var p = 0; p < 3; p++) {
 					sb.AppendLine($"::{PlaneName(p)}::");
