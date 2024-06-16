@@ -6,7 +6,7 @@ namespace LibDmd.Output
 	/// Output devices implementing this interface are able to
 	/// render 16-bit RGB565 frames.
 	/// </summary>
-	public interface IRgb565Destination : IRgb24Destination
+	public interface IRgb565Destination : IDestination
 	{
 		/// <summary>
 		/// Renders a 16-bit RGB565 frame.
