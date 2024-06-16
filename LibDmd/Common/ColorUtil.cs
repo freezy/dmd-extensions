@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Media;
 using LibDmd.Frame;
 
@@ -221,7 +222,7 @@ namespace LibDmd.Common
 		public static int[] ToIntArray(Color[] colors)
 		{
 			if (colors == null) {
-				return new int[0];
+				return Array.Empty<int>();
 			}
 			var arr = new int[colors.Length];
 			var pos = 0;
@@ -269,16 +270,13 @@ namespace LibDmd.Common
 							palValues[1][i] = palette[i].G;
 							palValues[2][i] = palette[i].B;
 							break;
-						case 2: {
-							ushort r5 = (ushort)((palette[i].R >> 3) & 0x1F);
-							ushort g6 = (ushort)((palette[i].G >> 2) & 0x3F);
-							ushort b5 = (ushort)((palette[i].B >> 3) & 0x1F);
-							ushort rgb565 = (ushort)((r5 << 11) | (g6 << 5) | b5);
 
-							palValues[0][i] = (byte)((rgb565 >> 8) & 0xFF);
-							palValues[1][i] = (byte)(rgb565 & 0xFF);
+						case 2:
+							var (x1, x2) = Rgb24ToRgb565(palette[i].R, palette[i].G, palette[i].B);
+							palValues[0][i] = x1;
+							palValues[1][i] = x2;
 							break;
-						}
+
 						default:
 							throw new ArgumentException("Unsupported number of bytes per pixel.");
 					}
@@ -305,23 +303,98 @@ namespace LibDmd.Common
 			}
 		}
 
+
+		/// <summary>
+		/// Convert an RGB24 array to a RGB565 byte array.
+		/// </summary>
+		/// <param name="dim">Dimensions of the image</param>
+		/// <param name="rgb888Data">RGB24 array, from top left to bottom right</param>
+		/// <returns></returns>
+		public static byte[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data)
+		{
+			var frame = new byte[dim.Surface * 2];
+			var rgb565Pos = 0;
+			for (var y = 0; y < dim.Height; y++) {
+				for (var x = 0; x < dim.Width * 3; x += 3) {
+					var rgb888Pos = y * dim.Width * 3 + x;
+					Rgb24ToRgb565(rgb888Data, rgb888Pos, frame, rgb565Pos++);
+				}
+			}
+			return frame;
+		}
+
+		/// <summary>
+		/// Convert an RGB24 array to a RGB565 char array.
+		/// </summary>
+		/// <param name="dim">Dimensions of the image</param>
+		/// <param name="rgb888Data">RGB24 array, from top left to bottom right</param>
+		/// <param name="frame"></param>
+		/// <returns></returns>
+		public static char[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data, char[] frame)
+		{
+			var rgb565Pos = 0;
+			for (var y = 0; y < dim.Height; y++) {
+				for (var x = 0; x < dim.Width * 3; x += 3) {
+					var rgb888Pos = y * dim.Width * 3 + x;
+					Rgb24ToRgb565(rgb888Data, rgb888Pos, frame, rgb565Pos++);
+				}
+			}
+			return frame;
+		}
+
+		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<byte> rgb565Data, int rgb565Pos)
+		{
+			var (x1, x2) = Rgb24ToRgb565(rgb888Data, rgb888Pos);
+			rgb565Data[rgb565Pos] = x1;
+			rgb565Data[rgb565Pos + 1] = x2;
+		}
+
+		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<char> rgb565Data, int rgb565Pos)
+		{
+			var (x1, x2) = Rgb24ToRgb565(rgb888Data, rgb888Pos);
+			rgb565Data[rgb565Pos] = (char)((x1 << 8) + x2);
+		}
+
+		private static (byte, byte) Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos)
+		{
+			return Rgb24ToRgb565(rgb888Data[rgb888Pos], rgb888Data[rgb888Pos + 1], rgb888Data[rgb888Pos + 2]);
+		}
+
+		public static (byte, byte) Rgb24ToRgb565(byte r, byte g, byte b)
+		{
+			var x1 = (r & 0xF8) | (g >> 5);          // Take 5 bits of Red component and 3 bits of G component
+			var x2 = ((g & 0x1C) << 3) | (b >> 3);   // Take remaining 3 Bits of G component and 5 bits of Blue component
+			return ((byte)x1, (byte)x2);
+		}
+
 		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
 		{
 			var rgb888Data = new byte[dim.Surface * 3];
 			for (var y = 0; y < dim.Height; y++) {
 				for (var x = 0; x < dim.Width; x++) {
 					var i = (y * dim.Width + x) * 2;
-					var rgb565 = (ushort)((rgb565Data[i] << 8) | rgb565Data[i + 1]);
-					var r = (byte)((rgb565 & 0xf800) >> 8);
-					var g = (byte)((rgb565 & 0x07e0) >> 3);
-					var b = (byte)((rgb565 & 0x001f) << 3);
 					var j = (y * dim.Width + x) * 3;
-					rgb888Data[j] = r;
-					rgb888Data[j + 1] = g;
-					rgb888Data[j + 2] = b;
+					Rgb565ToRgb888(rgb565Data, i, rgb888Data, j);
 				}
 			}
 			return rgb888Data;
+		}
+
+		private static void Rgb565ToRgb888(IReadOnlyList<byte> rgb565Data, int rgb565Pos, IList<byte> rgb888Data, int rgb888Pos)
+		{
+			var (r, g, b) = Rgb565ToRgb888(rgb565Data, rgb565Pos);
+			rgb888Data[rgb888Pos] = r;
+			rgb888Data[rgb888Pos + 1] = g;
+			rgb888Data[rgb888Pos + 2] = b;
+		}
+
+		public static (byte, byte, byte) Rgb565ToRgb888(IReadOnlyList<byte> rgb565Data, int rgb565Pos)
+		{
+			var rgb565 = (ushort)((rgb565Data[rgb565Pos] << 8) | rgb565Data[rgb565Pos + 1]);
+			var r = (byte)((rgb565 & 0xf800) >> 8);
+			var g = (byte)((rgb565 & 0x07e0) >> 3);
+			var b = (byte)((rgb565 & 0x001f) << 3);
+			return (r, g, b);
 		}
 
 		/// <summary>

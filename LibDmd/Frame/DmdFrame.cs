@@ -271,14 +271,14 @@ namespace LibDmd.Frame
 		/// </summary>
 		/// <param name="palette">Palette to use for conversion</param>
 		/// <returns>New bitmap frame</returns>
-		public BmpFrame ConvertToBmp(Color[] palette) => ConvertToRgb24(palette).ConvertToBmp();
+		public BmpFrame ConvertGrayToBmp(Color[] palette) => ConvertGrayToRgb24(palette).ConvertRgbToBmp();
 
 		/// <summary>
 		/// Converts this RGB frame to Bitmap.
 		/// </summary>
 		/// <returns>New bitmap frame</returns>
 		/// <exception cref="ArgumentException">Thrown if executed on a grayscale frame</exception>
-		public BmpFrame ConvertToBmp()
+		public BmpFrame ConvertRgbToBmp()
 		{
 			using (Profiler.Start("DmdFrame.ConvertToBmp")) {
 
@@ -300,7 +300,7 @@ namespace LibDmd.Frame
 		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
 		/// <returns>This updated instance.</returns>
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
-		public DmdFrame ConvertToRgb24(Color[] palette) => ConvertToRgb(palette, 3);
+		public DmdFrame ConvertGrayToRgb24(Color[] palette) => ConvertGrayToRgb(palette, 3);
 
 		/// <summary>
 		/// Converts a grayscale frame to RGB565.
@@ -309,7 +309,7 @@ namespace LibDmd.Frame
 		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
 		/// <returns>This updated instance.</returns>
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
-		public DmdFrame ConvertToRgb565(Color[] palette) => ConvertToRgb(palette, 2);
+		public DmdFrame ConvertGrayToRgb565(Color[] palette) => ConvertGrayToRgb(palette, 2);
 
 		/// <summary>
 		/// Converts a grayscale frame to RGB24.
@@ -319,7 +319,7 @@ namespace LibDmd.Frame
 		/// <param name="bytesPerPixel">Number of RGB bytes per pixel. 2 or 3.</param>
 		/// <returns>This updated instance.</returns>
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
-		private DmdFrame ConvertToRgb(Color[] palette, int bytesPerPixel)
+		private DmdFrame ConvertGrayToRgb(Color[] palette, int bytesPerPixel)
 		{
 			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
 
@@ -355,6 +355,26 @@ namespace LibDmd.Frame
 #endif
 				Data = ColorUtil.ConvertRgb565ToRgb24(Dimensions, Data);
 				BitLength = 24;
+
+				#if DEBUG
+				AssertData();
+				#endif
+
+				return this;
+			}
+		}
+
+		public DmdFrame ConvertRgb24ToRgb565()
+		{
+			using (Profiler.Start("DmdFrame.ConvertRgb565ToRgb24")) {
+
+#if DEBUG
+				if (BitLength != 24) {
+					throw new ArgumentException("Cannot convert non-RGB24 frame to RGB565.");
+				}
+#endif
+				Data = ColorUtil.ConvertRgb24ToRgb565(Dimensions, Data);
+				BitLength = 16;
 
 				#if DEBUG
 				AssertData();

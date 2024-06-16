@@ -153,7 +153,7 @@ namespace LibDmd.Output.Pixelcade
 		public void RenderRgb24(DmdFrame frameRgb24)
 		{
 			// convert rgb24 to rgb565
-			var frame565 = ImageUtil.ConvertToRgb565(FixedSize, frameRgb24.Data);
+			var frame565 = ColorUtil.ConvertRgb24ToRgb565(FixedSize, frameRgb24.Data, new char[FixedSize.Surface]);
 
 			// split into planes to send over the wire
 			var newFrame = new byte[FixedSize.Surface * 3 / 2];
