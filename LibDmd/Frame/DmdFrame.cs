@@ -280,7 +280,7 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">Thrown if executed on a grayscale frame</exception>
 		public BmpFrame ConvertRgbToBmp()
 		{
-			using (Profiler.Start("DmdFrame.ConvertToBmp")) {
+			using (Profiler.Start("DmdFrame.ConvertRgbToBmp")) {
 
 				#if DEBUG
 				if (!IsRgb24 && !IsRgb565) {
@@ -366,7 +366,7 @@ namespace LibDmd.Frame
 
 		public DmdFrame ConvertRgb24ToRgb565()
 		{
-			using (Profiler.Start("DmdFrame.ConvertRgb565ToRgb24")) {
+			using (Profiler.Start("DmdFrame.ConvertRgb24ToRgb565")) {
 
 #if DEBUG
 				if (BitLength != 24) {
