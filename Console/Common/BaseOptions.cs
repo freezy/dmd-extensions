@@ -163,7 +163,7 @@ namespace DmdExt.Common
 		[Option("zedmd-wifi-ssid", HelpText = "Configure ZeDMD to use this SSID for WiFi mode.")]
 		public string WifiSsid { get; set; } = null;
 
-		[Option("zedmd-wifi-port", HelpText = "Configure ZeDMD to use this password for WiFi mode.")]
+		[Option("zedmd-wifi-password", HelpText = "Configure ZeDMD to use this password for WiFi mode.")]
 		public string WifiPassword { get; set; } = null;
 
 		public IGlobalConfig Global { get; }
