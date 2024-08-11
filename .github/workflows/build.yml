@@ -1,0 +1,66 @@
+name: Build and Package
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  
+  # Build artifacts
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # We need dotnet
+      - name: Add dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 4.7.2
+
+      - name: Restore Packages
+        run: dotnet restore DMDExtensions.sln
+
+      - name: Restore DLLExport dependency
+        run: DllExport -action Restore -sln-file DmdExtensions.sln
+
+      # Build artifacts 
+      - name: Build
+        run: dotnet publish -r win-x64 --self-contained=false DmdExtensions.sln
+
+      # Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: DMDEXT
+          #path: bin\Release\net8.0-windows\win-x64\publish
+          path: bin\Release
+          retention-days: 7
+
+      - name: Generate zip bundle
+        run: |
+          # tree /f
+          7z a -tzip DMDExt.zip .\DMD-Extensions\bin\Release\*
+      
+      - if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        name: Publish latest pre-release
+        uses: ncipollo/release-action@v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          generateReleaseNotes: true
+          prerelease: true
+          artifacts: |
+            DMDExt.zip
+
+      - if: startsWith(github.ref, 'refs/tags/')
+        name: Publish tagged release
+        uses: ncipollo/release-action@v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          generateReleaseNotes: true
+          prerelease: false
+          artifacts: |
+            DMDExt.zip
