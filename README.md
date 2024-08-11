@@ -7,37 +7,53 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
 
 ## Table of Contents
 
-* [Features](#features)
-  * [Supported Games](#supported-games)
-  * [Supported Displays](#supported-displays)
-  * [High Resolution DMD for Monitors](#high-resolution-dmd-for-monitors)
-  * [Segment Display Rendering](#segment-display-rendering)
-  * [Frame Colorization](#frame-colorization)
-  * [Network Streaming](#network-streaming)
-  * [Scaling](#scaling)
-* [Install Instructions](#install-instructions)
-* [Usage](#usage)
-  * [Pinball FX2](#pinball-fx2)
-  * [Pinball FX3](#pinball-fx3)
-  * [Pinball FX](#pinball-fx)
-  * [The Pinball Arcade](#the-pinball-arcade)
-  * [Pro Pinball Ultra](#pro-pinball-ultra)
-  * [Visual PinMAME](#visual-pinmame)
-  * [Future Pinball](#future-pinball)
-  * [Media](#media)
-  * [Pinup Player](#pinup-player)
-  * [PinballX](#pinballx)
-  * [Frame Dumping](#frame-dumping)
-* [Configuration](#configuration)
-  * [Output Configuration](#output-configuration)
-  * [Command Line Configuration](#command-line-configuration) ([Mirror](#mirror-command) [Play](#play-command) [Test](#test-command))
-  * [Colorization](#colorization)
-* [Breaking Changes](#breaking-changes)
-* [Troubleshooting](#troubleshooting)
-* [Reporting Bugs](#reporting-bugs)
-* [Manual Installation](#manual-installation)
-* [Game Names](#game-names)
-* [Build Instructions](#build-instructions)
+- [Table of Contents](#table-of-contents)
+- [Features](#features)
+  - [Supported Games](#supported-games)
+  - [Supported Displays](#supported-displays)
+  - [High Resolution DMD for Monitors](#high-resolution-dmd-for-monitors)
+  - [Segment Display Rendering](#segment-display-rendering)
+  - [Frame Colorization](#frame-colorization)
+  - [Network Streaming](#network-streaming)
+  - [Scaling](#scaling)
+- [Install Instructions](#install-instructions)
+- [Usage](#usage)
+  - [Test](#test)
+  - [Pinball FX2](#pinball-fx2)
+  - [Pinball FX3](#pinball-fx3)
+  - [Pinball FX](#pinball-fx)
+  - [The Pinball Arcade](#the-pinball-arcade)
+  - [Pro Pinball Ultra](#pro-pinball-ultra)
+  - [Visual PinMAME](#visual-pinmame)
+  - [Future Pinball](#future-pinball)
+  - [Media](#media)
+  - [Pinup Player](#pinup-player)
+  - [PinballX](#pinballx)
+  - [Frame Dumping](#frame-dumping)
+- [Configuration](#configuration)
+  - [Output Configuration](#output-configuration)
+  - [Command Line Configuration](#command-line-configuration)
+  - [ZeDMD](#zedmd)
+  - [Colorization](#colorization)
+- [Breaking Changes](#breaking-changes)
+  - [v2.2.2](#v222)
+  - [v2.1.1](#v211)
+  - [v1.8.0](#v180)
+- [Troubleshooting](#troubleshooting)
+  - [Flickering with PinDMDv3](#flickering-with-pindmdv3)
+  - [Still flickering?](#still-flickering)
+  - [DmdDevice.ini Ignored?](#dmddeviceini-ignored)
+  - [Slow rendering on certain ROMs with VPM?](#slow-rendering-on-certain-roms-with-vpm)
+  - [Weird positioning or no DMD visible at all?](#weird-positioning-or-no-dmd-visible-at-all)
+  - [Unable to load DLL 'serum.dll'](#unable-to-load-dll-serumdll)
+  - [Backglass covers segment displays](#backglass-covers-segment-displays)
+- [Reporting Bugs](#reporting-bugs)
+- [Manual Installation](#manual-installation)
+- [Game Names](#game-names)
+  - [x64 vs x86](#x64-vs-x86)
+- [Build Instructions](#build-instructions)
+- [Credits](#credits)
+- [License](#license)
 
 ## Features
 
@@ -513,10 +529,11 @@ Alternatively ZeDMD could be flashed with a firmware that provides a WiFi mode.
 In `DmdDevice.ini` there're special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
 
 To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the network connection.
-These could also be set once via the DMD Extension.
-Run `dmdext.exe -d zedmd --zedmd-wifi-ssid YOUR_SECRET_SSID --zedmd-wifi-password YOUR_SECRET_PASSWORD`.
+These could also be set once via the DMD Extension.  
+Run `dmdext.exe test -d zedmdwifi --zedmd-wifi-ssid=YOUR_SECRET_SSID --zedmd-wifi-password=YOUR_SECRET_PASSWORD`.
 At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
-This address has to be added as `wifi.address` to `DmdDevice.ini`.
+This address has to be added as `wifi.address` to `DmdDevice.ini`.  
+You can test with `dmdext.exe test -d zedmdwifi --zedmd-wifi-address=x.x.x.x` (replace `x.x.x.x` with the IP address shown on ZeDMD).
 
 You can also perform that configuration without `dmdext.exe` using this multi-step process:
 First you have to add the SSID and the password in the zedmd section of `DmdDevice.ini` using
