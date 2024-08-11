@@ -1,0 +1,57 @@
+name: Build and Package
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  
+  # Build artifacts
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # We need dotnet
+      - name: Add dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1
+      
+      - name: Restore NuGet packages
+        run: nuget restore DmdExtensions.sln
+        
+      - name: Restore DLLExport dependency
+        run: .\DllExport -action Restore -sln-file DmdExtensions.sln
+
+      # Build artifacts 
+      - name: Build-X86
+        run: msbuild /property:Platform=x86 /property:Configuration=Release DmdExtensions.sln
+
+      # Build artifacts 
+      - name: Build-X64
+        run: msbuild /property:Platform=x64 /property:Configuration=Release DmdExtensions.sln
+
+      - name: Generate zip bundle
+        run: |
+          7z a -tzip dmdext-x64.zip .\Console\bin\x64\Release\dmdext.exe .\Console\bin\x64\Release\dmdext.log.config .\PinMameDevice\bin\x64\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x64\Release\DmdDevice.log.config dmdext.log.config
+          7z a -tzip dmdext-x86.zip .\Console\bin\x86\Release\dmdext.exe .\Console\bin\x86\Release\dmdext.log.config .\PinMameDevice\bin\x86\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x86\Release\DmdDevice.log.config
+         
+      # Upload ZIP as artifacts from GitHub Actions
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dmdext-snapshot
+          path: |
+            dmdext-x64.zip
+            dmdext-x86.zip 
+          retention-days: 90
