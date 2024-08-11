@@ -25,15 +25,15 @@ namespace LibDmd.Output.ZeDMD
 				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
 			}
 			else {
-				OpenUSBConnection();
-
-				if (IsAvailable && !string.IsNullOrEmpty(WifiSsid) && !string.IsNullOrEmpty(WifiPassword) && WifiPort > 0) {
+				if (!string.IsNullOrEmpty(WifiSsid) && !string.IsNullOrEmpty(WifiPassword) && WifiPort > 0) {
+					Logger.Info("Setting up WiFi credentials through USB.");
+					OpenUSBConnection();
 					ZeDMD_EnableDebug(_pZeDMD);
 					ZeDMD_SetWiFiSSID(_pZeDMD, WifiSsid);
 					ZeDMD_SetWiFiPassword(_pZeDMD, WifiPassword);
 					ZeDMD_SetWiFiPort(_pZeDMD, WifiPort);
 					ZeDMD_SaveSettings(_pZeDMD);
-					Logger.Info(Name + " WiFi credentials submitted");
+					Logger.Info(Name + " WiFi credentials submitted.");
 					ZeDMD_Close(_pZeDMD);
 					IsAvailable = false;
 					return;
