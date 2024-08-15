@@ -86,11 +86,11 @@ namespace LibDmd.Test
 
 			var rgb24Frame = FrameGenerator.FromString(@"
 				00 00 
-				f8 f8", @"
-				1c 80 
-				bc e4", @"
-				20 38 
-				38 d8");
+				ff ff", @"
+				1c 82 
+				be e7", @"
+				21 39 
+				39 de");
 
 			await AssertFrame(_source, dest, rgb565Frame, rgb24Frame);
 		}
