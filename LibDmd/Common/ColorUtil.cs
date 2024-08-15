@@ -303,7 +303,6 @@ namespace LibDmd.Common
 			}
 		}
 
-
 		/// <summary>
 		/// Convert an RGB24 array to a RGB565 byte array.
 		/// </summary>
@@ -376,11 +375,11 @@ namespace LibDmd.Common
 		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
 		{
 			var rgb888Data = new byte[dim.Surface * 3];
-			for (var y = 0; y < dim.Height; y++) {
-				for (var x = 0; x < dim.Width; x++) {
-					var i = (y * dim.Width + x) * 2;
-					var j = (y * dim.Width + x) * 3;
-					Rgb565ToRgb888(rgb565Data, i, rgb888Data, j);
+			for (var x = 0; x < dim.Width; x++) {
+				for (var y = 0; y < dim.Height; y++) {
+					var rgb565Pos = (y * dim.Width + x) * 2;
+					var rgb888Pos = (y * dim.Width + x) * 3;
+					Rgb565ToRgb888(rgb565Data, rgb565Pos, rgb888Data, rgb888Pos);
 				}
 			}
 			return rgb888Data;
@@ -425,7 +424,7 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		private static ushort GetRgb565Pixel(IReadOnlyList<byte> rgb565Data, int position)
 		{
-			return (ushort)((rgb565Data[position] << 8) | rgb565Data[position + 1]);
+			return (ushort)((rgb565Data[position + 1] << 8) | rgb565Data[position]);
 		}
 
 		/// <summary>
