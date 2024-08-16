@@ -19,6 +19,8 @@ namespace LibDmd.Converter.Serum
 		private readonly ScalerMode _scalerMode;
 		private readonly DmdFrame _frame;
 
+		private const int MAX_COLOR_ROTATIONS_V2 = 4;
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public SerumApiV2(Subject<DmdFrame> rgb565Frames, ScalerMode scalerMode, ref SerumFrame serumFrame)
@@ -32,32 +34,56 @@ namespace LibDmd.Converter.Serum
 
 		public bool Convert(ref SerumFrame serumFrame, uint rotations)
 		{
+			return ReadAndPushNextFrame(ref serumFrame, true);
+		}
+
+		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint changed)
+		{
+			// todo figure out what the hell the changed condition is used for
+			ReadAndPushNextFrame(ref serumFrame, false);
+		}
+
+		private bool ReadAndPushNextFrame(ref SerumFrame serumFrame, bool checkForRotations)
+		{
 			byte[] frameData;
 			Dimensions dim;
+			var hasRotations = false;
 			if (_scalerMode == ScalerMode.None) {
 				if (serumFrame.Has32PFrame) {
 					frameData = Read32PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width32, 32);
+					if (checkForRotations) {
+						hasRotations = HasRotations(serumFrame.rotations32);
+					}
 				} else {
 					frameData = Read64PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width64, 64);
+					if (checkForRotations) {
+						hasRotations = HasRotations(serumFrame.rotations64);
+					}
 					// TODO scale down
 				}
 			} else {
 				if (serumFrame.Has64PFrame) {
 					frameData = Read64PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width64, 64);
+					if (checkForRotations) {
+						hasRotations = HasRotations(serumFrame.rotations64);
+					}
 
 				} else {
 					frameData = Read32PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width32, 32);
+					if (checkForRotations) {
+						hasRotations = HasRotations(serumFrame.rotations32);
+					}
 					// TODO scale up
 				}
 			}
 
 			_frame.Update(dim, frameData);
 			_rgb565Frames.OnNext(_frame);
-			return false;
+			return hasRotations;
 		}
 
 		private static Dimensions ReadDimensions(ref SerumFrame serumFrame)
@@ -99,8 +125,18 @@ namespace LibDmd.Converter.Serum
 			return _frames[size];
 		}
 
-		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette)
+		private static bool HasRotations(IntPtr serumFrameRotations)
 		{
+			ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_V2 * Serum.MAX_LENGTH_COLOR_ROTATION];
+			var tData = new byte[trot.Length * 2];
+			Marshal.Copy(serumFrameRotations, tData, 0, tData.Length);
+			Buffer.BlockCopy(tData, 0, trot, 0, tData.Length);
+			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
+				if (trot[ti * 3] > 0) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

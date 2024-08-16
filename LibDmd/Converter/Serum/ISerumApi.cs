@@ -6,6 +6,6 @@ namespace LibDmd.Converter.Serum
 	{
 		uint NumColors { get; }
 		bool Convert(ref SerumFrame serumFrame, uint rotations);
-		void UpdateRotations(ref SerumFrame serumFrame, Color[] palette);
+		void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint changed);
 	}
 }

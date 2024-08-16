@@ -69,6 +69,7 @@ namespace LibDmd.Converter.Serum
 		private readonly Color[] _rotationPalette = new Color[64];
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		internal const int MAX_LENGTH_COLOR_ROTATION = 64; // maximum number of new colors in a rotation
 
 		private readonly ISerumApi _api;
 
@@ -189,7 +190,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			ReadSerumFrame();
-			_api.UpdateRotations(ref _serumFrame, _rotationPalette);
+			_api.UpdateRotations(ref _serumFrame, _rotationPalette, changed);
 			return true;
 		}
 
