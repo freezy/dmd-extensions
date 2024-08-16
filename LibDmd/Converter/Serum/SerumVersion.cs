@@ -6,7 +6,7 @@ namespace LibDmd.Converter.Serum
 	/// </summary>
 	enum SerumVersion
 	{
-		Version1,
-		Version2
+		Version1 = 1,
+		Version2 = 2
 	}
 }
