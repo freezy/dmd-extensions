@@ -424,6 +424,7 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		private static ushort GetRgb565Pixel(IReadOnlyList<byte> rgb565Data, int position)
 		{
+			// for some reason, those are inverted
 			return (ushort)((rgb565Data[position + 1] << 8) | rgb565Data[position]);
 		}
 

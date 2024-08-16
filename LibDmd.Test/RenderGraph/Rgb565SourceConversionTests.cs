@@ -60,9 +60,10 @@ namespace LibDmd.Test
 			_graph.Destinations = new List<IDestination> { dest };
 			_graph.StartRendering();
 
+			// note: the 2 bytes of the shorts are inverted
 			var rgb565Frame = FrameGenerator.FromString(@"
-				00e4 0407 
-				fde7 ff3b");
+				e400 0704 
+				e7fd 3bff");
 
 			var gray2Frame = FrameGenerator.FromString(@"
 				01
@@ -80,9 +81,10 @@ namespace LibDmd.Test
 			_graph.Destinations = new List<IDestination> { dest };
 			_graph.StartRendering();
 
+			// note: the 2 bytes of the shorts are inverted
 			var rgb565Frame = FrameGenerator.FromString(@"
-				00e4 0407 
-				fde7 ff3b");
+				e400 0704 
+				e7fd 3bff");
 
 			var rgb24Frame = FrameGenerator.FromString(@"
 				00 00 
