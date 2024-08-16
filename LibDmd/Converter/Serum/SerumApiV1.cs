@@ -57,7 +57,7 @@ namespace LibDmd.Converter.Serum
 			return hasRotations;
 		}
 
-		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette)
+		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint _)
 		{
 			Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
 			BytesToColors(_bytePalette, palette);
