@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using LibDmd.Frame;
 using LibDmd.Input;
 using System.Windows.Media;
+using NLog;
 
 namespace LibDmd.Converter.Serum
 {
@@ -22,6 +23,8 @@ namespace LibDmd.Converter.Serum
 
 		private readonly FrameEvent _frameEvent = new FrameEvent();
 
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		public SerumApiV1(Subject<ColoredFrame> coloredGray6Frames, Subject<FrameEvent> frameEvents, ref SerumFrame serumFrame)
 		{
 			_coloredGray6Frames = coloredGray6Frames;
@@ -36,8 +39,14 @@ namespace LibDmd.Converter.Serum
 
 		public bool Convert(ref SerumFrame serumFrame, uint rotations)
 		{
+			if (serumFrame.Frame == null) {
+				Logger.Warn("[serum] Frame data is null.");
+			}
+
 			// copy data from unmanaged to managed
-			Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
+			if (serumFrame.Palette != null) {
+				Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
+			}
 			Marshal.Copy(serumFrame.Frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
 			BytesToColors(_bytePalette, _colorPalette);
 
