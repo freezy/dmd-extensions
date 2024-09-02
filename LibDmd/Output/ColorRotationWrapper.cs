@@ -35,8 +35,12 @@ namespace LibDmd.Output
 			_rgb24Frames.OnNext(_frame.ConvertToRgb24());
 		}
 
-		public void UpdatePalette(Color[] palette)
+		private void UpdatePalette(Color[] palette)
 		{
+			if (_frame == null) {
+				return;
+			}
+
 			_frame.Update(_frame.Data, palette);
 			_rgb24Frames.OnNext(_frame.ConvertToRgb24());
 		}
