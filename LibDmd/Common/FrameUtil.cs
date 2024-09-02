@@ -192,7 +192,24 @@ namespace LibDmd.Common
 			}
 		}
 
-		public static void SplitIntoRgbPlanes(char[] rgb565, int width, int numLogicalRows, byte[] dest, ColorMatrix colorMatrix = ColorMatrix.Rgb) // originally "convertAdafruit()"
+
+		public static unsafe ushort[] CastToUShort(byte[] byteArray)
+		{
+			if (byteArray == null || byteArray.Length == 0) {
+				return Array.Empty<ushort>();
+			}
+
+			if (byteArray.Length % 2 != 0) {
+				throw new ArgumentException("Byte array length must be even to convert to ushort array.");
+			}
+
+			fixed (byte* pByteArray = byteArray) {
+				ushort* pUShortArray = (ushort*)pByteArray;
+				return new Span<ushort>(pUShortArray, byteArray.Length / 2).ToArray();
+			}
+		}
+
+		public static void SplitIntoRgbPlanes(ushort[] rgb565, int width, int numLogicalRows, byte[] dest, ColorMatrix colorMatrix = ColorMatrix.Rgb) // originally "convertAdafruit()"
 		{
 			var pairOffset = 16;
 			var height = rgb565.Length / width;
