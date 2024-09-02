@@ -111,7 +111,7 @@ namespace LibDmd.Converter.Serum
 
 		private byte[] Read32PFrame(ref SerumFrame serumFrame)
 		{
-			Logger.Info($"Got 32P frame ({serumFrame.Width32}x32)..");
+			// Logger.Info($"Got 32P frame ({serumFrame.Width32}x32)..");
 			var frameSize = serumFrame.Width32 * 32 * 2;
 			var frame = GetFrame(frameSize);
 			Marshal.Copy(serumFrame.Frame32Data, frame, 0, (int)frameSize);
@@ -120,7 +120,7 @@ namespace LibDmd.Converter.Serum
 
 		private byte[] Read64PFrame(ref SerumFrame serumFrame)
 		{
-			Logger.Info($"Reading 64P frame ({serumFrame.Width64}x64)..");
+			// Logger.Info($"Reading 64P frame ({serumFrame.Width64}x64)..");
 			var frameSize = serumFrame.Width64 * 64 * 2;
 			var frame = GetFrame(frameSize);
 			Marshal.Copy(serumFrame.Frame64Data, frame, 0, (int)frameSize);
