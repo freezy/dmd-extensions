@@ -329,7 +329,7 @@ namespace LibDmd.Common
 		/// <param name="rgb888Data">RGB24 array, from top left to bottom right</param>
 		/// <param name="frame"></param>
 		/// <returns></returns>
-		public static char[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data, char[] frame)
+		public static ushort[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data, ushort[] frame)
 		{
 			var rgb565Pos = 0;
 			for (var y = 0; y < dim.Height; y++) {
@@ -348,10 +348,10 @@ namespace LibDmd.Common
 			rgb565Data[rgb565Pos + 1] = x2;
 		}
 
-		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<char> rgb565Data, int rgb565Pos)
+		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<ushort> rgb565Data, int rgb565Pos)
 		{
 			var (x1, x2) = Rgb24ToRgb565(rgb888Data, rgb888Pos);
-			rgb565Data[rgb565Pos] = (char)((x1 << 8) + x2);
+			rgb565Data[rgb565Pos] = (ushort)((x1 << 8) + x2);
 		}
 
 		private static (byte, byte) Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos)
