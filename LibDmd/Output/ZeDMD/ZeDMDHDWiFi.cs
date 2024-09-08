@@ -7,7 +7,8 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMDHDWiFi : ZeDMDWiFiBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
+	public class ZeDMDHDWiFi : ZeDMDWiFiBase, IGray2Destination, IGray4Destination, IColoredGray2Destination,
+		IColoredGray4Destination, IRgb565Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
 	{
 		public override string Name => "ZeDMD HD WiFi";
 		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
@@ -73,6 +74,12 @@ namespace LibDmd.Output.ZeDMD
 		{
 			DmdAllowHdScaling = ScaleRgb24;
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+		}
+
+		public void RenderRgb565(DmdFrame frame)
+		{
+			DmdAllowHdScaling = ScaleRgb24;
+			ZeDMD_RenderRgb16(_pZeDMD, frame.Data);
 		}
 	}
 }
