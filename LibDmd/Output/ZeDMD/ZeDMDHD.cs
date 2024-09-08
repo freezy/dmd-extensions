@@ -7,7 +7,8 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMDHD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
+	public class ZeDMDHD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
+		IColoredGray6Destination, IRgb565Destination, IFixedSizeDestination, IColorRotationDestination
 	{
 		public override string Name => "ZeDMD HD";
 		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
@@ -88,6 +89,13 @@ namespace LibDmd.Output.ZeDMD
 			DmdAllowHdScaling = ScaleRgb24;
 			ZeDMD_EnablePreUpscaling(_pZeDMD);
 			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+		}
+
+		public void RenderRgb565(DmdFrame frame)
+		{
+			DmdAllowHdScaling = ScaleRgb24;
+			ZeDMD_EnablePreUpscaling(_pZeDMD);
+			ZeDMD_RenderRgb16(_pZeDMD, frame.Data);
 		}
 	}
 }
