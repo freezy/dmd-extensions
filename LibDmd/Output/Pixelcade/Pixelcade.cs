@@ -13,7 +13,7 @@ namespace LibDmd.Output.Pixelcade
 	/// Output target for Pixelcade devices.
 	/// </summary>
 	/// <see cref="http://pixelcade.org/"/>
-	public class Pixelcade : IRgb24Destination, IFixedSizeDestination
+	public class Pixelcade : IRgb24Destination, IRgb565Destination, IFixedSizeDestination
 	{
 		public string Name => "Pixelcade";
 		public bool IsAvailable { get; private set; }
@@ -153,7 +153,25 @@ namespace LibDmd.Output.Pixelcade
 		public void RenderRgb24(DmdFrame frameRgb24)
 		{
 			// convert rgb24 to rgb565
-			var frame565 = ColorUtil.ConvertRgb24ToRgb565(FixedSize, frameRgb24.Data, new char[FixedSize.Surface]);
+			var frame565 = ColorUtil.ConvertRgb24ToRgb565(FixedSize, frameRgb24.Data, new ushort[FixedSize.Surface]);
+
+			// split into planes to send over the wire
+			var newFrame = new byte[FixedSize.Surface * 3 / 2];
+			FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
+
+			// copy to frame buffer
+			var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);
+
+			// send to device if changed
+			if (changed) {
+				RenderRaw(_frameBuffer);
+			}
+		}
+
+
+		public void RenderRgb565(DmdFrame frame)
+		{
+			var frame565 = FrameUtil.CastToUShort(frame.Data);
 
 			// split into planes to send over the wire
 			var newFrame = new byte[FixedSize.Surface * 3 / 2];

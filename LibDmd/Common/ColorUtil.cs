@@ -303,7 +303,6 @@ namespace LibDmd.Common
 			}
 		}
 
-
 		/// <summary>
 		/// Convert an RGB24 array to a RGB565 byte array.
 		/// </summary>
@@ -330,7 +329,7 @@ namespace LibDmd.Common
 		/// <param name="rgb888Data">RGB24 array, from top left to bottom right</param>
 		/// <param name="frame"></param>
 		/// <returns></returns>
-		public static char[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data, char[] frame)
+		public static ushort[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data, ushort[] frame)
 		{
 			var rgb565Pos = 0;
 			for (var y = 0; y < dim.Height; y++) {
@@ -349,10 +348,10 @@ namespace LibDmd.Common
 			rgb565Data[rgb565Pos + 1] = x2;
 		}
 
-		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<char> rgb565Data, int rgb565Pos)
+		private static void Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos, IList<ushort> rgb565Data, int rgb565Pos)
 		{
 			var (x1, x2) = Rgb24ToRgb565(rgb888Data, rgb888Pos);
-			rgb565Data[rgb565Pos] = (char)((x1 << 8) + x2);
+			rgb565Data[rgb565Pos] = (ushort)((x1 << 8) + x2);
 		}
 
 		private static (byte, byte) Rgb24ToRgb565(IReadOnlyList<byte> rgb888Data, int rgb888Pos)
@@ -367,19 +366,32 @@ namespace LibDmd.Common
 			return ((byte)x1, (byte)x2);
 		}
 
+		/// <summary>
+		/// Converts RGB565 frame data to an RGB24 array.
+		/// </summary>
+		/// <param name="dim">Dimensions of the array</param>
+		/// <param name="rgb565Data">RGB565 data of the frame</param>
+		/// <returns>Converted RGB888 data</returns>
 		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
 		{
 			var rgb888Data = new byte[dim.Surface * 3];
-			for (var y = 0; y < dim.Height; y++) {
-				for (var x = 0; x < dim.Width; x++) {
-					var i = (y * dim.Width + x) * 2;
-					var j = (y * dim.Width + x) * 3;
-					Rgb565ToRgb888(rgb565Data, i, rgb888Data, j);
+			for (var x = 0; x < dim.Width; x++) {
+				for (var y = 0; y < dim.Height; y++) {
+					var rgb565Pos = (y * dim.Width + x) * 2;
+					var rgb888Pos = (y * dim.Width + x) * 3;
+					Rgb565ToRgb888(rgb565Data, rgb565Pos, rgb888Data, rgb888Pos);
 				}
 			}
 			return rgb888Data;
 		}
 
+		/// <summary>
+		/// Converts a RGB565 pixel of a frame to a pixel in a RGB24 frame.
+		/// </summary>
+		/// <param name="rgb565Data">Source RGB565 array</param>
+		/// <param name="rgb565Pos">Position of the source pixel within the array (not the frame)</param>
+		/// <param name="rgb888Data">Destination RGB888 array</param>
+		/// <param name="rgb888Pos">Position of the destination pixel without the array (not the frame)</param>
 		private static void Rgb565ToRgb888(IReadOnlyList<byte> rgb565Data, int rgb565Pos, IList<byte> rgb888Data, int rgb888Pos)
 		{
 			var (r, g, b) = Rgb565ToRgb888(rgb565Data, rgb565Pos);
@@ -388,13 +400,32 @@ namespace LibDmd.Common
 			rgb888Data[rgb888Pos + 2] = b;
 		}
 
+		/// <summary>
+		/// Returns the RGB888 values of a pixel within a RGB565 array.
+		/// </summary>
+		/// <param name="rgb565Data">RGB555 array</param>
+		/// <param name="rgb565Pos">Position of the pixel within the array (not the frame)</param>
+		/// <returns>A triplet of RGB values</returns>
 		public static (byte, byte, byte) Rgb565ToRgb888(IReadOnlyList<byte> rgb565Data, int rgb565Pos)
 		{
-			var rgb565 = (ushort)((rgb565Data[rgb565Pos] << 8) | rgb565Data[rgb565Pos + 1]);
-			var r = (byte)((rgb565 & 0xf800) >> 8);
-			var g = (byte)((rgb565 & 0x07e0) >> 3);
-			var b = (byte)((rgb565 & 0x001f) << 3);
-			return (r, g, b);
+			var rgb565 = GetRgb565Pixel(rgb565Data, rgb565Pos);
+			return (
+				(byte)(((rgb565 >> 8) & 0xF8) | ((rgb565 >> 13) & 0x07)), // shifting then copying the 3 most significant bits to the right
+				(byte)(((rgb565 >> 3) & 0xFC) | ((rgb565 >> 9) & 0x03)), // shifting then copying the 2 most significant bits to the right
+				(byte)(((rgb565 << 3) & 0xF8) | ((rgb565 >> 2) & 0x07)) // shifting then copying the 3 most significant bits to the right
+			);
+		}
+
+		/// <summary>
+		/// Returns a ushort RGB565 value from a byte array at a given position
+		/// </summary>
+		/// <param name="rgb565Data">RGB565 array</param>
+		/// <param name="position">Position within the array</param>
+		/// <returns></returns>
+		private static ushort GetRgb565Pixel(IReadOnlyList<byte> rgb565Data, int position)
+		{
+			// for some reason, those are inverted
+			return (ushort)((rgb565Data[position + 1] << 8) | rgb565Data[position]);
 		}
 
 		/// <summary>
