@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -14,6 +15,7 @@ namespace LibDmd.Converter.Serum
 {
 	public class Serum : AbstractConverter, IColoredGray6Source, IRgb565Source, IColorRotationSource, IFrameEventSource
 	{
+		protected override bool PadSmallFrames => true;
 		public override string Name => "Serum";
 
 		public override IEnumerable<FrameFormat> From { get; } = new [] { FrameFormat.Gray2, FrameFormat.Gray4 };
