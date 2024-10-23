@@ -140,7 +140,7 @@ namespace LibDmd.Converter
 		{
 			if (_lastDmdFrame != null) {
 				ConvertClocked(_lastDmdFrame);
-				_lastDmdFrame.ReturnToPool();
+				_lastDmdFrame?.ReturnToPool();
 			}
 
 			if (_lastAlphanumFrame != null) {
