@@ -240,50 +240,63 @@ namespace LibDmd
 			var info = new Dictionary<string, object>();
 			
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_Processor")) {
-				foreach (var obj in searcher.Get()) {
-					if (!(obj is ManagementObject mo)) {
-						continue;
+				try {
+					foreach (var obj in searcher.Get()) {
+						if (!(obj is ManagementObject mo)) {
+							continue;
+						}
+
+						AddInfo("Name", FieldCpuName, mo, info);
+						AddInfo("CurrentClockSpeed", FieldCpuClockSpeed, mo, info);
+						AddInfo("Manufacturer", FieldCpuManufacturer, mo, info);
+						AddInfo("NumberOfCores", FieldCpuNumCores, mo, info);
+						AddInfo("NumberOfLogicalProcessors", FieldCpuNumProcessors, mo, info);
+						AddInfo("ProcessorId", FieldCpuId, mo, info);
+
+						// Console.WriteLine($"{mo.Path}\n==========================");
+						// foreach(var prop in mo.Properties) {
+						// 	Console.WriteLine($"{prop.Name} = {prop.Value} ({prop.Type})");
+						// }
 					}
-					AddInfo("Name", FieldCpuName, mo, info);
-					AddInfo("CurrentClockSpeed", FieldCpuClockSpeed, mo, info);
-					AddInfo("Manufacturer", FieldCpuManufacturer, mo, info);
-					AddInfo("NumberOfCores", FieldCpuNumCores, mo, info);
-					AddInfo("NumberOfLogicalProcessors", FieldCpuNumProcessors, mo, info);
-					AddInfo("ProcessorId", FieldCpuId, mo, info);
-					
-					// Console.WriteLine($"{mo.Path}\n==========================");
-					// foreach(var prop in mo.Properties) {
-					// 	Console.WriteLine($"{prop.Name} = {prop.Value} ({prop.Type})");
-					// }
+				} catch (Exception) {
+					// do nothing
 				}
 			}
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController")) {
-				foreach (var obj in searcher.Get()) {
-					if (!(obj is ManagementObject mo)) {
-						continue;
+				try {
+					foreach (var obj in searcher.Get()) {
+						if (!(obj is ManagementObject mo)) {
+							continue;
+						}
+						PropertyData currentBitsPerPixel = mo.Properties["CurrentBitsPerPixel"];
+						PropertyData maxRefreshRate = mo.Properties["MaxRefreshRate"];
+						PropertyData description = mo.Properties["Description"];
+						if (currentBitsPerPixel.Value == null || maxRefreshRate.Value == null || (UInt32)maxRefreshRate.Value == 0 || description.Value == null) {
+							continue;
+						}
+						AddInfo("Description", FieldGpuName, mo, info);
+						AddInfo("CurrentHorizontalResolution", FieldGpuResWidth, mo, info);
+						AddInfo("CurrentVerticalResolution", FieldGpuResHeight, mo, info);
+						AddInfo("AdapterCompatibility", FieldGpuManufacturer, mo, info);
+						AddInfo("DriverVersion", FieldGpuDriverVersion, mo, info);
+						AddInfo("DriverDate", FieldGpuDriverDate, mo, info);
 					}
-					PropertyData currentBitsPerPixel = mo.Properties["CurrentBitsPerPixel"];
-					PropertyData maxRefreshRate = mo.Properties["MaxRefreshRate"];
-					PropertyData description = mo.Properties["Description"];
-					if (currentBitsPerPixel.Value == null || maxRefreshRate.Value == null || (UInt32)maxRefreshRate.Value == 0 || description.Value == null) {
-						continue;
-					}
-					AddInfo("Description", FieldGpuName, mo, info);
-					AddInfo("CurrentHorizontalResolution", FieldGpuResWidth, mo, info);
-					AddInfo("CurrentVerticalResolution", FieldGpuResHeight, mo, info);
-					AddInfo("AdapterCompatibility", FieldGpuManufacturer, mo, info);
-					AddInfo("DriverVersion", FieldGpuDriverVersion, mo, info);
-					AddInfo("DriverDate", FieldGpuDriverDate, mo, info);
+				} catch (Exception) {
+					// do nothing
 				}
 			}
 			using (var searcher = new ManagementObjectSearcher("select * from Win32_ComputerSystem")) {
-				foreach (var obj in searcher.Get()) {
-					if (!(obj is ManagementObject mo)) {
-						continue;
+				try {
+					foreach (var obj in searcher.Get()) {
+						if (!(obj is ManagementObject mo)) {
+							continue;
+						}
+						AddInfo("Name", FieldDeviceName, mo, info);
+						AddInfo("SystemType", FieldDeviceType, mo, info);
+						AddInfo("TotalPhysicalMemory", FieldDeviceMemory, mo, info);
 					}
-					AddInfo("Name", FieldDeviceName, mo, info);
-					AddInfo("SystemType", FieldDeviceType, mo, info);
-					AddInfo("TotalPhysicalMemory", FieldDeviceMemory, mo, info);
+				} catch (Exception) {
+					// do nothing
 				}
 			}
 
