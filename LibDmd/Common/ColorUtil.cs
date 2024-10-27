@@ -273,8 +273,8 @@ namespace LibDmd.Common
 
 						case 2:
 							var (x1, x2) = Rgb24ToRgb565(palette[i].R, palette[i].G, palette[i].B);
-							palValues[0][i] = x1;
-							palValues[1][i] = x2;
+							palValues[0][i] = x2;
+							palValues[1][i] = x1;
 							break;
 
 						default:
