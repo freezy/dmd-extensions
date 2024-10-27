@@ -142,6 +142,11 @@ namespace LibDmd.Converter.Serum
 				_frameEventsInitialized = true;
 			}
 
+			// vertical pad, if necessary
+			if (PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)) {
+				frame.Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength);
+			}
+
 			var rotations = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
 			var hasRotations = _api.Convert(ref _serumFrame, rotations);
