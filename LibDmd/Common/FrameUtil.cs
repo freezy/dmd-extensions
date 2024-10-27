@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using LibDmd.Frame;
@@ -501,9 +502,12 @@ namespace LibDmd.Common
 		{
 			using (Profiler.Start("FrameUtil.ConvertGrayToGray")) {
 
+				var mappingLength = mapping.Length;
 				var destFrame = new byte[srcFrame.Length];
 				for (var i = 0; i < destFrame.Length; i++) {
-					destFrame[i] = mapping[srcFrame[i]];
+					if (srcFrame[i] < mappingLength) { // ignore pixels that don't fall into the mapping
+						destFrame[i] = mapping[srcFrame[i]];
+					}
 				}
 				return destFrame;
 			}
