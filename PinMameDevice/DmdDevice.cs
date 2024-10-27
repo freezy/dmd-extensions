@@ -301,7 +301,7 @@ namespace PinMameDevice
 
 		private static void InternalSetGray2PaletteDevice(DeviceInstance device, Rgb24 color0, Rgb24 color33, Rgb24 color66, Rgb24 color100)
 		{
-			Logger.Info($"[dll] Set_4_Colors_Palette({device.Id}, {color0}, {color33}, {color66}, {color100})");
+			Logger.Info($"[dll] Set_4_Colors_Palette(device: {device.Id}, 0%: {color0}, 33%:{color33}, 66%:{color66}, 100%:{color100})");
 			device.DmdDevice.SetPalette(new[] {
 				ConvertColor(color0),
 				ConvertColor(color33),

@@ -195,6 +195,8 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+
+			Logger.Info($"[RenderGraph] SetColor(0%: {_gray2Colors[0]}, 33%:{_gray2Colors[1]}, 66%:{_gray2Colors[2]}, 100%:{_gray2Colors[3]})");
 		}
 
 		/// <summary>
