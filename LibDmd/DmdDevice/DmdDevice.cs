@@ -258,8 +258,8 @@ namespace LibDmd.DmdDevice
 			}
 
 			// if colorization enabled and palette is set, apply palette.
-			Logger.Info($"Applying palette of ${colors.Length} to render graphs.");
-			_graphs.SetPalette(_palette, -1);
+			Logger.Info($"Applying palette of {colors.Length} to render graphs.");
+			_graphs.SetPalette(_palette);
 		}
 
 		/// <summary>
@@ -795,7 +795,7 @@ namespace LibDmd.DmdDevice
 				// if colorization enabled and palette is set, apply palette.
 				Logger.Info("Applying palette to render graphs.");
 				_graphs.ClearColor();
-				_graphs.SetPalette(_palette, -1);
+				_graphs.SetPalette(_palette);
 
 			} else {
 				// if colorization disabled, apply default color.

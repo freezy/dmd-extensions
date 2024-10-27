@@ -201,8 +201,7 @@ namespace LibDmd
 		/// Sets the palette for rendering grayscale images.
 		/// </summary>
 		/// <param name="colors">Palette to set</param>
-		/// <param name="index">Palette index</param>
-		public void SetPalette(Color[] colors, int index = -1)
+		public void SetPalette(Color[] colors)
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);

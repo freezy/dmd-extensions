@@ -108,7 +108,7 @@ namespace LibDmd.Input.Network
 
 		public void OnColor(Color color) => _graphs.SetColor(color);
 
-		public void OnPalette(Color[] palette) => _graphs.SetPalette(palette, -1);
+		public void OnPalette(Color[] palette) => _graphs.SetPalette(palette);
 
 		public void OnClearColor() => _graphs.ClearColor();
 

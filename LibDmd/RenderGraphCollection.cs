@@ -97,9 +97,9 @@ namespace LibDmd
 			_rgb24Destinations.ForEach(dest => dest.ClearColor());
 		}
 
-		public void SetPalette(Color[] palette, int index)
+		public void SetPalette(Color[] palette)
 		{
-			_graphs.ForEach(graph => graph.SetPalette(palette, index));
+			_graphs.ForEach(graph => graph.SetPalette(palette));
 			_rgb24Destinations.ForEach(dest => dest.SetPalette(palette));
 		}
 
