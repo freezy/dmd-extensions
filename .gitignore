@@ -220,3 +220,11 @@ ModelManifest.xml
 _build
 _release
 Release - *
+
+.idea
+videos/*
+*.exe
+*.ps1
+*.psd
+*.ai
+rudder-sdk-.net/
