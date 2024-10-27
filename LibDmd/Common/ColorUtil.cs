@@ -234,7 +234,7 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Returns an RGB24 frame with colors from the palette applied to the frame.
+		/// Returns an RGB16 or RGB24 frame with colors from the palette applied to the frame.
 		/// 
 		/// Note that the size of the palette must be as large as the largest integer of 
 		/// the frame to color, or in other words, the bit length is given by the size of
@@ -244,7 +244,7 @@ namespace LibDmd.Common
 		/// <param name="frame">Frame to color, width * height pixels with values from 0 - [size of palette]</param>
 		/// <param name="palette">Colors to use for coloring</param>
 		/// <param name="bytesPerPixel">Number of output bytes per pixel. 3 for RGB24, 2 for RGB16.</param>
-		/// <returns>Colorized frame</returns>
+		/// <returns>Colorized frame data</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeRgb(Dimensions dim, byte[] frame, Color[] palette, int bytesPerPixel)
 		{
@@ -255,7 +255,7 @@ namespace LibDmd.Common
 				}
 				#endif
 
-				var frameLength = dim.Surface * 3;
+				var frameLength = dim.Surface * bytesPerPixel;
 				var colorizedData = new byte[frameLength];
 
 				var palValues = new byte[bytesPerPixel][];
@@ -288,7 +288,7 @@ namespace LibDmd.Common
 						byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
 						byte* pColorFrameCur = pcolorFrame;
 
-						for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += 3) {
+						for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += bytesPerPixel) {
 							var pixel = *pFrameCur;
 							if (pixel > maxPixel) {
 								pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range

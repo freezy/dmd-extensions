@@ -312,7 +312,7 @@ namespace LibDmd.Frame
 		public DmdFrame ConvertGrayToRgb565(Color[] palette) => ConvertGrayToRgb(palette, 2);
 
 		/// <summary>
-		/// Converts a grayscale frame to RGB24.
+		/// Converts a grayscale frame to RGB16 or RGB24.
 		/// </summary>
 		///
 		/// <param name="palette">Palette, must cover the bit length of the frame.</param>
@@ -321,20 +321,20 @@ namespace LibDmd.Frame
 		/// <exception cref="ArgumentException">If this frame already is RGB24, or palette doesn't match bit length.</exception>
 		private DmdFrame ConvertGrayToRgb(Color[] palette, int bytesPerPixel)
 		{
-			using (Profiler.Start("DmdFrame.ConvertToRgb24")) {
+			using (Profiler.Start("DmdFrame.ConvertGrayToRgb")) {
 
 #if DEBUG
 				if (!IsGray) {
-					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB24.");
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame to RGB{bytesPerPixel * 8}.");
 				}
 
 				if (BitLength != bytesPerPixel && palette.Length.GetBitLength() != BitLength) {
-					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB24.");
+					throw new ArgumentException($"Cannot convert a {BitLength}-bit frame with {palette.Length} colors to RGB{bytesPerPixel * 8}.");
 				}
 #endif
 
 				Data = ColorUtil.ColorizeRgb(Dimensions, Data, palette, bytesPerPixel);
-				BitLength = 24;
+				BitLength = bytesPerPixel * 8;
 
 				#if DEBUG
 				AssertData();
