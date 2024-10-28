@@ -26,30 +26,37 @@ virtualdmd width = 1677
 virtualdmd height = 702
 ```
 
-| Title                                                 | ID  |  
+| Title                                                 | ID  |
 |-------------------------------------------------------|:---:|
 | Adventure Land                                        | 29  |
 | Attack from Mars™                                     | 119 |
 | Back to the Future™ Pinball                           | 97  |
+| Battlestar Galactica                                  | 170 |
 | Biolab                                                | 27  |
 | Black Rose™                                           | 118 |
 | Blade                                                 | 45  |
 | Borderlands®: Vault Hunter Pinball                    | 152 |
 | Brothers in Arms®: Win the War Pinball                | 151 |
+| Camp Bloodbrook                                       | 191 |
 | Captain America                                       | 48  |
 | CastleStorm                                           | 40  |
 | Champion Pub™                                         | 121 |
+| Charlie Brown Christmas                               | 181 |
+| Chucky's Killer                                       | 171 |
 | Cirqus Voltaire™                                      | 127 |
 | Civil War                                             |  1  |
 | Crypt of the NecroDancer Pinball                      | 161 |
 | Curse of the Mummy                                    | 112 |
+| Dead By Daylight                                      | 174 |
 | Deadpool                                              | 22  |
 | Doctor Strange                                        | 30  |
 | Dr. Dude and his Excellent Ray™                       | 135 |
 | DreamWorks How to Train Your Dragon Pinball           | 141 |
 | DreamWorks Kung Fu Panda Pinball                      | 139 |
 | DreamWorks Trolls Pinball                             | 140 |
+| Duke Nukem                                            | 176 |
 | E.T.™ Pinball                                         | 96  |
+| Exploding Kittens                                     | 178 |
 | Fantastic Four                                        | 38  |
 | Fear Itself                                           |  5  |
 | Fish Tales™                                           | 108 |
@@ -58,6 +65,8 @@ virtualdmd height = 702
 | Ghost Rider                                           | 21  |
 | Godzilla Pinball                                      | 158 |
 | Godzilla vs. Kong Pinball                             | 160 |
+| Goat Simulator                                        | 187 |
+| Gloomhaven                                            | 179 |
 | Grimm Tales                                           | 155 |
 | Guardians of the Galaxy                               | 50  |
 | Homeworld®: Journey to Hiigara Pinball                | 150 |
@@ -69,29 +78,37 @@ virtualdmd height = 702
 | Jurassic Park Pinball Mayhem™                         | 102 |
 | Jurassic Park™ Pinball                                | 100 |
 | Jurassic World™ Pinball                               | 101 |
+| Knight Rider                                          | 177 |
 | Kong Pinball                                          | 153 |
-| MY LITTLE PONY Pinball                                | 138 |
 | Marvel's Avengers: Age of Ultron                      | 78  |
 | Marvel's The Avengers                                 | 17  |
 | Marvel's Women of Power: A-Force                      | 93  |
 | Marvel’s Ant-Man                                      | 79  |
 | Marvel’s Women of Power: Champions                    | 94  |
 | Medieval Madness™                                     | 109 |
-| Monster Bash™                                         | 130 |
+| Mysterious Island                                     | 164 |
 | Moon Knight                                           | 49  |
+| MY LITTLE PONY Pinball                                | 138 |
 | No Good Gofers™                                       | 128 |
+| Pacific Rim                                           | 186 |
 | Pasha                                                 | 23  |
 | Peanuts’ Snoopy Pinball                               | 146 |
 | Pinball Noir                                          | 123 |
+| Princess Bride                                        | 184 |
 | Red and Ted's Road Show™                              | 125 |
 | Rome                                                  | 31  |
 | Safe Cracker™                                         | 122 |
+| Samurai's Vengeance                                   | 165 |
 | Secrets of the Deep                                   | 66  |
 | Sky Pirates: Treasures of the Clouds                  | 113 |
 | Son of Zeus                                           | 80  |
 | Sorcerer's Lair                                       | 33  |
 | Space Station™                                        | 129 |
 | Spider-Man                                            | 46  |
+| Star Trek: Deep Space 9                               | 172 |
+| Star Trek: Discovery                                  | 169 |
+| Star Trek: Kelvin                                     | 166 |
+| Star Trek: The Next Generation                        | 163 |
 | Star Wars™ Pinball: Ahch-To Island                    | 104 |
 | Star Wars™ Pinball: Battle of Mimban                  | 107 |
 | Star Wars™ Pinball: Boba Fett                         | 53  |
@@ -115,6 +132,8 @@ virtualdmd height = 702
 | Star Wars™ Pinball: The Mandalorian                   | 136 |
 | Swords of Fury™                                       | 149 |
 | Tales of the Arabian Nights™                          | 132 |
+| Terraforming Mars                                     | 173 |
+| Texas Chainsaw Massacre                               | 180 |
 | The Addams Family                                     | 156 |
 | The Creature From The Black Lagoon™                   | 131 |
 | The Getaway: High Speed II™                           | 111 |
@@ -122,6 +141,7 @@ virtualdmd height = 702
 | The Machine™: Bride of Pin·Bot™                       | 148 |
 | The Party Zone™                                       | 120 |
 | Theatre of Magic™                                     | 117 |
+| The Thing                                             | 175 |
 | Thor                                                  |  7  |
 | Twilight Zone                                         | 162 |
 | Venom                                                 | 73  |
@@ -133,6 +153,8 @@ virtualdmd height = 702
 | World War Z Pinball                                   | 154 |
 | Wrath of the Elder Gods                               | 147 |
 | X-Men                                                 | 59  |
+| Xena: Warrior Princess                                | 167 |
+| Whirlwind                                             | 168 |
 
-This list will be updated as new tables are released. In case you want to add a new table, please open an issue or a 
-pull request.
+
+This list will be updated as new tables are released. If you want to add a new table, please fork the repository, make your update, and submit a pull request. Thanks!
