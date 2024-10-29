@@ -43,10 +43,10 @@ namespace LibDmd.Output.ZeDMD
 			IsAvailable = ZeDMD_Open(_pZeDMD);
 
 			if (!IsAvailable) {
-				Logger.Info(Name + " device not found");
+				Logger.Info(Name + " device not found at port " + Port);
 				return;
 			}
-			Logger.Info(Name + " device found");
+			Logger.Info(Name + " device found at port " + Port + ".");
 		}
 
 		protected void SendConfiguration(bool save = false)

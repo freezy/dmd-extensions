@@ -479,8 +479,11 @@ namespace LibDmd.DmdDevice
 					Logger.Info("Added ZeDMD renderer.");
 					ReportingTags.Add("Out:ZeDMD");
 					Analytics.Instance.AddDestination(zeDmd);
+				} else {
+					Logger.Warn("Could not find ZeDMD.");
 				}
 			}
+
 			if (_config.ZeDMDHD.Enabled) {
 				var zeDmdHd = ZeDMDHD.GetInstance(_config.ZeDMDHD.Debug, _config.ZeDMDHD.Brightness, _config.ZeDMDHD.RgbOrder, _config.ZeDMDHD.Port, _config.ZeDMDHD.ScaleRgb24);
 				if (zeDmdHd.IsAvailable) {
