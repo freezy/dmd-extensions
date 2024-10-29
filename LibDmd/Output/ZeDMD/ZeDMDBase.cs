@@ -18,6 +18,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public abstract string Name { get; }
 		public bool IsAvailable { get; protected set; }
+		public static string DriverVersion => Marshal.PtrToStringAnsi(ZeDMD_GetVersion());
 		public bool NeedsDuplicateFrames => false;
 		protected bool Debug { get; set; }
 		protected int Brightness { get; set; }
@@ -46,7 +47,7 @@ namespace LibDmd.Output.ZeDMD
 				Logger.Info(Name + " device not found at port " + Port);
 				return;
 			}
-			Logger.Info(Name + " device found at port " + Port + ".");
+			Logger.Info(Name + " device found at port " + Port + ", libzedmd version: " + DriverVersion);
 		}
 
 		protected void SendConfiguration(bool save = false)
@@ -303,6 +304,13 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_RenderRgb16(IntPtr pZeDMD, byte[] frame);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern IntPtr  ZeDMD_GetVersion();
 
 		#endregion
 
