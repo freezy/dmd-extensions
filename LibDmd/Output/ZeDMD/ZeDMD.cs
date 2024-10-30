@@ -28,9 +28,9 @@ namespace LibDmd.Output.ZeDMD
 			if (_instance == null)
 			{
 				_instance = new ZeDMD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port };
-				_instance.Init();
 			}
 
+			_instance.Init();
 			return _instance;
 		}
 

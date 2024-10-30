@@ -24,9 +24,9 @@ namespace LibDmd.Output.ZeDMD
 		{
 			if (_instance == null) {
 				_instance = new ZeDMDHDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, ScaleRgb24 = scaleRgb24, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
-				_instance.Init();
 			}
 
+			_instance.Init();
 			return _instance;
 		}
 
