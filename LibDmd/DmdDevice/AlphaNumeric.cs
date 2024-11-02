@@ -342,6 +342,7 @@ namespace LibDmd.DmdDevice
 
 		public static byte[] Render2x6Num10_2x6Num10_4x1Num(ushort[] seg_data)
 		{
+			Clear();
 			byte i, j;
 			for (i = 0; i < 12; i++) {
 				for (j = 0; j < 16; j++) {
