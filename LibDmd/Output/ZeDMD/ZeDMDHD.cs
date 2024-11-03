@@ -88,7 +88,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			DmdAllowHdScaling = ScaleRgb24;
 			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)

@@ -407,8 +407,6 @@ The output are described by block below.
 | `--zedmd-scalergb24`           | [zedmd]<br>scalergb24                          | Scale pure RGB24 content on ZeDMD HD. Default: true.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `--zedmd-wifi-address`         | [zedmdwifi]<br>wifi.address                    | Connect to ZeDMD (HD) WiFi using this IP address.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `--zedmd-wifi-port`            | [zedmdwifi]<br>wifi.port                       | Connect to ZeDMD (HD) WiFi using this port. Default: 3333.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `--zedmd-wifi-ssid`            | [zedmdwifi]<br>wifi.ssid                       | Configure ZeDMD (HD) WiFi to use this SSID.                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `--zedmd-wifi-password`        | [zedmdwifi]<br>wifi.password                   | Configure ZeDMD (HD) WiFi to use this password.                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | *n/a*                          | [video]<br>enabled                             | Enables creating an .avi video from the DMD frames.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | *n/a*                          | [video]<br>path                                | Path to folder or .avi file. If a folder is given, it will create a file named after the current game.                                                                                                                                                                                                                                                                                                                                                                      |
 | *n/a*                          | [browserstream]<br>enabled                     | Enables streaming the DMD in real time to your browser in your LAN.                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -528,20 +526,15 @@ you can set a conctrete COM port to use in `DmdDevice.ini` using `port`.
 Alternatively ZeDMD could be flashed with a firmware that provides a WiFi mode.
 In `DmdDevice.ini` there're special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
 
-To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the network connection.
-These could also be set once via the DMD Extension.  
-Run `dmdext.exe test -d zedmdwifi --zedmd-wifi-ssid=YOUR_SECRET_SSID --zedmd-wifi-password=YOUR_SECRET_PASSWORD`.
-At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
-This address has to be added as `wifi.address` to `DmdDevice.ini`.  
+To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the connection to your local network.
+To configure these for the first time, ZeDMD opens it's own WiFi access point.
+You can connect to it using `ZeDMD-WiFi` as SSID and `zedmd1234` as password.
+Then open a connection to `zedmd-wifi.local` in your browser and cinfigure the device.
+ZeDMD will remain reachable under this name even it becomes part of your local network.
+Therefore, a MDNS service is running on ZeDMD.
+If you run into issues with that, you can directly connect to the IP address that is shown on top of the logo when ZeDMD gets powered. 
+That IP address has to be added as `wifi.address` to `DmdDevice.ini`.  
 You can test with `dmdext.exe test -d zedmdwifi --zedmd-wifi-address=x.x.x.x` (replace `x.x.x.x` with the IP address shown on ZeDMD).
-
-You can also perform that configuration without `dmdext.exe` using this multi-step process:
-First you have to add the SSID and the password in the zedmd section of `DmdDevice.ini` using
-`wifi.ssid` and `wifi.password`. These will be submitted to ZeDMD the next time you start DMD Extensions.
-Once done you should quit DMD Extensions.
-Now you have to remove `wifi.ssid` and `wifi.password` from `DmdDevice.ini`.
-At the next start, ZeDMD will display the IP address it obtained from you WiFI network in the top left corner.
-This address has to be added as `wifi.address` to `DmdDevice.ini`.
 
 **ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
 above before giving your ZeDMD to someone else!**

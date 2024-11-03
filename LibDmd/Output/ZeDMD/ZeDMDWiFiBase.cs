@@ -13,31 +13,15 @@ namespace LibDmd.Output.ZeDMD
 	{
 		protected string WifiAddress { get; set; }
 		protected int WifiPort { get; set; }
-		protected string WifiSsid { get; set; }
-		protected string WifiPassword { get; set; }
 
 		protected new void Init()
 		{
 			base.Init();
 
-			if (string.IsNullOrEmpty(WifiSsid) && string.IsNullOrEmpty(WifiPassword) && !string.IsNullOrEmpty(WifiAddress) && WifiPort > 0) {
-
+			if (!string.IsNullOrEmpty(WifiAddress) && WifiPort > 0) {
 				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
-			}
-			else {
-				if (!string.IsNullOrEmpty(WifiSsid) && !string.IsNullOrEmpty(WifiPassword) && WifiPort > 0) {
-					Logger.Info("Setting up WiFi credentials through USB.");
-					OpenUSBConnection();
-					ZeDMD_EnableDebug(_pZeDMD);
-					ZeDMD_SetWiFiSSID(_pZeDMD, WifiSsid);
-					ZeDMD_SetWiFiPassword(_pZeDMD, WifiPassword);
-					ZeDMD_SetWiFiPort(_pZeDMD, WifiPort);
-					ZeDMD_SaveSettings(_pZeDMD);
-					Logger.Info(Name + " WiFi credentials submitted.");
-					ZeDMD_Close(_pZeDMD);
-					IsAvailable = false;
-					return;
-				}
+			} else {
+				IsAvailable = ZeDMD_OpenDefaultWiFi(_pZeDMD);
 			}
 
 			if (!IsAvailable)
@@ -46,8 +30,6 @@ namespace LibDmd.Output.ZeDMD
 				return;
 			}
 			Logger.Info(Name + " device found");
-
-			SendConfiguration();
 		}
 
 		#region libzedmd
@@ -62,28 +44,14 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
+		protected static extern bool ZeDMD_OpenDefaultWiFi(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		protected static extern bool ZeDMD_OpenWiFi(IntPtr pZeDMD, string ip, int port);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_SetWiFiSSID(IntPtr pZeDMD, string ssid);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_SetWiFiPassword(IntPtr pZeDMD, string password);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_SetWiFiPort(IntPtr pZeDMD, int port);
 
 		#endregion
 	}

@@ -90,7 +90,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderRgb24(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)
