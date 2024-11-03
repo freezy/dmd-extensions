@@ -82,8 +82,6 @@ namespace LibDmd.DmdDevice
 	{
 		string WifiAddress { get; }
 		int WifiPort { get; }
-		string WifiSsid { get; }
-		string WifiPassword { get; }
 	}
 
 	public interface IPin2DmdConfig

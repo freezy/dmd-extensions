@@ -20,14 +20,14 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMDHDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string port, bool scaleRgb24, string wifiAddress, int wifiPort, string wifiSsid, string wifiPassword)
+		public static ZeDMDHDWiFi GetInstance(bool debug, int brightness, int rgbOrder, string port, bool scaleRgb24, string wifiAddress, int wifiPort)
 		{
 			if (_instance == null) {
-				_instance = new ZeDMDHDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, ScaleRgb24 = scaleRgb24, WifiAddress = wifiAddress, WifiPort = wifiPort, WifiSsid = wifiSsid, WifiPassword = wifiPassword };
+				_instance = new ZeDMDHDWiFi { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port, ScaleRgb24 = scaleRgb24, WifiAddress = wifiAddress, WifiPort = wifiPort };
 			}
 
-			_instance.Init();
-			return _instance;
+            _instance.Init();
+            return _instance;
 		}
 
 		private new void Init()
@@ -73,7 +73,7 @@ namespace LibDmd.Output.ZeDMD
 		public void RenderRgb24(DmdFrame frame)
 		{
 			DmdAllowHdScaling = ScaleRgb24;
-			ZeDMD_RenderRgb24(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)
