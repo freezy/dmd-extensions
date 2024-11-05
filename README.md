@@ -529,7 +529,7 @@ In `DmdDevice.ini` there are special devices named `[zedmdwifi]` and `[zedmdhdwi
 To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the connection to your local network.
 To configure these for the first time, ZeDMD opens it's own WiFi access point.
 You can connect to it using `ZeDMD-WiFi` as SSID and `zedmd1234` as password.
-Then open a connection to `zedmd-wifi.local` in your browser and cinfigure the device.
+Then open a connection to `zedmd-wifi.local` in your browser and configure the device.
 ZeDMD will remain reachable under this name even it becomes part of your local network.
 Therefore, a MDNS service is running on ZeDMD.
 If you run into issues with that, you can directly connect to the IP address that is shown on top of the logo when ZeDMD gets powered. 
@@ -538,7 +538,7 @@ You can test with `dmdext.exe test -d zedmdwifi --zedmd-wifi-address=x.x.x.x` (r
 
 > [!WARNING]  
 > ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
-> above before giving your ZeDMD to someone else!**
+> above before giving your ZeDMD to someone else!
 
 ### Colorization
 
