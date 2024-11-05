@@ -47,7 +47,7 @@ jobs:
       - name: Update version info
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
+          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { "0.0.0-" + $env:GITHUB_SHA.Substring(0, 7) }
           $content = Get-Content VersionAssemblyInfo.cs
           $content = $content -replace '(?<=AssemblyVersion\(")[^"]*', $version
           $content = $content -replace '(?<=AssemblyFileVersion\(")[^"]*', $version
