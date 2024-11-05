@@ -11,7 +11,7 @@ comes with pretty monitor output, supports frame-by-frame colorization, and can 
 - [Features](#features)
   - [Supported Games](#supported-games)
   - [Supported Displays](#supported-displays)
-  - [High Resolution DMD for Monitors](#high-resolution-dmd-for-monitors)
+  - [High-Resolution DMD for Monitors](#high-resolution-dmd-for-monitors)
   - [Segment Display Rendering](#segment-display-rendering)
   - [Frame Colorization](#frame-colorization)
   - [Network Streaming](#network-streaming)
@@ -87,7 +87,7 @@ Currently supported hardware displays:
 _* The display from VirtuaPin marketed as [PinDMD v3.1](https://virtuapin.net/index.php?main_page=product_info&products_id=283) is
 a [ZeDMD](https://github.com/PPUC/ZeDMD) under the hood._
 
-### High Resolution DMD for Monitors
+### High-Resolution DMD for Monitors
 
 DMD Extensions includes a complex shader with awesome effects for monitor users. For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
@@ -211,7 +211,7 @@ that is used by Pinball FX2 by using the `--fx3-legacy` flag.
 
 ### Pinball FX
 
-Since mid June 2023, Pinball FX officially supports DMD Extensions through `DmdDevice.dll`. Note however that Pinball FX 
+Since mid-June 2023, Pinball FX officially supports DMD Extensions through `DmdDevice.dll`. Note however that Pinball FX 
 runs on 64 bit, so it's technically `DmdDevice64.dll`, which comes with the 64-bit version of DMD Extensions.
 
 If you don't have Visual PinMAME installed, you'll have to set the `DMDDEVICE_CONFIG` environment variable to point to
@@ -238,7 +238,7 @@ For customizing games in `DmdDevice.ini`, see [this list of IDs](PinMameDevice/P
 
 For TPA we're pulling frames off the DMD texture from TPA's memory.
 
-1. Open a command line prompt ([Windows], type `cmd`, [enter])
+1. Open a command-line prompt ([Windows], type `cmd`, [enter])
 2. Type `dmdext mirror --source=pinballarcade --no-virtual` [enter]
 3. Start the DX11 version of The Pinball Arcade.
 4. Select and **start** a game (*only then* it starts mirroring, during attract
@@ -516,15 +516,15 @@ working.
 
 #### USB mode
 
-This is the default maode for ZeDMD. You don't need to configuire anything except setting `enabled` to `true` in
+This is the default mode for ZeDMD. You don't need to configure anything except setting `enabled` to `true` in
 `DmdDevice.ini` for `[zedmd]` or `[zedmdhd]`.
-BUit in case you have multiple devices or run into issues with the auto detection and other USB devices attached,
-you can set a conctrete COM port to use in `DmdDevice.ini` using `port`.
+BUit in case you have multiple devices or run into issues with the auto-detection and other USB devices attached,
+you can set a concrete COM port to use in `DmdDevice.ini` using `port`.
 
 #### WiFi mode
 
 Alternatively ZeDMD could be flashed with a firmware that provides a WiFi mode.
-In `DmdDevice.ini` there're special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
+In `DmdDevice.ini` there are special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
 
 To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the connection to your local network.
 To configure these for the first time, ZeDMD opens it's own WiFi access point.
@@ -536,8 +536,9 @@ If you run into issues with that, you can directly connect to the IP address tha
 That IP address has to be added as `wifi.address` to `DmdDevice.ini`.  
 You can test with `dmdext.exe test -d zedmdwifi --zedmd-wifi-address=x.x.x.x` (replace `x.x.x.x` with the IP address shown on ZeDMD).
 
-**ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
-above before giving your ZeDMD to someone else!**
+> [!WARNING]  
+> ZeDMD will store the WiFi credentials internally! So ensure to erase them using one of the processes described
+> above before giving your ZeDMD to someone else!**
 
 ### Colorization
 
