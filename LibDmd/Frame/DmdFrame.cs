@@ -6,6 +6,8 @@ using System.Text;
 using System.Windows.Media;
 using LibDmd.Common;
 using LibDmd.Output;
+using NLog;
+
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace LibDmd.Frame
@@ -15,6 +17,11 @@ namespace LibDmd.Frame
 	/// </summary>RGB24 buffer must be divisible by 3
 	public class DmdFrame : BaseFrame, ICloneable, IEqualityComparer<DmdFrame>
 	{
+#if DEBUG
+		public static ulong FrameCount = 0;
+
+		public ulong FrameId = 0;
+#endif
 		/// <summary>
 		/// The frame data, from top left to bottom right.
 		/// It's usually one byte per pixel, but three bytes for RGB24.
@@ -46,6 +53,7 @@ namespace LibDmd.Frame
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
 
 		private static readonly ObjectPool Pool = new ObjectPool();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public FrameFormat Format {
 			get {
@@ -77,6 +85,9 @@ namespace LibDmd.Frame
 
 		public DmdFrame(Dimensions dim, int bitLength)
 		{
+			#if DEBUG
+			FrameId = FrameCount++;
+			#endif
 			Dimensions = dim;
 			BitLength = bitLength;
 			Data = new byte[dim.Surface * BytesPerPixel];
@@ -84,6 +95,10 @@ namespace LibDmd.Frame
 
 		public DmdFrame(Dimensions dim, byte[] data, int bitLength)
 		{
+			#if DEBUG
+			FrameId = FrameCount++;
+			#endif
+
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
@@ -95,6 +110,10 @@ namespace LibDmd.Frame
 
 		public DmdFrame(int width, int height, byte[] data, int bitLength)
 		{
+			#if DEBUG
+			FrameId = FrameCount++;
+			#endif
+
 			Dimensions = new Dimensions(width, height);
 			Data = data;
 			BitLength = bitLength;
@@ -204,7 +223,7 @@ namespace LibDmd.Frame
 		protected void AssertData()
 		{
 			if (Dimensions.Surface * BytesPerPixel != Data.Length) {
-				throw new ArgumentException($"Data length does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
+				throw new ArgumentException($"Data length of frame {FrameId} does not match dimensions and bit length: {Dimensions} * {BytesPerPixel} = {Dimensions.Surface} * {BytesPerPixel} != {Data.Length}.");
 			}
 		}
 #endif
@@ -478,7 +497,7 @@ namespace LibDmd.Frame
 				var bmp = ImageUtil.ConvertFromRgb565(Dimensions, Data);
 				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertToRgb565(transformedBmp);
-				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 16);
 			}
 		}
 
@@ -666,7 +685,14 @@ namespace LibDmd.Frame
 		{
 			private readonly ConcurrentBag<DmdFrame> _objects = new ConcurrentBag<DmdFrame>();
 
-			public DmdFrame Get() => _objects.TryTake(out DmdFrame item) ? item : new DmdFrame();
+			public DmdFrame Get()
+			{
+				var f = _objects.TryTake(out DmdFrame item) ? item : new DmdFrame();
+				#if DEBUG
+				f.FrameId = FrameCount++;
+				#endif
+				return f;
+			}
 
 			public void Return(DmdFrame item) => _objects.Add(item);
 		}
