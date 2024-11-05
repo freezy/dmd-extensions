@@ -8,7 +8,7 @@ permissions:
 jobs:
   
   # Build artifacts
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -26,32 +26,95 @@ jobs:
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1
-      
+
+      - name: Download and Setup VPinMAME
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/freezy/dmd-extensions/files/4073824/VPinMAME31_Minimal.zip" -OutFile vpm.zip
+          Expand-Archive vpm.zip -DestinationPath vpm
+          cd vpm
+          regsvr32 /s VPinMAME.dll
+          cd ..
+          dir
+
       - name: Restore NuGet packages
         run: nuget restore DmdExtensions.sln
         
       - name: Restore DLLExport dependency
         run: .\DllExport -action Restore -sln-file DmdExtensions.sln
 
-      # Build artifacts 
-      - name: Build-X86
-        run: msbuild /property:Platform=x86 /property:Configuration=Release DmdExtensions.sln
+      # Update version info from git
+      - name: Update version info
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA }
+          $content = Get-Content VersionAssemblyInfo.cs
+          $content = $content -replace '(?<=AssemblyVersion\(")[^"]*', $version
+          $content = $content -replace '(?<=AssemblyFileVersion\(")[^"]*', $version
+          Set-Content VersionAssemblyInfo.cs $content
 
-      # Build artifacts 
-      - name: Build-X64
-        run: msbuild /property:Platform=x64 /property:Configuration=Release DmdExtensions.sln
+      - name: Build
+        run: msbuild /property:Platform=${{ matrix.platform }} /property:Configuration=${{ matrix.configuration }} DmdExtensions.sln
+
+
+      # - name: Generate zip bundle
+      #   run: |
+      #     7z a -tzip dmdext-x64.zip .\Console\bin\x64\Release\dmdext.exe .\Console\bin\x64\Release\dmdext.log.config .\PinMameDevice\bin\x64\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x64\Release\DmdDevice.log.config dmdext.log.config
+      #     7z a -tzip dmdext-x86.zip .\Console\bin\x86\Release\dmdext.exe .\Console\bin\x86\Release\dmdext.log.config .\PinMameDevice\bin\x86\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x86\Release\DmdDevice.log.config
 
       - name: Generate zip bundle
+        shell: pwsh
         run: |
-          7z a -tzip dmdext-x64.zip .\Console\bin\x64\Release\dmdext.exe .\Console\bin\x64\Release\dmdext.log.config .\PinMameDevice\bin\x64\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x64\Release\DmdDevice.log.config dmdext.log.config
-          7z a -tzip dmdext-x86.zip .\Console\bin\x86\Release\dmdext.exe .\Console\bin\x86\Release\dmdext.log.config .\PinMameDevice\bin\x86\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x86\Release\DmdDevice.log.config
-         
-      # Upload ZIP as artifacts from GitHub Actions
+          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA }
+          $zipArchive = "$env:GITHUB_WORKSPACE\Installer\Builds\dmdext-$version-${{ matrix.platform }}-${{ matrix.configuration }}.zip"
+          New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\Installer\Builds"
+          
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe" -DestinationPath $zipArchive -Force
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config" -Update -DestinationPath $zipArchive
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\ProPinballSlave.bat" -Update -DestinationPath $zipArchive
+
+          $dllSuffix = if (${{ matrix.platform }} -eq "x64") { "64" } else { "" }
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Update -DestinationPath $zipArchive
+          
+          Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data" "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext"
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" -Update -DestinationPath $zipArchive
+          
+          Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: dmdext-snapshot
-          path: |
-            dmdext-x64.zip
-            dmdext-x86.zip 
+          name: dmdext-${{ matrix.platform }}-${{ matrix.configuration }}
+          path: ${{ github.workspace }}\Installer\Builds\*.zip
           retention-days: 90
+
+  create-release:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dmdext*.zip
+      - name: ls
+        run: ls -alrt
+      - name: Rename artifacts
+        run: |
+          version="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('{0}', github.sha) }}"
+          mv dmdext-x64.zip dmdext-$version-x64.zip
+          mv dmdext-x86.zip dmdext-$version-x86.zip
+      - name: ls
+        run: ls -alrt
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          generateReleaseNotes: true
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          allowUpdates: true
+          artifacts: "dmdext-*.zip"
+          tag: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('{0}', github.sha) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest' }}
