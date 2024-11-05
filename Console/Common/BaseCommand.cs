@@ -107,7 +107,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.ZeDMDWiFi.Enabled) {
-				var zeDMDWiFi = ZeDMDWiFi.GetInstance(config.ZeDMDWiFi.Debug, config.ZeDMDWiFi.Brightness, config.ZeDMDWiFi.RgbOrder, config.ZeDMDHD.Port, config.ZeDMDWiFi.WifiAddress, config.ZeDMDWiFi.WifiPort, config.ZeDMDWiFi.WifiSsid, config.ZeDMDWiFi.WifiPassword);
+				var zeDMDWiFi = ZeDMDWiFi.GetInstance(config.ZeDMDWiFi.Debug, config.ZeDMDWiFi.Brightness, config.ZeDMDWiFi.RgbOrder, config.ZeDMDHD.Port, config.ZeDMDWiFi.WifiAddress, config.ZeDMDWiFi.WifiPort);
 				if (zeDMDWiFi.IsAvailable) {
 					renderers.Add(zeDMDWiFi);
 					Logger.Info("Added ZeDMD WiFi renderer.");
@@ -119,7 +119,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.ZeDMDHDWiFi.Enabled) {
-				var zeDMDHDWiFi = ZeDMDHDWiFi.GetInstance(config.ZeDMDHDWiFi.Debug, config.ZeDMDHDWiFi.Brightness, config.ZeDMDHDWiFi.RgbOrder, config.ZeDMDHD.Port, config.ZeDMDHD.ScaleRgb24, config.ZeDMDHDWiFi.WifiAddress, config.ZeDMDHDWiFi.WifiPort, config.ZeDMDHDWiFi.WifiSsid, config.ZeDMDHDWiFi.WifiPassword);
+				var zeDMDHDWiFi = ZeDMDHDWiFi.GetInstance(config.ZeDMDHDWiFi.Debug, config.ZeDMDHDWiFi.Brightness, config.ZeDMDHDWiFi.RgbOrder, config.ZeDMDHD.Port, config.ZeDMDHD.ScaleRgb24, config.ZeDMDHDWiFi.WifiAddress, config.ZeDMDHDWiFi.WifiPort);
 				if (zeDMDHDWiFi.IsAvailable) {
 					renderers.Add(zeDMDHDWiFi);
 					Logger.Info("Added ZeDMD HD WiFi renderer.");
