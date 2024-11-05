@@ -84,11 +84,13 @@ jobs:
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: dmdext-${{ matrix.platform }}-${{ matrix.configuration }}
           path: ${{ github.workspace }}\Installer\Builds\*.zip
           retention-days: 90
+          if-no-files-found: error
+
 
   create-release:
     needs: build-windows
