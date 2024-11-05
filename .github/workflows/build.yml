@@ -6,26 +6,27 @@ permissions:
   contents: write
 
 jobs:
-  
-  # Build artifacts
   build-windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x86, x64]
+        configuration: [Release]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # We need dotnet
       - name: Add dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Setup MSBuild.exe
-        uses: microsoft/setup-msbuild@v1
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.3.1
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1
+        uses: NuGet/setup-nuget@v1.2.0
 
       - name: Download and Setup VPinMAME
         shell: pwsh
@@ -43,29 +44,27 @@ jobs:
       - name: Restore DLLExport dependency
         run: .\DllExport -action Restore -sln-file DmdExtensions.sln
 
-      # Update version info from git
       - name: Update version info
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA }
+          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
           $content = Get-Content VersionAssemblyInfo.cs
           $content = $content -replace '(?<=AssemblyVersion\(")[^"]*', $version
           $content = $content -replace '(?<=AssemblyFileVersion\(")[^"]*', $version
           Set-Content VersionAssemblyInfo.cs $content
 
       - name: Build
-        run: msbuild /property:Platform=${{ matrix.platform }} /property:Configuration=${{ matrix.configuration }} DmdExtensions.sln
-
-
-      # - name: Generate zip bundle
-      #   run: |
-      #     7z a -tzip dmdext-x64.zip .\Console\bin\x64\Release\dmdext.exe .\Console\bin\x64\Release\dmdext.log.config .\PinMameDevice\bin\x64\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x64\Release\DmdDevice.log.config dmdext.log.config
-      #     7z a -tzip dmdext-x86.zip .\Console\bin\x86\Release\dmdext.exe .\Console\bin\x86\Release\dmdext.log.config .\PinMameDevice\bin\x86\Release\DmdDevice.dll .\PinMameDevice\DmdDevice.ini .\PinMameDevice\bin\x86\Release\DmdDevice.log.config
+        run: msbuild -t:rebuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} DmdExtensions.sln
+      
+      - name: Build installer
+        run: |
+          echo "Building with wix goes here"
+          # Add actual WiX build command here
 
       - name: Generate zip bundle
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA }
+          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
           $zipArchive = "$env:GITHUB_WORKSPACE\Installer\Builds\dmdext-$version-${{ matrix.platform }}-${{ matrix.configuration }}.zip"
           New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\Installer\Builds"
           
@@ -73,7 +72,7 @@ jobs:
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\ProPinballSlave.bat" -Update -DestinationPath $zipArchive
 
-          $dllSuffix = if (${{ matrix.platform }} -eq "x64") { "64" } else { "" }
+          $dllSuffix = if ('${{ matrix.platform }}' -eq 'x64') { '64' } else { '' }
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Update -DestinationPath $zipArchive
@@ -90,33 +89,3 @@ jobs:
           path: ${{ github.workspace }}\Installer\Builds\*.zip
           retention-days: 90
           if-no-files-found: error
-
-
-  create-release:
-    needs: build-windows
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dmdext*.zip
-      - name: ls
-        run: ls -alrt
-      - name: Rename artifacts
-        run: |
-          version="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('{0}', github.sha) }}"
-          mv dmdext-x64.zip dmdext-$version-x64.zip
-          mv dmdext-x86.zip dmdext-$version-x86.zip
-      - name: ls
-        run: ls -alrt
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
-          generateReleaseNotes: true
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          allowUpdates: true
-          artifacts: "dmdext-*.zip"
-          tag: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('{0}', github.sha) }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest' }}
