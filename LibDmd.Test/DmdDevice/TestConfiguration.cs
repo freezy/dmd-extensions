@@ -118,8 +118,6 @@ namespace LibDmd.Test
 	{
 		public string WifiAddress { get; set; }
 		public int WifiPort { get; set; }
-		public string WifiSsid { get; set; }
-		public string WifiPassword { get; set; }
 	}
 
 	public class TestPin2DmdConfig : IPin2DmdConfig

@@ -30,7 +30,7 @@ namespace LibDmd.Output.ZeDMD
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		protected ColoredFrame _lastFrame = null;
 
-		protected void Init()
+		protected void Init() 
 		{
 			_pZeDMD = ZeDMD_GetInstance();
 		}
@@ -297,6 +297,13 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_RenderRgb24(IntPtr pZeDMD, byte[] frame);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern void ZeDMD_RenderRgb24EncodedAs565(IntPtr pZeDMD, byte[] frame);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
