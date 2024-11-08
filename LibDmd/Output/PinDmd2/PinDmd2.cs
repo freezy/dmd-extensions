@@ -137,7 +137,7 @@ namespace LibDmd.Output.PinDmd2
 					writer.Flush();
 					var error = writer.Write(data, 5000, out _);
 					if (error != ErrorCode.None) {
-						Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
+						Logger.Error("Error sending data to device: {0} ({1} - {2})", error, UsbDevice.LastErrorString, UsbDevice.LastErrorNumber);
 					}
 
 				} catch (Exception e) {
