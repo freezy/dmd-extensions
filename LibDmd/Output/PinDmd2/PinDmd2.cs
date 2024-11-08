@@ -134,7 +134,8 @@ namespace LibDmd.Output.PinDmd2
 
 				try {
 					var writer = _pinDmd2Device.OpenEndpointWriter(WriteEndpointID.Ep01);
-					var error = writer.Write(data, 2000, out _);
+					writer.Flush();
+					var error = writer.Write(data, 5000, out _);
 					if (error != ErrorCode.None) {
 						Logger.Error("Error sending data to device: {0}", UsbDevice.LastErrorString);
 					}
