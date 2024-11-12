@@ -149,7 +149,7 @@ jobs:
         shell: pwsh
         run: |
           $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
-          $zipArchive = "$env:GITHUB_WORKSPACE\Installer\Builds\dmdext-$version-${{ matrix.platform }}-${{ matrix.configuration }}.zip"
+          $zipArchive = "$env:GITHUB_WORKSPACE\Installer\Builds\dmdext-$version-${{ matrix.platform }}.zip"
           New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\Installer\Builds"
           
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe" -DestinationPath $zipArchive -Force
@@ -166,10 +166,44 @@ jobs:
           
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
 
-      - name: Upload artifacts
+      - name: Upload ZIP artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dmdext-${{ matrix.platform }}-${{ matrix.configuration }}
+          name: dmdext-${{ matrix.platform }}.zip
           path: ${{ github.workspace }}\Installer\Builds\*.zip
           retention-days: 90
           if-no-files-found: error
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmdext-${{ matrix.platform }}.msi
+          path: ${{ github.workspace }}\Installer\Builds\*.msi
+          retention-days: 90
+          if-no-files-found: error
+
+  create-release:
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - name: Download ZIP artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dmdext-${{ matrix.platform }}.zip
+      - name: Download MSI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dmdext-${{ matrix.platform }}.zip
+      - name: ls
+        run: ls -alrt
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          generateReleaseNotes: true
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          allowUpdates: true
+          artifacts: "dmdext*"
+          tag: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', github.sha) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest' }}
