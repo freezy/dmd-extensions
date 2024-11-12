@@ -144,6 +144,7 @@ jobs:
         run: |
           echo "Building with wix goes here"
           # Add actual WiX build command here
+          Get-ChildItem -Recurse Installer
 
       - name: Generate zip bundle
         shell: pwsh
