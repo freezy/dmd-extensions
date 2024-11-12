@@ -8,11 +8,15 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
+    permissions:
+      packages: write
+      contents: read
     strategy:
       matrix:
         platform: [x86, x64]
         configuration: [Release]
-
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,6 +31,13 @@ jobs:
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1.2.0
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}\.nuget\packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }} #hash of project files
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Download and Setup VPinMAME
         shell: pwsh
