@@ -142,8 +142,7 @@ jobs:
       
       - name: Build installer
         run: |
-          echo "Building with wix goes here"
-          # Add actual WiX build command here
+          msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir=".\" .\Installer\Installer.wixproj
           Get-ChildItem -Recurse Installer
 
       - name: Generate zip bundle
