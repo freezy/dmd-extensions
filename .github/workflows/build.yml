@@ -47,11 +47,84 @@ jobs:
       - name: Update version info
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME -replace '^v','' } else { "0.0.0." + $env:GITHUB_SHA.Substring(0, 7) }
-          $content = Get-Content VersionAssemblyInfo.cs
-          $content = $content -replace '(?<=AssemblyVersion\(")[^"]*', $version
-          $content = $content -replace '(?<=AssemblyFileVersion\(")[^"]*', $version
-          Set-Content VersionAssemblyInfo.cs $content
+          function replaceNumericVersion($name, $fileContent) {
+              $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""(\d+)\.(\d+)\.(\d+)(\.(\d+))?\""\)"
+              foreach($content in $fileContent)
+              {
+                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+                  if ($match.Success) {
+                      $major=$match.groups[1].value -as [int]
+                      $minor=$match.groups[2].value -as [int]
+                      $patch=$match.groups[3].value -as [int]
+                      $revision=$match.groups[4].value -as [int]
+                      
+                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$major.$minor.$patch.$env:GITHUB_RUN_NUMBER"")"
+                  }
+              }
+          }
+
+          function replaceFullVersion($name, $fileContent) {
+              $RegularExpression = [regex] "[^/]*\[assembly:\s*$name\(\""(\d)\.(\d)\.(\d)(-([\w\W]+))?\""\)"
+              foreach($content in $fileContent)
+              {
+                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+                  if ($match.Success) {
+                      $major=$match.groups[1].value -as [int]
+                      $minor=$match.groups[2].value -as [int]
+                      $patch=$match.groups[3].value -as [int]
+                      $tag=$match.groups[5].value
+
+                      # Get branch name from GitHub context
+                      $branch = if ($env:GITHUB_HEAD_REF) {
+                          $env:GITHUB_HEAD_REF  # For pull requests
+                      } else {
+                          $env:GITHUB_REF_NAME  # For direct pushes
+                      }
+
+                      if ($branch -eq "master") {
+                          if ($tag) {
+                              $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER"
+                          } else {
+                              $version = "$major.$minor.$patch-r$env:GITHUB_RUN_NUMBER"
+                          }                
+                      } else {
+                          $version = "$major.$minor.$patch-$($branch.ToUpper())-r$env:GITHUB_RUN_NUMBER"
+                      }            
+
+                      Write-Host "Changing version from $major.$minor.$patch-$tag to $version"
+                      # Set output for other steps to use
+                      "version=$version" >> $env:GITHUB_OUTPUT
+
+                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$version"")"
+                  }
+              }
+          }
+
+          function replaceAny($name, $replaceWith, $fileContent) {
+              $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)"
+              foreach($content in $fileContent)
+              {
+                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+                  if ($match.Success) {
+                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$replaceWith"")"
+                  }
+              }
+          }
+
+          $assemblyFile = "VersionAssemblyInfo.cs"
+          $fileContent = Get-Content $assemblyFile
+
+          $fileContent = replaceNumericVersion 'AssemblyVersion' $fileContent
+          $fileContent = replaceNumericVersion 'AssemblyFileVersion' $fileContent
+          $fileContent = replaceFullVersion 'AssemblyInformationalVersion' $fileContent
+
+          # Check if this is not a tag build
+          if (-not $env:GITHUB_REF.StartsWith("refs/tags/")) {
+              $fileContent = replaceAny 'AssemblyConfiguration' $env:GITHUB_SHA.Substring(0, 7) $fileContent
+          }
+
+          $fileContent | Set-Content "$assemblyFile"
+          Write-Host "Patching $assemblyFile"
 
       - name: Build
         run: msbuild -t:rebuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} DmdExtensions.sln
