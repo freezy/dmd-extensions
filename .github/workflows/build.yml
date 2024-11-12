@@ -47,7 +47,6 @@ jobs:
           cd vpm
           regsvr32 /s VPinMAME.dll
           cd ..
-          dir
 
       - name: Restore NuGet packages
         run: nuget restore DmdExtensions.sln
@@ -92,7 +91,7 @@ jobs:
                           $env:GITHUB_REF_NAME  # For direct pushes
                       }
 
-                      if ($branch -eq "master") {
+                      if ($branch -eq "master" -or $branch -eq "main") {
                           if ($tag) {
                               $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER"
                           } else {
@@ -141,9 +140,7 @@ jobs:
         run: msbuild -t:rebuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} DmdExtensions.sln
       
       - name: Build installer
-        run: |
-          msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir="$env:GITHUB_WORKSPACE\" .\Installer\Installer.wixproj
-          Get-ChildItem -Recurse Installer
+        run: msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir="$env:GITHUB_WORKSPACE\" .\Installer\Installer.wixproj
 
       - name: Generate zip bundle
         shell: pwsh
@@ -185,8 +182,7 @@ jobs:
   create-release:
     needs: [build-windows]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
-    steps:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))    steps:
       - name: Download ZIP artifacts
         uses: actions/download-artifact@v4
         with:
