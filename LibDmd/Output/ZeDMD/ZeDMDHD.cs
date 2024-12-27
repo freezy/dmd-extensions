@@ -7,8 +7,7 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMDHD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
-		IColoredGray6Destination, IRgb565Destination, IFixedSizeDestination, IColorRotationDestination
+	public class ZeDMDHD : ZeDMDBase, IRgb24Destination, IRgb565Destination, IFixedSizeDestination
 	{
 		public override string Name => "ZeDMD HD";
 		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
@@ -45,57 +44,18 @@ namespace LibDmd.Output.ZeDMD
 			ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
 		}
 
-		public void RenderGray2(DmdFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray2(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderGray4(DmdFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_DisablePreUpscaling(_pZeDMD);
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray4(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_DisablePreUpscaling(_pZeDMD);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray6(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, null);
-			_lastFrame = (ColoredFrame)frame.Clone();
-		}
-
 		public void RenderRgb24(DmdFrame frame)
 		{
 			DmdAllowHdScaling = ScaleRgb24;
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
+			if (!ScaleRgb24) { ZeDMD_DisableUpscaling(_pZeDMD); }
+			ZeDMD_RenderRgb888(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)
 		{
-			DmdAllowHdScaling = ScaleRgb24;
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
-			ZeDMD_RenderRgb16(_pZeDMD, frame.Data);
+			DmdAllowHdScaling = true;
+			ZeDMD_EnableUpscaling(_pZeDMD);
+			ZeDMD_RenderRgb565(_pZeDMD, frame.Data);
 		}
 	}
 }

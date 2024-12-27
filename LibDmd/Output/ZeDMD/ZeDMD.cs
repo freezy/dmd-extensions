@@ -7,8 +7,7 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMD : ZeDMDBase, IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
-		IColoredGray6Destination, IRgb565Destination, IMultiSizeDestination, IColorRotationDestination
+	public class ZeDMD : ZeDMDBase, IRgb24Destination, IRgb565Destination, IMultiSizeDestination
 	{
 		public override string Name => "ZeDMD";
 
@@ -40,9 +39,6 @@ namespace LibDmd.Output.ZeDMD
 			OpenUSBConnection();
 			SendConfiguration();
 			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
-			ZeDMD_EnforceStreaming(_pZeDMD);
-			ZeDMD_EnablePreDownscaling(_pZeDMD);
-			ZeDMD_EnablePreUpscaling(_pZeDMD);
 		}
 
 		private void SetDimensions(Dimensions newDim)
@@ -53,50 +49,16 @@ namespace LibDmd.Output.ZeDMD
 			}
 		}
 
-		public void RenderGray2(DmdFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray2(ColoredFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderGray4(DmdFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray4(ColoredFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray6(ColoredFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			SetPalette(frame.Palette);
-			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, null);
-			_lastFrame = (ColoredFrame)frame.Clone();
-		}
-
 		public void RenderRgb24(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb888(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)
 		{
 			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderRgb16(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb565(_pZeDMD, frame.Data);
 		}
 	}
 }
