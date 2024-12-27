@@ -4,6 +4,7 @@ using LibDmd.Common;
 using System.Windows.Media;
 using NLog;
 using System.Linq;
+using System.IO.Ports;
 
 namespace LibDmd.Output.ZeDMD
 {
@@ -85,49 +86,13 @@ namespace LibDmd.Output.ZeDMD
 
 		public void SetPalette(Color[] colors)
 		{
-			if (_pZeDMD == IntPtr.Zero) {
-				return;
-			}
-
-			byte[] paletteBuffer = Enumerable.Repeat((byte)0x0, 64 * 3).ToArray();
-			var numOfColors = colors.Length;
-
-			if (numOfColors != 4 && numOfColors != 16 && numOfColors != 64) {
-				return;
-			}
-
-			// Custom palettes could be defined with less colors as required by the ROM.
-			// So we interpolate bigger palettes up to 64 colors.
-			while (numOfColors <= 64) {
-				var palette = ColorUtil.GetPalette(colors, numOfColors);
-				var pos = 0;
-
-				foreach (var color in palette) {
-					paletteBuffer[pos++] = color.R;
-					paletteBuffer[pos++] = color.G;
-					paletteBuffer[pos++] = color.B;
-				}
-				ZeDMD_SetPalette(_pZeDMD, paletteBuffer, numOfColors);
-
-				numOfColors *= 4;
-			}
+			// no palette support here.
 		}
-
-		public void UpdatePalette(Color[] palette)
-		{
-			// For Rgb24, we get a new frame for each color rotation.
-			// But for ColoredGray6, we have to trigger the frame with
-			// an updated palette here.
-			if (_lastFrame != null) {
-				SetPalette(palette);
-				ZeDMD_RenderColoredGray6(_pZeDMD, _lastFrame.Data, null);
-			}
-		}
-
 		public void SetColor(Color color)
 		{
-			SetPalette(ColorUtil.GetPalette(new[] { Colors.Black, color }, 4));
+			// no palette support here.
 		}
+
 
 		public void ClearPalette()
 		{
@@ -184,34 +149,6 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern void ZeDMD_EnablePreDownscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_DisablePreDownscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_EnablePreUpscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_DisablePreUpscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
 		protected static extern void ZeDMD_EnableUpscaling(IntPtr pZeDMD);
 
 #if PLATFORM_X64
@@ -220,13 +157,6 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_DisableUpscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_EnforceStreaming(IntPtr pZeDMD);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
@@ -261,13 +191,6 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern void ZeDMD_SetPalette(IntPtr pZeDMD, byte[] palette, int numColors);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
 		protected static extern void ZeDMD_ClearScreen(IntPtr pZeDMD);
 
 #if PLATFORM_X64
@@ -275,42 +198,14 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern void ZeDMD_RenderGray2(IntPtr pZeDMD, byte[] frame);
+		protected static extern void ZeDMD_RenderRgb888(IntPtr pZeDMD, byte[] frame);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern void ZeDMD_RenderGray4(IntPtr pZeDMD, byte[] frame);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_RenderColoredGray6(IntPtr pZeDMD, byte[] frame, byte[] rotations);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_RenderRgb24(IntPtr pZeDMD, byte[] frame);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_RenderRgb24EncodedAs565(IntPtr pZeDMD, byte[] frame);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_RenderRgb16(IntPtr pZeDMD, byte[] frame);
+		protected static extern void ZeDMD_RenderRgb565(IntPtr pZeDMD, byte[] frame);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

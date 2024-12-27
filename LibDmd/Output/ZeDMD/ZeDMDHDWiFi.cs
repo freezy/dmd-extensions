@@ -7,8 +7,7 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMDHDWiFi : ZeDMDWiFiBase, IGray2Destination, IGray4Destination, IColoredGray2Destination,
-		IColoredGray4Destination, IRgb565Destination, IColoredGray6Destination, IFixedSizeDestination, IColorRotationDestination
+	public class ZeDMDHDWiFi : ZeDMDWiFiBase, IRgb24Destination, IRgb565Destination, IFixedSizeDestination
 	{
 		public override string Name => "ZeDMD HD WiFi";
 		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
@@ -36,50 +35,15 @@ namespace LibDmd.Output.ZeDMD
 			ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
 		}
 
-		public void RenderGray2(DmdFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray2(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray2(_pZeDMD, frame.Data);
-		}
-
-		public void RenderGray4(DmdFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray4(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			SetPalette(frame.Palette);
-			ZeDMD_RenderGray4(_pZeDMD, frame.Data);
-		}
-
-		public void RenderColoredGray6(ColoredFrame frame)
-		{
-			DmdAllowHdScaling = true;
-			SetPalette(frame.Palette);
-			ZeDMD_RenderColoredGray6(_pZeDMD, frame.Data, null);
-			_lastFrame = (ColoredFrame)frame.Clone();
-		}
-
 		public void RenderRgb24(DmdFrame frame)
 		{
 			DmdAllowHdScaling = ScaleRgb24;
-			ZeDMD_RenderRgb24EncodedAs565(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb888(_pZeDMD, frame.Data);
 		}
 
 		public void RenderRgb565(DmdFrame frame)
 		{
-			DmdAllowHdScaling = ScaleRgb24;
-			ZeDMD_RenderRgb16(_pZeDMD, frame.Data);
+			ZeDMD_RenderRgb565(_pZeDMD, frame.Data);
 		}
 	}
 }
