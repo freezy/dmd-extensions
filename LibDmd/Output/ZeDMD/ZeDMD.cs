@@ -11,7 +11,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public override string Name => "ZeDMD";
 		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
-		public virtual bool DmdAllowHdScaling { get; protected set; } = false;
+		public virtual bool DmdAllowHdScaling { get; } = false;
 
 		private static ZeDMD _instance;
 
