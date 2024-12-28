@@ -7,16 +7,13 @@ namespace LibDmd.Output.ZeDMD
 	/// Check "ZeDMD Project Page" https://github.com/PPUC/ZeDMD) for details.
 	/// This implementation supports ZeDMD and ZeDMD HD.
 	/// </summary>
-	public class ZeDMD : ZeDMDBase, IRgb24Destination, IRgb565Destination, IMultiSizeDestination
+	public class ZeDMD : ZeDMDUsbBase, IRgb24Destination, IRgb565Destination, IFixedSizeDestination
 	{
 		public override string Name => "ZeDMD";
-
-		// To leverage ZeDMD's own advanced downscaling we can't use FixedSize and RGB24Stream like ZeDMD HD.
-		// By not declaring 192x62 supported, we get a centered 256x64 frame.
-		public Dimensions[] Sizes { get; } = { new Dimensions(128, 16), Dimensions.Standard, new Dimensions(256, 64) };
+		public Dimensions FixedSize { get; } = new Dimensions(128, 32);
+		public virtual bool DmdAllowHdScaling { get; protected set; } = false;
 
 		private static ZeDMD _instance;
-		private Dimensions _currentDimensions = Dimensions.Standard;
 
 		/// <summary>
 		/// Returns the current instance of ZeDMD.
@@ -36,29 +33,10 @@ namespace LibDmd.Output.ZeDMD
 		private new void Init()
 		{
 			base.Init();
-			OpenUSBConnection();
-			SendConfiguration();
-			ZeDMD_SetFrameSize(_pZeDMD, _currentDimensions.Width, _currentDimensions.Height);
-		}
-
-		private void SetDimensions(Dimensions newDim)
-		{
-			if (_currentDimensions != newDim) {
-				_currentDimensions = newDim;
-				ZeDMD_SetFrameSize(_pZeDMD, newDim.Width, newDim.Height);
+			if (IsAvailable) {
+				SendConfiguration();
+				ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
 			}
-		}
-
-		public void RenderRgb24(DmdFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderRgb888(_pZeDMD, frame.Data);
-		}
-
-		public void RenderRgb565(DmdFrame frame)
-		{
-			SetDimensions(frame.Dimensions);
-			ZeDMD_RenderRgb565(_pZeDMD, frame.Data);
 		}
 	}
 }

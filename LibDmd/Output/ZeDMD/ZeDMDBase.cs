@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using LibDmd.Common;
 using System.Windows.Media;
+using LibDmd.Frame;
 using NLog;
-using System.Linq;
-using System.IO.Ports;
 
 namespace LibDmd.Output.ZeDMD
 {
@@ -25,7 +23,6 @@ namespace LibDmd.Output.ZeDMD
 		protected int Brightness { get; set; }
 		protected int RgbOrder { get; set; }
 		protected string Port { get; set; }
-		protected bool ScaleRgb24 { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -34,21 +31,6 @@ namespace LibDmd.Output.ZeDMD
 		protected void Init() 
 		{
 			_pZeDMD = ZeDMD_GetInstance();
-		}
-
-		protected void OpenUSBConnection()
-		{
-			if (!string.IsNullOrEmpty(Port)) {
-				ZeDMD_SetDevice(_pZeDMD, @"\\.\" + Port);
-			}
-
-			IsAvailable = ZeDMD_Open(_pZeDMD);
-
-			if (!IsAvailable) {
-				Logger.Info(Name + " device not found at port " + Port);
-				return;
-			}
-			Logger.Info(Name + " device found at port " + Port + ", libzedmd version: " + DriverVersion);
 		}
 
 		protected void SendConfiguration(bool save = false)
@@ -83,6 +65,17 @@ namespace LibDmd.Output.ZeDMD
 				IsAvailable = false;
 			}
 		}
+
+		public void RenderRgb24(DmdFrame frame)
+		{
+			ZeDMD_RenderRgb888(_pZeDMD, frame.Data);
+		}
+
+		public void RenderRgb565(DmdFrame frame)
+		{
+			ZeDMD_RenderRgb565(_pZeDMD, frame.Data);
+		}
+
 
 		public void SetPalette(Color[] colors)
 		{
@@ -128,13 +121,6 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern bool ZeDMD_Open(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
 		protected static extern void ZeDMD_Close(IntPtr pZeDMD);
 
 #if PLATFORM_X64
@@ -143,20 +129,6 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_EnableDebug(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_EnableUpscaling(IntPtr pZeDMD);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_DisableUpscaling(IntPtr pZeDMD);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
