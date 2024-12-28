@@ -574,6 +574,7 @@
     </Compile>
     <Compile Include="Output\ZeDMD\ZeDMDHDWiFi.cs" />
     <Compile Include="Output\ZeDMD\ZeDMDHD.cs" />
+    <Compile Include="Output\ZeDMD\ZeDMDUsbBase.cs" />
     <Compile Include="Output\ZeDMD\ZeDMDWiFiBase.cs" />
     <Compile Include="Output\ZeDMD\ZeDMDWiFi.cs" />
     <Compile Include="Output\ZeDMD\ZeDMDBase.cs" />

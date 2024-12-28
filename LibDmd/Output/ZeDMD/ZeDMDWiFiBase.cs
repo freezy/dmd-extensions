@@ -29,7 +29,7 @@ namespace LibDmd.Output.ZeDMD
 				Logger.Info(Name + " device not found");
 				return;
 			}
-			Logger.Info(Name + " device found");
+			Logger.Info(Name + " device found, libzedmd version: " + DriverVersion);
 		}
 
 		#region libzedmd
