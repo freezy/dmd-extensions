@@ -11,7 +11,7 @@ namespace LibDmd.Output.ZeDMD
 	{
 		public override string Name => "ZeDMD HD WiFi";
 		public virtual Dimensions FixedSize { get; } = new Dimensions(256, 64);
-		public virtual bool DmdAllowHdScaling { get; protected set; } = true;
+		public virtual bool DmdAllowHdScaling { get; } = true;
 
 		private static ZeDMDHDWiFi _instance;
 
