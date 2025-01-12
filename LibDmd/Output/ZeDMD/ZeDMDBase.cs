@@ -184,7 +184,14 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern IntPtr  ZeDMD_GetVersion();
+		protected static extern IntPtr ZeDMD_GetFirmwareVersion(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern IntPtr ZeDMD_GetVersion();
 
 		#endregion
 

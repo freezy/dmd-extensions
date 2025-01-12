@@ -22,10 +22,20 @@ namespace LibDmd.Output.ZeDMD
 			IsAvailable = ZeDMD_Open(_pZeDMD);
 
 			if (!IsAvailable) {
-				Logger.Info(Name + " device not found at port " + Port);
+				if (string.IsNullOrEmpty(Port)) {
+					Logger.Info(Name + " device not found at any port");
+				}
+				else {
+					Logger.Info(Name + " device not found at port " + Port);
+				}
 				return;
 			}
-			Logger.Info(Name + " device found at port " + Port + ", libzedmd version: " + DriverVersion);
+
+			if (string.IsNullOrEmpty(Port)) {
+				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, libzedmd version: " + DriverVersion);
+			} else {
+				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found at port " + Port + ", libzedmd version: " + DriverVersion);
+			}
 		}
 
 		#region libzedmd
