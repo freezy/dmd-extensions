@@ -517,12 +517,12 @@ working.
 
 This is the default mode for ZeDMD. You don't need to configure anything except setting `enabled` to `true` in
 `DmdDevice.ini` for `[zedmd]` or `[zedmdhd]`.
-BUit in case you have multiple devices or run into issues with the auto-detection and other USB devices attached,
+But in case you have multiple devices or run into issues with the auto-detection and other USB devices attached,
 you can set a concrete COM port to use in `DmdDevice.ini` using `port`.
 
 #### WiFi mode
 
-Alternatively ZeDMD could be flashed with a firmware that provides a WiFi mode.
+Alternatively ZeDMD could be set to WiFi mode in its settings menu.
 In `DmdDevice.ini` there are special devices named `[zedmdwifi]` and `[zedmdhdwifi]` to use it.
 
 To run the ZeDMD in WiFi mode it needs WiFi credentials to establish the connection to your local network.
@@ -631,6 +631,10 @@ upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algo
 - In DmdDevice.ini, set the `vni.scalermode` option.
 
 ## Breaking Changes
+
+### v2.3.1
+
+- ZeDMD firmware versions before 5.0.0 aren't supported anymore.
 
 ### v2.2.2
 
