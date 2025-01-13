@@ -60,6 +60,7 @@ namespace LibDmd.Output.ZeDMD
 		{
 			if (IsAvailable == true) {
 				if (_pZeDMD != IntPtr.Zero) {
+					ZeDMD_ClearScreen(_pZeDMD);
 					ZeDMD_Close(_pZeDMD);
 				}
 				IsAvailable = false;
