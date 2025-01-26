@@ -80,7 +80,6 @@ namespace LibDmd.DmdDevice
 	public interface IZeDMDWiFiConfig : IZeDMDConfig
 	{
 		string WifiAddress { get; }
-		int WifiPort { get; }
 	}
 
 	public interface IPin2DmdConfig

@@ -621,6 +621,7 @@
         <EmbeddedResource Include="Costura32\serum.dll" />
         <EmbeddedResource Include="Costura32\zedmd.dll" />
         <EmbeddedResource Include="Costura32\libserialport.dll" />
+        <EmbeddedResource Include="Costura32\sockpp.dll" />
         <EmbeddedResource Include="Costura32\libSkiaSharp.dll" />
         <EmbeddedResource Include="Costura32\sqlite3.dll" />
         <EmbeddedResource Include="Costura32\ftd2xx.dll" />
@@ -633,6 +634,7 @@
         <EmbeddedResource Include="Costura64\serum64.dll" />
         <EmbeddedResource Include="Costura64\zedmd64.dll" />
         <EmbeddedResource Include="Costura64\libserialport64.dll" />
+        <EmbeddedResource Include="Costura64\sockpp64.dll" />
         <EmbeddedResource Include="Costura64\libSkiaSharp.dll" />
         <EmbeddedResource Include="Costura64\sqlite3.dll" />
         <EmbeddedResource Include="Costura64\ftd2xx.dll" />

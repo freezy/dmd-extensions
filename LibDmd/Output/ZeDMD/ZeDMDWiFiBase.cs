@@ -12,14 +12,12 @@ namespace LibDmd.Output.ZeDMD
 	public abstract class ZeDMDWiFiBase : ZeDMDBase
 	{
 		protected string WifiAddress { get; set; }
-		protected int WifiPort { get; set; }
-
 		protected new void Init()
 		{
 			base.Init();
 
-			if (!string.IsNullOrEmpty(WifiAddress) && WifiPort > 0) {
-				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress, WifiPort);
+			if (!string.IsNullOrEmpty(WifiAddress)) {
+				IsAvailable = ZeDMD_OpenWiFi(_pZeDMD, WifiAddress);
 			} else {
 				IsAvailable = ZeDMD_OpenDefaultWiFi(_pZeDMD);
 			}
@@ -51,7 +49,7 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern bool ZeDMD_OpenWiFi(IntPtr pZeDMD, string ip, int port);
+		protected static extern bool ZeDMD_OpenWiFi(IntPtr pZeDMD, string ip);
 
 		#endregion
 	}
