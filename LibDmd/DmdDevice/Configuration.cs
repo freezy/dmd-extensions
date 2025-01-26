@@ -331,7 +331,6 @@ namespace LibDmd.DmdDevice
 	{
 		public override string Name { get; } = "zedmdwifi";
 		public string WifiAddress => GetString("wifi.address", null);
-		public int WifiPort => GetInt("wifi.port", 3333);
 		public ZeDMDWiFiConfig(IniData data, Configuration parent) : base(data, parent)
 		{
 		}

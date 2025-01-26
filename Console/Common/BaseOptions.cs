@@ -154,9 +154,6 @@ namespace DmdExt.Common
 		[Option("zedmd-wifi-address", HelpText = "Connect to ZeDMD in WiFi mode using this IP address. If not provided, a connection to zedmd-wifi.local will be established.")]
 		public string WifiAddress { get; set; } = null;
 
-		[Option("zedmd-wifi-port", HelpText = "Connect to ZeDMD in WiFi mode using this port. Default: 3333.")]
-		public int WifiPort { get; set; } = 3333;
-
 		public IGlobalConfig Global { get; }
 		public IVirtualDmdConfig VirtualDmd { get; }
 		public IVirtualAlphaNumericDisplayConfig VirtualAlphaNumericDisplay { get; }
@@ -430,7 +427,6 @@ namespace DmdExt.Common
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
-		public int WifiPort => _options.WifiPort;
 	}
 
 	internal class ZeDMDHDWiFiOptions : IZeDMDWiFiConfig
@@ -449,7 +445,6 @@ namespace DmdExt.Common
 		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
-		public int WifiPort => _options.WifiPort;
 	}
 
 	internal class Pin2DmdOptions : IPin2DmdConfig

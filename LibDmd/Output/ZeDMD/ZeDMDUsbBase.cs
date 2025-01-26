@@ -11,6 +11,8 @@ namespace LibDmd.Output.ZeDMD
 	/// </summary>
 	public abstract class ZeDMDUsbBase : ZeDMDBase
 	{
+		protected string Port { get; set; }
+
 		protected new void Init()
 		{
 			base.Init();

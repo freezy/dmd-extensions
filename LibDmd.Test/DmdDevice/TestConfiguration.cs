@@ -116,7 +116,6 @@ namespace LibDmd.Test
 	public class TestZeDMDWiFiConfig : TestZeDMDConfig, IZeDMDWiFiConfig
 	{
 		public string WifiAddress { get; set; }
-		public int WifiPort { get; set; }
 	}
 
 	public class TestPin2DmdConfig : IPin2DmdConfig

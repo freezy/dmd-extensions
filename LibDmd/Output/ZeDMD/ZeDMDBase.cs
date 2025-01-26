@@ -22,7 +22,6 @@ namespace LibDmd.Output.ZeDMD
 		protected bool Debug { get; set; }
 		protected int Brightness { get; set; }
 		protected int RgbOrder { get; set; }
-		protected string Port { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
