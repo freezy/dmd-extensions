@@ -633,7 +633,7 @@ upscaled. In the native VNI/PAL/PAC colorizer, you can choose which upscale algo
 
 ### v2.3.1
 
-- ZeDMD firmware versions before 5.0.0 aren't supported anymore.
+- ZeDMD firmware versions before 5.1.0 aren't supported anymore.
 
 ### v2.2.2
 
