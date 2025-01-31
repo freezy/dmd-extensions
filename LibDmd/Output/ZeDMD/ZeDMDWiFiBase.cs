@@ -24,7 +24,7 @@ namespace LibDmd.Output.ZeDMD
 
 			if (!IsAvailable)
 			{
-				Logger.Info(Name + " device not found");
+				Logger.Info(Name + " device not found, libzedmd version: " + DriverVersion);
 				return;
 			}
 			Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, libzedmd version: " + DriverVersion);
