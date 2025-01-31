@@ -25,10 +25,10 @@ namespace LibDmd.Output.ZeDMD
 
 			if (!IsAvailable) {
 				if (string.IsNullOrEmpty(Port)) {
-					Logger.Info(Name + " device not found at any port");
+					Logger.Info(Name + " device not found at any port, libzedmd version: " + DriverVersion);
 				}
 				else {
-					Logger.Info(Name + " device not found at port " + Port);
+					Logger.Info(Name + " device not found at port " + Port + ", libzedmd version: " + DriverVersion);
 				}
 				return;
 			}
