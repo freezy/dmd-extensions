@@ -73,7 +73,6 @@ namespace LibDmd.DmdDevice
 		bool Enabled { get; }
 		bool Debug { get; }
 		int Brightness { get; }
-		int RgbOrder { get; }
 		string Port { get; }
 	}
 

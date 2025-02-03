@@ -310,7 +310,6 @@ namespace LibDmd.DmdDevice
 		public bool Enabled => GetBoolean("enabled", false);
 		public bool Debug => GetBoolean("debug", false);
 		public int Brightness => GetInt("brightness", -1);
-		public int RgbOrder => GetInt("rgborder", -1);
 		public string Port => GetString("port", null);
 		public bool AllowHdScaling => false;
 		public ZeDMDConfig(IniData data, Configuration parent) : base(data, parent)

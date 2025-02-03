@@ -148,9 +148,6 @@ namespace DmdExt.Common
 		[Option("zedmd-brightness", HelpText = "Change ZeDMD brightness between 0 and 15.")]
 		public int Brightness { get; set; } = -1;
 
-		[Option("zedmd-rgborder", HelpText = "Change ZeDMD RGB order between 0 and 5.")]
-		public int RgbOrder { get; set; } = -1;
-
 		[Option("zedmd-wifi-address", HelpText = "Connect to ZeDMD in WiFi mode using this IP address. If not provided, a connection to zedmd-wifi.local will be established.")]
 		public string WifiAddress { get; set; } = null;
 
@@ -390,7 +387,6 @@ namespace DmdExt.Common
 							   _options.Destination == BaseOptions.DestinationType.zeDMD;
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
-		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 	}
 
@@ -407,7 +403,6 @@ namespace DmdExt.Common
 							   _options.Destination == BaseOptions.DestinationType.zeDMDHD;
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
-		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 	}
 
@@ -424,7 +419,6 @@ namespace DmdExt.Common
 							   _options.Destination == BaseOptions.DestinationType.zeDMDWiFi;
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
-		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
 	}
@@ -442,7 +436,6 @@ namespace DmdExt.Common
 							   _options.Destination == BaseOptions.DestinationType.zeDMDHDWiFi;
 		public bool Debug => _options.Debug;
 		public int Brightness => _options.Brightness;
-		public int RgbOrder => _options.RgbOrder;
 		public string Port => _options.Port;
 		public string WifiAddress => _options.WifiAddress;
 	}
