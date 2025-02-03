@@ -21,7 +21,6 @@ namespace LibDmd.Output.ZeDMD
 		public bool NeedsDuplicateFrames => false;
 		protected bool Debug { get; set; }
 		protected int Brightness { get; set; }
-		protected int RgbOrder { get; set; }
 
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -32,19 +31,13 @@ namespace LibDmd.Output.ZeDMD
 			_pZeDMD = ZeDMD_GetInstance();
 		}
 
-		protected void SendConfiguration(bool save = false)
+		protected void SendConfiguration()
 		{
 			if (Debug) {
 				ZeDMD_EnableDebug(_pZeDMD);
 			}
 			if (Brightness >= 0 && Brightness <= 15) {
 				ZeDMD_SetBrightness(_pZeDMD, Brightness);
-			}
-			if (RgbOrder >= 0 && RgbOrder <= 5) {
-				ZeDMD_SetRGBOrder(_pZeDMD, RgbOrder);
-			}
-			if (save) {
-				ZeDMD_SaveSettings(_pZeDMD);
 			}
 		}
 
@@ -136,20 +129,6 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern void ZeDMD_SetBrightness(IntPtr pZeDMD, int brightness);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_SetRGBOrder(IntPtr pZeDMD, int order);
-
-#if PLATFORM_X64
-		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#else
-		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-#endif
-		protected static extern void ZeDMD_SaveSettings(IntPtr pZeDMD);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

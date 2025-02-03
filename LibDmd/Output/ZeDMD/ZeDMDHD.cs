@@ -19,10 +19,10 @@ namespace LibDmd.Output.ZeDMD
 		/// Returns the current instance of ZeDMD.
 		/// </summary>
 		/// <returns>New or current instance</returns>
-		public static ZeDMDHD GetInstance(bool debug, int brightness, int rgbOrder, string port)
+		public static ZeDMDHD GetInstance(bool debug, int brightness, string port)
 		{
 			if (_instance == null) {
-				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, RgbOrder = rgbOrder, Port = port };
+				_instance = new ZeDMDHD { Debug = debug, Brightness = brightness, Port = port };
 			}
 
 			_instance.Init();

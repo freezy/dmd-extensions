@@ -109,7 +109,6 @@ namespace LibDmd.Test
 		public bool Enabled { get; set; }
 		public bool Debug { get; set; }
 		public int Brightness { get; set; }
-		public int RgbOrder { get; set; }
 		public string Port { get; set; }
 	}
 
