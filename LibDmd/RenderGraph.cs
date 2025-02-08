@@ -353,7 +353,11 @@ namespace LibDmd
 							if (destColoredGray2 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2)) {
 								Connect(sourceConverterColoredGray2, destColoredGray2, FrameFormat.ColoredGray2, FrameFormat.ColoredGray2);
 
-							// try to convert to rgb24
+							// try to convert to rgb
+							} else if (destRgb565 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray2, FrameFormat.Rgb565)) {
+								Logger.Warn("    -- Destination doesn't support colored 2-bit frames from converter, converting to RGB565 source.");
+								Connect(sourceConverterColoredGray2, destRgb565, FrameFormat.ColoredGray2, FrameFormat.Rgb565);
+
 							} else if (destRgb24 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray2, FrameFormat.Rgb24)) {
 								Logger.Warn("    -- Destination doesn't support colored 2-bit frames from converter, converting to RGB source.");
 								Connect(sourceConverterColoredGray2, destRgb24, FrameFormat.ColoredGray2, FrameFormat.Rgb24);
@@ -363,7 +367,7 @@ namespace LibDmd
 								Connect(sourceConverterColoredGray2, destBitmap, FrameFormat.ColoredGray2, FrameFormat.Bitmap);
 
 							} else {
-								Logger.Warn("    -- Destination doesn't support colored 2-bit frames from converter, ignoring converter.");
+								Logger.Warn("    -- Destination doesn't support colored 2-bit frames or RGB from converter, ignoring converter.");
 							}
 						}
 
@@ -373,7 +377,11 @@ namespace LibDmd
 							if (destColoredGray4 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray4,FrameFormat.ColoredGray4)) {
 								Connect(sourceConverterColoredGray4, destColoredGray4, FrameFormat.ColoredGray4, FrameFormat.ColoredGray4);
 
-								// otherwise, convert to rgb24
+							// try to convert to rgb
+							} else if (destRgb565 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray4, FrameFormat.Rgb565)) {
+								Logger.Warn("    -- Destination doesn't support colored 4-bit frames from converter, converting to RGB565 source.");
+								Connect(sourceConverterColoredGray4, destRgb565, FrameFormat.ColoredGray4, FrameFormat.Rgb565);
+
 							} else if (destRgb24 != null && !Converter.IsConnected(dest, FrameFormat.ColoredGray4,FrameFormat.Rgb24)) {
 								Logger.Warn("    -- Destination doesn't support colored 4-bit frames from converter, converting to RGB source.");
 								Connect(sourceConverterColoredGray4, destRgb24, FrameFormat.ColoredGray4, FrameFormat.Rgb24);
