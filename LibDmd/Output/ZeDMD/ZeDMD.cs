@@ -36,6 +36,7 @@ namespace LibDmd.Output.ZeDMD
 			if (IsAvailable) {
 				SendConfiguration();
 				ZeDMD_SetFrameSize(_pZeDMD, FixedSize.Width, FixedSize.Height);
+				ClearDisplay();
 			}
 		}
 	}
