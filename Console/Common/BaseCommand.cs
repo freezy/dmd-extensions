@@ -119,7 +119,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.ZeDMDHDWiFi.Enabled) {
-				var zeDMDHDWiFi = ZeDMDHDWiFi.GetInstance(config.ZeDMDHDWiFi.Debug, config.ZeDMDHDWiFi.Brightness, config.ZeDMDHD.Port, config.ZeDMDHDWiFi.WifiAddress);
+				var zeDMDHDWiFi = ZeDMDHDWiFi.GetInstance(config.ZeDMDHDWiFi.Debug, config.ZeDMDHDWiFi.Brightness, config.ZeDMDHDWiFi.WifiAddress);
 				if (zeDMDHDWiFi.IsAvailable) {
 					renderers.Add(zeDMDHDWiFi);
 					Logger.Info("Added ZeDMD HD WiFi renderer.");
