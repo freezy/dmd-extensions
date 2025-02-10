@@ -25,10 +25,21 @@ namespace LibDmd.Output.ZeDMD
 		protected IntPtr _pZeDMD = IntPtr.Zero;
 		protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		protected ColoredFrame _lastFrame = null;
+		private GCHandle handle;
 
-		protected void Init() 
+		protected static void LogHandler(string format, IntPtr args, IntPtr userData)
+	    {
+        	Logger.Info(format);
+    	}
+
+		protected void Init()
 		{
 			_pZeDMD = ZeDMD_GetInstance();
+
+			ZeDMD_LogCallback callbackDelegate = new ZeDMD_LogCallback(LogHandler);
+			// Keep a reference to the delegate to prevent GC from collecting it
+			handle = GCHandle.Alloc(callbackDelegate);
+	        ZeDMD_SetLogCallback(_pZeDMD, callbackDelegate, IntPtr.Zero);
 		}
 
 		protected void SendConfiguration()
@@ -101,6 +112,17 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern IntPtr ZeDMD_GetInstance();
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    	protected delegate void ZeDMD_LogCallback(string format, IntPtr args, IntPtr userData);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern void ZeDMD_SetLogCallback(IntPtr pZeDMD, ZeDMD_LogCallback callback, IntPtr userData);
+
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
