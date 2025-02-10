@@ -18,25 +18,25 @@ namespace LibDmd.Output.ZeDMD
 			base.Init();
 
 			if (!string.IsNullOrEmpty(Port)) {
-				ZeDMD_SetDevice(_pZeDMD, @"\\.\" + Port);
+				ZeDMD_SetDevice(_pZeDMD, Port);
 			}
 
 			IsAvailable = ZeDMD_Open(_pZeDMD);
 
 			if (!IsAvailable) {
 				if (string.IsNullOrEmpty(Port)) {
-					Logger.Info(Name + " device not found at any port, libzedmd version: " + DriverVersion);
+					Logger.Info(Name + " device not found at any port");
 				}
 				else {
-					Logger.Info(Name + " device not found at port " + Port + ", libzedmd version: " + DriverVersion);
+					Logger.Info(Name + " device not found at port " + Port);
 				}
 				return;
 			}
 
 			if (string.IsNullOrEmpty(Port)) {
-				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, libzedmd version: " + DriverVersion);
+				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, USB package size " + ZeDMD_GetUsbPackageSize(_pZeDMD));
 			} else {
-				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found at port " + Port + ", libzedmd version: " + DriverVersion);
+				Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found at port " + Port + ", USB package size " + ZeDMD_GetUsbPackageSize(_pZeDMD));
 			}
 		}
 
@@ -53,6 +53,13 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern bool ZeDMD_Open(IntPtr pZeDMD);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern int ZeDMD_GetUsbPackageSize(IntPtr pZeDMD);
 
 		#endregion
 	}

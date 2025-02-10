@@ -24,10 +24,10 @@ namespace LibDmd.Output.ZeDMD
 
 			if (!IsAvailable)
 			{
-				Logger.Info(Name + " device not found, libzedmd version: " + DriverVersion);
+				Logger.Info(Name + " device not found");
 				return;
 			}
-			Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, libzedmd version: " + DriverVersion);
+			Logger.Info(Name + " " + Marshal.PtrToStringAnsi(ZeDMD_GetFirmwareVersion(_pZeDMD)) + " device found, UDP delay " + ZeDMD_GetUdpDelay(_pZeDMD) + "ms");
 		}
 
 		#region libzedmd
@@ -50,6 +50,14 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
 		protected static extern bool ZeDMD_OpenWiFi(IntPtr pZeDMD, string ip);
+
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern int ZeDMD_GetUdpDelay(IntPtr pZeDMD);
+
 
 		#endregion
 	}
