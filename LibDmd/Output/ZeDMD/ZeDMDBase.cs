@@ -27,9 +27,9 @@ namespace LibDmd.Output.ZeDMD
 		protected ColoredFrame _lastFrame = null;
 		private GCHandle handle;
 
-		protected static void LogHandler(string format, IntPtr args, IntPtr userData)
+		protected void LogHandler(IntPtr format, IntPtr args, IntPtr pUserData)
 	    {
-        	Logger.Info(format);
+        	Logger.Info("libzedmd: " + Marshal.PtrToStringAnsi(ZeDMD_FormatLogMessage(format, args, pUserData)));
     	}
 
 		protected void Init()
@@ -114,15 +114,21 @@ namespace LibDmd.Output.ZeDMD
 		protected static extern IntPtr ZeDMD_GetInstance();
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    	protected delegate void ZeDMD_LogCallback(string format, IntPtr args, IntPtr userData);
+    	protected delegate void ZeDMD_LogCallback(IntPtr format, IntPtr args, IntPtr pUserData);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern void ZeDMD_SetLogCallback(IntPtr pZeDMD, ZeDMD_LogCallback callback, IntPtr userData);
+		protected static extern void ZeDMD_SetLogCallback(IntPtr pZeDMD, ZeDMD_LogCallback callback, IntPtr pUserData);
 
+#if PLATFORM_X64
+		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#else
+		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
+		protected static extern IntPtr ZeDMD_FormatLogMessage(IntPtr format, IntPtr args, IntPtr pUserData);
 
 #if PLATFORM_X64
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
