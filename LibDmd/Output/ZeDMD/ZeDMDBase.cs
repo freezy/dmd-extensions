@@ -28,12 +28,12 @@ namespace LibDmd.Output.ZeDMD
 		private GCHandle handle;
 
 		protected void LogHandler(string format, IntPtr args, IntPtr pUserData)
-	    {
+		{
 #if PLATFORM_X64
 			Logger.Debug("Trying to convert libzedmd log message: " + format);
-        	Logger.Info("libzedmd: " + Marshal.PtrToStringAnsi(ZeDMD_FormatLogMessage(format, args, pUserData)));
+			Logger.Info("libzedmd: " + Marshal.PtrToStringAnsi(ZeDMD_FormatLogMessage(format, args, pUserData)));
 #endif
-    	}
+		}
 
 		protected void Init()
 		{
@@ -44,7 +44,7 @@ namespace LibDmd.Output.ZeDMD
 			ZeDMD_LogCallback callbackDelegate = new ZeDMD_LogCallback(LogHandler);
 			// Keep a reference to the delegate to prevent GC from collecting it
 			handle = GCHandle.Alloc(callbackDelegate);
-	        ZeDMD_SetLogCallback(_pZeDMD, callbackDelegate, IntPtr.Zero);
+			ZeDMD_SetLogCallback(_pZeDMD, callbackDelegate, IntPtr.Zero);
 #else
 			Logger.Warn("Forwarding libzedmd and libserialport logging is not working on x86.");
 #endif
@@ -122,11 +122,12 @@ namespace LibDmd.Output.ZeDMD
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+#endif
 		protected static extern IntPtr ZeDMD_GetInstance();
 
 #if PLATFORM_X64
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    	protected delegate void ZeDMD_LogCallback(string format, IntPtr args, IntPtr pUserData);
+		protected delegate void ZeDMD_LogCallback(string format, IntPtr args, IntPtr pUserData);
 
 		[DllImport("zedmd64.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		protected static extern void ZeDMD_SetLogCallback(IntPtr pZeDMD, ZeDMD_LogCallback callback, IntPtr pUserData);
