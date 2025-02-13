@@ -59,7 +59,7 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern int ZeDMD_GetUsbPackageSize(IntPtr pZeDMD);
+		protected static extern ushort ZeDMD_GetUsbPackageSize(IntPtr pZeDMD);
 
 		#endregion
 	}

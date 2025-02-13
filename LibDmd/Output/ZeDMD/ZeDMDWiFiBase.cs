@@ -56,7 +56,7 @@ namespace LibDmd.Output.ZeDMD
 #else
 		[DllImport("zedmd.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 #endif
-		protected static extern int ZeDMD_GetUdpDelay(IntPtr pZeDMD);
+		protected static extern byte ZeDMD_GetUdpDelay(IntPtr pZeDMD);
 
 
 		#endregion
