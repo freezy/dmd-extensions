@@ -156,7 +156,10 @@ jobs:
           $dllSuffix = if ('${{ matrix.platform }}' -eq 'x64') { '64' } else { '' }
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Update -DestinationPath $zipArchive
+          # Copy DmdDevice.ini in a temporary Destination folder
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination (New-Item -Type Directory -Force "$env:GITHUB_WORKSPACE\ini-template")
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\ini-template" -Update -DestinationPath $zipArchive
+          Remove-Item "$env:GITHUB_WORKSPACE\ini-template" -Recurse
           
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data" "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext"
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" -Update -DestinationPath $zipArchive
