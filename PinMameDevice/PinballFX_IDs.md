@@ -98,6 +98,7 @@ virtualdmd height = 702
 | Pacific Rim Pinball                                   | 186 |
 | Pasha                                                 | 23  |
 | Peanuts’ Snoopy Pinball                               | 146 |
+| Pin Bot™																							| 194 |
 | Pinball Noir                                          | 123 |
 | Princess Bride                                        | 184 |
 | Red and Ted's Road Show™                              | 125 |
@@ -140,6 +141,7 @@ virtualdmd height = 702
 | Swords of Fury™                                       | 149 |
 | System Shock                                          | 183 |
 | Tales of the Arabian Nights™                          | 132 |
+| TAXI™																									| 196 |
 | Terraforming Mars Pinball                             | 173 |
 | Texas Chainsaw Massacre                               | 180 |
 | The Addams Family™                                    | 156 |
@@ -157,6 +159,7 @@ virtualdmd height = 702
 | Venom                                                 | 73  |
 | Verne's Mysterious Island                             | 164 |
 | White Water™                                          | 124 |
+| WHO dunnit™																						| 195 |
 | Wild West Rampage                                     | 75  |
 | Williams Pinball: Whirlwind™                          | 168 |
 | Wolverine                                             | 71  |
