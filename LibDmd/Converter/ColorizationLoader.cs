@@ -25,9 +25,11 @@ namespace LibDmd.Converter.Vni
 			}
 
 			var altColorDir = new DirectoryInfo(Path.Combine(_altcolorPath, gameName));
-			var serumFile = PathUtil.GetLastCreatedFile(altColorDir, "cRZ");
-			if (serumFile != null) {
-				var serumPath = serumFile.FullName;
+			var serumFileCRZ = PathUtil.GetLastCreatedFile(altColorDir, "cRZ");
+			var serumFileCROM = PathUtil.GetLastCreatedFile(altColorDir, "cROM");
+			var serumFileCROMC = PathUtil.GetLastCreatedFile(altColorDir, "cROMc");
+			if (serumFileCRZ != null || serumFileCROM != null || serumFileCROMC != null) {
+				var serumPath = serumFileCROMC != null ? serumFileCROMC.FullName : (serumFileCROM != null ? serumFileCROM.FullName : serumFileCRZ.FullName);
 				try {
 					var serum = new Serum.Serum(_altcolorPath, gameName, scalerMode);
 					if (serum.IsLoaded) {
@@ -100,3 +102,4 @@ namespace LibDmd.Converter.Vni
 		}
 	}
 }
+
