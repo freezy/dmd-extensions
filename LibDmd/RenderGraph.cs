@@ -753,6 +753,7 @@ namespace LibDmd
 			var destMultiSize = dest as IMultiSizeDestination;
 			var destGray2 = dest as IGray2Destination;
 			var destGray4 = dest as IGray4Destination;
+			var destGray8 = dest as IGray8Destination;
 			var destRgb565 = dest as IRgb565Destination;
 			var destRgb24 = dest as IRgb24Destination;
 			var destBitmap = dest as IBitmapDestination;
@@ -932,6 +933,28 @@ namespace LibDmd
 						// gray4 -> colored gray6
 						case FrameFormat.ColoredGray6:
 							throw new IncompatibleGraphException("Cannot convert from gray4 to colored gray6 (doesn't make any sense, colored gray6 can also do gray4).");
+
+						default:
+							throw new ArgumentOutOfRangeException(nameof(to), to, null);
+					}
+					break;
+
+
+				// source is gray8:
+				case FrameFormat.Gray8:
+					var sourceGray8 = source as IGray8Source;
+					switch (to) {
+
+						// gray8 -> gray8
+						case FrameFormat.Gray8:
+							AssertCompatibility(source, sourceGray8, dest, destGray8, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray8.RenderGray8);
+							break;
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);

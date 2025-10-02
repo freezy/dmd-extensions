@@ -252,7 +252,6 @@ namespace PinMameDevice
 		{
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
-			Logger.Info("Got 8-bit frame {0}x{1} ({2} bytes)", width, height, frameSize);
 			Marshal.Copy(lumBuffer, frame, 0, frameSize);
 			device.DmdDevice.RenderGray8(device.DmdFrame.Update(new Dimensions(width, height), frame, 8));
 		}
