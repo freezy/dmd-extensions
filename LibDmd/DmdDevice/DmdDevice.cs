@@ -50,6 +50,7 @@ namespace LibDmd.DmdDevice
 		// sources
 		private readonly PassthroughGray2Source _passthroughGray2Source;
 		private readonly PassthroughGray4Source _passthroughGray4Source;
+		private readonly PassthroughGray8Source _passthroughGray8Source;
 		private readonly PassthroughRgb24Source _passthroughRgb24Source;
 		private readonly PassthroughAlphaNumericSource _passthroughAlphaNumericSource;
 
@@ -94,6 +95,7 @@ namespace LibDmd.DmdDevice
 			var currentFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
 			_passthroughGray2Source = new PassthroughGray2Source(currentFrameFormat, "DmdDevice 2-bit Source");
 			_passthroughGray4Source = new PassthroughGray4Source(currentFrameFormat, "DmdDevice 4-bit Source");
+			_passthroughGray8Source = new PassthroughGray8Source(currentFrameFormat, "DmdDevice 8-bit Source");
 			_passthroughRgb24Source = new PassthroughRgb24Source(currentFrameFormat, "DmdDevice RGB24 Source");
 			_passthroughAlphaNumericSource = new PassthroughAlphaNumericSource(currentFrameFormat);
 
@@ -242,7 +244,7 @@ namespace LibDmd.DmdDevice
 		public void SetColor(Color color)
 		{
 			Logger.Info("Setting color: {0}", color);
-			_color = color;
+			_color = Colors.OrangeRed;
 		}
 
 		/// <summary>
@@ -289,6 +291,23 @@ namespace LibDmd.DmdDevice
 		}
 
 		/// <summary>
+		/// A new gray8 frame coming in from the DLL.
+		/// </summary>
+		///
+		/// <remarks>
+		/// Gray8 frames exist because PinMAME does some clever PWM simulation on some games which ends up in 8-bit shadings.
+		/// </remarks>
+		/// <param name="frame">New gray8 frame</param>
+		public void RenderGray8(DmdFrame frame)
+		{
+			AnalyticsSetDmd();
+			if (!_isOpen) {
+				Init();
+			}
+			_passthroughGray8Source.NextFrame(frame);
+		}
+
+		/// <summary>
 		/// A new RGB24 frame coming in from the DLL.
 		/// </summary>
 		/// <param name="frame">New RGB24 frame</param>
@@ -329,7 +348,7 @@ namespace LibDmd.DmdDevice
 
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 
-			//Logger.Info("Alphanumeric: {0}", layout);
+			Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
 					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 2));
@@ -763,6 +782,16 @@ namespace LibDmd.DmdDevice
 				_graphs.Add(new RenderGraph(refs) {
 					Name = "4-bit Passthrough Graph",
 					Source = _passthroughGray4Source,
+					Destinations = renderers,
+					Resize = _config.Global.Resize,
+					FlipHorizontally = _config.Global.FlipHorizontally,
+					FlipVertically = _config.Global.FlipVertically,
+					ScalerMode = _config.Global.ScalerMode
+				});
+
+				_graphs.Add(new RenderGraph(refs) {
+					Name = "8-bit Passthrough Graph",
+					Source = _passthroughGray8Source,
 					Destinations = renderers,
 					Resize = _config.Global.Resize,
 					FlipHorizontally = _config.Global.FlipHorizontally,

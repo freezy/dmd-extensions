@@ -446,6 +446,7 @@
     <Compile Include="Input\IDmdColorSource.cs" />
     <Compile Include="Input\IFrameEventSource.cs" />
     <Compile Include="Input\IGameNameSource.cs" />
+    <Compile Include="Input\IGray8Source.cs" />
     <Compile Include="Input\IRgb565Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray4Source.cs" />
     <Compile Include="Input\Network\WebsocketColoredGray2Source.cs" />
@@ -457,11 +458,13 @@
     <Compile Include="Input\Passthrough\PassthroughColoredGray2Source.cs" />
     <Compile Include="Input\Passthrough\PassthroughColoredGray4Source.cs" />
     <Compile Include="Input\Passthrough\PassthroughColoredGray6Source.cs" />
+    <Compile Include="Input\Passthrough\PassthroughGray8Source.cs" />
     <Compile Include="Output\ColorRotationWrapper.cs" />
     <Compile Include="Output\FileOutput\RawOutput.cs" />
     <Compile Include="Output\IColoredGray6Destination.cs" />
     <Compile Include="Output\IColorRotationDestination.cs" />
     <Compile Include="Output\IFrameEventDestination.cs" />
+    <Compile Include="Output\IGray8Destination.cs" />
     <Compile Include="Output\IMultiSizeDestination.cs" />
     <Compile Include="Output\IRgb565Destination.cs" />
     <Compile Include="Output\Network\NetworkStream.cs" />
