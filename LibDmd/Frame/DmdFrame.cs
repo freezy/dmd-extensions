@@ -387,6 +387,19 @@ namespace LibDmd.Frame
 			}
 		}
 
+		public ColoredFrame ConvertGray8ToColoredGray6(Color[] palette)
+		{
+			using (Profiler.Start("DmdFrame.ConvertGray8ToColoredGray")) {
+
+#if DEBUG
+				if (BitLength != 8) {
+					throw new ArgumentException("Cannot convert non-Gray8 frame to Colored Gray 6.");
+				}
+#endif
+				return new ColoredFrame(Dimensions, FrameUtil.ConvertGray8ToGray(Data, 6), palette);
+			}
+		}
+
 		public DmdFrame ConvertRgb24ToRgb565()
 		{
 			using (Profiler.Start("DmdFrame.ConvertRgb24ToRgb565")) {

@@ -124,9 +124,11 @@ namespace LibDmd
 
 		private Color[] _gray2Colors; 
 		private Color[] _gray4Colors;
+		private Color[] _gray6Colors;
 		private Color[] _gray8Colors;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+		private Color[] _gray6Palette;
 		private Color[] _gray8Palette;
 
 		private IDisposable _idleRenderer;
@@ -197,6 +199,7 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+			_gray6Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 64);
 			_gray8Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 256);
 
 			Logger.Info($"[RenderGraph] SetColor(0%: {_gray2Colors[0]}, 33%:{_gray2Colors[1]}, 66%:{_gray2Colors[2]}, 100%:{_gray2Colors[3]})");
@@ -210,6 +213,7 @@ namespace LibDmd
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+			_gray6Palette = ColorUtil.GetPalette(colors, 64);
 			_gray8Palette = ColorUtil.GetPalette(colors, 256);
 		}
 
@@ -220,6 +224,7 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
+			_gray6Palette = null;
 			_gray8Palette = null;
 		}
 
@@ -655,6 +660,11 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
 						continue;
 					}
+					// gray8 -> colored gray6
+					if (sourceGray8 != null && destColoredGray6 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.ColoredGray6);
+						continue;
+					}
 					// gray8 -> gray4
 					if (sourceGray8 != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Gray4);
@@ -1008,6 +1018,19 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray8.RenderGray8);
+							break;
+
+						// gray8 -> colored gray6
+						case FrameFormat.ColoredGray6:
+							AssertCompatibility(source, sourceGray8, dest, destColoredGray6, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertGray8ToColoredGray6(_gray6Colors ?? _gray6Colors)
+									.Transform(this, destFixedSize, destMultiSize),
+								destColoredGray6.RenderColoredGray6
+							);
 							break;
 
 						// gray8 -> rgb565
