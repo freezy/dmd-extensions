@@ -588,6 +588,11 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Rgb565);
 						continue;
 					}
+					// gray4 -> rgb24
+					if (sourceGray8 != null && destRgb24 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Rgb24);
+						continue;
+					}
 					// rgb565 -> rgb24
 					if (sourceRgb565 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Rgb565, FrameFormat.Rgb24);
@@ -977,6 +982,18 @@ namespace LibDmd
 									.TransformRgb565(this, destFixedSize, destMultiSize),
 								destRgb565.RenderRgb565
 							);
+							break;
+
+						// gray4 -> rgb24
+						case FrameFormat.Rgb24:
+							AssertCompatibility(source, sourceGray8, dest, destRgb24, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertGrayToRgb24(_gray8Palette ?? _gray8Colors)
+									.TransformRgb24(this, destFixedSize, destMultiSize),
+								destRgb24.RenderRgb24);
 							break;
 
 						default:
