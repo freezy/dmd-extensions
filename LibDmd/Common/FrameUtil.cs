@@ -513,6 +513,20 @@ namespace LibDmd.Common
 			}
 		}
 
+		public static byte[] ConvertGray8ToGray(byte[] srcFrame, int bitLength)
+		{
+			using (Profiler.Start("FrameUtil.ConvertGray8ToGray")) {
+				var numDestColors = Math.Pow(2, bitLength);
+				var factor = 256 / numDestColors;
+
+				var destFrame = new byte[srcFrame.Length];
+				for (var i = 0; i < destFrame.Length; i++) {
+					destFrame[i] = (byte)Math.Floor(srcFrame[i] / factor);
+				}
+				return destFrame;
+			}
+		}
+
 		public static byte[] NewPlane(Dimensions dim)
 		{
 			var count = dim.Width / 8 * dim.Height;

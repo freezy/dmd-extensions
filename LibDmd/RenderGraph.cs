@@ -588,9 +588,14 @@ namespace LibDmd
 						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Rgb565);
 						continue;
 					}
-					// gray4 -> rgb24
+					// gray8 -> rgb24
 					if (sourceGray8 != null && destRgb24 != null) {
 						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Rgb24);
+						continue;
+					}
+					// gray8 -> bitmap
+					if (sourceGray8 != null && destBitmap != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Bitmap);
 						continue;
 					}
 					// rgb565 -> rgb24
@@ -648,6 +653,16 @@ namespace LibDmd
 					// gray4 -> gray2
 					if (sourceGray4 != null && destGray2 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray2);
+						continue;
+					}
+					// gray8 -> gray4
+					if (sourceGray8 != null && destGray4 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Gray4);
+						continue;
+					}
+					// gray8 -> gray2
+					if (sourceGray8 != null && destGray2 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Gray2);
 						continue;
 					}
 					// colored gray6 -> rgb565
@@ -960,6 +975,30 @@ namespace LibDmd
 					var sourceGray8 = source as IGray8Source;
 					switch (to) {
 
+						// gray8 -> gray4
+						case FrameFormat.Gray4:
+							AssertCompatibility(source, sourceGray8, dest, destGray4, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToGray4()
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray4.RenderGray4);
+							break;
+
+						// gray8 -> gray2
+						case FrameFormat.Gray2:
+							AssertCompatibility(source, sourceGray8, dest, destGray2, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertToGray2()
+									.TransformGray(this, destFixedSize, destMultiSize),
+								destGray2.RenderGray2);
+							break;
+
 						// gray8 -> gray8
 						case FrameFormat.Gray8:
 							AssertCompatibility(source, sourceGray8, dest, destGray8, from, to);
@@ -984,7 +1023,7 @@ namespace LibDmd
 							);
 							break;
 
-						// gray4 -> rgb24
+						// gray8 -> rgb24
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray8, dest, destRgb24, from, to);
 							Subscribe(
@@ -995,6 +1034,19 @@ namespace LibDmd
 									.TransformRgb24(this, destFixedSize, destMultiSize),
 								destRgb24.RenderRgb24);
 							break;
+
+						// gray8 -> bitmap
+						case FrameFormat.Bitmap:
+							AssertCompatibility(source, sourceGray8, dest, destBitmap, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertGrayToBmp(_gray8Palette ?? _gray8Colors)
+									.Transform(this, destFixedSize, destMultiSize),
+								destBitmap.RenderBitmap);
+							break;
+
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);
