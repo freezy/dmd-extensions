@@ -124,8 +124,10 @@ namespace LibDmd
 
 		private Color[] _gray2Colors; 
 		private Color[] _gray4Colors;
+		private Color[] _gray8Colors;
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
+		private Color[] _gray8Palette;
 
 		private IDisposable _idleRenderer;
 		private IDisposable _activeRenderer;
@@ -195,6 +197,7 @@ namespace LibDmd
 		{
 			_gray2Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 4);
 			_gray4Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 16);
+			_gray8Colors = ColorUtil.GetPalette(new []{Colors.Black, color}, 256);
 
 			Logger.Info($"[RenderGraph] SetColor(0%: {_gray2Colors[0]}, 33%:{_gray2Colors[1]}, 66%:{_gray2Colors[2]}, 100%:{_gray2Colors[3]})");
 		}
@@ -207,6 +210,7 @@ namespace LibDmd
 		{
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
+			_gray8Palette = ColorUtil.GetPalette(colors, 256);
 		}
 
 		/// <summary>
@@ -216,6 +220,7 @@ namespace LibDmd
 		{
 			_gray2Palette = null;
 			_gray4Palette = null;
+			_gray8Palette = null;
 		}
 
 		/// <summary>
@@ -576,6 +581,11 @@ namespace LibDmd
 					// gray4 -> bitmap
 					if (sourceGray4 != null && destBitmap != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Bitmap);
+						continue;
+					}
+					// gray8 -> rgb565
+					if (sourceGray8 != null && destRgb565 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Rgb565);
 						continue;
 					}
 					// rgb565 -> rgb24
@@ -954,6 +964,19 @@ namespace LibDmd
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
 								destGray8.RenderGray8);
+							break;
+
+						// gray8 -> rgb565
+						case FrameFormat.Rgb565:
+							AssertCompatibility(source, sourceGray8, dest, destRgb565, from, to);
+							Subscribe(
+								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
+								frame => frame
+									.TransformHdScaling(destFixedSize, ScalerMode)
+									.ConvertGrayToRgb565(_gray8Palette ?? _gray8Colors)
+									.TransformRgb565(this, destFixedSize, destMultiSize),
+								destRgb565.RenderRgb565
+							);
 							break;
 
 						default:
