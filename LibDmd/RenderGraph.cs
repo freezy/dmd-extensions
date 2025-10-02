@@ -283,6 +283,7 @@ namespace LibDmd
 			try {
 				var sourceGray2 = Source as IGray2Source;
 				var sourceGray4 = Source as IGray4Source;
+				var sourceGray8 = Source as IGray8Source;
 				var sourceAlphaNumeric = Source as IAlphaNumericSource;
 				Logger.Info("Setting up {0} for {1} destination(s) [ {2} ]", Name, Destinations.Count, string.Join(", ", Destinations.Select(d => d.Name)));
 
@@ -470,7 +471,7 @@ namespace LibDmd
 					// Now here we need to find the most efficient way of passing data from the source
 					// to each destination. 
 					// One thing to remember is that now we don't have a converter defining the
-					// input format, so the source might able to deliver multiple different formats 
+					// input format, so the source might be able to deliver multiple different formats
 					// and the destination might be accepting multiple formats as well. 
 					//
 					// But since we know that a source doesn't implement any interface that would 
@@ -485,6 +486,7 @@ namespace LibDmd
 
 					var destGray2 = dest as IGray2Destination;
 					var destGray4 = dest as IGray4Destination;
+					var destGray8 = dest as IGray8Destination;
 
 					var sourceColoredGray2 = Source as IColoredGray2Source;
 					var sourceColoredGray4 = Source as IColoredGray4Source;
@@ -502,6 +504,11 @@ namespace LibDmd
 					// gray4 -> gray4
 					if (sourceGray4 != null && destGray4 != null) {
 						Connect(Source, dest, FrameFormat.Gray4, FrameFormat.Gray4);
+						continue;
+					}
+					// gray8 -> gray8
+					if (sourceGray8 != null && destGray8 != null) {
+						Connect(Source, dest, FrameFormat.Gray8, FrameFormat.Gray8);
 						continue;
 					}
 					// colored gray2 -> colored gray2
@@ -1645,6 +1652,11 @@ namespace LibDmd
 		/// A 4-bit grayscale frame (16 shades)
 		/// </summary>
 		Gray4,
+
+		/// <summary>
+		/// An 8-bit grayscale frame (256 shades) - result from PWM dithering
+		/// </summary>
+		Gray8,
 
 		/// <summary>
 		/// A 16-bit RGB frame
