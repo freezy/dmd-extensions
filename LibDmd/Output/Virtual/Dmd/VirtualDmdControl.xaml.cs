@@ -29,7 +29,7 @@ namespace LibDmd.Output.Virtual.Dmd
 	/// <summary>
 	/// Interaction logic for VirtualDmdControl.xaml
 	/// </summary>
-	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IColoredGray2Destination, IColoredGray4Destination,
+	public partial class VirtualDmdControl : IGray2Destination, IGray4Destination, IGray8Destination, IColoredGray2Destination, IColoredGray4Destination,
 		IColoredGray6Destination, IBitmapDestination, IRgb565Destination, IResizableDestination, IVirtualControl, IColorRotationDestination
 	// these others are for debugging purpose. basically you can make the virtual dmd
 	// behave like any other display by adding/removing interfaces
@@ -64,6 +64,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		private Color[] _gray2Palette;
 		private Color[] _gray4Palette;
 		private Color[] _gray6Palette;
+		private Color[] _gray8Palette;
 
 		private bool _hasFrame; // Flag set to true when a new frame is to be processed (following a call to RenderXXX)
 		private Dimensions _frameDimensions = Dimensions.Standard;
@@ -181,6 +182,16 @@ namespace LibDmd.Output.Virtual.Dmd
 			SetDimensions(frame.Dimensions);
 			Dmd.RequestRender();
 			CurrentFrameFormat = FrameFormat.Gray4;
+		}
+
+		public void RenderGray8(DmdFrame frame)
+		{
+			_hasFrame = true;
+			_frameType = FrameFormat.Gray8;
+			_frameData = frame.Data;
+			SetDimensions(frame.Dimensions);
+			Dmd.RequestRender();
+			CurrentFrameFormat = FrameFormat.Gray8;
 		}
 
 		public void RenderRgb565(DmdFrame frame)
@@ -479,6 +490,15 @@ namespace LibDmd.Output.Virtual.Dmd
 							data[i * 3 + 2] = _gray4Palette[i / 4].B;
 						}
 					}
+					else if (_frameType == FrameFormat.Gray8 && _gray8Palette != null)
+					{
+						for (int i = 0; i < 64; i++)
+						{
+							data[i * 3] = _gray8Palette[i * 4].R;
+							data[i * 3 + 1] = _gray8Palette[i * 4].G;
+							data[i * 3 + 2] = _gray8Palette[i * 4].B;
+						}
+					}
 					else if (_frameType == FrameFormat.ColoredGray6 && _gray6Palette != null)
 					{
 						for (int i = 0; i < 64; i++)
@@ -561,6 +581,7 @@ namespace LibDmd.Output.Virtual.Dmd
 							glTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, _frameDimensions.Width, _frameDimensions.Height, OpenGL.GL_LUMINANCE, OpenGL.GL_UNSIGNED_BYTE, _frameData);
 						break;
 					case FrameFormat.Gray4:
+					case FrameFormat.Gray8:
 						if (_frameData.Length != _frameDimensions.Surface)
 						{
 							LogErrors("Invalid frame buffer size of [" + _frameData.Length + "] bytes for a frame size of [" + _frameDimensions.Width + " x " + _frameDimensions.Height + "]");
@@ -736,6 +757,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_gray2Palette = ColorUtil.GetPalette(colors, 4);
 			_gray4Palette = ColorUtil.GetPalette(colors, 16);
 			_gray6Palette = ColorUtil.GetPalette(colors, 64);
+			_gray8Palette = ColorUtil.GetPalette(colors, 256);
 		}
 
 		public void ClearPalette()
@@ -744,6 +766,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_gray2Palette = null;
 			_gray4Palette = null;
 			_gray6Palette = null;
+			_gray8Palette = null;
 		}
 
 		public void ClearColor()

@@ -21,6 +21,11 @@ vec3 decodeGray4()
 	return lutPalette(texture(dmdData, uv).r * 255.0 / 15.0);
 }
 
+vec3 decodeGray8()
+{
+	return lutPalette(texture(dmdData, uv).r);
+}
+
 vec3 decodeColoredGray6()
 {
 	return lutPalette(texture(dmdData, uv).r * 255.0 / 63.0);
@@ -38,6 +43,8 @@ void main()
 	vec3 color = decodeGray2();
 #elif defined(GRAY4)
 	vec3 color = decodeGray4();
+#elif defined(GRAY8)
+	vec3 color = decodeGray8();
 #elif defined(COLOREDGRAY6)
 	vec3 color = decodeColoredGray6();
 #elif defined(RGB24)
