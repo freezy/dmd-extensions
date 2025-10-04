@@ -356,7 +356,7 @@ namespace LibDmd.DmdDevice
 
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 
-			Logger.Info("Alphanumeric: {0}", layout);
+			// Logger.Info("Alphanumeric: {0}", layout);
 			switch (layout) {
 				case NumericalLayout.__2x16Alpha:
 					_passthroughGray2Source.NextFrame(_alphanumFrame.Update(AlphaNumeric.Render2x16Alpha(segData), 2));
