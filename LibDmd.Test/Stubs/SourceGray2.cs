@@ -15,7 +15,7 @@ namespace LibDmd.Test.Stubs
 
 		private readonly Subject<DmdFrame> _frames = new Subject<DmdFrame>();
 
-		public IObservable<DmdFrame> GetGray2Frames(bool dedupe) => _frames;
+		public IObservable<DmdFrame> GetGray2Frames(bool dedupe, bool skipIdentificationFrames) => _frames;
 
 		public void AddFrame(DmdFrame frame)
 		{

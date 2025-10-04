@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Frame;
 using NLog;
@@ -50,7 +51,9 @@ namespace LibDmd.Input.Passthrough
 			_framesGray4Deduped.OnNext(frame);
 		}
 
-		public IObservable<DmdFrame> GetGray4Frames(bool dedupe) => dedupe ? _framesGray4Deduped : _framesGray4Duped;
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe, bool skipIdentificationFrames) => dedupe
+			? (skipIdentificationFrames ? _framesGray4Deduped.Where(f => !f.IsIdentifyFrame) : _framesGray4Deduped)
+			: (skipIdentificationFrames ? _framesGray4Duped.Where(f => !f.IsIdentifyFrame) : _framesGray4Duped);
 
 		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
 

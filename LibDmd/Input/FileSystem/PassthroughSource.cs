@@ -30,12 +30,12 @@ namespace LibDmd.Input.FileSystem
 			Name = name;
 		}
 
-		public IObservable<DmdFrame> GetGray2Frames(bool dedupe)
+		public IObservable<DmdFrame> GetGray2Frames(bool dedupe, bool skipIdentificationFrames)
 		{
 			return FramesGray2;
 		}
 
-		public IObservable<DmdFrame> GetGray4Frames(bool dedupe)
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe, bool skipIdentificationFrames)
 		{
 			return FramesGray4;
 		}
