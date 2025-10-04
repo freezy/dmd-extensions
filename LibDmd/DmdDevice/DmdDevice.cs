@@ -305,13 +305,10 @@ namespace LibDmd.DmdDevice
 				Init();
 			}
 			_passthroughGray8Source.NextFrame(frame);
-			switch (identifyFrame.BitLength) {
-				case 2:
-					_passthroughGray2Source.NextFrame(identifyFrame);
-					break;
-				case 4:
-					_passthroughGray4Source.NextFrame(identifyFrame);
-					break;
+			if (identifyFrame.BitLength == 4) {
+				_passthroughGray4Source.NextFrame(identifyFrame);
+			} else {
+				_passthroughGray2Source.NextFrame(identifyFrame);
 			}
 		}
 
