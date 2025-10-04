@@ -1027,7 +1027,7 @@ namespace LibDmd
 								sourceGray8.GetGray8Frames(!dest.NeedsDuplicateFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
-									.ConvertGray8ToColoredGray6(_gray6Colors ?? _gray6Colors)
+									.ConvertGray8ToColoredGray6(_gray6Palette ?? _gray6Colors)
 									.Transform(this, destFixedSize, destMultiSize),
 								destColoredGray6.RenderColoredGray6
 							);
