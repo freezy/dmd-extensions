@@ -36,7 +36,7 @@ namespace LibDmd.Input.FileSystem
 			}
 		}
 
-		public IObservable<DmdFrame> GetGray2Frames(bool dedupe)
+		public IObservable<DmdFrame> GetGray2Frames(bool dedupe, bool skipIdentificationFrames)
 		{
 			const Int32 bufferSize = 128;
 			_gameName.OnNext(Path.GetFileNameWithoutExtension(_filename).TrimEnd('-'));

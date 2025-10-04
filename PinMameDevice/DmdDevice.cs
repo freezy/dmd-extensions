@@ -31,6 +31,7 @@ namespace PinMameDevice
 			public int Id;
 			public IDmdDevice DmdDevice { get; } = new LibDmd.DmdDevice.DmdDevice();
 			public DmdFrame DmdFrame { get; } = new DmdFrame();
+			public DmdFrame DmdIdentifyFrame { get; } = new DmdFrame();
 			public RawFrame RawDmdFrame { get; } = new RawFrame();
 			public LinkedList<char> CData { get; } = new LinkedList<char>();
 		}
@@ -146,10 +147,10 @@ namespace PinMameDevice
 		[DllExport("Render_RGB24", CallingConvention = CallingConvention.Cdecl)]
 		public static void RenderRgb24(ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(DefaultDevice, width, height, currbuffer);
 
-		// void Render_Lum_And_Raw(UINT16 width, UINT16 height, UINT8 *lumBuffer, UINT8 *identifyBuffer, UINT32 noOfRawFrames, UINT8 *rawFrames);
+		// void Render_Lum_And_Raw(UINT16 width, UINT16 height, UINT8 *lumBuffer, UINT8 *identifyBuffer, UINT8 identifyBitLength);
 		[DllExport("Render_Lum_And_Raw", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderLumRaw(ushort width, ushort height, IntPtr lumbuffer, IntPtr identifyBuffer, uint noOfRawFrames, IntPtr rawFrames)
-			=> InternalRenderRaw8Device(DefaultDevice, width, height, lumbuffer, identifyBuffer);
+		public static void RenderLumRaw(ushort width, ushort height, IntPtr lumbuffer, IntPtr identifyBuffer, byte identifyBitLength)
+			=> InternalRenderRaw8Device(DefaultDevice, width, height, lumbuffer, identifyBuffer, identifyBitLength);
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
@@ -248,12 +249,17 @@ namespace PinMameDevice
 			device.DmdDevice.RenderRgb24(device.DmdFrame.Update(new Dimensions(width, height), frame, 24));
 		}
 
-		private static void InternalRenderRaw8Device(DeviceInstance device, ushort width, ushort height, IntPtr lumBuffer, IntPtr identifyBuffer)
+		private static void InternalRenderRaw8Device(DeviceInstance device, ushort width, ushort height, IntPtr lumBuffer, IntPtr identifyBuffer, byte identifyBitLength)
 		{
 			var frameSize = width * height;
 			var frame = new byte[frameSize];
+			var identifyFrame = new byte[frameSize];
 			Marshal.Copy(lumBuffer, frame, 0, frameSize);
-			device.DmdDevice.RenderGray8(device.DmdFrame.Update(new Dimensions(width, height), frame, 8));
+			Marshal.Copy(identifyBuffer, identifyFrame, 0, frameSize);
+			device.DmdDevice.RenderGray8(
+				device.DmdFrame.Update(new Dimensions(width, height), frame, 8),
+				device.DmdIdentifyFrame.Update(new Dimensions(width, height), identifyFrame, identifyBitLength, true)
+			);
 		}
 
 		private static void InternalRenderRaw4Device(DeviceInstance device, ushort width, ushort height, IntPtr currbuffer, ushort noOfRawFrames, IntPtr currrawbuffer)

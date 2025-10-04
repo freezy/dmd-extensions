@@ -13,7 +13,7 @@ namespace LibDmd.Input.FileSystem
 	{
 		readonly DmdFrame _dmdFrame = new DmdFrame();
 
-		public IObservable<DmdFrame> GetGray2Frames(bool dedupe) => _frames;
+		public IObservable<DmdFrame> GetGray2Frames(bool dedupe, bool skipIdentificationFrames) => _frames;
 
 		private readonly BehaviorSubject<DmdFrame> _frames;
 
@@ -27,7 +27,7 @@ namespace LibDmd.Input.FileSystem
 	{
 		DmdFrame _dmdFrame = new DmdFrame();
 
-		public IObservable<DmdFrame> GetGray4Frames(bool dedupe) => _frames;
+		public IObservable<DmdFrame> GetGray4Frames(bool dedupe, bool skipIdentificationFrames) => _frames;
 
 		private readonly BehaviorSubject<DmdFrame> _frames;
 

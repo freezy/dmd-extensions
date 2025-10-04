@@ -29,6 +29,12 @@ namespace LibDmd.Frame
 		public byte[] Data { get; protected set; }
 
 		/// <summary>
+		/// These frames are used for colorization and should never be rendered (if they exist, that means
+		/// there's a gray-8 frame to be rendered).
+		/// </summary>
+		public bool IsIdentifyFrame { get; protected set; }
+
+		/// <summary>
 		/// The bit length of each pixel.
 		/// </summary>
 		public int BitLength { get; protected set; }
@@ -132,6 +138,7 @@ namespace LibDmd.Frame
 			Dimensions = frame.Dimensions;
 			Data = frame.Data;
 			BitLength = frame.BitLength;
+			IsIdentifyFrame = false;
 
 			#if DEBUG
 			AssertData();
@@ -143,6 +150,7 @@ namespace LibDmd.Frame
 		{
 			Data = data;
 			BitLength = bitLength;
+			IsIdentifyFrame = false;
 
 			#if DEBUG
 			AssertData();
@@ -150,11 +158,12 @@ namespace LibDmd.Frame
 			return this;
 		}
 
-		public DmdFrame Update(Dimensions dim, byte[] data, int bitLength)
+		public DmdFrame Update(Dimensions dim, byte[] data, int bitLength, bool isIdentifyFrame = false)
 		{
 			Dimensions = dim;
 			Data = data;
 			BitLength = bitLength;
+			IsIdentifyFrame = isIdentifyFrame;
 
 			#if DEBUG
 			AssertData();
@@ -166,6 +175,7 @@ namespace LibDmd.Frame
 		{
 			Dimensions = dim;
 			Data = data;
+			IsIdentifyFrame = false;
 
 			#if DEBUG
 			AssertData();

@@ -298,13 +298,21 @@ namespace LibDmd.DmdDevice
 		/// Gray8 frames exist because PinMAME does some clever PWM simulation on some games which ends up in 8-bit shadings.
 		/// </remarks>
 		/// <param name="frame">New gray8 frame</param>
-		public void RenderGray8(DmdFrame frame)
+		public void RenderGray8(DmdFrame frame, DmdFrame identifyFrame)
 		{
 			AnalyticsSetDmd();
 			if (!_isOpen) {
 				Init();
 			}
 			_passthroughGray8Source.NextFrame(frame);
+			switch (identifyFrame.BitLength) {
+				case 2:
+					_passthroughGray2Source.NextFrame(identifyFrame);
+					break;
+				case 4:
+					_passthroughGray4Source.NextFrame(identifyFrame);
+					break;
+			}
 		}
 
 		/// <summary>

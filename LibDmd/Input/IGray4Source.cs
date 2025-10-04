@@ -16,7 +16,8 @@ namespace LibDmd.Input
 		/// between 0 and 15 for every pixel.
 		/// </summary>
 		/// <param name="dedupe"></param>
+		/// <param name="skipIdentificationFrames"></param>
 		/// <remarks>When disposed, frame production must stop.</remarks>
-		IObservable<DmdFrame> GetGray4Frames(bool dedupe);
+		IObservable<DmdFrame> GetGray4Frames(bool dedupe, bool skipIdentificationFrames);
 	}
 }

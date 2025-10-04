@@ -19,7 +19,7 @@ namespace LibDmd.Input.PinballFX
 	{
 		public override string Name { get; } = "Pinball FX3";
 
-		public IObservable<DmdFrame> GetGray2Frames(bool dedupe)
+		public IObservable<DmdFrame> GetGray2Frames(bool dedupe, bool skipIdentificationFrames)
 		{
 			return GetFrames();
 		}
