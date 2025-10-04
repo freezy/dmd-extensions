@@ -74,9 +74,6 @@ namespace LibDmd.DmdDevice
 		// colorizers
 		private readonly ColorizationLoader _colorizationLoader;
 		private AbstractConverter _colorizer;
-		// private Serum _serum;
-		// private ColorizationPlugin _colorizationPlugin;
-		// private VniColorizer _vniColorizer;
 
 		// error reporting
 #if !DEBUG
@@ -298,6 +295,7 @@ namespace LibDmd.DmdDevice
 		/// Gray8 frames exist because PinMAME does some clever PWM simulation on some games which ends up in 8-bit shadings.
 		/// </remarks>
 		/// <param name="frame">New gray8 frame</param>
+		/// <param name="identifyFrame">Identify frame for the colorizer</param>
 		public void RenderGray8(DmdFrame frame, DmdFrame identifyFrame)
 		{
 			AnalyticsSetDmd();
