@@ -7,7 +7,7 @@ using NLog;
 namespace LibDmd.Input.Passthrough
 {
 	/// <summary>
-	/// Receives 4-bit frames from VPM and forwards them to the observable
+	/// Receives 8-bit frames from VPM and forwards them to the observable
 	/// after dropping duplicates (if enabled).
 	/// </summary>
 	public class PassthroughGray8Source : AbstractSource, IGray8Source, IGameNameSource
