@@ -89,7 +89,7 @@ a [ZeDMD](https://github.com/PPUC/ZeDMD) under the hood._
 
 ### High-Resolution DMD for Monitors
 
-DMD Extensions includes a complex shader with awesome effects for monitor users. For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
+DMD Extensions includes a complex shader with awesome effects for monitor users. It also supports VPM's recently added [support for PWM frames](https://github.com/vpinball/pinmame/blob/master/docs/dmd.md). For more info, find the documentation [here](https://github.com/freezy/dmd-extensions/tree/master/LibDmd/Output/Virtual/Dmd#readme).
 
 <image src="https://user-images.githubusercontent.com/70426/109708090-3ee0cf80-7b9b-11eb-9fdd-83523aa265f9.png" width="350" />
 
