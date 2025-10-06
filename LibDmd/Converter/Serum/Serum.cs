@@ -151,10 +151,10 @@ namespace LibDmd.Converter.Serum
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
 
-			// 0 => no rotation
-			// 1 - 0xFFFF => time in ms to next rotation
+			// lower word: 0 => no rotation
+			// lower word: 1 - 2048 => time in ms to next rotation
 			// 0xFFFFFFFF => frame wasn't colorized
-			if (rotation > 0 && (rotation & 0xffff) < 2048) {
+			if (rotation > 0 && (rotation & 0xffff) <= 2048) {
                 StartRotating();
 			} else {
 				StopRotating();
@@ -195,9 +195,9 @@ namespace LibDmd.Converter.Serum
 		private bool UpdateRotations()
 		{
 			var rotation = Serum_Rotate();
-			// 0 => no rotation
-			// 1 - 0xFFFF => time in ms to next rotation
-			if ((rotation & 0xffff) == 0 || (rotation & 0xffff) < 2048) {
+			// lower word: 0 => no rotation
+			// lower word: 1 - 2048 => time in ms to next rotation
+			if ((rotation & 0xffff) == 0 || (rotation & 0xffff) > 2048) {
 				StopRotating();
 				return false;
 			}
