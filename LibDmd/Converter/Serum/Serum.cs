@@ -147,14 +147,14 @@ namespace LibDmd.Converter.Serum
 				frame.Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength);
 			}
 
-			var rotations = Serum_Colorize(frame.Data);
+			var rotation = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
 
 			// 0 => no rotation
 			// 1 - 0xFFFF => time in ms to next rotation
 			// 0xFFFFFFFF => frame wasn't colorized
-			if (rotations > 0 && (rotations & 0xffff) < 2048) {
+			if (rotation > 0 && (rotation & 0xffff) < 2048) {
                 StartRotating();
 			} else {
 				StopRotating();
@@ -199,13 +199,13 @@ namespace LibDmd.Converter.Serum
 				var rotation = Serum_Rotate();
 				// 0 => no rotation
 				// 1 - 0xFFFF => time in ms to next rotation
-				if ((rotations & 0xffff) == 0 || (rotations & 0xffff) < 2048) {
+				if ((rotation & 0xffff) == 0 || (rotation & 0xffff) < 2048) {
 					StopRotating();
 					return false;
 				}
 
 				ReadSerumFrame();
-				_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotations);
+				_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotation);
 				return true;
 
 			} catch (Exception) {
