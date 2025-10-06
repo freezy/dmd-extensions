@@ -150,7 +150,7 @@ namespace LibDmd.Converter.Serum
 			var rotations = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
 
-			if (rotations > 0 && ((rotations & 0xffff) < 2048))
+			if (rotations > 0 && ((rotations & 0xffff) < 2048)) {
                 StartRotating();
 			} else {
 				StopRotating();
@@ -275,4 +275,5 @@ namespace LibDmd.Converter.Serum
 		#endregion
 	}
 }
+
 
