@@ -41,6 +41,7 @@ namespace LibDmd.Converter.Serum
 		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
 		private IDisposable _rotator;
+		private int rotationIntervalMs = 1;
 
 		private bool _frameEventsInitialized;
 
@@ -176,15 +177,16 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		private void StartRotating(int intervalMs = 1)
+		private void StartRotating(int intervalMs)
 		{
 			if (_rotator != null) {
-				return;
+				StopRotating();
 			}
+			rotationIntervalMs = intervalMs;
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(intervalMs))
+				.Interval(TimeSpan.FromMilliseconds(rotationIntervalMs))
 				.Subscribe(Rotate);
-			Logger.Info($"[serum] First Rotation in {intervalMs} ms.");
+			Logger.Info($"[serum] First Rotation in {rotationIntervalMs} ms.");
 		}
 
 		private void ContinueRotating(int intervalMs = 1)
@@ -192,10 +194,15 @@ namespace LibDmd.Converter.Serum
 			if (_rotator == null) {
 				return;
 			}
-			_rotator.Dispose();
-			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(intervalMs))
-				.Subscribe(Rotate);
+
+			if (intervalMs != rotationIntervalMs)
+			{
+				rotationIntervalMs = intervalMs;
+				_rotator.Dispose();
+				_rotator = Observable
+					.Interval(TimeSpan.FromMilliseconds(intervalMs))
+					.Subscribe(Rotate);
+			}
 			Logger.Info($"[serum] Next Rotation in {intervalMs} ms.");
 		}
 
