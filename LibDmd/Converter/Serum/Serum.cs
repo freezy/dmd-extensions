@@ -149,6 +149,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			var rotation = Serum_Colorize(frame.Data);
+			Logger.Info($"[serum] Colorize returned 0x{rotation:X8}.");
 
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
@@ -189,7 +190,7 @@ namespace LibDmd.Converter.Serum
 			Logger.Info($"[serum] First Rotation in {rotationIntervalMs} ms.");
 		}
 
-		private void ContinueRotating(int intervalMs = 1)
+		private void ContinueRotating(int intervalMs)
 		{
 			if (_rotator == null) {
 				return;
