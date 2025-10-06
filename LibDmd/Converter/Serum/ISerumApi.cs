@@ -5,7 +5,7 @@ namespace LibDmd.Converter.Serum
 	public interface ISerumApi
 	{
 		uint NumColors { get; }
-		bool Convert(ref SerumFrame serumFrame, uint rotations);
+		void Convert(ref SerumFrame serumFrame);
 		void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint changed);
 	}
 }

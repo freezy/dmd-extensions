@@ -37,7 +37,7 @@ namespace LibDmd.Converter.Serum
 			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
 		}
 
-		public bool Convert(ref SerumFrame serumFrame, uint rotations)
+		public void Convert(ref SerumFrame serumFrame)
 		{
 			if (serumFrame.Frame == null) {
 				Logger.Warn("[serum] Frame data is null.");
@@ -50,12 +50,6 @@ namespace LibDmd.Converter.Serum
 			Marshal.Copy(serumFrame.Frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
 			BytesToColors(_bytePalette, _colorPalette);
 
-			// 0 => no rotation
-			// 1 - 0xFFFF => time in ms to next rotation
-			// 0xFFFFFFFF => frame wasn't colorized
-			// 0xFFFFFFFE => same frame as before
-			var hasRotations = rotations != 0xffffffff && rotations > 0;
-
 			// send event trigger
 			if (serumFrame.triggerID != 0xffffffff) {
 				_frameEvents.OnNext(_frameEvent.Update((ushort)serumFrame.triggerID));
@@ -63,7 +57,6 @@ namespace LibDmd.Converter.Serum
 
 			// send the colored frame
 			_coloredGray6Frames.OnNext(new ColoredFrame(_dimensions, _frame.Data, _colorPalette));
-			return hasRotations;
 		}
 
 		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint _)
