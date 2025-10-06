@@ -154,7 +154,7 @@ namespace LibDmd.Converter.Serum
 			// 0 => no rotation
 			// 1 - 0xFFFF => time in ms to next rotation
 			// 0xFFFFFFFF => frame wasn't colorized
-			if (rotations > 0 && ((rotations & 0xffff) < 2048)) {
+			if (rotations > 0 && (rotations & 0xffff) < 2048) {
                 StartRotating();
 			} else {
 				StopRotating();
@@ -195,17 +195,22 @@ namespace LibDmd.Converter.Serum
 		private bool UpdateRotations()
 		{
 			try {
-				var changed = Serum_Rotate();
-				if ((changed & (0x10000 + 0x20000)) <= 0) {
+
+				var rotation = Serum_Rotate();
+				// 0 => no rotation
+				// 1 - 0xFFFF => time in ms to next rotation
+				if ((rotations & 0xffff) == 0 || (rotations & 0xffff) < 2048) {
+					StopRotating();
 					return false;
 				}
 
 				ReadSerumFrame();
-				_api.UpdateRotations(ref _serumFrame, _rotationPalette, changed);
+				_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotations);
 				return true;
 
 			} catch (Exception) {
 				// had a "Attempted to divide by zero." error within Serum_Rotate.
+				StopRotating();
 				return false;
 			}
 		}
