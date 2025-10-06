@@ -116,9 +116,9 @@ namespace LibDmd.Converter.Serum
 
 		public new void Dispose()
 		{
+			StopRotating();
 			base.Dispose();
 			Serum_Dispose();
-			StopRotating();
 			_frameEventInit?.Dispose();
 			_frameEvents?.Dispose();
 			IsLoaded = false;
@@ -157,11 +157,9 @@ namespace LibDmd.Converter.Serum
 				// 0 => no rotation
 				// 1 - 2048 => time in ms to next rotation
 				if (rotation > 0 && rotation <= 2048) {
-					StartRotating();
-					Logger.Info($"[serum] First Rotation in {rotation} ms.");
+					StartRotating(rotation);
 				} else{
 					StopRotating();
-					Logger.Info($"[serum] Rotation stopped.");
 				}
 			}
 		}
@@ -178,23 +176,38 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		private void StartRotating()
+		private void StartRotating(int intervalMs = 1)
 		{
 			if (_rotator != null) {
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(10))
+				.Interval(TimeSpan.FromMilliseconds(intervalMs))
 				.Subscribe(Rotate);
+			Logger.Info($"[serum] First Rotation in {intervalMs} ms.");
 		}
 
-		private void StopRotating()
+		private void ContinueRotating(int intervalMs = 1)
 		{
 			if (_rotator == null) {
 				return;
 			}
 			_rotator.Dispose();
+			_rotator = Observable
+				.Interval(TimeSpan.FromMilliseconds(intervalMs))
+				.Subscribe(Rotate);
+			Logger.Info($"[serum] Next Rotation in {intervalMs} ms.");
+		}
+
+		private void StopRotating()
+		{
+			if (_rotator == null)
+			{
+				return;
+			}
+			_rotator.Dispose();
 			_rotator = null;
+			Logger.Info($"[serum] Rotation stopped.");
 		}
 
 		private bool UpdateRotations()
@@ -207,15 +220,13 @@ namespace LibDmd.Converter.Serum
 			rotation &= 0xffff;
 			// lower word: 0 => no rotation
 			// lower word: 1 - 2048 => time in ms to next rotation
-			if (rotation == 0 || rotation > 2048){
+			if (rotation > 0 || rotation <= 2048) {
+				ContinueRotating(rotation);
+				return true;
+			} else {
 				StopRotating();
-				Logger.Info($"[serum] Rotation stopped.");
 				return false;
 			}
-
-			Logger.Info($"[serum] Next Rotation in {rotation} ms.");
-
-			return true;
 		}
 
 		public static string GetVersion()
