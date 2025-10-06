@@ -157,7 +157,7 @@ namespace LibDmd.Converter.Serum
 				// 0 => no rotation
 				// 1 - 2048 => time in ms to next rotation
 				if (rotation > 0 && rotation <= 2048) {
-					StartRotating(rotation);
+					StartRotating((int)rotation);
 				} else{
 					StopRotating();
 				}
@@ -221,7 +221,7 @@ namespace LibDmd.Converter.Serum
 			// lower word: 0 => no rotation
 			// lower word: 1 - 2048 => time in ms to next rotation
 			if (rotation > 0 || rotation <= 2048) {
-				ContinueRotating(rotation);
+				ContinueRotating((int)rotation);
 				return true;
 			} else {
 				StopRotating();
