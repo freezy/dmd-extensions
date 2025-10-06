@@ -194,25 +194,17 @@ namespace LibDmd.Converter.Serum
 
 		private bool UpdateRotations()
 		{
-			try {
-
-				var rotation = Serum_Rotate();
-				// 0 => no rotation
-				// 1 - 0xFFFF => time in ms to next rotation
-				if ((rotation & 0xffff) == 0 || (rotation & 0xffff) < 2048) {
-					StopRotating();
-					return false;
-				}
-
-				ReadSerumFrame();
-				_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotation);
-				return true;
-
-			} catch (Exception) {
-				// had a "Attempted to divide by zero." error within Serum_Rotate.
+			var rotation = Serum_Rotate();
+			// 0 => no rotation
+			// 1 - 0xFFFF => time in ms to next rotation
+			if ((rotation & 0xffff) == 0 || (rotation & 0xffff) < 2048) {
 				StopRotating();
 				return false;
 			}
+
+			ReadSerumFrame();
+			_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotation);
+			return true;
 		}
 
 		public static string GetVersion()
