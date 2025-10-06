@@ -152,8 +152,7 @@ namespace LibDmd.Converter.Serum
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
 
-			if (rotation < 0xfffffffe)
-			{
+			if (rotation < 0xfffffffe) {
 				rotation &= 0xffff;
 				// 0 => no rotation
 				// 1 - 2048 => time in ms to next rotation
@@ -162,6 +161,7 @@ namespace LibDmd.Converter.Serum
 					Logger.Info($"[serum] First Rotation in {rotation} ms.");
 				} else{
 					StopRotating();
+					Logger.Info($"[serum] Rotation stopped.");
 				}
 			}
 		}
@@ -184,7 +184,7 @@ namespace LibDmd.Converter.Serum
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(1d/60))
+				.Interval(TimeSpan.FromMilliseconds(10))
 				.Subscribe(Rotate);
 		}
 
@@ -207,9 +207,9 @@ namespace LibDmd.Converter.Serum
 			rotation &= 0xffff;
 			// lower word: 0 => no rotation
 			// lower word: 1 - 2048 => time in ms to next rotation
-			if (rotation == 0 || rotation > 2048)
-			{
+			if (rotation == 0 || rotation > 2048){
 				StopRotating();
+				Logger.Info($"[serum] Rotation stopped.");
 				return false;
 			}
 
