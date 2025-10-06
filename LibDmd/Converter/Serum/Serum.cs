@@ -82,7 +82,7 @@ namespace LibDmd.Converter.Serum
 #else
 			const string dllName = "serum.dll";
 #endif
-			
+
 			if (File.Exists(dllName)) {
 				Logger.Info($"[serum] Found {dllName} at {Directory.GetCurrentDirectory()}.");
 			}
@@ -113,7 +113,7 @@ namespace LibDmd.Converter.Serum
 			IsLoaded = true;
 			Logger.Info($"[serum] Found {NumTriggersAvailable} triggers to emit.");
 		}
-		
+
 		public new void Dispose()
 		{
 			base.Dispose();
@@ -149,7 +149,11 @@ namespace LibDmd.Converter.Serum
 
 			var rotations = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
+			_api.Convert(ref _serumFrame);
 
+			// 0 => no rotation
+			// 1 - 0xFFFF => time in ms to next rotation
+			// 0xFFFFFFFF => frame wasn't colorized
 			if (rotations > 0 && ((rotations & 0xffff) < 2048)) {
                 StartRotating();
 			} else {
@@ -199,7 +203,7 @@ namespace LibDmd.Converter.Serum
 				ReadSerumFrame();
 				_api.UpdateRotations(ref _serumFrame, _rotationPalette, changed);
 				return true;
-				
+
 			} catch (Exception) {
 				// had a "Attempted to divide by zero." error within Serum_Rotate.
 				return false;

@@ -32,14 +32,14 @@ namespace LibDmd.Converter.Serum
 			Logger.Info($"Serum v2 initialized {_dimensions}.");
 		}
 
-		public bool Convert(ref SerumFrame serumFrame, uint rotations)
+		public void Convert(ref SerumFrame serumFrame)
 		{
-			return ReadAndPushNextFrame(ref serumFrame, true);
+			ReadAndPushNextFrame(ref serumFrame);
 		}
 
 		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint changed)
 		{
-			ReadAndPushNextFrame(ref serumFrame, false);
+			ReadAndPushNextFrame(ref serumFrame);
 
 			// todo 👇
 			// there is a rotation in the 32P frame
@@ -53,7 +53,7 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		private bool ReadAndPushNextFrame(ref SerumFrame serumFrame, bool checkForRotations)
+		private void ReadAndPushNextFrame(ref SerumFrame serumFrame)
 		{
 			byte[] frameData;
 			Dimensions dim;
@@ -62,38 +62,24 @@ namespace LibDmd.Converter.Serum
 				if (serumFrame.Has32PFrame) {
 					frameData = Read32PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width32, 32);
-					if (checkForRotations) {
-						hasRotations = HasRotations(serumFrame.rotations32);
-					}
 				} else {
 					frameData = Read64PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width64, 64);
-					if (checkForRotations) {
-						hasRotations = HasRotations(serumFrame.rotations64);
-					}
 					// TODO scale down
 				}
 			} else {
 				if (serumFrame.Has64PFrame) {
 					frameData = Read64PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width64, 64);
-					if (checkForRotations) {
-						hasRotations = HasRotations(serumFrame.rotations64);
-					}
-
 				} else {
 					frameData = Read32PFrame(ref serumFrame);
 					dim = new Dimensions((int)serumFrame.Width32, 32);
-					if (checkForRotations) {
-						hasRotations = HasRotations(serumFrame.rotations32);
-					}
 					// TODO scale up
 				}
 			}
 
 			_frame.Update(dim, frameData);
 			_rgb565Frames.OnNext(_frame);
-			return hasRotations;
 		}
 
 		private static Dimensions ReadDimensions(ref SerumFrame serumFrame)
@@ -133,20 +119,6 @@ namespace LibDmd.Converter.Serum
 				_frames[size] = new byte[size];
 			}
 			return _frames[size];
-		}
-
-		private static bool HasRotations(IntPtr serumFrameRotations)
-		{
-			ushort[] trot = new ushort[MAX_COLOR_ROTATIONS_V2 * Serum.MAX_LENGTH_COLOR_ROTATION];
-			var tData = new byte[trot.Length * 2];
-			Marshal.Copy(serumFrameRotations, tData, 0, tData.Length);
-			Buffer.BlockCopy(tData, 0, trot, 0, tData.Length);
-			for (uint ti = 0; ti < MAX_COLOR_ROTATIONS_V2; ti++) {
-				if (trot[ti * 3] > 0) {
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 }
