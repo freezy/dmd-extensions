@@ -149,10 +149,9 @@ namespace LibDmd.Converter.Serum
 
 			var rotations = Serum_Colorize(frame.Data);
 			ReadSerumFrame();
-			var hasRotations = _api.Convert(ref _serumFrame, rotations);
 
-			if (hasRotations) {
-				StartRotating();
+			if (rotations > 0 && ((rotations & 0xffff) < 2048))
+                StartRotating();
 			} else {
 				StopRotating();
 			}
@@ -276,3 +275,4 @@ namespace LibDmd.Converter.Serum
 		#endregion
 	}
 }
+
