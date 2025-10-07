@@ -160,9 +160,7 @@ namespace LibDmd.Converter.Serum
 				if (rotation > 0 && rotation <= 2048) {
 					StartRotating();
 					if ((resultAndRotation & 0x40000) > 0) {
-						Logger.Warn($"[serum] Start scene rotation {_serumFrame.triggerID}.");
-					} else {
-						Logger.Warn($"[serum] Start rotation.");
+						Logger.Warn($"[serum] Found scene rotation {_serumFrame.triggerID}.");
 					}
 				} else {
 					StopRotating();
@@ -190,6 +188,7 @@ namespace LibDmd.Converter.Serum
 			_rotator = Observable
 				.Interval(TimeSpan.FromMilliseconds(1d/60))
 				.Subscribe(Rotate);
+			Logger.Info($"[serum] Rotation started.");
 		}
 
 		private void StopRotating()
