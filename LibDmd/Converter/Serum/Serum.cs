@@ -175,7 +175,7 @@ namespace LibDmd.Converter.Serum
 
 		private void Rotate(long _)
 		{
-			if (UpdateRotations()) {
+			if (UpdateRotations() && _api is SerumApiV1) {
 				_paletteChanges.OnNext(_rotationPalette);
 			}
 		}
@@ -186,7 +186,7 @@ namespace LibDmd.Converter.Serum
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(1d/60))
+				.Interval(TimeSpan.FromMilliseconds(1))
 				.Subscribe(Rotate);
 			Logger.Info($"[serum] Rotation started.");
 		}
