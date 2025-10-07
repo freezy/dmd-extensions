@@ -41,6 +41,7 @@ namespace LibDmd.Converter.Serum
 		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
 		private IDisposable _rotator;
+
 		private bool _frameEventsInitialized;
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
@@ -160,7 +161,7 @@ namespace LibDmd.Converter.Serum
 				if (rotation > 0 && rotation <= 2048) {
 					StartRotating();
 					if ((resultAndRotation & 0x40000) > 0) {
-						Logger.Warn($"[serum] Found scene rotation {_serumFrame.triggerID}.");
+						Logger.Info($"[serum] Found scene rotation {_serumFrame.triggerID}.");
 					}
 				} else {
 					StopRotating();
@@ -292,5 +293,3 @@ namespace LibDmd.Converter.Serum
 		#endregion
 	}
 }
-
-
