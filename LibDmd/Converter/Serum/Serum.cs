@@ -147,7 +147,6 @@ namespace LibDmd.Converter.Serum
 			}
 
 			var resultAndRotation = Serum_Colorize(frame.Data);
-			//Logger.Info($"[serum] Colorize returned 0x{resultAndRotation:X8}.");
 
 			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
 			ReadSerumFrame();
@@ -159,9 +158,6 @@ namespace LibDmd.Converter.Serum
 				// 1 - 2048 => time in ms to next rotation, but in dmdext we use a fixed interval to ask for rotations
 				if (rotation > 0 && rotation <= 2048) {
 					StartRotating();
-					if ((resultAndRotation & 0x40000) > 0) {
-						//Logger.Info($"[serum] Found scene rotation {_serumFrame.triggerID}.");
-					}
 				} else {
 					StopRotating();
 				}
@@ -188,7 +184,6 @@ namespace LibDmd.Converter.Serum
 			_rotator = Observable
 				.Interval(TimeSpan.FromMilliseconds(1d/60))
 				.Subscribe(Rotate);
-			//Logger.Info($"[serum] Rotation started.");
 		}
 
 		private void StopRotating()
@@ -198,7 +193,6 @@ namespace LibDmd.Converter.Serum
 			}
 			_rotator.Dispose();
 			_rotator = null;
-			//Logger.Info($"[serum] Rotation stopped.");
 		}
 
 		private bool UpdateRotations()
