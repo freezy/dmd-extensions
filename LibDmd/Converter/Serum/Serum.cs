@@ -186,7 +186,7 @@ namespace LibDmd.Converter.Serum
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(1))
+				.Interval(TimeSpan.FromMilliseconds(1d/60))
 				.Subscribe(Rotate);
 			Logger.Info($"[serum] Rotation started.");
 		}
