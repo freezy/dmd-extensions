@@ -156,13 +156,13 @@ namespace LibDmd.Converter.Serum
 			if (resultAndRotation < 0xfffffffe) {
 				int rotation = (int) (resultAndRotation & 0xffff);
 				// 0 => no rotation
-				// 1 - 2048 => time in ms to next rotation, but in dmdext we use a fixed interval of 1ms
+				// 1 - 2048 => time in ms to next rotation, but in dmdext we use a fixed interval to ask for rotations
 				if (rotation > 0 && rotation <= 2048) {
 					StartRotating();
 					if ((resultAndRotation & 0x40000) > 0) {
-						Logger.Warn("[serum] Start scene rotation {_serumFrame.triggerID}.");
-					} else if ((resultAndRotation & 0x10000) > 0 || (resultAndRotation & 0x20000) > 0) {
-						Logger.Warn("[serum] Start rotation.");
+						Logger.Warn($"[serum] Start scene rotation {_serumFrame.triggerID}.");
+					} else {
+						Logger.Warn($"[serum] Start rotation.");
 					}
 				} else {
 					StopRotating();
@@ -188,7 +188,7 @@ namespace LibDmd.Converter.Serum
 				return;
 			}
 			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(1))
+				.Interval(TimeSpan.FromMilliseconds(1d/60))
 				.Subscribe(Rotate);
 		}
 
