@@ -203,20 +203,24 @@ namespace LibDmd.Converter.Serum
 
 		private bool UpdateRotations()
 		{
+			bool result = false;
 			var resultAndRotation = Serum_Rotate();
 
-			ReadSerumFrame();
-			_api.UpdateRotations(ref _serumFrame, _rotationPalette, resultAndRotation);
+			if (((resultAndRotation & 0x10000) > 0) || ((resultAndRotation & 0x20000) > 0)) {
+				ReadSerumFrame();
+				_api.UpdateRotations(ref _serumFrame, _rotationPalette, resultAndRotation);
+				result = true;
+			}
 
 			int rotation = (int) (resultAndRotation & 0xffff);
-			// 0 => no rotation
+			// 0 => no further rotation
 			// 1 - 2048 => time in ms to next rotation
 			if (rotation == 0 || rotation > 2048) {
 				StopRotating();
 				return false;
 			}
 
-			return true;
+			return result;
 		}
 
 		public static string GetVersion()

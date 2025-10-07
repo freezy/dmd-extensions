@@ -39,8 +39,17 @@ namespace LibDmd.Converter.Serum
 
 		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint changed)
 		{
-			if ((changed | 0x10000) > 0 || (changed | 0x20000) > 0 ) {
-				ReadAndPushNextFrame(ref serumFrame);
+			ReadAndPushNextFrame(ref serumFrame);
+
+			// todo 👇
+			// there is a rotation in the 32P frame
+			if ((changed & 0x10000) > 0) {
+
+			}
+
+			// there is a rotation in the 64P frame
+			if ((changed & 0x20000) > 0) {
+
 			}
 		}
 
