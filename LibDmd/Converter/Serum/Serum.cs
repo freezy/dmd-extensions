@@ -147,7 +147,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			var resultAndRotation = Serum_Colorize(frame.Data);
-			Logger.Info($"[serum] Colorize returned 0x{rotation:X8}.");
+			Logger.Info($"[serum] Colorize returned 0x{resultAndRotation:X8}.");
 
 			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
 			ReadSerumFrame();
