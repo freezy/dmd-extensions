@@ -41,8 +41,6 @@ namespace LibDmd.Converter.Serum
 		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
 		private IDisposable _rotator;
-		private int rotationIntervalMs = 1;
-
 		private bool _frameEventsInitialized;
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames = new Subject<ColoredFrame>();
@@ -148,19 +146,25 @@ namespace LibDmd.Converter.Serum
 				frame.Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength);
 			}
 
-			var rotation = Serum_Colorize(frame.Data);
+			var resultAndRotation = Serum_Colorize(frame.Data);
 			Logger.Info($"[serum] Colorize returned 0x{rotation:X8}.");
 
+			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
 
-			if (rotation < 0xfffffffe) {
-				rotation &= 0xffff;
+			if (resultAndRotation < 0xfffffffe) {
+				int rotation = resultAndRotation & 0xffff;
 				// 0 => no rotation
-				// 1 - 2048 => time in ms to next rotation
+				// 1 - 2048 => time in ms to next rotation, but in dmdext we use a fixed interval of 1ms
 				if (rotation > 0 && rotation <= 2048) {
-					StartRotating((int)rotation);
-				} else{
+					StartRotating();
+					if (resultAndRotation & 0x40000) {
+						Logger.Warn("[serum] Start scene rotation {_serumFrame.triggerID}.");
+					} else if (resultAndRotation & 0x10000 || resultAndRotation & 0x20000) {
+						Logger.Warn("[serum] Start rotation.");
+					}
+				} else {
 					StopRotating();
 				}
 			}
@@ -178,39 +182,19 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		private void StartRotating(int intervalMs)
+		private void StartRotating()
 		{
 			if (_rotator != null) {
-				StopRotating();
-			}
-			rotationIntervalMs = intervalMs;
-			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(rotationIntervalMs))
-				.Subscribe(Rotate);
-			Logger.Info($"[serum] First Rotation in {rotationIntervalMs} ms.");
-		}
-
-		private void ContinueRotating(int intervalMs)
-		{
-			if (_rotator == null) {
 				return;
 			}
-
-			if (intervalMs != rotationIntervalMs)
-			{
-				rotationIntervalMs = intervalMs;
-				_rotator.Dispose();
-				_rotator = Observable
-					.Interval(TimeSpan.FromMilliseconds(intervalMs))
-					.Subscribe(Rotate);
-			}
-			Logger.Info($"[serum] Next Rotation in {intervalMs} ms.");
+			_rotator = Observable
+				.Interval(TimeSpan.FromMilliseconds(1))
+				.Subscribe(Rotate);
 		}
 
 		private void StopRotating()
 		{
-			if (_rotator == null)
-			{
+			if (_rotator == null) {
 				return;
 			}
 			_rotator.Dispose();
@@ -220,21 +204,20 @@ namespace LibDmd.Converter.Serum
 
 		private bool UpdateRotations()
 		{
-			var rotation = Serum_Rotate();
+			var resultAndRotation = Serum_Rotate();
 
 			ReadSerumFrame();
 			_api.UpdateRotations(ref _serumFrame, _rotationPalette, rotation);
 
-			rotation &= 0xffff;
-			// lower word: 0 => no rotation
-			// lower word: 1 - 2048 => time in ms to next rotation
-			if (rotation > 0 || rotation <= 2048) {
-				ContinueRotating((int)rotation);
-				return true;
-			} else {
+			int rotation = resultAndRotation & 0xffff;
+			// 0 => no rotation
+			// 1 - 2048 => time in ms to next rotation
+			if (rotation == 0 || rotation > 2048) {
 				StopRotating();
 				return false;
 			}
+
+			return true;
 		}
 
 		public static string GetVersion()
