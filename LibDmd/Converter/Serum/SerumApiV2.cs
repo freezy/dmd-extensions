@@ -57,7 +57,6 @@ namespace LibDmd.Converter.Serum
 		{
 			byte[] frameData;
 			Dimensions dim;
-			var hasRotations = false;
 			if (_scalerMode == ScalerMode.None) {
 				if (serumFrame.Has32PFrame) {
 					frameData = Read32PFrame(ref serumFrame);
