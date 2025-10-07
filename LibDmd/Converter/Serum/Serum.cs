@@ -71,7 +71,6 @@ namespace LibDmd.Converter.Serum
 		private readonly Color[] _rotationPalette = new Color[64];
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		internal const int MAX_LENGTH_COLOR_ROTATION = 64; // maximum number of new colors in a rotation
 
 		private readonly ISerumApi _api;
 
@@ -148,7 +147,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			var resultAndRotation = Serum_Colorize(frame.Data);
-			Logger.Info($"[serum] Colorize returned 0x{resultAndRotation:X8}.");
+			//Logger.Info($"[serum] Colorize returned 0x{resultAndRotation:X8}.");
 
 			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
 			ReadSerumFrame();
@@ -161,7 +160,7 @@ namespace LibDmd.Converter.Serum
 				if (rotation > 0 && rotation <= 2048) {
 					StartRotating();
 					if ((resultAndRotation & 0x40000) > 0) {
-						Logger.Info($"[serum] Found scene rotation {_serumFrame.triggerID}.");
+						//Logger.Info($"[serum] Found scene rotation {_serumFrame.triggerID}.");
 					}
 				} else {
 					StopRotating();
@@ -189,7 +188,7 @@ namespace LibDmd.Converter.Serum
 			_rotator = Observable
 				.Interval(TimeSpan.FromMilliseconds(1d/60))
 				.Subscribe(Rotate);
-			Logger.Info($"[serum] Rotation started.");
+			//Logger.Info($"[serum] Rotation started.");
 		}
 
 		private void StopRotating()
@@ -199,7 +198,7 @@ namespace LibDmd.Converter.Serum
 			}
 			_rotator.Dispose();
 			_rotator = null;
-			Logger.Info($"[serum] Rotation stopped.");
+			//Logger.Info($"[serum] Rotation stopped.");
 		}
 
 		private bool UpdateRotations()
