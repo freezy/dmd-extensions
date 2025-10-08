@@ -884,6 +884,7 @@ and re-launch the DMD Extensions project and the issue will go away. [Reference]
 - Adrian Page from Barnstorm for his help setting up the slave correctly.
 - Funkyman for 64 color support, 256x64 scaling options, bug fixes and code cleanup.
 - To Zen Studios for their support and for making Pinball FX!
+- @zedrummer and @mkalkbrenner for all the Serum support.
 
 <a title="IntelliJ IDEA" href="https://www.jetbrains.com/resharper/"><img src="https://raw.githubusercontent.com/freezy/dmd-extensions/master/resharper.svg?sanitize=true" alt="IntelliJ Resharper" width="250"></a>
 
