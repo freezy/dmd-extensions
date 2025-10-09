@@ -121,101 +121,72 @@ jobs:
       - name: Build installer
         run: msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir="$env:GITHUB_WORKSPACE\" .\Installer\Installer.wixproj
 
-      - name: Package .zip with versioned filename
+      - name: Package portable bundle (folder)
         shell: pwsh
         run: |
-          $version = "${{ steps.set_version.outputs.version }}"
-          $outDir  = "$env:GITHUB_WORKSPACE\Installer\Builds"
-          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-          $zipArchive = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.zip"
+          $version   = "${{ steps.set_version.outputs.version }}"
+          $outDir    = "$env:GITHUB_WORKSPACE\Installer\Builds"
+          $bundleDir = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}"
+          New-Item -ItemType Directory -Force -Path $bundleDir | Out-Null
 
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe" -DestinationPath $zipArchive -Force
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config" -Update -DestinationPath $zipArchive
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\ProPinballSlave.bat" -Update -DestinationPath $zipArchive
+          # Core binaries/config
+          Copy-Item "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe"         -Destination $bundleDir -Force
+          Copy-Item "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config"  -Destination $bundleDir -Force
+          Copy-Item "$env:GITHUB_WORKSPACE\Console\ProPinballSlave.bat"                                                      -Destination $bundleDir -Force
 
+          # PinMAME device bits
           $dllSuffix = if ('${{ matrix.platform }}' -eq 'x64') { '64' } else { '' }
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
+          Copy-Item "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Destination $bundleDir -Force
+          Copy-Item "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config"    -Destination $bundleDir -Force
 
-          # add ini template as folder (no nested zip)
-          $iniTemp = "$env:GITHUB_WORKSPACE\ini-template"
-          New-Item -Type Directory -Force $iniTemp | Out-Null
-          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination $iniTemp
-          Compress-Archive -Path "$iniTemp\*" -Update -DestinationPath $zipArchive
-          Remove-Item $iniTemp -Recurse -Force
+          # ini template as a folder
+          New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'ini-template') | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination (Join-Path $bundleDir 'ini-template\DmdDevice.ini') -Force
 
-          # include data folder contents as 'dmdext' directory
-          Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data" "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext"
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext\*" -Update -DestinationPath $zipArchive
-          Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
+          # data folder contents under a 'dmdext' subfolder
+          New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'dmdext') | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data\*" -Destination (Join-Path $bundleDir 'dmdext') -Recurse -Force
 
       - name: Rename MSI to versioned filename
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-
           $version = "${{ steps.set_version.outputs.version }}"
           $root    = $env:GITHUB_WORKSPACE
           $outDir  = Join-Path $root 'Installer\Builds'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
-          # Look for the latest MSI in common WiX output locations
           $searchRoots = @(
             (Join-Path $root 'Installer\Builds'),
             (Join-Path $root 'Installer\bin'),
-            (Join-Path $root 'Installer') # fallback
+            (Join-Path $root 'Installer')
           ) | Get-Unique
 
-          $candidates = @()
-          foreach ($dir in $searchRoots) {
-            if (Test-Path $dir) {
-              $candidates += Get-ChildItem -Path $dir -Filter *.msi -File -Recurse -ErrorAction SilentlyContinue
-            }
+          $candidates = foreach ($dir in $searchRoots) {
+            if (Test-Path $dir) { Get-ChildItem -Path $dir -Filter *.msi -File -Recurse -ErrorAction SilentlyContinue }
           }
 
-          if (-not $candidates -or $candidates.Count -eq 0) {
-            throw "No MSI found under: `n  - $($searchRoots -join "`n  - ")"
-          }
+          if (-not $candidates) { throw "No MSI found under:`n  - $($searchRoots -join "`n  - ")" }
 
-          # Pick the most recently written MSI
-          $msi = $candidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
-
+          $msi    = $candidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
           $target = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.msi"
 
-          if ($msi.FullName -ieq $target) {
-            Write-Host "MSI already has the correct name: $target"
-            exit 0
-          }
+          if ($msi.FullName -ieq $target) { exit 0 }
+          Copy-Item $msi.FullName $target -Force
+          if ($msi.FullName -ne $target) { Remove-Item $msi.FullName -Force }
 
-          # Copy to the target name (more reliable on hosted runners), then remove the original
-          Copy-Item -Path $msi.FullName -Destination $target -Force
-          if (-not (Test-Path $target)) {
-            throw "Failed to create target MSI at: $target"
-          }
-
-          # Clean up the original if it lives elsewhere
-          if ($msi.FullName -ne $target) {
-            Remove-Item -Path $msi.FullName -Force
-          }
-
-          Write-Host "MSI placed at: $target"
-
-      # Upload the already-zipped bundle WITHOUT re-compressing
-      - name: Upload ZIP artifact
+      - name: Upload portable bundle (single zip by GitHub)
         uses: actions/upload-artifact@v4
         with:
-          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.zip
-          path: ${{ github.workspace }}\Installer\Builds\dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.zip
-          compression-level: 0
+          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}
+          path: ${{ github.workspace }}\Installer\Builds\dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}
           retention-days: 90
           if-no-files-found: error
 
-      # Upload the MSI as-is (not zipped)
-      - name: Upload MSI artifact
+      - name: Upload MSI (wrapped by GitHub)
         uses: actions/upload-artifact@v4
         with:
-          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.msi
+          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}-msi
           path: ${{ github.workspace }}\Installer\Builds\dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.msi
-          compression-level: 0
           retention-days: 90
           if-no-files-found: error
