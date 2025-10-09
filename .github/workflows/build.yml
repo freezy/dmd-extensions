@@ -152,13 +152,31 @@ jobs:
       - name: Rename MSI to versioned filename
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+
           $version = "${{ steps.set_version.outputs.version }}"
           $outDir  = "$env:GITHUB_WORKSPACE\Installer\Builds"
-          $msi = Get-ChildItem -Path $outDir -Filter *.msi | Select-Object -First 1
-          if (-not $msi) { throw "MSI not found in $outDir" }
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+          # Find the built MSI in the output directory
+          $msis = Get-ChildItem -Path $outDir -Filter *.msi -File -ErrorAction SilentlyContinue
+          if (-not $msis -or $msis.Count -eq 0) {
+            $listing = (Get-ChildItem -Force $outDir | Select-Object Name,Length,LastWriteTime | Format-Table | Out-String)
+            throw "No MSI found in $outDir. Current contents:`n$listing"
+          }
+          if ($msis.Count -gt 1) {
+            Write-Warning "Multiple MSIs found in $outDir. Using the first one: $($msis[0].Name)"
+          }
+
+          $msi    = $msis[0]
           $target = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.msi"
-          Remove-Item $target -Force -ErrorAction SilentlyContinue
-          Rename-Item -Path $msi.FullName -NewName (Split-Path $target -Leaf)
+
+          if (Test-Path $target) { Remove-Item $target -Force }
+
+          # Use Move-Item with a full destination path (more reliable than Rename-Item + -NewName)
+          Move-Item -Path $msi.FullName -Destination $target
+          Write-Host "MSI renamed to: $target"
+
 
       # Upload the already-zipped bundle WITHOUT re-compressing
       - name: Upload ZIP artifact
