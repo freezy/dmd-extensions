@@ -35,7 +35,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}\.nuget\packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }} #hash of project files
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -50,7 +50,7 @@ jobs:
 
       - name: Restore NuGet packages
         run: nuget restore DmdExtensions.sln
-        
+
       - name: Restore DLLExport dependency
         run: .\DllExport -action Restore -sln-file DmdExtensions.sln
 
@@ -67,7 +67,6 @@ jobs:
                       $minor=$match.groups[2].value -as [int]
                       $patch=$match.groups[3].value -as [int]
                       $revision=$match.groups[4].value -as [int]
-                      
                       return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$major.$minor.$patch.$env:GITHUB_RUN_NUMBER"")"
                   }
               }
@@ -84,25 +83,16 @@ jobs:
                       $patch=$match.groups[3].value -as [int]
                       $tag=$match.groups[5].value
 
-                      # Get branch name from GitHub context
-                      $branch = if ($env:GITHUB_HEAD_REF) {
-                          $env:GITHUB_HEAD_REF  # For pull requests
-                      } else {
-                          $env:GITHUB_REF_NAME  # For direct pushes
-                      }
+                      $branch = if ($env:GITHUB_HEAD_REF) { $env:GITHUB_HEAD_REF } else { $env:GITHUB_REF_NAME }
 
                       if ($branch -eq "master" -or $branch -eq "main") {
-                          if ($tag) {
-                              $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER"
-                          } else {
-                              $version = "$major.$minor.$patch-r$env:GITHUB_RUN_NUMBER"
-                          }                
+                          if ($tag) { $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER" }
+                          else { $version = "$major.$minor.$patch-r$env:GITHUB_RUN_NUMBER" }
                       } else {
                           $version = "$major.$minor.$patch-$($branch.ToUpper())-r$env:GITHUB_RUN_NUMBER"
-                      }            
+                      }
 
-                      Write-Host "Changing version from $major.$minor.$patch-$tag to $version"
-                      # Set output for other steps to use
+                      Write-Host "Changing version to $version"
                       "version=$version" >> $env:GITHUB_OUTPUT
 
                       return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$version"")"
@@ -123,12 +113,10 @@ jobs:
 
           $assemblyFile = "VersionAssemblyInfo.cs"
           $fileContent = Get-Content $assemblyFile
-
           $fileContent = replaceNumericVersion 'AssemblyVersion' $fileContent
           $fileContent = replaceNumericVersion 'AssemblyFileVersion' $fileContent
           $fileContent = replaceFullVersion 'AssemblyInformationalVersion' $fileContent
 
-          # Check if this is not a tag build
           if (-not $env:GITHUB_REF.StartsWith("refs/tags/")) {
               $fileContent = replaceAny 'AssemblyConfiguration' $env:GITHUB_SHA.Substring(0, 7) $fileContent
           }
@@ -138,7 +126,7 @@ jobs:
 
       - name: Build
         run: msbuild -t:rebuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} DmdExtensions.sln
-      
+
       - name: Build installer
         run: msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir="$env:GITHUB_WORKSPACE\" .\Installer\Installer.wixproj
 
@@ -146,9 +134,10 @@ jobs:
         shell: pwsh
         run: |
           $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
-          $zipArchive = "$env:GITHUB_WORKSPACE\Installer\Builds\dmdext-$version-${{ matrix.platform }}.zip"
-          New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\Installer\Builds"
-          
+          $outDir = "$env:GITHUB_WORKSPACE\Installer\Builds"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $zipArchive = Join-Path $outDir "dmdext-$version-${{ matrix.platform }}.zip"
+
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe" -DestinationPath $zipArchive -Force
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\ProPinballSlave.bat" -Update -DestinationPath $zipArchive
@@ -156,29 +145,34 @@ jobs:
           $dllSuffix = if ('${{ matrix.platform }}' -eq 'x64') { '64' } else { '' }
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
-          # Copy DmdDevice.ini in a temporary Destination folder
-          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination (New-Item -Type Directory -Force "$env:GITHUB_WORKSPACE\ini-template")
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\ini-template" -Update -DestinationPath $zipArchive
-          Remove-Item "$env:GITHUB_WORKSPACE\ini-template" -Recurse
-          
+
+          # Include default ini template as a folder inside the zip
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination (New-Item -Type Directory -Force "$env:GITHUB_WORKSPACE\ini-template") | Out-Null
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\ini-template\*" -Update -DestinationPath $zipArchive
+          Remove-Item "$env:GITHUB_WORKSPACE\ini-template" -Recurse -Force
+
+          # Include 'data' folder contents as 'dmdext' directory inside the zip
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data" "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext"
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" -Update -DestinationPath $zipArchive
-          
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext\*" -Update -DestinationPath $zipArchive
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
 
+      # Upload the already-zipped bundle
       - name: Upload ZIP artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dmdext-${{ matrix.platform }}-zip
           path: ${{ github.workspace }}\Installer\Builds\*.zip
+          compression-level: 0
           retention-days: 90
           if-no-files-found: error
 
+      # Upload the MSI as-is (not placed inside the zip)
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dmdext-${{ matrix.platform }}-msi
           path: ${{ github.workspace }}\Installer\Builds\*.msi
+          compression-level: 0
           retention-days: 90
           if-no-files-found: error
 
@@ -187,16 +181,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
     steps:
+      # Download both matrix artifacts by pattern and merge into the workspace
       - name: Download ZIP artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dmdext-${{ matrix.platform }}-zip
+          pattern: dmdext-*-zip
+          merge-multiple: true
+
       - name: Download MSI artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dmdext-${{ matrix.platform }}-msi
-      - name: ls
-        run: ls -alrt
+          pattern: dmdext-*-msi
+          merge-multiple: true
+
+      - name: List files
+        run: ls -alR
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
