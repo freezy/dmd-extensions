@@ -55,60 +55,55 @@ jobs:
         run: .\DllExport -action Restore -sln-file DmdExtensions.sln
 
       - name: Update version info
+        id: set_version
         shell: pwsh
         run: |
           function replaceNumericVersion($name, $fileContent) {
-              $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""(\d+)\.(\d+)\.(\d+)(\.(\d+))?\""\)"
-              foreach($content in $fileContent)
-              {
-                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
-                  if ($match.Success) {
-                      $major=$match.groups[1].value -as [int]
-                      $minor=$match.groups[2].value -as [int]
-                      $patch=$match.groups[3].value -as [int]
-                      $revision=$match.groups[4].value -as [int]
-                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$major.$minor.$patch.$env:GITHUB_RUN_NUMBER"")"
-                  }
+            $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""(\d+)\.(\d+)\.(\d+)(\.(\d+))?\""\)"
+            foreach($content in $fileContent) {
+              $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+              if ($match.Success) {
+                $major=$match.groups[1].value -as [int]
+                $minor=$match.groups[2].value -as [int]
+                $patch=$match.groups[3].value -as [int]
+                return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$major.$minor.$patch.$env:GITHUB_RUN_NUMBER"")]"
               }
+            }
           }
 
           function replaceFullVersion($name, $fileContent) {
-              $RegularExpression = [regex] "[^/]*\[assembly:\s*$name\(\""(\d)\.(\d)\.(\d)(-([\w\W]+))?\""\)"
-              foreach($content in $fileContent)
-              {
-                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
-                  if ($match.Success) {
-                      $major=$match.groups[1].value -as [int]
-                      $minor=$match.groups[2].value -as [int]
-                      $patch=$match.groups[3].value -as [int]
-                      $tag=$match.groups[5].value
+            $RegularExpression = [regex] "[^/]*\[assembly:\s*$name\(\""(\d)\.(\d)\.(\d)(-([\w\W]+))?\""\)"
+            foreach($content in $fileContent) {
+              $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+              if ($match.Success) {
+                $major=$match.groups[1].value -as [int]
+                $minor=$match.groups[2].value -as [int]
+                $patch=$match.groups[3].value -as [int]
+                $tag=$match.groups[5].value
 
-                      $branch = if ($env:GITHUB_HEAD_REF) { $env:GITHUB_HEAD_REF } else { $env:GITHUB_REF_NAME }
+                $branch = if ($env:GITHUB_HEAD_REF) { $env:GITHUB_HEAD_REF } else { $env:GITHUB_REF_NAME }
 
-                      if ($branch -eq "master" -or $branch -eq "main") {
-                          if ($tag) { $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER" }
-                          else { $version = "$major.$minor.$patch-r$env:GITHUB_RUN_NUMBER" }
-                      } else {
-                          $version = "$major.$minor.$patch-$($branch.ToUpper())-r$env:GITHUB_RUN_NUMBER"
-                      }
+                if ($branch -eq "master" -or $branch -eq "main") {
+                  if ($tag) { $version = "$major.$minor.$patch-$tag-r$env:GITHUB_RUN_NUMBER" }
+                  else { $version = "$major.$minor.$patch-r$env:GITHUB_RUN_NUMBER" }
+                } else {
+                  $version = "$major.$minor.$patch-$($branch.ToUpper())-r$env:GITHUB_RUN_NUMBER"
+                }
 
-                      Write-Host "Changing version to $version"
-                      "version=$version" >> $env:GITHUB_OUTPUT
-
-                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$version"")"
-                  }
+                "version=$version" >> $env:GITHUB_OUTPUT
+                return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$version"")]"
               }
+            }
           }
 
           function replaceAny($name, $replaceWith, $fileContent) {
-              $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)"
-              foreach($content in $fileContent)
-              {
-                  $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
-                  if ($match.Success) {
-                      return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$replaceWith"")"
-                  }
+            $RegularExpression = [regex] "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)"
+            foreach($content in $fileContent) {
+              $match = [System.Text.RegularExpressions.Regex]::Match($content, $RegularExpression)
+              if ($match.Success) {
+                return $fileContent -replace "^[^/]*\[assembly:\s*$name\(\""[^""]*\""\)", "[assembly: $name(""$replaceWith"")]"
               }
+            }
           }
 
           $assemblyFile = "VersionAssemblyInfo.cs"
@@ -116,13 +111,10 @@ jobs:
           $fileContent = replaceNumericVersion 'AssemblyVersion' $fileContent
           $fileContent = replaceNumericVersion 'AssemblyFileVersion' $fileContent
           $fileContent = replaceFullVersion 'AssemblyInformationalVersion' $fileContent
-
           if (-not $env:GITHUB_REF.StartsWith("refs/tags/")) {
-              $fileContent = replaceAny 'AssemblyConfiguration' $env:GITHUB_SHA.Substring(0, 7) $fileContent
+            $fileContent = replaceAny 'AssemblyConfiguration' $env:GITHUB_SHA.Substring(0, 7) $fileContent
           }
-
           $fileContent | Set-Content "$assemblyFile"
-          Write-Host "Patching $assemblyFile"
 
       - name: Build
         run: msbuild -t:rebuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} DmdExtensions.sln
@@ -130,13 +122,13 @@ jobs:
       - name: Build installer
         run: msbuild /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:SolutionDir="$env:GITHUB_WORKSPACE\" .\Installer\Installer.wixproj
 
-      - name: Generate zip bundle
+      - name: Package .zip with versioned filename
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF.StartsWith("refs/tags/")) { $env:GITHUB_REF_NAME } else { $env:GITHUB_SHA.Substring(0, 7) }
-          $outDir = "$env:GITHUB_WORKSPACE\Installer\Builds"
+          $version = "${{ steps.set_version.outputs.version }}"
+          $outDir  = "$env:GITHUB_WORKSPACE\Installer\Builds"
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-          $zipArchive = Join-Path $outDir "dmdext-$version-${{ matrix.platform }}.zip"
+          $zipArchive = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.zip"
 
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.exe" -DestinationPath $zipArchive -Force
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\Console\bin\${{ matrix.platform }}\${{ matrix.configuration }}\dmdext.log.config" -Update -DestinationPath $zipArchive
@@ -146,64 +138,45 @@ jobs:
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice$dllSuffix.dll" -Update -DestinationPath $zipArchive
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\bin\${{ matrix.platform }}\${{ matrix.configuration }}\DmdDevice.log.config" -Update -DestinationPath $zipArchive
 
-          # Include default ini template as a folder inside the zip
-          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination (New-Item -Type Directory -Force "$env:GITHUB_WORKSPACE\ini-template") | Out-Null
-          Compress-Archive -Path "$env:GITHUB_WORKSPACE\ini-template\*" -Update -DestinationPath $zipArchive
-          Remove-Item "$env:GITHUB_WORKSPACE\ini-template" -Recurse -Force
+          # add ini template as folder (no nested zip)
+          $iniTemp = "$env:GITHUB_WORKSPACE\ini-template"
+          New-Item -Type Directory -Force $iniTemp | Out-Null
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\PinMameDevice\DmdDevice.ini" -Destination $iniTemp
+          Compress-Archive -Path "$iniTemp\*" -Update -DestinationPath $zipArchive
+          Remove-Item $iniTemp -Recurse -Force
 
-          # Include 'data' folder contents as 'dmdext' directory inside the zip
+          # include data folder contents as 'dmdext' directory
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\data" "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext"
           Compress-Archive -Path "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext\*" -Update -DestinationPath $zipArchive
           Rename-Item "$env:GITHUB_WORKSPACE\PinMameDevice\dmdext" "$env:GITHUB_WORKSPACE\PinMameDevice\data"
 
-      # Upload the already-zipped bundle
-      - name: Upload ZIP artifacts
+      - name: Rename MSI to versioned filename
+        shell: pwsh
+        run: |
+          $version = "${{ steps.set_version.outputs.version }}"
+          $outDir  = "$env:GITHUB_WORKSPACE\Installer\Builds"
+          $msi = Get-ChildItem -Path $outDir -Filter *.msi | Select-Object -First 1
+          if (-not $msi) { throw "MSI not found in $outDir" }
+          $target = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.msi"
+          Remove-Item $target -Force -ErrorAction SilentlyContinue
+          Rename-Item -Path $msi.FullName -NewName (Split-Path $target -Leaf)
+
+      # Upload the already-zipped bundle WITHOUT re-compressing
+      - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dmdext-${{ matrix.platform }}-zip
-          path: ${{ github.workspace }}\Installer\Builds\*.zip
+          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.zip
+          path: ${{ github.workspace }}\Installer\Builds\dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.zip
           compression-level: 0
           retention-days: 90
           if-no-files-found: error
 
-      # Upload the MSI as-is (not placed inside the zip)
-      - name: Upload installer artifacts
+      # Upload the MSI as-is (not zipped)
+      - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dmdext-${{ matrix.platform }}-msi
-          path: ${{ github.workspace }}\Installer\Builds\*.msi
+          name: dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.msi
+          path: ${{ github.workspace }}\Installer\Builds\dmdext-v${{ steps.set_version.outputs.version }}-${{ matrix.platform }}.msi
           compression-level: 0
           retention-days: 90
           if-no-files-found: error
-
-  create-release:
-    needs: [build-windows]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
-    steps:
-      # Download both matrix artifacts by pattern and merge into the workspace
-      - name: Download ZIP artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dmdext-*-zip
-          merge-multiple: true
-
-      - name: Download MSI artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dmdext-*-msi
-          merge-multiple: true
-
-      - name: List files
-        run: ls -alR
-
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
-          generateReleaseNotes: true
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          allowUpdates: true
-          artifacts: "dmdext*"
-          tag: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', github.sha) }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest' }}
