@@ -155,28 +155,50 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $version = "${{ steps.set_version.outputs.version }}"
-          $outDir  = "$env:GITHUB_WORKSPACE\Installer\Builds"
+          $root    = $env:GITHUB_WORKSPACE
+          $outDir  = Join-Path $root 'Installer\Builds'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
-          # Find the built MSI in the output directory
-          $msis = Get-ChildItem -Path $outDir -Filter *.msi -File -ErrorAction SilentlyContinue
-          if (-not $msis -or $msis.Count -eq 0) {
-            $listing = (Get-ChildItem -Force $outDir | Select-Object Name,Length,LastWriteTime | Format-Table | Out-String)
-            throw "No MSI found in $outDir. Current contents:`n$listing"
-          }
-          if ($msis.Count -gt 1) {
-            Write-Warning "Multiple MSIs found in $outDir. Using the first one: $($msis[0].Name)"
+          # Look for the latest MSI in common WiX output locations
+          $searchRoots = @(
+            (Join-Path $root 'Installer\Builds'),
+            (Join-Path $root 'Installer\bin'),
+            (Join-Path $root 'Installer') # fallback
+          ) | Get-Unique
+
+          $candidates = @()
+          foreach ($dir in $searchRoots) {
+            if (Test-Path $dir) {
+              $candidates += Get-ChildItem -Path $dir -Filter *.msi -File -Recurse -ErrorAction SilentlyContinue
+            }
           }
 
-          $msi    = $msis[0]
+          if (-not $candidates -or $candidates.Count -eq 0) {
+            throw "No MSI found under: `n  - $($searchRoots -join "`n  - ")"
+          }
+
+          # Pick the most recently written MSI
+          $msi = $candidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+
           $target = Join-Path $outDir "dmdext-v$version-${{ matrix.platform }}.msi"
 
-          if (Test-Path $target) { Remove-Item $target -Force }
+          if ($msi.FullName -ieq $target) {
+            Write-Host "MSI already has the correct name: $target"
+            exit 0
+          }
 
-          # Use Move-Item with a full destination path (more reliable than Rename-Item + -NewName)
-          Move-Item -Path $msi.FullName -Destination $target
-          Write-Host "MSI renamed to: $target"
+          # Copy to the target name (more reliable on hosted runners), then remove the original
+          Copy-Item -Path $msi.FullName -Destination $target -Force
+          if (-not (Test-Path $target)) {
+            throw "Failed to create target MSI at: $target"
+          }
 
+          # Clean up the original if it lives elsewhere
+          if ($msi.FullName -ne $target) {
+            Remove-Item -Path $msi.FullName -Force
+          }
+
+          Write-Host "MSI placed at: $target"
 
       # Upload the already-zipped bundle WITHOUT re-compressing
       - name: Upload ZIP artifact
