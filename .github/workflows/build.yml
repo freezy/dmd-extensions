@@ -15,9 +15,6 @@ jobs:
       matrix:
         platform: [x86, x64]
         configuration: [Release]
-    concurrency:
-        group: ${{ github.workflow }}-${{ github.ref }}
-        cancel-in-progress: false
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
