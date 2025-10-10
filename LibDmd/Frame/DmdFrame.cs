@@ -30,7 +30,7 @@ namespace LibDmd.Frame
 
 		/// <summary>
 		/// These frames are used for colorization and should never be rendered (if they exist, that means
-		/// there's a gray-8 frame to be rendered).
+		/// that there also exists a gray-8 frame to be rendered).
 		/// </summary>
 		public bool IsIdentifyFrame { get; private set; }
 
