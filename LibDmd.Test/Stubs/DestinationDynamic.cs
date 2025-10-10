@@ -8,6 +8,8 @@ namespace LibDmd.Test.Stubs
 	public abstract class DestinationDynamic<TFrame> : IResizableDestination, ITestDestination<TFrame>
 	{
 		public IConnectableObservable<TFrame> Frame { get; private set; }
+
+		public bool NeedsIdentificationFrames => false;
 		
 		protected Subject<TFrame> LastFrame = new Subject<TFrame>();
 		

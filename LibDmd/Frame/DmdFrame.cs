@@ -32,7 +32,7 @@ namespace LibDmd.Frame
 		/// These frames are used for colorization and should never be rendered (if they exist, that means
 		/// there's a gray-8 frame to be rendered).
 		/// </summary>
-		public bool IsIdentifyFrame { get; protected set; }
+		public bool IsIdentifyFrame { get; private set; }
 
 		/// <summary>
 		/// The bit length of each pixel.

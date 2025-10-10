@@ -830,7 +830,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray2, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
@@ -846,7 +846,7 @@ namespace LibDmd
 						case FrameFormat.Rgb565:
 							AssertCompatibility(source, sourceGray2, dest, destRgb565, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToRgb565(_gray2Palette ?? _gray2Colors)
@@ -859,7 +859,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray2, dest, destRgb24, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToRgb24(_gray2Palette ?? _gray2Colors)
@@ -872,7 +872,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray2, dest, destBitmap, from, to);
 							Subscribe(
-								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray2.GetGray2Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToBmp(_gray2Palette ?? _gray2Colors)
@@ -906,7 +906,7 @@ namespace LibDmd
 						case FrameFormat.Gray2:
 							AssertCompatibility(source, sourceGray4, dest, destGray2, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertToGray2()
@@ -918,7 +918,7 @@ namespace LibDmd
 						case FrameFormat.Gray4:
 							AssertCompatibility(source, sourceGray4, dest, destGray4, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.TransformGray(this, destFixedSize, destMultiSize),
@@ -929,7 +929,7 @@ namespace LibDmd
 						case FrameFormat.Rgb565:
 							AssertCompatibility(source, sourceGray4, dest, destRgb565, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToRgb565(_gray4Palette ?? _gray4Colors)
@@ -942,7 +942,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24:
 							AssertCompatibility(source, sourceGray4, dest, destRgb24, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToRgb24(_gray4Palette ?? _gray4Colors)
@@ -954,7 +954,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap:
 							AssertCompatibility(source, sourceGray4, dest, destBitmap, from, to);
 							Subscribe(
-								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, true),
+								sourceGray4.GetGray4Frames(!dest.NeedsDuplicateFrames, !dest.NeedsIdentificationFrames),
 								frame => frame
 									.TransformHdScaling(destFixedSize, ScalerMode)
 									.ConvertGrayToBmp(_gray4Palette ?? _gray4Colors)

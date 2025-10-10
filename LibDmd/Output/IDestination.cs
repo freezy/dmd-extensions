@@ -28,6 +28,11 @@ namespace LibDmd.Output
 		bool NeedsDuplicateFrames { get; }
 
 		/// <summary>
+		/// If true, send identification instead of PWM frames to this destination.
+		/// </summary>
+		bool NeedsIdentificationFrames { get; }
+
+		/// <summary>
 		/// Clears the display.
 		/// </summary>
 		void ClearDisplay();

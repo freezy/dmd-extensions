@@ -45,6 +45,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public bool IsAvailable => true;
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		public double AspectRatio { get; private set; } = 1.0;
 

@@ -21,6 +21,7 @@ namespace LibDmd.Converter.Plugin
 	{
 		public override string Name => "Colorization Plugin";
 		public override IEnumerable<FrameFormat> From => new [] { FrameFormat.Gray2, FrameFormat.Gray4, FrameFormat.AlphaNumeric };
+		public bool NeedsIdentificationFrames => true;
 
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => DedupedColoredGray2Source.GetColoredGray2Frames();
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => DedupedColoredGray4Source.GetColoredGray4Frames();
@@ -31,6 +32,7 @@ namespace LibDmd.Converter.Plugin
 		public IObservable<FrameEvent> GetFrameEvents() => _frameEvents;
 
 		#region Passthrough
+
 		public void ClearDisplay() { }
 		public void RenderAlphaNumeric(AlphaNumericFrame frame) => Convert(frame);
 		public void RenderGray4(DmdFrame frame) => Convert(frame);
