@@ -13,6 +13,7 @@ namespace LibDmd.Output.Network
 		public string Name { get; } = "Network Stream";
 		public bool IsAvailable { get; private set; }
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		private WebSocket _client;
 		private Uri _uri;

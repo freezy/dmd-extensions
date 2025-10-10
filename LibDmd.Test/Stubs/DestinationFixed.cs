@@ -9,6 +9,7 @@ namespace LibDmd.Test.Stubs
 	public abstract class DestinationFixed<TFrame> : IFixedSizeDestination, ITestDestination<TFrame>
 	{
 		public IConnectableObservable<TFrame> Frame { get; private set; }
+		public bool NeedsIdentificationFrames => false;
 		
 		public Dimensions FixedSize { get; }
 		

@@ -12,6 +12,7 @@ namespace LibDmd.Output.Pin2Dmd
 	{
 		public bool IsAvailable { get; private set; }
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		/// <summary>
 		/// How long to wait after sending data, in milliseconds

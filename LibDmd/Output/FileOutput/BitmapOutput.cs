@@ -21,6 +21,7 @@ namespace LibDmd.Output.FileOutput
 		public string Name { get; } = "File Writer";
 		public bool IsAvailable { get; } = true;
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		private int _counter;
 		private readonly HashSet<string> _hashes = new HashSet<string>();

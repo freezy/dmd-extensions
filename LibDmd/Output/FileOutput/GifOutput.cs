@@ -14,6 +14,7 @@ namespace LibDmd.Output.FileOutput
 		public string Name { get; } = "GIF Writer";
 		public bool IsAvailable { get; } = true;
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		private readonly GifWriter _outputGif;
 

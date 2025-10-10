@@ -19,6 +19,7 @@ namespace LibDmd.Output.ZeDMD
 		public bool IsAvailable { get; protected set; }
 		public static string DriverVersion => Marshal.PtrToStringAnsi(ZeDMD_GetVersion());
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 		protected bool Debug { get; set; }
 		protected int Brightness { get; set; }
 

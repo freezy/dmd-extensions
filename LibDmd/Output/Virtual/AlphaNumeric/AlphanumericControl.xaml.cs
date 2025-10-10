@@ -21,6 +21,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public bool IsAvailable => true;
 		public bool NeedsDuplicateFrames => false;
+		public bool NeedsIdentificationFrames => false;
 
 		public DisplaySetting DisplaySetting { get; set; }
 		public bool IgnoreAspectRatio { get; set; }
