@@ -344,7 +344,8 @@ namespace LibDmd
 					// For the output, the converter acts as ISource, implementing the specific
 					// interfaces supported. Currently the following output sources are supported:
 					//
-					//    IColoredGray2Source, IColoredGray4Source, IColoredGray6Source and IRgb24Source.
+					//    IColoredGray2Source, IColoredGray4Source, IColoredGray6Source,
+					//    IRgb565Source and IRgb24Source.
 					//
 					// Other types don't make much sense (i.e. you don't convert *down* to 
 					// IGray2Source).
@@ -356,7 +357,7 @@ namespace LibDmd
 					// will get the IColoredGray4Source converted up to RGB24.
 					if (Converter != null) {
 
-						Logger.Info($"  ** Linking converter {Converter.Name} to {dest.Name}...");
+						Logger.Info($"  ** Connecting converter {Converter.Name} to {dest.Name}...");
 
 						// if converter emits colored gray-2 frames..
 						if (Converter is IColoredGray2Source sourceConverterColoredGray2 && !Converter.IsConnected(dest, FrameFormat.ColoredGray2)) {
@@ -476,6 +477,7 @@ namespace LibDmd
 						if (Converter.IsConnected(dest)) {
 							continue;
 						}
+						Logger.Info($"    -- Converter {Converter.Name} could not be linked with a compatible frame format to {dest.Name}.");
 					}
 
 					// Now here we need to find the most efficient way of passing data from the source
@@ -1069,7 +1071,6 @@ namespace LibDmd
 									.Transform(this, destFixedSize, destMultiSize),
 								destBitmap.RenderBitmap);
 							break;
-
 
 						default:
 							throw new ArgumentOutOfRangeException(nameof(to), to, null);

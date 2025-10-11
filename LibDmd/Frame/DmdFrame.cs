@@ -138,7 +138,7 @@ namespace LibDmd.Frame
 			Dimensions = frame.Dimensions;
 			Data = frame.Data;
 			BitLength = frame.BitLength;
-			IsIdentifyFrame = false;
+			IsIdentifyFrame = frame.IsIdentifyFrame;
 
 			#if DEBUG
 			AssertData();
@@ -739,6 +739,27 @@ namespace LibDmd.Frame
 				}
 				sw.WriteLine(ToString());
 			}
+		}
+
+		public uint DataHash()
+		{
+			const uint fnvPrime = 16777619;
+			uint hash = 2166136261;
+
+			for (int i = 0; i < Data.Length; i++)
+			{
+				hash ^= Data[i];
+				hash *= fnvPrime;
+			}
+
+			// Final avalanche (mix bits for better distribution)
+			hash += hash << 13;
+			hash ^= hash >> 7;
+			hash += hash << 3;
+			hash ^= hash >> 17;
+			hash += hash << 5;
+
+			return hash;
 		}
 
 		#endregion
