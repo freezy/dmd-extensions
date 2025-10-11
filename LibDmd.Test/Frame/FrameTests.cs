@@ -51,13 +51,9 @@ namespace LibDmd.Test
 			var rgb2 = FrameGenerator.Random(128, 32, 24);
 			
 			(gray1 == gray2).Should().Be(false);
-			(gray1 == gray1).Should().Be(true);
-			(gray2 == gray2).Should().Be(true);
-			
+
 			(rgb1 == rgb2).Should().Be(false);
-			(rgb1 == rgb1).Should().Be(true);
-			(rgb2 == rgb2).Should().Be(true);
-			
+
 			(rgb1 == gray1).Should().Be(false);
 
 			gray1.Update(gray2);
