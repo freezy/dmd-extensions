@@ -241,7 +241,7 @@ namespace LibDmd.DmdDevice
 		public void SetColor(Color color)
 		{
 			Logger.Info("Setting color: {0}", color);
-			_color = Colors.OrangeRed;
+			_color = color;
 		}
 
 		/// <summary>
