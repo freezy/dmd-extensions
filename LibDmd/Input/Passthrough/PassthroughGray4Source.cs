@@ -42,7 +42,7 @@ namespace LibDmd.Input.Passthrough
 			_framesGray4Duped.OnNext(frame);
 
 			// de-dupe frame
-			if (_lastFrameFormat.Value == FrameFormat.Gray4 && _lastFrame == frame) {
+			if ((_lastFrameFormat.Value == FrameFormat.Gray4 || _lastFrameFormat.Value == FrameFormat.Gray8) && _lastFrame == frame) {
 				return;
 			}
 
@@ -52,8 +52,8 @@ namespace LibDmd.Input.Passthrough
 		}
 
 		public IObservable<DmdFrame> GetGray4Frames(bool dedupe, bool skipIdentificationFrames) => dedupe
-			? (skipIdentificationFrames ? _framesGray4Deduped.Where(f => !f.IsIdentifyFrame) : _framesGray4Deduped)
-			: (skipIdentificationFrames ? _framesGray4Duped.Where(f => !f.IsIdentifyFrame) : _framesGray4Duped);
+			? skipIdentificationFrames ? _framesGray4Deduped.Where(f => !f.IsIdentifyFrame) : _framesGray4Deduped
+			: skipIdentificationFrames ? _framesGray4Duped.Where(f => !f.IsIdentifyFrame) : _framesGray4Duped;
 
 		public void NextGameName(string gameName) => _gameName.OnNext(gameName);
 

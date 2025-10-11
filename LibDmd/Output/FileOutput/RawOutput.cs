@@ -11,7 +11,7 @@ namespace LibDmd.Output.FileOutput
 		public string Name => "Raw Output";
 		public bool IsAvailable => !string.IsNullOrEmpty(_gameName);
 		public bool NeedsDuplicateFrames => false;
-		public bool NeedsIdentificationFrames => false;
+		public bool NeedsIdentificationFrames => true;
 
 		private string _gameName;
 
