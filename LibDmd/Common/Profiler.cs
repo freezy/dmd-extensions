@@ -1,17 +1,21 @@
 ﻿using System;
+#if DEBUG
 using System.Collections.Generic;
 using NLog;
+#endif
 
 namespace LibDmd.Common
 {
 	public static class Profiler
 	{
+#if DEBUG
+
 		private static readonly Dictionary<string, Profile> Profiles = new Dictionary<string, Profile>();
 		private static List<Profile> RootProfiles { get; } = new List<Profile>();
 		private static Profile _parent;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
+#endif
 		public static IDisposable Start(string key)
 		{
 #if DEBUG
@@ -26,8 +30,10 @@ namespace LibDmd.Common
 					}
 				}
 			}
-#endif
 			return new ProfilerSpan(key);
+#else
+			return null;
+#endif
 		}
 
 		public static void Stop(string key)
@@ -40,31 +46,33 @@ namespace LibDmd.Common
 
 		public static void Print()
 		{
+#if DEBUG
 			Logger.Debug("Profiling data:");
 			RootProfiles.ForEach(p => p.Print());
+#endif
 		}
 
 		public static void Reset()
 		{
+#if DEBUG
 			Profiles.Clear();
 			RootProfiles.Clear();
 			_parent = null;
+#endif
 		}
 	}
 
+#if DEBUG
 	public readonly struct ProfilerSpan : IDisposable
 	{
 		private readonly string _key;
-
 		public ProfilerSpan(string key)
 		{
 			_key = key;
 		}
 		public void Dispose()
 		{
-#if DEBUG
 			Profiler.Stop(_key);
-#endif
 		}
 	}
 
@@ -137,4 +145,5 @@ namespace LibDmd.Common
 			return str.PadLeft(str.Length + _level * 3);
 		}
 	}
+#endif
 }
