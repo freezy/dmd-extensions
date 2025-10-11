@@ -115,7 +115,7 @@ namespace LibDmd.DmdDevice
 				}
 #if !DEBUG
 				else {
-					SimpleConfigurator.ConfigureForTargetLogging(MemLogger, LogLevel.Debug);
+					LogManager.Setup().LoadConfiguration(c => c.ForLogger(LogLevel.Debug).WriteTo(MemLogger));
 				}
 #endif
 			}
