@@ -147,10 +147,10 @@ namespace PinMameDevice
 		[DllExport("Render_RGB24", CallingConvention = CallingConvention.Cdecl)]
 		public static void RenderRgb24(ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(DefaultDevice, width, height, currbuffer);
 
-		// void Render_Lum_And_Raw(UINT16 width, UINT16 height, UINT8 *lumBuffer, UINT8 *identifyBuffer, UINT8 identifyBitLength);
+		// void Render_Lum_And_Raw(UINT16 width, UINT16 height, float* lumFrame, UINT8* rawFrame, UINT8 rawBitSize);
 		[DllExport("Render_Lum_And_Raw", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderLumRaw(ushort width, ushort height, IntPtr lumbuffer, IntPtr identifyBuffer, byte identifyBitLength)
-			=> InternalRenderRaw8Device(DefaultDevice, width, height, lumbuffer, identifyBuffer, identifyBitLength);
+		public static void RenderLumRaw(ushort width, ushort height, IntPtr lumFrame, IntPtr rawFrame, byte rawBitSize)
+			=> InternalRenderRawFloatDevice(DefaultDevice, width, height, lumFrame, rawFrame, rawBitSize);
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
 		[DllExport("Render_16_Shades_with_Raw", CallingConvention = CallingConvention.Cdecl)]
@@ -249,16 +249,27 @@ namespace PinMameDevice
 			device.DmdDevice.RenderRgb24(device.DmdFrame.Update(new Dimensions(width, height), frame, 24));
 		}
 
-		private static void InternalRenderRaw8Device(DeviceInstance device, ushort width, ushort height, IntPtr lumBuffer, IntPtr identifyBuffer, byte identifyBitLength)
+		private static void InternalRenderRawFloatDevice(DeviceInstance device, ushort width, ushort height, IntPtr lumFramePtr, IntPtr rawFramePtr, byte rawBitSize)
 		{
 			var frameSize = width * height;
-			var frame = new byte[frameSize];
-			var identifyFrame = new byte[frameSize];
-			Marshal.Copy(lumBuffer, frame, 0, frameSize);
-			Marshal.Copy(identifyBuffer, identifyFrame, 0, frameSize);
+			var lumFloatFrame = new float[frameSize];
+			Marshal.Copy(lumFramePtr, lumFloatFrame, 0, frameSize);
+
+			// convert to 8-bit grayscale
+			var lumByteFrame = new byte[frameSize];
+			for (var i = 0; i < frameSize; i++) {
+				var v = lumFloatFrame[i];
+				if (v < 0f) v = 0f;
+				if (v > 1f) v = 1f;
+				lumByteFrame[i] = (byte)(v * 255f);
+			}
+
+			var rawFrame = new byte[frameSize];
+			Marshal.Copy(rawFramePtr, rawFrame, 0, frameSize);
+
 			device.DmdDevice.RenderGray8(
-				device.DmdFrame.Update(new Dimensions(width, height), frame, 8),
-				device.DmdIdentifyFrame.Update(new Dimensions(width, height), identifyFrame, identifyBitLength, true)
+				device.DmdFrame.Update(new Dimensions(width, height), lumByteFrame, 8),
+				device.DmdIdentifyFrame.Update(new Dimensions(width, height), rawFrame, rawBitSize, true)
 			);
 		}
 
