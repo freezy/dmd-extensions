@@ -17,6 +17,7 @@ namespace LibDmd.Output.FileOutput
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private TextWriter _writer;
+		private readonly object _writeLock = new object();
 
 		public RawOutput()
 		{
@@ -39,8 +40,11 @@ namespace LibDmd.Output.FileOutput
 				}
 			}
 			var path = Path.Combine(folder, $"{_gameName}.txt");
-			_writer?.Dispose();
-			_writer = new StreamWriter(File.Open(path, FileMode.Append));
+			lock (_writeLock) {
+				_writer?.Dispose();
+				_writer = new StreamWriter(File.Open(path, FileMode.Append));
+			}
+
 			Logger.Info($"[rawoutput] Dumping frames to {path}.");
 		}
 
@@ -50,22 +54,26 @@ namespace LibDmd.Output.FileOutput
 
 		private void WriteFrame(DmdFrame frame)
 		{
-			if (_writer == null) {
-				return;
-			}
+			// Build outside lock so we don't block other work while formatting.
+			var sb = new System.Text.StringBuilder(frame.Dimensions.Width * frame.Dimensions.Height + 64);
+			sb.Append("0x").AppendLine(Environment.TickCount.ToString("X8"));
 
-			const string nl = "\r\n";
-			_writer.Write("0x");
-			_writer.WriteLine(Environment.TickCount.ToString("X8"));
-			int idx = 0;
-			for (int j = 0; j < frame.Dimensions.Height; j++) {
-				for (int i = 0; i < frame.Dimensions.Width; i++) {
-					_writer.Write(frame.Data[idx++].ToString("X"));
+			var idx = 0;
+			for (var j = 0; j < frame.Dimensions.Height; j++) {
+				for (var i = 0; i < frame.Dimensions.Width; i++) {
+					sb.Append(frame.Data[idx++].ToString("X"));
 				}
-				_writer.Write(nl);
+				sb.Append("\r\n");
 			}
-			_writer.Write(nl);
-			_writer.Flush();
+			sb.Append("\r\n");
+
+			lock (_writeLock) {
+				if (_writer == null) {
+					return;
+				}
+				_writer.Write(sb.ToString());
+				_writer.Flush();
+			}
 		}
 
 		public void SetDimensions(Dimensions newDimensions) { }
@@ -73,7 +81,9 @@ namespace LibDmd.Output.FileOutput
 
 		public void Dispose()
 		{
-			_writer?.Dispose();
+			lock (_writeLock) {
+				_writer?.Dispose();
+			}
 		}
 	}
 }
