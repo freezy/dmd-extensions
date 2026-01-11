@@ -148,8 +148,8 @@ namespace PinMameDevice
 		public static void RenderRgb24(ushort width, ushort height, IntPtr currbuffer) => InternalRenderRgb24Device(DefaultDevice, width, height, currbuffer);
 
 		// void Render_Lum_And_Raw(UINT16 width, UINT16 height, float* lumFrame, UINT8* rawFrame, UINT8 rawBitSize);
-		[DllExport("Render_Lum_And_Raw", CallingConvention = CallingConvention.Cdecl)]
-		public static void RenderLumRaw(ushort width, ushort height, IntPtr lumFrame, IntPtr rawFrame, byte rawBitSize)
+		[DllExport("Render_FloatLum_And_Raw", CallingConvention = CallingConvention.Cdecl)]
+		public static void RenderFloatLumRaw(ushort width, ushort height, IntPtr lumFrame, IntPtr rawFrame, byte rawBitSize)
 			=> InternalRenderRawFloatDevice(DefaultDevice, width, height, lumFrame, rawFrame, rawBitSize);
 
 		// void Render_16_Shades(UINT16 width, UINT16 height, UINT8 *currbuffer)
