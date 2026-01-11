@@ -2,7 +2,7 @@
 using System.Reflection;
 
 [assembly: AssemblyCompany("freezy <freezy@vpdb.io>")]
-[assembly: AssemblyCopyright("Copyright (C) 2025 <freezy@vpdb.io>")]
+[assembly: AssemblyCopyright("Copyright (C) 2026 <freezy@vpdb.io>")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -17,7 +17,7 @@ using System.Reflection;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.3.2.0")]
-[assembly: AssemblyFileVersion("2.3.2.0")]
-[assembly: AssemblyInformationalVersion("2.3.2-SNAPSHOT")]
+[assembly: AssemblyVersion("2.4.0.0")]
+[assembly: AssemblyFileVersion("2.4.0.0")]
+[assembly: AssemblyInformationalVersion("2.4.0")]
 [assembly: NeutralResourcesLanguage("en")]
