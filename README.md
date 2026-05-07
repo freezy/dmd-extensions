@@ -193,15 +193,15 @@ You should see a test image on your DMD as well as on a virtual DMD.
 
 For further tweaking, see options below.
 
-### Pinball FX3
+### Pinball FX3 / Pinball FX Classic
 
-The DMD from Pinball FX3 is pulled directly from the memory.
+The DMD from Pinball FX3 and Pinball FX Classic is pulled directly from the memory.
 
 1. Open a command line prompt ([Windows], type `cmd`, [enter])
-2. Type `dmdext mirror --source=pinballfx3 --no-virtual` [enter]
-3. Start Pinball FX3 and play a game.
+2. Type `dmdext mirror --source=pinballfx3 --no-virtual` [enter] (you can also use `--source=pinballfxclassic`)
+3. Start Pinball FX3 or Pinball FX Classic and play a game.
 
-It doesn't matter whether Pinball FX3 is started before or after `dmdext`, and
+It doesn't matter whether the game is started before or after `dmdext`, and
 it works with or without cabinet mode.
 
 Note that while the current memory grabber code should also work for future

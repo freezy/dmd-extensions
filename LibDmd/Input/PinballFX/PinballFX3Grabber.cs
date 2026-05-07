@@ -4,9 +4,9 @@
 	{
 		public override string Name { get; } = "Pinball FX3";
 
-		protected override string GetProcessName()
+		protected override System.Collections.Generic.IEnumerable<string> GetProcessNames()
 		{
-			return "Pinball FX3";
+			return new[] { "Pinball FX3", "Pinball FX Classic" };
 		}
 	}
 }

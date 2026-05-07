@@ -28,7 +28,7 @@ namespace LibDmd.Input.PinballFX
 	/// </remarks>
 	public abstract class PinballFXGrabber : AbstractSource, IColoredGray2Source
 	{
-		protected abstract string GetProcessName();
+		protected abstract IEnumerable<string> GetProcessNames();
 
 		public IObservable<Unit> OnResume => _onResume;
 		public IObservable<Unit> OnPause => _onPause;
@@ -164,20 +164,22 @@ namespace LibDmd.Input.PinballFX
 
 		private IntPtr FindDmdHandle()
 		{
-			foreach (var proc in Process.GetProcessesByName(GetProcessName())) {
-				var handles = GetRootWindowsOfProcess(proc.Id);
-				foreach (var handle in handles) {
-					NativeCapture.RECT rc;
-					GetWindowRect(handle, out rc);
-					if (rc.Width == 0 || rc.Height == 0) {
-						continue;
+			foreach (var processName in GetProcessNames()) {
+				foreach (var proc in Process.GetProcessesByName(processName)) {
+					var handles = GetRootWindowsOfProcess(proc.Id);
+					foreach (var handle in handles) {
+						NativeCapture.RECT rc;
+						GetWindowRect(handle, out rc);
+						if (rc.Width == 0 || rc.Height == 0) {
+							continue;
+						}
+						var ar = rc.Width / rc.Height;
+						if (ar >= 3 && ar < 4.2) {
+							return handle;
+						}
 					}
-					var ar = rc.Width / rc.Height;
-					if (ar >= 3 && ar < 4.2) {
-						return handle;
-					}
+					Logger.Warn("{0} process found (pid {1}) but DMD not. No game running?", processName, proc.Id);
 				}
-				Logger.Warn("{0} process found (pid {1}) but DMD not. No game running?", GetProcessName(), proc.Id);
 			}
 			return IntPtr.Zero;
 		}

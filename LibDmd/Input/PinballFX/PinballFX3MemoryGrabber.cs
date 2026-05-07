@@ -190,7 +190,7 @@ namespace LibDmd.Input.PinballFX
 
 		protected override IntPtr AttachGameProcess(Process p)
 		{
-			if (p.ProcessName == "Pinball FX3") {
+			if (p.ProcessName == "Pinball FX3" || p.ProcessName == "Pinball FX Classic") {
 				return GetPointerBaseAddress(p);
 			}
 

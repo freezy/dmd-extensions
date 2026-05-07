@@ -5,7 +5,7 @@ namespace DmdExt.Mirror
 {
 	class MirrorOptions : BaseOptions
 	{
-		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballarcade, propinball, screen ].")]
+		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballfxclassic, pinballarcade, propinball, screen ].")]
 		public SourceType Source { get; set; }
 
 		[Option('f', "fps", HelpText = "How many frames per second should be mirrored. Default: 25")]
@@ -36,8 +36,12 @@ namespace DmdExt.Mirror
 		public IParserState LastParserState { get; set; }
 
 		public new void Validate()
-		{
-			base.Validate();
+			{
+				if (Source == SourceType.PinballFXClassic) {
+					Source = SourceType.PinballFX3;
+				}
+
+				base.Validate();
 
 			if (Source == SourceType.Screen) {
 				if (Position.Length != 4)
@@ -69,6 +73,7 @@ namespace DmdExt.Mirror
 	{
 		PinballFX2,
 		PinballFX3,
+		PinballFXClassic,
 		Screen,
 		PinballArcade,
 		ProPinball,
