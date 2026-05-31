@@ -76,7 +76,18 @@ namespace LibDmd.Common
 				return;
 			}
 			Dispatcher.Invoke(() => {
+				// Guard against invalid/frameless dimensions to avoid dividing by zero or producing Infinity.
+				if (dim.IsFlat) {
+					Logger.Warn("Ignored SetDimensions with flat dimensions: {0}x{1}", dim.Width, dim.Height);
+					return;
+				}
+
 				_aspectRatio = dim.AspectRatio;
+				if (double.IsNaN(_aspectRatio) || double.IsInfinity(_aspectRatio) || _aspectRatio == 0.0) {
+					Logger.Warn("Ignored SetDimensions with invalid aspect ratio: {0}", _aspectRatio);
+					return;
+				}
+
 				if (LockHeight) {
 					Width = Height * _aspectRatio;
 				} else {
