@@ -94,6 +94,7 @@ namespace LibDmd.Output.Pixelcade
 		private byte[] _lastPayload;  // previous payload, for change detection
 		private byte[] _swapBuffer;   // holds the green/blue-swapped payload when ColorMatrix is Rbg
 		private byte _lastCommand;    // previous payload command, for change detection
+		private int _lastPayloadLength = -1; // length of the previous payload, for change detection
 
 		private bool _lastFrameFailed;
 
@@ -235,6 +236,8 @@ namespace LibDmd.Output.Pixelcade
 				} else if (f2 == (byte)'M') {
 					width = 64;
 					height = 32;
+				} else {
+					Logger.Warn("Unrecognized Pixelcade panel size code '{0}' (0x{1:X2}); defaulting to {2}.", (char)f2, f2, new Dimensions(width, height));
 				}
 
 				_isV2 = f3 == (byte)'R';
@@ -256,6 +259,7 @@ namespace LibDmd.Output.Pixelcade
 				_lastPayload = new byte[MaxDataSize];
 				_swapBuffer = new byte[MaxDataSize];
 				_lastCommand = 0; // not a valid frame command, so the first frame always sends
+				_lastPayloadLength = -1;
 			} else {
 				_frameBuffer = new byte[FixedSize.Surface * 3 / 2 + 1];
 				_frameBuffer[0] = RgbLedMatrixFrameCommandByte;
@@ -277,7 +281,7 @@ namespace LibDmd.Output.Pixelcade
 				// v2 boards accept raw RGB888 directly (R,G,B per pixel), no plane splitting.
 				// Honor the color matrix by swapping green/blue for RBG-wired panels.
 				var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb888GreenBlue(frameRgb24.Data) : frameRgb24.Data;
-				SendV2Frame(Rgb888CommandByte, data);
+				SendV2Frame(Rgb888CommandByte, data, frameRgb24.Data.Length);
 				return;
 			}
 
@@ -304,7 +308,7 @@ namespace LibDmd.Output.Pixelcade
 				// frame.Data is already little-endian RGB565, which is what the v2 firmware expects.
 				// Honor the color matrix by swapping green/blue for RBG-wired panels.
 				var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb565GreenBlue(frame.Data) : frame.Data;
-				SendV2Frame(Rgb565CommandByte, data);
+				SendV2Frame(Rgb565CommandByte, data, frame.Data.Length);
 				return;
 			}
 
@@ -326,22 +330,34 @@ namespace LibDmd.Output.Pixelcade
 		/// <summary>
 		/// Assembles and sends a v2 payload, skipping frames identical to the last one.
 		/// </summary>
-		private void SendV2Frame(byte command, byte[] data)
+		private void SendV2Frame(byte command, byte[] data, int length)
 		{
-			// FrameUtil.Copy writes data into _lastPayload and reports whether it changed.
-			var changed = FrameUtil.Copy(data, _lastPayload, 0) || command != _lastCommand;
-			_lastCommand = command;
-			if (!changed) {
+			// Skip frames identical to the last one, comparing only the meaningful bytes.
+			// data may be the over-sized _swapBuffer, so we can't rely on data.Length here.
+			if (command == _lastCommand && length == _lastPayloadLength && BuffersEqual(data, _lastPayload, length)) {
 				return;
 			}
+			Buffer.BlockCopy(data, 0, _lastPayload, 0, length);
+			_lastCommand = command;
+			_lastPayloadLength = length;
 
 			var wireLength = _useFraming
-				? BuildFrame(_wireBuffer, command, data, data.Length)
-				: BuildRawCommand(_wireBuffer, command, data, data.Length);
+				? BuildFrame(_wireBuffer, command, data, length)
+				: BuildRawCommand(_wireBuffer, command, data, length);
 
 			if (wireLength > 0) {
 				RenderRaw(_wireBuffer, wireLength);
 			}
+		}
+
+		private static bool BuffersEqual(byte[] a, byte[] b, int length)
+		{
+			for (var i = 0; i < length; i++) {
+				if (a[i] != b[i]) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -456,6 +472,7 @@ namespace LibDmd.Output.Pixelcade
 					_serialPort.Write(_wireBuffer, 0, wireLength);
 				}
 				_lastCommand = 0; // force the next frame to be sent
+				_lastPayloadLength = -1;
 				return;
 			}
 
