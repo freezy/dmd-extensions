@@ -1,11 +1,12 @@
 ﻿using CommandLine;
 using DmdExt.Common;
+using LibDmd.Common;
 
 namespace DmdExt.Mirror
 {
 	class MirrorOptions : BaseOptions
 	{
-		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballfxclassic, pinballarcade, propinball, screen ].")]
+		[Option('s', "source", Required = true, HelpText = "The source you want to retrieve DMD data from. One of: [ pinballfx2, pinballfx3, pinballfxclassic, pinballarcade, propinball, futurepinball, screen ].")]
 		public SourceType Source { get; set; }
 
 		[Option('f', "fps", HelpText = "How many frames per second should be mirrored. Default: 25")]
@@ -32,6 +33,9 @@ namespace DmdExt.Mirror
 		[Option("fx3-legacy", HelpText = "[pinballfx3] If set, don't use the memory grabber but the legacy screen grabber, like Pinball FX2. Default: false.")]
 		public bool Fx3GrabScreen { get; set; } = false;
 
+		[OptionArray("colors", HelpText = "[futurepinball] Static DMD palette colors. Provide five or sixteen RGB hex colors, e.g. \"#000000\" \"#8E5525\" \"#F6B832\" \"#B95B00\" \"#F3EEC4\".")]
+		public string[] Colors { get; set; } = new string[] {};
+
 		[ParserState]
 		public IParserState LastParserState { get; set; }
 
@@ -42,6 +46,20 @@ namespace DmdExt.Mirror
 				}
 
 				base.Validate();
+
+			if (Colors.Length > 0) {
+				if (Source != SourceType.FuturePinball) {
+					throw new InvalidOptionException("Argument --colors is only supported with --source futurepinball.");
+				}
+				if (Colors.Length != 5 && Colors.Length != 16) {
+					throw new InvalidOptionException("Argument --colors must contain five or sixteen RGB colors.");
+				}
+				foreach (var color in Colors) {
+					if (!ColorUtil.IsColor(color)) {
+						throw new InvalidOptionException("Argument --colors must contain valid RGB colors. Example: \"#ff0000\".");
+					}
+				}
+			}
 
 			if (Source == SourceType.Screen) {
 				if (Position.Length != 4)

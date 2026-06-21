@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Windows.Media;
 using DmdExt.Common;
 using LibDmd;
+using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Converter.Vni;
 using LibDmd.DmdDevice;
@@ -54,8 +55,31 @@ namespace DmdExt.Mirror
 				IdlePlay = _options.IdlePlay
 			};
 			graph.SetColor(_config.Global.DmdColor);
+			var palette = GetStaticPalette();
+			if (palette != null) {
+				graph.SetPalette(palette);
+				graph.Destinations.OfType<IPaletteDestination>().ToList().ForEach(dest => dest.SetPalette(palette));
+			}
 
 			return graph;
+		}
+
+		private Color[] GetStaticPalette()
+		{
+			if (_options.Colors.Length == 0) {
+				return null;
+			}
+
+			var colors = _options.Colors.Select(ColorUtil.ParseColor).ToArray();
+			if (colors.Length == 16) {
+				return colors;
+			}
+
+			var palette = new Color[16];
+			for (var i = 0; i < palette.Length; i++) {
+				palette[i] = i < colors.Length ? colors[i] : colors[colors.Length - 1];
+			}
+			return palette;
 		}
 
 		protected override void CreateRenderGraphs(RenderGraphCollection graphs, HashSet<string> reportingTags)

@@ -540,6 +540,7 @@
     <Compile Include="Output\IGray2Destination.cs" />
     <Compile Include="Output\IFixedSizeDestination.cs" />
     <Compile Include="Output\IColoredGray4Destination.cs" />
+    <Compile Include="Output\IPaletteDestination.cs" />
     <Compile Include="Output\IResizableDestination.cs" />
     <Compile Include="Output\IRgb24Destination.cs" />
     <Compile Include="Common\BinaryReaderExtensions.cs" />

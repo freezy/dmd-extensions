@@ -20,8 +20,9 @@ namespace LibDmd
 	public class RenderGraphCollection : IDisposable
 	{
 		public ICollection<RenderGraph> Graphs => _graphs;
-		private readonly List<RenderGraph> _graphs = new List<RenderGraph>(); 
+		private readonly List<RenderGraph> _graphs = new List<RenderGraph>();
 		private readonly List<IRgb24Destination> _rgb24Destinations = new List<IRgb24Destination>();
+		private readonly List<IPaletteDestination> _paletteDestinations = new List<IPaletteDestination>();
 		private readonly List<IResizableDestination> _resizableDestinations = new List<IResizableDestination>();
 		private readonly List<AbstractConverter> _converters = new List<AbstractConverter>();
 		private readonly BehaviorSubject<Dimensions> _dimensions = new BehaviorSubject<Dimensions>(Dimensions.Standard);
@@ -43,6 +44,9 @@ namespace LibDmd
 				var resizableDestinations = dest as IResizableDestination;
 				if (dest is IRgb24Destination rgb24Destination && !_rgb24Destinations.Contains(rgb24Destination)) {
 					_rgb24Destinations.Add(rgb24Destination);
+				}
+				if (dest is IPaletteDestination paletteDestination && !_paletteDestinations.Contains(paletteDestination)) {
+					_paletteDestinations.Add(paletteDestination);
 				}
 				if (resizableDestinations != null && !_resizableDestinations.Contains(resizableDestinations)) {
 					_resizableDestinations.Add(resizableDestinations);
@@ -100,13 +104,13 @@ namespace LibDmd
 		public void SetPalette(Color[] palette)
 		{
 			_graphs.ForEach(graph => graph.SetPalette(palette));
-			_rgb24Destinations.ForEach(dest => dest.SetPalette(palette));
+			_paletteDestinations.ForEach(dest => dest.SetPalette(palette));
 		}
 
 		public void ClearPalette()
 		{
 			_graphs.ForEach(graph => graph.ClearPalette());
-			_rgb24Destinations.ForEach(dest => dest.ClearPalette());
+			_paletteDestinations.ForEach(dest => dest.ClearPalette());
 		}
 
 		public void ClearDisplay()
@@ -126,6 +130,7 @@ namespace LibDmd
 
 			} else {
 				_rgb24Destinations.Clear();
+				_paletteDestinations.Clear();
 				_graphs.ForEach(graph => graph.Dispose());
 				_graphs.Clear();
 			}
