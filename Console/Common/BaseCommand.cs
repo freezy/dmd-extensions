@@ -83,7 +83,7 @@ namespace DmdExt.Common
 			}
 
 			if (config.ZeDMD.Enabled) {
-				var zeDMD = ZeDMD.GetInstance(config.ZeDMD.Debug, config.ZeDMD.Brightness, config.ZeDMDHD.Port);
+				var zeDMD = ZeDMD.GetInstance(config.ZeDMD.Debug, config.ZeDMD.Brightness, config.ZeDMD.Port);
 				if (zeDMD.IsAvailable) {
 					renderers.Add(zeDMD);
 					Logger.Info("Added ZeDMD renderer.");
