@@ -52,6 +52,7 @@ virtualdmd height = 702
 | Dead By Daylight                                      | 174 |
 | Deadpool                                              | 22  |
 | Doctor Strange                                        | 30  |
+| Doom                                                  | 92  |
 | Dr. Dude and his Excellent Ray™                       | 135 |
 | DreamWorks How to Train Your Dragon Pinball           | 141 |
 | DreamWorks Kung Fu Panda Pinball                      | 139 |
@@ -62,6 +63,7 @@ virtualdmd height = 702
 | Epic Quest                                            | 67  |
 | Excalibur                                             | 20  |
 | Exploding Kittens®: A Pinball Cat-astrophe            | 178 |
+| Fallout                                               | 90  |
 | Fantastic Four                                        | 38  |
 | Fear Itself                                           |  5  |
 | Fish Tales™                                           | 108 |
@@ -106,6 +108,7 @@ virtualdmd height = 702
 | Safe Cracker™                                         | 122 |
 | Secrets of the Deep                                   | 66  |
 | Sky Pirates: Treasures of the Clouds                  | 113 |
+| Skyrim                                                | 91  |
 | Son of Zeus                                           | 80  |
 | Sorcerer's Lair                                       | 33  |
 | South Park™: Butters' Very Own Pinball Game           | 55  |
