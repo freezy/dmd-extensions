@@ -51,6 +51,7 @@ virtualdmd height = 702
 | Curse of the Mummy                                    | 112 |
 | Dead By Daylight                                      | 174 |
 | Deadpool                                              | 22  |
+| Diner                                                 | 201 |
 | Doctor Strange                                        | 30  |
 | Doom                                                  | 92  |
 | Dr. Dude and his Excellent Ray™                       | 135 |

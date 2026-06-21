@@ -240,6 +240,11 @@ namespace LibDmd.DmdDevice
 		/// <param name="color">New color</param>
 		public void SetColor(Color color)
 		{
+			if (!IsUsableColor(color)) {
+				Logger.Warn("Ignoring invalid host color because it is black.");
+				return;
+			}
+
 			Logger.Info("Setting color: {0}", color);
 			_color = color;
 		}
@@ -250,6 +255,11 @@ namespace LibDmd.DmdDevice
 		/// <param name="colors">New palette</param>
 		public void SetPalette(Color[] colors)
 		{
+			if (!IsUsablePalette(colors)) {
+				Logger.Warn("Ignoring invalid host palette because it is empty or entirely black.");
+				return;
+			}
+
 			_palette = colors;
 
 			if (!_colorize || _colorizer != null || _palette == null) {
@@ -259,6 +269,16 @@ namespace LibDmd.DmdDevice
 			// if colorization enabled and palette is set, apply palette.
 			Logger.Info($"Applying palette of {colors.Length} to render graphs.");
 			_graphs.SetPalette(_palette);
+		}
+
+		internal static bool IsUsablePalette(Color[] colors)
+		{
+			return colors != null && colors.Length > 0 && colors.Any(color => color.R != 0 || color.G != 0 || color.B != 0);
+		}
+
+		internal static bool IsUsableColor(Color color)
+		{
+			return color.R != 0 || color.G != 0 || color.B != 0;
 		}
 
 		/// <summary>
