@@ -13,7 +13,8 @@ namespace LibDmd.Converter
 	/// Converter that can swap in another child converter dynamically, without requiring upstream subscribers to re-subscribe.
 	/// Falls back to orange DMD colored frames when no child converter is available.
 	/// </summary>
-	public class SwitchingConverter : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IAlphaNumericSource
+	public class SwitchingConverter : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source,
+		IRgb565Source, IRgb24Source, IAlphaNumericSource
 	{
 		private AbstractConverter _converter;
 		private readonly Subject<ColoredFrame> _coloredGray2PassthroughFrames = new Subject<ColoredFrame>();
@@ -24,6 +25,8 @@ namespace LibDmd.Converter
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray6 = new ReplaySubject<IObservable<ColoredFrame>>(1);
+		private readonly ReplaySubject<IObservable<DmdFrame>> _latestRgb565 = new ReplaySubject<IObservable<DmdFrame>>(1);
+		private readonly ReplaySubject<IObservable<DmdFrame>> _latestRgb24 = new ReplaySubject<IObservable<DmdFrame>>(1);
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -38,6 +41,8 @@ namespace LibDmd.Converter
 			_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
 			_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 			_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
+			_latestRgb565.OnNext(Observable.Empty<DmdFrame>());
+			_latestRgb24.OnNext(Observable.Empty<DmdFrame>());
 		}
 
 		public override void Convert(DmdFrame frame)
@@ -68,6 +73,10 @@ namespace LibDmd.Converter
 
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => _latestColoredGray6.Switch();
 
+		public IObservable<DmdFrame> GetRgb565Frames() => _latestRgb565.Switch();
+
+		public IObservable<DmdFrame> GetRgb24Frames() => _latestRgb24.Switch();
+
 		public IObservable<AlphaNumericFrame> GetAlphaNumericFrames() => _alphaNumericPassthroughFrames;
 
 		public void Switch(AbstractConverter converter)
@@ -78,21 +87,27 @@ namespace LibDmd.Converter
 				_latestColoredGray2.OnNext(_coloredGray2PassthroughFrames);
 				_latestColoredGray4.OnNext(_coloredGray4PassthroughFrames);
 				_latestColoredGray6.OnNext(Observable.Empty<ColoredFrame>());
+				_latestRgb565.OnNext(Observable.Empty<DmdFrame>());
+				_latestRgb24.OnNext(Observable.Empty<DmdFrame>());
 				_converter = null;
 				return;
 			}
 
-			if (converter is IColoredGray2Source source2) {
-				_latestColoredGray2.OnNext(source2.GetColoredGray2Frames());
-			}
-
-			if (converter is IColoredGray4Source source4) {
-				_latestColoredGray4.OnNext(source4.GetColoredGray4Frames());
-			}
-
-			if (converter is IColoredGray6Source source6) {
-				_latestColoredGray6.OnNext(source6.GetColoredGray6Frames());
-			}
+			_latestColoredGray2.OnNext(converter is IColoredGray2Source source2
+				? source2.GetColoredGray2Frames()
+				: Observable.Empty<ColoredFrame>());
+			_latestColoredGray4.OnNext(converter is IColoredGray4Source source4
+				? source4.GetColoredGray4Frames()
+				: Observable.Empty<ColoredFrame>());
+			_latestColoredGray6.OnNext(converter is IColoredGray6Source source6
+				? source6.GetColoredGray6Frames()
+				: Observable.Empty<ColoredFrame>());
+			_latestRgb565.OnNext(converter is IRgb565Source sourceRgb565
+				? sourceRgb565.GetRgb565Frames()
+				: Observable.Empty<DmdFrame>());
+			_latestRgb24.OnNext(converter is IRgb24Source sourceRgb24
+				? sourceRgb24.GetRgb24Frames()
+				: Observable.Empty<DmdFrame>());
 
 			_converter = converter;
 		}
