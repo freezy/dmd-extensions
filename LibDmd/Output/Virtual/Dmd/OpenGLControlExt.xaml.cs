@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -126,16 +128,27 @@ namespace LibDmd.Output.Virtual.Dmd
 		/// When overridden in a derived class, is invoked whenever application code or 
 		/// internal processes call <see cref="M:System.Windows.FrameworkElement.ApplyTemplate"/>.
 		/// </summary>
+		[HandleProcessCorruptedStateExceptions]
+		[SecurityCritical]
 		public override void OnApplyTemplate()
 		{
 			//  Call the base.
 			base.OnApplyTemplate();
 
 			//  Lock on OpenGL.
-			lock (gl)
-			{
-				//  Create OpenGL.
-				gl.Create(OpenGLVersion, RenderContextType, 1, 1, 32, null);
+			try {
+				lock (gl)
+				{
+					//  Create OpenGL.
+					gl.Create(OpenGLVersion, RenderContextType, 1, 1, 32, null);
+				}
+			} catch (Exception ex) {
+				// ChoosePixelFormat (and the rest of the OpenGL context creation) throws a native
+				// SEHException when there is no usable OpenGL driver available - typically when running
+				// through Remote Desktop, in a VM without GPU acceleration, or with the Windows Basic
+				// Display Adapter. Turn that into a clear, actionable error instead of crashing with an
+				// unhandled native stack trace.
+				throw new RenderException($"Could not initialize OpenGL, which is required to render the virtual DMD. (Underlying error: {ex.Message})");
 			}
 
 			// Force re-set of dpi and format settings
