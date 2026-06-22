@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Copy the osx-arm64 native binaries next to the consumer's output (best-effort for non-RID
+       builds; RID-specific publish and Unity resolve them on their own). -->
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx-arm64\native\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+</Project>

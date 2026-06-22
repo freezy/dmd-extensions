@@ -228,3 +228,7 @@ videos/*
 *.psd
 *.ai
 rudder-sdk-.net/
+# --- LibDmd.Core NuGet packaging ---
+native/nuget/runtimes/
+build-nuget/nuget.exe
+!build-nuget/*.ps1

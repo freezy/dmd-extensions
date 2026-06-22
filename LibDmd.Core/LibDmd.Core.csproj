@@ -1,0 +1,129 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    LibDmd.Core - the cross-platform (WPF-free) extraction of LibDmd.
+
+    It compiles the SAME source files as the legacy LibDmd project (linked in below),
+    plus a handful of Core-only shim/native files in this folder. WPF is replaced as
+    follows:
+      * System.Windows.Media.Color/Colors/ColorConverter -> LibDmd.DmdColor/DmdColors/
+        DmdColorConverter via the global usings below (no edits to shared files).
+      * System.Windows.Media.Imaging (bitmaps), WPF threading, registry and Windows-only
+        P/Invoke are excluded with `#if !LIBDMD_CORE` in the shared files.
+    PLATFORM_X64 is defined so the existing `#if PLATFORM_X64` DllImport branches pick the
+    64-bit native names (serum64.dll / zedmd64.dll); NativeLibraryLoader remaps those per OS.
+  -->
+
+  <PropertyGroup>
+    <!-- netstandard2.1 is the Unity/cross-runtime target. The second TFM is a modern build for
+         the console harness + forward path; net8.0 (LTS) so it loads in VS 2022 17.14 (which
+         resolves .NET SDK 9.x). Bump to net10.0 once VS's default SDK supports it. -->
+    <TargetFrameworks>netstandard2.1;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>LibDmd</RootNamespace>
+    <AssemblyName>LibDmd.Core</AssemblyName>
+    <DefineConstants>$(DefineConstants);LIBDMD_CORE;PLATFORM_X64</DefineConstants>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <!-- The shared sources carry plenty of legacy warnings; don't fail the de-risk build on them. -->
+    <NoWarn>$(NoWarn);CS0618;CS0612;CS0414;CS0169;CS0649;CS1591;CS0067;CA2255</NoWarn>
+  </PropertyGroup>
+
+  <!-- NuGet package metadata. The native binaries (libserum/libzedmd) ship in the companion
+       LibDmd.Core.Native.* packages; see native/nuget/ and build-nuget/. -->
+  <PropertyGroup>
+    <PackageId>LibDmd.Core</PackageId>
+    <Authors>freezy and contributors</Authors>
+    <Product>LibDmd.Core</Product>
+    <Description>Cross-platform (WPF-free) core of dmd-extensions / LibDmd: the reactive frame pipeline (RenderGraph), Serum + VNI/PAL colorization, and ZeDMD / PinDMD3 / Pixelcade output. Native binaries are delivered by the companion LibDmd.Core.Native package.</Description>
+    <PackageTags>dmd;pinball;serum;zedmd;colorization;vpinball;cross-platform</PackageTags>
+    <PackageProjectUrl>https://github.com/freezy/dmd-extensions</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/freezy/dmd-extensions</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- Version is supplied by the build (-p:Version=x.y.z); falls back to a dev default. -->
+    <Version Condition="'$(Version)' == ''">0.1.0-dev</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" Visible="false" />
+    <None Include="..\LibDmd\icon.png" Pack="true" PackagePath="icon.png" Visible="false" />
+    <None Include="PACKAGE.md" Pack="true" PackagePath="README.md" Visible="false" />
+  </ItemGroup>
+
+  <!-- Dependency on the native binaries package. Injected at pack time
+       (-p:LibDmdCoreNativeVersion=x.y.z) so local dev builds don't require it on a feed. -->
+  <ItemGroup Condition="'$(LibDmdCoreNativeVersion)' != ''">
+    <PackageReference Include="LibDmd.Core.Native" Version="$(LibDmdCoreNativeVersion)" />
+  </ItemGroup>
+
+  <!-- Per-project color aliases: the shared sources keep saying Color/Colors/ColorConverter. -->
+  <ItemGroup>
+    <Using Include="LibDmd.DmdColor" Alias="Color" />
+    <Using Include="LibDmd.DmdColors" Alias="Colors" />
+    <Using Include="LibDmd.DmdColorConverter" Alias="ColorConverter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
+    <PackageReference Include="NLog" Version="5.3.4" />
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+  <!--
+    Shared sources from the legacy LibDmd project (the "keep / port" set).
+    The default SDK glob picks up this folder's own files (Shims/, Native/).
+  -->
+  <ItemGroup>
+    <!-- Frame (BmpFrame compiles as a cross-platform stub; see BmpFrame.cs) -->
+    <Compile Include="..\LibDmd\Frame\*.cs" LinkBase="LibDmd\Frame" />
+
+    <!-- Converters (Serum / VNI / Switching / Plugin / Loader) -->
+    <Compile Include="..\LibDmd\Converter\**\*.cs" LinkBase="LibDmd\Converter" />
+
+    <!-- Common utilities -->
+    <Compile Include="..\LibDmd\Common\*.cs"
+             Exclude="..\LibDmd\Common\AboutDialog.xaml.cs;..\LibDmd\Common\ImageUtil.cs;..\LibDmd\Common\VirtualDmd.xaml.cs;..\LibDmd\Common\VirtualDisplay.cs;..\LibDmd\Common\VirtualAlphaNumericDisplay.xaml.cs"
+             LinkBase="LibDmd\Common" />
+    <Compile Include="..\LibDmd\Common\HeatShrink\*.cs" LinkBase="LibDmd\Common\HeatShrink" />
+
+    <!-- Input: interfaces + abstract base + passthrough sources -->
+    <Compile Include="..\LibDmd\Input\*.cs"
+             Exclude="..\LibDmd\Input\MemoryGrabber.cs;..\LibDmd\Input\MemoryGrabberBase.cs"
+             LinkBase="LibDmd\Input" />
+    <Compile Include="..\LibDmd\Input\Passthrough\*.cs" LinkBase="LibDmd\Input\Passthrough" />
+
+    <!-- Output: interfaces + color-rotation wrapper + portable device drivers -->
+    <Compile Include="..\LibDmd\Output\*.cs"
+             Exclude="..\LibDmd\Output\BufferRenderer.cs"
+             LinkBase="LibDmd\Output" />
+    <Compile Include="..\LibDmd\Output\ZeDMD\*.cs" LinkBase="LibDmd\Output\ZeDMD" />
+    <Compile Include="..\LibDmd\Output\PinDmd3\*.cs" LinkBase="LibDmd\Output\PinDmd3" />
+    <Compile Include="..\LibDmd\Output\Pixelcade\*.cs" LinkBase="LibDmd\Output\Pixelcade" />
+
+    <!--
+      The full INI configuration layer (DmdDevice/Configuration.cs, IConfiguration.cs) is
+      deferred: it pulls in SkiaSharp and the dropped virtual-DMD style types, and nothing
+      in the ZeDMD+Serum pipeline depends on it. It returns (with #if guards for the
+      Skia/virtual-style bits) with the player-app dmddevice.ini work (plan Phase 2).
+      These two portable types are needed by the converter layer, though:
+    -->
+    <Compile Include="..\LibDmd\DmdDevice\AlphaNumeric.cs" LinkBase="LibDmd\DmdDevice" />
+    <Compile Include="..\LibDmd\DmdDevice\PluginConfig.cs" LinkBase="LibDmd\DmdDevice" />
+    <Compile Include="..\LibDmd\DmdDevice\PMOptions.cs" LinkBase="LibDmd\DmdDevice" />
+
+    <!-- Pipeline core -->
+    <Compile Include="..\LibDmd\RenderGraph.cs" LinkBase="LibDmd" />
+    <Compile Include="..\LibDmd\RenderGraphCollection.cs" LinkBase="LibDmd" />
+    <Compile Include="..\LibDmd\IRenderer.cs" LinkBase="LibDmd" />
+    <Compile Include="..\LibDmd\AlphaNumericFrame.cs" LinkBase="LibDmd" />
+  </ItemGroup>
+
+</Project>

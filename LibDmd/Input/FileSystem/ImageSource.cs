@@ -161,10 +161,6 @@ namespace LibDmd.Input.FileSystem
 		private readonly ISubject<Unit> _onPause = new Subject<Unit>();
 	}
 
-	public class WrongFormatException : Exception
-	{
-		public WrongFormatException(string message) : base(message)
-		{
-		}
-	}
+	// WrongFormatException moved to LibDmd/Common/WrongFormatException.cs so the
+	// cross-platform core (VNI loader) can reference it.
 }

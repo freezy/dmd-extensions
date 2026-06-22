@@ -8,13 +8,17 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
+#if !LIBDMD_CORE
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+#endif
 using LibDmd.Common;
 using LibDmd.Converter;
 using LibDmd.Frame;
 using LibDmd.Input;
+#if !LIBDMD_CORE
 using LibDmd.Input.FileSystem;
+#endif
 using LibDmd.Output;
 using NLog;
 
@@ -168,6 +172,7 @@ namespace LibDmd
 		/// </summary>
 		/// <param name="bmp">Bitmap to render</param>
 		/// <param name="onCompleted">If set, this action is executed once the bitmap is displayed.</param>
+#if !LIBDMD_CORE
 		public void Render(BitmapSource bmp, Action onCompleted = null)
 		{
 			var source = new PassthroughSource("Bitmap Source");
@@ -175,6 +180,7 @@ namespace LibDmd
 			_activeRenderer = Init().StartRendering(onCompleted);
 			source.FramesBitmap.OnNext(new BmpFrame(bmp));
 		}
+#endif
 
 		/// <summary>
 		/// Subscribes to the source and hence starts receiving and processing frames
@@ -815,7 +821,7 @@ namespace LibDmd
 				if (from == FrameFormat.Gray2 || from == FrameFormat.Gray4) {
 					deduped = dest.NeedsDuplicateFrames ? " - not deduped" : " - deduped";
 				}
-				Dispatcher.CurrentDispatcher.Invoke(() => Logger.Info($"  {indent}-> Connecting {source.Name} to {dest.Name} ({@from} -> {to}){deduped}"));
+				Logger.Info($"  {indent}-> Connecting {source.Name} to {dest.Name} ({@from} -> {to}){deduped}");
 			
 			} catch (TaskCanceledException e) {
 				Logger.Error(e, "Main thread seems already destroyed, aborting.");
@@ -1653,7 +1659,9 @@ namespace LibDmd
 				dest = dest.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
 
 				// execute on main thread
+#if !LIBDMD_CORE
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+#endif
 				if (!_runOnMainThread) {
 					dest = dest.ObserveOn(Scheduler.Default);
 				}
@@ -1662,7 +1670,9 @@ namespace LibDmd
 			} else {
 
 				// subscribe and add to active sources
+#if !LIBDMD_CORE
 				SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+#endif
 
 				// run frame processing on separate thread.
 				if (!_runOnMainThread) {
@@ -1683,6 +1693,7 @@ namespace LibDmd
 		/// </remarks>
 		private void StartIdling()
 		{
+#if !LIBDMD_CORE
 			if (IdlePlay != null) {
 				ISource source;
 				Logger.Info("Idle timeout ({0}ms), playing {1}.", IdleAfter, IdlePlay);
@@ -1714,6 +1725,11 @@ namespace LibDmd
 				Logger.Info("Idle timeout ({0}ms), clearing display.", IdleAfter);
 				ClearDisplay();
 			}
+#else
+			// Cross-platform core: file-based idle playback (png/jpg/gif) isn't ported; just clear.
+			Logger.Info("Idle timeout ({0}ms), clearing display.", IdleAfter);
+			ClearDisplay();
+#endif
 		}
 
 		/// <summary>

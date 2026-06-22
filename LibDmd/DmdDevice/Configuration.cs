@@ -259,19 +259,8 @@ namespace LibDmd.DmdDevice
 		}
 	}
 
-	public class PluginConfig
-	{
-		public readonly string Path;
-		public readonly bool PassthroughEnabled;
-		public readonly ScalerMode ScalerMode;
-
-		public PluginConfig(string path, bool passthroughEnabled, ScalerMode scalerMode)
-		{
-			Path = path;
-			PassthroughEnabled = passthroughEnabled;
-			ScalerMode = scalerMode;
-		}
-	}
+	// PluginConfig moved to LibDmd/DmdDevice/PluginConfig.cs so the cross-platform core can
+	// reference it without the full INI/SkiaSharp configuration layer.
 
 	public class PinDmd1Config : AbstractConfiguration, IPinDmd1Config
 	{

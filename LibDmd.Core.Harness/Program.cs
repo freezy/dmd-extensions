@@ -1,0 +1,116 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
+using LibDmd;
+using LibDmd.Common;
+using LibDmd.Converter.Serum;
+using LibDmd.Frame;
+using LibDmd.Input.Passthrough;
+using LibDmd.Native;
+using LibDmd.Output;
+using LibDmd.Output.ZeDMD;
+
+namespace LibDmd.Core.Harness
+{
+	internal static class Program
+	{
+		private static int Main(string[] args)
+		{
+			Console.WriteLine("=== LibDmd.Core cross-platform harness (Phase 0) ===");
+			Console.WriteLine($"  OS:      {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})");
+			Console.WriteLine($"  Runtime: {RuntimeInformation.FrameworkDescription}");
+			Console.WriteLine();
+
+			// Install the cross-platform native-library resolver (maps serum64.dll/zedmd64.dll
+			// to the per-OS file). It also runs via a module initializer; calling it is harmless.
+			NativeLibraryLoader.Register();
+
+			TestSerumNative();
+			Console.WriteLine();
+			TestPipeline();
+			Console.WriteLine();
+			TestZeDmd();
+			Console.WriteLine();
+
+			if (args.Length >= 2) {
+				TestSerumColorization(args[0], args[1]);
+			} else {
+				Console.WriteLine("(tip: pass <altcolorDir> <romName> to exercise Serum colorization from a .cRZ)");
+			}
+
+			Console.WriteLine();
+			Console.WriteLine("=== Done ===");
+			return 0;
+		}
+
+		/// <summary>Proves the native libserum loads and is callable across the P/Invoke boundary.</summary>
+		private static void TestSerumNative()
+		{
+			Console.WriteLine("[1] Native interop - libserum:");
+			try {
+				var version = Serum.GetVersion();
+				Console.WriteLine($"    OK: libserum reports version \"{version}\" - native load + P/Invoke works.");
+			} catch (DllNotFoundException e) {
+				Console.WriteLine($"    libserum not found next to the executable: {e.Message}");
+			} catch (Exception e) {
+				Console.WriteLine($"    libserum call failed: {e.GetType().Name}: {e.Message}");
+			}
+		}
+
+		/// <summary>Proves the Rx frame pipeline runs WPF-free: source -> RenderGraph -> destination.</summary>
+		private static void TestPipeline()
+		{
+			Console.WriteLine("[2] Frame pipeline - PassthroughGray2Source -> RenderGraph -> LoggingDestination:");
+			var lastFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Gray2);
+			var source = new PassthroughGray2Source(lastFormat, "Harness Gray2 Source");
+			var dest = new LoggingDestination();
+
+			// runOnMainThread: true keeps frame processing synchronous on this thread, so the
+			// pushed frames are rendered before we tear the graph down.
+			var graph = new RenderGraph(new UndisposedReferences(), runOnMainThread: true) {
+				Name = "Harness",
+				Source = source,
+				Destinations = new List<IDestination> { dest },
+			};
+			graph.Init();
+
+			using (graph.StartRendering(ex => Console.WriteLine($"    pipeline error: {ex.Message}"))) {
+				for (var i = 0; i < 3; i++) {
+					var data = new byte[Dimensions.Standard.Surface];
+					for (var p = 0; p < data.Length; p++) {
+						data[p] = (byte)((p + i) & 0x3);
+					}
+					source.NextFrame(new DmdFrame(Dimensions.Standard, data, 2));
+				}
+			}
+
+			Console.WriteLine($"    {dest.FrameCount} frame(s) made it through the WPF-free pipeline.");
+		}
+
+		/// <summary>Probes for a real ZeDMD (exercises the libzedmd load path; no hardware expected).</summary>
+		private static void TestZeDmd()
+		{
+			Console.WriteLine("[3] Real-hardware probe - ZeDMD (libzedmd):");
+			try {
+				var zedmd = ZeDMD.GetInstance(false, 100, null);
+				Console.WriteLine($"    ZeDMD instantiated. IsAvailable={zedmd.IsAvailable} (false = no device attached, expected).");
+			} catch (Exception e) {
+				Console.WriteLine($"    ZeDMD probe failed: {e.GetType().Name}: {e.Message}");
+			}
+		}
+
+		/// <summary>Optionally loads a real Serum colorization (.cRZ) to prove the converter end to end.</summary>
+		private static void TestSerumColorization(string altColorDir, string romName)
+		{
+			Console.WriteLine($"[4] Serum colorization - rom \"{romName}\" in \"{altColorDir}\":");
+			try {
+				using (var serum = new Serum(altColorDir, romName, ScalerMode.None)) {
+					Console.WriteLine($"    Serum.IsLoaded={serum.IsLoaded}, colorization version={serum.ColorizationVersion}");
+				}
+			} catch (Exception e) {
+				Console.WriteLine($"    Serum load failed: {e.GetType().Name}: {e.Message}");
+			}
+		}
+	}
+}

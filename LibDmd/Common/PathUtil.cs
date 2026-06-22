@@ -5,14 +5,20 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+#if !LIBDMD_CORE
 using Microsoft.Win32;
+#endif
 using NLog;
 
 namespace LibDmd.Common
 {
 	public static class PathUtil
 	{
+#if LIBDMD_CORE
+		private static readonly string AssemblyPath = AppContext.BaseDirectory;
+#else
 		private static readonly string AssemblyPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+#endif
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static string _sha;
 		private static string _fullVersion;
@@ -47,6 +53,7 @@ namespace LibDmd.Common
 				return absPath;
 			}
 
+#if !LIBDMD_CORE
 			// then, try vpinmame location
 			var vpmDllName = IntPtr.Size == 4  ? "VPinMAME.dll" : "VPinMAME64.dll";
 			var vpmPath = GetDllPath(vpmDllName);
@@ -72,6 +79,7 @@ namespace LibDmd.Common
 					}
 				}
 			}
+#endif
 
 			Logger.Info($"{logPrefix} {fileOrFolder} not found.");
 			return null;
@@ -122,14 +130,19 @@ namespace LibDmd.Common
 				return assembly.Location;
 			}
 
+#if !LIBDMD_CORE
 			if (!assembly.CodeBase.ToLowerInvariant().StartsWith("file:")) {
 				return null;
 			}
 
 			var uri = new UriBuilder(assembly.CodeBase);
 			return Uri.UnescapeDataString(uri.Path);
+#else
+			return null;
+#endif
 		}
 
+#if !LIBDMD_CORE
 		private static string GetDllPath(string name)
 		{
 			const int maxPath = 260;
@@ -154,6 +167,7 @@ namespace LibDmd.Common
 			[Out] StringBuilder lpFilename,
 			[In][MarshalAs(UnmanagedType.U4)] int nSize
 		);
+#endif
 
 		public static FileInfo GetLastCreatedFile(DirectoryInfo altColorDir, string ext)
 		{

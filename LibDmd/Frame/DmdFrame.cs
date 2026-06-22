@@ -299,6 +299,7 @@ namespace LibDmd.Frame
 			}
 		}
 
+#if !LIBDMD_CORE
 		/// <summary>
 		/// Converts this gray frame to Bitmap.
 		/// </summary>
@@ -325,6 +326,12 @@ namespace LibDmd.Frame
 					: new BmpFrame(ImageUtil.ConvertFromRgb565(Dimensions, Data));
 			}
 		}
+#else
+		// Cross-platform core: bitmap conversion isn't ported. Stubs keep the signatures
+		// RenderGraph references; they are never reached (no bitmap destination is wired up).
+		public BmpFrame ConvertGrayToBmp(Color[] palette) => throw new NotSupportedException("Bitmap frames are not supported in LibDmd.Core.");
+		public BmpFrame ConvertRgbToBmp() => throw new NotSupportedException("Bitmap frames are not supported in LibDmd.Core.");
+#endif
 
 		/// <summary>
 		/// Converts a grayscale frame to RGB24.
@@ -472,12 +479,19 @@ namespace LibDmd.Frame
 					}
 				}
 
+#if !LIBDMD_CORE
 				// otherwise, convert to bitmap, resize, convert back.
 				var bmp = ImageUtil.ConvertFrom(BitLength, Dimensions, Data, 0, 1, 1);
 				var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertTo(BitLength, transformedBmp);
 
 				return Update(targetDim, transformedFrame, BitLength);
+#else
+				// Cross-platform core: bitmap-based arbitrary resize isn't ported yet. Center/pad
+				// is handled above; for a genuine down-scale, return unchanged (matched sizes are
+				// expected in the Phase-0 pipeline).
+				return this;
+#endif
 			}
 		}
 
@@ -497,11 +511,16 @@ namespace LibDmd.Frame
 					return this;
 				}
 
+#if !LIBDMD_CORE
 				// resize
 				var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
 				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
 				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+#else
+				// Cross-platform core: bitmap-based resize isn't ported yet (matched sizes expected).
+				return this;
+#endif
 			}
 		}
 
@@ -520,11 +539,16 @@ namespace LibDmd.Frame
 					return this;
 				}
 
+#if !LIBDMD_CORE
 				// resize
 				var bmp = ImageUtil.ConvertFromRgb565(Dimensions, Data);
 				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertToRgb565(transformedBmp);
 				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 16);
+#else
+				// Cross-platform core: bitmap-based resize isn't ported yet (matched sizes expected).
+				return this;
+#endif
 			}
 		}
 
