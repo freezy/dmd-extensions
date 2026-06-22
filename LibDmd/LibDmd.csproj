@@ -485,6 +485,7 @@
     </Compile>
     <Compile Include="Common\VirtualDisplay.cs" />
     <Compile Include="DmdDevice\AlphaNumeric.cs" />
+    <Compile Include="DmdDevice\PluginConfig.cs" />
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
     <Compile Include="Common\HeatShrink\HeatShrinkDecoder.cs" />
@@ -492,6 +493,9 @@
     <Compile Include="Common\HeatShrink\OutputInfo.cs" />
     <Compile Include="Common\HeatShrink\Result.cs" />
     <Compile Include="Common\ImageUtil.cs" />
+    <Compile Include="Common\ImageUtil.Portable.cs" />
+    <Compile Include="Common\ScalerMode.cs" />
+    <Compile Include="Common\WrongFormatException.cs" />
     <Compile Include="Common\InteropUtil.cs" />
     <Compile Include="Common\Profiler.cs" />
     <Compile Include="Common\TransformationUtil.cs" />

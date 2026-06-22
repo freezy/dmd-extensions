@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+#if !LIBDMD_CORE
 using System.Drawing.Imaging;
+#endif
 using System.IO;
 using System.Windows.Media;
 using LibDmd.Common;
@@ -407,6 +409,7 @@ namespace LibDmd.Converter.Vni
 			return $"{Name}, {Frames.Length} frames";
 		}
 
+#if !LIBDMD_CORE
 		public void Dump(string path, Mapping mapping, Palette[] palettes)
 		{
 			var i = 0;
@@ -419,6 +422,7 @@ namespace LibDmd.Converter.Vni
 				i++;
 			}
 		}
+#endif
 	}
 
 	public enum AnimationEditMode

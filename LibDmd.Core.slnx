@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LibDmd.Core.Harness/LibDmd.Core.Harness.csproj" />
+  <Project Path="LibDmd.Core/LibDmd.Core.csproj" />
+</Solution>

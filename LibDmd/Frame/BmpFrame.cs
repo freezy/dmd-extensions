@@ -1,15 +1,20 @@
-﻿using System;
+using System;
+#if !LIBDMD_CORE
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media.Imaging;
+#endif
 using LibDmd.Common;
 using LibDmd.Output;
+#if !LIBDMD_CORE
 using Point = System.Drawing.Point;
 using ResizeMode = LibDmd.Input.ResizeMode;
+#endif
 
 namespace LibDmd.Frame
 {
+#if !LIBDMD_CORE
 	public class BmpFrame : BaseFrame, ICloneable
 	{
 		public BitmapSource Bitmap;
@@ -145,4 +150,32 @@ namespace LibDmd.Frame
 
 		public override string ToString() => ConvertToRgb24().ToString();
 	}
+#else
+	/// <summary>
+	/// Cross-platform (LibDmd.Core) compile-stub for <see cref="BmpFrame"/>.
+	///
+	/// The WPF/<c>System.Drawing</c> bitmap pipeline isn't ported. No core source or
+	/// destination implements <c>IBitmapSource</c>/<c>IBitmapDestination</c>, so the
+	/// RenderGraph branches that would call these methods are dead (the <c>as</c> casts
+	/// are always null). The signatures are kept so RenderGraph compiles unchanged; the
+	/// bodies throw to make any accidental use obvious.
+	/// </summary>
+	public class BmpFrame : BaseFrame, ICloneable
+	{
+		private const string NotSupported = "Bitmap frames are not supported in LibDmd.Core (no bitmap source/destination is wired up).";
+
+		public DmdFrame ConvertToRgb24() => throw new NotSupportedException(NotSupported);
+		public DmdFrame ConvertToRgb565() => throw new NotSupportedException(NotSupported);
+		public DmdFrame ConvertToGray2() => throw new NotSupportedException(NotSupported);
+		public DmdFrame ConvertToGray4() => throw new NotSupportedException(NotSupported);
+
+		public BmpFrame Transform(RenderGraph renderGraph, IFixedSizeDestination fixedDest, IMultiSizeDestination multiDest)
+			=> throw new NotSupportedException(NotSupported);
+
+		public BmpFrame TransformHdScaling(IFixedSizeDestination fixedDest, ScalerMode scalerMode)
+			=> throw new NotSupportedException(NotSupported);
+
+		public object Clone() => this;
+	}
+#endif
 }

@@ -1,0 +1,66 @@
+name: LibDmd.Core NuGet
+
+# Builds and (on tags) publishes the LibDmd.Core managed package plus the per-platform
+# native packages (libserum / libzedmd), mirroring vpinball/pinmame-dotnet.
+
+on:
+  push:
+    tags: [ "core-v*" ]
+  pull_request:
+    paths:
+      - "LibDmd.Core/**"
+      - "native/nuget/**"
+      - "build-nuget/**"
+      - ".github/workflows/build-core-nuget.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version (e.g. 0.1.0). Leave blank for a CI dev version."
+        required: false
+
+env:
+  SERUM_VERSION: "2.5.2"
+  ZEDMD_VERSION: "0.11.0"
+
+jobs:
+  pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/core-v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/core-v}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch native binaries
+        shell: bash
+        run: ./build-nuget/fetch-natives.sh
+
+      - name: Pack
+        shell: pwsh
+        run: ./build-nuget/pack.ps1 -Version "${{ steps.ver.outputs.version }}" -SerumVersion "$env:SERUM_VERSION" -ZedmdVersion "$env:ZEDMD_VERSION" -SkipFetch
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libdmd-core-nuget-${{ steps.ver.outputs.version }}
+          path: artifacts/*.nupkg
+
+      - name: Push to NuGet.org
+        if: startsWith(github.ref, 'refs/tags/core-v')
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }

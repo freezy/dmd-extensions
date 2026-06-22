@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using LibDmd.Common;
-using LibDmd.Input.FileSystem;
 using NLog;
 
 namespace LibDmd.Converter.Vni

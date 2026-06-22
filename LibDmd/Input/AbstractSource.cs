@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+#if !LIBDMD_CORE
 using System.Security.Principal;
+#endif
 using NLog;
 
 namespace LibDmd.Input
@@ -11,10 +13,11 @@ namespace LibDmd.Input
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+#if !LIBDMD_CORE
 		// Set SeDebugPrivilege in our process token, to allow debugger
 		// level access to another process's memory space.  This is used
-		// for input classes that read DMD data directly from memory in 
-		// the target game process, such as Pinball Arcade DX11 and 
+		// for input classes that read DMD data directly from memory in
+		// the target game process, such as Pinball Arcade DX11 and
 		// Pinball FX3.
 		protected void SetDebugPrivilege()
 		{
@@ -155,6 +158,7 @@ namespace LibDmd.Input
 		protected const UInt32 WAIT_ABANDONED = 0x00000080;
 		protected const UInt32 WAIT_OBJECT_0 = 0x00000000;
 		protected const UInt32 WAIT_TIMEOUT = 0x00000102;
+#endif
 	}
 
 	public class DebugPrivilegeException : Exception

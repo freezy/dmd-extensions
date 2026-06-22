@@ -338,6 +338,7 @@ namespace LibDmd.Converter.Vni
 			_activeFrameSeq = null;
 		}
 
+#if !LIBDMD_CORE
 		public void DumpAnimations(string path)
 		{
 			foreach (var offset in _palFile.Mappings.Keys) {
@@ -351,5 +352,6 @@ namespace LibDmd.Converter.Vni
 				anim.Dump(path, mapping, _palFile.Palettes);
 			}
 		}
+#endif
 	}
 }

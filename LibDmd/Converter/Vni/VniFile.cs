@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using LibDmd.Common;
 using LibDmd.Frame;
-using LibDmd.Input.FileSystem;
 
 namespace LibDmd.Converter.Vni
 {
