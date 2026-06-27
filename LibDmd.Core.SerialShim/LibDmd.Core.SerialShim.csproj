@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Drop-in replacement for System.IO.Ports under Unity's Mono runtime, which cannot load the real
+    (net6.0+) System.IO.Ports implementation ("TypeLoadException: Invalid type
+    System.IO.Ports.SerialPort"). The assembly is named System.IO.Ports and exposes the small
+    SerialPort surface LibDmd's Pixelcade / PinDMD3 drivers use, backed by the native libserialport
+    (already shipped with dmd-extensions). LibDmd.Core compiles against the real reference assembly;
+    at runtime Unity loads only this shim from Plugins, so the drivers bind to it transparently.
+
+    netstandard2.0 keeps it loadable by Mono. AssemblyVersion matches the real package so the
+    reference in LibDmd.Core resolves.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>System.IO.Ports</AssemblyName>
+    <RootNamespace>System.IO.Ports</RootNamespace>
+    <AssemblyVersion>8.0.0.0</AssemblyVersion>
+    <FileVersion>8.0.0.0</FileVersion>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- This is a deliberate substitution of a framework assembly name. -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+  </PropertyGroup>
+
+</Project>
