@@ -59,10 +59,12 @@ namespace LibDmd.Output.Virtual.Dmd
 	{
 		private const byte DefaultAlpha = 255;
 		private readonly Dimensions _size;
+		private readonly Func<string, IntPtr> _loadGlFunction;
 		private VirtualDmdRenderStyle _style;
 		private bool _sourceTextureCreated;
 		private bool _glassTextureCreated;
 		private bool _framebuffersCreated;
+		private bool _glFunctionsAvailable;
 		private bool _dmdRendererAvailable;
 		private bool _dmdProgramInvalid;
 		private byte[] _uploadBuffer;
@@ -94,6 +96,26 @@ namespace LibDmd.Output.Virtual.Dmd
 		private int _dmdGlassTexScaleUniform;
 		private int _dmdGlassColorUniform;
 
+		private GlBegin _glBegin;
+		private GlBindTexture _glBindTexture;
+		private GlClear _glClear;
+		private GlClearColor _glClearColor;
+		private GlColor3f _glColor3f;
+		private GlDisable _glDisable;
+		private GlEnable _glEnable;
+		private GlEnd _glEnd;
+		private GlGenTextures _glGenTextures;
+		private GlLoadIdentity _glLoadIdentity;
+		private GlMatrixMode _glMatrixMode;
+		private GlOrtho _glOrtho;
+		private GlPixelStorei _glPixelStorei;
+		private GlTexCoord2f _glTexCoord2f;
+		private GlTexImage2DIntPtr _glTexImage2DIntPtr;
+		private GlTexImage2DBytes _glTexImage2DBytes;
+		private GlTexParameteri _glTexParameteri;
+		private GlTexSubImage2D _glTexSubImage2D;
+		private GlVertex2f _glVertex2f;
+		private GlViewport _glViewport;
 		private GlActiveTexture _glActiveTexture;
 		private GlAttachShader _glAttachShader;
 		private GlBindFramebuffer _glBindFramebuffer;
@@ -126,11 +148,18 @@ namespace LibDmd.Output.Virtual.Dmd
 		}
 
 		public VirtualDmdOpenGlPipeline(Dimensions size, VirtualDmdRenderStyle style)
+			: this(size, style, null)
+		{
+		}
+
+		public VirtualDmdOpenGlPipeline(Dimensions size, VirtualDmdRenderStyle style, Func<string, IntPtr> loadGlFunction)
 		{
 			_size = size;
 			_style = style ?? VirtualDmdRenderStyle.Default;
+			_loadGlFunction = loadGlFunction;
 			try {
 				LoadRendererFunctions();
+				_glFunctionsAvailable = true;
 				_blur2Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_2(texture, uv, direction).rgb, 1.0); }");
 				_blur12Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_12(texture, uv, direction).rgb, 1.0); }");
 
@@ -144,6 +173,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				_dmdRendererAvailable = true;
 				Logger.Info("[DMD] Shared dmdext OpenGL renderer initialized.");
 			} catch (Exception exception) {
+				_glFunctionsAvailable = _glViewport != null;
 				_dmdRendererAvailable = false;
 				Logger.Warn(exception, "[DMD] Shared dmdext OpenGL renderer unavailable; using immediate dot renderer.");
 			}
@@ -151,6 +181,10 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Render(byte[] rgba, int clientWidth, int clientHeight, float offsetX, float offsetY, float renderWidth, float renderHeight)
 		{
+			if (!_glFunctionsAvailable) {
+				return;
+			}
+
 			PrepareViewport(clientWidth, clientHeight);
 			if (_dmdRendererAvailable) {
 				RenderDmdExtPipeline(rgba, clientWidth, clientHeight, offsetX, offsetY, renderWidth, renderHeight);
@@ -209,12 +243,12 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void PrepareViewport(int clientWidth, int clientHeight)
 		{
-			glViewport(0, 0, clientWidth, clientHeight);
-			glClearColor(0f, 0f, 0f, 1f);
-			glClear(GL_COLOR_BUFFER_BIT);
+			_glViewport(0, 0, clientWidth, clientHeight);
+			_glClearColor(0f, 0f, 0f, 1f);
+			_glClear(GL_COLOR_BUFFER_BIT);
 			SetOrthographicProjection(clientWidth, clientHeight);
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_TEXTURE_2D);
+			_glDisable(GL_DEPTH_TEST);
+			_glDisable(GL_TEXTURE_2D);
 		}
 
 		private void RenderDmdExtPipeline(byte[] rgba, int clientWidth, int clientHeight, float offsetX, float offsetY, float renderWidth, float renderHeight)
@@ -262,7 +296,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			_glUseProgram(0);
 			_glActiveTexture(GL_TEXTURE0);
-			glDisable(GL_TEXTURE_2D);
+			_glDisable(GL_TEXTURE_2D);
 		}
 
 		private void EnsureDmdProgram()
@@ -292,7 +326,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			_glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 			SetOrthographicProjection(_size.Width, _size.Height);
-			glClear(GL_COLOR_BUFFER_BIT);
+			_glClear(GL_COLOR_BUFFER_BIT);
 			_glUseProgram(program);
 			BindTextureUnit(0, inputTexture);
 			_glUniform1i(textureUniform, 0);
@@ -319,13 +353,13 @@ namespace LibDmd.Output.Virtual.Dmd
 		private uint CreateRenderTexture()
 		{
 			var textures = new uint[1];
-			glGenTextures(1, textures);
-			glBindTexture(GL_TEXTURE_2D, textures[0]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _size.Width, _size.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, IntPtr.Zero);
+			_glGenTextures(1, textures);
+			_glBindTexture(GL_TEXTURE_2D, textures[0]);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+			_glTexImage2DIntPtr(GL_TEXTURE_2D, 0, GL_RGBA, _size.Width, _size.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, IntPtr.Zero);
 			return textures[0];
 		}
 
@@ -347,22 +381,22 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			if (_sourceTexture == 0) {
 				var textures = new uint[1];
-				glGenTextures(1, textures);
+				_glGenTextures(1, textures);
 				_sourceTexture = textures[0];
 			}
 
 			var upload = GetOpenGlUploadBuffer(rgba);
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glBindTexture(GL_TEXTURE_2D, _sourceTexture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_NEAREST);
+			_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			_glBindTexture(GL_TEXTURE_2D, _sourceTexture);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_NEAREST);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_NEAREST);
 
 			if (_sourceTextureCreated) {
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _size.Width, _size.Height, GL_RGBA, GL_UNSIGNED_BYTE, upload);
+				_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _size.Width, _size.Height, GL_RGBA, GL_UNSIGNED_BYTE, upload);
 			} else {
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _size.Width, _size.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, upload);
+				_glTexImage2DBytes(GL_TEXTURE_2D, 0, GL_RGBA, _size.Width, _size.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, upload);
 				_sourceTextureCreated = true;
 			}
 		}
@@ -375,21 +409,21 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_glassTexture == 0) {
 				var textures = new uint[1];
-				glGenTextures(1, textures);
+				_glGenTextures(1, textures);
 				_glassTexture = textures[0];
 			}
 
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glBindTexture(GL_TEXTURE_2D, _glassTexture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+			_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			_glBindTexture(GL_TEXTURE_2D, _glassTexture);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+			_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
 			if (_glassTextureCreated) {
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _glassWidth, _glassHeight, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
+				_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _glassWidth, _glassHeight, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
 			} else {
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _glassWidth, _glassHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
+				_glTexImage2DBytes(GL_TEXTURE_2D, 0, GL_RGBA, _glassWidth, _glassHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
 				_glassTextureCreated = true;
 			}
 		}
@@ -411,44 +445,44 @@ namespace LibDmd.Output.Virtual.Dmd
 		private void BindTextureUnit(uint unit, uint texture)
 		{
 			_glActiveTexture(GL_TEXTURE0 + unit);
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, texture);
+			_glEnable(GL_TEXTURE_2D);
+			_glBindTexture(GL_TEXTURE_2D, texture);
 		}
 
-		private static void DrawDmdQuad(float x, float y, float width, float height)
+		private void DrawDmdQuad(float x, float y, float width, float height)
 		{
-			glBegin(GL_QUADS);
-			glTexCoord2f(0f, 1f);
-			glVertex2f(x, y);
-			glTexCoord2f(0f, 0f);
-			glVertex2f(x, y + height);
-			glTexCoord2f(1f, 0f);
-			glVertex2f(x + width, y + height);
-			glTexCoord2f(1f, 1f);
-			glVertex2f(x + width, y);
-			glEnd();
+			_glBegin(GL_QUADS);
+			_glTexCoord2f(0f, 1f);
+			_glVertex2f(x, y);
+			_glTexCoord2f(0f, 0f);
+			_glVertex2f(x, y + height);
+			_glTexCoord2f(1f, 0f);
+			_glVertex2f(x + width, y + height);
+			_glTexCoord2f(1f, 1f);
+			_glVertex2f(x + width, y);
+			_glEnd();
 		}
 
-		private static void SetOrthographicProjection(int width, int height)
+		private void SetOrthographicProjection(int width, int height)
 		{
-			glViewport(0, 0, width, height);
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			glOrtho(0, width, height, 0, -1, 1);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
+			_glViewport(0, 0, width, height);
+			_glMatrixMode(GL_PROJECTION);
+			_glLoadIdentity();
+			_glOrtho(0, width, height, 0, -1, 1);
+			_glMatrixMode(GL_MODELVIEW);
+			_glLoadIdentity();
 		}
 
 		private void RenderImmediate(byte[] rgba, float scale, float offsetX, float offsetY)
 		{
-			glDisable(GL_TEXTURE_2D);
+			_glDisable(GL_TEXTURE_2D);
 			var dotSize = Math.Max(1f, scale * 0.72f);
 			var dotPad = (scale - dotSize) * 0.5f;
 			var unlitR = 0.028f;
 			var unlitG = 0.008f;
 			var unlitB = 0f;
 
-			glBegin(GL_QUADS);
+			_glBegin(GL_QUADS);
 			for (var y = 0; y < _size.Height; y++) {
 				for (var x = 0; x < _size.Width; x++) {
 					var pixel = (y * _size.Width + x) * 4;
@@ -465,7 +499,7 @@ namespace LibDmd.Output.Virtual.Dmd
 					DrawDot(offsetX + x * scale + dotPad, offsetY + y * scale + dotPad, dotSize, r, g, b);
 				}
 			}
-			glEnd();
+			_glEnd();
 		}
 
 		private uint CreateProgram(string vertexSource, string fragmentSource)
@@ -517,6 +551,26 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void LoadRendererFunctions()
 		{
+			_glBegin = LoadGlFunction<GlBegin>("glBegin");
+			_glBindTexture = LoadGlFunction<GlBindTexture>("glBindTexture");
+			_glClear = LoadGlFunction<GlClear>("glClear");
+			_glClearColor = LoadGlFunction<GlClearColor>("glClearColor");
+			_glColor3f = LoadGlFunction<GlColor3f>("glColor3f");
+			_glDisable = LoadGlFunction<GlDisable>("glDisable");
+			_glEnable = LoadGlFunction<GlEnable>("glEnable");
+			_glEnd = LoadGlFunction<GlEnd>("glEnd");
+			_glGenTextures = LoadGlFunction<GlGenTextures>("glGenTextures");
+			_glLoadIdentity = LoadGlFunction<GlLoadIdentity>("glLoadIdentity");
+			_glMatrixMode = LoadGlFunction<GlMatrixMode>("glMatrixMode");
+			_glOrtho = LoadGlFunction<GlOrtho>("glOrtho");
+			_glPixelStorei = LoadGlFunction<GlPixelStorei>("glPixelStorei");
+			_glTexCoord2f = LoadGlFunction<GlTexCoord2f>("glTexCoord2f");
+			_glTexImage2DIntPtr = LoadGlFunction<GlTexImage2DIntPtr>("glTexImage2D");
+			_glTexImage2DBytes = LoadGlFunction<GlTexImage2DBytes>("glTexImage2D");
+			_glTexParameteri = LoadGlFunction<GlTexParameteri>("glTexParameteri");
+			_glTexSubImage2D = LoadGlFunction<GlTexSubImage2D>("glTexSubImage2D");
+			_glVertex2f = LoadGlFunction<GlVertex2f>("glVertex2f");
+			_glViewport = LoadGlFunction<GlViewport>("glViewport");
 			_glActiveTexture = LoadGlFunction<GlActiveTexture>("glActiveTexture");
 			_glAttachShader = LoadGlFunction<GlAttachShader>("glAttachShader");
 			_glBindFramebuffer = LoadGlFunction<GlBindFramebuffer>("glBindFramebuffer");
@@ -542,26 +596,41 @@ namespace LibDmd.Output.Virtual.Dmd
 			_glUseProgram = LoadGlFunction<GlUseProgram>("glUseProgram");
 		}
 
-		private static T LoadGlFunction<T>(string name) where T : Delegate
+		private T LoadGlFunction<T>(string name) where T : Delegate
 		{
-			var address = wglGetProcAddress(name);
-			if (address == IntPtr.Zero || address == new IntPtr(1) || address == new IntPtr(2) || address == new IntPtr(3) || address == new IntPtr(-1)) {
+			var address = _loadGlFunction?.Invoke(name) ?? IntPtr.Zero;
+			if (_loadGlFunction != null) {
+				if (IsInvalidGlAddress(address)) {
+					throw new InvalidOperationException($"OpenGL function {name} is unavailable.");
+				}
+				return Marshal.GetDelegateForFunctionPointer<T>(address);
+			}
+
+			if (IsInvalidGlAddress(address)) {
+				address = wglGetProcAddress(name);
+			}
+			if (IsInvalidGlAddress(address)) {
 				var module = LoadLibrary("opengl32.dll");
 				address = GetProcAddress(module, name);
 			}
-			if (address == IntPtr.Zero) {
+			if (IsInvalidGlAddress(address)) {
 				throw new InvalidOperationException($"OpenGL function {name} is unavailable.");
 			}
 			return Marshal.GetDelegateForFunctionPointer<T>(address);
 		}
 
-		private static void DrawDot(float x, float y, float size, float r, float g, float b)
+		private static bool IsInvalidGlAddress(IntPtr address)
 		{
-			glColor3f(r, g, b);
-			glVertex2f(x, y);
-			glVertex2f(x + size, y);
-			glVertex2f(x + size, y + size);
-			glVertex2f(x, y + size);
+			return address == IntPtr.Zero || address == new IntPtr(1) || address == new IntPtr(2) || address == new IntPtr(3) || address == new IntPtr(-1);
+		}
+
+		private void DrawDot(float x, float y, float size, float r, float g, float b)
+		{
+			_glColor3f(r, g, b);
+			_glVertex2f(x, y);
+			_glVertex2f(x + size, y);
+			_glVertex2f(x + size, y + size);
+			_glVertex2f(x, y + size);
 		}
 
 		private const string PassthroughVertexShader = @"
@@ -741,6 +810,26 @@ void main()
 		private delegate void GlUniform3f(int location, float value0, float value1, float value2);
 		private delegate void GlUniform4f(int location, float value0, float value1, float value2, float value3);
 		private delegate void GlUseProgram(uint program);
+		private delegate void GlBegin(uint mode);
+		private delegate void GlBindTexture(uint target, uint texture);
+		private delegate void GlClear(uint mask);
+		private delegate void GlClearColor(float red, float green, float blue, float alpha);
+		private delegate void GlColor3f(float red, float green, float blue);
+		private delegate void GlDisable(uint cap);
+		private delegate void GlEnable(uint cap);
+		private delegate void GlEnd();
+		private delegate void GlGenTextures(int n, uint[] textures);
+		private delegate void GlLoadIdentity();
+		private delegate void GlMatrixMode(uint mode);
+		private delegate void GlOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
+		private delegate void GlPixelStorei(uint pname, int param);
+		private delegate void GlTexCoord2f(float s, float t);
+		private delegate void GlTexImage2DIntPtr(uint target, int level, uint internalFormat, int width, int height, int border, uint format, uint type, IntPtr pixels);
+		private delegate void GlTexImage2DBytes(uint target, int level, uint internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
+		private delegate void GlTexParameteri(uint target, uint pname, int param);
+		private delegate void GlTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, byte[] pixels);
+		private delegate void GlVertex2f(float x, float y);
+		private delegate void GlViewport(int x, int y, int width, int height);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		private static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
@@ -750,65 +839,6 @@ void main()
 
 		[DllImport("opengl32.dll")]
 		private static extern IntPtr wglGetProcAddress(string lpszProc);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glBegin(uint mode);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glBindTexture(uint target, uint texture);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glClear(uint mask);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glClearColor(float red, float green, float blue, float alpha);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glColor3f(float red, float green, float blue);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glDisable(uint cap);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glEnable(uint cap);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glEnd();
-
-		[DllImport("opengl32.dll")]
-		private static extern void glGenTextures(int n, uint[] textures);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glLoadIdentity();
-
-		[DllImport("opengl32.dll")]
-		private static extern void glMatrixMode(uint mode);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glPixelStorei(uint pname, int param);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glTexCoord2f(float s, float t);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glTexImage2D(uint target, int level, uint internalFormat, int width, int height, int border, uint format, uint type, IntPtr pixels);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glTexImage2D(uint target, int level, uint internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glTexParameteri(uint target, uint pname, int param);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glTexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, byte[] pixels);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glVertex2f(float x, float y);
-
-		[DllImport("opengl32.dll")]
-		private static extern void glViewport(int x, int y, int width, int height);
 	}
 }
+
