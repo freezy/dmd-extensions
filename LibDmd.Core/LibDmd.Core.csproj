@@ -107,6 +107,9 @@
     <Compile Include="..\LibDmd\Output\ZeDMD\*.cs" LinkBase="LibDmd\Output\ZeDMD" />
     <Compile Include="..\LibDmd\Output\PinDmd3\*.cs" LinkBase="LibDmd\Output\PinDmd3" />
     <Compile Include="..\LibDmd\Output\Pixelcade\*.cs" LinkBase="LibDmd\Output\Pixelcade" />
+    <!-- PIN2DMD: shared frame/palette logic; the libusb-1.0 USB transport lives in this project's
+         own Output\Pin2Dmd\Pin2DmdBase.Usb3.cs (legacy LibUsbDotNet 2.x path is #if !LIBDMD_CORE). -->
+    <Compile Include="..\LibDmd\Output\Pin2Dmd\*.cs" LinkBase="LibDmd\Output\Pin2Dmd" />
 
     <!--
       The full INI configuration layer (DmdDevice/Configuration.cs, IConfiguration.cs) is
