@@ -14,12 +14,15 @@ namespace LibDmd.Output.NativeWindow
 		private VirtualDmdOpenGlPipeline _pipeline;
 		private bool _disposed;
 
-		public NativeOpenGlRenderer(IntPtr hwnd, Dimensions size)
+		public NativeOpenGlRenderer(IntPtr hwnd, Dimensions size, VirtualDmdRenderStyle style)
 		{
 			_hwnd = hwnd;
 			_size = size;
+			_style = style ?? VirtualDmdRenderStyle.Default;
 			Initialize();
 		}
+
+		private VirtualDmdRenderStyle _style;
 
 		public void Render(byte[] rgba)
 		{
@@ -40,8 +43,14 @@ namespace LibDmd.Output.NativeWindow
 			var offsetY = (clientHeight - renderHeight) * 0.5f;
 
 			wglMakeCurrent(_hdc, _hglrc);
+			_pipeline.SetStyle(_style);
 			_pipeline.Render(rgba, clientWidth, clientHeight, offsetX, offsetY, renderWidth, renderHeight);
 			SwapBuffers(_hdc);
+		}
+
+		public void SetStyle(VirtualDmdRenderStyle style)
+		{
+			_style = style ?? VirtualDmdRenderStyle.Default;
 		}
 
 		public void Dispose()
@@ -92,7 +101,7 @@ namespace LibDmd.Output.NativeWindow
 				throw new InvalidOperationException($"Could not create native DMD OpenGL context. Win32 error: {Marshal.GetLastWin32Error()}.");
 			}
 
-			_pipeline = new VirtualDmdOpenGlPipeline(_size);
+			_pipeline = new VirtualDmdOpenGlPipeline(_size, _style);
 		}
 
 		private const uint PFD_DOUBLEBUFFER = 0x00000001;
