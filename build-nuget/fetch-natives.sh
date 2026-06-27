@@ -89,7 +89,24 @@ for rid in $RIDS; do
       ;;
   esac
 
+  # Vendored extra natives: libusb-1.0 (PIN2DMD / PinDMD2) and libftd2xx (PinDMD1) don't have a
+  # single canonical upstream release like serum/zedmd, so they're sourced from a vendored drop.
+  # Place the per-OS binaries under native/vendor/<rid>/ using the resolver's canonical names
+  # (libusb-1.0.dll / libusb-1.0.0.dylib / libusb-1.0.so.0; ftd2xx.dll / libftd2xx.dylib /
+  # libftd2xx.so) and they get packaged here. See native/vendor/README.md.
+  vendor="$ROOT/native/vendor/$rid"
+  if [ -d "$vendor" ]; then
+    echo "[$rid] staging vendored natives from native/vendor/$rid"
+    copy_libs "$vendor" "$dest"
+  fi
+
   echo "[$rid] staged: $(cd "$dest" && ls | tr '\n' ' ')"
+
+  # Sanity: libusb-1.0 is required by PIN2DMD / PinDMD2 and is vendored (not downloaded), so warn
+  # loudly if it didn't get staged — otherwise the package ships fine but fails at the consumer's
+  # first P/Invoke with DllNotFoundException. Non-fatal: serum/zedmd-only packages are still valid.
+  ls "$dest"/libusb-1.0.* >/dev/null 2>&1 \
+    || echo "[$rid] WARNING: libusb-1.0 not staged — PIN2DMD/PinDMD2 will fail at runtime. Drop it under native/vendor/$rid/ (see native/vendor/README.md)."
 done
 
-echo "Done. Native binaries staged under native/nuget/runtimes/ (libserum $SERUM_VERSION, libzedmd $ZEDMD_VERSION)."
+echo "Done. Native binaries staged under native/nuget/runtimes/ (libserum $SERUM_VERSION, libzedmd $ZEDMD_VERSION; plus any native/vendor/ drops)."

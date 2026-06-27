@@ -33,7 +33,7 @@ namespace LibDmd.Native
 		/// appears (minus the <c>64</c> suffix and extension) in the <c>[DllImport]</c>
 		/// attributes.
 		/// </summary>
-		private static readonly string[] KnownLibraries = { "serum", "zedmd" };
+		private static readonly string[] KnownLibraries = { "serum", "zedmd", "ftd2xx" };
 
 		/// <summary>
 		/// Installs the import resolver. Safe to call multiple times; only the first
