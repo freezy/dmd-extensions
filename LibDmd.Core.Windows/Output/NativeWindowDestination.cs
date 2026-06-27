@@ -14,7 +14,8 @@ namespace LibDmd.Output.NativeWindow
 		private readonly byte[] _rgba;
 		private readonly INativeWindowBackend _backend;
 		private Color _color = Color.FromRgb(255, 88, 0);
-		private bool _disposed;
+		// Written on the main thread (Dispose), read on the worker thread (RenderXxx).
+		private volatile bool _disposed;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -198,13 +199,14 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
+			var color = _color; // single read; SetColor may run on another thread (color rotation)
 			for (var i = 0; i < _size.Surface; i++) {
 				var intensity = frame.Data[i] / (float)maxValue;
 				WriteRgba(
 					i,
-					(byte)(_color.R * intensity),
-					(byte)(_color.G * intensity),
-					(byte)(_color.B * intensity));
+					(byte)(color.R * intensity),
+					(byte)(color.G * intensity),
+					(byte)(color.B * intensity));
 			}
 			_backend.Render(_rgba);
 		}
@@ -224,11 +226,10 @@ namespace LibDmd.Output.NativeWindow
 				return new Win32NativeWindowDestination(width, height, windowLeft, windowTop, windowWidth, windowHeight, stayOnTop, renderStyle);
 			}
 
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-				return new SdlNativeWindowDestination(width, height, windowLeft, windowTop, windowWidth, windowHeight, stayOnTop, renderStyle);
-			}
-
-			Logger.Warn($"[DMD] Native DMD window is not supported on {RuntimeInformation.OSDescription}.");
+			// On macOS/Linux this assembly's desktop (immediate-mode) GL pipeline doesn't apply; the
+			// cross-platform window is the host-pumped GL-ES backend in LibDmd.Core.Sdl, which the
+			// NativeDmdWindow factory selects directly there. This self-driven backend is Windows-only.
+			Logger.Warn($"[DMD] Native DMD window is not supported on {RuntimeInformation.OSDescription} via LibDmd.Core.Windows; use LibDmd.Core.Sdl.");
 			return new NullNativeWindowBackend(width, height, windowLeft, windowTop, windowWidth, windowHeight, stayOnTop);
 		}
 	}

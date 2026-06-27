@@ -47,11 +47,13 @@ namespace LibDmd.Output.NativeWindow
 		private Color _color = Color.FromRgb(255, 88, 0);
 
 		private IntPtr _window;
+		private uint _windowId;
 		private IntPtr _glContext;
 		private IntPtr _eventBuffer;
 		private GlesDmdPipeline _pipeline;
 		private bool _initialized;
-		private bool _disposed;
+		// Written on the main thread (Dispose), read on the worker thread (RenderGrayX/RenderRgbX).
+		private volatile bool _disposed;
 
 		// Cached geometry (read on the main thread in Pump, surfaced to the bridge).
 		private int _windowLeft;
@@ -281,6 +283,17 @@ namespace LibDmd.Output.NativeWindow
 		{
 			while (Sdl.SDL_PollEvent(_eventBuffer) != 0) {
 				var type = (uint)Marshal.ReadInt32(_eventBuffer, 0);
+
+				// SDL has a single global event queue. If the host (Unity) or another plugin also uses
+				// SDL, mouse events from their windows must not drive our borderless-drag. Only act on
+				// mouse events addressed to our window; everything else is left untouched.
+				if (type == Sdl.SDL_MOUSEBUTTONDOWN || type == Sdl.SDL_MOUSEBUTTONUP || type == Sdl.SDL_MOUSEMOTION) {
+					var windowId = (uint)Marshal.ReadInt32(_eventBuffer, Sdl.EventOffsetWindowId);
+					if (windowId != _windowId) {
+						continue;
+					}
+				}
+
 				switch (type) {
 					case Sdl.SDL_MOUSEBUTTONDOWN:
 						if (Marshal.ReadByte(_eventBuffer, Sdl.EventOffsetButton) == Sdl.SDL_BUTTON_LEFT) {
@@ -336,6 +349,7 @@ namespace LibDmd.Output.NativeWindow
 			if (_window == IntPtr.Zero) {
 				throw new InvalidOperationException($"SDL_CreateWindow failed: {Sdl.GetError()}");
 			}
+			_windowId = Sdl.SDL_GetWindowID(_window);
 
 			var prevContext = Sdl.SDL_GL_GetCurrentContext();
 			var prevWindow = Sdl.SDL_GL_GetCurrentWindow();

@@ -153,7 +153,11 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 			if (_dmdProgram != 0) {
+				// Style changed: drop the old program before building the replacement, otherwise it
+				// leaks for the lifetime of the GL context (one per style reload).
 				_glUseProgram(0);
+				_glDeleteProgram(_dmdProgram);
+				_dmdProgram = 0;
 			}
 			_dmdProgram = CreateProgram(VertexShader, BuildDmdFragment(_style));
 			_dmdTexU = _getUniform(_dmdProgram, "dmdTexture");
@@ -289,6 +293,9 @@ namespace LibDmd.Output.NativeWindow
 			}
 		}
 
+		// Reused so the per-frame composite doesn't allocate (runs at the host render cadence).
+		private readonly float[] _letterboxRect = new float[4];
+
 		private float[] ComputeLetterbox(int w, int h)
 		{
 			float dmdAspect = (float)_size.Width / _size.Height;
@@ -308,7 +315,11 @@ namespace LibDmd.Output.NativeWindow
 			// pixel (y down) -> NDC (y up); rect = (x0, yBottom, x1, yTop) to match quad pos.y: 0=bottom,1=top.
 			float Nx(float px) => px / w * 2f - 1f;
 			float Ny(float py) => 1f - py / h * 2f;
-			return new[] { Nx(left), Ny(bottom), Nx(right), Ny(top) };
+			_letterboxRect[0] = Nx(left);
+			_letterboxRect[1] = Ny(bottom);
+			_letterboxRect[2] = Nx(right);
+			_letterboxRect[3] = Ny(top);
+			return _letterboxRect;
 		}
 
 		// --- shader build -------------------------------------------------------------------------
@@ -497,9 +508,38 @@ void main() {
 			if (!_ready) {
 				return;
 			}
+			_ready = false;
 			_glUseProgram(0);
+
 			if (_fbosCreated) {
 				_glDeleteFramebuffers(3, new[] { _dotGlowFbo, _backGlowFbo, _tempFbo });
+				_glDeleteTextures(3, new[] { _dotGlowTexture, _backGlowTexture, _tempTexture });
+				_dotGlowFbo = _backGlowFbo = _tempFbo = 0;
+				_dotGlowTexture = _backGlowTexture = _tempTexture = 0;
+				_fbosCreated = false;
+			}
+
+			if (_sourceTexture != 0) {
+				_glDeleteTextures(1, new[] { _sourceTexture });
+				_sourceTexture = 0;
+				_sourceCreated = false;
+			}
+
+			DeleteProgram(ref _blur2Program);
+			DeleteProgram(ref _blur12Program);
+			DeleteProgram(ref _dmdProgram);
+
+			if (_quadVbo != 0) {
+				_glDeleteBuffers(1, new[] { _quadVbo });
+				_quadVbo = 0;
+			}
+		}
+
+		private void DeleteProgram(ref uint program)
+		{
+			if (program != 0) {
+				_glDeleteProgram(program);
+				program = 0;
 			}
 		}
 
@@ -547,6 +587,9 @@ void main() {
 			_glViewport = Load<GlViewport>("glViewport");
 			_glClear = Load<GlClear>("glClear");
 			_glClearColor = Load<GlClearColor>("glClearColor");
+			_glDeleteProgram = Load<GlDeleteProgram>("glDeleteProgram");
+			_glDeleteTextures = Load<GlDeleteTextures>("glDeleteTextures");
+			_glDeleteBuffers = Load<GlDeleteBuffers>("glDeleteBuffers");
 		}
 
 		private T Load<T>(string name) where T : Delegate
@@ -628,6 +671,9 @@ void main() {
 		private delegate void GlViewport(int x, int y, int width, int height);
 		private delegate void GlClear(uint mask);
 		private delegate void GlClearColor(float r, float g, float b, float a);
+		private delegate void GlDeleteProgram(uint program);
+		private delegate void GlDeleteTextures(int n, uint[] textures);
+		private delegate void GlDeleteBuffers(int n, uint[] buffers);
 
 		private GlGenTextures _glGenTextures;
 		private GlBindTexture _glBindTexture;
@@ -669,5 +715,8 @@ void main() {
 		private GlViewport _glViewport;
 		private GlClear _glClear;
 		private GlClearColor _glClearColor;
+		private GlDeleteProgram _glDeleteProgram;
+		private GlDeleteTextures _glDeleteTextures;
+		private GlDeleteBuffers _glDeleteBuffers;
 	}
 }

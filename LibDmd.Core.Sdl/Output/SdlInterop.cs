@@ -58,7 +58,8 @@ namespace LibDmd.Output.NativeWindow
 		public const string SDL_HINT_OPENGL_ES_DRIVER = "SDL_OPENGL_ES_DRIVER";
 		public const string SDL_HINT_VIDEO_HIGHDPI_DISABLED = "SDL_VIDEO_HIGHDPI_DISABLED";
 
-		// Event field offsets (SDL_MouseMotion/Button share x@20, y@24; button@16).
+		// Event field offsets. SDL_MouseMotion/Button events share: windowID@8, button@16, x@20, y@24.
+		public const int EventOffsetWindowId = 8;
 		public const int EventOffsetButton = 16;
 		public const int EventOffsetX = 20;
 		public const int EventOffsetY = 24;
@@ -126,6 +127,9 @@ namespace LibDmd.Output.NativeWindow
 
 		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void SDL_GetWindowPosition(IntPtr window, out int x, out int y);
+
+		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+		public static extern uint SDL_GetWindowID(IntPtr window);
 
 		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void SDL_SetWindowSize(IntPtr window, int w, int h);
