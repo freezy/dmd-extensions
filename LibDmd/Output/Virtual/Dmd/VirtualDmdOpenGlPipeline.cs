@@ -61,14 +61,19 @@ namespace LibDmd.Output.Virtual.Dmd
 		private readonly Dimensions _size;
 		private VirtualDmdRenderStyle _style;
 		private bool _sourceTextureCreated;
+		private bool _glassTextureCreated;
 		private bool _framebuffersCreated;
 		private bool _dmdRendererAvailable;
 		private bool _dmdProgramInvalid;
 		private byte[] _uploadBuffer;
 		private uint _sourceTexture;
+		private uint _glassTexture;
 		private uint _dotGlowTexture;
 		private uint _backGlowTexture;
 		private uint _tempTexture;
+		private byte[] _glassRgba;
+		private int _glassWidth;
+		private int _glassHeight;
 		private uint _dotGlowFramebuffer;
 		private uint _backGlowFramebuffer;
 		private uint _tempFramebuffer;
@@ -166,6 +171,33 @@ namespace LibDmd.Output.Virtual.Dmd
 			_dmdProgramInvalid = true;
 		}
 
+		public void SetGlassTexture(byte[] rgba, int width, int height)
+		{
+			if (rgba == null || width <= 0 || height <= 0) {
+				ClearGlassTexture();
+				return;
+			}
+
+			if (_glassRgba == null || _glassRgba.Length != rgba.Length) {
+				_glassRgba = new byte[rgba.Length];
+			}
+
+			Buffer.BlockCopy(rgba, 0, _glassRgba, 0, rgba.Length);
+			_glassWidth = width;
+			_glassHeight = height;
+			_glassTextureCreated = false;
+			_dmdProgramInvalid = true;
+		}
+
+		public void ClearGlassTexture()
+		{
+			_glassRgba = null;
+			_glassWidth = 0;
+			_glassHeight = 0;
+			_glassTextureCreated = false;
+			_dmdProgramInvalid = true;
+		}
+
 		public void Dispose()
 		{
 			if (_dmdRendererAvailable) {
@@ -189,6 +221,7 @@ namespace LibDmd.Output.Virtual.Dmd
 		{
 			EnsureDmdProgram();
 			UploadSourceTexture(rgba);
+			UploadGlassTexture();
 			EnsureFramebuffers();
 
 			RunBlurPass(_blur2Program, _blur2TextureUniform, _blur2DirectionUniform, _sourceTexture, _tempFramebuffer, 1.0f / _size.Width, 0f);
@@ -203,6 +236,9 @@ namespace LibDmd.Output.Virtual.Dmd
 			BindTextureUnit(0, _sourceTexture);
 			BindTextureUnit(1, _dotGlowTexture);
 			BindTextureUnit(2, _backGlowTexture);
+			if (_glassTextureCreated) {
+				BindTextureUnit(3, _glassTexture);
+			}
 			_glUniform1i(_dmdTextureUniform, 0);
 			_glUniform1i(_dmdDotGlowUniform, 1);
 			_glUniform1i(_dmdBackGlowUniform, 2);
@@ -211,7 +247,7 @@ namespace LibDmd.Output.Virtual.Dmd
 				_glUniform3f(_dmdUnlitDotUniform, _style.UnlitDotR / Math.Max(0.0001f, _style.Brightness), _style.UnlitDotG / Math.Max(0.0001f, _style.Brightness), _style.UnlitDotB / Math.Max(0.0001f, _style.Brightness));
 			}
 			if (_dmdGlassTextureUniform != -1) {
-				_glUniform1i(_dmdGlassTextureUniform, 0);
+				_glUniform1i(_dmdGlassTextureUniform, 3);
 			}
 			if (_dmdGlassTexOffsetUniform != -1) {
 				_glUniform2f(_dmdGlassTexOffsetUniform, 0f, 0f);
@@ -328,6 +364,33 @@ namespace LibDmd.Output.Virtual.Dmd
 			} else {
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _size.Width, _size.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, upload);
 				_sourceTextureCreated = true;
+			}
+		}
+
+		private void UploadGlassTexture()
+		{
+			if (_glassRgba == null || _glassWidth <= 0 || _glassHeight <= 0) {
+				return;
+			}
+
+			if (_glassTexture == 0) {
+				var textures = new uint[1];
+				glGenTextures(1, textures);
+				_glassTexture = textures[0];
+			}
+
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			glBindTexture(GL_TEXTURE_2D, _glassTexture);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+
+			if (_glassTextureCreated) {
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _glassWidth, _glassHeight, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
+			} else {
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _glassWidth, _glassHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, _glassRgba);
+				_glassTextureCreated = true;
 			}
 		}
 
@@ -540,7 +603,7 @@ vec4 blur_level_12(sampler2D image, vec2 coord, vec2 blurDirection) {
 }
 ";
 
-		private static string BuildDmdFragmentShader(VirtualDmdRenderStyle style)
+		private string BuildDmdFragmentShader(VirtualDmdRenderStyle style)
 		{
 			var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
 			var builder = new StringBuilder();
@@ -549,7 +612,7 @@ vec4 blur_level_12(sampler2D image, vec2 coord, vec2 blurDirection) {
 			if (style.HasDotGlow) builder.AppendLine("#define DOTGLOW");
 			if (style.HasBrightness) builder.AppendLine("#define BRIGHTNESS");
 			if (style.HasUnlitDot) builder.AppendLine("#define UNLIT");
-			if (style.HasGlass) builder.AppendLine("#define GLASS");
+			if (style.HasGlass && _glassRgba != null) builder.AppendLine("#define GLASS");
 			if (style.HasGamma) builder.AppendLine("#define GAMMA");
 			if (style.DotSize > 0.5f) builder.AppendLine("#define DOT_OVERLAP");
 			builder.AppendFormat(nfi, "const float dotSize = {0:0.00000};\n", style.DotSize);
