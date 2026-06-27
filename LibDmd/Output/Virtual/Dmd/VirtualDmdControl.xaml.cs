@@ -117,6 +117,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_style = style;
 			_dmdShaderInvalid = true;
 			_lutInvalid = true;
+			_sharedPipeline?.SetStyle(ToSharedRenderStyle(_style));
 			var glassTexturePath = GetAbsolutePath(_style.GlassTexture, dataPath);
 			try {
 				_glassToRender = string.IsNullOrEmpty(glassTexturePath)
@@ -714,7 +715,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 			if (_sharedPipeline == null || _sharedPipelineDimensions != _frameDimensions) {
 				_sharedPipeline?.Dispose();
-				_sharedPipeline = new VirtualDmdOpenGlPipeline(_frameDimensions);
+				_sharedPipeline = new VirtualDmdOpenGlPipeline(_frameDimensions, ToSharedRenderStyle(_style));
 				_sharedPipelineDimensions = _frameDimensions;
 			}
 
@@ -827,6 +828,30 @@ namespace LibDmd.Output.Virtual.Dmd
 					_sharedFrameRgba[target + 3] = 255;
 				}
 			}
+		}
+
+		private static VirtualDmdRenderStyle ToSharedRenderStyle(DmdStyle style)
+		{
+			if (style == null) {
+				return VirtualDmdRenderStyle.Default;
+			}
+
+			return new VirtualDmdRenderStyle {
+				DotSize = (float)style.DotSize,
+				DotRounding = (float)style.DotRounding,
+				DotSharpness = (float)style.DotSharpness,
+				UnlitDotR = style.UnlitDot.ScR,
+				UnlitDotG = style.UnlitDot.ScG,
+				UnlitDotB = style.UnlitDot.ScB,
+				Brightness = (float)style.Brightness,
+				DotGlow = (float)style.DotGlow,
+				BackGlow = (float)style.BackGlow,
+				Gamma = (float)style.Gamma,
+				GlassR = style.GlassColor.ScR,
+				GlassG = style.GlassColor.ScG,
+				GlassB = style.GlassColor.ScB,
+				GlassLighting = (float)style.GlassLighting
+			};
 		}
 
 		#endregion
