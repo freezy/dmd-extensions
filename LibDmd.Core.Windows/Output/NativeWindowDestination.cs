@@ -29,6 +29,8 @@ namespace LibDmd.Output.NativeWindow
 		private NativeOpenGlRenderer _renderer;
 		private bool _disposed;
 		private bool _isMovingOrSizing;
+		private int _renderPending;
+		private int _configurePending;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -141,19 +143,8 @@ namespace LibDmd.Output.NativeWindow
 			_stayOnTop = stayOnTop;
 
 			var hwnd = _hwnd;
-			if (hwnd != IntPtr.Zero) {
-				var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-				var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
-				AdjustWindowRect(ref rect, style, false);
-				SetWindowPos(
-					hwnd,
-					_stayOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
-					rect.Left,
-					rect.Top,
-					rect.Right - rect.Left,
-					rect.Bottom - rect.Top,
-					SWP_NOACTIVATE | SWP_SHOWWINDOW);
-				RequestPaint();
+			if (hwnd != IntPtr.Zero && Interlocked.Exchange(ref _configurePending, 1) == 0) {
+				PostMessage(hwnd, WM_CONFIGURE_WINDOW, IntPtr.Zero, IntPtr.Zero);
 			}
 		}
 
@@ -212,7 +203,7 @@ namespace LibDmd.Output.NativeWindow
 		private void RequestPaint()
 		{
 			var hwnd = _hwnd;
-			if (hwnd != IntPtr.Zero) {
+			if (hwnd != IntPtr.Zero && !_isMovingOrSizing && Interlocked.Exchange(ref _renderPending, 1) == 0) {
 				PostMessage(hwnd, WM_RENDER, IntPtr.Zero, IntPtr.Zero);
 			}
 		}
@@ -302,6 +293,27 @@ namespace LibDmd.Output.NativeWindow
 			_windowHeight = Math.Max(1, client.Bottom - client.Top);
 		}
 
+		private void ApplyWindowConfiguration()
+		{
+			var hwnd = _hwnd;
+			if (hwnd == IntPtr.Zero) {
+				return;
+			}
+
+			var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+			var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
+			AdjustWindowRect(ref rect, style, false);
+			SetWindowPos(
+				hwnd,
+				_stayOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+				rect.Left,
+				rect.Top,
+				rect.Right - rect.Left,
+				rect.Bottom - rect.Top,
+				SWP_NOACTIVATE | SWP_SHOWWINDOW);
+			RequestPaint();
+		}
+
 		private sealed class NativeWindowClass
 		{
 			public static readonly string ClassName = "LibDmdNativeWindow_" + Guid.NewGuid().ToString("N");
@@ -354,52 +366,54 @@ namespace LibDmd.Output.NativeWindow
 			{
 				switch (message) {
 					case WM_PAINT:
-						lock (SyncRoot) {
-							if (Destinations.TryGetValue(hwnd, out var destination)) {
-								destination.Paint(hwnd);
-								return IntPtr.Zero;
-							}
+						if (TryGetDestination(hwnd, out var paintDestination)) {
+							Interlocked.Exchange(ref paintDestination._renderPending, 0);
+							paintDestination.Paint(hwnd);
+							return IntPtr.Zero;
 						}
 						break;
 					case WM_ERASEBKGND:
 						return new IntPtr(1);
 					case WM_ENTERSIZEMOVE:
-						lock (SyncRoot) {
-							if (Destinations.TryGetValue(hwnd, out var destination)) {
-								destination._isMovingOrSizing = true;
-								return IntPtr.Zero;
-							}
+						if (TryGetDestination(hwnd, out var enterDestination)) {
+							enterDestination._isMovingOrSizing = true;
+							Interlocked.Exchange(ref enterDestination._renderPending, 0);
+							return IntPtr.Zero;
 						}
 						break;
 					case WM_EXITSIZEMOVE:
-						lock (SyncRoot) {
-							if (Destinations.TryGetValue(hwnd, out var destination)) {
-								destination._isMovingOrSizing = false;
-								destination.ReadWindowLayout();
-								destination.RequestPaint();
-								return IntPtr.Zero;
-							}
+						if (TryGetDestination(hwnd, out var exitDestination)) {
+							exitDestination._isMovingOrSizing = false;
+							exitDestination.ReadWindowLayout();
+							exitDestination.RequestPaint();
+							return IntPtr.Zero;
 						}
 						break;
 					case WM_MOVE:
 					case WM_SIZE:
-						lock (SyncRoot) {
-							if (Destinations.TryGetValue(hwnd, out var destination)) {
-								destination.ReadWindowLayout();
-								if (!destination._isMovingOrSizing) {
-									destination.RequestPaint();
-								}
-								return IntPtr.Zero;
+						if (TryGetDestination(hwnd, out var sizeDestination)) {
+							sizeDestination.ReadWindowLayout();
+							if (!sizeDestination._isMovingOrSizing) {
+								sizeDestination.RequestPaint();
 							}
+							return IntPtr.Zero;
+						}
+						break;
+					case WM_CONFIGURE_WINDOW:
+						if (TryGetDestination(hwnd, out var configureDestination)) {
+							Interlocked.Exchange(ref configureDestination._configurePending, 0);
+							configureDestination.ApplyWindowConfiguration();
+							return IntPtr.Zero;
 						}
 						break;
 					case WM_SHOWWINDOW:
 					case WM_RENDER:
-						lock (SyncRoot) {
-							if (Destinations.TryGetValue(hwnd, out var destination)) {
-								destination.RenderOpenGl();
-								return IntPtr.Zero;
+						if (TryGetDestination(hwnd, out var renderDestination)) {
+							Interlocked.Exchange(ref renderDestination._renderPending, 0);
+							if (!renderDestination._isMovingOrSizing) {
+								renderDestination.RenderOpenGl();
 							}
+							return IntPtr.Zero;
 						}
 						break;
 					case WM_CLOSE:
@@ -412,6 +426,13 @@ namespace LibDmd.Output.NativeWindow
 
 				return DefWindowProc(hwnd, message, wParam, lParam);
 			}
+
+			private static bool TryGetDestination(IntPtr hwnd, out NativeWindowDestination destination)
+			{
+				lock (SyncRoot) {
+					return Destinations.TryGetValue(hwnd, out destination);
+				}
+			}
 		}
 
 		private const int CW_USEDEFAULT = unchecked((int)0x80000000);
@@ -423,6 +444,7 @@ namespace LibDmd.Output.NativeWindow
 		private const int SWP_NOACTIVATE = 0x0010;
 		private const int SWP_SHOWWINDOW = 0x0040;
 		private const int WM_CLOSE = 0x0010;
+		private const int WM_CONFIGURE_WINDOW = 0x8002;
 		private const int WM_DESTROY = 0x0002;
 		private const int WM_ENTERSIZEMOVE = 0x0231;
 		private const int WM_ERASEBKGND = 0x0014;
