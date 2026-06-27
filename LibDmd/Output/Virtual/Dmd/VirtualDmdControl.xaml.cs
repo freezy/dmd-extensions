@@ -77,6 +77,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private bool _lutInvalid = true; // Flag set to true when the LUT (look up table) of the palette has changed and needs to be updated on the GPU
 		private bool _dmdShaderInvalid = true; // Flag set to true when the DMD shader needs to be rebuilt (for example at startup or when the DMD style change)
 		private Bitmap _glassToRender; // Set to the bitmap to be upload to GPU for the glass, nullified once uploaded
+		private VirtualDmdOpenGlPipeline _sharedPipeline;
+		private Dimensions _sharedPipelineDimensions;
+		private byte[] _sharedFrameRgba;
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric; // Format of the compiled convert shader; if frame format, the shader will be recompiled to adapt to the incoming frame
 		private ShaderProgram _convertShader, _blurShader1, _blurShader2, _dmdShader;
 		private int _csTexture, _csPalette; // Convert Shader (hence the _cs prefix) uniform locations
@@ -351,6 +354,10 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void ogl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
 		{
+			if (TryDrawSharedPipeline()) {
+				return;
+			}
+
 			var gl = args.OpenGL;
 			gl.ClearColor(0f, 0f, 0f, 1f);
 			gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
@@ -699,6 +706,129 @@ namespace LibDmd.Output.Virtual.Dmd
 			_quadVbo.Unbind(gl);
 		}
 
+		private bool TryDrawSharedPipeline()
+		{
+			if (Dmd == null || Dmd.Width <= 0 || Dmd.Height <= 0) {
+				return false;
+			}
+
+			if (_sharedPipeline == null || _sharedPipelineDimensions != _frameDimensions) {
+				_sharedPipeline?.Dispose();
+				_sharedPipeline = new VirtualDmdOpenGlPipeline(_frameDimensions);
+				_sharedPipelineDimensions = _frameDimensions;
+			}
+
+			if (_hasFrame) {
+				_hasFrame = false;
+				if (!TryUpdateSharedRgbaFrame()) {
+					return false;
+				}
+			}
+
+			if (_sharedFrameRgba == null) {
+				return false;
+			}
+
+			_sharedPipeline.Render(_sharedFrameRgba, Math.Max(1, (int)Dmd.Width), Math.Max(1, (int)Dmd.Height), 0f, 0f, (float)Dmd.Width, (float)Dmd.Height);
+			return true;
+		}
+
+		private bool TryUpdateSharedRgbaFrame()
+		{
+			if (_frameType == FrameFormat.Bitmap || _frameData == null) {
+				return false;
+			}
+
+			var size = _frameDimensions.Surface * 4;
+			if (_sharedFrameRgba == null || _sharedFrameRgba.Length != size) {
+				_sharedFrameRgba = new byte[size];
+			}
+
+			switch (_frameType) {
+				case FrameFormat.Gray2:
+					if (_frameData.Length != _frameDimensions.Surface) {
+						LogErrors("Invalid frame buffer size of [" + _frameData.Length + "] bytes for a frame size of [" + _frameDimensions.Width + " x " + _frameDimensions.Height + "]");
+						return false;
+					}
+					WriteGrayToSharedRgba(3, _gray2Palette);
+					return true;
+
+				case FrameFormat.Gray4:
+					if (_frameData.Length != _frameDimensions.Surface) {
+						LogErrors("Invalid frame buffer size of [" + _frameData.Length + "] bytes for a frame size of [" + _frameDimensions.Width + " x " + _frameDimensions.Height + "]");
+						return false;
+					}
+					WriteGrayToSharedRgba(15, _gray4Palette);
+					return true;
+
+				case FrameFormat.Gray8:
+					if (_frameData.Length != _frameDimensions.Surface) {
+						LogErrors("Invalid frame buffer size of [" + _frameData.Length + "] bytes for a frame size of [" + _frameDimensions.Width + " x " + _frameDimensions.Height + "]");
+						return false;
+					}
+					WriteGrayToSharedRgba(255, _gray8Palette);
+					return true;
+
+				case FrameFormat.ColoredGray6:
+					if (_frameData.Length != _frameDimensions.Surface) {
+						LogErrors("Invalid frame buffer size of [" + _frameData.Length + "] bytes for a frame size of [" + _frameDimensions.Width + " x " + _frameDimensions.Height + "]");
+						return false;
+					}
+					WriteGrayToSharedRgba(63, _gray6Palette);
+					return true;
+
+				case FrameFormat.Rgb24:
+					WriteRgb24ToSharedRgba();
+					return true;
+
+				default:
+					return false;
+			}
+		}
+
+		private void WriteGrayToSharedRgba(int maxValue, Color[] palette)
+		{
+			for (var i = 0; i < _frameDimensions.Surface; i++) {
+				var value = _frameData[i];
+				byte r;
+				byte g;
+				byte b;
+				if (palette != null && palette.Length > 0) {
+					var paletteIndex = Math.Min(palette.Length - 1, value * (palette.Length - 1) / maxValue);
+					var color = palette[paletteIndex];
+					r = color.R;
+					g = color.G;
+					b = color.B;
+				} else {
+					var intensity = value / (float)maxValue;
+					r = (byte)(_dotColor.R * intensity);
+					g = (byte)(_dotColor.G * intensity);
+					b = (byte)(_dotColor.B * intensity);
+				}
+
+				var target = i * 4;
+				_sharedFrameRgba[target] = r;
+				_sharedFrameRgba[target + 1] = g;
+				_sharedFrameRgba[target + 2] = b;
+				_sharedFrameRgba[target + 3] = 255;
+			}
+		}
+
+		private void WriteRgb24ToSharedRgba()
+		{
+			var sourceStride = _frameData.Length / Math.Max(1, _frameDimensions.Height);
+			for (var y = 0; y < _frameDimensions.Height; y++) {
+				for (var x = 0; x < _frameDimensions.Width; x++) {
+					var source = y * sourceStride + x * 3;
+					var target = (y * _frameDimensions.Width + x) * 4;
+					_sharedFrameRgba[target] = _frameData[source];
+					_sharedFrameRgba[target + 1] = _frameData[source + 1];
+					_sharedFrameRgba[target + 2] = _frameData[source + 2];
+					_sharedFrameRgba[target + 3] = 255;
+				}
+			}
+		}
+
 		#endregion
 
 		private void OnSizeChanged(object sender, RoutedEventArgs e)
@@ -800,7 +930,8 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Dispose()
 		{
-			// FIXME we should dispose the OpenGL native objects allocated in ogl_Initalized but this need to have the OpenGL context which is not garanteed here
+			_sharedPipeline?.Dispose();
+			_sharedPipeline = null;
 		}
 	}
 }

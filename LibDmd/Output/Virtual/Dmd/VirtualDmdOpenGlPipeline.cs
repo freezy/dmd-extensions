@@ -6,7 +6,7 @@ using NLog;
 
 namespace LibDmd.Output.Virtual.Dmd
 {
-	internal sealed class VirtualDmdOpenGlPipeline : IDisposable
+	public sealed class VirtualDmdOpenGlPipeline : IDisposable
 	{
 		private const byte DefaultAlpha = 255;
 		private readonly Dimensions _size;
