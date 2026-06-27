@@ -16,12 +16,13 @@
     <AssemblyName>LibDmd.Core.Harness</AssemblyName>
     <RootNamespace>LibDmd.Core.Harness</RootNamespace>
     <IsPackable>false</IsPackable>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget Condition="'$(RuntimeIdentifier)' != 'osx-arm64'">x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LibDmd.Core\LibDmd.Core.csproj" />
+    <ProjectReference Include="..\LibDmd.Core.Windows\LibDmd.Core.Windows.csproj" />
   </ItemGroup>
 
   <!-- Native libs next to the exe. On Windows the 64-bit names load directly; the
@@ -31,6 +32,13 @@
     <None Include="..\LibDmd\Costura64\zedmd64.dll" Link="zedmd64.dll" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\LibDmd\Costura64\libserialport64-0.dll" Link="libserialport64-0.dll" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\LibDmd\Costura64\sockpp64.dll" Link="sockpp64.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <None Include="..\native\nuget\runtimes\$(RuntimeIdentifier)\native\*"
+          Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('..\native\nuget\runtimes\$(RuntimeIdentifier)\native')" />
   </ItemGroup>
 
 </Project>

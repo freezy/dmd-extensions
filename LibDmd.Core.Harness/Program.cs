@@ -9,6 +9,7 @@ using LibDmd.Frame;
 using LibDmd.Input.Passthrough;
 using LibDmd.Native;
 using LibDmd.Output;
+using LibDmd.Output.NativeWindow;
 using LibDmd.Output.ZeDMD;
 
 namespace LibDmd.Core.Harness
@@ -25,6 +26,10 @@ namespace LibDmd.Core.Harness
 			// Install the cross-platform native-library resolver (maps serum64.dll/zedmd64.dll
 			// to the per-OS file). It also runs via a module initializer; calling it is harmless.
 			NativeLibraryLoader.Register();
+
+			if (Array.IndexOf(args, "--native-window") >= 0) {
+				return TestNativeWindow() ? 0 : 1;
+			}
 
 			TestSerumNative();
 			Console.WriteLine();
@@ -111,6 +116,60 @@ namespace LibDmd.Core.Harness
 			} catch (Exception e) {
 				Console.WriteLine($"    Serum load failed: {e.GetType().Name}: {e.Message}");
 			}
+		}
+
+		private static bool TestNativeWindow()
+		{
+			Console.WriteLine("[native-window] RenderGraph -> NativeWindowDestination:");
+			try {
+				var lastFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
+				var source = new PassthroughRgb24Source(lastFormat, "Harness RGB24 Source", deDupe: false);
+				using (var dest = new NativeWindowDestination(Dimensions.Standard.Width, Dimensions.Standard.Height, 100, 100, 512, 128, false))
+				{
+					if (!dest.IsAvailable) {
+						Console.WriteLine("    Native window destination is not available.");
+						return false;
+					}
+
+					var graph = new RenderGraph(new UndisposedReferences(), runOnMainThread: true) {
+						Name = "Native Window Harness",
+						Source = source,
+						Destinations = new List<IDestination> { dest },
+					};
+					graph.Init();
+
+					using (graph.StartRendering(ex => Console.WriteLine($"    pipeline error: {ex.Message}"))) {
+						for (var frame = 0; frame < 600; frame++) {
+							source.NextFrame(CreateRgb24TestFrame(frame));
+							System.Threading.Thread.Sleep(16);
+						}
+					}
+				}
+
+				Console.WriteLine("    Native window test completed.");
+				return true;
+			} catch (Exception e) {
+				Console.WriteLine($"    Native window test failed: {e}");
+				return false;
+			}
+		}
+
+		private static DmdFrame CreateRgb24TestFrame(int frame)
+		{
+			var dim = Dimensions.Standard;
+			var data = new byte[dim.Surface * 3];
+			for (var y = 0; y < dim.Height; y++) {
+				for (var x = 0; x < dim.Width; x++) {
+					var offset = (y * dim.Width + x) * 3;
+					var bar = ((x + frame) / 8) % 3;
+					var on = ((x + frame) % 32) < 16 ^ ((y / 4) % 2 == 0);
+					data[offset] = (byte)(on && bar == 0 ? 255 : 24);
+					data[offset + 1] = (byte)(on && bar == 1 ? 180 : 8);
+					data[offset + 2] = (byte)(on && bar == 2 ? 64 : 0);
+				}
+			}
+
+			return new DmdFrame(dim, data, 24);
 		}
 	}
 }

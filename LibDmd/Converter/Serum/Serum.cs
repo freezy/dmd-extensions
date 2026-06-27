@@ -86,7 +86,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			_serumFramePtr = Serum_Load(altcolorPath, romName, FlagRequest32PFrames | FlagRequest64PFrames);
-			if (_serumFramePtr == null) {
+			if (_serumFramePtr == IntPtr.Zero) {
 				IsLoaded = false;
 				return;
 			}
