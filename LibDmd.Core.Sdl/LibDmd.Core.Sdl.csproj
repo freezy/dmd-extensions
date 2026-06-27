@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    LibDmd.Core.Sdl - cross-platform (macOS / Linux, and a path to mobile) host-pumped
+    native DMD window. Unlike LibDmd.Core.Windows (Win32, self-driven message loop) this
+    backend does NOT own a thread: the host calls Pump() once per frame on its main thread
+    (mandatory on macOS, where AppKit/SDL windowing is main-thread-only). Rendering uses an
+    OpenGL ES 2.0 context (ANGLE on macOS/Windows, native GLES on Linux/mobile).
+
+    STATUS: code-complete draft. Compiles against netstandard2.1, but has NOT been run on a
+    Mac yet - SDL2 + an ANGLE (libEGL/libGLESv2) or native GLES runtime must be present, and
+    the window orientation / letterboxing is the most likely thing to need a one-line tweak on
+    first run (see GlesDmdPipeline / SdlNativeDmdWindow comments).
+  -->
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>LibDmd</RootNamespace>
+    <AssemblyName>LibDmd.Core.Sdl</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The IDestination color setters use the neutral DmdColor (aliased as Color), matching Core. -->
+    <Using Include="LibDmd.DmdColor" Alias="Color" />
+    <ProjectReference Include="..\LibDmd.Core\LibDmd.Core.csproj" />
+    <PackageReference Include="NLog" Version="4.7.15" />
+  </ItemGroup>
+
+</Project>
