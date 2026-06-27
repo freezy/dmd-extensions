@@ -80,6 +80,9 @@ namespace LibDmd.Output.Virtual.Dmd
 		private VirtualDmdOpenGlPipeline _sharedPipeline;
 		private Dimensions _sharedPipelineDimensions;
 		private byte[] _sharedFrameRgba;
+		private byte[] _sharedGlassRgba;
+		private int _sharedGlassWidth;
+		private int _sharedGlassHeight;
 		private FrameFormat _convertShaderType = FrameFormat.AlphaNumeric; // Format of the compiled convert shader; if frame format, the shader will be recompiled to adapt to the incoming frame
 		private ShaderProgram _convertShader, _blurShader1, _blurShader2, _dmdShader;
 		private int _csTexture, _csPalette; // Convert Shader (hence the _cs prefix) uniform locations
@@ -123,10 +126,12 @@ namespace LibDmd.Output.Virtual.Dmd
 				_glassToRender = string.IsNullOrEmpty(glassTexturePath)
 					? null
 					: new Bitmap(glassTexturePath);
+				SetSharedGlassTexture(_glassToRender);
 
 			} catch (Exception e) {
 				Logger.Warn(e, $"Could not load glass texture at \"{glassTexturePath}\".");
 				_glassToRender = null;
+				SetSharedGlassTexture(null);
 			}
 
 			var frameTexturePath = GetAbsolutePath(_style.FrameTexture, dataPath);
@@ -716,6 +721,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			if (_sharedPipeline == null || _sharedPipelineDimensions != _frameDimensions) {
 				_sharedPipeline?.Dispose();
 				_sharedPipeline = new VirtualDmdOpenGlPipeline(_frameDimensions, ToSharedRenderStyle(_style));
+				ApplySharedGlassTexture();
 				_sharedPipelineDimensions = _frameDimensions;
 			}
 
@@ -852,6 +858,53 @@ namespace LibDmd.Output.Virtual.Dmd
 				GlassB = style.GlassColor.ScB,
 				GlassLighting = (float)style.GlassLighting
 			};
+		}
+
+		private void SetSharedGlassTexture(Bitmap bitmap)
+		{
+			if (bitmap == null) {
+				_sharedGlassRgba = null;
+				_sharedGlassWidth = 0;
+				_sharedGlassHeight = 0;
+				_sharedPipeline?.ClearGlassTexture();
+				return;
+			}
+
+			_sharedGlassWidth = bitmap.Width;
+			_sharedGlassHeight = bitmap.Height;
+			var rgba = new byte[bitmap.Width * bitmap.Height * 4];
+			var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+			try {
+				for (var y = 0; y < bitmap.Height; y++) {
+					var sourceRow = data.Scan0 + y * data.Stride;
+					for (var x = 0; x < bitmap.Width; x++) {
+						var source = sourceRow + x * 3;
+						var target = (y * bitmap.Width + x) * 4;
+						rgba[target] = Marshal.ReadByte(source + 2);
+						rgba[target + 1] = Marshal.ReadByte(source + 1);
+						rgba[target + 2] = Marshal.ReadByte(source);
+						rgba[target + 3] = 255;
+					}
+				}
+			} finally {
+				bitmap.UnlockBits(data);
+			}
+
+			_sharedGlassRgba = rgba;
+			ApplySharedGlassTexture();
+		}
+
+		private void ApplySharedGlassTexture()
+		{
+			if (_sharedPipeline == null) {
+				return;
+			}
+
+			if (_sharedGlassRgba == null) {
+				_sharedPipeline.ClearGlassTexture();
+			} else {
+				_sharedPipeline.SetGlassTexture(_sharedGlassRgba, _sharedGlassWidth, _sharedGlassHeight);
+			}
 		}
 
 		#endregion
