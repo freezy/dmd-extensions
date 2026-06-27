@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using LibDmd.Frame;
 using LibDmd.Output;
+using LibDmd.Output.Virtual.Dmd;
 using NLog;
 
 namespace LibDmd.Output.NativeWindow
@@ -17,18 +18,41 @@ namespace LibDmd.Output.NativeWindow
 		private readonly Dimensions _size;
 		private readonly byte[] _rgba;
 		private readonly byte[] _renderBuffer;
+		private int _windowLeft;
+		private int _windowTop;
+		private int _windowWidth;
+		private int _windowHeight;
+		private bool _stayOnTop;
+		private VirtualDmdRenderStyle _renderStyle;
 		private Color _color = Color.FromRgb(255, 88, 0);
 		private IntPtr _hwnd;
 		private NativeOpenGlRenderer _renderer;
 		private bool _disposed;
+		private bool _isMovingOrSizing;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public NativeWindowDestination(int width, int height)
+			: this(width, height, 100, 100, width * Scale, height * Scale, false, VirtualDmdRenderStyle.Default)
+		{
+		}
+
+		public NativeWindowDestination(int width, int height, int windowLeft, int windowTop, int windowWidth, int windowHeight, bool stayOnTop)
+			: this(width, height, windowLeft, windowTop, windowWidth, windowHeight, stayOnTop, VirtualDmdRenderStyle.Default)
+		{
+		}
+
+		public NativeWindowDestination(int width, int height, int windowLeft, int windowTop, int windowWidth, int windowHeight, bool stayOnTop, VirtualDmdRenderStyle renderStyle)
 		{
 			_size = new Dimensions(width, height);
 			_rgba = new byte[_size.Surface * 4];
 			_renderBuffer = new byte[_rgba.Length];
+			_windowLeft = windowLeft;
+			_windowTop = windowTop;
+			_windowWidth = windowWidth > 0 ? windowWidth : width * Scale;
+			_windowHeight = windowHeight > 0 ? windowHeight : height * Scale;
+			_stayOnTop = stayOnTop;
+			_renderStyle = renderStyle ?? VirtualDmdRenderStyle.Default;
 			_windowThread = new Thread(WindowThreadMain) {
 				IsBackground = true,
 				Name = "LibDmd Native Window"
@@ -44,6 +68,12 @@ namespace LibDmd.Output.NativeWindow
 		public bool NeedsIdentificationFrames => false;
 		public Dimensions FixedSize => _size;
 		public bool DmdAllowHdScaling => false;
+		public int WindowLeft => _windowLeft;
+		public int WindowTop => _windowTop;
+		public int WindowWidth => _windowWidth;
+		public int WindowHeight => _windowHeight;
+		public bool WindowStayOnTop => _stayOnTop;
+		public bool IsMovingOrSizing => _isMovingOrSizing;
 
 		public void RenderGray2(DmdFrame frame) => RenderGray(frame, 3);
 		public void RenderGray4(DmdFrame frame) => RenderGray(frame, 15);
@@ -100,6 +130,38 @@ namespace LibDmd.Output.NativeWindow
 
 		public void ClearPalette()
 		{
+		}
+
+		public void ConfigureWindow(int left, int top, int width, int height, bool stayOnTop)
+		{
+			_windowLeft = left;
+			_windowTop = top;
+			_windowWidth = width > 0 ? width : _size.Width * Scale;
+			_windowHeight = height > 0 ? height : _size.Height * Scale;
+			_stayOnTop = stayOnTop;
+
+			var hwnd = _hwnd;
+			if (hwnd != IntPtr.Zero) {
+				var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+				var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
+				AdjustWindowRect(ref rect, style, false);
+				SetWindowPos(
+					hwnd,
+					_stayOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+					rect.Left,
+					rect.Top,
+					rect.Right - rect.Left,
+					rect.Bottom - rect.Top,
+					SWP_NOACTIVATE | SWP_SHOWWINDOW);
+				RequestPaint();
+			}
+		}
+
+		public void ConfigureRenderStyle(VirtualDmdRenderStyle renderStyle)
+		{
+			_renderStyle = renderStyle ?? VirtualDmdRenderStyle.Default;
+			_renderer?.SetStyle(_renderStyle);
+			RequestPaint();
 		}
 
 		public void ClearDisplay()
@@ -159,15 +221,15 @@ namespace LibDmd.Output.NativeWindow
 		{
 			NativeWindowClass.Register();
 			var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-			var rect = new RECT { Left = 100, Top = 100, Right = 100 + _size.Width * Scale, Bottom = 100 + _size.Height * Scale };
+			var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
 			AdjustWindowRect(ref rect, style, false);
 			_hwnd = CreateWindowEx(
-				0,
+				_stayOnTop ? WS_EX_TOPMOST : 0,
 				NativeWindowClass.ClassName,
 				"VPE DMD",
 				style,
-				CW_USEDEFAULT,
-				CW_USEDEFAULT,
+				rect.Left,
+				rect.Top,
 				rect.Right - rect.Left,
 				rect.Bottom - rect.Top,
 				IntPtr.Zero,
@@ -181,7 +243,8 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
-			_renderer = new NativeOpenGlRenderer(_hwnd, _size);
+			ReadWindowLayout();
+			_renderer = new NativeOpenGlRenderer(_hwnd, _size, _renderStyle);
 			NativeWindowClass.SetDestination(_hwnd, this);
 			_windowReady.Set();
 			RequestPaint();
@@ -219,6 +282,24 @@ namespace LibDmd.Output.NativeWindow
 			}
 
 			renderer.Render(_renderBuffer);
+		}
+
+		private void ReadWindowLayout()
+		{
+			var hwnd = _hwnd;
+			if (hwnd == IntPtr.Zero || !GetClientRect(hwnd, out var client)) {
+				return;
+			}
+
+			var clientOrigin = new POINT();
+			if (!ClientToScreen(hwnd, ref clientOrigin)) {
+				return;
+			}
+
+			_windowLeft = clientOrigin.X;
+			_windowTop = clientOrigin.Y;
+			_windowWidth = Math.Max(1, client.Right - client.Left);
+			_windowHeight = Math.Max(1, client.Bottom - client.Top);
 		}
 
 		private sealed class NativeWindowClass
@@ -282,7 +363,36 @@ namespace LibDmd.Output.NativeWindow
 						break;
 					case WM_ERASEBKGND:
 						return new IntPtr(1);
+					case WM_ENTERSIZEMOVE:
+						lock (SyncRoot) {
+							if (Destinations.TryGetValue(hwnd, out var destination)) {
+								destination._isMovingOrSizing = true;
+								return IntPtr.Zero;
+							}
+						}
+						break;
+					case WM_EXITSIZEMOVE:
+						lock (SyncRoot) {
+							if (Destinations.TryGetValue(hwnd, out var destination)) {
+								destination._isMovingOrSizing = false;
+								destination.ReadWindowLayout();
+								destination.RequestPaint();
+								return IntPtr.Zero;
+							}
+						}
+						break;
+					case WM_MOVE:
 					case WM_SIZE:
+						lock (SyncRoot) {
+							if (Destinations.TryGetValue(hwnd, out var destination)) {
+								destination.ReadWindowLayout();
+								if (!destination._isMovingOrSizing) {
+									destination.RequestPaint();
+								}
+								return IntPtr.Zero;
+							}
+						}
+						break;
 					case WM_SHOWWINDOW:
 					case WM_RENDER:
 						lock (SyncRoot) {
@@ -307,14 +417,22 @@ namespace LibDmd.Output.NativeWindow
 		private const int CW_USEDEFAULT = unchecked((int)0x80000000);
 		private const int CS_HREDRAW = 0x0002;
 		private const int CS_VREDRAW = 0x0001;
+		private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+		private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
 		private const int IDC_ARROW = 32512;
+		private const int SWP_NOACTIVATE = 0x0010;
+		private const int SWP_SHOWWINDOW = 0x0040;
 		private const int WM_CLOSE = 0x0010;
 		private const int WM_DESTROY = 0x0002;
+		private const int WM_ENTERSIZEMOVE = 0x0231;
 		private const int WM_ERASEBKGND = 0x0014;
+		private const int WM_EXITSIZEMOVE = 0x0232;
+		private const int WM_MOVE = 0x0003;
 		private const int WM_PAINT = 0x000F;
 		private const int WM_RENDER = 0x8001;
 		private const int WM_SHOWWINDOW = 0x0018;
 		private const int WM_SIZE = 0x0005;
+		private const int WS_EX_TOPMOST = 0x00000008;
 		private const int WS_OVERLAPPEDWINDOW = 0x00CF0000;
 		private const int WS_VISIBLE = 0x10000000;
 
@@ -347,6 +465,13 @@ namespace LibDmd.Output.NativeWindow
 			public uint time;
 			public int ptX;
 			public int ptY;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct POINT
+		{
+			public int X;
+			public int Y;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -402,6 +527,15 @@ namespace LibDmd.Output.NativeWindow
 
 		[DllImport("user32.dll")]
 		private static extern bool AdjustWindowRect(ref RECT lpRect, int dwStyle, bool bMenu);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+		[DllImport("user32.dll")]
+		private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+		[DllImport("user32.dll")]
+		private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll")]
 		private static extern IntPtr BeginPaint(IntPtr hwnd, out PAINTSTRUCT lpPaint);
