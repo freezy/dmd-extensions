@@ -6,13 +6,64 @@ using NLog;
 
 namespace LibDmd.Output.Virtual.Dmd
 {
+	public sealed class VirtualDmdRenderStyle : IEquatable<VirtualDmdRenderStyle>
+	{
+		public static readonly VirtualDmdRenderStyle Default = new VirtualDmdRenderStyle();
+
+		public float DotSize { get; set; } = 0.92f;
+		public float DotRounding { get; set; } = 1.0f;
+		public float DotSharpness { get; set; } = 0.8f;
+		public float UnlitDotR { get; set; }
+		public float UnlitDotG { get; set; }
+		public float UnlitDotB { get; set; }
+		public float Brightness { get; set; } = 0.95f;
+		public float DotGlow { get; set; }
+		public float BackGlow { get; set; }
+		public float Gamma { get; set; } = 1.0f;
+		public float GlassR { get; set; }
+		public float GlassG { get; set; }
+		public float GlassB { get; set; }
+		public float GlassLighting { get; set; }
+
+		public bool HasUnlitDot => UnlitDotR > 0f || UnlitDotG > 0f || UnlitDotB > 0f;
+		public bool HasBrightness => Math.Abs(Brightness - 1.0f) > 0.01f;
+		public bool HasDotGlow => DotGlow > 0.01f;
+		public bool HasBackGlow => BackGlow > 0.01f;
+		public bool HasGamma => Math.Abs(Gamma - 1.0f) > 0.01f;
+		public bool HasGlass => GlassLighting > 0.0f || GlassR > 0f || GlassG > 0f || GlassB > 0f;
+
+		public bool Equals(VirtualDmdRenderStyle other)
+		{
+			if (other == null) {
+				return false;
+			}
+
+			return DotSize.Equals(other.DotSize)
+				&& DotRounding.Equals(other.DotRounding)
+				&& DotSharpness.Equals(other.DotSharpness)
+				&& UnlitDotR.Equals(other.UnlitDotR)
+				&& UnlitDotG.Equals(other.UnlitDotG)
+				&& UnlitDotB.Equals(other.UnlitDotB)
+				&& Brightness.Equals(other.Brightness)
+				&& DotGlow.Equals(other.DotGlow)
+				&& BackGlow.Equals(other.BackGlow)
+				&& Gamma.Equals(other.Gamma)
+				&& GlassR.Equals(other.GlassR)
+				&& GlassG.Equals(other.GlassG)
+				&& GlassB.Equals(other.GlassB)
+				&& GlassLighting.Equals(other.GlassLighting);
+		}
+	}
+
 	public sealed class VirtualDmdOpenGlPipeline : IDisposable
 	{
 		private const byte DefaultAlpha = 255;
 		private readonly Dimensions _size;
+		private VirtualDmdRenderStyle _style;
 		private bool _sourceTextureCreated;
 		private bool _framebuffersCreated;
 		private bool _dmdRendererAvailable;
+		private bool _dmdProgramInvalid;
 		private byte[] _uploadBuffer;
 		private uint _sourceTexture;
 		private uint _dotGlowTexture;
@@ -33,6 +84,10 @@ namespace LibDmd.Output.Virtual.Dmd
 		private int _dmdBackGlowUniform;
 		private int _dmdSizeUniform;
 		private int _dmdUnlitDotUniform;
+		private int _dmdGlassTextureUniform;
+		private int _dmdGlassTexOffsetUniform;
+		private int _dmdGlassTexScaleUniform;
+		private int _dmdGlassColorUniform;
 
 		private GlActiveTexture _glActiveTexture;
 		private GlAttachShader _glAttachShader;
@@ -55,28 +110,31 @@ namespace LibDmd.Output.Virtual.Dmd
 		private GlUniform1i _glUniform1i;
 		private GlUniform2f _glUniform2f;
 		private GlUniform3f _glUniform3f;
+		private GlUniform4f _glUniform4f;
 		private GlUseProgram _glUseProgram;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public VirtualDmdOpenGlPipeline(Dimensions size)
+			: this(size, VirtualDmdRenderStyle.Default)
+		{
+		}
+
+		public VirtualDmdOpenGlPipeline(Dimensions size, VirtualDmdRenderStyle style)
 		{
 			_size = size;
+			_style = style ?? VirtualDmdRenderStyle.Default;
 			try {
 				LoadRendererFunctions();
 				_blur2Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_2(texture, uv, direction).rgb, 1.0); }");
 				_blur12Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_12(texture, uv, direction).rgb, 1.0); }");
-				_dmdProgram = CreateProgram(PassthroughVertexShader, DmdFragmentShader);
 
 				_blur2TextureUniform = _glGetUniformLocation(_blur2Program, "texture");
 				_blur2DirectionUniform = _glGetUniformLocation(_blur2Program, "direction");
 				_blur12TextureUniform = _glGetUniformLocation(_blur12Program, "texture");
 				_blur12DirectionUniform = _glGetUniformLocation(_blur12Program, "direction");
-				_dmdTextureUniform = _glGetUniformLocation(_dmdProgram, "dmdTexture");
-				_dmdDotGlowUniform = _glGetUniformLocation(_dmdProgram, "dmdDotGlow");
-				_dmdBackGlowUniform = _glGetUniformLocation(_dmdProgram, "dmdBackGlow");
-				_dmdSizeUniform = _glGetUniformLocation(_dmdProgram, "dmdSize");
-				_dmdUnlitDotUniform = _glGetUniformLocation(_dmdProgram, "unlitDot");
+				_dmdProgramInvalid = true;
+				EnsureDmdProgram();
 
 				_dmdRendererAvailable = true;
 				Logger.Info("[DMD] Shared dmdext OpenGL renderer initialized.");
@@ -95,6 +153,17 @@ namespace LibDmd.Output.Virtual.Dmd
 				var scale = renderWidth / _size.Width;
 				RenderImmediate(rgba, scale, offsetX, offsetY);
 			}
+		}
+
+		public void SetStyle(VirtualDmdRenderStyle style)
+		{
+			style = style ?? VirtualDmdRenderStyle.Default;
+			if (_style.Equals(style)) {
+				return;
+			}
+
+			_style = style;
+			_dmdProgramInvalid = true;
 		}
 
 		public void Dispose()
@@ -118,6 +187,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		private void RenderDmdExtPipeline(byte[] rgba, int clientWidth, int clientHeight, float offsetX, float offsetY, float renderWidth, float renderHeight)
 		{
+			EnsureDmdProgram();
 			UploadSourceTexture(rgba);
 			EnsureFramebuffers();
 
@@ -137,12 +207,49 @@ namespace LibDmd.Output.Virtual.Dmd
 			_glUniform1i(_dmdDotGlowUniform, 1);
 			_glUniform1i(_dmdBackGlowUniform, 2);
 			_glUniform2f(_dmdSizeUniform, _size.Width, _size.Height);
-			_glUniform3f(_dmdUnlitDotUniform, 0.018f, 0.004f, 0f);
+			if (_dmdUnlitDotUniform != -1) {
+				_glUniform3f(_dmdUnlitDotUniform, _style.UnlitDotR / Math.Max(0.0001f, _style.Brightness), _style.UnlitDotG / Math.Max(0.0001f, _style.Brightness), _style.UnlitDotB / Math.Max(0.0001f, _style.Brightness));
+			}
+			if (_dmdGlassTextureUniform != -1) {
+				_glUniform1i(_dmdGlassTextureUniform, 0);
+			}
+			if (_dmdGlassTexOffsetUniform != -1) {
+				_glUniform2f(_dmdGlassTexOffsetUniform, 0f, 0f);
+			}
+			if (_dmdGlassTexScaleUniform != -1) {
+				_glUniform2f(_dmdGlassTexScaleUniform, 1f, 1f);
+			}
+			if (_dmdGlassColorUniform != -1) {
+				_glUniform4f(_dmdGlassColorUniform, _style.GlassR, _style.GlassG, _style.GlassB, _style.GlassLighting);
+			}
 			DrawDmdQuad(offsetX, offsetY, renderWidth, renderHeight);
 
 			_glUseProgram(0);
 			_glActiveTexture(GL_TEXTURE0);
 			glDisable(GL_TEXTURE_2D);
+		}
+
+		private void EnsureDmdProgram()
+		{
+			if (!_dmdProgramInvalid && _dmdProgram != 0) {
+				return;
+			}
+
+			if (_dmdProgram != 0) {
+				_glUseProgram(0);
+			}
+
+			_dmdProgram = CreateProgram(PassthroughVertexShader, BuildDmdFragmentShader(_style));
+			_dmdTextureUniform = _glGetUniformLocation(_dmdProgram, "dmdTexture");
+			_dmdDotGlowUniform = _glGetUniformLocation(_dmdProgram, "dmdDotGlow");
+			_dmdBackGlowUniform = _glGetUniformLocation(_dmdProgram, "dmdBackGlow");
+			_dmdSizeUniform = _glGetUniformLocation(_dmdProgram, "dmdSize");
+			_dmdUnlitDotUniform = _glGetUniformLocation(_dmdProgram, "unlitDot");
+			_dmdGlassTextureUniform = _glGetUniformLocation(_dmdProgram, "glassTexture");
+			_dmdGlassTexOffsetUniform = _glGetUniformLocation(_dmdProgram, "glassTexOffset");
+			_dmdGlassTexScaleUniform = _glGetUniformLocation(_dmdProgram, "glassTexScale");
+			_dmdGlassColorUniform = _glGetUniformLocation(_dmdProgram, "glassColor");
+			_dmdProgramInvalid = false;
 		}
 
 		private void RunBlurPass(uint program, int textureUniform, int directionUniform, uint inputTexture, uint framebuffer, float directionX, float directionY)
@@ -368,6 +475,7 @@ namespace LibDmd.Output.Virtual.Dmd
 			_glUniform1i = LoadGlFunction<GlUniform1i>("glUniform1i");
 			_glUniform2f = LoadGlFunction<GlUniform2f>("glUniform2f");
 			_glUniform3f = LoadGlFunction<GlUniform3f>("glUniform3f");
+			_glUniform4f = LoadGlFunction<GlUniform4f>("glUniform4f");
 			_glUseProgram = LoadGlFunction<GlUseProgram>("glUseProgram");
 		}
 
@@ -432,24 +540,42 @@ vec4 blur_level_12(sampler2D image, vec2 coord, vec2 blurDirection) {
 }
 ";
 
-		private const string DmdFragmentShader = @"
-#version 120
+		private static string BuildDmdFragmentShader(VirtualDmdRenderStyle style)
+		{
+			var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
+			var builder = new StringBuilder();
+			builder.AppendLine("#version 120");
+			if (style.HasBackGlow) builder.AppendLine("#define BACKGLOW");
+			if (style.HasDotGlow) builder.AppendLine("#define DOTGLOW");
+			if (style.HasBrightness) builder.AppendLine("#define BRIGHTNESS");
+			if (style.HasUnlitDot) builder.AppendLine("#define UNLIT");
+			if (style.HasGlass) builder.AppendLine("#define GLASS");
+			if (style.HasGamma) builder.AppendLine("#define GAMMA");
+			if (style.DotSize > 0.5f) builder.AppendLine("#define DOT_OVERLAP");
+			builder.AppendFormat(nfi, "const float dotSize = {0:0.00000};\n", style.DotSize);
+			builder.AppendFormat(nfi, "const float dotRounding = {0:0.00000};\n", style.DotRounding);
+			builder.AppendFormat(nfi, "const float sharpMax = {0:0.00000};\n", 0.01f + style.DotSize * (1.0f - style.DotSharpness));
+			builder.AppendFormat(nfi, "const float sharpMin = {0:0.00000};\n", -0.01f - style.DotSize * (1.0f - style.DotSharpness));
+			builder.AppendFormat(nfi, "const float brightness = {0:0.00000};\n", style.Brightness);
+			builder.AppendFormat(nfi, "const float backGlow = {0:0.00000};\n", style.BackGlow);
+			builder.AppendFormat(nfi, "const float dotGlow = {0:0.00000};\n", style.DotGlow);
+			builder.AppendFormat(nfi, "const float gamma = {0:0.00000};\n", style.Gamma);
+			builder.Append(DmdFragmentShaderBody);
+			return builder.ToString();
+		}
+
+		private const string DmdFragmentShaderBody = @"
 varying vec2 uv;
 
 uniform sampler2D dmdTexture;
 uniform sampler2D dmdDotGlow;
 uniform sampler2D dmdBackGlow;
 uniform vec2 dmdSize;
+uniform sampler2D glassTexture;
+uniform vec2 glassTexOffset;
+uniform vec2 glassTexScale;
 uniform vec3 unlitDot;
-
-const float dotSize = 0.92000;
-const float dotRounding = 1.00000;
-const float sharpMax = 0.19400;
-const float sharpMin = -0.19400;
-const float brightness = 0.95000;
-const float backGlow = 0.10000;
-const float dotGlow = 0.18000;
-const float gamma = 1.05000;
+uniform vec4 glassColor;
 
 float udRoundBox(vec2 p, float b, float r)
 {
@@ -463,22 +589,43 @@ vec3 computeDotColor(vec2 ofs)
 	vec2 pos = 2.0 * (fract(uv * dmdSize) - ofs);
 	float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
 	vec3 dmd = texture2D(dmdTexture, nearest).rgb + unlitDot;
+#ifndef UNLIT
+	dmd -= unlitDot;
+#endif
 	return dmd * dot;
 }
 
 void main()
 {
+#ifdef DOT_OVERLAP
 	vec3 dotColor = vec3(0.0);
 	for(int x = -1; x <= 1; x++) {
 		for(int y = -1; y <= 1; y++) {
 			dotColor = max(dotColor, computeDotColor(vec2(float(x) + 0.5, float(y) + 0.5)));
 		}
 	}
+#else
+	vec3 dotColor = computeDotColor(vec2(0.5, 0.5));
+#endif
 
+#ifdef DOTGLOW
 	dotColor += texture2D(dmdDotGlow, uv).rgb * dotGlow;
+#endif
+#ifdef BACKGLOW
 	dotColor += texture2D(dmdBackGlow, uv).rgb * backGlow;
+#endif
+#ifdef BRIGHTNESS
 	dotColor *= brightness;
+#endif
+#ifdef GLASS
+	vec2 glassUv = uv * glassTexScale - glassTexOffset;
+	vec4 glass = texture2D(glassTexture, glassUv);
+	vec3 glassLight = glassColor.rgb + 2.5 * glassColor.a * texture2D(dmdBackGlow, uv).rgb * brightness;
+	dotColor += glass.rgb * glassLight.rgb;
+#endif
+#ifdef GAMMA
 	dotColor = pow(dotColor, vec3(1.0 / gamma));
+#endif
 	gl_FragColor = vec4(dotColor, 1.0);
 }";
 
@@ -529,6 +676,7 @@ void main()
 		private delegate void GlUniform1i(int location, int value);
 		private delegate void GlUniform2f(int location, float value0, float value1);
 		private delegate void GlUniform3f(int location, float value0, float value1, float value2);
+		private delegate void GlUniform4f(int location, float value0, float value1, float value2, float value3);
 		private delegate void GlUseProgram(uint program);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
