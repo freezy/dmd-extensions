@@ -110,6 +110,11 @@
     <!-- PIN2DMD: shared frame/palette logic; the libusb-1.0 USB transport lives in this project's
          own Output\Pin2Dmd\Pin2DmdBase.Usb3.cs (legacy LibUsbDotNet 2.x path is #if !LIBDMD_CORE). -->
     <Compile Include="..\LibDmd\Output\Pin2Dmd\*.cs" LinkBase="LibDmd\Output\Pin2Dmd" />
+    <!-- PinDMD1 (FTDI/D2XX) and PinDMD2 (libusb). Like Pin2DMD, the cross-platform transport lives
+         in this project (Output\PinDmd1\PinDmd1.Ftdi.cs, Output\PinDmd2\PinDmd2.Usb3.cs); the legacy
+         FTD2XX_NET / LibUsbDotNet paths in the shared files are #if !LIBDMD_CORE. -->
+    <Compile Include="..\LibDmd\Output\PinDmd1\*.cs" LinkBase="LibDmd\Output\PinDmd1" />
+    <Compile Include="..\LibDmd\Output\PinDmd2\*.cs" LinkBase="LibDmd\Output\PinDmd2" />
 
     <!--
       The full INI configuration layer (DmdDevice/Configuration.cs, IConfiguration.cs) is

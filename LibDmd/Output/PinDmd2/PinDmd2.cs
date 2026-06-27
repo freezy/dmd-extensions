@@ -1,7 +1,9 @@
 ﻿using System;
 using LibDmd.Frame;
+#if !LIBDMD_CORE
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+#endif
 using NLog;
 
 namespace LibDmd.Output.PinDmd2
@@ -10,7 +12,9 @@ namespace LibDmd.Output.PinDmd2
 	/// Output target for PinDMD2 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd2 : IGray2Destination, IGray4Destination, IRawOutput, IFixedSizeDestination
+	// USB transport is split per build: legacy LibUsbDotNet 2.x here (#if !LIBDMD_CORE), the
+	// libusb-1.0 path in PinDmd2.Usb3.cs (LibDmd.Core). PinDMD2 is a libusb device, not FTDI.
+	public partial class PinDmd2 : IGray2Destination, IGray4Destination, IRawOutput, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v2";
 		public bool IsAvailable { get; private set; }
@@ -20,7 +24,9 @@ namespace LibDmd.Output.PinDmd2
 		public Dimensions FixedSize { get; } = Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
+#if !LIBDMD_CORE
 		private UsbDevice _pinDmd2Device;
+#endif
 		private readonly byte[] _frameBuffer;
 
 		private static PinDmd2 _instance;
@@ -55,6 +61,7 @@ namespace LibDmd.Output.PinDmd2
 			return _instance;
 		}
 
+#if !LIBDMD_CORE
 		public void Init()
 		{
 			// find and open the usb device.
@@ -109,6 +116,7 @@ namespace LibDmd.Output.PinDmd2
 				Logger.Warn(e, "Probing PinDMDv2 failed, skipping.");
 			}
 		}
+#endif
 
 		public void RenderGray2(DmdFrame frame)
 		{
@@ -125,6 +133,7 @@ namespace LibDmd.Output.PinDmd2
 			RenderRaw(_frameBuffer);
 		}
 
+#if !LIBDMD_CORE
 		public void RenderRaw(byte[] data)
 		{
 			lock (locker) {
@@ -146,12 +155,14 @@ namespace LibDmd.Output.PinDmd2
 				}
 			}
 		}
+#endif
 
 		public void ClearDisplay()
 		{
 			RenderGray2(new DmdFrame(FixedSize, 2));
 		}
 
+#if !LIBDMD_CORE
 		public void Dispose()
 		{
 			lock (locker) {
@@ -166,5 +177,6 @@ namespace LibDmd.Output.PinDmd2
 				UsbDevice.Exit();
 			}
 		}
+#endif
 	}
 }
