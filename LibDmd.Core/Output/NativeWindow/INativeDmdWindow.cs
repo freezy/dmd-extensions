@@ -106,16 +106,17 @@ namespace LibDmd.Output.NativeWindow
 	/// </summary>
 	public static class NativeDmdWindow
 	{
-		private const string ImplementationTypeName =
-			"LibDmd.Output.NativeWindow.NativeWindowDestination, LibDmd.Core.Windows";
+		// Self-driven Win32 backend (own message loop) and the cross-platform host-pumped SDL/GL-ES
+		// backend. The factory picks per-OS, preferring the native one and falling back to SDL.
+		private const string Win32TypeName = "LibDmd.Output.NativeWindow.NativeWindowDestination, LibDmd.Core.Windows";
+		private const string SdlTypeName = "LibDmd.Output.NativeWindow.SdlNativeDmdWindow, LibDmd.Core.Sdl";
 
 		private static bool _resolved;
 		private static ConstructorInfo _ctor;
 
 		/// <summary>
-		/// Creates a native DMD window for the given resolution, or returns null if no
-		/// platform backend is available (e.g. the platform window assembly isn't shipped
-		/// for the current OS).
+		/// Creates a native DMD window for the given resolution, or returns null if no platform backend
+		/// is available (the assembly isn't shipped for this OS) or the backend failed to initialize.
 		/// </summary>
 		public static INativeDmdWindow TryCreate(int width, int height, DmdWindowLayout layout, DmdWindowStyle style)
 		{
@@ -124,12 +125,17 @@ namespace LibDmd.Output.NativeWindow
 				return null;
 			}
 
-			return (INativeDmdWindow)ctor.Invoke(new object[] {
-				width,
-				height,
-				layout ?? new DmdWindowLayout(100, 100, width * 4, height * 4, false),
-				style ?? new DmdWindowStyle()
-			});
+			try {
+				return (INativeDmdWindow)ctor.Invoke(new object[] {
+					width,
+					height,
+					layout ?? new DmdWindowLayout(100, 100, width * 4, height * 4, false),
+					style ?? new DmdWindowStyle()
+				});
+			} catch (Exception) {
+				// Backend present but couldn't create its window/context (e.g. no SDL/ANGLE runtime).
+				return null;
+			}
 		}
 
 		private static ConstructorInfo ResolveConstructor()
@@ -139,15 +145,29 @@ namespace LibDmd.Output.NativeWindow
 			}
 
 			_resolved = true;
-			var type = Type.GetType(ImplementationTypeName, throwOnError: false);
-			if (type == null || !typeof(INativeDmdWindow).IsAssignableFrom(type)) {
-				return null;
+			foreach (var typeName in CandidateTypeNames()) {
+				var type = Type.GetType(typeName, throwOnError: false);
+				if (type == null || !typeof(INativeDmdWindow).IsAssignableFrom(type)) {
+					continue;
+				}
+
+				var ctor = type.GetConstructor(new[] {
+					typeof(int), typeof(int), typeof(DmdWindowLayout), typeof(DmdWindowStyle)
+				});
+				if (ctor != null) {
+					_ctor = ctor;
+					break;
+				}
 			}
 
-			_ctor = type.GetConstructor(new[] {
-				typeof(int), typeof(int), typeof(DmdWindowLayout), typeof(DmdWindowStyle)
-			});
 			return _ctor;
+		}
+
+		private static string[] CandidateTypeNames()
+		{
+			return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+				? new[] { Win32TypeName, SdlTypeName }
+				: new[] { SdlTypeName };
 		}
 	}
 }
