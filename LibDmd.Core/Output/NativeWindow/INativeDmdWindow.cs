@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using NLog;
 
 namespace LibDmd.Output.NativeWindow
 {
@@ -22,6 +24,15 @@ namespace LibDmd.Output.NativeWindow
 	/// </list>
 	/// All frame data is pushed in via the <see cref="IDestination"/> render methods; the
 	/// window owns its own GL(ES) context and never shares Unity's GPU device.
+	///
+	/// THREADING CONTRACT — implementations MUST be safe against this concurrency:
+	/// the <see cref="IDestination"/> render methods (RenderGrayX/RenderRgbX) and the color/palette
+	/// setters are invoked by the RenderGraph on the DMD <i>worker</i> thread (and, when a clocked
+	/// colorizer is active, from its rotation/timer thread) — NOT necessarily the host's main thread.
+	/// <see cref="ConfigureWindow"/>, <see cref="ConfigureStyle"/> and <see cref="Pump"/> are called
+	/// from the host's main thread. Implementations therefore buffer incoming frames under a lock and
+	/// only touch GL/OS-window state from their own loop (self-driven) or from <see cref="Pump"/>
+	/// (host-driven). Render methods must never block on the main thread.
 	/// </remarks>
 	public interface INativeDmdWindow : IDestination
 	{
@@ -112,39 +123,43 @@ namespace LibDmd.Output.NativeWindow
 		private const string SdlTypeName = "LibDmd.Output.NativeWindow.SdlNativeDmdWindow, LibDmd.Core.Sdl";
 
 		private static bool _resolved;
-		private static ConstructorInfo _ctor;
+		private static ConstructorInfo[] _ctors;
+
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// Creates a native DMD window for the given resolution, or returns null if no platform backend
-		/// is available (the assembly isn't shipped for this OS) or the backend failed to initialize.
+		/// is available (the assembly isn't shipped for this OS) or every candidate backend failed to
+		/// initialize. Candidates are attempted in preference order (native first, then SDL); a backend
+		/// that throws during construction is logged and the next candidate is tried.
 		/// </summary>
 		public static INativeDmdWindow TryCreate(int width, int height, DmdWindowLayout layout, DmdWindowStyle style)
 		{
-			var ctor = ResolveConstructor();
-			if (ctor == null) {
-				return null;
+			layout = layout ?? new DmdWindowLayout(100, 100, width * 4, height * 4, false);
+			style = style ?? new DmdWindowStyle();
+
+			foreach (var ctor in ResolveConstructors()) {
+				try {
+					return (INativeDmdWindow)ctor.Invoke(new object[] { width, height, layout, style });
+				} catch (Exception exception) {
+					// Backend present but couldn't create its window/context (e.g. no SDL/ANGLE runtime).
+					// Fall through to the next candidate rather than giving up on the whole feature.
+					Logger.Info(exception.InnerException ?? exception,
+						$"[DMD] Native-window backend {ctor.DeclaringType?.FullName} failed to initialize; trying next candidate.");
+				}
 			}
 
-			try {
-				return (INativeDmdWindow)ctor.Invoke(new object[] {
-					width,
-					height,
-					layout ?? new DmdWindowLayout(100, 100, width * 4, height * 4, false),
-					style ?? new DmdWindowStyle()
-				});
-			} catch (Exception) {
-				// Backend present but couldn't create its window/context (e.g. no SDL/ANGLE runtime).
-				return null;
-			}
+			return null;
 		}
 
-		private static ConstructorInfo ResolveConstructor()
+		private static ConstructorInfo[] ResolveConstructors()
 		{
 			if (_resolved) {
-				return _ctor;
+				return _ctors;
 			}
 
 			_resolved = true;
+			var ctors = new List<ConstructorInfo>();
 			foreach (var typeName in CandidateTypeNames()) {
 				var type = Type.GetType(typeName, throwOnError: false);
 				if (type == null || !typeof(INativeDmdWindow).IsAssignableFrom(type)) {
@@ -155,12 +170,12 @@ namespace LibDmd.Output.NativeWindow
 					typeof(int), typeof(int), typeof(DmdWindowLayout), typeof(DmdWindowStyle)
 				});
 				if (ctor != null) {
-					_ctor = ctor;
-					break;
+					ctors.Add(ctor);
 				}
 			}
 
-			return _ctor;
+			_ctors = ctors.ToArray();
+			return _ctors;
 		}
 
 		private static string[] CandidateTypeNames()

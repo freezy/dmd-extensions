@@ -27,8 +27,9 @@ namespace LibDmd.Output.NativeWindow
 		private Color _color = Color.FromRgb(255, 88, 0);
 		private IntPtr _hwnd;
 		private NativeOpenGlRenderer _renderer;
-		private bool _disposed;
-		private bool _isMovingOrSizing;
+		// Crossed between the worker thread (RenderXxx) and the window thread (Dispose / WndProc).
+		private volatile bool _disposed;
+		private volatile bool _isMovingOrSizing;
 		private int _renderPending;
 		private int _configurePending;
 
@@ -193,14 +194,15 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
+			var color = _color; // single read; SetColor may run on another thread (color rotation)
 			lock (_frameLock) {
 				for (var i = 0; i < _size.Surface; i++) {
 					var intensity = frame.Data[i] / (float)maxValue;
 					WriteRgba(
 						i,
-						(byte)(_color.R * intensity),
-						(byte)(_color.G * intensity),
-						(byte)(_color.B * intensity));
+						(byte)(color.R * intensity),
+						(byte)(color.G * intensity),
+						(byte)(color.B * intensity));
 				}
 			}
 			RequestPaint();
