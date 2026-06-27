@@ -15,10 +15,10 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
       <group targetFramework="netstandard2.1">
-        <dependency id="LibDmd.Core.Native.win-x64" version="__VERSION__" include="native" />
-        <dependency id="LibDmd.Core.Native.osx-x64" version="__VERSION__" include="native" />
-        <dependency id="LibDmd.Core.Native.osx-arm64" version="__VERSION__" include="native" />
-        <dependency id="LibDmd.Core.Native.linux-x64" version="__VERSION__" include="native" />
+        <dependency id="LibDmd.Core.Native.win-x64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.osx-x64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.osx-arm64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.linux-x64" version="__VERSION__" include="native;build" />
       </group>
     </dependencies>
   </metadata>
