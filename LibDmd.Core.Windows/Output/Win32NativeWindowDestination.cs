@@ -164,8 +164,10 @@ namespace LibDmd.Output.NativeWindow
 		public void ConfigureRenderStyle(VirtualDmdRenderStyle renderStyle)
 		{
 			_renderStyle = renderStyle ?? VirtualDmdRenderStyle.Default;
-			_renderer?.SetStyle(_renderStyle);
-			RequestPaint();
+			var hwnd = _hwnd;
+			if (hwnd != IntPtr.Zero) {
+				PostMessage(hwnd, WM_CONFIGURE_RENDER_STYLE, IntPtr.Zero, IntPtr.Zero);
+			}
 		}
 
 		public void ClearDisplay()
@@ -340,6 +342,12 @@ namespace LibDmd.Output.NativeWindow
 			RequestPaint();
 		}
 
+		private void ApplyRenderStyle()
+		{
+			_renderer?.SetStyle(_renderStyle);
+			RequestPaint();
+		}
+
 		private static short GetSignedLoWord(IntPtr value)
 		{
 			return unchecked((short)((long)value & 0xffff));
@@ -449,6 +457,12 @@ namespace LibDmd.Output.NativeWindow
 							return IntPtr.Zero;
 						}
 						break;
+					case WM_CONFIGURE_RENDER_STYLE:
+						if (TryGetDestination(hwnd, out var configureStyleDestination)) {
+							configureStyleDestination.ApplyRenderStyle();
+							return IntPtr.Zero;
+						}
+						break;
 					case WM_SHOWWINDOW:
 					case WM_RENDER:
 						if (TryGetDestination(hwnd, out var renderDestination)) {
@@ -489,6 +503,7 @@ namespace LibDmd.Output.NativeWindow
 		private const int SWP_NOACTIVATE = 0x0010;
 		private const int SWP_SHOWWINDOW = 0x0040;
 		private const int WM_CLOSE = 0x0010;
+		private const int WM_CONFIGURE_RENDER_STYLE = 0x8003;
 		private const int WM_CONFIGURE_WINDOW = 0x8002;
 		private const int WM_DESTROY = 0x0002;
 		private const int WM_ENTERSIZEMOVE = 0x0231;

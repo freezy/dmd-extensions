@@ -36,6 +36,8 @@ namespace LibDmd.Output.NativeWindow
 		private int _dragStartWidth;
 		private int _dragStartHeight;
 		private int _renderPending;
+		private int _configurePending;
+		private int _renderStylePending;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -72,21 +74,14 @@ namespace LibDmd.Output.NativeWindow
 			_windowWidth = width > 0 ? width : _size.Width * Scale;
 			_windowHeight = height > 0 ? height : _size.Height * Scale;
 			_stayOnTop = stayOnTop;
-			var window = _window;
-			if (window == IntPtr.Zero) {
-				return;
-			}
-
-			SDL_SetWindowPosition(window, _windowLeft, _windowTop);
-			SDL_SetWindowSize(window, _windowWidth, _windowHeight);
-			SDL_SetWindowAlwaysOnTop(window, _stayOnTop ? SDL_TRUE : SDL_FALSE);
+			Interlocked.Exchange(ref _configurePending, 1);
 			RequestPaint();
 		}
 
 		public void ConfigureRenderStyle(VirtualDmdRenderStyle renderStyle)
 		{
 			_renderStyle = renderStyle ?? VirtualDmdRenderStyle.Default;
-			_pipeline?.SetStyle(_renderStyle);
+			Interlocked.Exchange(ref _renderStylePending, 1);
 			RequestPaint();
 		}
 
@@ -130,6 +125,14 @@ namespace LibDmd.Output.NativeWindow
 				while (!_disposed) {
 					while (SDL_PollEvent(out var ev) != 0) {
 						HandleEvent(ev);
+					}
+
+					if (Interlocked.Exchange(ref _configurePending, 0) != 0) {
+						ApplyWindowConfiguration();
+					}
+
+					if (Interlocked.Exchange(ref _renderStylePending, 0) != 0) {
+						ApplyRenderStyle();
 					}
 
 					if (Interlocked.Exchange(ref _renderPending, 0) != 0 && !_isMovingOrSizing) {
@@ -223,6 +226,23 @@ namespace LibDmd.Output.NativeWindow
 			_pipeline.SetStyle(_renderStyle);
 			_pipeline.Render(frame, drawableWidth, drawableHeight, offsetX, offsetY, renderWidth, renderHeight);
 			SDL_GL_SwapWindow(_window);
+		}
+
+		private void ApplyWindowConfiguration()
+		{
+			if (_window == IntPtr.Zero) {
+				return;
+			}
+
+			SDL_SetWindowPosition(_window, _windowLeft, _windowTop);
+			SDL_SetWindowSize(_window, _windowWidth, _windowHeight);
+			SDL_SetWindowAlwaysOnTop(_window, _stayOnTop ? SDL_TRUE : SDL_FALSE);
+			ReadWindowLayout();
+		}
+
+		private void ApplyRenderStyle()
+		{
+			_pipeline?.SetStyle(_renderStyle);
 		}
 
 		private void HandleEvent(SdlEvent ev)
