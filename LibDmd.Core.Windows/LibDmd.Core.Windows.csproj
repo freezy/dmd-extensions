@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net8.0-windows</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>LibDmd</RootNamespace>
+    <AssemblyName>LibDmd.Core.Windows</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="LibDmd.DmdColor" Alias="Color" />
+    <ProjectReference Include="..\LibDmd.Core\LibDmd.Core.csproj" />
+    <PackageReference Include="NLog" Version="4.7.15" />
+  </ItemGroup>
+
+</Project>
