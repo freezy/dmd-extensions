@@ -7,7 +7,7 @@ using NLog;
 
 namespace LibDmd.Output.NativeWindow
 {
-	public sealed class NativeWindowDestination : IGray2Destination, IGray4Destination, IGray8Destination, IRgb24Destination, IRgb565Destination, IFixedSizeDestination
+	public sealed class NativeWindowDestination : IGray2Destination, IGray4Destination, IGray8Destination, IRgb24Destination, IRgb565Destination, IFixedSizeDestination, INativeDmdWindow
 	{
 		private const int Scale = 4;
 		private readonly Dimensions _size;
@@ -33,6 +33,21 @@ namespace LibDmd.Output.NativeWindow
 			_size = new Dimensions(width, height);
 			_rgba = new byte[_size.Surface * 4];
 			_backend = CreateBackend(width, height, windowLeft, windowTop, windowWidth, windowHeight, stayOnTop, renderStyle);
+		}
+
+		/// <summary>
+		/// Strongly-typed constructor used by the cross-platform <see cref="NativeDmdWindow.TryCreate"/>
+		/// factory so consumers never touch reflection or the GL-coupled style type.
+		/// </summary>
+		public NativeWindowDestination(int width, int height, DmdWindowLayout layout, DmdWindowStyle style)
+			: this(width, height,
+				(layout ?? new DmdWindowLayout()).Left,
+				(layout ?? new DmdWindowLayout()).Top,
+				(layout ?? new DmdWindowLayout()).Width,
+				(layout ?? new DmdWindowLayout()).Height,
+				(layout ?? new DmdWindowLayout()).StayOnTop,
+				ToRenderStyle(style))
+		{
 		}
 
 		public string Name => "Native DMD Window";
@@ -109,6 +124,56 @@ namespace LibDmd.Output.NativeWindow
 		public void ConfigureRenderStyle(VirtualDmdRenderStyle renderStyle)
 		{
 			_backend.ConfigureRenderStyle(renderStyle);
+		}
+
+		// --- INativeDmdWindow ---
+
+		/// <summary>
+		/// False: the current backends (Win32 message loop, SDL loop) own their own thread.
+		/// The host-pumped backend (Phase B / macOS) flips this to true.
+		/// </summary>
+		public bool RequiresHostPump => false;
+
+		public void ConfigureWindow(DmdWindowLayout layout)
+		{
+			if (layout == null) {
+				return;
+			}
+			_backend.ConfigureWindow(layout.Left, layout.Top, layout.Width, layout.Height, layout.StayOnTop);
+		}
+
+		public void ConfigureStyle(DmdWindowStyle style)
+		{
+			_backend.ConfigureRenderStyle(ToRenderStyle(style));
+		}
+
+		public void Pump()
+		{
+			// No-op: self-driven backends render on their own thread. Host-driven backends override this.
+		}
+
+		private static VirtualDmdRenderStyle ToRenderStyle(DmdWindowStyle style)
+		{
+			if (style == null) {
+				return VirtualDmdRenderStyle.Default;
+			}
+
+			return new VirtualDmdRenderStyle {
+				DotSize = style.DotSize,
+				DotRounding = style.DotRounding,
+				DotSharpness = style.DotSharpness,
+				UnlitDotR = style.UnlitDotR,
+				UnlitDotG = style.UnlitDotG,
+				UnlitDotB = style.UnlitDotB,
+				Brightness = style.Brightness,
+				DotGlow = style.DotGlow,
+				BackGlow = style.BackGlow,
+				Gamma = style.Gamma,
+				GlassR = style.GlassR,
+				GlassG = style.GlassG,
+				GlassB = style.GlassB,
+				GlassLighting = style.GlassLighting,
+			};
 		}
 
 		public void ClearDisplay()
