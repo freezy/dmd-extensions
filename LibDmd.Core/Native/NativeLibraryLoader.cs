@@ -71,6 +71,21 @@ namespace LibDmd.Native
 		/// </summary>
 		private static IEnumerable<string> GetCandidates(string libraryName)
 		{
+			// libusb-1.0 (PIN2DMD) doesn't follow the "<name>64" convention, so map it explicitly.
+			if (libraryName.IndexOf("usb", StringComparison.OrdinalIgnoreCase) >= 0) {
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+					yield return "libusb-1.0.dll";
+				} else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+					yield return "libusb-1.0.0.dylib";
+					yield return "libusb-1.0.dylib";
+				} else {
+					yield return "libusb-1.0.so.0";
+					yield return "libusb-1.0.so";
+				}
+				yield return libraryName;
+				yield break;
+			}
+
 			var baseName = GetBaseName(libraryName);
 			if (baseName == null) {
 				// not one of ours — let the default resolver handle it
