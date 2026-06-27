@@ -33,6 +33,7 @@ namespace LibDmd.Output.NativeWindow
 		private int _configurePending;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private const int ResizeGripSize = 18;
 
 		public NativeWindowDestination(int width, int height)
 			: this(width, height, 100, 100, width * Scale, height * Scale, false, VirtualDmdRenderStyle.Default)
@@ -211,18 +212,16 @@ namespace LibDmd.Output.NativeWindow
 		private void WindowThreadMain()
 		{
 			NativeWindowClass.Register();
-			var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-			var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
-			AdjustWindowRect(ref rect, style, false);
+			var style = WS_POPUP | WS_THICKFRAME | WS_VISIBLE;
 			_hwnd = CreateWindowEx(
 				_stayOnTop ? WS_EX_TOPMOST : 0,
 				NativeWindowClass.ClassName,
 				"VPE DMD",
 				style,
-				rect.Left,
-				rect.Top,
-				rect.Right - rect.Left,
-				rect.Bottom - rect.Top,
+				_windowLeft,
+				_windowTop,
+				_windowWidth,
+				_windowHeight,
 				IntPtr.Zero,
 				IntPtr.Zero,
 				IntPtr.Zero,
@@ -293,6 +292,24 @@ namespace LibDmd.Output.NativeWindow
 			_windowHeight = Math.Max(1, client.Bottom - client.Top);
 		}
 
+		private bool IsResizeGrip(IntPtr lParam)
+		{
+			var hwnd = _hwnd;
+			if (hwnd == IntPtr.Zero || !GetClientRect(hwnd, out var client)) {
+				return false;
+			}
+
+			var point = new POINT {
+				X = GetSignedLoWord(lParam),
+				Y = GetSignedHiWord(lParam)
+			};
+			if (!ScreenToClient(hwnd, ref point)) {
+				return false;
+			}
+
+			return point.X >= client.Right - ResizeGripSize && point.Y >= client.Bottom - ResizeGripSize;
+		}
+
 		private void ApplyWindowConfiguration()
 		{
 			var hwnd = _hwnd;
@@ -300,18 +317,25 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
-			var style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-			var rect = new RECT { Left = _windowLeft, Top = _windowTop, Right = _windowLeft + _windowWidth, Bottom = _windowTop + _windowHeight };
-			AdjustWindowRect(ref rect, style, false);
 			SetWindowPos(
 				hwnd,
 				_stayOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
-				rect.Left,
-				rect.Top,
-				rect.Right - rect.Left,
-				rect.Bottom - rect.Top,
+				_windowLeft,
+				_windowTop,
+				_windowWidth,
+				_windowHeight,
 				SWP_NOACTIVATE | SWP_SHOWWINDOW);
 			RequestPaint();
+		}
+
+		private static short GetSignedLoWord(IntPtr value)
+		{
+			return unchecked((short)((long)value & 0xffff));
+		}
+
+		private static short GetSignedHiWord(IntPtr value)
+		{
+			return unchecked((short)(((long)value >> 16) & 0xffff));
 		}
 
 		private sealed class NativeWindowClass
@@ -374,6 +398,13 @@ namespace LibDmd.Output.NativeWindow
 						break;
 					case WM_ERASEBKGND:
 						return new IntPtr(1);
+					case WM_NCCALCSIZE:
+						return IntPtr.Zero;
+					case WM_NCHITTEST:
+						if (TryGetDestination(hwnd, out var hitTestDestination)) {
+							return new IntPtr(hitTestDestination.IsResizeGrip(lParam) ? HTBOTTOMRIGHT : HTCAPTION);
+						}
+						break;
 					case WM_ENTERSIZEMOVE:
 						if (TryGetDestination(hwnd, out var enterDestination)) {
 							enterDestination._isMovingOrSizing = true;
@@ -438,6 +469,8 @@ namespace LibDmd.Output.NativeWindow
 		private const int CW_USEDEFAULT = unchecked((int)0x80000000);
 		private const int CS_HREDRAW = 0x0002;
 		private const int CS_VREDRAW = 0x0001;
+		private const int HTBOTTOMRIGHT = 17;
+		private const int HTCAPTION = 2;
 		private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 		private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
 		private const int IDC_ARROW = 32512;
@@ -450,12 +483,15 @@ namespace LibDmd.Output.NativeWindow
 		private const int WM_ERASEBKGND = 0x0014;
 		private const int WM_EXITSIZEMOVE = 0x0232;
 		private const int WM_MOVE = 0x0003;
+		private const int WM_NCCALCSIZE = 0x0083;
+		private const int WM_NCHITTEST = 0x0084;
 		private const int WM_PAINT = 0x000F;
 		private const int WM_RENDER = 0x8001;
 		private const int WM_SHOWWINDOW = 0x0018;
 		private const int WM_SIZE = 0x0005;
 		private const int WS_EX_TOPMOST = 0x00000008;
-		private const int WS_OVERLAPPEDWINDOW = 0x00CF0000;
+		private const int WS_POPUP = unchecked((int)0x80000000);
+		private const int WS_THICKFRAME = 0x00040000;
 		private const int WS_VISIBLE = 0x10000000;
 
 		private delegate IntPtr WndProc(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
@@ -558,6 +594,9 @@ namespace LibDmd.Output.NativeWindow
 
 		[DllImport("user32.dll")]
 		private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+		[DllImport("user32.dll")]
+		private static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll")]
 		private static extern IntPtr BeginPaint(IntPtr hwnd, out PAINTSTRUCT lpPaint);
