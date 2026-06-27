@@ -21,8 +21,6 @@ namespace LibDmd.Output.NativeWindow
 		private IntPtr _hwnd;
 		private NativeOpenGlRenderer _renderer;
 		private bool _disposed;
-		private bool _firstNonEmptyFrameLogged;
-		private bool _firstEmptyFrameLogged;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -57,7 +55,6 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
-			LogFrame("rgb565", frame);
 			lock (_frameLock) {
 				for (var i = 0; i < _size.Surface; i++) {
 					var value = frame.Data[i * 2] | (frame.Data[i * 2 + 1] << 8);
@@ -76,7 +73,6 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
-			LogFrame("rgb24", frame);
 			lock (_frameLock) {
 				for (var i = 0; i < _size.Surface; i++) {
 					WriteRgba(i, frame.Data[i * 3], frame.Data[i * 3 + 1], frame.Data[i * 3 + 2]);
@@ -129,7 +125,6 @@ namespace LibDmd.Output.NativeWindow
 				return;
 			}
 
-			LogFrame("gray", frame);
 			lock (_frameLock) {
 				for (var i = 0; i < _size.Surface; i++) {
 					var intensity = frame.Data[i] / (float)maxValue;
@@ -141,24 +136,6 @@ namespace LibDmd.Output.NativeWindow
 				}
 			}
 			RequestPaint();
-		}
-
-		private void LogFrame(string format, DmdFrame frame)
-		{
-			var max = 0;
-			for (var i = 0; i < frame.Data.Length; i++) {
-				if (frame.Data[i] > max) {
-					max = frame.Data[i];
-				}
-			}
-
-			if (max > 0 && !_firstNonEmptyFrameLogged) {
-				Logger.Info($"[DMD] Native window received first non-empty {format} frame: bitLength={frame.BitLength}, bytes={frame.Data.Length}, max={max}.");
-				_firstNonEmptyFrameLogged = true;
-			} else if (max == 0 && !_firstEmptyFrameLogged) {
-				Logger.Info($"[DMD] Native window received first empty {format} frame: bitLength={frame.BitLength}, bytes={frame.Data.Length}.");
-				_firstEmptyFrameLogged = true;
-			}
 		}
 
 		private void WriteRgba(int pixel, byte r, byte g, byte b)
