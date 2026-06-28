@@ -1,5 +1,7 @@
 ﻿using System;
+#if !LIBDMD_CORE
 using FTD2XX_NET;
+#endif
 using LibDmd.Frame;
 using NLog;
 
@@ -9,7 +11,9 @@ namespace LibDmd.Output.PinDmd1
 	/// Output target for PinDMDv1 devices.
 	/// </summary>
 	/// <see cref="http://pindmd.com/"/>
-	public class PinDmd1 : IRawOutput, IGray2Destination, IFixedSizeDestination
+	// FTDI transport is split per build: the legacy FTD2XX_NET path is here (#if !LIBDMD_CORE);
+	// the cross-platform ftd2xx (D2XX) P/Invoke path is in PinDmd1.Ftdi.cs (LibDmd.Core).
+	public partial class PinDmd1 : IRawOutput, IGray2Destination, IFixedSizeDestination
 	{
 		public string Name { get; } = "PinDMD v1";
 		public bool IsAvailable { get; private set; }
@@ -19,10 +23,12 @@ namespace LibDmd.Output.PinDmd1
 		public Dimensions FixedSize { get; } = Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
+#if !LIBDMD_CORE
 		private FTDI.FT_DEVICE_INFO_NODE _pinDmd1Device;
+		private static FTDI _ftdi;
+#endif
 		private readonly byte[] _frameBuffer;
 
-		private static FTDI _ftdi;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private static PinDmd1 _instance;
 
@@ -32,6 +38,7 @@ namespace LibDmd.Output.PinDmd1
 
 		private PinDmd1()
 		{
+#if !LIBDMD_CORE
 			if (_ftdi == null) {
 				try {
 					_ftdi = new FTDI();
@@ -39,6 +46,7 @@ namespace LibDmd.Output.PinDmd1
 					Logger.Error(e, "Error initializing FTDI USB driver.");
 				}
 			}
+#endif
 
 			// 2 bits per pixel + 4 init pixels
 			var size = (FixedSize.Surface / 4) + 4;
@@ -49,6 +57,7 @@ namespace LibDmd.Output.PinDmd1
 			_frameBuffer[3] = 0x0;     // command byte
 		}
 
+#if !LIBDMD_CORE
 		public void Init()
 		{
 			if (_ftdi == null) {
@@ -128,6 +137,7 @@ namespace LibDmd.Output.PinDmd1
 			}
 			Logger.Info("Connected to PinDMDv1.");
 		}
+#endif
 
 		/// <summary>
 		/// Returns the current instance of the PinDMD2 API. In any case,
@@ -152,6 +162,7 @@ namespace LibDmd.Output.PinDmd1
 			RenderRaw(_frameBuffer);
 		}
 
+#if !LIBDMD_CORE
 		public void RenderRaw(byte[] data)
 		{
 			lock (locker) {
@@ -164,12 +175,14 @@ namespace LibDmd.Output.PinDmd1
 				}
 			}
 		}
+#endif
 
 		public void ClearDisplay()
 		{
 			RenderGray2(new DmdFrame(FixedSize, 2));
 		}
 
+#if !LIBDMD_CORE
 		public void Dispose()
 		{
 			lock (locker) {
@@ -181,5 +194,6 @@ namespace LibDmd.Output.PinDmd1
 				}
 			}
 		}
+#endif
 	}
 }

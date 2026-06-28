@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+#if !LIBDMD_CORE
 using System.Windows;
+#endif
 using System.Windows.Media;
+#if !LIBDMD_CORE
 using System.Windows.Media.Imaging;
-using LibDmd.Frame;
 using ResizeMode = LibDmd.Input.ResizeMode;
+#endif
+using LibDmd.Frame;
 
 namespace LibDmd.Common
 {
@@ -77,6 +81,7 @@ namespace LibDmd.Common
 			}
 		}
 
+#if !LIBDMD_CORE
 		/// <summary>
 		/// Resizes and flips an image
 		/// </summary>
@@ -253,5 +258,6 @@ namespace LibDmd.Common
 				return processedBmp;
 			}
 		}
+#endif
 	}
 }

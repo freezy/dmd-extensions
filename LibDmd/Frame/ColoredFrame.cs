@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
+#if !LIBDMD_CORE
 using System.Windows.Media.Imaging;
+#endif
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Output;
@@ -120,11 +122,16 @@ namespace LibDmd
 			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), 4);
 		}
 
+#if !LIBDMD_CORE
 		/// <summary>
 		/// Converts this colored frame to a bitmap frame.
 		/// </summary>
 		/// <returns>Converted bitmap frame</returns>
 		public BmpFrame ConvertToBitmap() => new BmpFrame(ConvertToBitmapWithColors());
+#else
+		// Cross-platform core: stub keeps the signature RenderGraph references; never reached.
+		public BmpFrame ConvertToBitmap() => throw new NotSupportedException("Bitmap frames are not supported in LibDmd.Core.");
+#endif
 
 		/// <summary>
 		/// Converts this colored frame to a RGB24 frame.
@@ -138,6 +145,7 @@ namespace LibDmd
 		/// <returns>Converted RGB565 frame</returns>
 		public DmdFrame ConvertToRgb565() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 2), 16);
 
+#if !LIBDMD_CORE
 		private BitmapSource ConvertToBitmapWithColors()
 		{
 			var rgb24 = ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 3);
@@ -174,6 +182,7 @@ namespace LibDmd
 					throw new ArgumentException("Cannot convert frame with bit length " + BitLength);
 			}
 		}
+#endif
 
 		#endregion
 
@@ -205,6 +214,7 @@ namespace LibDmd
 			// 	return Update(targetDim, FrameUtil.ScaleDown(targetDim, Data));
 			// }
 
+#if !LIBDMD_CORE
 			// otherwise, convert to grayscale bitmap, transform, convert back.
 			var bmp = ConvertToBitmapWithoutColors();
 			var transformedBmp = TransformationUtil.Transform(bmp, targetDim, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
@@ -213,6 +223,12 @@ namespace LibDmd
 			Update(targetDim, transformedData);
 
 			return this;
+#else
+			// Cross-platform core: bitmap-based arbitrary resize isn't ported yet
+			// (TransformationUtil's WPF bitmap path is excluded). Same-size and HD up-scaling
+			// are handled above / by TransformHdScaling; fall back to a flip here.
+			return Update(TransformationUtil.Flip(Dimensions, BytesPerPixel, Data, renderGraph.FlipHorizontally, renderGraph.FlipVertically));
+#endif
 		}
 
 		/// <summary>

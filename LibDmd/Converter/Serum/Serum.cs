@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -87,7 +86,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			_serumFramePtr = Serum_Load(altcolorPath, romName, FlagRequest32PFrames | FlagRequest64PFrames);
-			if (_serumFramePtr == null) {
+			if (_serumFramePtr == IntPtr.Zero) {
 				IsLoaded = false;
 				return;
 			}

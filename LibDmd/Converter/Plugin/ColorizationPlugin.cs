@@ -563,6 +563,7 @@ namespace LibDmd.Converter.Plugin
 	
 	static class NativeDllLoad
 	{
+#if !LIBDMD_CORE
 		[DllImport("kernel32.dll")]
 		public static extern IntPtr LoadLibrary(string dllToLoad);
 
@@ -571,5 +572,27 @@ namespace LibDmd.Converter.Plugin
 
 		[DllImport("kernel32.dll")]
 		public static extern bool FreeLibrary(IntPtr hModule);
+#elif NET
+		// Cross-platform native loading via System.Runtime.InteropServices.NativeLibrary.
+		public static IntPtr LoadLibrary(string dllToLoad)
+			=> dllToLoad != null && System.Runtime.InteropServices.NativeLibrary.TryLoad(dllToLoad, out var h) ? h : IntPtr.Zero;
+
+		public static IntPtr GetProcAddress(IntPtr hModule, string procedureName)
+			=> System.Runtime.InteropServices.NativeLibrary.TryGetExport(hModule, procedureName, out var addr) ? addr : IntPtr.Zero;
+
+		public static bool FreeLibrary(IntPtr hModule)
+		{
+			if (hModule != IntPtr.Zero) {
+				System.Runtime.InteropServices.NativeLibrary.Free(hModule);
+			}
+			return true;
+		}
+#else
+		// netstandard2.1 (e.g. Unity/Mono): native plugin-colorizer loading isn't wired up yet.
+		// Returning Zero makes LoadPlugin fail gracefully rather than throwing.
+		public static IntPtr LoadLibrary(string dllToLoad) => IntPtr.Zero;
+		public static IntPtr GetProcAddress(IntPtr hModule, string procedureName) => IntPtr.Zero;
+		public static bool FreeLibrary(IntPtr hModule) => false;
+#endif
 	}
 }

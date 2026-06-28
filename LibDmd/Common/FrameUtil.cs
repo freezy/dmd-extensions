@@ -771,12 +771,35 @@ namespace LibDmd.Common
 			}
 		}
 
+#if !LIBDMD_CORE
 		[DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
 		public static extern unsafe IntPtr memset(byte* dest, int c, int byteCount);
 
 
 		[DllImport("msvcrt.dll", CallingConvention=CallingConvention.Cdecl)]
 		private static extern unsafe int memcmp(byte* b1, byte* b2, int count);
+#else
+		// Cross-platform core: managed equivalents of the msvcrt P/Invokes (Windows-only).
+		public static unsafe IntPtr memset(byte* dest, int c, int byteCount)
+		{
+			var b = (byte)c;
+			for (var i = 0; i < byteCount; i++) {
+				dest[i] = b;
+			}
+			return (IntPtr)dest;
+		}
+
+		private static unsafe int memcmp(byte* b1, byte* b2, int count)
+		{
+			for (var i = 0; i < count; i++) {
+				int diff = b1[i] - b2[i];
+				if (diff != 0) {
+					return diff;
+				}
+			}
+			return 0;
+		}
+#endif
 
 		/// <summary>
 		/// Compares two byte arrays and returns true if they are identical.
