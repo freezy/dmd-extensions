@@ -120,27 +120,42 @@ namespace LibDmd.Core.Harness
 
 		private static bool TestNativeWindow()
 		{
-			Console.WriteLine("[native-window] RenderGraph -> NativeWindowDestination:");
+			// Cross-platform: the NativeDmdWindow factory resolves the Win32 window on Windows and the
+			// host-pumped SDL/GL-ES (ANGLE) window on macOS/Linux. On macOS this MUST run on the main
+			// thread (the process main thread, which is where Main -> here executes), and Pump() must be
+			// called once per frame -- exactly what the loop below does.
+			Console.WriteLine("[native-window] RenderGraph -> NativeDmdWindow (Win32 / SDL+GL-ES via ANGLE):");
 			try {
-				var lastFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
-				var source = new PassthroughRgb24Source(lastFormat, "Harness RGB24 Source", deDupe: false);
-				using (var dest = new NativeWindowDestination(Dimensions.Standard.Width, Dimensions.Standard.Height, 100, 100, 512, 128, false))
-				{
-					if (!dest.IsAvailable) {
-						Console.WriteLine("    Native window destination is not available.");
+				var w = Dimensions.Standard.Width;
+				var h = Dimensions.Standard.Height;
+				var layout = new DmdWindowLayout(100, 100, w * 8, h * 8, false);
+				// A realistic DMD look so the shader (dots + glow) is visibly exercised.
+				var style = new DmdWindowStyle {
+					DotSize = 0.85f, DotRounding = 1.0f, DotSharpness = 0.8f,
+					Brightness = 1.0f, DotGlow = 1.0f, BackGlow = 0.4f, Gamma = 1.0f,
+				};
+				using (var window = NativeDmdWindow.TryCreate(w, h, layout, style)) {
+					if (window == null || !window.IsAvailable) {
+						Console.WriteLine("    Native window unavailable (no platform backend, or the SDL2 / ANGLE runtime is missing next to the executable).");
 						return false;
 					}
 
+					var lastFormat = new BehaviorSubject<FrameFormat>(FrameFormat.Rgb24);
+					var source = new PassthroughRgb24Source(lastFormat, "Harness RGB24 Source", deDupe: false);
 					var graph = new RenderGraph(new UndisposedReferences(), runOnMainThread: true) {
 						Name = "Native Window Harness",
 						Source = source,
-						Destinations = new List<IDestination> { dest },
+						Destinations = new List<IDestination> { window },
 					};
 					graph.Init();
 
+					Console.WriteLine($"    Window up: {window.Name} (RequiresHostPump={window.RequiresHostPump}). Animating ~10s; try dragging it to reposition.");
 					using (graph.StartRendering(ex => Console.WriteLine($"    pipeline error: {ex.Message}"))) {
 						for (var frame = 0; frame < 600; frame++) {
 							source.NextFrame(CreateRgb24TestFrame(frame));
+							if (window.RequiresHostPump) {
+								window.Pump(); // SDL/macOS: render + event pump, must be on the main thread
+							}
 							System.Threading.Thread.Sleep(16);
 						}
 					}
