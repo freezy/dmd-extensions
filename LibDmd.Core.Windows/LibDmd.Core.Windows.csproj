@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Compile Include="..\LibDmd\Output\Virtual\Dmd\VirtualDmdOpenGlPipeline.cs" Link="Output\Virtual\Dmd\VirtualDmdOpenGlPipeline.cs" />
+    <Compile Include="..\LibDmd\Output\Virtual\Dmd\DmdShaderSource.cs" Link="Output\Virtual\Dmd\DmdShaderSource.cs" />
   </ItemGroup>
 
 </Project>

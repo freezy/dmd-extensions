@@ -160,8 +160,8 @@ namespace LibDmd.Output.Virtual.Dmd
 			try {
 				LoadRendererFunctions();
 				_glFunctionsAvailable = true;
-				_blur2Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_2(texture, uv, direction).rgb, 1.0); }");
-				_blur12Program = CreateProgram(PassthroughVertexShader, BlurFragmentPrelude + "void main() { gl_FragColor = vec4(blur_level_12(texture, uv, direction).rgb, 1.0); }");
+				_blur2Program = CreateProgram(PassthroughVertexShader, DesktopHeader + DmdShaderSource.BlurFragmentFunctions + DmdShaderSource.BlurMain2);
+				_blur12Program = CreateProgram(PassthroughVertexShader, DesktopHeader + DmdShaderSource.BlurFragmentFunctions + DmdShaderSource.BlurMain12);
 
 				_blur2TextureUniform = _glGetUniformLocation(_blur2Program, "texture");
 				_blur2DirectionUniform = _glGetUniformLocation(_blur2Program, "direction");
@@ -643,123 +643,20 @@ void main()
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }";
 
-		private const string BlurFragmentPrelude = @"
-#version 120
-varying vec2 uv;
-
-uniform sampler2D texture;
-uniform vec2 direction;
-
-vec4 blur_level_2(sampler2D image, vec2 coord, vec2 blurDirection) {
-	vec4 color = vec4(0.0);
-	vec2 off1 = blurDirection;
-	color += texture2D(image, coord) * 0.5;
-	color += texture2D(image, coord + off1) * 0.25;
-	color += texture2D(image, coord - off1) * 0.25;
-	return color;
-}
-
-vec4 blur_level_12(sampler2D image, vec2 coord, vec2 blurDirection) {
-	vec4 color = vec4(0.0);
-	vec2 off1 = vec2(1.3846153846) * blurDirection;
-	vec2 off2 = vec2(3.2307692308) * blurDirection;
-	color += texture2D(image, coord) * 0.2270270270;
-	color += texture2D(image, coord + off1) * 0.3162162162;
-	color += texture2D(image, coord - off1) * 0.3162162162;
-	color += texture2D(image, coord + off2) * 0.0702702703;
-	color += texture2D(image, coord - off2) * 0.0702702703;
-	return color;
-}
-";
+		private const string DesktopHeader = "#version 120\n";
 
 		private string BuildDmdFragmentShader(VirtualDmdRenderStyle style)
 		{
-			var nfi = System.Globalization.NumberFormatInfo.InvariantInfo;
-			var builder = new StringBuilder();
-			builder.AppendLine("#version 120");
-			if (style.HasBackGlow) builder.AppendLine("#define BACKGLOW");
-			if (style.HasDotGlow) builder.AppendLine("#define DOTGLOW");
-			if (style.HasBrightness) builder.AppendLine("#define BRIGHTNESS");
-			if (style.HasUnlitDot) builder.AppendLine("#define UNLIT");
-			if (style.HasGlass && _glassRgba != null) builder.AppendLine("#define GLASS");
-			if (style.HasGamma) builder.AppendLine("#define GAMMA");
-			if (style.DotSize > 0.5f) builder.AppendLine("#define DOT_OVERLAP");
-			builder.AppendFormat(nfi, "const float dotSize = {0:0.00000};\n", style.DotSize);
-			builder.AppendFormat(nfi, "const float dotRounding = {0:0.00000};\n", style.DotRounding);
-			builder.AppendFormat(nfi, "const float sharpMax = {0:0.00000};\n", 0.01f + style.DotSize * (1.0f - style.DotSharpness));
-			builder.AppendFormat(nfi, "const float sharpMin = {0:0.00000};\n", -0.01f - style.DotSize * (1.0f - style.DotSharpness));
-			builder.AppendFormat(nfi, "const float brightness = {0:0.00000};\n", style.Brightness);
-			builder.AppendFormat(nfi, "const float backGlow = {0:0.00000};\n", style.BackGlow);
-			builder.AppendFormat(nfi, "const float dotGlow = {0:0.00000};\n", style.DotGlow);
-			builder.AppendFormat(nfi, "const float gamma = {0:0.00000};\n", style.Gamma);
-			builder.Append(DmdFragmentShaderBody);
-			return builder.ToString();
+			// Single-sourced from DmdShaderSource (shared with the GL-ES pipeline). Desktop GLSL 1.20
+			// header here; GL ES prepends its own #version 100 + precision.
+			return DesktopHeader
+				+ DmdShaderSource.BuildDmdConfig(
+					style.DotSize, style.DotRounding, style.DotSharpness,
+					style.Brightness, style.BackGlow, style.DotGlow, style.Gamma,
+					style.HasBackGlow, style.HasDotGlow, style.HasBrightness,
+					style.HasUnlitDot, style.HasGlass && _glassRgba != null, style.HasGamma)
+				+ DmdShaderSource.DmdFragmentBody;
 		}
-
-		private const string DmdFragmentShaderBody = @"
-varying vec2 uv;
-
-uniform sampler2D dmdTexture;
-uniform sampler2D dmdDotGlow;
-uniform sampler2D dmdBackGlow;
-uniform vec2 dmdSize;
-uniform sampler2D glassTexture;
-uniform vec2 glassTexOffset;
-uniform vec2 glassTexScale;
-uniform vec3 unlitDot;
-uniform vec4 glassColor;
-
-float udRoundBox(vec2 p, float b, float r)
-{
-	vec2 q = abs(p) - b + r;
-	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
-}
-
-vec3 computeDotColor(vec2 ofs)
-{
-	vec2 nearest = (floor(uv * dmdSize) + ofs) / dmdSize;
-	vec2 pos = 2.0 * (fract(uv * dmdSize) - ofs);
-	float dot = smoothstep(sharpMax, sharpMin, udRoundBox(pos, dotSize, dotRounding * dotSize));
-	vec3 dmd = texture2D(dmdTexture, nearest).rgb + unlitDot;
-#ifndef UNLIT
-	dmd -= unlitDot;
-#endif
-	return dmd * dot;
-}
-
-void main()
-{
-#ifdef DOT_OVERLAP
-	vec3 dotColor = vec3(0.0);
-	for(int x = -1; x <= 1; x++) {
-		for(int y = -1; y <= 1; y++) {
-			dotColor = max(dotColor, computeDotColor(vec2(float(x) + 0.5, float(y) + 0.5)));
-		}
-	}
-#else
-	vec3 dotColor = computeDotColor(vec2(0.5, 0.5));
-#endif
-
-#ifdef DOTGLOW
-	dotColor += texture2D(dmdDotGlow, uv).rgb * dotGlow;
-#endif
-#ifdef BACKGLOW
-	dotColor += texture2D(dmdBackGlow, uv).rgb * backGlow;
-#endif
-#ifdef BRIGHTNESS
-	dotColor *= brightness;
-#endif
-#ifdef GLASS
-	vec2 glassUv = uv * glassTexScale - glassTexOffset;
-	vec4 glass = texture2D(glassTexture, glassUv);
-	vec3 glassLight = glassColor.rgb + 2.5 * glassColor.a * texture2D(dmdBackGlow, uv).rgb * brightness;
-	dotColor += glass.rgb * glassLight.rgb;
-#endif
-#ifdef GAMMA
-	dotColor = pow(dotColor, vec3(1.0 / gamma));
-#endif
-	gl_FragColor = vec4(dotColor, 1.0);
-}";
 
 		private const uint GL_CLAMP = 0x2900;
 		private const uint GL_COLOR_ATTACHMENT0 = 0x8CE0;

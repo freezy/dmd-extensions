@@ -578,6 +578,7 @@
     <Compile Include="Output\Virtual\Dmd\DmdStyle.cs" />
     <Compile Include="Output\Virtual\Dmd\Helper.cs" />
     <Compile Include="Output\Virtual\Dmd\VirtualDmdOpenGlPipeline.cs" />
+    <Compile Include="Output\Virtual\Dmd\DmdShaderSource.cs" />
     <Compile Include="Output\Virtual\Dmd\VirtualDmdControl.xaml.cs">
       <DependentUpon>VirtualDmdControl.xaml</DependentUpon>
     </Compile>
