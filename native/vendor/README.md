@@ -4,10 +4,20 @@
 
 - **libusb-1.0** — ✅ all four RIDs (`win-x64`, `osx-x64`, `osx-arm64`, `linux-x64`). win from the
   official libusb 1.0.27 release; the others from the PyPI `libusb_package` 1.0.26 wheels.
+- **libSDL2** — ✅ `osx-arm64` + `osx-x64` (universal dylib from the PyPI `pysdl2-dll` 2.30.1 wheel).
+  Needed by the macOS virtual-DMD window. (Windows/Linux don't use the SDL window.)
+- **libserialport** — handled by the build, not vendored: win renames the Costura `libserialport64-0.dll`,
+  Linux aliases the staged `libserialport.so.0.1.1` to `libserialport.so`, macOS uses the staged
+  `libserialport.dylib`. Nothing to drop here.
+- **ANGLE** (`libEGL.dylib` + `libGLESv2.dylib`, macOS) — ❌ **NOT staged and not auto-fetchable.**
+  macOS has no native GL ES, so the SDL window needs ANGLE — but ANGLE ships no standalone prebuilt
+  binaries and the ones inside Electron link its framework (not self-contained). It must be built, or
+  sourced as a verified standalone build, and dropped into `osx-*/`. This is the macOS virtual-window
+  blocker; the in-scene + hardware DMDs work on macOS without it.
 - **libftd2xx** — `win-x64/ftd2xx.dll` only (reused from the repo's existing copy). **macOS/Linux
-  `libftd2xx` is NOT staged**: FTDI gates automated downloads, so grab `libftd2xx.{dylib,so}` from
-  ftdichip.com manually and drop them under `osx-*/` and `linux-x64/` here (and in the Unity
-  `Plugins/`). PinDMD1 is unaffected on Windows; on macOS/Linux it stays unavailable until then.
+  `libftd2xx` is NOT staged**: FTDI gates automated downloads. Grab `libftd2xx.{dylib,so}` from
+  ftdichip.com manually (or switch PinDMD1 to the LGPL `libftdi`), and drop them under `osx-*/` and
+  `linux-x64/`. Only affects PinDMD1; it works on Windows, and every other device works on all OSes.
 
 The same binaries are also placed in the VPE DMD package's Unity `Plugins/<rid>/` folders.
 
