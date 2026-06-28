@@ -23,6 +23,9 @@
   <ItemGroup>
     <ProjectReference Include="..\LibDmd.Core\LibDmd.Core.csproj" />
     <ProjectReference Include="..\LibDmd.Core.Windows\LibDmd.Core.Windows.csproj" />
+    <!-- Cross-platform host-pumped SDL/GL-ES window. The NativeDmdWindow factory resolves this on
+         macOS/Linux (Win32 on Windows); referenced so the assembly ships next to the harness. -->
+    <ProjectReference Include="..\LibDmd.Core.Sdl\LibDmd.Core.Sdl.csproj" />
   </ItemGroup>
 
   <!-- Native libs next to the exe. On Windows the 64-bit names load directly; the
