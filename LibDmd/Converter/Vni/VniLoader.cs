@@ -19,6 +19,7 @@ namespace LibDmd.Converter.Vni
 		private readonly string _vniPath;
 		private readonly string _pacPath;
 		private BinaryReader _reader;
+		private const byte LatestPacVersion = 2;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		
@@ -67,30 +68,38 @@ namespace LibDmd.Converter.Vni
 			}
 			var key = HexToBytes(vniKey);
 			Logger.Info("[vni] Loading PAC file at {0}...", _pacPath);
-			_reader = new BinaryReader(File.OpenRead(_pacPath));
-			var header = _reader.ReadBytes(4);
-			if (Encoding.Default.GetString(header) != "PAC ") {
-				throw new WrongFormatException($"Cannot read {_pacPath}, doesn't seem to be a valid PAC file.");
-			}
-			var version = _reader.Read();
+			using (_reader = new BinaryReader(File.OpenRead(_pacPath))) {
+				var header = _reader.ReadBytes(4);
+				if (Encoding.Default.GetString(header) != "PAC ") {
+					throw new WrongFormatException($"Cannot read {_pacPath}, doesn't seem to be a valid PAC file.");
+				}
+				var version = _reader.ReadByte();
+				if (version > LatestPacVersion) {
+					throw new WrongFormatException($"Cannot read {_pacPath}, PAC v{version} is not supported.");
+				}
 
-			NextChunk(key);
-			var bs = _reader.BaseStream;
-			if (bs.Position == bs.Length) { // EOF?
-				Logger.Info($"[vni] PAC v{version} without animations loaded successfully.");
-				return;
+				NextChunk(key, version);
+				var bs = _reader.BaseStream;
+				if (bs.Position == bs.Length) { // EOF?
+					Logger.Info($"[vni] PAC v{version} without animations loaded successfully.");
+					return;
+				}
+				NextChunk(key, version);
+				Logger.Info($"[vni] PAC v{version} loaded successfully.");
+				Analytics.Instance.SetColorizer("PAC");
 			}
-			NextChunk(key);
-			Logger.Info($"[vni] PAC v{version} loaded successfully.");
-			Analytics.Instance.SetColorizer("PAC");
 		}
 
-		private void NextChunk(byte[] key)
+		private void NextChunk(byte[] key, byte version)
 		{
 			try {
 				var type = (DataType)Enum.ToObject(typeof(DataType), _reader.ReadInt16BE());
 				var len = _reader.ReadInt32BE();
-				var data = Decompress(Decrypt(_reader.ReadBytes(len), key));
+				var encryptedData = _reader.ReadBytesRequired(len);
+				if (version == 2) {
+					DecodePacV2(encryptedData);
+				}
+				var data = Decompress(Decrypt(encryptedData, key));
 				switch (type) {
 					case DataType.Pal:
 						Pal = new PalFile(data, Path.GetFileName(_pacPath));
@@ -104,6 +113,36 @@ namespace LibDmd.Converter.Vni
 			} catch (CryptographicException e) {
 				Logger.Error($"[vni] Could not decrypt PAC file: {e.Message}");
 			}
+		}
+
+		/// <summary>
+		/// PAC v2 reverses all 32 bits in every encrypted four-byte word. The
+		/// operation is its own inverse, so applying it restores the PAC v1 AES
+		/// ciphertext before decryption.
+		/// </summary>
+		private static void DecodePacV2(byte[] data)
+		{
+			if (data.Length % 4 != 0) {
+				throw new InvalidDataException("PAC v2 encrypted chunk length must be a multiple of four bytes.");
+			}
+
+			for (var i = 0; i < data.Length; i += 4) {
+				var byte0 = ReverseBits(data[i + 3]);
+				var byte1 = ReverseBits(data[i + 2]);
+				var byte2 = ReverseBits(data[i + 1]);
+				var byte3 = ReverseBits(data[i]);
+				data[i] = byte0;
+				data[i + 1] = byte1;
+				data[i + 2] = byte2;
+				data[i + 3] = byte3;
+			}
+		}
+
+		private static byte ReverseBits(byte value)
+		{
+			value = (byte)(((value & 0xf0) >> 4) | ((value & 0x0f) << 4));
+			value = (byte)(((value & 0xcc) >> 2) | ((value & 0x33) << 2));
+			return (byte)(((value & 0xaa) >> 1) | ((value & 0x55) << 1));
 		}
 
 		private static byte[] Decompress(byte[] input)
