@@ -61,11 +61,16 @@ namespace LibDmd.Output.NativeWindow
 
 			_disposed = true;
 			if (_hglrc != IntPtr.Zero) {
-				wglMakeCurrent(_hdc, _hglrc);
-				_pipeline?.Dispose();
-				wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
-				wglDeleteContext(_hglrc);
-				_hglrc = IntPtr.Zero;
+				try {
+					if (wglMakeCurrent(_hdc, _hglrc)) {
+						_pipeline?.Dispose();
+					}
+				} finally {
+					_pipeline = null;
+					wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
+					wglDeleteContext(_hglrc);
+					_hglrc = IntPtr.Zero;
+				}
 			}
 
 			if (_hdc != IntPtr.Zero) {

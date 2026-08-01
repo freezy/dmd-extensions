@@ -30,6 +30,7 @@ namespace LibDmd.Output.NativeWindow
 		// Crossed between the worker thread (RenderXxx) and the window thread (Dispose / WndProc).
 		private volatile bool _disposed;
 		private volatile bool _isMovingOrSizing;
+		private int _disposeStarted;
 		private int _renderPending;
 		private int _configurePending;
 
@@ -181,9 +182,16 @@ namespace LibDmd.Output.NativeWindow
 
 		public void Dispose()
 		{
+			if (Interlocked.Exchange(ref _disposeStarted, 1) != 0) {
+				return;
+			}
+
 			_disposed = true;
 			if (_hwnd != IntPtr.Zero) {
 				PostMessage(_hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+			}
+			if (Thread.CurrentThread != _windowThread) {
+				_windowThread.Join();
 			}
 			_windowReady.Dispose();
 		}
@@ -253,17 +261,31 @@ namespace LibDmd.Output.NativeWindow
 			_renderer = new NativeOpenGlRenderer(_hwnd, _size, _renderStyle);
 			NativeWindowClass.SetDestination(_hwnd, this);
 			_windowReady.Set();
-			RequestPaint();
+			if (_disposed) {
+				PostMessage(_hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+			} else {
+				RequestPaint();
+			}
 
 			while (GetMessage(out var message, IntPtr.Zero, 0, 0) > 0) {
 				TranslateMessage(ref message);
 				DispatchMessage(ref message);
 			}
 
-			_renderer?.Dispose();
-			_renderer = null;
+			DisposeRenderer();
 			NativeWindowClass.RemoveDestination(_hwnd);
 			_hwnd = IntPtr.Zero;
+		}
+
+		private void DisposeRenderer()
+		{
+			try {
+				_renderer?.Dispose();
+			} catch (Exception exception) {
+				Logger.Error(exception, "[DMD] Could not dispose the native DMD OpenGL renderer.");
+			} finally {
+				_renderer = null;
+			}
 		}
 
 		private void Paint(IntPtr hwnd)
@@ -476,9 +498,18 @@ namespace LibDmd.Output.NativeWindow
 						}
 						break;
 					case WM_CLOSE:
+						if (TryGetDestination(hwnd, out var closeDestination)) {
+							closeDestination._disposed = true;
+							closeDestination.DisposeRenderer();
+						}
 						DestroyWindow(hwnd);
 						return IntPtr.Zero;
 					case WM_DESTROY:
+						if (TryGetDestination(hwnd, out var destroyDestination)) {
+							destroyDestination._disposed = true;
+							destroyDestination.DisposeRenderer();
+							RemoveDestination(hwnd);
+						}
 						PostQuitMessage(0);
 						return IntPtr.Zero;
 				}

@@ -1008,8 +1008,44 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void Dispose()
 		{
-			_sharedPipeline?.Dispose();
+			if (Dispatcher.CheckAccess()) {
+				DisposeSharedPipeline();
+				return;
+			}
+
+			if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) {
+				// The render context is going away, so its resources will be released with it.
+				return;
+			}
+
+			try {
+				Dispatcher.Invoke(DisposeSharedPipeline);
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Could not dispose the shared OpenGL pipeline because the DMD dispatcher was already shutting down.");
+			} catch (InvalidOperationException e) when (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) {
+				Logger.Warn(e, "Could not dispose the shared OpenGL pipeline because the DMD dispatcher was already shut down.");
+			}
+		}
+
+		private void DisposeSharedPipeline()
+		{
+			var pipeline = _sharedPipeline;
 			_sharedPipeline = null;
+			if (pipeline == null) {
+				return;
+			}
+
+			var gl = Dmd?.OpenGL;
+			if (gl?.RenderContextProvider == null) {
+				return;
+			}
+
+			// Extension entry points loaded with wglGetProcAddress must only be called while the
+			// context that owns their objects is current on this thread.
+			lock (gl) {
+				gl.MakeCurrent();
+				pipeline.Dispose();
+			}
 		}
 	}
 }
