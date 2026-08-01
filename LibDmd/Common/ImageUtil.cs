@@ -14,7 +14,10 @@ using Point = System.Drawing.Point;
 
 namespace LibDmd.Common
 {
-	public static class ImageUtil
+	// Bitmap (WPF / System.Drawing) half of ImageUtil. The portable array-only methods
+	// live in ImageUtil.Portable.cs (compiled into the cross-platform core); this file is
+	// excluded from LibDmd.Core.
+	public static partial class ImageUtil
 	{
 		private static readonly Dictionary<int, FrameData> FrameDataObjectPool = new Dictionary<int, FrameData>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -118,52 +121,6 @@ namespace LibDmd.Common
 			});
 			hue = imageHue;
 			return frame;
-		}
-
-		/// <summary>
-		/// Converts an RGB24 frame to a grayscale array.
-		/// </summary>
-		/// <param name="dim">Pixel dimensions</param>
-		/// <param name="frameRgb24">RGB24 frame, top left to bottom right, three bytes per pixel with values between 0 and 255</param>
-		/// <param name="numColors">Number of gray tones. 4 for 2 bit, 16 for 4 bit</param>
-		/// <returns>Gray2 frame, top left to bottom right, one byte per pixel with values between 0 and 3</returns>
-		public static byte[] ConvertToGray(Dimensions dim, byte[] frameRgb24, int numColors)
-		{
-			using (Profiler.Start("ImageUtil.ConvertToGray")) {
-
-				var frame = new byte[dim.Surface];
-				var pos = 0;
-				for (var y = 0; y < dim.Height; y++) {
-					for (var x = 0; x < dim.Width * 3; x += 3) {
-						var rgbPos = y * dim.Width * 3 + x;
-
-						// convert to HSL
-						ColorUtil.RgbToHsl(frameRgb24[rgbPos], frameRgb24[rgbPos + 1], frameRgb24[rgbPos + 2], out _, out _, out var luminosity);
-						frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
-					}
-				}
-				return frame;
-			}
-		}
-
-		public static byte[] ConvertRgb565ToGray(Dimensions dim, byte[] rgb565Data, int numColors)
-		{
-			using (Profiler.Start("ImageUtil.ConvertRgb565ToGray")) {
-
-				var frame = new byte[dim.Surface];
-				var pos = 0;
-				for (var y = 0; y < dim.Height; y++) {
-					for (var x = 0; x < dim.Width; x++) {
-						var i = (y * dim.Width + x) * 2;
-						var (r, g, b) = ColorUtil.Rgb565ToRgb888(rgb565Data, i);
-
-						// convert to HSL
-						ColorUtil.RgbToHsl(r, g, b, out _, out _, out var luminosity);
-						frame[pos++] = (byte)Math.Round(luminosity * (numColors - 1));
-					}
-				}
-				return frame;
-			}
 		}
 
 		/// <summary>
@@ -319,21 +276,6 @@ namespace LibDmd.Common
 			bitmap.UnlockBits(data);
 
 			return bitmap;
-		}
-
-		public static void ConvertRgb24ToBgr32(Dimensions dim, byte[] from, byte[] to)
-		{
-			var pos = 0;
-			for (var y = 0; y < dim.Height; y++) {
-				for (var x = 0; x < dim.Width * 3; x += 3) {
-					var fromPos = dim.Width * 3 * y + x;
-					to[pos] = from[fromPos + 2];
-					to[pos + 1] = from[fromPos + 1];
-					to[pos + 2] = from[fromPos];
-					to[pos + 3] = 0;
-					pos += 4;
-				}
-			}
 		}
 
 		/// <summary>
@@ -683,85 +625,6 @@ namespace LibDmd.Common
 		}
 
 		/// <summary>
-		/// Get pixel color of the frame data
-		/// </summary>
-		/// <param name="x">x coord</param>
-		/// <param name="y">y coord</param>
-		/// <param name="width">stride of data</param>
-		/// <param name="height"></param>
-		/// <param name="frame">data</param>
-		/// <returns>color of coord</returns>
-		public static byte GetPixel(int x, int y, int width, int height, byte[] frame)
-		{
-			// Clamp edges so it doesn't wrap.
-			x = Clamp(x, 0, width - 1);
-			y = Clamp(y, 0, height - 1);
-
-			return frame[x + (width * y)];
-		}
-
-		/// <summary>
-		/// Set pixel color of a texture block
-		/// </summary>
-		/// <param name="x">x coord</param>
-		/// <param name="y">y coord</param>
-		/// <param name="color">color to set</param>
-		/// <param name="width">stride of data</param>
-		/// <param name="frame">data</param>
-		public static void SetPixel(int x, int y, byte color, int width, byte[] frame)
-		{
-			frame[x + (width * y)] = color;
-		}
-
-		/// <summary>
-		/// Get pixel color of the RGB frame data
-		/// </summary>
-		/// <param name="x">x coord</param>
-		/// <param name="y">y coord</param>
-		/// <param name="width">stride of data</param>
-		/// <param name="height"></param>
-		/// <param name="frame">data</param>
-		/// <param name="rgb"></param>
-		public static void GetRgbPixel(int x, int y, int width, int height, byte[] frame, byte[] rgb)
-		{
-			// Clamp edges so it doesn't wrap.
-			x = Clamp(x, 0, width - 1);
-			y = Clamp(y, 0, height - 1);
-
-			for (var i = 0; i < rgb.Length; i++) {
-				rgb[i] = frame[x * rgb.Length + i + (width * rgb.Length * y)];
-			}
-		}
-
-		/// <summary>
-		/// Set pixel RGB color of a texture block
-		/// </summary>
-		/// <param name="x">x coord</param>
-		/// <param name="y">y coord</param>
-		/// <param name="color">color to set</param>
-		/// <param name="width">stride of data</param>
-		/// <param name="frame">data</param>
-		/// <param name="bytesPerPixel">Number of bytes per pixel</param>
-		public static void SetRgbPixel(int x, int y, byte[] color, int width, byte[] frame, int bytesPerPixel)
-		{
-			for (var i = 0; i < bytesPerPixel; i++) {
-				frame[x * bytesPerPixel + i + (width * bytesPerPixel * y)] = color[i];
-			}
-		}
-
-		/// <summary>
-		/// Clamp values
-		/// </summary>
-		/// <param name="value"></param>
-		/// <param name="min"></param>
-		/// <param name="max"></param>
-		/// <returns></returns>
-		public static int Clamp(int value, int min, int max)
-		{
-			return (value < min) ? min : (value > max) ? max : value;
-		}
-
-		/// <summary>
 		/// Dispatches the action to the UI thread and waits until it completes.
 		/// </summary>
 		/// <param name="bmp">Bitmap</param>
@@ -786,24 +649,6 @@ namespace LibDmd.Common
 		}
 	}
 
-	/// <summary>
-	/// Scaler mode determines whether "HD up-scaling" is enabled.
-	/// </summary>
-	public enum ScalerMode
-	{
-		/// <summary>
-		/// Don't upscale
-		/// </summary>
-		None,
-		
-		/// <summary>
-		/// Double the pixels
-		/// </summary>
-		Doubler,
-
-		/// <summary>
-		/// Use scale2x algorithm
-		/// </summary>
-		Scale2x
-	}
+	// ScalerMode moved to LibDmd/Common/ScalerMode.cs so the cross-platform core can
+	// reference it without ImageUtil's WPF/bitmap dependencies.
 }

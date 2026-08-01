@@ -44,6 +44,7 @@ namespace LibDmd.Converter
 		/// duplicated or not. The *output* of the converter will de-duplicated.
 		/// </summary>
 		private readonly bool _clockAndDedupe;
+		private readonly object _lastFrameLock = new object();
 		private DmdFrame _lastDmdFrame;
 		private AlphaNumericFrame _lastAlphanumFrame;
 		private readonly IDisposable _clock;
@@ -99,9 +100,15 @@ namespace LibDmd.Converter
 				throw new InvalidOperationException("Convert() must be overridden if convertor doesn't receive clocked frames.");
 			}
 #endif
-			_lastDmdFrame = PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)
+			var lastDmdFrame = PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)
 				? DmdFrame.GetFromPool().Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength)
 				: DmdFrame.GetFromPool().Update(frame);
+			DmdFrame previousFrame;
+			lock (_lastFrameLock) {
+				previousFrame = _lastDmdFrame;
+				_lastDmdFrame = lastDmdFrame;
+			}
+			previousFrame?.ReturnToPool();
 		}
 
 		/// <summary>
@@ -129,7 +136,9 @@ namespace LibDmd.Converter
 				throw new InvalidOperationException("Convert() must be overridden if convertor doesn't receive clocked frames.");
 			}
 			#endif
-			_lastAlphanumFrame = frame;
+			lock (_lastFrameLock) {
+				_lastAlphanumFrame = frame;
+			}
 		}
 
 		protected virtual void ConvertClocked(AlphaNumericFrame frame)
@@ -138,22 +147,26 @@ namespace LibDmd.Converter
 
 		private void Tick(long _)
 		{
-			if (_lastDmdFrame != null) {
-				ConvertClocked(_lastDmdFrame);
-				_lastDmdFrame?.ReturnToPool();
-			}
+			lock (_lastFrameLock) {
+				if (_lastDmdFrame != null) {
+					ConvertClocked(_lastDmdFrame);
+				}
 
-			if (_lastAlphanumFrame != null) {
-				ConvertClocked(_lastAlphanumFrame);
+				if (_lastAlphanumFrame != null) {
+					ConvertClocked(_lastAlphanumFrame);
+				}
 			}
 		}
 
 		public void Dispose()
 		{
-			_lastDmdFrame = null;
-			_lastAlphanumFrame = null;
-			_lastFrameFormat?.Dispose();
 			_clock?.Dispose();
+			lock (_lastFrameLock) {
+				_lastDmdFrame?.ReturnToPool();
+				_lastDmdFrame = null;
+				_lastAlphanumFrame = null;
+			}
+			_lastFrameFormat?.Dispose();
 		}
 
 		#region Connection Handling

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
+  <metadata>
+    <id>LibDmd.Core.Native</id>
+    <title>LibDmd.Core - Native binaries (all platforms)</title>
+    <version>__VERSION__</version>
+    <description>Meta-package that pulls the per-platform native binaries (libserum, libzedmd) used by LibDmd.Core. Reference this alongside LibDmd.Core to get the right binaries for the consumer's runtime.</description>
+    <summary>Native binaries (libserum, libzedmd) for LibDmd.Core</summary>
+    <projectUrl>https://github.com/freezy/dmd-extensions</projectUrl>
+    <repository type="git" url="https://github.com/freezy/dmd-extensions" />
+    <tags>dmd pinball serum zedmd native binaries</tags>
+    <license type="file">LICENSE</license>
+    <authors>freezy and contributors</authors>
+    <owners>freezy and contributors</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+      <group targetFramework="netstandard2.1">
+        <dependency id="LibDmd.Core.Native.win-x64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.osx-x64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.osx-arm64" version="__VERSION__" include="native;build" />
+        <dependency id="LibDmd.Core.Native.linux-x64" version="__VERSION__" include="native;build" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\..\LICENSE" target="LICENSE" />
+    <!-- A dummy reference which prevents NuGet from adding any compile-time references. -->
+    <file src="_._" target="lib\netstandard2.1" />
+  </files>
+</package>

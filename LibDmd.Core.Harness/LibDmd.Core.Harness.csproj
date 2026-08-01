@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Phase-0 console harness: proves the extracted, WPF-free LibDmd.Core compiles AND runs
+    on the desktop .NET runtime - native interop (libserum/libzedmd), the Rx frame pipeline
+    (RenderGraph), and real-device probing (ZeDMD) - end to end.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>LibDmd.Core.Harness</AssemblyName>
+    <RootNamespace>LibDmd.Core.Harness</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget Condition="'$(RuntimeIdentifier)' != 'osx-arm64'">x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibDmd.Core\LibDmd.Core.csproj" />
+    <ProjectReference Include="..\LibDmd.Core.Windows\LibDmd.Core.Windows.csproj" />
+    <!-- Cross-platform host-pumped SDL/GL-ES window. The NativeDmdWindow factory resolves this on
+         macOS/Linux (Win32 on Windows); referenced so the assembly ships next to the harness. -->
+    <ProjectReference Include="..\LibDmd.Core.Sdl\LibDmd.Core.Sdl.csproj" />
+  </ItemGroup>
+
+  <!-- Native libs next to the exe. On Windows the 64-bit names load directly; the
+       NativeLibraryLoader resolver remaps them on macOS/Linux. -->
+  <ItemGroup>
+    <None Include="..\LibDmd\Costura64\serum64.dll" Link="serum64.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\LibDmd\Costura64\zedmd64.dll" Link="zedmd64.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\LibDmd\Costura64\libserialport64-0.dll" Link="libserialport64-0.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\LibDmd\Costura64\sockpp64.dll" Link="sockpp64.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <None Include="..\native\nuget\runtimes\$(RuntimeIdentifier)\native\*"
+          Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('..\native\nuget\runtimes\$(RuntimeIdentifier)\native')" />
+  </ItemGroup>
+
+</Project>

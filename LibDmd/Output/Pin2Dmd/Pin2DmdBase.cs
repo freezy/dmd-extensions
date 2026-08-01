@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Windows.Media;
+#if !LIBDMD_CORE
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+#endif
 using NLog;
 using System.Runtime.InteropServices;
 using LibDmd.Frame;
 
 namespace LibDmd.Output.Pin2Dmd
 {
-	public abstract class Pin2DmdBase
+	// USB transport is split per build: the legacy LibUsbDotNet 2.x path lives here under
+	// #if !LIBDMD_CORE; the cross-platform libusb-1.0 path is in Pin2DmdBase.Usb3.cs (LibDmd.Core).
+	public abstract partial class Pin2DmdBase
 	{
 		public bool IsAvailable { get; private set; }
 		public bool NeedsDuplicateFrames => false;
@@ -22,7 +26,9 @@ namespace LibDmd.Output.Pin2Dmd
 
 		protected abstract string ProductString { get; }
 
+#if !LIBDMD_CORE
 		protected UsbDevice _pin2DmdDevice;
+#endif
 		protected byte[] _frameBufferRgb24;
 
 		protected static readonly Dimensions Dim128x32 = new Dimensions(128, 32);
@@ -58,6 +64,7 @@ namespace LibDmd.Output.Pin2Dmd
 			_frameBufferRgb24[3] = 00; // number of planes
 		}
 
+#if !LIBDMD_CORE
 		public void Init()
 		{
 
@@ -123,6 +130,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 #endif
 		}
+#endif
 
 		public static readonly byte[] GAMMA_TABLE =
 			{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -247,6 +255,7 @@ namespace LibDmd.Output.Pin2Dmd
 
 
 
+#if !LIBDMD_CORE
 		public void RenderRaw(byte[] frame)
 		{
 #if (!TEST_WITHOUT_PIN2DMD)
@@ -273,6 +282,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 #endif
 		}
+#endif
 
 		static ConfigDescriptor ReadConfigUsingPointer(byte[] data)
 		{
@@ -285,6 +295,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 		}
 
+#if !LIBDMD_CORE
 		public void ReadConfig()
 		{
 #if (!TEST_WITHOUT_PIN2DMD)
@@ -327,6 +338,7 @@ namespace LibDmd.Output.Pin2Dmd
 			}
 #endif
 		}
+#endif
 
 		public void SetColor(Color color)
 		{
@@ -352,6 +364,7 @@ namespace LibDmd.Output.Pin2Dmd
 			SetColor(RenderGraph.DefaultColor);
 		}
 
+#if !LIBDMD_CORE
 		public void Dispose()
 		{
 			if (_pin2DmdDevice != null)
@@ -378,5 +391,6 @@ namespace LibDmd.Output.Pin2Dmd
 			_pin2DmdDevice = null;
 			UsbDevice.Exit();
 		}
+#endif
 	}
 }
