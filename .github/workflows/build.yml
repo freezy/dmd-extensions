@@ -49,7 +49,9 @@ jobs:
           cd ..
 
       - name: Restore NuGet packages
-        run: nuget restore DmdExtensions.sln
+        run: |
+          nuget restore DmdExtensions.sln
+          dotnet restore .\LibDmd.Core.Sdl\LibDmd.Core.Sdl.csproj
 
       - name: Restore DLLExport dependency
         run: .\DllExport -action Restore -sln-file DmdExtensions.sln
