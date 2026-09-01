@@ -135,7 +135,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void ClearDisplay()
 		{
-			_data = new ushort[Res.SegmentSize[DisplaySetting.SegmentType]];
+			_data = new ushort[
+				DisplaySetting.NumChars * DisplaySetting.NumLines
+			];
 		}
 
 		public void Dispose()
