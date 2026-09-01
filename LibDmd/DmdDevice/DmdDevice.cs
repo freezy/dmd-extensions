@@ -140,7 +140,7 @@ namespace LibDmd.DmdDevice
 
 			try {
 				Analytics.Instance.Init(_fullVersion, "DLL");
-				
+
 			} catch (Exception e) {
 				ReportError(e);
 				Analytics.Instance.Disable(false);
@@ -369,6 +369,30 @@ namespace LibDmd.DmdDevice
 				layout = NumericalLayout.__1x7Num_1x16Alpha_1x16Num;
 			}
 
+			// Pinball FX supplies an incorrect two-line layout for Comet.
+			// Its physical display matches PIN-BOT: four 7-character displays
+			// plus two 2-character auxiliary displays.
+			if (_gameName == "199") {
+				layout = NumericalLayout.__2x7Alpha_2x7Num_4x1Num;
+
+				// Pinball FX supplies Comet's auxiliary digits interleaved:
+				// left-1, right-1, left-2, right-2.
+				// Reorder them into:
+				// left-1, left-2, right-1, right-2.
+				segData = (ushort[])segData.Clone();
+
+				ushort rightDigit1 = segData[29];
+				segData[29] = segData[30];
+				segData[30] = rightDigit1;
+			}
+
+			// Pinball FX supplies an incorrect two-line layout for Fire!.
+			// Its physical display matches Swords of Fury: two 7-character
+			// alphanumeric displays plus two 7-character numeric displays.
+			if (_gameName == "200") {
+				layout = NumericalLayout.__2x7Alpha_2x7Num;
+			}
+
 			_passthroughAlphaNumericSource.NextFrame(new AlphaNumericFrame(layout, segData, segDataExtended));
 
 			// Logger.Info("Alphanumeric: {0}", layout);
@@ -440,6 +464,22 @@ namespace LibDmd.DmdDevice
 			}
 			_graphs.ClearDisplay();
 			_graphs.Dispose();
+
+			if (_alphaNumericDest != null) {
+				try {
+					_alphaNumericDest.Dispose();
+
+				} catch (TaskCanceledException e) {
+					Logger.Warn(e, "Could not close alphanumeric displays because their dispatcher was canceled.");
+
+				} catch (InvalidOperationException e) {
+					Logger.Warn(e, "Could not close alphanumeric displays because their dispatcher was unavailable.");
+
+				} finally {
+					_alphaNumericDest = null;
+				}
+			}
+
 			try {
 				_virtualDmd?.Dispatcher?.Invoke(() => _virtualDmd?.Close());
 				_virtualDmd = null;
@@ -1017,7 +1057,7 @@ namespace LibDmd.DmdDevice
 			Analytics.Instance.AddDestination(_virtualDmd.Dmd);
 			Analytics.Instance.StartGame();
 		}
-		
+
 		private void AnalyticsSetSegmentDisplay()
 		{
 			if (!_config.VirtualAlphaNumericDisplay.Enabled || _analyticsVirtualDmdEnabled || _alphaNumericDest == null) {
@@ -1033,7 +1073,7 @@ namespace LibDmd.DmdDevice
 		{
 			_analyticsVirtualDmdEnabled = false;
 		}
-		
+
 		#endregion
 
 		#region Error Reporting
