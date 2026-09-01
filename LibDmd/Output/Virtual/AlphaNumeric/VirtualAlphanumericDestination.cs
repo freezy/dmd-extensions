@@ -48,7 +48,13 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void RenderAlphaNumeric(AlphaNumericFrame frame)
 		{
-			if (_currentLayout == NumericalLayout.None || _currentLayout != frame.SegmentLayout) {
+			if (_currentLayout == NumericalLayout.None ||
+				_currentLayout != frame.SegmentLayout) {
+
+				if (_currentLayout != NumericalLayout.None) {
+					CloseDisplays();
+				}
+
 				ShowDisplays(frame.SegmentLayout);
 				_currentLayout = frame.SegmentLayout;
 			}
@@ -99,7 +105,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					SendToDisplay(1, new ArraySegment<ushort>(frame.SegmentData, 7, 7).ToArray());
 					SendToDisplay(2, new ArraySegment<ushort>(frame.SegmentData, 14, 7).ToArray());
 					SendToDisplay(3, new ArraySegment<ushort>(frame.SegmentData, 21, 7).ToArray());
-					SendToDisplay(5, data10x1);
+					SendToDisplay(4, data10x1);
 					break;
 
 				case NumericalLayout.__2x7Num_2x7Num_4x1Num_gen7:
@@ -199,7 +205,6 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private void ShowDisplays(NumericalLayout layout)
 		{
 			//Logger.Info("New type of {0}", layout);
-			// todo teardown current if open
 			switch (layout) {
 
 				case NumericalLayout.__2x16Alpha: // jokrz_l6 - Jokerz (L-6)
@@ -327,25 +332,86 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 		}
 
+		private void CloseDisplays()
+		{
+			foreach (var display in _displays.Values.ToArray()) {
+				try {
+					if (display.Dispatcher.HasShutdownStarted ||
+						display.Dispatcher.HasShutdownFinished) {
+						continue;
+					}
+
+					display.Dispatcher.Invoke(() => display.Close());
+
+				} catch (TaskCanceledException e) {
+					Logger.Warn(e, "Could not close alphanumeric display because its dispatcher was canceled.");
+
+				} catch (InvalidOperationException e) {
+					Logger.Warn(e, "Could not close alphanumeric display because its dispatcher was unavailable.");
+				}
+			}
+
+			_displays.Clear();
+			_droppedData.Clear();
+		}
+
 		public void ClearDisplay()
 		{
-			// todo (i guess?)
+			foreach (var display in _displays.Values.ToArray()) {
+				try {
+					if (display.Dispatcher.HasShutdownStarted ||
+						display.Dispatcher.HasShutdownFinished) {
+						continue;
+					}
+
+					display.Dispatcher.Invoke(
+						() => display.AlphaNumericDisplay.ClearDisplay()
+					);
+
+				} catch (TaskCanceledException e) {
+					Logger.Warn(e, "Could not clear alphanumeric display because its dispatcher was canceled.");
+
+				} catch (InvalidOperationException e) {
+					Logger.Warn(e, "Could not clear alphanumeric display because its dispatcher was unavailable.");
+				}
+			}
 		}
 
 		public void Dispose()
 		{
 			try {
 				_settingSubscription?.Dispose();
-				foreach (var display in _displays.Values.ToArray()) {
-					display.Dispatcher.Invoke(() => display.Close());
+				_settingSubscription = null;
+
+				if (_settingWindow != null) {
+					try {
+						if (!_settingWindow.Dispatcher.HasShutdownStarted &&
+							!_settingWindow.Dispatcher.HasShutdownFinished) {
+
+							_settingWindow.Dispatcher.Invoke(
+								() => _settingWindow.Close()
+							);
+						}
+
+					} catch (TaskCanceledException e) {
+						Logger.Warn(e, "Could not close alphanumeric settings because its dispatcher was canceled.");
+
+					} catch (InvalidOperationException e) {
+						Logger.Warn(e, "Could not close alphanumeric settings because its dispatcher was unavailable.");
+					}
 				}
+
+				_settingWindow = null;
+				_settingsOpen = false;
+
+				CloseDisplays();
 				Res.Clear();
+
+			} finally {
 				_displays.Clear();
 				_droppedData.Clear();
+				_currentLayout = NumericalLayout.None;
 				_instance = null;
-
-			} catch (TaskCanceledException e) {
-				Logger.Warn(e, "Could not hide DMD because task was already canceled.");
 			}
 		}
 
