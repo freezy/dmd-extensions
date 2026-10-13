@@ -23,8 +23,10 @@ namespace LibDmd.Converter.Vni
 		private string _filename;
 
 		/// <summary>
-		/// File version. 1 = FSQ, 2 = VNI (but we don't really care, we fetch what we get)
+		/// File version. 1 = the animations are in an FSQ file, 2 = they are in a VNI file.
 		/// </summary>
+		public int Version => _version;
+
 		private int _version;
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -107,7 +109,7 @@ namespace LibDmd.Converter.Vni
 			if (numMasks > 0) {
 				int maskBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position) / numMasks;
 
-				if (maskBytes != 256 && maskBytes != 512 && maskBytes != 1536) {
+				if (maskBytes != 256 && maskBytes != 512 && maskBytes != 1536 && maskBytes != 2048) {
 					Logger.Warn("[vni] {0} bytes remaining per {1} masks.  Unknown size, ignoring.", maskBytes, numMasks);
 					reader.Close();
 					return;

@@ -125,7 +125,10 @@ namespace LibDmd.Converter.Plugin
 						// no dimension changes
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						// the mode is the largest plane size / 512, other sizes are rendered at 128x32.
+						Logger.Warn($"[plugin] Unknown colorization mode {(int)_colorizerMode}, assuming 128x32.");
+						_dimensions = new Dimensions(128, 32);
+						break;
 				}
 
 				Logger.Info($"[plugin] Colorization mode {_colorizerMode} enabled.");

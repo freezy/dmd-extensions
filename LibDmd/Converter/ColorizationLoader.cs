@@ -67,7 +67,7 @@ namespace LibDmd.Converter.Vni
 
 			try {
 				loader.Load(vniKey);
-				return new VniColorizer(loader.Pal, loader.Vni) { ScalerMode = scalerMode };
+				return new VniColorizer(loader.Pal, loader.Animations) { ScalerMode = scalerMode };
 
 			} catch (Exception e) {
 				Logger.Warn(e, "Error initializing colorizer: {0}", e.Message);

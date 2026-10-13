@@ -24,6 +24,16 @@ namespace LibDmd.Converter.Vni
 			return Animations.FirstOrDefault(animation => animation.Offset == offset);
 		}
 
+		/// <summary>
+		/// Finds the animation a mapping points to.
+		/// </summary>
+		/// <param name="mapping">Mapping of an animation</param>
+		/// <returns>The animation, or null if not found</returns>
+		public virtual FrameSeq Find(Mapping mapping)
+		{
+			return Find(mapping.Offset);
+		}
+
 		public override string ToString()
 		{
 			return $"VPIN v{Version}, {Animations.Count} animation(s)";

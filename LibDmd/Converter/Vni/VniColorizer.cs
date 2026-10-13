@@ -9,7 +9,7 @@ using NLog;
 
 namespace LibDmd.Converter.Vni
 {
-	public class VniColorizer : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source
+	public class VniColorizer : AbstractConverter, IColoredGray2Source, IColoredGray4Source, IColoredGray6Source, IRgb24Source
 	{
 		public override string Name => "VNI Colorizer";
 		public override IEnumerable<FrameFormat> From => new []{ FrameFormat.Gray2, FrameFormat.Gray4 };
@@ -17,6 +17,7 @@ namespace LibDmd.Converter.Vni
 		public IObservable<ColoredFrame> GetColoredGray2Frames() => DedupedColoredGray2Source.GetColoredGray2Frames();
 		public IObservable<ColoredFrame> GetColoredGray4Frames() => DedupedColoredGray4Source.GetColoredGray4Frames();
 		public IObservable<ColoredFrame> GetColoredGray6Frames() => DedupedColoredGray6Source.GetColoredGray6Frames();
+		public IObservable<DmdFrame> GetRgb24Frames() => DedupedRgb24Source.GetRgb24Frames();
 
 		public bool Has128x32Animation { get; set; }
 		public ScalerMode ScalerMode { get; set; }
@@ -56,6 +57,15 @@ namespace LibDmd.Converter.Vni
 		private bool _resetEmbedded;
 		private int _lastEmbedded = -1;
 
+		/// <summary>
+		/// The last frame that was checked for triggers, so a frame repeated by the
+		/// clock isn't checked again.
+		/// </summary>
+		private byte[] _lastTriggerData;
+		private byte[][] _lastTriggerRawPlanes;
+		private Dimensions _lastTriggerDimensions;
+		private int _lastTriggerBitLength;
+
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public VniColorizer(PalFile palFile, AnimationSet animations) : base(true)
@@ -79,13 +89,22 @@ namespace LibDmd.Converter.Vni
 
 		protected override void ConvertClocked(DmdFrame frame)
 		{
+			// the clock repeats the last frame, but triggers and palette resets only apply when a new frame comes in.
+			var isNewFrame = IsNewFrame(frame);
+			if (isNewFrame) {
+				RememberTriggerFrame(frame);
+			}
+
+			var data = frame.Data;
 			if (frame.BitLength == 4 && _palFile.Palettes.Length > 1 && _animations == null) {
 
-				if (frame.Data[0] == 0x08 && frame.Data[1] == 0x09 && frame.Data[2] == 0x0a && frame.Data[3] == 0x0b) {
-					uint newPal = (uint)frame.Data[5] * 8 + frame.Data[4];
+				if (data[0] == 0x08 && data[1] == 0x09 && data[2] == 0x0a && data[3] == 0x0b) {
+					uint newPal = (uint)data[5] * 8 + data[4];
 
+					// remove the marker from a copy, so the received frame can still be compared with the next one.
+					data = (byte[])data.Clone();
 					for (int i = 0; i < 6; i++) {
-						frame.Data[i] = 0;
+						data[i] = 0;
 					}
 
 					if (newPal != _lastEmbedded) {
@@ -95,20 +114,28 @@ namespace LibDmd.Converter.Vni
 						}
 						_lastEmbedded = (int)newPal;
 					}
-				} else if (_resetEmbedded) {
+				} else if (isNewFrame && _resetEmbedded) {
 					_lastEmbedded = _palFile.DefaultPaletteIndex;
 					SetPalette(_palFile.DefaultPalette);
 					_resetEmbedded = false;
 				}
 			}
 
-			var planes = frame.BitPlanes;
-			if (_palFile.Mappings != null) {
-				if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
-					TriggerAnimation(vd.AllPlanes, false);
+			var planes = FrameUtil.Split(frame.Dimensions, frame.BitLength, data);
+			if (isNewFrame) {
 
-				} else {
-					TriggerAnimation(planes, false);
+				// looping color masks also move on when the frame changes
+				if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode == SwitchMode.ColorMaskLoop) {
+					_activeFrameSeq.ExpireFrameDelay();
+				}
+
+				if (_palFile.Mappings != null) {
+					if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
+						TriggerAnimation(vd.AllPlanes, false);
+
+					} else {
+						TriggerAnimation(planes, false);
+					}
 				}
 			}
 
@@ -121,6 +148,39 @@ namespace LibDmd.Converter.Vni
 
 			// Sisch diräkt uisgäh
 			Render(frame.Dimensions, planes);
+		}
+
+		/// <summary>
+		/// Checks whether a frame differs from the last one that was checked for triggers.
+		/// </summary>
+		private bool IsNewFrame(DmdFrame frame)
+		{
+			if (_lastTriggerData == null || frame.Dimensions != _lastTriggerDimensions || frame.BitLength != _lastTriggerBitLength) {
+				return true;
+			}
+			if (!FrameUtil.CompareBuffersFast(frame.Data, _lastTriggerData)) {
+				return true;
+			}
+			var rawPlanes = frame is RawFrame raw ? raw.AllPlanes : null;
+			if ((rawPlanes?.Length ?? 0) != (_lastTriggerRawPlanes?.Length ?? 0)) {
+				return true;
+			}
+			for (var i = 0; i < (rawPlanes?.Length ?? 0); i++) {
+				if (!FrameUtil.CompareBuffersFast(rawPlanes[i], _lastTriggerRawPlanes[i])) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private void RememberTriggerFrame(DmdFrame frame)
+		{
+			_lastTriggerDimensions = frame.Dimensions;
+			_lastTriggerBitLength = frame.BitLength;
+			_lastTriggerData = (byte[])frame.Data.Clone();
+			_lastTriggerRawPlanes = frame is RawFrame raw
+				? Array.ConvertAll(raw.AllPlanes, plane => (byte[])plane.Clone())
+				: null;
 		}
 
 		public void LoadPalette(uint newpal)
@@ -148,8 +208,15 @@ namespace LibDmd.Converter.Vni
 				return;
 			}
 
-			// If same LRM scene, no need to stop/start 
+			// If same LRM scene, no need to stop/start
 			if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode == SwitchMode.MaskedReplace && mapping.Mode == SwitchMode.MaskedReplace && mapping.Offset == _activeFrameSeq.Offset)
+			{
+				return;
+			}
+
+			// Modes 8 and 9 don't restart when their trigger shows up again while playing
+			if (_activeFrameSeq != null && (_activeFrameSeq.SwitchMode == SwitchMode.ReplaceNoRetrigger || _activeFrameSeq.SwitchMode == SwitchMode.ColorMaskLoop)
+			    && mapping.IsAnimation && mapping.Offset == _activeFrameSeq.Offset)
 			{
 				return;
 			}
@@ -197,7 +264,7 @@ namespace LibDmd.Converter.Vni
 					Logger.Warn("[vni] Tried to load animation but no animation file loaded.");
 					return;
 				}
-				_activeFrameSeq = _animations.Find(mapping.Offset);
+				_activeFrameSeq = _animations.Find(mapping);
 
 				if (_activeFrameSeq == null)
 				{
@@ -253,8 +320,9 @@ namespace LibDmd.Converter.Vni
 			var checksum = FrameUtil.Checksum(plane, reverse);
 			noMaskCrc = checksum;
 
+			// events aren't supported, so they shouldn't hide a palette or animation mapping found through a mask.
 			var mapping = _palFile.FindMapping(checksum);
-			if (mapping != null) 
+			if (mapping != null && mapping.Mode != SwitchMode.Event)
 			{
 				return mapping;
 			}
@@ -262,13 +330,15 @@ namespace LibDmd.Converter.Vni
 			// Wenn kä Maskä definiert, de nächschti Bitplane
 			if (_palFile.Masks == null || _palFile.Masks.Length <= 0)
 				return null;
-		
+
 			// Sisch gemmr Maskä fir Maskä durä und luägid ob da eppis passt
 			foreach (var mask in _palFile.Masks)
 			{
+				if (mask.Length != plane.Length)
+					continue;
 				checksum = FrameUtil.ChecksumWithMask(plane, mask, reverse);
 				mapping = _palFile.FindMapping(checksum);
-				if (mapping != null) 
+				if (mapping != null && mapping.Mode != SwitchMode.Event)
 				{
 					return mapping;
 				}
@@ -292,6 +362,12 @@ namespace LibDmd.Converter.Vni
 				dim *= 2;
 			}
 
+			// true color animations come as 24 (8 bits per channel) or 15 (5 bits per channel) bit planes.
+			if (planes.Length == 24 || planes.Length == 15) {
+				DedupedRgb24Source.NextFrame(new DmdFrame(dim, PlanesToRgb24(dim, planes), 24));
+				return;
+			}
+
 			var palette = ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length));
 			var data = FrameUtil.Join(dim, planes);
 			var coloredFrame = new ColoredFrame(dim, data, palette);
@@ -307,6 +383,40 @@ namespace LibDmd.Converter.Vni
 					DedupedColoredGray6Source.NextFrame(coloredFrame);
 					break;
 			}
+		}
+
+		/// <summary>
+		/// Converts the bit planes of a true color animation frame to RGB24. The planes
+		/// are blue, green and red, each starting with the least significant bit.
+		/// </summary>
+		/// <param name="dim">Frame dimensions</param>
+		/// <param name="planes">15 or 24 bit planes</param>
+		/// <returns>RGB24 frame data</returns>
+		public static byte[] PlanesToRgb24(Dimensions dim, byte[][] planes)
+		{
+			var bitsPerColor = planes.Length / 3;
+			var shift = 8 - bitsPerColor;
+			var rgb = new byte[dim.Surface * 3];
+			for (var pixel = 0; pixel < dim.Surface; pixel++) {
+				var pos = pixel >> 3;
+				var bit = 1 << (pixel & 7);
+				int red = 0, green = 0, blue = 0;
+				for (var i = 0; i < bitsPerColor; i++) {
+					if ((planes[i][pos] & bit) != 0) {
+						blue |= 1 << i;
+					}
+					if ((planes[bitsPerColor + i][pos] & bit) != 0) {
+						green |= 1 << i;
+					}
+					if ((planes[2 * bitsPerColor + i][pos] & bit) != 0) {
+						red |= 1 << i;
+					}
+				}
+				rgb[pixel * 3] = (byte)(red << shift);
+				rgb[pixel * 3 + 1] = (byte)(green << shift);
+				rgb[pixel * 3 + 2] = (byte)(blue << shift);
+			}
+			return rgb;
 		}
 
 		/// <summary>
