@@ -72,7 +72,14 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// Faus ja de wärdid Biudr ergänzt, sisch wärdits uistuischt
 		/// </summary>
-		public bool AddPlanes => SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.ColorMask;
+		public bool AddPlanes => SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.ColorMaskLoop;
+
+		/// <summary>
+		/// If set, the frames are played by their delay, otherwise they are
+		/// picked by the incoming frames.
+		/// </summary>
+		private bool IsTimed => SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.Replace
+			|| SwitchMode == SwitchMode.ReplaceNoRetrigger || SwitchMode == SwitchMode.ColorMaskLoop;
 
 		/// <summary>
 		/// Dr Modus vo dr Animazion wo bestimmt wiäd Biudr aagwänded wärdid
@@ -92,6 +99,7 @@ namespace LibDmd.Converter.Vni
 		private Action<Dimensions, byte[][]> _currentRender;
 		private int _lastTick;
 		private int _timer;
+		private bool _planeCountWarned;
 
 		/// <summary>
 		/// Index of the frame currently displaying (or enhancing).
@@ -128,10 +136,12 @@ namespace LibDmd.Converter.Vni
 			{
 				case SwitchMode.ColorMask:
 				case SwitchMode.Follow:
+				case SwitchMode.ColorMaskLoop:
 					StartEnhance(render);
 					break;
 				case SwitchMode.Replace:
 				case SwitchMode.FollowReplace:
+				case SwitchMode.ReplaceNoRetrigger:
 					StartReplace(render);
 					break;
 				case SwitchMode.LayeredColorMask:
@@ -160,11 +170,13 @@ namespace LibDmd.Converter.Vni
 
 			if (SwitchMode == SwitchMode.LayeredColorMask)
 			{
-				for (int i = 0; i < planes.Length; i++)
+				// like the color mask: if the input has as many planes as the LCM, the upper two planes come from the LCM.
+				var numInputPlanes = planes.Length < numLcmPlanes ? planes.Length : Math.Max(numLcmPlanes - 2, 0);
+				for (int i = 0; i < numInputPlanes; i++)
 				{
 					outPlanes[i] = planes[i];
 				}
-				for (int i = planes.Length; i < numLcmPlanes; i++)
+				for (int i = numInputPlanes; i < numLcmPlanes; i++)
 				{
 					outPlanes[i] = _lcmBufferPlanes[i];
 				}
@@ -205,6 +217,8 @@ namespace LibDmd.Converter.Vni
 				{
 					foreach (var mask in masks)
 					{
+						if (mask.Length != plane.Length)
+							continue;
 						var maskcrc = FrameUtil.ChecksumWithMask(plane, mask, Reverse);
 						if (maskcrc == af.Hash)
 						{
@@ -220,11 +234,14 @@ namespace LibDmd.Converter.Vni
 		public bool DetectLCM(byte[] plane, uint NoMaskCRC, bool Reverse, bool clear)
 		{
 			uint checksum = NoMaskCRC;
+			var numMasks = Masks?.Length ?? 0;
 
-			for (int k = -1; k < Masks.Length; k++)
+			for (int k = -1; k < numMasks; k++)
 			{
 				if (k >= 0)
 				{
+					if (Masks[k].Length != plane.Length)
+						continue;
 					checksum = FrameUtil.ChecksumWithMask(plane, Masks[k], Reverse);
 				}
 				foreach (var af in Frames)
@@ -239,12 +256,13 @@ namespace LibDmd.Converter.Vni
 								FrameUtil.ClearPlane(ReplaceMask);
 						}
 
-						for (int i = 0; i < af.Planes.Count; i++)
+						var numPlanes = Math.Min(af.Planes.Count, _lcmBufferPlanes.Count);
+						for (int i = 0; i < numPlanes; i++)
 						{
 							FrameUtil.OrPlane(af.PlaneData[i], _lcmBufferPlanes[i]);
-							if (SwitchMode == SwitchMode.MaskedReplace)
-								FrameUtil.OrPlane(af.Mask, ReplaceMask);
 						}
+						if (SwitchMode == SwitchMode.MaskedReplace && af.Mask != null)
+							FrameUtil.OrPlane(af.Mask, ReplaceMask);
 					}
 				}
 			}
@@ -275,7 +293,7 @@ namespace LibDmd.Converter.Vni
 
 		private void RenderAnimation(Dimensions dim, byte[][] vpmFrame, Action completed = null)
 		{
-			if (SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.Replace)
+			if (IsTimed)
 			{
 				var delay = Environment.TickCount - _lastTick;
 				_lastTick = Environment.TickCount;
@@ -289,6 +307,12 @@ namespace LibDmd.Converter.Vni
 					_frameIndex++;
 					return;
 				}
+			}
+
+			// looping animations start over instead of finishing
+			if (SwitchMode == SwitchMode.ColorMaskLoop && _frameIndex >= NumFrames && NumFrames > 0)
+			{
+				_frameIndex = 0;
 			}
 
 			if (_frameIndex < NumFrames)
@@ -319,10 +343,12 @@ namespace LibDmd.Converter.Vni
 			{
 				case SwitchMode.ColorMask:
 				case SwitchMode.Follow:
+				case SwitchMode.ColorMaskLoop:
 					outplanes = RenderColorMask(planes);
 					break;
 				case SwitchMode.FollowReplace:
 				case SwitchMode.Replace:
+				case SwitchMode.ReplaceNoRetrigger:
 					outplanes = Frames[_frameIndex].PlaneData;
 					break;
 				case SwitchMode.LayeredColorMask:
@@ -351,7 +377,11 @@ namespace LibDmd.Converter.Vni
 
 			if (Frames[_frameIndex].Planes.Count < 4)
 			{
-				Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+				if (!_planeCountWarned) {
+					Logger.Warn("[vni][{0}] Cannot enhance frame with {1} additional bitplanes.", SwitchMode, Frames[_frameIndex].Planes.Count);
+					_planeCountWarned = true;
+				}
+				return vpmFrame;
 			}
 			else
 			{
@@ -385,6 +415,15 @@ namespace LibDmd.Converter.Vni
 		private void InitializeFrame()
 		{
 			_timer += (int)Frames[_frameIndex].Delay;
+		}
+
+		/// <summary>
+		/// Ends the delay of the current frame, so the next call moves to the next frame.
+		/// </summary>
+		public void ExpireFrameDelay()
+		{
+			_timer = 0;
+			_lastTick = Environment.TickCount;
 		}
 
 		public void NextFrame(Dimensions dim, byte[][] planes, Action completed = null)

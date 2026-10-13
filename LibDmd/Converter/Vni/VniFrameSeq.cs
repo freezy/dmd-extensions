@@ -63,7 +63,7 @@ namespace LibDmd.Converter.Vni
 				int compiledAnimation = reader.ReadByte();
 				int size = reader.ReadInt16BE();
 				// ReSharper disable once UnusedVariable
-				string animName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(nameLength)) : "<undefined>";
+				string animName = size > 0 ? Encoding.UTF8.GetString(reader.ReadBytes(size)) : "<undefined>";
 
 				// ReSharper disable once UnusedVariable
 				uint startFrame = reader.ReadUInt32BE();

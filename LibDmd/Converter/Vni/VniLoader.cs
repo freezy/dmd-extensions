@@ -12,12 +12,20 @@ namespace LibDmd.Converter.Vni
 	public class VniLoader
 	{
 		public VniFile Vni;
+		public FsqFile Fsq;
 		public PalFile Pal;
 		public bool FilesExist => _pacPath != null || _palPath != null;
 
+		/// <summary>
+		/// The animations, either from the VNI or the FSQ file.
+		/// </summary>
+		public AnimationSet Animations => (AnimationSet)Vni ?? Fsq;
+
 		private readonly string _palPath;
 		private readonly string _vniPath;
+		private readonly string _fsqPath;
 		private readonly string _pacPath;
+		private byte[] _pacAnimationData;
 		private BinaryReader _reader;
 		private const byte LatestPacVersion = 2;
 
@@ -34,6 +42,7 @@ namespace LibDmd.Converter.Vni
 			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "pac"), ref _pacPath);
 			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "pal"), ref _palPath);
 			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "vni"), ref _vniPath);
+			SetPath(PathUtil.GetLastCreatedFile(altColorDir, "fsq"), ref _fsqPath);
 		}
 
 		public void Load(string vniKey)
@@ -48,7 +57,15 @@ namespace LibDmd.Converter.Vni
 				Pal = new PalFile(_palPath);
 			}
 
-			if (_vniPath != null) {
+			// v1 palette files point into an FSQ file.
+			if (Pal != null && Pal.Version == 1 && _fsqPath != null) {
+				Logger.Info("[vni] Loading FSQ animation file at {0}...", _fsqPath);
+				Fsq = new FsqFile(_fsqPath, Pal);
+				Logger.Info("[vni] Loaded animation set {0}", Fsq);
+				Logger.Info("[vni] Animation Dimensions: {0}x{1}", Fsq.Dimensions.Width, Fsq.Dimensions.Height);
+				Analytics.Instance.SetColorizer("FSQ/PAL");
+
+			} else if (_vniPath != null) {
 				Logger.Info("[vni] Loading virtual animation file at {0}...", _vniPath);
 				Vni = new VniFile(_vniPath);
 				Logger.Info("[vni] Loaded animation set {0}", Vni);
@@ -85,6 +102,10 @@ namespace LibDmd.Converter.Vni
 					return;
 				}
 				NextChunk(key, version);
+				if (_pacAnimationData != null) {
+					LoadPacFsq(_pacAnimationData);
+					_pacAnimationData = null;
+				}
 				Logger.Info($"[vni] PAC v{version} loaded successfully.");
 				Analytics.Instance.SetColorizer("PAC");
 			}
@@ -105,7 +126,12 @@ namespace LibDmd.Converter.Vni
 						Pal = new PalFile(data, Path.GetFileName(_pacPath));
 						break;
 					case DataType.Vni:
-						Vni = new VniFile(data, Path.GetFileName(_pacPath));
+						// the animation chunk is either a VNI or an FSQ file. FSQ needs the mappings of the palette.
+						if (HasHeader(data, "VPIN")) {
+							Vni = new VniFile(data, Path.GetFileName(_pacPath));
+						} else {
+							_pacAnimationData = data;
+						}
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -113,6 +139,24 @@ namespace LibDmd.Converter.Vni
 			} catch (CryptographicException e) {
 				Logger.Error($"[vni] Could not decrypt PAC file: {e.Message}");
 			}
+		}
+
+		/// <summary>
+		/// Reads an animation chunk that isn't VNI. It's FSQ if it says so, or if
+		/// the palette points to FSQ, since old FSQ files have no header.
+		/// </summary>
+		private void LoadPacFsq(byte[] data)
+		{
+			if (Pal == null || (!HasHeader(data, "FSQ ") && Pal.Version != 1)) {
+				Vni = new VniFile(data, Path.GetFileName(_pacPath));
+				return;
+			}
+			Fsq = new FsqFile(data, Path.GetFileName(_pacPath), Pal);
+		}
+
+		private static bool HasHeader(byte[] data, string header)
+		{
+			return data.Length >= header.Length && Encoding.ASCII.GetString(data, 0, header.Length) == header;
 		}
 
 		/// <summary>

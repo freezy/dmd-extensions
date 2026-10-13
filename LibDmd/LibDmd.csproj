@@ -508,6 +508,9 @@
     <Compile Include="Converter\Vni\SwitchMode.cs" />
     <Compile Include="Converter\Vni\VniFrameSeq.cs" />
     <Compile Include="Converter\Vni\FrameSeq.cs" />
+    <Compile Include="Converter\Vni\FsqAnimationFrame.cs" />
+    <Compile Include="Converter\Vni\FsqFile.cs" />
+    <Compile Include="Converter\Vni\FsqFrameSeq.cs" />
     <Compile Include="Converter\Vni\VniAnimationFrame.cs" />
     <Compile Include="Converter\Vni\VniAnimationPlane.cs" />
     <Compile Include="Converter\Vni\VniFile.cs" />

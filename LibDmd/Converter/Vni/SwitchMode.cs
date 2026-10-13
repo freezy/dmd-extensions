@@ -33,6 +33,18 @@
 
 		FollowReplace = 6,
 
-		MaskedReplace = 7
+		MaskedReplace = 7,
+
+		/// <summary>
+		/// Like <see cref="Replace"/>, but the animation isn't restarted when
+		/// its trigger frame shows up again while it's still playing.
+		/// </summary>
+		ReplaceNoRetrigger = 8,
+
+		/// <summary>
+		/// Like <see cref="ColorMask"/>, but the animation loops until another
+		/// mapping is triggered.
+		/// </summary>
+		ColorMaskLoop = 9
 	}
 }

@@ -11,7 +11,7 @@ namespace LibDmd.Converter.Vni
 		public VniAnimationFrame(BinaryReader reader, int fileVersion, uint time) : base(time)
 		{
 			int planeSize = reader.ReadInt16BE();
-			Delay = (uint) reader.ReadInt16BE();
+			Delay = reader.ReadUInt16BE();
 			if (fileVersion >= 4) {
 				Hash = reader.ReadUInt32BE();
 			}
