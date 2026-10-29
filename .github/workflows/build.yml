@@ -115,7 +115,9 @@ jobs:
                   if ($tag) { $version = "$major.$minor.$patch-$tag-r$env:BRANCH_BUILD" }
                   else { $version = "$major.$minor.$patch-r$env:BRANCH_BUILD" }
                 } else {
-                  $version = "$major.$minor.$patch-$($branch.ToUpper())-r$env:BRANCH_BUILD"
+                  # The version is also used in installer filenames and artifact names.
+                  $branchLabel = $branch.ToUpperInvariant() -replace '[^A-Z0-9._-]', '-'
+                  $version = "$major.$minor.$patch-$branchLabel-r$env:BRANCH_BUILD"
                 }
           
                 "version=$version" >> $env:GITHUB_OUTPUT
