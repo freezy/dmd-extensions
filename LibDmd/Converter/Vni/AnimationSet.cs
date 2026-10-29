@@ -21,7 +21,10 @@ namespace LibDmd.Converter.Vni
 		/// <returns>Diä gfundini Animazion odr sisch null</returns>
 		public FrameSeq Find(uint offset)
 		{
-			return Animations.FirstOrDefault(animation => animation.Offset == offset);
+			foreach (var animation in Animations) {
+				if (animation.Offset == offset) return animation;
+			}
+			return null;
 		}
 
 		/// <summary>

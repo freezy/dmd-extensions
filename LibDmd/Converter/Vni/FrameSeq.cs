@@ -173,7 +173,7 @@ namespace LibDmd.Converter.Vni
 		private byte[][] RenderLCM(Dimensions dim, byte[][] planes)
 		{
 			var numLcmPlanes = _lcmBufferPlanes.Count;
-			var outPlanes = new byte[numLcmPlanes][];
+			var outPlanes = FrameBufferPool.Allocate<byte[]>(numLcmPlanes);
 
 			if (SwitchMode == SwitchMode.LayeredColorMask)
 			{
@@ -266,7 +266,7 @@ namespace LibDmd.Converter.Vni
 						var numPlanes = Math.Min(af.Planes.Count, _lcmBufferPlanes.Count);
 						for (int i = 0; i < numPlanes; i++)
 						{
-							FrameUtil.OrPlane(af.PlaneData[i], _lcmBufferPlanes[i]);
+							FrameUtil.OrPlane(af.Planes[i].Plane, _lcmBufferPlanes[i]);
 						}
 						if (SwitchMode == SwitchMode.MaskedReplace && af.Mask != null)
 							FrameUtil.OrPlane(af.Mask, ReplaceMask);
@@ -279,20 +279,26 @@ namespace LibDmd.Converter.Vni
 		private void StartLCM(Action<Dimensions, byte[][]> render)
 		{
 			_currentRender = render;
-			_lcmBufferPlanes.Clear();
-			for (int i = 0; i < Frames[0].Planes.Count; i++)
-				_lcmBufferPlanes.Add(FrameUtil.NewPlane(Size));
+			if (_lcmBufferPlanes.Count != Frames[0].Planes.Count) {
+				_lcmBufferPlanes.Clear();
+				for (int i = 0; i < Frames[0].Planes.Count; i++)
+					_lcmBufferPlanes.Add(FrameUtil.NewPlane(Size));
+			}
 
 			ClearLCMBuffer();
-			if (SwitchMode == SwitchMode.MaskedReplace)
-				ReplaceMask = new byte[Size.Surface / 8];
+			if (SwitchMode == SwitchMode.MaskedReplace) {
+				if (ReplaceMask == null || ReplaceMask.Length != Size.Surface / 8)
+					ReplaceMask = new byte[Size.Surface / 8];
+				else
+					FrameUtil.ClearPlane(ReplaceMask);
+			}
 
-			Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
+			if (Logger.IsDebugEnabled) Logger.Debug("[vni][{0}] Started LCM/LRM mode, ({1})...", SwitchMode, Name);
 		}
 
 		private void StartReplace(Action<Dimensions, byte[][]> render)
 		{
-			Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
+			if (Logger.IsDebugEnabled) Logger.Debug("[vni][{0}] Starting colored animation of {1} frames ({2})...", SwitchMode, Frames.Length, Name);
 			_lastTick = Environment.TickCount;
 			_timer = 0;
 			_currentRender = render;
@@ -382,7 +388,7 @@ namespace LibDmd.Converter.Vni
 		{
 			var frame_count = Frames[_frameIndex].Planes.Count;
 			byte[][] outplanes;
-			outplanes = new byte[frame_count][];
+			outplanes = FrameBufferPool.Allocate<byte[]>(frame_count);
 
 			if (Frames[_frameIndex].Planes.Count < 4)
 			{

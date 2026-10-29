@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive.Linq;
+using System.Threading;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
@@ -39,7 +39,15 @@ namespace LibDmd.Converter.Serum
 		private uint NumTriggersAvailable { get; }
 		public string ColorizationVersion => _serumVersion == SerumVersion.Version1 ? "v1" : _serumVersion == SerumVersion.Version2 ? "v2" : "unknown";
 
-		private IDisposable _rotator;
+		private Timer _rotator;
+		// Approximately 60 Hz. The former 1d/60 milliseconds rounded down to zero
+		// on timer-backed schedulers, producing a busy loop or a one-shot callback.
+		private const int RotationIntervalMilliseconds = 16;
+		private bool _rotating;
+		private bool _disposed;
+		private readonly object _gate = new object();
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
+		private readonly DmdFrame _input = new DmdFrame();
 
 		private bool _frameEventsInitialized;
 
@@ -109,17 +117,22 @@ namespace LibDmd.Converter.Serum
 			}
 
 			IsLoaded = true;
+			_rotator = new Timer(Rotate, null, Timeout.Infinite, Timeout.Infinite);
 			Logger.Info($"[serum] Found {NumTriggersAvailable} triggers to emit.");
 		}
 
-		public new void Dispose()
+		public override void Dispose()
 		{
-			StopRotating();
-			base.Dispose();
-			Serum_Dispose();
-			_frameEventInit?.Dispose();
-			_frameEvents?.Dispose();
-			IsLoaded = false;
+			lock (_gate) {
+				if (_disposed) return;
+				_disposed = true;
+				_rotator?.Dispose();
+				base.Dispose();
+				if (IsLoaded) Serum_Dispose();
+				_frameEventInit?.Dispose();
+				_frameEvents?.Dispose();
+				IsLoaded = false;
+			}
 		}
 
 		public override bool Supports(FrameFormat format)
@@ -135,9 +148,19 @@ namespace LibDmd.Converter.Serum
 
 		public override void Convert(DmdFrame frame)
 		{
+			lock (_gate) {
+				if (_disposed || !IsLoaded) return;
+				// Native conversion and padding must not modify the frame sent to other destinations.
+				using (_buffers.Enter()) ConvertFrame(_input.CopyFrom(frame));
+			}
+		}
+
+		private void ConvertFrame(DmdFrame frame)
+		{
 			if (!_frameEventsInitialized) {
-				_frameEventInit.OnNext(new FrameEventInit(NumTriggersAvailable > 0));
 				_frameEventsInitialized = true;
+				_frameEventInit.OnNext(new FrameEventInit(NumTriggersAvailable > 0));
+				if (_disposed) return;
 			}
 
 			// vertical pad, if necessary
@@ -150,6 +173,7 @@ namespace LibDmd.Converter.Serum
 			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
 			ReadSerumFrame();
 			_api.Convert(ref _serumFrame);
+			if (_disposed) return;
 
 			if (resultAndRotation < 0xfffffffe) {
 				int rotation = (int) (resultAndRotation & 0xffff);
@@ -165,33 +189,31 @@ namespace LibDmd.Converter.Serum
 
 		private void ReadSerumFrame()
 		{
-			_serumFrame = (SerumFrame)Marshal.PtrToStructure(_serumFramePtr, typeof(SerumFrame));
+			_serumFrame = SerumFrame.ReadFrom(_serumFramePtr);
 		}
 
-		private void Rotate(long _)
+		private void Rotate(object state)
 		{
-			if (UpdateRotations() && _api is SerumApiV1) {
-				_paletteChanges.OnNext(_rotationPalette);
+			lock (_gate) {
+				if (_disposed || !_rotating) return;
+				if (UpdateRotations() && _api is SerumApiV1) {
+					_paletteChanges.OnNext(_rotationPalette);
+				}
 			}
 		}
 
 		private void StartRotating()
 		{
-			if (_rotator != null) {
-				return;
-			}
-			_rotator = Observable
-				.Interval(TimeSpan.FromMilliseconds(1d/60))
-				.Subscribe(Rotate);
+			if (_disposed || _rotating) return;
+			_rotating = true;
+			_rotator.Change(RotationIntervalMilliseconds, RotationIntervalMilliseconds);
 		}
 
 		private void StopRotating()
 		{
-			if (_rotator == null) {
-				return;
-			}
-			_rotator.Dispose();
-			_rotator = null;
+			if (_disposed || !_rotating) return;
+			_rotating = false;
+			_rotator.Change(Timeout.Infinite, Timeout.Infinite);
 		}
 
 		private bool UpdateRotations()

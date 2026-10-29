@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Frame;
+using LibDmd.Common;
 using LibDmd.Input;
 using NLog;
 
@@ -21,6 +22,13 @@ namespace LibDmd.Converter
 		private readonly Subject<ColoredFrame> _coloredGray4PassthroughFrames = new Subject<ColoredFrame>();
 		private readonly Subject<AlphaNumericFrame> _alphaNumericPassthroughFrames = new Subject<AlphaNumericFrame>();
 		private Color _color = Colors.OrangeRed;
+		private readonly Dictionary<int, Color[]> _palettes = new Dictionary<int, Color[]>();
+		private readonly object _paletteGate = new object();
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
+		public bool ReuseFrameBuffers { get; set; }
+#if LIBDMD_CORE
+			= true;
+#endif
 
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray2 = new ReplaySubject<IObservable<ColoredFrame>>(1);
 		private readonly ReplaySubject<IObservable<ColoredFrame>> _latestColoredGray4 = new ReplaySubject<IObservable<ColoredFrame>>(1);
@@ -50,10 +58,17 @@ namespace LibDmd.Converter
 			if (_converter != null) {
 				_converter?.Convert(frame);
 			} else {
-				if (frame.BitLength == 4) {
-					_coloredGray4PassthroughFrames.OnNext(new ColoredFrame(frame, _color));
-				} else {
-					_coloredGray2PassthroughFrames.OnNext(new ColoredFrame(frame, _color));
+				Color[] palette;
+				lock (_paletteGate) {
+					if (!_palettes.TryGetValue(frame.BitLength, out palette)) {
+						palette = ColorUtil.GetPalette(new[] { Colors.Black, _color }, frame.NumColors);
+						_palettes.Add(frame.BitLength, palette);
+					}
+				}
+				using (ReuseFrameBuffers ? _buffers.Enter() : FrameBufferPool.Suspend()) {
+					var colored = FrameBufferPool.Create(frame.Dimensions, frame.Data, palette);
+					if (frame.BitLength == 4) _coloredGray4PassthroughFrames.OnNext(colored);
+					else _coloredGray2PassthroughFrames.OnNext(colored);
 				}
 			}
 		}
@@ -118,7 +133,10 @@ namespace LibDmd.Converter
 		/// <param name="color">Rendered color</param>
 		public void SetColor(Color color)
 		{
-			_color = color;
+			lock (_paletteGate) {
+				_color = color;
+				_palettes.Clear();
+			}
 		}
 
 		private static string ConverterName(AbstractConverter converter)

@@ -45,7 +45,7 @@ namespace LibDmd.Input.Passthrough
 				return;
 			}
 
-			_lastFrame.Update(frame);
+			_lastFrame.CopyFrom(frame);
 			_lastFrameFormat.OnNext(FrameFormat.Gray8);
 			_framesGray8Deduped.OnNext(frame);
 		}

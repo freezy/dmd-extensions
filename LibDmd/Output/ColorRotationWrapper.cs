@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Windows.Media;
 using LibDmd.Frame;
 using LibDmd.Input;
+using LibDmd.Common;
 
 namespace LibDmd.Output
 {
@@ -21,9 +22,16 @@ namespace LibDmd.Output
 		private readonly CompositeDisposable _disposables = new CompositeDisposable();
 		private readonly Subject<DmdFrame> _rgb24Frames = new Subject<DmdFrame>();
 		private ColoredFrame _frame;
+		private readonly object _gate = new object();
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
+		private readonly bool _reuseFrameBuffers;
 
 		public ColorRotationWrapper(IColoredGray6Source frameSource, IColorRotationSource rotationSource)
+			: this(frameSource, rotationSource, false) { }
+
+		public ColorRotationWrapper(IColoredGray6Source frameSource, IColorRotationSource rotationSource, bool reuseFrameBuffers)
 		{
+			_reuseFrameBuffers = reuseFrameBuffers;
 			_source = frameSource;
 			_disposables.Add(frameSource.GetColoredGray6Frames().Subscribe(UpdateFrame));
 			_disposables.Add(rotationSource.GetPaletteChanges().Subscribe(UpdatePalette));
@@ -31,18 +39,26 @@ namespace LibDmd.Output
 
 		private void UpdateFrame(ColoredFrame frame)
 		{
-			_frame = frame;
-			_rgb24Frames.OnNext(_frame.ConvertToRgb24());
+			lock (_gate) {
+				if (_frame == null) _frame = new ColoredFrame();
+				_frame.Update(frame);
+				Render();
+			}
 		}
 
 		private void UpdatePalette(Color[] palette)
 		{
-			if (_frame == null) {
-				return;
+			lock (_gate) {
+				if (_frame == null) return;
+				Array.Copy(palette, _frame.Palette, palette.Length);
+				Render();
 			}
+		}
 
-			_frame.Update(_frame.Data, palette);
-			_rgb24Frames.OnNext(_frame.ConvertToRgb24());
+		private void Render()
+		{
+			using (_reuseFrameBuffers ? _buffers.Enter() : FrameBufferPool.Suspend())
+				_rgb24Frames.OnNext(_frame.ConvertToRgb24());
 		}
 
 		public void ClearDisplay()

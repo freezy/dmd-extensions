@@ -5,6 +5,10 @@ namespace LibDmd.Converter.Serum
 {
 	public struct SerumFrame
 	{
+		// This ABI structure contains only blittable scalars and pointers. PtrToStructure<T>
+		// still boxes it on CoreCLR; read it by value without allocating a managed object.
+		internal static unsafe SerumFrame ReadFrom(IntPtr pointer) => *(SerumFrame*)pointer.ToPointer();
+
 		// data for v1 Serum format
 		/// <summary>
 		/// The colorized frame data.

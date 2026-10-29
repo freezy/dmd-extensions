@@ -111,6 +111,15 @@ namespace LibDmd
 
 		public ScalerMode ScalerMode { get; set; } = ScalerMode.None;
 
+		/// <summary>
+		/// Reuse frame-processing storage. Destination callbacks must consume or copy
+		/// frames before returning; retaining borrowed frame objects or buffers is unsafe.
+		/// </summary>
+		public bool ReuseFrameBuffers { get; set; }
+#if LIBDMD_CORE
+			= true;
+#endif
+
 		#endregion
 
 		#region Constants
@@ -1537,7 +1546,7 @@ namespace LibDmd
 						case FrameFormat.Rgb24: {
 							AssertCompatibility(source, sourceColoredGray6, dest, destRgb24, from, to);
 							if (Converter is IColorRotationSource colorRotationSource) {
-								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource);
+								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource, ReuseFrameBuffers);
 								Subscribe(
 									rotationWrapper.GetRgb24Frames(),
 									frame => frame
@@ -1561,7 +1570,7 @@ namespace LibDmd
 						case FrameFormat.Bitmap: {
 							AssertCompatibility(source, sourceColoredGray6, dest, destBitmap, from, to);
 							if (Converter is IColorRotationSource colorRotationSource) {
-								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource);
+								var rotationWrapper = new ColorRotationWrapper(sourceColoredGray6, colorRotationSource, ReuseFrameBuffers);
 								Subscribe(
 									rotationWrapper.GetRgb24Frames(),
 									frame => frame
@@ -1648,6 +1657,13 @@ namespace LibDmd
 		/// <param name="onNext">Action to run on destination</param>
 		private void Subscribe<TIn, TOut>(IObservable<TIn> src, Func<TIn, TOut> processor, Action<TOut> onNext) where TIn : class, ICloneable
 		{
+			if (ReuseFrameBuffers) {
+				var observer = new BufferedFrameObserver<TIn, TOut>(processor, onNext, _runOnMainThread,
+					IdleAfter, StopIdling, StartIdling);
+				_activeSources.Add(observer);
+				_activeSources.Add(src.Subscribe(observer));
+				return;
+			}
 			// set idle timeout if enabled
 			if (IdleAfter > 0) {
 
@@ -1659,7 +1675,7 @@ namespace LibDmd
 
 				// now render it
 				src = src.Do(_ => StopIdling());
-				var dest = src.Select(frame => (TIn)frame.Clone()).Select(processor).Do(onNext);
+				var dest = src.Select(frame => ProcessOwned(frame, processor)).Do(onNext);
 
 				// but subscribe to a throttled idle action
 				dest = dest.Throttle(TimeSpan.FromMilliseconds(IdleAfter));
@@ -1682,10 +1698,21 @@ namespace LibDmd
 
 				// run frame processing on separate thread.
 				if (!_runOnMainThread) {
-					src = src.ObserveOn(Scheduler.Default);
+					// A borrowed producer may reuse its storage as soon as OnNext returns.
+					src = src.Select(frame => frame is DmdFrame dmd && dmd.IsBorrowed
+						? new FrameSnapshot<TIn>().Copy(frame) : frame).ObserveOn(Scheduler.Default);
 				}
 
-				_activeSources.Add(src.Select(frame => (TIn)frame.Clone()).Select(processor).Subscribe(onNext));
+				_activeSources.Add(src.Select(frame => ProcessOwned(frame, processor)).Subscribe(onNext));
+			}
+		}
+
+		private static TOut ProcessOwned<TIn, TOut>(TIn frame, Func<TIn, TOut> processor) where TIn : class, ICloneable
+		{
+			using (FrameBufferPool.Suspend()) {
+				var copy = frame is DmdFrame dmd && dmd.IsBorrowed
+					? new FrameSnapshot<TIn>().Copy(frame) : (TIn)frame.Clone();
+				return processor(copy);
 			}
 		}
 

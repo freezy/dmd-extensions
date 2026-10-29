@@ -3,4 +3,5 @@
   <Project Path="LibDmd.Core/LibDmd.Core.csproj" />
   <Project Path="LibDmd.Core.Windows/LibDmd.Core.Windows.csproj" />
   <Project Path="LibDmd.Core.Sdl/LibDmd.Core.Sdl.csproj" />
+  <Project Path="LibDmd.Core.Tests/LibDmd.Core.Tests.csproj" />
 </Solution>

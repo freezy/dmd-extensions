@@ -39,25 +39,24 @@ namespace LibDmd.Common
 			using (Profiler.Start("FrameUtil.Split")) {
 
 				var planeSize = dim.Surface / 8;
-				var planes = destPlanes ?? new byte[bitlen][];
+				var planes = destPlanes ?? FrameBufferPool.Allocate<byte[]>(bitlen);
 
 				try
 				{
 					for (var i = 0; i < bitlen; i++) {
 						if (planes[i] == null) { // recycle, if possible
-							planes[i] = new byte[planeSize];
+							planes[i] = FrameBufferPool.Allocate<byte>(planeSize);
 						}
 					}
 
 					var byteIdx = 0;
-					var bd = new byte[bitlen];
 					for (var y = 0; y < dim.Height; y++)
 					{
 						for (var x = 0; x < dim.Width; x += 8)
 						{
 							for (var i = 0; i < bitlen; i++)
 							{
-								bd[i] = 0;
+								planes[i][byteIdx] = 0;
 							}
 
 							for (var v = 7; v >= 0; v--)
@@ -65,17 +64,12 @@ namespace LibDmd.Common
 								var pixel = frame[(y * dim.Width) + (x + v)];
 								for (var i = 0; i < bitlen; i++)
 								{
-									bd[i] <<= 1;
+									planes[i][byteIdx] <<= 1;
 									if ((pixel & (1 << i)) != 0)
 									{
-										bd[i] |= 1;
+										planes[i][byteIdx] |= 1;
 									}
 								}
-							}
-
-							for (var i = 0; i < bitlen; i++)
-							{
-								planes[i][byteIdx] = bd[i];
 							}
 
 							byteIdx++;
@@ -98,11 +92,15 @@ namespace LibDmd.Common
 		/// <param name="dim">Frame dimensions</param>
 		/// <param name="bitPlanes">Array of bit planes</param>
 		/// <returns>Byte array from top left to bottom right</returns>
-		public static byte[] Join(Dimensions dim, byte[][] bitPlanes)
+		public static byte[] Join(Dimensions dim, byte[][] bitPlanes) => Join(dim, bitPlanes, FrameBufferPool.Allocate<byte>(dim.Surface));
+
+		/// <summary>Joins planes into caller-owned storage, replacing all previous pixels.</summary>
+		public static byte[] Join(Dimensions dim, byte[][] bitPlanes, byte[] frame)
 		{
 			using (Profiler.Start("FrameUtil.Join")) {
 
-				var frame = new byte[dim.Surface];
+				if (frame.Length != dim.Surface) throw new ArgumentException("Frame buffer size does not match dimensions.", nameof(frame));
+				Array.Clear(frame, 0, frame.Length);
 				if (bitPlanes.Length == 2) {
 					unsafe
 					{
@@ -173,17 +171,13 @@ namespace LibDmd.Common
 						}
 					}
 				} else {
-					var planes = new BitArray[bitPlanes.Length];
-					for (var i = 0; i < bitPlanes.Length; i++) {
-						planes[i] = new BitArray(bitPlanes[i]);
-					}
 					for (var f = 0; f < frame.Length; f++) {
 						for (var p = 0; p < bitPlanes.Length; p++) {
 							try {
-								var bit = planes[p].Get(f) ? (byte)1 : (byte)0;
+								var bit = (bitPlanes[p][f >> 3] >> (f & 7)) & 1;
 								frame[f] |= (byte)(bit << p);
-							} catch (ArgumentOutOfRangeException) {
-								Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, planes.Length);
+							} catch (IndexOutOfRangeException) {
+								Logger.Error("Error retrieving pixel {0} on plane {1}. Frame size = {2}x{3}, plane size = {4}.", f, p, dim.Width, dim.Height, bitPlanes.Length);
 								throw;
 							}
 						}
@@ -332,7 +326,7 @@ namespace LibDmd.Common
 		/// <returns>Scaled bit planes</returns>
 		public static byte[][] ScaleDouble(Dimensions dim, byte[][] srcPlanes)
 		{
-			var planes = new byte[srcPlanes.Length][];
+			var planes = FrameBufferPool.Allocate<byte[]>(srcPlanes.Length);
 			for (var l = 0; l < srcPlanes.Length; l++)
 			{
 				planes[l] = ScaleDoublePlane(dim, srcPlanes[l]);
@@ -350,7 +344,7 @@ namespace LibDmd.Common
 		{
 			var newDim = dim * 2;
 			var newPlaneSize = newDim.Surface / 8;
-			ushort[] scaledPlane = new ushort[newPlaneSize / 2]; // div 2 because, ushorts
+			ushort[] scaledPlane = FrameBufferPool.Allocate<ushort>(newPlaneSize / 2); // div 2 because, ushorts
 			var width = newDim.Width / 2 / 8;
 			for (var i = 0; i < newDim.Height; i++) {
 				for (var k = 0; k < width; k++) {
@@ -359,7 +353,7 @@ namespace LibDmd.Common
 				i++;
 			}
 			// copy ushorts back to bytes
-			var plane = new byte[newPlaneSize];
+			var plane = FrameBufferPool.Allocate<byte>(newPlaneSize);
 			Buffer.BlockCopy(scaledPlane, 0, plane, 0, newPlaneSize);
 			return plane;
 		}
@@ -387,9 +381,9 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		public static byte[] ScaleDouble(Dimensions dim, byte[] frame, int byteSize)
 		{
-			using (Profiler.Start($"FrameUtil.ScaleDouble({byteSize})")) {
+			using (Profiler.Start("FrameUtil.ScaleDouble")) {
 				var outputDim = dim * 2;
-				byte[] scaledData = new byte[outputDim.Surface * byteSize];
+				byte[] scaledData = FrameBufferPool.Allocate<byte>(outputDim.Surface * byteSize);
 				const int scale = 2;
 
 				int targetIdx = 0;
@@ -415,16 +409,16 @@ namespace LibDmd.Common
 		/// <returns>scaled frame planes</returns>
 		public static byte[] Scale2X(Dimensions dim, byte[] data, int bytesPerPixel)
 		{
-			using (Profiler.Start($"FrameUtil.Scale2X({bytesPerPixel})")) {
+			using (Profiler.Start("FrameUtil.Scale2X")) {
 				var targetWidth = dim.Width * 2;
 				var targetHeight = dim.Height * 2;
-				byte[] scaledData = new byte[targetWidth * targetHeight * bytesPerPixel];
+				byte[] scaledData = FrameBufferPool.Allocate<byte>(targetWidth * targetHeight * bytesPerPixel);
 
-				var colorB = new byte[bytesPerPixel];
-				var colorH = new byte[bytesPerPixel];
-				var colorD = new byte[bytesPerPixel];
-				var colorF = new byte[bytesPerPixel];
-				var colorE = new byte[bytesPerPixel];
+				var colorB = FrameBufferPool.Allocate<byte>(bytesPerPixel);
+				var colorH = FrameBufferPool.Allocate<byte>(bytesPerPixel);
+				var colorD = FrameBufferPool.Allocate<byte>(bytesPerPixel);
+				var colorF = FrameBufferPool.Allocate<byte>(bytesPerPixel);
+				var colorE = FrameBufferPool.Allocate<byte>(bytesPerPixel);
 
 				for (var y = 0; y < dim.Height; y++)
 				{
@@ -462,8 +456,8 @@ namespace LibDmd.Common
 			using (Profiler.Start("FrameUtil.ScaleDown")) {
 
 				var planeSize = dim.Surface / 8;
-				byte[] scaledPlane = new byte[planeSize];
-				ushort[] plane = new ushort[planeSize * 2];
+				byte[] scaledPlane = FrameBufferPool.Allocate<byte>(planeSize);
+				ushort[] plane = FrameBufferPool.Allocate<ushort>(planeSize * 2);
 				Buffer.BlockCopy(srcPlane, 0, plane, 0, planeSize * 4);
 
 				for (var i = 0; i < dim.Height*2; i++)
@@ -483,7 +477,7 @@ namespace LibDmd.Common
 		public static byte[][] ScaleDown(Dimensions dim, byte[][] srcPlanes)
 		{
 			using (Profiler.Start("FrameUtil.ScaleDown")) {
-				var planes = new byte[srcPlanes.Length][];
+				var planes = FrameBufferPool.Allocate<byte[]>(srcPlanes.Length);
 				for (var l = 0; l < srcPlanes.Length; l++)
 				{
 					planes[l] = ScaleDown(dim, srcPlanes[l]);
@@ -503,7 +497,7 @@ namespace LibDmd.Common
 			using (Profiler.Start("FrameUtil.ConvertGrayToGray")) {
 
 				var mappingLength = mapping.Length;
-				var destFrame = new byte[srcFrame.Length];
+				var destFrame = FrameBufferPool.Allocate<byte>(srcFrame.Length);
 				for (var i = 0; i < destFrame.Length; i++) {
 					if (srcFrame[i] < mappingLength) { // ignore pixels that don't fall into the mapping
 						destFrame[i] = mapping[srcFrame[i]];
@@ -519,7 +513,7 @@ namespace LibDmd.Common
 				var numDestColors = Math.Pow(2, bitLength);
 				var factor = 256 / numDestColors;
 
-				var destFrame = new byte[srcFrame.Length];
+				var destFrame = FrameBufferPool.Allocate<byte>(srcFrame.Length);
 				for (var i = 0; i < destFrame.Length; i++) {
 					destFrame[i] = (byte)Math.Floor(srcFrame[i] / factor);
 				}
@@ -580,7 +574,7 @@ namespace LibDmd.Common
 		{
 			var length = planeA.Length;
 			Debug.Assert(length == planeB.Length && length == mask.Length);
-			byte[] outPlane = new byte[length];
+			byte[] outPlane = FrameBufferPool.Allocate<byte>(length);
 
 			unchecked
 			{

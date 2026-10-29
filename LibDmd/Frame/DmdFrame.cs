@@ -27,6 +27,10 @@ namespace LibDmd.Frame
 		/// It's usually one byte per pixel, but three bytes for RGB24.
 		/// </summary>
 		public byte[] Data { get; protected set; }
+		private RetainedBuffer<byte> _snapshotData;
+
+		/// <summary>True when this frame and its pixels are valid only during the receiving callback.</summary>
+		public bool IsBorrowed { get; internal set; }
 
 		/// <summary>
 		/// These frames are used for colorization and should never be rendered (if they exist, that means
@@ -57,6 +61,11 @@ namespace LibDmd.Frame
 
 		public static bool operator == (DmdFrame x, DmdFrame y) => Equals(x, y);
 		public static bool operator != (DmdFrame x, DmdFrame y) => !Equals(x, y);
+
+		private static readonly byte[] Gray4ToGray2Mapping = { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3 };
+		private static readonly byte[] Gray6ToGray2Mapping = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3 };
+		private static readonly byte[] Gray2ToGray4Mapping = { 0x0, 0x1, 0x4, 0xf };
+		private static readonly byte[] Gray6ToGray4Mapping = { 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf };
 
 		private static readonly ObjectPool Pool = new ObjectPool();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -133,6 +142,16 @@ namespace LibDmd.Frame
 
 		#region Update
 
+		/// <summary>Copy pixels and metadata into storage owned by this frame, reusing it when the size matches.</summary>
+		/// <remarks>Use a separate instance for each simultaneously retained frame. This copies grayscale/RGB data;
+		/// use ColoredFrame.Update(ColoredFrame) to retain a palette as well.</remarks>
+		public DmdFrame CopyFrom(DmdFrame frame)
+		{
+			var data = _snapshotData.Get(frame.Data.Length);
+			Buffer.BlockCopy(frame.Data, 0, data, 0, frame.Data.Length);
+			return Update(frame.Dimensions, data, frame.BitLength, frame.IsIdentifyFrame);
+		}
+
 		public DmdFrame Update(DmdFrame frame)
 		{
 			Dimensions = frame.Dimensions;
@@ -189,10 +208,15 @@ namespace LibDmd.Frame
 
 		public void CopyPlanesTo(byte[] dest, int offset)
 		{
-			var planes = BitPlanes;
-			foreach (var plane in planes) {
-				Buffer.BlockCopy(plane, 0, dest, offset, plane.Length);
-				offset += plane.Length;
+			var planeSize = Dimensions.Surface / 8;
+			for (var plane = 0; plane < BitLength; plane++) {
+				for (var b = 0; b < planeSize; b++) {
+					byte packed = 0;
+					for (var bit = 0; bit < 8; bit++) {
+						packed |= (byte)(((Data[b * 8 + bit] >> plane) & 1) << bit);
+					}
+					dest[offset + plane * planeSize + b] = packed;
+				}
 			}
 		}
 
@@ -255,9 +279,9 @@ namespace LibDmd.Frame
 					case 2:
 						throw new ArgumentException("Frame is already gray2.");
 					case 4:
-						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3), 2);
+						return Update(FrameUtil.ConvertGrayToGray(Data, Gray4ToGray2Mapping), 2);
 					case 6:
-						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3), 2);
+						return Update(FrameUtil.ConvertGrayToGray(Data, Gray6ToGray2Mapping), 2);
 					case 8:
 						return Update(FrameUtil.ConvertGray8ToGray(Data, 2), 2);
 					case 16:
@@ -282,11 +306,11 @@ namespace LibDmd.Frame
 				switch (BitLength) {
 					case 2:
 					case 3:
-						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x1, 0x4, 0xf), 4);
+						return Update(FrameUtil.ConvertGrayToGray(Data, Gray2ToGray4Mapping), 4);
 					case 4:
 						throw new ArgumentException("Frame is already gray4.");
 					case 6:
-						return Update(FrameUtil.ConvertGrayToGray(Data, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x8, 0x8, 0x8, 0x8, 0x9, 0x9, 0x9, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0xb, 0xb, 0xb, 0xc, 0xc, 0xc, 0xc, 0xd, 0xd, 0xd, 0xd, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf), 4);
+						return Update(FrameUtil.ConvertGrayToGray(Data, Gray6ToGray4Mapping), 4);
 					case 8:
 						return Update(FrameUtil.ConvertGray8ToGray(Data, 4), 4);
 					case 16:
@@ -413,7 +437,7 @@ namespace LibDmd.Frame
 					throw new ArgumentException("Cannot convert non-Gray8 frame to Colored Gray 6.");
 				}
 #endif
-				return new ColoredFrame(Dimensions, FrameUtil.ConvertGray8ToGray(Data, 6), palette);
+				return FrameBufferPool.Create(Dimensions, FrameUtil.ConvertGray8ToGray(Data, 6), palette);
 			}
 		}
 
@@ -516,7 +540,7 @@ namespace LibDmd.Frame
 				var bmp = ImageUtil.ConvertFromRgb24(Dimensions, Data);
 				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertToRgb24(transformedBmp);
-				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 24);
+				return FrameBufferPool.Create(fixedDest.FixedSize, transformedFrame, 24);
 #else
 				// Cross-platform core: bitmap-based resize isn't ported yet (matched sizes expected).
 				return this;
@@ -544,7 +568,7 @@ namespace LibDmd.Frame
 				var bmp = ImageUtil.ConvertFromRgb565(Dimensions, Data);
 				var transformedBmp = TransformationUtil.Transform(bmp, fixedDest.FixedSize, renderGraph.Resize, renderGraph.FlipHorizontally, renderGraph.FlipVertically);
 				var transformedFrame = ImageUtil.ConvertToRgb565(transformedBmp);
-				return new DmdFrame(fixedDest.FixedSize, transformedFrame, 16);
+				return FrameBufferPool.Create(fixedDest.FixedSize, transformedFrame, 16);
 #else
 				// Cross-platform core: bitmap-based resize isn't ported yet (matched sizes expected).
 				return this;
@@ -681,7 +705,7 @@ namespace LibDmd.Frame
 		/// can replace it without affecting other references of the frame).
 		/// </summary>
 		/// <returns></returns>
-		public object Clone() => new DmdFrame(Dimensions, Data, BitLength);
+		public object Clone() => new DmdFrame(Dimensions, Data, BitLength) { IsBorrowed = IsBorrowed, IsIdentifyFrame = IsIdentifyFrame };
 
 		public DmdFrame CloneFrame() => new DmdFrame(Dimensions, Data, BitLength);
 

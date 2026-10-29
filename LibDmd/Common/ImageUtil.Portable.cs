@@ -23,7 +23,7 @@ namespace LibDmd.Common
 		{
 			using (Profiler.Start("ImageUtil.ConvertToGray")) {
 
-				var frame = new byte[dim.Surface];
+				var frame = FrameBufferPool.Allocate<byte>(dim.Surface);
 				var pos = 0;
 				for (var y = 0; y < dim.Height; y++) {
 					for (var x = 0; x < dim.Width * 3; x += 3) {
@@ -42,7 +42,7 @@ namespace LibDmd.Common
 		{
 			using (Profiler.Start("ImageUtil.ConvertRgb565ToGray")) {
 
-				var frame = new byte[dim.Surface];
+				var frame = FrameBufferPool.Allocate<byte>(dim.Surface);
 				var pos = 0;
 				for (var y = 0; y < dim.Height; y++) {
 					for (var x = 0; x < dim.Width; x++) {

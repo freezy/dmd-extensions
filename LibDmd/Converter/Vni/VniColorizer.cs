@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Threading;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;
@@ -53,8 +50,7 @@ namespace LibDmd.Converter.Vni
 		/// <summary>
 		/// The timer that resets to the standard palette in case a time-limited palette change is active.
 		/// </summary>
-		private IDisposable _paletteReset;
-		private int _paletteRefreshPending;
+		private long _paletteResetAt;
 
 		private bool _resetEmbedded;
 		private int _lastEmbedded = -1;
@@ -63,16 +59,29 @@ namespace LibDmd.Converter.Vni
 		/// The last frame that was checked for triggers, so a frame repeated by the
 		/// clock isn't checked again.
 		/// </summary>
-		private byte[] _lastTriggerData;
-		private byte[][] _lastTriggerRawPlanes;
-		private Dimensions _lastTriggerDimensions;
-		private int _lastTriggerBitLength;
+		private readonly FrameSnapshot<DmdFrame> _lastTriggerFrame = new FrameSnapshot<DmdFrame>();
+		private RetainedBuffer<byte> _embeddedData;
+		private RetainedBuffer<byte[]> _triggerPlanes;
+		private readonly FrameBufferPool _frameBuffers = new FrameBufferPool();
+		private readonly Action _animationFinished;
+		private readonly Action<Dimensions, byte[][]> _render;
+
+		/// <summary>
+		/// Reuse output storage after each observer callback returns. Observers that
+		/// retain a frame must copy its pixels and palette. Enabled by default in LibDmd.Core.
+		/// </summary>
+		public bool ReuseFrameBuffers { get; set; }
+#if LIBDMD_CORE
+			= true;
+#endif
 
 		protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public VniColorizer(PalFile palFile, AnimationSet animations) : base(true)
 		{
 			_palFile = palFile;
+			_animationFinished = AnimationFinished;
+			_render = Render;
 			_animations = animations;
 			Has128x32Animation = (_palFile.Masks != null && _palFile.Masks.Length >= 1 && _palFile.Masks[0].Length == 512);
 			SetPalette(palFile.DefaultPalette, true);
@@ -91,8 +100,21 @@ namespace LibDmd.Converter.Vni
 
 		protected override void ConvertClocked(DmdFrame frame)
 		{
+			if (ReuseFrameBuffers) {
+				using (_frameBuffers.Enter()) ConvertFrame(frame);
+			} else {
+				using (FrameBufferPool.Suspend()) ConvertFrame(frame);
+			}
+		}
+
+		private void ConvertFrame(DmdFrame frame)
+		{
 			// Repeated input must not retrigger mappings, but a timed palette reset needs a redraw.
-			var refreshPalette = Interlocked.Exchange(ref _paletteRefreshPending, 0) != 0;
+			var refreshPalette = _paletteResetAt != 0 && System.Diagnostics.Stopwatch.GetTimestamp() >= _paletteResetAt;
+			if (refreshPalette) {
+				_paletteResetAt = 0;
+				if (_defaultPalette != null) SetPalette(_defaultPalette);
+			}
 			var isNewFrame = IsNewFrame(frame);
 			if (isNewFrame) {
 				RememberTriggerFrame(frame);
@@ -108,7 +130,9 @@ namespace LibDmd.Converter.Vni
 					uint newPal = (uint)data[5] * 8 + data[4];
 
 					// remove the marker from a copy, so the received frame can still be compared with the next one.
-					data = (byte[])data.Clone();
+					var embedded = _embeddedData.Get(data.Length);
+					Buffer.BlockCopy(data, 0, embedded, 0, data.Length);
+					data = embedded;
 					for (int i = 0; i < 6; i++) {
 						data[i] = 0;
 					}
@@ -138,7 +162,11 @@ namespace LibDmd.Converter.Vni
 
 				if (_palFile.Mappings != null) {
 					if (frame is RawFrame vd && vd.RawPlanes.Length > 0) {
-						TriggerAnimation(vd.AllPlanes, false);
+						var triggerPlanes = _triggerPlanes.Get(vd.TotalPlanes);
+						for (var i = 0; i < triggerPlanes.Length; i++) {
+							triggerPlanes[i] = RawPlane(vd, i);
+						}
+						TriggerAnimation(triggerPlanes, false);
 
 					} else {
 						TriggerAnimation(planes, false);
@@ -149,7 +177,7 @@ namespace LibDmd.Converter.Vni
 			// if an animation is playing, render it instead of the normal frame
 			if (_activeFrameSeq != null) {
 				_activeFrameSeq.ScalerMode = ScalerMode;
-				_activeFrameSeq.NextFrame(frame.Dimensions, planes, AnimationFinished, renderInputOnCompletion: isNewFrame);
+				_activeFrameSeq.NextFrame(frame.Dimensions, planes, _animationFinished, renderInputOnCompletion: isNewFrame);
 				return;
 			}
 
@@ -162,33 +190,23 @@ namespace LibDmd.Converter.Vni
 		/// </summary>
 		private bool IsNewFrame(DmdFrame frame)
 		{
-			if (_lastTriggerData == null || frame.Dimensions != _lastTriggerDimensions || frame.BitLength != _lastTriggerBitLength) {
-				return true;
-			}
-			if (!FrameUtil.CompareBuffersFast(frame.Data, _lastTriggerData)) {
-				return true;
-			}
-			var rawPlanes = frame is RawFrame raw ? raw.AllPlanes : null;
-			if ((rawPlanes?.Length ?? 0) != (_lastTriggerRawPlanes?.Length ?? 0)) {
-				return true;
-			}
-			for (var i = 0; i < (rawPlanes?.Length ?? 0); i++) {
-				if (!FrameUtil.CompareBuffersFast(rawPlanes[i], _lastTriggerRawPlanes[i])) {
-					return true;
-				}
+			var previous = _lastTriggerFrame.Value;
+			if (previous == null || frame.Dimensions != previous.Dimensions || frame.BitLength != previous.BitLength
+				|| !FrameUtil.CompareBuffersFast(frame.Data, previous.Data)) return true;
+			var raw = frame as RawFrame;
+			var previousRaw = previous as RawFrame;
+			var count = raw?.TotalPlanes ?? 0;
+			if (count != (previousRaw?.TotalPlanes ?? 0)) return true;
+			for (var i = 0; i < count; i++) {
+				if (!FrameUtil.CompareBuffersFast(RawPlane(raw, i), RawPlane(previousRaw, i))) return true;
 			}
 			return false;
 		}
 
-		private void RememberTriggerFrame(DmdFrame frame)
-		{
-			_lastTriggerDimensions = frame.Dimensions;
-			_lastTriggerBitLength = frame.BitLength;
-			_lastTriggerData = (byte[])frame.Data.Clone();
-			_lastTriggerRawPlanes = frame is RawFrame raw
-				? Array.ConvertAll(raw.AllPlanes, plane => (byte[])plane.Clone())
-				: null;
-		}
+		private void RememberTriggerFrame(DmdFrame frame) => _lastTriggerFrame.Copy(frame);
+
+		private static byte[] RawPlane(RawFrame frame, int index) => index < frame.RawPlanes.Length
+			? frame.RawPlanes[index] : frame.ExtraRawPlanes[index - frame.RawPlanes.Length];
 
 		public void LoadPalette(uint newpal)
 		{
@@ -240,28 +258,11 @@ namespace LibDmd.Converter.Vni
 				return;
 			}
 			//Logger.Debug("[vni] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
-			_paletteReset?.Dispose();
-			_paletteReset = null;
-			Interlocked.Exchange(ref _paletteRefreshPending, 0);
 			SetPalette(palette);
-
-			// Palettä risettä wenn ä Lengi gäh isch
-			if (!mapping.IsAnimation && mapping.Duration > 0)
-			{
-				_paletteReset = Observable
-					.Never<Unit>()
-					.StartWith(Unit.Default)
-					.Delay(TimeSpan.FromMilliseconds(mapping.Duration)).Subscribe(_ =>
-					{
-						if (_defaultPalette != null)
-						{
-							Logger.Debug("[vni] Resetting to default palette after {0} ms.", mapping.Duration);
-							SetPalette(_defaultPalette);
-							Interlocked.Exchange(ref _paletteRefreshPending, 1);
-						}
-						_paletteReset = null;
-					});
-			}
+			// Expire on the next colorizer tick; no per-trigger scheduler or closure is needed.
+			_paletteResetAt = !mapping.IsAnimation && mapping.Duration > 0
+				? System.Diagnostics.Stopwatch.GetTimestamp() + (long)mapping.Duration * System.Diagnostics.Stopwatch.Frequency / 1000
+				: 0;
 
 			// Animazionä
 			if (mapping.IsAnimation)
@@ -281,7 +282,7 @@ namespace LibDmd.Converter.Vni
 					return;
 				}
 
-				_activeFrameSeq.Start(mapping.Mode, Render, AnimationFinished);
+				_activeFrameSeq.Start(mapping.Mode, _render, _animationFinished);
 			}
 		}
 
@@ -297,7 +298,7 @@ namespace LibDmd.Converter.Vni
 				// Faus niid gfundä hemmr fertig
 				if (mapping != null)
 				{
-					Logger.Debug("[vni] Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
+					if (Logger.IsDebugEnabled) Logger.Debug("[vni] Detect hash {0:X} for mode {1}", mapping.Checksum, mapping.Mode);
 
 					ActivateMapping(mapping);
 					// Can exit if not LCM sceene.
@@ -373,13 +374,13 @@ namespace LibDmd.Converter.Vni
 
 			// true color animations come as 24 (8 bits per channel) or 15 (5 bits per channel) bit planes.
 			if (planes.Length == 24 || planes.Length == 15) {
-				DedupedRgb24Source.NextFrame(new DmdFrame(dim, PlanesToRgb24(dim, planes), 24));
+				DedupedRgb24Source.NextFrame(FrameBufferPool.Create(dim, PlanesToRgb24(dim, planes), 24));
 				return;
 			}
 
-			var palette = ColorUtil.GetPalette(_palette.GetColors((int)(Math.Log(_palette.Colors.Length) / Math.Log(2))), (int)Math.Pow(2, planes.Length));
+			var palette = _palette.GetColors(planes.Length);
 			var data = FrameUtil.Join(dim, planes);
-			var coloredFrame = new ColoredFrame(dim, data, palette);
+			var coloredFrame = FrameBufferPool.Create(dim, data, palette);
 
 			switch (planes.Length) {
 				case 2:
@@ -405,7 +406,7 @@ namespace LibDmd.Converter.Vni
 		{
 			var bitsPerColor = planes.Length / 3;
 			var shift = 8 - bitsPerColor;
-			var rgb = new byte[dim.Surface * 3];
+			var rgb = FrameBufferPool.Allocate<byte>(dim.Surface * 3);
 			for (var pixel = 0; pixel < dim.Surface; pixel++) {
 				var pos = pixel >> 3;
 				var bit = 1 << (pixel & 7);

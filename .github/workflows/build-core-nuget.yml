@@ -9,6 +9,8 @@ on:
   pull_request:
     paths:
       - "LibDmd.Core/**"
+      - "LibDmd.Core.Tests/**"
+      - "LibDmd/**"
       - "native/nuget/**"
       - "build-nuget/**"
       - ".github/workflows/build-core-nuget.yml"
@@ -23,7 +25,21 @@ env:
   ZEDMD_VERSION: "0.11.0"
 
 jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Test frame processing and allocations
+        run: dotnet test LibDmd.Core.Tests/LibDmd.Core.Tests.csproj -c Release
+
   pack:
+    needs: test
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

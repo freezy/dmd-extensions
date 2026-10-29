@@ -488,6 +488,8 @@
     <Compile Include="DmdDevice\PluginConfig.cs" />
     <Compile Include="Common\ColorUtil.cs" />
     <Compile Include="Common\FrameUtil.cs" />
+    <Compile Include="Common\FrameBufferPool.cs" />
+    <Compile Include="Common\BufferedFrameObserver.cs" />
     <Compile Include="Common\HeatShrink\HeatShrinkDecoder.cs" />
     <Compile Include="Common\HeatShrink\HeatShrinkEncoder.cs" />
     <Compile Include="Common\HeatShrink\OutputInfo.cs" />

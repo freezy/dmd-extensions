@@ -19,6 +19,8 @@ namespace LibDmd
 		/// Color palette
 		/// </summary>
 		public Color[] Palette { get; private set; }
+		private RetainedBuffer<byte> _snapshotData;
+		private RetainedBuffer<Color> _snapshotPalette;
 
 		public static bool operator == (ColoredFrame x, ColoredFrame y) => Equals(x, y);
 		public static bool operator != (ColoredFrame x, ColoredFrame y) => !Equals(x, y);
@@ -93,11 +95,12 @@ namespace LibDmd
 
 		public void Update(ColoredFrame frame)
 		{
-			Dimensions = frame.Dimensions;
-			Data = new byte[frame.Data.Length];
-			Buffer.BlockCopy(frame.Data, 0, Data, 0, frame.Data.Length);
-			BitLength = frame.BitLength;
-			Palette = frame.Palette;
+			var data = _snapshotData.Get(frame.Data.Length);
+			Buffer.BlockCopy(frame.Data, 0, data, 0, frame.Data.Length);
+			base.Update(frame.Dimensions, data, frame.BitLength, frame.IsIdentifyFrame);
+			var palette = _snapshotPalette.Get(frame.Palette.Length);
+			Array.Copy(frame.Palette, palette, frame.Palette.Length);
+			Palette = palette;
 
 			#if DEBUG
 			AssertData();
@@ -114,12 +117,12 @@ namespace LibDmd
 		/// <returns>New DMD frame</returns>
 		public DmdFrame ConvertToGray()
 		{
-			return new DmdFrame(Dimensions, Data, BitLength);
+			return FrameBufferPool.Create(Dimensions, Data, BitLength);
 		}
 
 		public DmdFrame ConvertToGray4(params byte[] mapping)
 		{
-			return new DmdFrame(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), 4);
+			return FrameBufferPool.Create(Dimensions, FrameUtil.ConvertGrayToGray(Data, mapping), 4);
 		}
 
 #if !LIBDMD_CORE
@@ -137,13 +140,13 @@ namespace LibDmd
 		/// Converts this colored frame to a RGB24 frame.
 		/// </summary>
 		/// <returns>Converted RGB24 frame</returns>
-		public DmdFrame ConvertToRgb24() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 3), 24);
+		public DmdFrame ConvertToRgb24() => FrameBufferPool.Create(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 3), 24);
 
 		/// <summary>
 		/// Converts this colored frame to a RGB565 frame.
 		/// </summary>
 		/// <returns>Converted RGB565 frame</returns>
-		public DmdFrame ConvertToRgb565() => new DmdFrame(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 2), 16);
+		public DmdFrame ConvertToRgb565() => FrameBufferPool.Create(Dimensions, ColorUtil.ColorizeRgb(Dimensions, Data, Palette, 2), 16);
 
 #if !LIBDMD_CORE
 		private BitmapSource ConvertToBitmapWithColors()
@@ -360,7 +363,12 @@ namespace LibDmd
 
 		#region Overrides
 
-		public new object Clone() => new ColoredFrame(Dimensions, Data, Palette);
+		public new object Clone()
+		{
+			var copy = new ColoredFrame(Dimensions, Data, Palette) { IsBorrowed = IsBorrowed };
+			copy.Update(Dimensions, Data, BitLength, IsIdentifyFrame);
+			return copy;
+		}
 
 		public override string ToString()
 		{

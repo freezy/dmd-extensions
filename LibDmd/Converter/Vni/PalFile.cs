@@ -130,8 +130,10 @@ namespace LibDmd.Converter.Vni
 
 		public Palette GetPalette(uint index)
 		{
-			// TODO index bruichä
-			return Palettes.FirstOrDefault(p => p.Index == index);
+			foreach (var palette in Palettes) {
+				if (palette.Index == index) return palette;
+			}
+			return null;
 		}
 
 		public Mapping FindMapping(uint checksum)

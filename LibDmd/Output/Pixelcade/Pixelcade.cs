@@ -88,6 +88,9 @@ namespace LibDmd.Output.Pixelcade
 
 		// v1 wire buffer ([cmd][planes...])
 		private byte[] _frameBuffer;
+		private readonly object _renderGate = new object();
+		private ushort[] _rgb565Buffer;
+		private byte[] _planeBuffer;
 
 		// v2 scratch buffers (allocated once the size/protocol is known)
 		private byte[] _wireBuffer;   // assembled bytes written to the wire
@@ -262,6 +265,8 @@ namespace LibDmd.Output.Pixelcade
 				_lastPayloadLength = -1;
 			} else {
 				_frameBuffer = new byte[FixedSize.Surface * 3 / 2 + 1];
+				_rgb565Buffer = new ushort[FixedSize.Surface];
+				_planeBuffer = new byte[FixedSize.Surface * 3 / 2];
 				_frameBuffer[0] = RgbLedMatrixFrameCommandByte;
 			}
 		}
@@ -277,53 +282,58 @@ namespace LibDmd.Output.Pixelcade
 
 		public void RenderRgb24(DmdFrame frameRgb24)
 		{
-			if (_isV2) {
-				// v2 boards accept raw RGB888 directly (R,G,B per pixel), no plane splitting.
-				// Honor the color matrix by swapping green/blue for RBG-wired panels.
-				var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb888GreenBlue(frameRgb24.Data) : frameRgb24.Data;
-				SendV2Frame(Rgb888CommandByte, data, frameRgb24.Data.Length);
-				return;
-			}
+			lock (_renderGate) {
+				if (_isV2) {
+					// v2 boards accept raw RGB888 directly (R,G,B per pixel), no plane splitting.
+					// Honor the color matrix by swapping green/blue for RBG-wired panels.
+					var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb888GreenBlue(frameRgb24.Data) : frameRgb24.Data;
+					SendV2Frame(Rgb888CommandByte, data, frameRgb24.Data.Length);
+					return;
+				}
 
-			// convert rgb24 to rgb565
-			var frame565 = ColorUtil.ConvertRgb24ToRgb565(FixedSize, frameRgb24.Data, new ushort[FixedSize.Surface]);
+				// convert rgb24 to rgb565
+				var frame565 = ColorUtil.ConvertRgb24ToRgb565(FixedSize, frameRgb24.Data, _rgb565Buffer);
 
-			// split into planes to send over the wire
-			var newFrame = new byte[FixedSize.Surface * 3 / 2];
-			FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
+				// split into planes to send over the wire
+				var newFrame = _planeBuffer;
+				FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
 
-			// copy to frame buffer
-			var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);
+				// copy to frame buffer
+				var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);
 
-			// send to device if changed
-			if (changed) {
-				RenderRaw(_frameBuffer);
+				// send to device if changed
+				if (changed) {
+					RenderRaw(_frameBuffer);
+				}
 			}
 		}
 
 
 		public void RenderRgb565(DmdFrame frame)
 		{
-			if (_isV2) {
-				// frame.Data is already little-endian RGB565, which is what the v2 firmware expects.
-				// Honor the color matrix by swapping green/blue for RBG-wired panels.
-				var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb565GreenBlue(frame.Data) : frame.Data;
-				SendV2Frame(Rgb565CommandByte, data, frame.Data.Length);
-				return;
-			}
+			lock (_renderGate) {
+				if (_isV2) {
+					// frame.Data is already little-endian RGB565, which is what the v2 firmware expects.
+					// Honor the color matrix by swapping green/blue for RBG-wired panels.
+					var data = ColorMatrix == ColorMatrix.Rbg ? SwapRgb565GreenBlue(frame.Data) : frame.Data;
+					SendV2Frame(Rgb565CommandByte, data, frame.Data.Length);
+					return;
+				}
 
-			var frame565 = FrameUtil.CastToUShort(frame.Data);
+				var frame565 = _rgb565Buffer;
+				Buffer.BlockCopy(frame.Data, 0, frame565, 0, frame.Data.Length);
 
-			// split into planes to send over the wire
-			var newFrame = new byte[FixedSize.Surface * 3 / 2];
-			FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
+				// split into planes to send over the wire
+				var newFrame = _planeBuffer;
+				FrameUtil.SplitIntoRgbPlanes(frame565, FixedSize.Width, 16, newFrame, ColorMatrix);
 
-			// copy to frame buffer
-			var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);
+				// copy to frame buffer
+				var changed = FrameUtil.Copy(newFrame, _frameBuffer, 1);
 
-			// send to device if changed
-			if (changed) {
-				RenderRaw(_frameBuffer);
+				// send to device if changed
+				if (changed) {
+					RenderRaw(_frameBuffer);
+				}
 			}
 		}
 

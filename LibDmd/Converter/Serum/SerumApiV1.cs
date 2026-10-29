@@ -2,6 +2,7 @@
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using LibDmd.Frame;
+using LibDmd.Common;
 using LibDmd.Input;
 using System.Windows.Media;
 using NLog;
@@ -12,14 +13,13 @@ namespace LibDmd.Converter.Serum
 	{
 		public uint NumColors { get; }
 
-		private readonly DmdFrame _frame;
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
 		private readonly Dimensions _dimensions;
 
 		private readonly Subject<ColoredFrame> _coloredGray6Frames;
 		private readonly Subject<FrameEvent> _frameEvents;
 
 		private readonly byte[] _bytePalette = new byte[64 * 3];
-		private readonly Color[] _colorPalette = new Color[64];
 
 		private readonly FrameEvent _frameEvent = new FrameEvent();
 
@@ -34,11 +34,17 @@ namespace LibDmd.Converter.Serum
 				: new Dimensions((int)serumFrame.Width64, 64);
 
 			NumColors = serumFrame.nocolors;
-			_frame = new DmdFrame(_dimensions, ((int)NumColors).GetBitLength());
 		}
 
 		public void Convert(ref SerumFrame serumFrame)
 		{
+			using (_buffers.Enter()) ConvertFrame(ref serumFrame);
+		}
+
+		private void ConvertFrame(ref SerumFrame serumFrame)
+		{
+			var pixels = FrameBufferPool.Allocate<byte>(_dimensions.Surface);
+			var palette = FrameBufferPool.Allocate<Color>(64);
 			if (serumFrame.Frame == null) {
 				Logger.Warn("[serum] Frame data is null.");
 			}
@@ -47,8 +53,8 @@ namespace LibDmd.Converter.Serum
 			if (serumFrame.Palette != null) {
 				Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
 			}
-			Marshal.Copy(serumFrame.Frame, _frame.Data, 0, _dimensions.Width * _dimensions.Height);
-			BytesToColors(_bytePalette, _colorPalette);
+			Marshal.Copy(serumFrame.Frame, pixels, 0, _dimensions.Width * _dimensions.Height);
+			BytesToColors(_bytePalette, palette);
 
 			// send event trigger
 			if (serumFrame.triggerID != 0xffffffff) {
@@ -56,7 +62,7 @@ namespace LibDmd.Converter.Serum
 			}
 
 			// send the colored frame
-			_coloredGray6Frames.OnNext(new ColoredFrame(_dimensions, _frame.Data, _colorPalette));
+			_coloredGray6Frames.OnNext(FrameBufferPool.Create(_dimensions, pixels, palette));
 		}
 
 		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint _)
