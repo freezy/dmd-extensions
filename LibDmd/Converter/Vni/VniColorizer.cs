@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using LibDmd.Common;
 using LibDmd.Frame;
 using LibDmd.Input;
@@ -53,6 +54,7 @@ namespace LibDmd.Converter.Vni
 		/// The timer that resets to the standard palette in case a time-limited palette change is active.
 		/// </summary>
 		private IDisposable _paletteReset;
+		private int _paletteRefreshPending;
 
 		private bool _resetEmbedded;
 		private int _lastEmbedded = -1;
@@ -89,11 +91,12 @@ namespace LibDmd.Converter.Vni
 
 		protected override void ConvertClocked(DmdFrame frame)
 		{
-			// the clock repeats the last frame, but triggers and palette resets only apply when a new frame comes in.
+			// Repeated input must not retrigger mappings, but a timed palette reset needs a redraw.
+			var refreshPalette = Interlocked.Exchange(ref _paletteRefreshPending, 0) != 0;
 			var isNewFrame = IsNewFrame(frame);
 			if (isNewFrame) {
 				RememberTriggerFrame(frame);
-			} else if (_activeFrameSeq == null || !_activeFrameSeq.AdvancesOnRepeatedFrame) {
+			} else if (!refreshPalette && (_activeFrameSeq == null || !_activeFrameSeq.AdvancesOnRepeatedFrame)) {
 				// Retain the last output without advancing or expiring a static scene.
 				return;
 			}
@@ -239,6 +242,7 @@ namespace LibDmd.Converter.Vni
 			//Logger.Debug("[vni] Setting palette {0} of {1} colors.", mapping.PaletteIndex, palette.Colors.Length);
 			_paletteReset?.Dispose();
 			_paletteReset = null;
+			Interlocked.Exchange(ref _paletteRefreshPending, 0);
 			SetPalette(palette);
 
 			// Palettä risettä wenn ä Lengi gäh isch
@@ -253,6 +257,7 @@ namespace LibDmd.Converter.Vni
 						{
 							Logger.Debug("[vni] Resetting to default palette after {0} ms.", mapping.Duration);
 							SetPalette(_defaultPalette);
+							Interlocked.Exchange(ref _paletteRefreshPending, 1);
 						}
 						_paletteReset = null;
 					});

@@ -52,21 +52,25 @@ namespace LibDmd.Test
 			public void Tick(DmdFrame frame) => ConvertClocked(frame);
 		}
 
-		[TestCase(2, SwitchMode.Follow)]
-		[TestCase(2, SwitchMode.FollowReplace)]
-		[TestCase(3, SwitchMode.Follow)]
-		[TestCase(3, SwitchMode.FollowReplace)]
-		public void ShouldFollowFsqFrameHashes(int version, SwitchMode mode)
+		[TestCase(2, SwitchMode.Follow, 512)]
+		[TestCase(2, SwitchMode.FollowReplace, 512)]
+		[TestCase(3, SwitchMode.Follow, 512)]
+		[TestCase(3, SwitchMode.FollowReplace, 512)]
+		[TestCase(2, SwitchMode.Follow, 256)]
+		[TestCase(2, SwitchMode.FollowReplace, 256)]
+		[TestCase(3, SwitchMode.Follow, 256)]
+		[TestCase(3, SwitchMode.FollowReplace, 256)]
+		public void ShouldFollowFsqFrameHashes(int version, SwitchMode mode, int planeSize)
 		{
 			var first = new DmdFrame(Dim, FrameUtil.Join(Dim, new[] { Planes.With(1), Planes.Empty() }), 2);
 			var second = new DmdFrame(Dim, FrameUtil.Join(Dim, new[] { Planes.With(2), Planes.Empty() }), 2);
 			var hashes = new[] { FrameUtil.Checksum(first.BitPlanes[0]), FrameUtil.Checksum(second.BitPlanes[0]) };
-			var table = new byte[Planes.Size];
+			var table = new byte[planeSize];
 			Buffer.BlockCopy(hashes, 0, table, 0, hashes.Length * 4);
 			var fsq = new FsqBuilder(version);
 			var offset = fsq.Animation(
-				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[0] : 0, Mask = table, Planes = new[] { Planes.With(100), Planes.Empty() } },
-				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[1] : 0, Mask = Planes.Empty(), Planes = new[] { Planes.With(101), Planes.Empty() } });
+				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[0] : 0, Mask = table, Planes = new[] { Planes.With(100).Take(planeSize).ToArray(), new byte[planeSize] } },
+				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[1] : 0, Mask = new byte[planeSize], Planes = new[] { Planes.With(101).Take(planeSize).ToArray(), new byte[planeSize] } });
 			var pal = new PalBuilder(1).Palette(0, 1, Colors16).Mapping(hashes[0], mode, 0, offset).BuildFile();
 			var animations = new FsqFile(fsq.Build(), "follow.fsq", pal);
 			animations.Find(pal.Mappings[hashes[0]]).NumFrames.Should().Be(2);
@@ -74,7 +78,8 @@ namespace LibDmd.Test
 				colorizer.Tick(first);
 				colorizer.Tick(second);
 				var animationBit = mode == SwitchMode.Follow ? 4 : 1;
-				colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & animationBit) != 0)).Should().Equal(100, 101);
+				var padding = planeSize == 256 ? 8 * 128 : 0;
+				colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & animationBit) != 0)).Should().Equal(padding + 100, padding + 101);
 			}
 		}
 

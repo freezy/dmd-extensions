@@ -20,7 +20,7 @@ namespace LibDmd.Converter.Vni
 		private const byte MaskMarker = 0x01;
 
 		/// <summary>
-		/// Size of each bit plane in bytes.
+		/// Size of each stored bit plane in bytes, before playback padding.
 		/// </summary>
 		public int PlaneSize { get; }
 
@@ -60,6 +60,31 @@ namespace LibDmd.Converter.Vni
 			for (var i = 0; i < count; i++) {
 				Planes.Insert(0, new FsqAnimationPlane(new byte[PlaneSize], 0));
 			}
+		}
+
+		/// <summary>
+		/// Match the vertical padding applied to 128x16 input before playback.
+		/// Call after metadata has been extracted from the stored planes.
+		/// </summary>
+		internal void PadSmallPlanes()
+		{
+			if (PlaneSize != 256) {
+				return;
+			}
+			for (var i = 0; i < Planes.Count; i++) {
+				Planes[i] = new FsqAnimationPlane(PadSmallPlane(Planes[i].Plane), Planes[i].Marker);
+			}
+			Mask = PadSmallPlane(Mask);
+		}
+
+		internal static byte[] PadSmallPlane(byte[] plane)
+		{
+			if (plane == null || plane.Length != 256) {
+				return plane;
+			}
+			var padded = new byte[512];
+			System.Buffer.BlockCopy(plane, 0, padded, 128, plane.Length);
+			return padded;
 		}
 	}
 
