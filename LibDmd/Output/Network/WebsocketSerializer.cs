@@ -19,12 +19,12 @@ namespace LibDmd.Output.Network
 		void OnClearColor();
 		void OnClearPalette();
 		void OnGameName(string gameName);
-		void OnRgb24(uint timestamp, byte[] frame);
-		void OnColoredGray6(uint timestamp, Color[] palette, byte[] data); //, byte[] rotations); 
-		void OnColoredGray4(uint timestamp, Color[] palette, byte[] data);
-		void OnColoredGray2(uint timestamp, Color[] palette, byte[] data);
-		void OnGray4(uint timestamp, byte[] frame);
-		void OnGray2(uint timestamp, byte[] frame);
+		void OnRgb24(uint timestamp, Dimensions dimensions, byte[] frame);
+		void OnColoredGray6(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data); //, byte[] rotations);
+		void OnColoredGray4(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data);
+		void OnColoredGray2(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data);
+		void OnGray4(uint timestamp, Dimensions dimensions, byte[] frame);
+		void OnGray2(uint timestamp, Dimensions dimensions, byte[] frame);
 	}
 
 	internal class WebsocketSerializer
@@ -81,7 +81,7 @@ namespace LibDmd.Output.Network
 						break;
 					}
 					case "rgb24": {
-						action.OnRgb24(reader.ReadUInt32(), reader.ReadBytes(data.Length - (int)reader.BaseStream.Position));
+						action.OnRgb24(reader.ReadUInt32(), Dimensions, reader.ReadBytes(data.Length - (int)reader.BaseStream.Position));
 						break;
 					}
 					case "coloredGray6": {
@@ -97,7 +97,7 @@ namespace LibDmd.Output.Network
 							for (var i = 0; i < 6; i++) {
 								planes[i] = reader.ReadBytes(planeSize);
 							}
-							action.OnColoredGray6(timestamp, palette, FrameUtil.Join(Dimensions, planes));
+							action.OnColoredGray6(timestamp, Dimensions, palette, FrameUtil.Join(Dimensions, planes));
 							// missing - rotations!!!!
 							break;
 						}
@@ -113,7 +113,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 4; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnColoredGray4(timestamp, palette, FrameUtil.Join(Dimensions, planes));
+						action.OnColoredGray4(timestamp, Dimensions, palette, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "coloredGray2": {
@@ -128,7 +128,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 2; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnColoredGray2(timestamp, palette, FrameUtil.Join(Dimensions, planes));
+						action.OnColoredGray2(timestamp, Dimensions, palette, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "gray4Planes": {
@@ -138,7 +138,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 4; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnGray4(timestamp, FrameUtil.Join(Dimensions, planes));
+						action.OnGray4(timestamp, Dimensions, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 					case "gray2Planes": {
@@ -148,7 +148,7 @@ namespace LibDmd.Output.Network
 						for (var i = 0; i < 2; i++) {
 							planes[i] = reader.ReadBytes(planeSize);
 						}
-						action.OnGray2(timestamp, FrameUtil.Join(Dimensions, planes));
+						action.OnGray2(timestamp, Dimensions, FrameUtil.Join(Dimensions, planes));
 						break;
 					}
 				}
