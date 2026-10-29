@@ -62,6 +62,78 @@ namespace LibDmd.Test
 
 		private static int LitPixel(ColoredFrame frame) => Array.FindIndex(frame.Data, b => b == 3);
 
+		[TestCase(false)]
+		[TestCase(true)]
+		public void ShouldRedrawHeldFrameWhenTimedPaletteExpires(bool holdTrigger)
+		{
+			var trigger = Gray2Frame(1);
+			var held = holdTrigger ? trigger : Gray2Frame(2);
+			var pal = new PalBuilder(1).Palette(0, 1, Gray4).Palette(1, 0, Red4)
+				.Mapping(Crc(trigger), SwitchMode.Palette, 1, 200).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, null)) {
+				colorizer.Tick(trigger);
+				colorizer.Tick(held);
+				colorizer.Frames.Last().Palette.Should().Equal(Red4);
+				System.Threading.SpinWait.SpinUntil(() => {
+					colorizer.Tick(held);
+					return colorizer.Frames.Last().Palette.SequenceEqual(Gray4);
+				}, 2000).Should().BeTrue("the expired palette must repaint unchanged input");
+				colorizer.Frames.Last().Data.Should().Equal(held.Data);
+				colorizer.Tick(held);
+				colorizer.Frames.Last().Palette.Should().Equal(Gray4);
+			}
+		}
+
+		[TestCase(SwitchMode.Replace, 2)]
+		[TestCase(SwitchMode.ReplaceNoRetrigger, 2)]
+		[TestCase(SwitchMode.FollowReplace, 2)]
+		[TestCase(SwitchMode.ColorMask, 2)]
+		[TestCase(SwitchMode.ColorMaskLoop, 2)]
+		[TestCase(SwitchMode.Follow, 2)]
+		[TestCase(SwitchMode.LayeredColorMask, 2)]
+		[TestCase(SwitchMode.MaskedReplace, 2)]
+		[TestCase(SwitchMode.Replace, 15)]
+		[TestCase(SwitchMode.Replace, 24)]
+		public void ShouldCenterSmallFsqAnimationsInPaddedInput(SwitchMode mode, int depth)
+		{
+			var trigger = Gray2Frame(8 * 128 + 1);
+			var plane = new byte[256];
+			plane[0] = 1;
+			plane[255] = 128;
+			var layered = mode == SwitchMode.LayeredColorMask || mode == SwitchMode.MaskedReplace;
+			var fsq = new FsqBuilder(layered ? 3 : 2);
+			var displayFrame = new FsqFrame {
+				Delay = 50,
+				Mask = Enumerable.Repeat((byte)255, 256).ToArray(),
+				Planes = Enumerable.Range(0, depth).Select(_ => plane).ToArray()
+			};
+			var hashes = new byte[256];
+			Buffer.BlockCopy(new[] { Crc(trigger) }, 0, hashes, 0, 4);
+			var offset = layered
+				? fsq.Animation(new FsqFrame { Planes = new[] { new byte[256], hashes } }, displayFrame)
+				: fsq.Animation(displayFrame);
+			var colors = Enumerable.Range(0, 16).Select(i => Color.FromRgb((byte)i, 0, 0)).ToArray();
+			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(Crc(trigger), mode, 0, offset).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "small.fsq", pal))) {
+				colorizer.Tick(trigger);
+				if (depth > 6) {
+					var output = colorizer.Rgb24Frames.Single();
+					output.Dimensions.Should().Be(Dim);
+					output.Data.Take(8 * 128 * 3).Should().OnlyContain(b => b == 0);
+					output.Data.Skip(24 * 128 * 3).Should().OnlyContain(b => b == 0);
+					output.Data[8 * 128 * 3].Should().Be((byte)(depth == 15 ? 248 : 255));
+					output.Data[(24 * 128 - 1) * 3].Should().Be(output.Data[8 * 128 * 3]);
+				} else {
+					var output = colorizer.Frames.Single();
+					output.Dimensions.Should().Be(Dim);
+					output.Data.Take(8 * 128).Should().OnlyContain(b => b == 0);
+					output.Data.Skip(24 * 128).Should().OnlyContain(b => b == 0);
+					output.Data[8 * 128].Should().Be((byte)(FsqFrameSeq.IsColorMaskMode(mode) ? 12 : 3));
+					output.Data[24 * 128 - 1].Should().Be(output.Data[8 * 128]);
+				}
+			}
+		}
+
 		private static ClockedColorizer ReplaceColorizer(SwitchMode mode, DmdFrame trigger, int numFrames)
 		{
 			var fsq = new FsqBuilder(2);

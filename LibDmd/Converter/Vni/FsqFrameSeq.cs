@@ -74,6 +74,13 @@ namespace LibDmd.Converter.Vni
 				}
 			}
 
+			// Normalize pixels and masks only after reading hashes from the original layout.
+			foreach (var frame in frames) {
+				frame.PadSmallPlanes();
+			}
+			if (Masks != null) {
+				Masks = Masks.Select(FsqAnimationFrame.PadSmallPlane).ToArray();
+			}
 			Frames = frames.Cast<AnimationFrame>().ToArray();
 			Size = frames.Length > 0 ? GetDimensions(frames[0].PlaneSize) : Dimensions.Standard;
 		}
@@ -102,7 +109,7 @@ namespace LibDmd.Converter.Vni
 		private static Dimensions GetDimensions(int planeSize)
 		{
 			switch (planeSize) {
-				case 256: return new Dimensions(128, 16);
+				case 256: return Dimensions.Standard;
 				case 512: return new Dimensions(128, 32);
 				case 1536: return new Dimensions(192, 64);
 				case 2048: return new Dimensions(256, 64);
