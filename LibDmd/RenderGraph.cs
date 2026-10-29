@@ -451,8 +451,14 @@ namespace LibDmd
 						}
 
 						// if converter emits RGB24 frames..
-						if (Converter is IRgb24Source sourceConverterRgb24 && destRgb24 != null && !Converter.IsConnected(dest, FrameFormat.Rgb24, FrameFormat.Rgb24)) {
-							Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
+						if (Converter is IRgb24Source sourceConverterRgb24 && !Converter.IsConnected(dest, FrameFormat.Rgb24)) {
+							if (destRgb24 != null) {
+								Connect(sourceConverterRgb24, destRgb24, FrameFormat.Rgb24, FrameFormat.Rgb24);
+							} else if (destRgb565 != null) {
+								Connect(sourceConverterRgb24, destRgb565, FrameFormat.Rgb24, FrameFormat.Rgb565);
+							} else if (destBitmap != null) {
+								Connect(sourceConverterRgb24, destBitmap, FrameFormat.Rgb24, FrameFormat.Bitmap);
+							}
 						}
 
 						// this is mainly for the passing through alphanumeric frames from the switching converter.

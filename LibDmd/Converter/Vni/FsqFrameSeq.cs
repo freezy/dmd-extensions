@@ -34,7 +34,18 @@ namespace LibDmd.Converter.Vni
 				AnimationDuration += frames[i].Delay;
 			}
 
-			// LCM and follow animations start with a frame that holds the masks, and from v3 on, the hashes of the frames.
+			if (fileVersion > 2 && numFrames > 0 && (mode == SwitchMode.Follow || mode == SwitchMode.FollowReplace)) {
+				// Follow scenes keep their first display frame. Its first plane holds the little-endian
+				// hash table after the 12-byte frame header and plane marker.
+				var endPosition = reader.BaseStream.Position;
+				reader.BaseStream.Position = Offset + 2 + 13;
+				foreach (var frame in frames) {
+					frame.Hash = reader.ReadUInt32();
+				}
+				reader.BaseStream.Position = endPosition;
+			}
+
+			// LCM/LRM scenes instead have a separate metadata frame containing masks and, in v3, hashes.
 			if (HasMaskFrame(mode, fileVersion, frames)) {
 				var maskFrame = frames[0];
 				var numMasks = maskFrame.Planes.Count;
@@ -53,10 +64,13 @@ namespace LibDmd.Converter.Vni
 				frames = frames.Skip(1).ToArray();
 			}
 
-			// color mask animations only store the added planes
+			// Smaller color-mask scenes store only the added planes. The 256x64 layout
+			// stores the full depth, with stored plane 2 corresponding to output plane 2.
 			if (IsColorMaskMode(mode)) {
 				foreach (var frame in frames) {
-					frame.PrependEmptyPlanes(2);
+					if (frame.PlaneSize != 2048) {
+						frame.PrependEmptyPlanes(2);
+					}
 				}
 			}
 
@@ -77,7 +91,7 @@ namespace LibDmd.Converter.Vni
 			if (fileVersion < 2 || frames.Length < 2) {
 				return false;
 			}
-			if (mode != SwitchMode.Follow && mode != SwitchMode.LayeredColorMask && mode != SwitchMode.FollowReplace && mode != SwitchMode.MaskedReplace) {
+			if (mode != SwitchMode.LayeredColorMask && mode != SwitchMode.MaskedReplace) {
 				return false;
 			}
 			// the mask frame isn't displayed, so it has no delay, no hash and no replace mask.
