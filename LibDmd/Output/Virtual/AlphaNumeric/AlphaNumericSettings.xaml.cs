@@ -19,7 +19,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 	/// <summary>
 	/// Interaction logic for AlphaNumericSettings.xaml
 	/// </summary>
-	public partial class VirtualAlphaNumericSettings
+	public partial class VirtualAlphaNumericSettings : IDisposable
 	{
 		private static readonly AlphaNumericResources Res = AlphaNumericResources.GetInstance();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -32,6 +32,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private readonly RasterizeStyleDefinition _originalStyle;
 		private readonly VirtualAlphaNumericDisplayConfig _alphaNumericConfig;
 		private ushort[] _data = { };
+		private WriteableBitmap _previewBitmap;
+		private bool _disposed;
 		private readonly int[] _segments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
 		public SegmentWeight SegmentWeight {
@@ -74,9 +76,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 			Logger.Info("Creating preview image at {0}x{1}", (int)Preview.Width, (int)Preview.Height);
 			var writeableBitmap = new WriteableBitmap((int)Preview.Width, (int)Preview.Height, Dpi, Dpi, PixelFormats.Bgra32, BitmapPalettes.Halftone256Transparent);
-			Preview.Source = writeableBitmap;
+			Preview.Source = _previewBitmap = writeableBitmap;
 
-			CompositionTarget.Rendering += (o, e) => DrawPreview(writeableBitmap);
+			CompositionTarget.Rendering += OnRendering;
 
 			// name each layer
 			ForegroundStyle.Label = "Foreground Layer";
@@ -107,10 +109,27 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void Window_Closing(object sender, CancelEventArgs e)
 		{
+			if (_disposed) {
+				return;
+			}
 			// hide the window instead of closing it, so we can easily re-open it later without crashing.
 			e.Cancel = true;
 			Hide();
 		}
+
+		public void Dispose()
+		{
+			if (_disposed) {
+				return;
+			}
+			_disposed = true;
+			CompositionTarget.Rendering -= OnRendering;
+			Preview.Source = null;
+			_previewBitmap = null;
+			Close();
+		}
+
+		private void OnRendering(object sender, EventArgs e) => DrawPreview(_previewBitmap);
 
 		private void SetupTriggers()
 		{
