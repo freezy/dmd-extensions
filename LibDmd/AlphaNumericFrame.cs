@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using LibDmd.DmdDevice;
+using LibDmd.Common;
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace LibDmd
 {
 	public class AlphaNumericFrame : ICloneable, IEqualityComparer<AlphaNumericFrame>
 	{
+		private RetainedBuffer<ushort> _segments, _extendedSegments;
 		/// <summary>
 		/// The segment data
 		/// </summary>
@@ -48,6 +50,21 @@ namespace LibDmd
 			SegmentData = frame.SegmentData;
 			SegmentDataExtended = frame.SegmentDataExtended;
 			SegmentLayout = frame.SegmentLayout;
+		}
+
+		internal void CopyFrom(AlphaNumericFrame frame)
+		{
+			SegmentData = CopySegments(frame.SegmentData, ref _segments);
+			SegmentDataExtended = CopySegments(frame.SegmentDataExtended, ref _extendedSegments);
+			SegmentLayout = frame.SegmentLayout;
+		}
+
+		private static ushort[] CopySegments(ushort[] source, ref RetainedBuffer<ushort> buffers)
+		{
+			if (source == null) return null;
+			var target = buffers.Get(source.Length);
+			Array.Copy(source, target, source.Length);
+			return target;
 		}
 
 		public object Clone() => new AlphaNumericFrame(SegmentLayout, SegmentData, SegmentDataExtended);

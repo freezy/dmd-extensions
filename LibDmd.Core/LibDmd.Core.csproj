@@ -58,6 +58,10 @@
     <None Include="PACKAGE.md" Pack="true" PackagePath="README.md" Visible="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="LibDmd.Core.Tests" />
+  </ItemGroup>
+
   <!-- Dependency on the native binaries package. Injected at pack time
        (-p:LibDmdCoreNativeVersion=x.y.z) so local dev builds don't require it on a feed. -->
   <ItemGroup Condition="'$(LibDmdCoreNativeVersion)' != ''">

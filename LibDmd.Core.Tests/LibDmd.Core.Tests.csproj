@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LibDmd.Core/LibDmd.Core.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.4.2" />
+    <PackageReference Include="FluentAssertions" Version="6.11.0" />
+    <Using Include="LibDmd.DmdColor" Alias="Color" />
+    <Using Include="LibDmd.DmdColors" Alias="Colors" />
+    <Compile Include="../LibDmd.Test/Converter/Vni/AltColorBuilder.cs" Link="Fixtures/AltColorBuilder.cs" />
+  </ItemGroup>
+</Project>

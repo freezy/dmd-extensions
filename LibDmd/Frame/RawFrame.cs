@@ -27,7 +27,7 @@
 		{
 			get {
 				var planeSize = PlaneSize;
-				var rawBuffer = new byte[TotalPlanes * planeSize];
+				var rawBuffer = LibDmd.Common.FrameBufferPool.Allocate<byte>(TotalPlanes * planeSize);
 				for (int i = 0; i < TotalPlanes; i++) {
 					if (i < RawPlanes.Length) {
 						RawPlanes[i].CopyTo(rawBuffer, i * planeSize);

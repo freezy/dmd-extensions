@@ -42,7 +42,7 @@ namespace LibDmd.Input.Passthrough
 				return;
 			}
 
-			_lastFrame.Update(frame);
+			_lastFrame.CopyFrom(frame);
 			_framesAlphaNumeric.OnNext(frame);
 			_lastFrameFormat.OnNext(FrameFormat.AlphaNumeric);
 		}

@@ -14,10 +14,9 @@ namespace LibDmd.Converter.Serum
 		public uint NumColors => 0;
 
 		private readonly Subject<DmdFrame> _rgb565Frames;
-		private readonly Dictionary<uint, byte[]> _frames = new Dictionary<uint, byte[]>();
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
 		private readonly Dimensions _dimensions;
 		private readonly ScalerMode _scalerMode;
-		private readonly DmdFrame _frame;
 
 		private const int MAX_COLOR_ROTATIONS_V2 = 4;
 
@@ -28,7 +27,6 @@ namespace LibDmd.Converter.Serum
 			_rgb565Frames = rgb565Frames;
 			_scalerMode = scalerMode;
 			_dimensions = ReadDimensions(ref serumFrame);
-			_frame = new DmdFrame(_dimensions, 16);
 			Logger.Info($"Serum v2 initialized {_dimensions}.");
 		}
 
@@ -43,6 +41,11 @@ namespace LibDmd.Converter.Serum
 		}
 
 		private void ReadAndPushNextFrame(ref SerumFrame serumFrame)
+		{
+			using (_buffers.Enter()) ReadFrame(ref serumFrame);
+		}
+
+		private void ReadFrame(ref SerumFrame serumFrame)
 		{
 			byte[] frameData;
 			Dimensions dim;
@@ -66,8 +69,7 @@ namespace LibDmd.Converter.Serum
 				}
 			}
 
-			_frame.Update(dim, frameData);
-			_rgb565Frames.OnNext(_frame);
+			_rgb565Frames.OnNext(FrameBufferPool.Create(dim, frameData, 16));
 		}
 
 		private static Dimensions ReadDimensions(ref SerumFrame serumFrame)
@@ -99,12 +101,6 @@ namespace LibDmd.Converter.Serum
 			return frame;
 		}
 
-		private byte[] GetFrame(uint size)
-		{
-			if (!_frames.ContainsKey(size)) {
-				_frames[size] = new byte[size];
-			}
-			return _frames[size];
-		}
+		private static byte[] GetFrame(uint size) => FrameBufferPool.Allocate<byte>((int)size);
 	}
 }

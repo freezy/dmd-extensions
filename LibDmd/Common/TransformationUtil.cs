@@ -31,7 +31,7 @@ namespace LibDmd.Common
 					return frame;
 				}
 				var pos = 0;
-				var flipped = new byte[frame.Length];
+				var flipped = FrameBufferPool.Allocate<byte>(frame.Length);
 				for (var y = 0; y < dim.Height; y++) {
 					for (var x = 0; x < dim.Width * bytesPerPixel; x += bytesPerPixel) {
 						var xFlipped = flipHorizontally ? (dim.Width - 1) * bytesPerPixel - x : x;
@@ -60,22 +60,23 @@ namespace LibDmd.Common
 				if (!flipHorizontally && !flipVertically) {
 					return planes;
 				}
-				var flippedPlanes = new byte[planes.Length][];
+				var flippedPlanes = FrameBufferPool.Allocate<byte[]>(planes.Length);
 				for (var n = 0; n < planes.Length; n++) {
 					var pos = 0;
-					var plane = new BitArray(planes[n]);
-					var flippedPlane = new BitArray(plane.Length);
+					var plane = planes[n];
+					var flippedPlane = FrameBufferPool.Allocate<byte>(plane.Length);
 					for (var y = 0; y < dim.Height; y++) {
 						for (var x = 0; x < dim.Width; x ++) {
 							var xFlipped = flipHorizontally ? (dim.Width - 1) - x : x;
 							var yFlipped = flipVertically ? dim.Height - y - 1 : y;
-							flippedPlane.Set(pos, plane[dim.Width * yFlipped + xFlipped]);
+							var sourcePixel = dim.Width * yFlipped + xFlipped;
+							if ((plane[sourcePixel >> 3] & (1 << (sourcePixel & 7))) != 0) {
+								flippedPlane[pos >> 3] |= (byte)(1 << (pos & 7));
+							}
 							pos++;
 						}
 					}
-					var fp = new byte[planes[n].Length];
-					flippedPlane.CopyTo(fp, 0);
-					flippedPlanes[n] = fp;
+					flippedPlanes[n] = flippedPlane;
 				}
 				return flippedPlanes;
 			}
@@ -238,7 +239,7 @@ namespace LibDmd.Common
 				if (marginX > 0 || marginY > 0) {
 					var bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
 					var blockSize = bytesPerPixel * processedBmp.PixelWidth * processedBmp.PixelHeight;
-					var buffer = new byte[blockSize];
+					var buffer = FrameBufferPool.Allocate<byte>(blockSize);
 					var stride = processedBmp.PixelWidth * bytesPerPixel;
 
 					// create new canvas

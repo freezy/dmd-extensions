@@ -162,7 +162,7 @@ namespace LibDmd.Converter.Plugin
 			}
 		}
 
-		public new void Dispose()
+		public override void Dispose()
 		{
 			base.Dispose();
 
@@ -215,7 +215,11 @@ namespace LibDmd.Converter.Plugin
 
 		#region Conversion
 
-		private byte[] _frameData;
+		private readonly FrameBufferPool _buffers = new FrameBufferPool();
+		public bool ReuseFrameBuffers { get; set; }
+#if LIBDMD_CORE
+			= true;
+#endif
 		private readonly Dictionary<int, int> _colorIndex = new Dictionary<int, int>();
 		private readonly Color[] _palette = new Color[64];
 
@@ -237,6 +241,11 @@ namespace LibDmd.Converter.Plugin
 		/// <param name="frame">Uncolored frame with in <see cref="FrameFormat"/>.</param>
 		protected override void ConvertClocked(DmdFrame frame)
 		{
+			using (ReuseFrameBuffers ? _buffers.Enter() : FrameBufferPool.Suspend()) ConvertFrame(frame);
+		}
+
+		private void ConvertFrame(DmdFrame frame)
+		{
 			var rgb24FramePtr = frame is RawFrame rawFrame && rawFrame.RawPlanes.Length > 0
 				? ColorizeFrame(rawFrame)
 				: ColorizeFrame(frame);
@@ -250,6 +259,11 @@ namespace LibDmd.Converter.Plugin
 		}
 
 		protected override void ConvertClocked(AlphaNumericFrame frame)
+		{
+			using (ReuseFrameBuffers ? _buffers.Enter() : FrameBufferPool.Suspend()) ConvertFrame(frame);
+		}
+
+		private void ConvertFrame(AlphaNumericFrame frame)
 		{
 			var rgb24FramePtr = _colorizeAlphaNumeric(frame.SegmentLayout, frame.SegmentData, frame.SegmentDataExtended);
 
@@ -308,12 +322,10 @@ namespace LibDmd.Converter.Plugin
 		private void EmitFrame(Dimensions dim, IntPtr rgb24FramePtr)
 		{
 			var frameSize = dim.Surface * 3;
-			var rgb24Frame = new byte[frameSize];
+			var rgb24Frame = FrameBufferPool.Allocate<byte>(frameSize);
 			Marshal.Copy(rgb24FramePtr, rgb24Frame, 0, frameSize);
 
-			if (_frameData == null || _frameData.Length != dim.Surface) {
-				_frameData = new byte[dim.Surface];
-			}
+			var frameData = FrameBufferPool.Allocate<byte>(dim.Surface);
 			_colorIndex.Clear();
 			for (var k = 0; k < 64; k++) {
 				_palette[k] = Colors.Black;
@@ -337,22 +349,29 @@ namespace LibDmd.Converter.Plugin
 					index = _colorIndex[color];
 				}
 
-				_frameData[j++] = (byte)index;
+				frameData[j++] = (byte)index;
 			}
 
 			// split and send
 			if (lastIndex < 4) {
-				DedupedColoredGray2Source.NextFrame(new ColoredFrame(dim, _frameData, _palette.Take(4).ToArray()));
+				DedupedColoredGray2Source.NextFrame(CreateColoredFrame(dim, frameData, 4));
 
 			} else if (lastIndex < 16) {
-				DedupedColoredGray4Source.NextFrame(new ColoredFrame(dim, _frameData, _palette.Take(16).ToArray()));
+				DedupedColoredGray4Source.NextFrame(CreateColoredFrame(dim, frameData, 16));
 
 			} else if (lastIndex < 64) {
-				DedupedColoredGray6Source.NextFrame(new ColoredFrame(dim, _frameData, _palette));
+				DedupedColoredGray6Source.NextFrame(CreateColoredFrame(dim, frameData, 64));
 
 			} else {
-				DedupedRgb24Source.NextFrame(new DmdFrame(dim, rgb24Frame, 24));
+				DedupedRgb24Source.NextFrame(FrameBufferPool.Create(dim, rgb24Frame, 24));
 			}
+		}
+
+		private ColoredFrame CreateColoredFrame(Dimensions dim, byte[] data, int colors)
+		{
+			var palette = FrameBufferPool.Allocate<Color>(colors);
+			Array.Copy(_palette, palette, colors);
+			return FrameBufferPool.Create(dim, data, palette);
 		}
 
 		#endregion

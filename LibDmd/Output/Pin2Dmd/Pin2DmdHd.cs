@@ -15,6 +15,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public bool DmdAllowHdScaling { get; set; } = true;
 
 		private static Pin2DmdHd _instance;
+		private byte[] _rgbScratch;
 
 		private Pin2DmdHd()
 		{
@@ -34,9 +35,12 @@ namespace LibDmd.Output.Pin2Dmd
 			return _instance;
 		}
 
-		private static bool CreateRgb24HD(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence, int buffermode)
+		private bool CreateRgb24HD(Dimensions dim, byte[] frame, byte[] frameBuffer, int offset, int rgbSequence, int buffermode)
 		{
-			var tmp = new byte[frameBuffer.Length];
+			if (_rgbScratch == null || _rgbScratch.Length != frameBuffer.Length) {
+				_rgbScratch = new byte[frameBuffer.Length];
+			}
+			var tmp = _rgbScratch;
 			var identical = true;
 			CreateRgb24(dim, frame, tmp, offset, rgbSequence);
 			var dest_idx = offset;

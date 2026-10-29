@@ -1,5 +1,6 @@
 ﻿using System;
 using LibDmd.Output;
+using LibDmd.Common;
 
 namespace LibDmd.Frame
 {
@@ -40,7 +41,7 @@ namespace LibDmd.Frame
 		{
 			var padX = (targetDim.Width - Dimensions.Width) / 2;
 			var padY = (targetDim.Height - Dimensions.Height) / 2;
-			var frameData = new byte[targetDim.Surface * bytesPerPixel];
+			var frameData = FrameBufferPool.Allocate<byte>(targetDim.Surface * bytesPerPixel);
 			var ySrc = 0;
 			for (var yDest = padY; yDest < padY + Dimensions.Height; yDest++) {
 				Buffer.BlockCopy(
@@ -59,7 +60,7 @@ namespace LibDmd.Frame
 		protected byte[] CenterVertically(Dimensions targetDim, byte[] data, int bytesPerPixel)
 		{
 			var padY = (targetDim.Height - Dimensions.Height) / 2;
-			var transformedFrameData = new byte[targetDim.Surface * bytesPerPixel];
+			var transformedFrameData = FrameBufferPool.Allocate<byte>(targetDim.Surface * bytesPerPixel);
 			Buffer.BlockCopy(
 				data,
 				0,

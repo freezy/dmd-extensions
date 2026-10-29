@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NLog;
+using LibDmd.Common;
 
 namespace LibDmd.Converter.Vni
 {
@@ -27,7 +28,13 @@ namespace LibDmd.Converter.Vni
 
 		//public bool HasMask { get; protected set; }
 
-		public byte[][] PlaneData => Planes.Select(p => p.Plane).ToArray();
+		public byte[][] PlaneData {
+			get {
+				var planes = FrameBufferPool.Allocate<byte[]>(Planes.Count);
+				for (var i = 0; i < planes.Length; i++) planes[i] = Planes[i].Plane;
+				return planes;
+			}
+		}
 
 		public uint Hash;
 

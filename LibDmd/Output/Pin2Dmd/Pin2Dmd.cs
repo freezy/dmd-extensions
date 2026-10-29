@@ -16,6 +16,7 @@ namespace LibDmd.Output.Pin2Dmd
 		public override Dimensions FixedSize => Dimensions.Standard;
 		public bool DmdAllowHdScaling { get; set; } = true;
 
+		private static readonly byte[] Gray2ToGray4Mapping = { 0, 1, 4, 15 };
 		private byte[] _frameBufferGray4;
 		private byte[] _frameBufferGray6;
 		private readonly byte[] _colorPalette;
@@ -143,7 +144,7 @@ namespace LibDmd.Output.Pin2Dmd
 			SetPalette(frame.Palette);
 
 			// send frame buffer to device
-			RenderGray4(frame.ConvertToGray4(0x0, 0x1, 0x4, 0xf));
+			RenderGray4(frame.ConvertToGray4(Gray2ToGray4Mapping));
 		}
 
 		public void UpdatePalette(Color[] palette)

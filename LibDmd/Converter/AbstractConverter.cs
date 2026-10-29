@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LibDmd.Frame;
+using LibDmd.Common;
 using LibDmd.Input;
 using LibDmd.Input.Passthrough;
 using LibDmd.Output;
@@ -46,6 +47,8 @@ namespace LibDmd.Converter
 		private readonly bool _clockAndDedupe;
 		private readonly object _lastFrameLock = new object();
 		private DmdFrame _lastDmdFrame;
+		private readonly DmdFrame _dmdSnapshot = new DmdFrame();
+		private readonly FrameBufferPool _paddingBuffers = new FrameBufferPool();
 		private AlphaNumericFrame _lastAlphanumFrame;
 		private readonly IDisposable _clock;
 		private readonly BehaviorSubject<FrameFormat> _lastFrameFormat = new BehaviorSubject<FrameFormat>(FrameFormat.AlphaNumeric);
@@ -100,15 +103,20 @@ namespace LibDmd.Converter
 				throw new InvalidOperationException("Convert() must be overridden if convertor doesn't receive clocked frames.");
 			}
 #endif
-			var lastDmdFrame = PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)
-				? DmdFrame.GetFromPool().Update(Dimensions.Standard, frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel), frame.BitLength)
-				: DmdFrame.GetFromPool().Update(frame);
-			DmdFrame previousFrame;
 			lock (_lastFrameLock) {
-				previousFrame = _lastDmdFrame;
-				_lastDmdFrame = lastDmdFrame;
+				// Keep the established clocked input format: joined grayscale pixels, even for RawFrame.
+				// Retain an owned copy because the producer can reuse its data before the next tick.
+				if (PadSmallFrames && frame.Dimensions.IsSmallerThan(Dimensions.Standard)) {
+					using (_paddingBuffers.Enter()) {
+						var pixels = frame.CenterFrame(Dimensions.Standard, frame.Data, frame.BytesPerPixel);
+						var padded = FrameBufferPool.Create(Dimensions.Standard, pixels, frame.BitLength);
+						padded.Update(Dimensions.Standard, pixels, frame.BitLength, frame.IsIdentifyFrame);
+						_lastDmdFrame = _dmdSnapshot.CopyFrom(padded);
+					}
+				} else {
+					_lastDmdFrame = _dmdSnapshot.CopyFrom(frame);
+				}
 			}
-			previousFrame?.ReturnToPool();
 		}
 
 		/// <summary>
@@ -137,7 +145,8 @@ namespace LibDmd.Converter
 			}
 			#endif
 			lock (_lastFrameLock) {
-				_lastAlphanumFrame = frame;
+				if (_lastAlphanumFrame == null) _lastAlphanumFrame = new AlphaNumericFrame();
+				_lastAlphanumFrame.CopyFrom(frame);
 			}
 		}
 
@@ -158,11 +167,10 @@ namespace LibDmd.Converter
 			}
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			_clock?.Dispose();
 			lock (_lastFrameLock) {
-				_lastDmdFrame?.ReturnToPool();
 				_lastDmdFrame = null;
 				_lastAlphanumFrame = null;
 			}

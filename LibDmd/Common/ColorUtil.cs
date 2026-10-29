@@ -247,60 +247,30 @@ namespace LibDmd.Common
 		/// <returns>Colorized frame data</returns>
 		/// <exception cref="ArgumentException">When provided frame and palette are incoherent</exception>
 		public static byte[] ColorizeRgb(Dimensions dim, byte[] frame, Color[] palette, int bytesPerPixel)
+			=> ColorizeRgb(dim, frame, palette, bytesPerPixel, FrameBufferPool.Allocate<byte>(dim.Surface * bytesPerPixel));
+
+		/// <summary>Colorizes into caller-owned storage without allocating temporary palette arrays.</summary>
+		public static byte[] ColorizeRgb(Dimensions dim, byte[] frame, Color[] palette, int bytesPerPixel, byte[] destination)
 		{
-			using (Profiler.Start("ColorUtil.ColorizeRgb")) {
-				#if DEBUG
-				if (dim.Surface != frame.Length) {
-					throw new ArgumentException("Data and dimensions do not match.");
-				}
-				#endif
-
-				var frameLength = dim.Surface * bytesPerPixel;
-				var colorizedData = new byte[frameLength];
-
-				var palValues = new byte[bytesPerPixel][];
-				for (var k = 0; k < bytesPerPixel; k++) {
-					palValues[k] = new byte[palette.Length];
-				}
-
-				for (var i = 0; i < palette.Length; i++) {
-					switch (bytesPerPixel) {
-						case 3:
-							palValues[0][i] = palette[i].R;
-							palValues[1][i] = palette[i].G;
-							palValues[2][i] = palette[i].B;
-							break;
-
-						case 2:
-							var (x1, x2) = Rgb24ToRgb565(palette[i].R, palette[i].G, palette[i].B);
-							palValues[0][i] = x2;
-							palValues[1][i] = x1;
-							break;
-
-						default:
-							throw new ArgumentException("Unsupported number of bytes per pixel.");
-					}
-				}
-
-				var maxPixel = (byte)(palette.Length - 1);
-				unsafe {
-					fixed (byte* pFrame = frame, pcolorFrame = colorizedData) {
-						byte* pFrameCur = pFrame, pFEnd = pFrame + frame.Length;
-						byte* pColorFrameCur = pcolorFrame;
-
-						for (; pFrameCur < pFEnd; pFrameCur++, pColorFrameCur += bytesPerPixel) {
-							var pixel = *pFrameCur;
-							if (pixel > maxPixel) {
-								pixel = maxPixel; // Avoid crash when VPinMame sends data out of the palette range
-							}
-							for (var i = 0; i < bytesPerPixel; i++) {
-								*(pColorFrameCur + i) = palValues[i][pixel];
-							}
-						}
-					}
-				}
-				return colorizedData;
+			if (bytesPerPixel != 2 && bytesPerPixel != 3) throw new ArgumentException("Unsupported number of bytes per pixel.");
+			if (frame.Length != dim.Surface || destination.Length != dim.Surface * bytesPerPixel) {
+				throw new ArgumentException("Data and dimensions do not match.");
 			}
+			var maxPixel = palette.Length - 1;
+			for (var i = 0; i < frame.Length; i++) {
+				var color = palette[Math.Min(frame[i], maxPixel)];
+				var offset = i * bytesPerPixel;
+				if (bytesPerPixel == 3) {
+					destination[offset] = color.R;
+					destination[offset + 1] = color.G;
+					destination[offset + 2] = color.B;
+				} else {
+					var (high, low) = Rgb24ToRgb565(color.R, color.G, color.B);
+					destination[offset] = low;
+					destination[offset + 1] = high;
+				}
+			}
+			return destination;
 		}
 
 		/// <summary>
@@ -311,7 +281,7 @@ namespace LibDmd.Common
 		/// <returns></returns>
 		public static byte[] ConvertRgb24ToRgb565(Dimensions dim, byte[] rgb888Data)
 		{
-			var frame = new byte[dim.Surface * 2];
+			var frame = FrameBufferPool.Allocate<byte>(dim.Surface * 2);
 			var rgb565Pos = 0;
 			for (var y = 0; y < dim.Height; y++) {
 				for (var x = 0; x < dim.Width * 3; x += 3) {
@@ -374,7 +344,7 @@ namespace LibDmd.Common
 		/// <returns>Converted RGB888 data</returns>
 		public static byte[] ConvertRgb565ToRgb24(Dimensions dim, byte[] rgb565Data)
 		{
-			var rgb888Data = new byte[dim.Surface * 3];
+			var rgb888Data = FrameBufferPool.Allocate<byte>(dim.Surface * 3);
 			for (var x = 0; x < dim.Width; x++) {
 				for (var y = 0; y < dim.Height; y++) {
 					var rgb565Pos = (y * dim.Width + x) * 2;
