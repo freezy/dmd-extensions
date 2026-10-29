@@ -43,6 +43,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private bool _aspectRatioSet;
 
 		private WriteableBitmap _writeableBitmap;
+		private IDisposable _resizeSubscription;
+		private bool _disposed;
 
 		public AlphanumericControl()
 		{
@@ -51,12 +53,12 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			DisplaySetting = new DisplaySetting();
 
 			SizeChanged += SizeChanged_Event;
-			CompositionTarget.Rendering += (o, e) => DrawImage(_writeableBitmap);
+			CompositionTarget.Rendering += OnRendering;
 		}
 
 		public void Init()
 		{
-			Host.WindowResized.Subscribe(pos => CreateImage((int)pos.Width, (int)pos.Height));
+			_resizeSubscription = Host.WindowResized.Subscribe(pos => CreateImage((int)pos.Width, (int)pos.Height));
 			_stopwatch.Start();
 		}
 
@@ -142,12 +144,24 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Dispose()
 		{
+			if (_disposed) {
+				return;
+			}
+			_disposed = true;
+			CompositionTarget.Rendering -= OnRendering;
+			SizeChanged -= SizeChanged_Event;
+			_resizeSubscription?.Dispose();
+			_resizeSubscription = null;
+			AlphanumericDisplay.Source = null;
+			_writeableBitmap = null;
+			_data = null;
 			_switchDirection = null;
 			_switchPercentage = null;
 			_stopwatch.Stop();
 			_stopwatch.Reset();
-			Res.Clear();
 		}
+
+		private void OnRendering(object sender, EventArgs e) => DrawImage(_writeableBitmap);
 
 		private void UpdateSwitchStatus(long elapsedMillisecondsSinceLastFrame)
 		{

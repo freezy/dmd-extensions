@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using LibDmd.Common;
@@ -27,8 +26,8 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 		private readonly RasterizeStyleDefinition _styleDef;
 
 		private readonly Dictionary<int, VirtualAlphaNumericDisplay> _displays = new Dictionary<int, VirtualAlphaNumericDisplay>();
-		private readonly Dictionary<int, ushort[]> _droppedData = new Dictionary<int, ushort[]>();
 		private NumericalLayout _currentLayout = NumericalLayout.None;
+		private bool _disposed;
 
 		private bool _settingsOpen;
 		private VirtualAlphaNumericSettings _settingWindow;
@@ -48,14 +47,22 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void RenderAlphaNumeric(AlphaNumericFrame frame)
 		{
+			if (!_dispatcher.CheckAccess()) {
+				RunOnDispatcher(() => RenderAlphaNumeric(frame));
+				return;
+			}
+			if (_disposed) {
+				return;
+			}
 			if (_currentLayout == NumericalLayout.None ||
 				_currentLayout != frame.SegmentLayout) {
 
-				if (_currentLayout != NumericalLayout.None) {
-					CloseDisplays();
-				}
-
+				var oldDisplays = _displays.Values.ToArray();
+				_displays.Clear();
+				// Keep a window alive across the transition: console hosts use WPF's
+				// default shutdown-on-last-window-close behavior.
 				ShowDisplays(frame.SegmentLayout);
+				CloseDisplays(oldDisplays);
 				_currentLayout = frame.SegmentLayout;
 			}
 			//Logger.Info("New frame type {0}", frame.SegmentLayout);
@@ -192,13 +199,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		private void SendToDisplay(int displayNumber, ushort[] data)
 		{
-			if (_displays.ContainsKey(displayNumber)) {
+			if (_displays.TryGetValue(displayNumber, out var display)) {
 				//Logger.Debug("Sending data to display {0}...", displayNumber);
-				_displays[displayNumber].AlphaNumericDisplay.RenderSegments(data);
-
-			} else {
-				//Logger.Debug("Got data for display {0}, but it's now created yet, so saving for later.", displayNumber);
-				_droppedData[displayNumber] = data;
+				display.AlphaNumericDisplay.RenderSegments(data);
 			}
 		}
 
@@ -332,9 +335,9 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 			}
 		}
 
-		private void CloseDisplays()
+		private void CloseDisplays(IEnumerable<VirtualAlphaNumericDisplay> displays)
 		{
-			foreach (var display in _displays.Values.ToArray()) {
+			foreach (var display in displays) {
 				try {
 					if (display.Dispatcher.HasShutdownStarted ||
 						display.Dispatcher.HasShutdownFinished) {
@@ -350,13 +353,14 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 					Logger.Warn(e, "Could not close alphanumeric display because its dispatcher was unavailable.");
 				}
 			}
-
-			_displays.Clear();
-			_droppedData.Clear();
 		}
 
 		public void ClearDisplay()
 		{
+			if (!_dispatcher.CheckAccess()) {
+				RunOnDispatcher(ClearDisplay);
+				return;
+			}
 			foreach (var display in _displays.Values.ToArray()) {
 				try {
 					if (display.Dispatcher.HasShutdownStarted ||
@@ -379,6 +383,17 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 
 		public void Dispose()
 		{
+			if (!_dispatcher.CheckAccess()) {
+				RunOnDispatcher(Dispose);
+				if (ReferenceEquals(_instance, this)) {
+					_instance = null;
+				}
+				return;
+			}
+			if (_disposed) {
+				return;
+			}
+			_disposed = true;
 			try {
 				_settingSubscription?.Dispose();
 				_settingSubscription = null;
@@ -389,7 +404,7 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 							!_settingWindow.Dispatcher.HasShutdownFinished) {
 
 							_settingWindow.Dispatcher.Invoke(
-								() => _settingWindow.Close()
+								() => _settingWindow.Dispose()
 							);
 						}
 
@@ -404,39 +419,40 @@ namespace LibDmd.Output.Virtual.AlphaNumeric
 				_settingWindow = null;
 				_settingsOpen = false;
 
-				CloseDisplays();
+				CloseDisplays(_displays.Values.ToArray());
 				Res.Clear();
 
 			} finally {
 				_displays.Clear();
-				_droppedData.Clear();
 				_currentLayout = NumericalLayout.None;
-				_instance = null;
+				if (ReferenceEquals(_instance, this)) {
+					_instance = null;
+				}
 			}
 		}
 
 		private void ShowDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
 		{
-			_dispatcher.Invoke(delegate {
-				var display = CreateDisplay(displayNumber, numChars, numLines, type);
-				var thread = new Thread(() => {
-					SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
-					display.Dispatcher.Invoke(() => {
-						display.AlphaNumericDisplay.Init();
-						display.Show();
+			// Windows already belong to this dispatcher. Complete startup here so a
+			// layout change cannot close a window with an Init/Show callback pending.
+			var display = CreateDisplay(displayNumber, numChars, numLines, type);
+			display.Closed += (s, e) => display.AlphaNumericDisplay.Dispose();
+			display.AlphaNumericDisplay.Init();
+			display.Show();
+		}
 
-						if (_droppedData.ContainsKey(displayNumber)) {
-							Logger.Debug("Sending dropped frame to freshly created display {0}...", displayNumber);
-							display.AlphaNumericDisplay.RenderSegments(_droppedData[displayNumber]);
-							_droppedData.Remove(displayNumber);
-						}
-					});
-					Dispatcher.Run();
-				});
-				display.Closed += (s, e) => Dispatcher.FromThread(thread).BeginInvokeShutdown(DispatcherPriority.Background);
-				thread.SetApartmentState(ApartmentState.STA);
-				thread.Start();
-			});
+		private void RunOnDispatcher(Action action)
+		{
+			if (_dispatcher.HasShutdownStarted || _dispatcher.HasShutdownFinished) {
+				return;
+			}
+			try {
+				_dispatcher.Invoke(action);
+			} catch (TaskCanceledException e) {
+				Logger.Warn(e, "Alphanumeric dispatcher operation was canceled.");
+			} catch (InvalidOperationException e) when (_dispatcher.HasShutdownStarted || _dispatcher.HasShutdownFinished) {
+				Logger.Warn(e, "Alphanumeric dispatcher is shutting down.");
+			}
 		}
 
 		private VirtualAlphaNumericDisplay CreateDisplay(int displayNumber, int numChars, int numLines, SegmentType type)
