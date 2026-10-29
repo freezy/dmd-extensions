@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using LibDmd.Frame;
@@ -43,14 +44,15 @@ namespace LibDmd.Converter.Serum
 
 		private void ConvertFrame(ref SerumFrame serumFrame)
 		{
+			if (serumFrame.Frame == IntPtr.Zero) {
+				Logger.Warn("[serum] Frame data is null.");
+				return;
+			}
 			var pixels = FrameBufferPool.Allocate<byte>(_dimensions.Surface);
 			var palette = FrameBufferPool.Allocate<Color>(64);
-			if (serumFrame.Frame == null) {
-				Logger.Warn("[serum] Frame data is null.");
-			}
 
 			// copy data from unmanaged to managed
-			if (serumFrame.Palette != null) {
+			if (serumFrame.Palette != IntPtr.Zero) {
 				Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
 			}
 			Marshal.Copy(serumFrame.Frame, pixels, 0, _dimensions.Width * _dimensions.Height);
@@ -67,7 +69,9 @@ namespace LibDmd.Converter.Serum
 
 		public void UpdateRotations(ref SerumFrame serumFrame, Color[] palette, uint _)
 		{
-			Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
+			if (serumFrame.Palette != IntPtr.Zero) {
+				Marshal.Copy(serumFrame.Palette, _bytePalette, 0, _bytePalette.Length);
+			}
 			BytesToColors(_bytePalette, palette);
 		}
 

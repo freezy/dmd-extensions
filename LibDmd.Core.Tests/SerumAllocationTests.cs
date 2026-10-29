@@ -14,6 +14,46 @@ namespace LibDmd.Test
 	public class SerumAllocationTests
 	{
 		[Test]
+		public void V1SkipsMissingNativePixelsWithoutPublishingFramesOrEvents()
+		{
+			using var frames = new Subject<ColoredFrame>();
+			using var events = new Subject<FrameEvent>();
+			var native = new SerumFrame { Width32 = 128, nocolors = 4, triggerID = 1 };
+			var api = new SerumApiV1(frames, events, ref native);
+			var publications = 0;
+			using var frameSubscription = frames.Subscribe(_ => publications++);
+			using var eventSubscription = events.Subscribe(_ => publications++);
+			api.Convert(ref native);
+			Assert.That(publications, Is.Zero);
+		}
+
+		[Test]
+		public void V1KeepsTheLastPaletteWhenTheNativePaletteIsMissing()
+		{
+			var pixels = Marshal.AllocHGlobal(4096);
+			var palette = Marshal.AllocHGlobal(192);
+			try {
+				Marshal.Copy(new byte[4096], 0, pixels, 4096);
+				var colors = new byte[192]; colors[0] = 42;
+				Marshal.Copy(colors, 0, palette, colors.Length);
+				using var frames = new Subject<ColoredFrame>();
+				using var events = new Subject<FrameEvent>();
+				var native = new SerumFrame { Width32 = 128, nocolors = 4, Frame = pixels, Palette = palette, triggerID = uint.MaxValue };
+				var api = new SerumApiV1(frames, events, ref native);
+				Color observed = default;
+				using var subscription = frames.Subscribe(f => observed = f.Palette[0]);
+				api.Convert(ref native);
+				native.Palette = IntPtr.Zero;
+				observed = default;
+				api.Convert(ref native);
+				Assert.That(observed, Is.EqualTo(Color.FromRgb(42, 0, 0)));
+				var rotated = new Color[64];
+				api.UpdateRotations(ref native, rotated, 0);
+				Assert.That(rotated[0], Is.EqualTo(observed));
+			} finally { Marshal.FreeHGlobal(pixels); Marshal.FreeHGlobal(palette); }
+		}
+
+		[Test]
 		public void ReadingNativeFrameMetadataDoesNotBoxTheStructure()
 		{
 			var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<SerumFrame>());
