@@ -75,6 +75,13 @@ namespace LibDmd.Converter.Vni
 		public bool AddPlanes => SwitchMode == SwitchMode.Follow || SwitchMode == SwitchMode.ColorMask || SwitchMode == SwitchMode.ColorMaskLoop;
 
 		/// <summary>
+		/// Only multi-frame replace and looping color-mask animations advance on unchanged input.
+		/// Other modes, and all single-frame scenes, keep their last rendered image until the input changes.
+		/// </summary>
+		public bool AdvancesOnRepeatedFrame => NumFrames > 1 && (SwitchMode == SwitchMode.Replace
+			|| SwitchMode == SwitchMode.ReplaceNoRetrigger || SwitchMode == SwitchMode.ColorMaskLoop);
+
+		/// <summary>
 		/// If set, the frames are played by their delay, otherwise they are
 		/// picked by the incoming frames.
 		/// </summary>
@@ -291,7 +298,7 @@ namespace LibDmd.Converter.Vni
 			_currentRender = render;
 		}
 
-		private void RenderAnimation(Dimensions dim, byte[][] vpmFrame, Action completed = null)
+		private void RenderAnimation(Dimensions dim, byte[][] vpmFrame, Action completed, bool renderInputOnCompletion)
 		{
 			if (IsTimed)
 			{
@@ -331,7 +338,9 @@ namespace LibDmd.Converter.Vni
 			
 			completed?.Invoke();
 			SwitchMode = SwitchMode.Palette;
-			OutputFrame(dim, vpmFrame);
+			if (renderInputOnCompletion) {
+				OutputFrame(dim, vpmFrame);
+			}
 			Stop("finished");
 		}
 
@@ -428,7 +437,12 @@ namespace LibDmd.Converter.Vni
 
 		public void NextFrame(Dimensions dim, byte[][] planes, Action completed = null)
 		{
-			RenderAnimation(dim, planes, completed);
+			NextFrame(dim, planes, completed, true);
+		}
+
+		public void NextFrame(Dimensions dim, byte[][] planes, Action completed, bool renderInputOnCompletion)
+		{
+			RenderAnimation(dim, planes, completed, renderInputOnCompletion);
 		}
 
 		public void Stop(string what = "stopped")

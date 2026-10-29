@@ -93,6 +93,9 @@ namespace LibDmd.Converter.Vni
 			var isNewFrame = IsNewFrame(frame);
 			if (isNewFrame) {
 				RememberTriggerFrame(frame);
+			} else if (_activeFrameSeq == null || !_activeFrameSeq.AdvancesOnRepeatedFrame) {
+				// Retain the last output without advancing or expiring a static scene.
+				return;
 			}
 
 			var data = frame.Data;
@@ -124,8 +127,9 @@ namespace LibDmd.Converter.Vni
 			var planes = FrameUtil.Split(frame.Dimensions, frame.BitLength, data);
 			if (isNewFrame) {
 
-				// looping color masks also move on when the frame changes
-				if (_activeFrameSeq != null && _activeFrameSeq.SwitchMode == SwitchMode.ColorMaskLoop) {
+				// Multi-frame color masks move on with new input, regardless of the current frame's delay.
+				if (_activeFrameSeq != null && _activeFrameSeq.NumFrames > 1
+					&& (_activeFrameSeq.SwitchMode == SwitchMode.ColorMask || _activeFrameSeq.SwitchMode == SwitchMode.ColorMaskLoop)) {
 					_activeFrameSeq.ExpireFrameDelay();
 				}
 
@@ -142,7 +146,7 @@ namespace LibDmd.Converter.Vni
 			// if an animation is playing, render it instead of the normal frame
 			if (_activeFrameSeq != null) {
 				_activeFrameSeq.ScalerMode = ScalerMode;
-				_activeFrameSeq.NextFrame(frame.Dimensions, planes, AnimationFinished);
+				_activeFrameSeq.NextFrame(frame.Dimensions, planes, AnimationFinished, renderInputOnCompletion: isNewFrame);
 				return;
 			}
 

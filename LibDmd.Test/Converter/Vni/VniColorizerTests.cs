@@ -6,6 +6,8 @@ using FluentAssertions;
 using LibDmd.Common;
 using LibDmd.Converter.Vni;
 using LibDmd.Frame;
+using LibDmd.Output;
+using LibDmd.Test.Stubs;
 using NUnit.Framework;
 
 namespace LibDmd.Test
@@ -68,11 +70,12 @@ namespace LibDmd.Test
 			return new ClockedColorizer(pal, new FsqFile(fsq.Build(), "test.fsq", pal));
 		}
 
-		[Test]
-		public void ShouldPlayReplaceAnimationWhileTriggerFrameIsRepeated()
+		[TestCase(SwitchMode.Replace)]
+		[TestCase(SwitchMode.ReplaceNoRetrigger)]
+		public void ShouldPlayReplaceAnimationWhileTriggerFrameIsRepeated(SwitchMode mode)
 		{
 			var trigger = Gray2Frame(1);
-			var colorizer = ReplaceColorizer(SwitchMode.Replace, trigger, 3);
+			var colorizer = ReplaceColorizer(mode, trigger, 3);
 
 			// the clock repeats the frame, and VPM may send it again.
 			colorizer.Tick(trigger);
@@ -80,6 +83,93 @@ namespace LibDmd.Test
 			colorizer.Tick(Gray2Frame(1));
 
 			colorizer.Frames.Select(LitPixel).Should().Equal(100, 101, 102);
+		}
+
+		[Test]
+		public void ShouldKeepT2LogoBlueWhileItsTriggerFrameIsRepeated()
+		{
+			// T2's IntroLogo19 is a one-frame, 6-plane color mask with a 38 ms delay.
+			// The ROM holds its trigger longer than that delay (1,057 ms in the recording).
+			var trigger = Gray2Frame(1);
+			var fsq = new FsqBuilder(2);
+			var offset = fsq.Animation(new FsqFrame {
+				Delay = 38,
+				Planes = new[] { Planes.With(1), Planes.Empty(), Planes.Empty(), Planes.Empty() }
+			});
+			var blue64 = Enumerable.Range(0, 64).Select(i => Color.FromRgb(0, 0, (byte)(i * 4))).ToArray();
+			var pal = new PalBuilder(1).Palette(0, 1, Gray4).Palette(1, 0, blue64)
+				.Mapping(Crc(trigger), SwitchMode.ColorMask, 1, offset).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "t2-logo.fsq", pal))) {
+				colorizer.Tick(trigger);
+				System.Threading.Thread.Sleep(100);
+				colorizer.Tick(trigger);
+				colorizer.Tick(Gray2Frame(1));
+
+				colorizer.Frames.Should().ContainSingle();
+				var logo = colorizer.Frames.Last();
+				logo.BitLength.Should().Be(6);
+				logo.Palette[logo.Data[1]].Should().Be(blue64[5]);
+
+				// A different input can expire the mask and restore the default palette.
+				colorizer.Tick(Gray2Frame(2));
+				colorizer.Frames.Last().BitLength.Should().Be(2);
+				colorizer.Frames.Last().Palette.Should().Equal(Gray4);
+			}
+		}
+
+		[TestCase(SwitchMode.Replace)]
+		[TestCase(SwitchMode.ReplaceNoRetrigger)]
+		[TestCase(SwitchMode.ColorMaskLoop)]
+		public void ShouldHoldSingleFrameAnimationOnRepeatedInput(SwitchMode mode)
+		{
+			var trigger = Gray2Frame(1);
+			var fsq = new FsqBuilder(2);
+			var offset = fsq.Animation(new FsqFrame {
+				Planes = new[] { Planes.With(100), Planes.Empty() }
+			});
+			var colors = Enumerable.Range(0, 16).Select(i => Color.FromRgb((byte)i, 0, 0)).ToArray();
+			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(Crc(trigger), mode, 0, offset).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "test.fsq", pal))) {
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Frames.Should().ContainSingle();
+			}
+		}
+
+		[TestCase(SwitchMode.Replace)]
+		[TestCase(SwitchMode.ReplaceNoRetrigger)]
+		public void ShouldKeepLastReplaceOutputWhenItFinishesOnRepeatedInput(SwitchMode mode)
+		{
+			var trigger = Gray2Frame(1);
+			using (var colorizer = ReplaceColorizer(mode, trigger, 2)) {
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Frames.Select(LitPixel).Should().Equal(100, 101);
+				colorizer.Tick(Gray2Frame(2));
+				colorizer.Frames.Select(LitPixel).Should().Equal(100, 101, -1);
+			}
+		}
+
+		[Test]
+		public void ShouldOnlyAdvanceMultiFrameColorMaskOnChangedInput()
+		{
+			var trigger = Gray2Frame(1);
+			var fsq = new FsqBuilder(2);
+			var offset = fsq.Animation(
+				new FsqFrame { Planes = new[] { Planes.With(100), Planes.Empty() } },
+				new FsqFrame { Planes = new[] { Planes.With(101), Planes.Empty() } });
+			var colors = Enumerable.Range(0, 16).Select(i => Color.FromRgb((byte)i, 0, 0)).ToArray();
+			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(Crc(trigger), SwitchMode.ColorMask, 0, offset).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "test.fsq", pal))) {
+				colorizer.Tick(trigger);
+				colorizer.Tick(trigger);
+				colorizer.Tick(Gray2Frame(2));
+				colorizer.Tick(Gray2Frame(2));
+				colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & 4) != 0)).Should().Equal(100, 101);
+			}
 		}
 
 		[Test]
@@ -157,6 +247,48 @@ namespace LibDmd.Test
 			rgb.Take(6).Should().Equal(0xf8, 0xf8, 0xf8, 0, 0, 0);
 		}
 
+		[TestCase(15)]
+		[TestCase(24)]
+		public void ShouldRenderRgbAnimationToAllColorDestinations(int bitDepth)
+		{
+			var trigger = Gray2Frame(1);
+			const int pixel = 5;
+			var bitsPerChannel = bitDepth / 3;
+			var planes = new List<byte[]>();
+			foreach (var channel in new byte[] { 0x58, 0x38, 0x18 }) {
+				for (var bit = 0; bit < bitsPerChannel; bit++) {
+					planes.Add((channel & (1 << (bit + 8 - bitsPerChannel))) != 0 ? Planes.With(pixel) : Planes.Empty());
+				}
+			}
+			var fsq = new FsqBuilder(2);
+			var offset = fsq.Animation(new FsqFrame { Mask = Planes.Empty(), Planes = planes.ToArray() });
+			var pal = new PalBuilder(1).Palette(0, 1, Gray4).Mapping(Crc(trigger), SwitchMode.Replace, 0, offset).BuildFile();
+			var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "rgb.fsq", pal));
+			var bitmapDest = new DestinationFixedBitmap(128, 32);
+			var rgb565Dest = new DestinationFixedRgb565(128, 32);
+			var rgb24Dest = new DestinationFixedRgb24(128, 32);
+			BmpFrame bitmap = null;
+			DmdFrame rgb565 = null, rgb24 = null;
+			bitmapDest.Frame.Subscribe(f => bitmap = f);
+			rgb565Dest.Frame.Subscribe(f => rgb565 = (DmdFrame)f.Clone());
+			rgb24Dest.Frame.Subscribe(f => rgb24 = (DmdFrame)f.Clone());
+			using (var graph = new RenderGraph(new UndisposedReferences(), true) {
+				Source = new SourceGray2(),
+				Converter = colorizer,
+				Destinations = new List<IDestination> { bitmapDest, rgb565Dest, rgb24Dest }
+			}) {
+				graph.StartRendering();
+				colorizer.Tick(trigger);
+
+				bitmap.Should().NotBeNull("GIF and bitmap destinations must receive RGB animations");
+				rgb565.Should().NotBeNull();
+				rgb24.Should().NotBeNull();
+				bitmap.ConvertToRgb24().Data.Skip(pixel * 3).Take(3).Should().Equal(0x18, 0x38, 0x58);
+				rgb24.Data.Skip(pixel * 3).Take(3).Should().Equal(0x18, 0x38, 0x58);
+				rgb565.Data.Should().Equal(((DmdFrame)rgb24.Clone()).ConvertRgb24ToRgb565().Data);
+			}
+		}
+
 		[Test]
 		public void ShouldNotLetEventMappingsHideMaskedMappings()
 		{
@@ -209,11 +341,12 @@ namespace LibDmd.Test
 			colorizer.Tick(trigger);
 
 			// one-frame animation, then the live frame, then the animation again
-			colorizer.Frames.Select(LitPixel).Should().Equal(100, -1, -1, 100);
+			colorizer.Frames.Select(LitPixel).Should().Equal(100, -1, 100);
 		}
 
-		[Test]
-		public void ShouldAdvanceColorMaskLoopWhenFrameChanges()
+		[TestCase(SwitchMode.ColorMask)]
+		[TestCase(SwitchMode.ColorMaskLoop)]
+		public void ShouldAdvanceColorMaskWhenFrameChanges(SwitchMode mode)
 		{
 			var fsq = new FsqBuilder(2);
 			var offset = fsq.Animation(
@@ -221,7 +354,7 @@ namespace LibDmd.Test
 				new FsqFrame { Delay = 10000, Planes = new[] { Planes.With(101), Planes.Empty() } });
 			var colors = Enumerable.Range(0, 16).Select(i => Color.FromRgb((byte)i, 0, 0)).ToArray();
 			var trigger = Gray2Frame(1);
-			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(Crc(trigger), SwitchMode.ColorMaskLoop, 0, offset).BuildFile();
+			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(Crc(trigger), mode, 0, offset).BuildFile();
 			var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "test.fsq", pal));
 
 			colorizer.Tick(trigger);
@@ -230,7 +363,7 @@ namespace LibDmd.Test
 			colorizer.Tick(Gray2Frame(3));
 
 			// the delays are long, so only the new frames move the animation on.
-			colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & 4) != 0)).Should().Equal(100, 101, 100);
+			colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & 4) != 0)).Should().Equal(100, 101, mode == SwitchMode.ColorMaskLoop ? 100 : -1);
 		}
 
 		[Test]

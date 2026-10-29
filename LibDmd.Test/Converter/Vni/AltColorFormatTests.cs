@@ -44,10 +44,85 @@ namespace LibDmd.Test
 
 			public ClockedColorizer(PalFile palFile, AnimationSet animations) : base(palFile, animations)
 			{
+				GetColoredGray2Frames().Subscribe(f => Frames.Add((ColoredFrame)f.Clone()));
 				GetColoredGray4Frames().Subscribe(f => Frames.Add((ColoredFrame)f.Clone()));
+				GetColoredGray6Frames().Subscribe(f => Frames.Add((ColoredFrame)f.Clone()));
 			}
 
 			public void Tick(DmdFrame frame) => ConvertClocked(frame);
+		}
+
+		[TestCase(2, SwitchMode.Follow)]
+		[TestCase(2, SwitchMode.FollowReplace)]
+		[TestCase(3, SwitchMode.Follow)]
+		[TestCase(3, SwitchMode.FollowReplace)]
+		public void ShouldFollowFsqFrameHashes(int version, SwitchMode mode)
+		{
+			var first = new DmdFrame(Dim, FrameUtil.Join(Dim, new[] { Planes.With(1), Planes.Empty() }), 2);
+			var second = new DmdFrame(Dim, FrameUtil.Join(Dim, new[] { Planes.With(2), Planes.Empty() }), 2);
+			var hashes = new[] { FrameUtil.Checksum(first.BitPlanes[0]), FrameUtil.Checksum(second.BitPlanes[0]) };
+			var table = new byte[Planes.Size];
+			Buffer.BlockCopy(hashes, 0, table, 0, hashes.Length * 4);
+			var fsq = new FsqBuilder(version);
+			var offset = fsq.Animation(
+				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[0] : 0, Mask = table, Planes = new[] { Planes.With(100), Planes.Empty() } },
+				new FsqFrame { Delay = 50, Hash = version == 2 ? hashes[1] : 0, Mask = Planes.Empty(), Planes = new[] { Planes.With(101), Planes.Empty() } });
+			var pal = new PalBuilder(1).Palette(0, 1, Colors16).Mapping(hashes[0], mode, 0, offset).BuildFile();
+			var animations = new FsqFile(fsq.Build(), "follow.fsq", pal);
+			animations.Find(pal.Mappings[hashes[0]]).NumFrames.Should().Be(2);
+			using (var colorizer = new ClockedColorizer(pal, animations)) {
+				colorizer.Tick(first);
+				colorizer.Tick(second);
+				var animationBit = mode == SwitchMode.Follow ? 4 : 1;
+				colorizer.Frames.Select(f => Array.FindIndex(f.Data, b => (b & animationBit) != 0)).Should().Equal(100, 101);
+			}
+		}
+
+		[TestCase(SwitchMode.ColorMask, 4)]
+		[TestCase(SwitchMode.Follow, 4)]
+		[TestCase(SwitchMode.LayeredColorMask, 4)]
+		[TestCase(SwitchMode.ColorMaskLoop, 4)]
+		[TestCase(SwitchMode.ColorMask, 6)]
+		[TestCase(SwitchMode.Follow, 6)]
+		[TestCase(SwitchMode.LayeredColorMask, 6)]
+		[TestCase(SwitchMode.ColorMaskLoop, 6)]
+		public void ShouldKeep256x64FsqColorMaskPlaneIndices(SwitchMode mode, int bitDepth)
+		{
+			var dim = new Dimensions(256, 64);
+			var data = new byte[dim.Surface];
+			data[1] = 1;
+			var trigger = new DmdFrame(dim, data, 2);
+			var crc = FrameUtil.Checksum(trigger.BitPlanes[0]);
+			var planes = Enumerable.Range(0, bitDepth).Select(_ => new byte[2048]).ToArray();
+			// Stored planes 0 and 1 must be discarded in favor of the incoming grayscale planes.
+			planes[0][100 / 8] |= (byte)(1 << (100 % 8));
+			planes[1][101 / 8] |= (byte)(1 << (101 % 8));
+			for (var i = 2; i < bitDepth; i++) {
+				var pixel = 13000 + i;
+				planes[i][pixel / 8] |= (byte)(1 << (pixel % 8));
+			}
+			var hashTable = new byte[2048];
+			Buffer.BlockCopy(new[] { crc }, 0, hashTable, 0, 4);
+			var fsq = new FsqBuilder(3);
+			var colorFrame = new FsqFrame { Delay = 50, Mask = hashTable, Planes = planes };
+			var offset = mode == SwitchMode.LayeredColorMask
+				? fsq.Animation(new FsqFrame { Planes = new[] { new byte[2048], hashTable } }, colorFrame)
+				: fsq.Animation(colorFrame);
+			var colors = Enumerable.Range(0, 1 << bitDepth).Select(i => Color.FromRgb((byte)i, 0, 0)).ToArray();
+			var pal = new PalBuilder(1).Palette(0, 1, colors).Mapping(crc, mode, 0, offset).BuildFile();
+			using (var colorizer = new ClockedColorizer(pal, new FsqFile(fsq.Build(), "hd.fsq", pal))) {
+				colorizer.Tick(trigger);
+				colorizer.Frames.Should().ContainSingle();
+				var output = colorizer.Frames[0];
+				output.Dimensions.Should().Be(dim);
+				output.BitLength.Should().Be(bitDepth);
+				output.Data[1].Should().Be(1);
+				output.Data[100].Should().Be(0);
+				output.Data[101].Should().Be(0);
+				for (var i = 2; i < bitDepth; i++) {
+					output.Data[13000 + i].Should().Be((byte)(1 << i));
+				}
+			}
 		}
 
 		[TestCase(2)]
