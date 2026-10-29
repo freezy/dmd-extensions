@@ -26,8 +26,6 @@ namespace LibDmd.Input.Network
 		// ReSharper disable once CollectionNeverQueried.Local
 		private readonly List<DmdSocket> _sockets = new List<DmdSocket>();
 		private RenderGraphCollection _graphs;
-		private readonly DmdFrame _dmdFrame = new DmdFrame();
-		private readonly ColoredFrame _coloredFrame = new ColoredFrame();
 
 		private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -119,19 +117,19 @@ namespace LibDmd.Input.Network
 			Logger.Info("OnGameName: {0}", gameName);
 		}
 
-		public void OnRgb24(uint timestamp, byte[] frame) => _rgb24Source.FramesRgb24.OnNext(_dmdFrame.Update(frame, 24));
+		public void OnRgb24(uint timestamp, Dimensions dimensions, byte[] frame) => _rgb24Source.FramesRgb24.OnNext(new DmdFrame(dimensions, frame, 24));
 
-		public void OnColoredGray4(uint timestamp, Color[] palette, byte[] data)
-			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));
-		public void OnColoredGray6(uint timestamp, Color[] palette, byte[] data)
-			=> _coloredGray6Source.FramesColoredGray6.OnNext(_coloredFrame.Update(data, palette));
+		public void OnColoredGray4(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data)
+			=> _coloredGray4Source.FramesColoredGray4.OnNext(new ColoredFrame(dimensions, data, palette));
+		public void OnColoredGray6(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data)
+			=> _coloredGray6Source.FramesColoredGray6.OnNext(new ColoredFrame(dimensions, data, palette));
 
-		public void OnColoredGray2(uint timestamp, Color[] palette, byte[] data)
-			=> _coloredGray4Source.FramesColoredGray4.OnNext(_coloredFrame.Update(data, palette));
+		public void OnColoredGray2(uint timestamp, Dimensions dimensions, Color[] palette, byte[] data)
+			=> _coloredGray2Source.FramesColoredGray2.OnNext(new ColoredFrame(dimensions, data, palette));
 
-		public void OnGray4(uint timestamp, byte[] frame) => _gray4Source.FramesGray4.OnNext(_dmdFrame.Update(frame, 4));
+		public void OnGray4(uint timestamp, Dimensions dimensions, byte[] frame) => _gray4Source.FramesGray4.OnNext(new DmdFrame(dimensions, frame, 4));
 
-		public void OnGray2(uint timestamp, byte[] frame) => _gray2Source.FramesGray2.OnNext(_dmdFrame.Update(frame, 2));
+		public void OnGray2(uint timestamp, Dimensions dimensions, byte[] frame) => _gray2Source.FramesGray2.OnNext(new DmdFrame(dimensions, frame, 2));
 	}
 
 	public class DmdSocket : WebSocketBehavior
