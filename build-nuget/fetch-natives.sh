@@ -10,7 +10,7 @@
 #
 set -euo pipefail
 
-SERUM_VERSION="${SERUM_VERSION:-2.5.2}"
+SERUM_VERSION="${SERUM_VERSION:-2.8.2}"
 ZEDMD_VERSION="${ZEDMD_VERSION:-0.11.0}"
 RIDS="${RIDS:-win-x64 osx-x64 osx-arm64 linux-x64}"
 

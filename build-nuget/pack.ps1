@@ -19,7 +19,7 @@
 [CmdletBinding()]
 param(
   [string]$Version = "0.1.0-dev",
-  [string]$SerumVersion = "2.5.2",
+  [string]$SerumVersion = "2.8.2",
   [string]$ZedmdVersion = "0.11.0",
   [switch]$SkipFetch,
   [switch]$Push,
