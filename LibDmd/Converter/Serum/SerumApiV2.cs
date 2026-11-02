@@ -47,6 +47,12 @@ namespace LibDmd.Converter.Serum
 
 		private void ReadFrame(ref SerumFrame serumFrame)
 		{
+			// A frame without any width would resize destinations to an invalid 0xN surface.
+			if (!serumFrame.Has32PFrame && !serumFrame.Has64PFrame) {
+				Logger.Warn("[serum] Skipping frame without dimensions.");
+				return;
+			}
+
 			byte[] frameData;
 			Dimensions dim;
 			if (_scalerMode == ScalerMode.None) {

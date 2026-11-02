@@ -166,6 +166,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderBitmap(BmpFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.Bitmap;
 			_frameBitmap = frame.Bitmap;
@@ -176,6 +177,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderGray2(DmdFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.Gray2;
 			_frameData = frame.Data;
@@ -186,6 +188,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderGray4(DmdFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.Gray4;
 			_frameData = frame.Data;
@@ -196,6 +199,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderGray8(DmdFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.Gray8;
 			_frameData = frame.Data;
@@ -211,6 +215,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderRgb24(DmdFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.Rgb24;
 			SetRgb24Frame(frame);
@@ -221,6 +226,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray2(ColoredFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray2(frame.ConvertToGray());
@@ -229,6 +235,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray4(ColoredFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			SetDimensions(frame.Dimensions);
 			SetPalette(frame.Palette);
 			RenderGray4(frame.ConvertToGray());
@@ -237,6 +244,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void RenderColoredGray6(ColoredFrame frame)
 		{
+			if (!HasArea(frame.Dimensions)) return;
 			_hasFrame = true;
 			_frameType = FrameFormat.ColoredGray6;
 			_frameData = frame.Data;
@@ -256,7 +264,7 @@ namespace LibDmd.Output.Virtual.Dmd
 
 		public void SetDimensions(Dimensions dim)
 		{
-			if (dim == _frameDimensions) {
+			if (dim == _frameDimensions || !HasArea(dim)) {
 				return;
 			}
 
@@ -922,6 +930,9 @@ namespace LibDmd.Output.Virtual.Dmd
 
 						var frameWidth = glassWidth + _style.FramePadding.Left + _style.FramePadding.Right;
 						var frameHeight = glassHeight + _style.FramePadding.Top + _style.FramePadding.Bottom;
+						if (frameWidth <= 0 || frameHeight <= 0) {
+							return;
+						}
 						AspectRatio = frameWidth / frameHeight;
 
 						var alphaW = ActualWidth / frameWidth;
@@ -935,6 +946,10 @@ namespace LibDmd.Output.Virtual.Dmd
 
 						var hpad = 0.5 * (ActualWidth - frameWidth * alphaW);
 						var vpad = 0.5 * (ActualHeight - frameHeight * alphaH);
+						// WPF throws on non-finite sizes and margins, which takes down the host process.
+						if (!IsFinite(alphaW) || !IsFinite(alphaH) || !IsFinite(hpad) || !IsFinite(vpad)) {
+							return;
+						}
 
 						DmdFraming.Width = frameWidth * alphaW;
 						DmdFraming.Height = frameHeight * alphaH;
@@ -953,6 +968,13 @@ namespace LibDmd.Output.Virtual.Dmd
 				}
 			}
 		}
+
+		/// <summary>
+		/// Frames without any pixels can't be rendered and would produce invalid layout values.
+		/// </summary>
+		private static bool HasArea(Dimensions dim) => dim.Width > 0 && dim.Height > 0;
+
+		private static bool IsFinite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
 
 		public void SetColor(Color color)
 		{
