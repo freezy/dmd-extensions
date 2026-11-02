@@ -24,7 +24,7 @@ A consumer just installs `LibDmd.Core` (+ `LibDmd.Core.Native`); NuGet then depl
 
 Binaries are downloaded from the upstream GitHub releases:
 
-- **libserum** — https://github.com/PPUC/libserum/releases (default `SERUM_VERSION=2.5.2`)
+- **libserum** — https://github.com/PPUC/libserum/releases (default `SERUM_VERSION=2.8.2`)
 - **libzedmd** — https://github.com/PPUC/libzedmd/releases (default `ZEDMD_VERSION=0.11.0`)
 
 > Keep these in sync with the C# wrappers (`Converter/Serum`, `Output/ZeDMD`). The Windows DLLs

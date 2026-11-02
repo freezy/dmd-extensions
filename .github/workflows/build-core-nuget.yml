@@ -21,7 +21,7 @@ on:
         required: false
 
 env:
-  SERUM_VERSION: "2.5.2"
+  SERUM_VERSION: "2.8.2"
   ZEDMD_VERSION: "0.11.0"
 
 jobs:
