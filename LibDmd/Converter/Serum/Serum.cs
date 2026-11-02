@@ -63,11 +63,6 @@ namespace LibDmd.Converter.Serum
 		private readonly IntPtr _serumFramePtr;
 
 		/// <summary>
-		/// The last frame data returned by the Serum DLL.
-		/// </summary>
-		private SerumFrame _serumFrame;
-
-		/// <summary>
 		/// The Serum version of the current colorization
 		/// </summary>
 		private readonly SerumVersion _serumVersion;
@@ -99,21 +94,21 @@ namespace LibDmd.Converter.Serum
 				return;
 			}
 
-			ReadSerumFrame();
-			NumTriggersAvailable = _serumFrame.ntriggers;
-			_serumVersion = (SerumVersion)_serumFrame.SerumVersion;
+			var serumFrame = ReadSerumFrame();
+			NumTriggersAvailable = serumFrame.ntriggers;
+			_serumVersion = (SerumVersion)serumFrame.SerumVersion;
 
 			switch (_serumVersion) {
 				case SerumVersion.Version1: {
-					_api = new SerumApiV1(_coloredGray6Frames, _frameEvents, ref _serumFrame);
+					_api = new SerumApiV1(_coloredGray6Frames, _frameEvents, ref serumFrame);
 					break;
 				}
 				case SerumVersion.Version2: {
-					_api = new SerumApiV2(_rgb565Frames, scalerMode, ref _serumFrame);
+					_api = new SerumApiV2(_rgb565Frames, scalerMode, ref serumFrame);
 					break;
 				}
 				default:
-					throw new NotSupportedException($"Unsupported Serum version: {_serumFrame.SerumVersion}");
+					throw new NotSupportedException($"Unsupported Serum version: {serumFrame.SerumVersion}");
 			}
 
 			IsLoaded = true;
@@ -171,8 +166,8 @@ namespace LibDmd.Converter.Serum
 			var resultAndRotation = Serum_Colorize(frame.Data);
 
 			// In case of no frame or same frame as before, ReadSerumFrame will read the unmodified structure.
-			ReadSerumFrame();
-			_api.Convert(ref _serumFrame);
+			var serumFrame = ReadSerumFrame();
+			_api.Convert(ref serumFrame);
 			if (_disposed) return;
 
 			if (resultAndRotation < 0xfffffffe) {
@@ -187,10 +182,11 @@ namespace LibDmd.Converter.Serum
 			}
 		}
 
-		private void ReadSerumFrame()
-		{
-			_serumFrame = SerumFrame.ReadFrom(_serumFramePtr);
-		}
+		/// <summary>
+		/// Takes a snapshot of the frame structure in the Serum DLL. Must be called
+		/// under <see cref="_gate"/>, right after the native call that filled it.
+		/// </summary>
+		private SerumFrame ReadSerumFrame() => SerumFrame.ReadFrom(_serumFramePtr);
 
 		private void Rotate(object state)
 		{
@@ -222,8 +218,8 @@ namespace LibDmd.Converter.Serum
 			var resultAndRotation = Serum_Rotate();
 
 			if (((resultAndRotation & 0x10000) > 0) || ((resultAndRotation & 0x20000) > 0)) {
-				ReadSerumFrame();
-				_api.UpdateRotations(ref _serumFrame, _rotationPalette, resultAndRotation);
+				var serumFrame = ReadSerumFrame();
+				_api.UpdateRotations(ref serumFrame, _rotationPalette, resultAndRotation);
 				result = true;
 			}
 
