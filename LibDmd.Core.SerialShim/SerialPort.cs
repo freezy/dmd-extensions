@@ -82,9 +82,11 @@ namespace System.IO.Ports
 			Check(Sp.sp_get_port_by_name(PortName, out _port), "sp_get_port_by_name");
 			var rc = Sp.sp_open(_port, Sp.SP_MODE_READ_WRITE);
 			if (rc != Sp.SP_OK) {
+				// Capture the OS error before releasing the port, which can replace it.
+				var osError = rc == Sp.SP_ERR_FAIL ? $", OS error {Marshal.GetLastWin32Error()}" : "";
 				Sp.sp_free_port(_port);
 				_port = IntPtr.Zero;
-				throw new IOException($"Could not open serial port '{PortName}' (libserialport {rc}).");
+				throw new IOException($"Could not open serial port '{PortName}' (libserialport {rc}{osError}).");
 			}
 			Sp.sp_set_baudrate(_port, BaudRate);
 			Sp.sp_set_bits(_port, DataBits);
@@ -174,6 +176,7 @@ namespace System.IO.Ports
 		private const string Lib = "libserialport";
 
 		public const int SP_OK = 0;
+		public const int SP_ERR_FAIL = -2;
 		public const int SP_MODE_READ_WRITE = 3;
 		public const int SP_DTR_OFF = 0;
 		public const int SP_DTR_ON = 1;
@@ -195,7 +198,7 @@ namespace System.IO.Ports
 		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr sp_get_port_name(IntPtr port);
 
-		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 		public static extern int sp_open(IntPtr port, int flags);
 
 		[DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
