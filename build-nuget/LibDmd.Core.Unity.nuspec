@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
+  <metadata>
+    <id>LibDmd.Core.Unity</id>
+    <version>__VERSION__</version>
+    <authors>freezy and contributors</authors>
+    <description>LibDmd's Windows and SDL display backends and the System.IO.Ports replacement for Unity's Mono runtime. Unity integrations deploy these assemblies from unity/managed.</description>
+    <projectUrl>https://github.com/freezy/dmd-extensions</projectUrl>
+    <repository type="git" url="https://github.com/freezy/dmd-extensions" />
+    <license type="file">LICENSE</license>
+    <tags>dmd pinball unity</tags>
+    <dependencies>
+      <group targetFramework="netstandard2.1">
+        <dependency id="LibDmd.Core" version="[__VERSION__]" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="LICENSE" target="LICENSE" />
+    <file src="native\nuget\_._" target="lib\netstandard2.1" />
+    <file src="LibDmd.Core.Windows\bin\Release\netstandard2.1\LibDmd.Core.Windows.dll" target="unity\managed" />
+    <file src="LibDmd.Core.Sdl\bin\Release\netstandard2.1\LibDmd.Core.Sdl.dll" target="unity\managed" />
+    <file src="LibDmd.Core.SerialShim\bin\Release\netstandard2.0\System.IO.Ports.dll" target="unity\managed" />
+  </files>
+</package>

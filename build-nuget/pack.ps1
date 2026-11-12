@@ -6,6 +6,7 @@
 .DESCRIPTION
   Produces, in ./artifacts:
     - LibDmd.Core.<version>.nupkg                 (managed, multi-targets netstandard2.1 + net8.0)
+    - LibDmd.Core.Unity.<version>.nupkg           (managed display backends and Unity serial shim)
     - LibDmd.Core.Native.<version>.nupkg          (meta package -> all per-RID packages)
     - LibDmd.Core.Native.<rid>.<version>.nupkg    (one per RID: win-x64, osx-x64, osx-arm64, linux-x64)
 
@@ -76,6 +77,23 @@ try {
     & $nuget pack $dst -BasePath $nugetDir -OutputDirectory $artifacts -Version $Version -NoDefaultExcludes
     if ($LASTEXITCODE -ne 0) { throw "nuget pack failed for $id" }
   }
+
+  # Use the same assembly version as the matching LibDmd.Core package.
+  $unityProjects = [ordered]@{
+    "LibDmd.Core.Windows" = "netstandard2.1"
+    "LibDmd.Core.Sdl" = "netstandard2.1"
+    "LibDmd.Core.SerialShim" = "netstandard2.0"
+  }
+  foreach ($project in $unityProjects.Keys) {
+    & dotnet build (Join-Path $repo "$project/$project.csproj") -c Release -f $unityProjects[$project] "-p:Version=$Version"
+    if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for $project" }
+  }
+
+  $unitySpec = Join-Path $tmp "LibDmd.Core.Unity.nuspec"
+  (Get-Content (Join-Path $PSScriptRoot "LibDmd.Core.Unity.nuspec") -Raw).Replace("__VERSION__", $Version) |
+    Set-Content $unitySpec -Encoding UTF8
+  & $nuget pack $unitySpec -BasePath $repo -OutputDirectory $artifacts -Version $Version -NoDefaultExcludes
+  if ($LASTEXITCODE -ne 0) { throw "nuget pack failed for LibDmd.Core.Unity" }
 } finally {
   Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -86,7 +104,7 @@ Write-Host "==> Packing LibDmd.Core $Version (managed)" -ForegroundColor Cyan
   -c Release `
   -p:Version=$Version `
   -p:LibDmdCoreNativeVersion=$Version `
-  -p:RestoreSources="$Source;$artifacts" `
+  "-p:RestoreSources=$Source%3B$artifacts" `
   -o $artifacts
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for LibDmd.Core" }
 

@@ -1,7 +1,6 @@
 name: LibDmd.Core NuGet
 
-# Builds and publishes tagged versions of the LibDmd.Core managed package plus the per-platform
-# native packages (libserum / libzedmd), mirroring vpinball/pinmame-dotnet.
+# Builds and publishes LibDmd.Core, its Unity integrations, and the per-platform native packages.
 
 on:
   push:
@@ -9,6 +8,9 @@ on:
   pull_request:
     paths:
       - "LibDmd.Core/**"
+      - "LibDmd.Core.Windows/**"
+      - "LibDmd.Core.Sdl/**"
+      - "LibDmd.Core.SerialShim/**"
       - "LibDmd.Core.Tests/**"
       - "LibDmd/**"
       - "native/nuget/**"
@@ -129,6 +131,11 @@ jobs:
           )
           $packages = foreach ($id in $ids) {
             Get-Item -LiteralPath "artifacts/$id.$env:PACKAGE_VERSION.nupkg"
+          }
+          # Older release tags predate the Unity package.
+          $unityPackage = "artifacts/LibDmd.Core.Unity.$env:PACKAGE_VERSION.nupkg"
+          if (Test-Path -LiteralPath $unityPackage) {
+            $packages += Get-Item -LiteralPath $unityPackage
           }
           foreach ($package in $packages) {
             dotnet nuget push $package.FullName --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

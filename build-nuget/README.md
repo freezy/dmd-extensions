@@ -1,21 +1,23 @@
 ﻿# LibDmd.Core NuGet packaging
 
-Produces the `LibDmd.Core` NuGet package plus per-platform native binary packages, modelled on
-[vpinball/pinmame-dotnet](https://github.com/vpinball/pinmame-dotnet).
+Produces `LibDmd.Core`, its Unity integrations, and the per-platform native binary packages.
 
 ## Packages produced
 
 | Package | Contents |
 |---|---|
 | `LibDmd.Core` | The managed assembly (`netstandard2.1` + `net8.0`). Depends on `LibDmd.Core.Native`. |
+| `LibDmd.Core.Unity` | Windows and SDL display backends and the Unity-compatible `System.IO.Ports.dll` shim under `unity/managed/`. |
 | `LibDmd.Core.Native` | Meta-package; depends on all per-RID native packages below (`include="native"`). |
-| `LibDmd.Core.Native.win-x64` | `runtimes/win-x64/native/` → `serum64.dll`, `zedmd64.dll` |
+| `LibDmd.Core.Native.win-x64` | `runtimes/win-x64/native/` → Serum, ZeDMD, USB and Windows support DLLs, including `libserialport.dll`. |
 | `LibDmd.Core.Native.osx-x64` | `runtimes/osx-x64/native/` → `libserum`/`libzedmd` + serial deps (`.dylib`) |
 | `LibDmd.Core.Native.osx-arm64` | `runtimes/osx-arm64/native/` → same, arm64 |
 | `LibDmd.Core.Native.linux-x64` | `runtimes/linux-x64/native/` → `libserum`/`libzedmd` + serial deps (`.so`) |
 
 A consumer just installs `LibDmd.Core` (+ `LibDmd.Core.Native`); NuGet then deploys the matching
 `runtimes/<rid>/native/` binaries and the .NET host resolves them at runtime via `deps.json`.
+
+Unity integrations restore `LibDmd.Core` and `LibDmd.Core.Unity` at the same version. Deploy the assemblies from `unity/managed/` alongside the managed core and its dependencies. Use the shim in place of the stock `System.IO.Ports.dll`, and deploy the native payload under `runtimes/<rid>/native/` to the matching Unity plugin directory.
 
 > Windows is **x64 only** — `LibDmd.Core` is built with `PLATFORM_X64` (so the P/Invokes use the
 > `*64.dll` names). 32-bit Windows is served by the legacy WPF build, not this package.
@@ -41,8 +43,7 @@ Binaries are downloaded from the upstream GitHub releases:
 pwsh ./build-nuget/pack.ps1 -Version 0.1.0 -SkipFetch
 ```
 
-`pack.ps1` packs the native `.nuspec` files with `nuget.exe` (downloaded automatically if absent)
-and the managed package with `dotnet pack`, resolving the native dependency from `./artifacts`.
+`pack.ps1` packs the native and Unity `.nuspec` files with `nuget.exe` and the managed core with `dotnet pack`, resolving the native dependency from `./artifacts`.
 
 To publish: `pwsh ./build-nuget/pack.ps1 -Version 0.1.0 -Push -ApiKey <key>`.
 
