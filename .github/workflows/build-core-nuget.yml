@@ -1,6 +1,6 @@
 name: LibDmd.Core NuGet
 
-# Builds and (on tags) publishes the LibDmd.Core managed package plus the per-platform
+# Builds and publishes tagged versions of the LibDmd.Core managed package plus the per-platform
 # native packages (libserum / libzedmd), mirroring vpinball/pinmame-dotnet.
 
 on:
@@ -19,6 +19,10 @@ on:
       version:
         description: "Package version (e.g. 0.1.0). Leave blank for a CI dev version."
         required: false
+      release_tag:
+        description: "Publish an existing core-v* tag. Leave blank to build only."
+        type: string
+        required: false
 
 env:
   SERUM_VERSION: "2.8.2"
@@ -32,6 +36,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
@@ -41,8 +47,12 @@ jobs:
   pack:
     needs: test
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -51,14 +61,21 @@ jobs:
       - name: Determine version
         id: ver
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          BUILD_VERSION: ${{ inputs.version }}
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/core-v* ]]; then
-            echo "version=${GITHUB_REF#refs/tags/core-v}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          ref="${RELEASE_TAG:+refs/tags/$RELEASE_TAG}"
+          ref="${ref:-$GITHUB_REF}"
+          if [[ "$ref" == refs/tags/core-v?* ]]; then
+            version="${ref#refs/tags/core-v}"
+          elif [[ -n "$RELEASE_TAG" ]]; then
+            echo "::error::The release tag must start with core-v followed by the package version."
+            exit 1
           else
-            echo "version=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            version="${BUILD_VERSION:-0.0.0-ci.$GITHUB_RUN_NUMBER}"
           fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Fetch native binaries
         shell: bash
@@ -66,17 +83,54 @@ jobs:
 
       - name: Pack
         shell: pwsh
-        run: ./build-nuget/pack.ps1 -Version "${{ steps.ver.outputs.version }}" -SerumVersion "$env:SERUM_VERSION" -ZedmdVersion "$env:ZEDMD_VERSION" -SkipFetch
+        env:
+          PACKAGE_VERSION: ${{ steps.ver.outputs.version }}
+        run: ./build-nuget/pack.ps1 -Version "$env:PACKAGE_VERSION" -SerumVersion "$env:SERUM_VERSION" -ZedmdVersion "$env:ZEDMD_VERSION" -SkipFetch
 
       - uses: actions/upload-artifact@v4
         with:
           name: libdmd-core-nuget-${{ steps.ver.outputs.version }}
           path: artifacts/*.nupkg
 
+  publish:
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/core-v')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.release_tag != '' &&
+      github.ref_name == github.event.repository.default_branch)
+    needs: pack
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: libdmd-core-nuget-${{ needs.pack.outputs.version }}
+          path: artifacts
+
+      - name: Sign in to NuGet.org
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet.org
-        if: startsWith(github.ref, 'refs/tags/core-v')
         shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          PACKAGE_VERSION: ${{ needs.pack.outputs.version }}
         run: |
-          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
-            dotnet nuget push $_.FullName --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          $ids = @(
+            'LibDmd.Core.Native.win-x64'
+            'LibDmd.Core.Native.osx-x64'
+            'LibDmd.Core.Native.osx-arm64'
+            'LibDmd.Core.Native.linux-x64'
+            'LibDmd.Core.Native'
+            'LibDmd.Core'
+          )
+          $packages = foreach ($id in $ids) {
+            Get-Item -LiteralPath "artifacts/$id.$env:PACKAGE_VERSION.nupkg"
+          }
+          foreach ($package in $packages) {
+            dotnet nuget push $package.FullName --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { throw "NuGet push failed for $($package.Name)." }
           }

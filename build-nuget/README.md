@@ -48,11 +48,9 @@ To publish: `pwsh ./build-nuget/pack.ps1 -Version 0.1.0 -Push -ApiKey <key>`.
 
 ## CI
 
-`.github/workflows/build-core-nuget.yml` runs on `windows-latest`: stages natives, packs, uploads
-the `.nupkg`s as a build artifact, and — on a `core-v*` tag — pushes them to NuGet.org (needs the
-`NUGET_API_KEY` secret). Linux symlink handling is correct on the runner's Git Bash because the
-fetch dereferences real files; the per-OS `runtimes/` payloads come straight from the upstream
-release archives.
+`.github/workflows/build-core-nuget.yml` stages the natives, packs, and uploads the `.nupkg` files as a build artifact. A `core-v*` tag also publishes the packages using NuGet Trusted Publishing. Configure the policy for `freezy/dmd-extensions`, workflow file `build-core-nuget.yml`, and package glob `LibDmd.Core*`. Set `NUGET_USER` to the NuGet profile username in GitHub Actions secrets. [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
+
+To publish an existing tag, run the workflow from the default branch and supply `release_tag`. The build checks out that tag and derives the package version from its name.
 
 ## Files
 
