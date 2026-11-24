@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -169,7 +170,13 @@ namespace LibDmd.Output.Pixelcade
 				_serialPort.DtrEnable = true;
 				_serialPort.ReadTimeout = ReadTimeoutMs;
 				System.Threading.Thread.Sleep(Delay);
-				_serialPort.Open();
+				try {
+					_serialPort.Open();
+				} catch (FileNotFoundException) {
+					Logger.Info("Pixelcade port {0} is unavailable. Check the connection or configured port.", port);
+					_serialPort = null;
+					return false;
+				}
 
 				// let's assume opening a connection results in what IncomingState.handleEstablishConnection() receives...
 				var result = new byte[1 + 4 + 8 + 8 + 8];

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 
 // ReSharper disable once CheckNamespace
@@ -83,10 +84,16 @@ namespace System.IO.Ports
 			var rc = Sp.sp_open(_port, Sp.SP_MODE_READ_WRITE);
 			if (rc != Sp.SP_OK) {
 				// Capture the OS error before releasing the port, which can replace it.
-				var osError = rc == Sp.SP_ERR_FAIL ? $", OS error {Marshal.GetLastWin32Error()}" : "";
+				var osError = rc == Sp.SP_ERR_FAIL ? Marshal.GetLastWin32Error() : (int?)null;
 				Sp.sp_free_port(_port);
 				_port = IntPtr.Zero;
-				throw new IOException($"Could not open serial port '{PortName}' (libserialport {rc}{osError}).");
+				var detail = osError.HasValue ? $", OS error {osError.Value}" : "";
+				var message = $"Could not open serial port '{PortName}' (libserialport {rc}{detail}).";
+				// Windows ERROR_FILE_NOT_FOUND and POSIX ENOENT both use code 2.
+				if (osError == 2) {
+					throw new FileNotFoundException(message, PortName);
+				}
+				throw new IOException(message);
 			}
 			Sp.sp_set_baudrate(_port, BaudRate);
 			Sp.sp_set_bits(_port, DataBits);
