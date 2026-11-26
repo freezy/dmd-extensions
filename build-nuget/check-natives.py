@@ -102,7 +102,7 @@ def load(path):
 		variable = "DYLD_LIBRARY_PATH" if sys.platform == "darwin" else "LD_LIBRARY_PATH"
 		env[variable] = os.pathsep.join(filter(None, [os.path.dirname(path), env.get(variable)]))
 	result = subprocess.run([sys.executable, __file__, "--load", path], env=env, capture_output=True, text=True)
-	return None if result.returncode == 0 else (result.stdout + result.stderr).strip()
+	return None if result.returncode == 0 else ((result.stdout + result.stderr).strip() or f"exited with code {result.returncode}")
 
 
 def check(folder):
