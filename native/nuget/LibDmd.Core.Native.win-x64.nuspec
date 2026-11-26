@@ -20,6 +20,8 @@
   <files>
     <file src="targets\LibDmd.Core.Native.win-x64.targets" target="build\netstandard2.1" />
     <file src="runtimes\win-x64\native\*" target="runtimes\win-x64\native" />
+    <!-- zedmd64.dll imports libserialport64-0.dll, the serial port shim P/Invokes libserialport. -->
+    <file src="..\..\LibDmd\Costura64\libserialport64-0.dll" target="runtimes\win-x64\native" />
     <file src="..\..\LibDmd\Costura64\libserialport64-0.dll" target="runtimes\win-x64\native\libserialport.dll" />
     <file src="..\..\LibDmd\Costura64\libSkiaSharp.dll" target="runtimes\win-x64\native" />
     <file src="..\..\LibDmd\Costura64\sockpp64.dll" target="runtimes\win-x64\native" />

@@ -86,6 +86,15 @@ for rid in $RIDS; do
     linux-*)
       [ -f "$dest/libserum.so" ] || cp -fL "$(ls "$dest"/libserum.so* | head -1)" "$dest/libserum.so"
       [ -f "$dest/libzedmd.so" ] || cp -fL "$(ls "$dest"/libzedmd.so* | head -1)" "$dest/libzedmd.so"
+      # libzedmd needs libserialport and libsockpp by their sonames (libserialport.so.0,
+      # libsockpp.so.1). The tarball has those as symlinks, which Git Bash can't extract.
+      for lib in libserialport libsockpp; do
+        versioned="$(ls "$dest/$lib".so.*.*.* 2>/dev/null | head -1)"
+        if [ -n "$versioned" ]; then
+          soname="${versioned%.*.*}"
+          [ -f "$soname" ] || cp -fL "$versioned" "$soname"
+        fi
+      done
       ;;
   esac
 
