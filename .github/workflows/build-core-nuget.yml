@@ -112,9 +112,8 @@ jobs:
             rid: osx-x64
     runs-on: ${{ matrix.os }}
     steps:
+      # the checker of the workflow's revision: the package comes from pack, and older tags don't have the checker
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
 
       - uses: actions/setup-python@v5
         with:
