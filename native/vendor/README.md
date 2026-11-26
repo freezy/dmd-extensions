@@ -4,11 +4,15 @@
 
 - **libusb-1.0** — ✅ all four RIDs (`win-x64`, `osx-x64`, `osx-arm64`, `linux-x64`). win from the
   official libusb 1.0.27 release; the others from the PyPI `libusb_package` 1.0.26 wheels.
-- **libSDL2** — ✅ `osx-arm64` + `osx-x64` (universal dylib from the PyPI `pysdl2-dll` 2.30.1 wheel).
-  Needed by the macOS virtual-DMD window. (Windows/Linux don't use the SDL window.)
-- **libserialport** — handled by the build, not vendored: win renames the Costura `libserialport64-0.dll`,
-  Linux aliases the staged `libserialport.so.0.1.1` to `libserialport.so`, macOS uses the staged
-  `libserialport.dylib`. Nothing to drop here.
+- **libSDL2** — ✅ `osx-arm64` + `osx-x64` (universal dylib from the PyPI `pysdl2-dll` 2.30.1 wheel,
+  `SDL2.framework/Versions/A/SDL2`). Needed by the macOS virtual-DMD window. (Windows/Linux don't use
+  the SDL window.) Its framework signature doesn't hold outside the framework and macOS refuses to load
+  it, so it is re-signed ad hoc (`codesign --force --sign - --identifier libSDL2`), as is the x64 libusb,
+  which came unsigned.
+- **libserialport** — handled by the build, not vendored: win ships the Costura `libserialport64-0.dll`
+  under its own name (zedmd64.dll imports it) and as `libserialport.dll` (the serial port shim), Linux
+  copies the staged `libserialport.so.0.1.1` to its soname `libserialport.so.0` (as `libsockpp.so.1`
+  for sockpp), macOS uses the staged `libserialport.dylib`. Nothing to drop here.
 - **ANGLE** (`libEGL.dylib` + `libGLESv2.dylib`, macOS) — ❌ **NOT staged and not auto-fetchable.**
   macOS has no native GL ES, so the SDL window needs ANGLE — but ANGLE ships no standalone prebuilt
   binaries and the ones inside Electron link its framework (not self-contained). It must be built, or
