@@ -59,3 +59,7 @@ To publish an existing tag, run the workflow from the default branch and supply 
 - `native/nuget/targets/*.targets` — copy the native libs next to the consumer output (best-effort
   for non-RID builds; RID publish & Unity resolve them on their own)
 - `native/nuget/runtimes/` — staging dir populated by `fetch-natives.sh` (git-ignored)
+- `build-nuget/natives-sources.sh` — pinned versions, asset names and release URLs, sourced by the
+  two scripts below
+- `build-nuget/natives.sha256` — one recorded value per archive, keyed by file name
+- `build-nuget/update-digests.sh` — rewrites that record for the pinned versions
