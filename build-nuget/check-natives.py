@@ -5,7 +5,8 @@ Usage: check-natives.py <LibDmd.Core.Native.<rid>.<version>.nupkg | runtimes/<ri
 
 Run it on the package's platform:
 - Windows: every DLL's imports (including the delay-loaded ones) are in the package or in the system, and it loads.
-- macOS: every dylib's signature verifies (codesign --verify --strict), and it loads.
+- macOS: every dylib's signature verifies (codesign --verify --strict), and it loads. Unsigned x86_64-only dylibs pass:
+  macOS runs unsigned x86_64 code, only arm64 code must be signed.
 - Linux: every library loads.
 
 Each library loads in a process of its own, so a library loaded earlier can't stand in for a missing file. The folder is
@@ -81,6 +82,19 @@ def missing_imports(folder, name):
 	return missing
 
 
+def macho_archs(path):
+	"""The architectures of a Mach-O file."""
+	names = {0x01000007: "x86_64", 0x0100000C: "arm64"}
+	with open(path, "rb") as file:
+		header = file.read(4096)
+	if struct.unpack_from(">I", header, 0)[0] == 0xCAFEBABE:
+		count = struct.unpack_from(">I", header, 4)[0]
+		cpus = [struct.unpack_from(">I", header, 8 + 20 * i)[0] for i in range(count)]
+	else:
+		cpus = [struct.unpack_from("<I", header, 4)[0]]
+	return [names.get(cpu, hex(cpu)) for cpu in cpus]
+
+
 def load(path):
 	"""Loads one library in a process of its own: None when it loads, the error otherwise."""
 	env = dict(os.environ)
@@ -106,8 +120,11 @@ def check(folder):
 				problems.append(f"imports {', '.join(missing)}, which neither the package nor the system has")
 		if sys.platform == "darwin":
 			result = subprocess.run(["codesign", "--verify", "--strict", "--verbose=2", path], capture_output=True, text=True)
-			if result.returncode != 0:
-				problems.append(f"invalid signature: {(result.stdout + result.stderr).strip()}")
+			output = (result.stdout + result.stderr).strip()
+			# macOS runs unsigned x86_64 code, but arm64 code must be signed
+			unsigned_intel = "not signed at all" in output and "arm64" not in macho_archs(path)
+			if result.returncode != 0 and not unsigned_intel:
+				problems.append(f"invalid signature: {output}")
 		error = load(path)
 		if error:
 			problems.append(f"does not load: {error}")
