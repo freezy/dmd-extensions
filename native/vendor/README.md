@@ -12,7 +12,7 @@
 - **libserialport** — handled by the build, not vendored: win ships the Costura `libserialport64-0.dll`
   under its own name (zedmd64.dll imports it) and as `libserialport.dll` (the serial port shim), Linux
   copies the staged `libserialport.so.0.1.1` to its soname `libserialport.so.0` (as `libsockpp.so.1`
-  for sockpp), macOS uses the staged `libserialport.dylib`. Nothing to drop here.
+  for sockpp) and to `libserialport.so` (the shim), macOS uses the staged `libserialport.dylib`. Nothing to drop here.
 - **ANGLE** (`libEGL.dylib` + `libGLESv2.dylib`, macOS) — ❌ **NOT staged and not auto-fetchable.**
   macOS has no native GL ES, so the SDL window needs ANGLE — but ANGLE ships no standalone prebuilt
   binaries and the ones inside Electron link its framework (not self-contained). It must be built, or

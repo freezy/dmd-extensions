@@ -95,6 +95,8 @@ for rid in $RIDS; do
           [ -f "$soname" ] || cp -fL "$versioned" "$soname"
         fi
       done
+      # The serial port shim P/Invokes "libserialport".
+      [ -f "$dest/libserialport.so" ] || cp -fL "$dest/libserialport.so.0" "$dest/libserialport.so"
       ;;
   esac
 
