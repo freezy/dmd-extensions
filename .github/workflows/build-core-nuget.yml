@@ -95,9 +95,43 @@ jobs:
           name: libdmd-core-nuget-${{ steps.ver.outputs.version }}
           path: artifacts/*.nupkg
 
+  # The native packages hold only vendored binaries, so managed sources cannot change what the checker loads.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      natives: ${{ steps.filter.outputs.natives }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Look for changes to the native packages
+        id: filter
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ -z "$BASE_SHA" ]]; then
+            echo "A tag or a manual run checks the native packages."
+            echo "natives=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            native/nuget native/vendor build-nuget .github/workflows/build-core-nuget.yml)
+          if [[ -n "$changed" ]]; then
+            echo "The native packages change here:"
+            echo "$changed"
+            echo "natives=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "This pull request leaves the native packages alone."
+            echo "natives=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Every native library of each package loads on its platform: Windows imports resolve, macOS signatures verify.
   natives:
-    needs: pack
+    needs: [ pack, changes ]
+    if: needs.changes.outputs.natives == 'true'
     strategy:
       fail-fast: false
       matrix:
