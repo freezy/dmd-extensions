@@ -14,6 +14,7 @@ on:
       - "LibDmd.Core.Tests/**"
       - "LibDmd/**"
       - "native/nuget/**"
+      - "native/vendor/**"
       - "build-nuget/**"
       - ".github/workflows/build-core-nuget.yml"
   workflow_dispatch:
@@ -94,12 +95,46 @@ jobs:
           name: libdmd-core-nuget-${{ steps.ver.outputs.version }}
           path: artifacts/*.nupkg
 
+  # Every native library of each package loads on its platform: Windows imports resolve, macOS signatures verify.
+  natives:
+    needs: pack
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-24.04
+            rid: linux-x64
+          - os: macos-15
+            rid: osx-arm64
+          - os: macos-15-intel
+            rid: osx-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: libdmd-core-nuget-${{ needs.pack.outputs.version }}
+          path: artifacts
+
+      - name: Load the native libraries
+        shell: bash
+        run: python build-nuget/check-natives.py "artifacts/LibDmd.Core.Native.${{ matrix.rid }}.${{ needs.pack.outputs.version }}.nupkg"
+
   publish:
     if: >-
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/core-v')) ||
       (github.event_name == 'workflow_dispatch' && inputs.release_tag != '' &&
       github.ref_name == github.event.repository.default_branch)
-    needs: pack
+    needs: [ pack, natives ]
     runs-on: windows-latest
     permissions:
       id-token: write
