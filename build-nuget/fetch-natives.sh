@@ -10,29 +10,48 @@
 #
 set -euo pipefail
 
-SERUM_VERSION="${SERUM_VERSION:-2.8.2}"
-ZEDMD_VERSION="${ZEDMD_VERSION:-0.11.0}"
-RIDS="${RIDS:-win-x64 osx-x64 osx-arm64 linux-x64}"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 STAGE="$ROOT/native/nuget/runtimes"
 TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$STAGE"
+NEW="$(mktemp -d "$STAGE/.new.XXXXXX")"
+trap 'rm -rf "$TMP" "$NEW"' EXIT
 
-# rid -> upstream archive suffix
-serum_asset() { case "$1" in
-  win-x64)   echo "win-x64.zip" ;;
-  osx-x64)   echo "macos-x64.tar.gz" ;;
-  osx-arm64) echo "macos-arm64.tar.gz" ;;
-  linux-x64) echo "linux-x64.tar.gz" ;;
-  *) echo "" ;; esac; }
-zedmd_asset() { case "$1" in
-  win-x64)   echo "win-x64-Release.zip" ;;
-  osx-x64)   echo "macos-x64.tar.gz" ;;
-  osx-arm64) echo "macos-arm64.tar.gz" ;;
-  linux-x64) echo "linux-x64.tar.gz" ;;
-  *) echo "" ;; esac; }
+. "$SCRIPT_DIR/natives-sources.sh"
+
+DIGESTS="$SCRIPT_DIR/natives.sha256"
+
+requested=""
+for rid in $RIDS; do
+  case " $ALL_RIDS " in
+    *" $rid "*) ;;
+    *) echo "unknown rid: $rid (known: $ALL_RIDS)" >&2; exit 1 ;;
+  esac
+  case " $requested " in
+    *" $rid "*) ;;
+    *) requested="$requested $rid" ;;
+  esac
+done
+RIDS="${requested# }"
+
+verify_archive() { # archive name
+  local expected actual
+  expected="$(awk -v name="$2" '$2 == name { print $1 }' "$DIGESTS")"
+  if [ -z "$expected" ]; then
+    echo "$2 is missing from build-nuget/natives.sha256." >&2
+    echo "After changing a version in natives-sources.sh, run update-digests.sh and commit the result." >&2
+    exit 1
+  fi
+  actual="$(sha256_of "$1")"
+  if [ "$actual" != "$expected" ]; then
+    echo "$2 does not match build-nuget/natives.sha256." >&2
+    echo "  recorded $expected" >&2
+    echo "  computed $actual" >&2
+    echo "The archive behind that URL changed. Establish why before updating the record." >&2
+    exit 1
+  fi
+}
 
 extract() { # archive destdir
   mkdir -p "$2"
@@ -54,23 +73,25 @@ copy_libs() { # srcdir destdir
 }
 
 for rid in $RIDS; do
-  dest="$STAGE/$rid/native"
-  rm -rf "$dest"; mkdir -p "$dest"
+  dest="$NEW/$rid/native"
   sdir="$TMP/serum-$rid"; zdir="$TMP/zedmd-$rid"
 
-  sasset="$(serum_asset "$rid")"
-  zasset="$(zedmd_asset "$rid")"
-  surl="https://github.com/PPUC/libserum/releases/download/v${SERUM_VERSION}/libserum-${SERUM_VERSION}-${sasset}"
-  zurl="https://github.com/PPUC/libzedmd/releases/download/v${ZEDMD_VERSION}/libzedmd-${ZEDMD_VERSION}-${zasset}"
+  sname="$(serum_archive "$rid")"
+  zname="$(zedmd_archive "$rid")"
+  surl="$(serum_url "$rid")"
+  zurl="$(zedmd_url "$rid")"
   # keep the real extension (.zip / .tar.gz) so extract() can detect the archive type
-  sarch="$TMP/serum-${rid}-${sasset}"
-  zarch="$TMP/zedmd-${rid}-${zasset}"
+  sarch="$TMP/serum-${rid}-${sname}"
+  zarch="$TMP/zedmd-${rid}-${zname}"
 
   echo "[$rid] downloading libserum  $surl"
   curl -fsSL "$surl" -o "$sarch"
+  verify_archive "$sarch" "$sname"
   echo "[$rid] downloading libzedmd  $zurl"
   curl -fsSL "$zurl" -o "$zarch"
+  verify_archive "$zarch" "$zname"
 
+  mkdir -p "$dest"
   extract "$sarch" "$sdir"
   extract "$zarch" "$zdir"
   copy_libs "$sdir" "$dest"
@@ -118,6 +139,12 @@ for rid in $RIDS; do
   # first P/Invoke with DllNotFoundException. Non-fatal: serum/zedmd-only packages are still valid.
   ls "$dest"/libusb-1.0.* >/dev/null 2>&1 \
     || echo "[$rid] WARNING: libusb-1.0 not staged — PIN2DMD/PinDMD2 will fail at runtime. Drop it under native/vendor/$rid/ (see native/vendor/README.md)."
+done
+
+mkdir -p "$STAGE"
+for rid in $RIDS; do
+  rm -rf "$STAGE/$rid"
+  mv "$NEW/$rid" "$STAGE/$rid"
 done
 
 echo "Done. Native binaries staged under native/nuget/runtimes/ (libserum $SERUM_VERSION, libzedmd $ZEDMD_VERSION; plus any native/vendor/ drops)."
