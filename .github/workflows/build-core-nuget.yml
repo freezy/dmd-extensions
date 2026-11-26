@@ -117,8 +117,17 @@ jobs:
             echo "natives=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # the nuspec files name every source outside native/nuget that the packages carry
+          readarray -t packed < <(
+            grep -ho 'src="[^"]*"' native/nuget/*.nuspec |
+              sed -e 's|^src="||' -e 's|"$||' -e 's|\\|/|g' |
+              { grep '^\.\./\.\./' || true; } |
+              sed -e 's|^\.\./\.\./||' |
+              sort -u
+          )
           changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            native/nuget native/vendor build-nuget .github/workflows/build-core-nuget.yml)
+            native/nuget native/vendor build-nuget .github/workflows/build-core-nuget.yml \
+            "${packed[@]}")
           if [[ -n "$changed" ]]; then
             echo "The native packages change here:"
             echo "$changed"
